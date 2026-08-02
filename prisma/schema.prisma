@@ -1,0 +1,95 @@
+// ============================================================
+// K-12 AI SUPERBOARD — Prisma Schema
+// ============================================================
+// NOTE: This schema uses SQLite for local development.
+// In production, swap the datasource provider to "postgresql"
+// and point DATABASE_URL to your Supabase PostgreSQL connection.
+// ============================================================
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String?
+  stripeCustomerId  String?   @unique
+  tier              String    @default("FREE") // "FREE", "PRO", "AGENCY"
+  fingerprintHash   String?
+  // Agency Features
+  customDomain      String?   @unique
+  brandingLogoUrl   String?
+  brandingColor     String?   // Hex code e.g., #FF5733
+  parentAgencyId    String?    // If this user is a sub-tutor under an agency
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  rooms             Room[]
+  usageLogs         UsageLog[]
+  templates         Template[]
+}
+
+model UsageLog {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodStartDate  DateTime // Monday for Free tier, Billing Day for Pro/Agency
+  videoMinutesUsed Int      @default(0)
+  aiCreditsUsed    Int      @default(0)
+  recordingsUsed   Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([userId, periodStartDate])
+}
+
+model Room {
+  id            String     @id @default(uuid())
+  tutorId       String
+  tutor         User       @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  subject       String     @default("GENERAL") // MATH, SCIENCE, LANGUAGE, GENERAL
+  isActive      Boolean    @default(true)
+  // Branding snapshot taken at room creation so it persists
+  // even if agency changes logo later
+  brandingLogo  String?
+  brandingColor String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  pages         BoardPage[]
+  recordings    Recording[]
+}
+
+model BoardPage {
+  id        String   @id @default(uuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  pageIndex Int
+  snapshot  String   // Yjs document state serialized as JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Template {
+  id        String   @id @default(uuid())
+  tutorId   String
+  tutor     User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  name      String
+  subject   String
+  snapshot  String   // Yjs document state serialized as JSON string
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Recording {
+  id        String   @id @default(uuid())
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tutorId   String
+  url       String   // Storage URL for the video file (Supabase Storage)
+  createdAt DateTime @default(now())
+}

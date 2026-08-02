@@ -1,0 +1,519 @@
+// ============================================================
+// PipVideoPanel — Floating, Draggable PiP Video Panel
+// ============================================================
+// Native floating panel inside the whiteboard UI (position: fixed).
+// Contains LiveKit video grid with tutor + student webcams,
+// mute/deafen controls, and recording button.
+// Uses placeholder divs for actual video until LiveKit credentials are wired.
+// ============================================================
+
+'use client';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useAppStore } from '@/store/app-store';
+import RecordButton from './RecordButton';
+import {
+  Mic,
+  MicOff,
+  Headphones,
+  HeadphoneOff,
+  Minimize2,
+  Maximize2,
+  PhoneOff,
+  GripHorizontal,
+  Video,
+  VideoOff,
+  User,
+  MonitorSpeaker,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+// ---- Types ----
+
+interface PanelPosition {
+  x: number;
+  y: number;
+}
+
+interface PanelSize {
+  width: number;
+  height: number;
+}
+
+// ---- Constants ----
+
+const MINIMIZED_SIZE = 56;
+const DEFAULT_WIDTH = 360;
+const DEFAULT_HEIGHT = 300;
+const MIN_WIDTH = 280;
+const MIN_HEIGHT = 220;
+const HEADER_HEIGHT = 40;
+const CONTROLS_HEIGHT = 52;
+const EDGE_SNAP = 16;
+
+// ---- Placeholder Participant Type (mirrors LiveKit useParticipants) ----
+
+interface PlaceholderParticipant {
+  identity: string;
+  name: string;
+  isTutor: boolean;
+  isMuted: boolean;
+  isDeafened: boolean;
+  isCameraOn: boolean;
+  isSpeaking: boolean;
+}
+
+// TODO: Replace with real LiveKit `useParticipants()` data once connected
+const PLACEHOLDER_PARTICIPANTS: PlaceholderParticipant[] = [
+  {
+    identity: 'tutor-001',
+    name: 'Ms. Johnson',
+    isTutor: true,
+    isMuted: false,
+    isDeafened: false,
+    isCameraOn: true,
+    isSpeaking: false,
+  },
+  {
+    identity: 'student-001',
+    name: 'Alex',
+    isTutor: false,
+    isMuted: true,
+    isDeafened: false,
+    isCameraOn: true,
+    isSpeaking: false,
+  },
+];
+
+// ============================================================
+// Main Component
+// ============================================================
+
+export default function PipVideoPanel() {
+  const roomActive = useAppStore((s) => s.room.isActive);
+  const isRecording = useAppStore((s) => s.room.isRecording);
+  const isTutor = useAppStore((s) => s.room.isTutor);
+
+  // ---- Panel state ----
+  const [position, setPosition] = useState<PanelPosition>(() => ({
+    x: window.innerWidth - DEFAULT_WIDTH - EDGE_SNAP,
+    y: window.innerHeight - DEFAULT_HEIGHT - EDGE_SNAP,
+  }));
+  const [size, setSize] = useState<PanelSize>({
+    width: DEFAULT_WIDTH,
+    height: DEFAULT_HEIGHT,
+  });
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+
+  // ---- Local media state (placeholder) ----
+  const [isMuted, setIsMuted] = useState(false);
+  const [isDeafened, setIsDeafened] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+
+  // ---- Drag refs ----
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // ---- Snap to corners on mount / resize ----
+  useEffect(() => {
+    const handleResize = () => {
+      setPosition((prev) => ({
+        x: Math.min(prev.x, window.innerWidth - (isMinimized ? MINIMIZED_SIZE : size.width)),
+        y: Math.min(prev.y, window.innerHeight - (isMinimized ? MINIMIZED_SIZE : size.height)),
+      }));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [size.width, size.height, isMinimized]);
+
+  // ---- Drag handlers ----
+  const handleDragStart = useCallback(
+    (e: React.MouseEvent) => {
+      if (isResizing) return;
+      e.preventDefault();
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      dragOffset.current = {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+      setIsDragging(true);
+    },
+    [isResizing]
+  );
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleDragMove = (e: MouseEvent) => {
+      const newX = e.clientX - dragOffset.current.x;
+      const newY = e.clientY - dragOffset.current.y;
+      const currentW = isMinimized ? MINIMIZED_SIZE : size.width;
+      const currentH = isMinimized ? MINIMIZED_SIZE : size.height;
+
+      setPosition({
+        x: Math.max(0, Math.min(newX, window.innerWidth - currentW)),
+        y: Math.max(0, Math.min(newY, window.innerHeight - currentH)),
+      });
+    };
+
+    const handleDragEnd = () => {
+      setIsDragging(false);
+      // Snap to nearest edge
+      setPosition((prev) => snapToEdge(prev, isMinimized ? MINIMIZED_SIZE : size.width, isMinimized ? MINIMIZED_SIZE : size.height));
+    };
+
+    window.addEventListener('mousemove', handleDragMove);
+    window.addEventListener('mouseup', handleDragEnd);
+    return () => {
+      window.removeEventListener('mousemove', handleDragMove);
+      window.removeEventListener('mouseup', handleDragEnd);
+    };
+  }, [isDragging, size, isMinimized]);
+
+  // ---- Resize handlers ----
+  const handleResizeStart = useCallback(
+    (e: React.MouseEvent) => {
+      if (isDragging) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setIsResizing(true);
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startW = size.width;
+      const startH = size.height;
+
+      const handleResizeMove = (moveE: MouseEvent) => {
+        const deltaW = startX - moveE.clientX;
+        const deltaH = startY - moveE.clientY;
+        setSize({
+          width: Math.max(MIN_WIDTH, Math.min(startW + deltaW, 600)),
+          height: Math.max(MIN_HEIGHT, Math.min(startH + deltaH, 500)),
+        });
+      };
+
+      const handleResizeEnd = () => {
+        setIsResizing(false);
+        window.removeEventListener('mousemove', handleResizeMove);
+        window.removeEventListener('mouseup', handleResizeEnd);
+      };
+
+      window.addEventListener('mousemove', handleResizeMove);
+      window.addEventListener('mouseup', handleResizeEnd);
+    },
+    [isDragging, size]
+  );
+
+  // ---- Don't render if room is not active ----
+  if (!roomActive) return null;
+
+  // ---- Minimized view: small circle with last speaker avatar ----
+  if (isMinimized) {
+    const lastSpeaker = PLACEHOLDER_PARTICIPANTS.find((p) => p.isSpeaking) || PLACEHOLDER_PARTICIPANTS[0];
+    return (
+      <div
+        ref={panelRef}
+        style={{
+          position: 'fixed',
+          left: position.x,
+          top: position.y,
+          width: MINIMIZED_SIZE,
+          height: MINIMIZED_SIZE,
+          zIndex: 9999,
+        }}
+        onMouseDown={handleDragStart}
+        className={cn(
+          'cursor-grab active:cursor-grabbing rounded-full',
+          'bg-black/80 backdrop-blur-xl border border-white/10',
+          'shadow-2xl flex items-center justify-center',
+          'transition-shadow hover:shadow-[0_0_24px_rgba(59,130,246,0.3)]',
+          'group'
+        )}
+        onClick={() => setIsMinimized(false)}
+        title="Click to expand video panel"
+      >
+        {/* Speaker avatar */}
+        <div className="relative">
+          <div
+            className={cn(
+              'w-10 h-10 rounded-full flex items-center justify-center',
+              lastSpeaker.isTutor ? 'bg-blue-500/80' : 'bg-emerald-500/80'
+            )}
+          >
+            {lastSpeaker.isCameraOn ? (
+              <User className="w-5 h-5 text-white" />
+            ) : (
+              <VideoOff className="w-5 h-5 text-white/60" />
+            )}
+          </div>
+          {/* Speaking indicator */}
+          {lastSpeaker.isSpeaking && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-black/80" />
+          )}
+          {/* Recording indicator */}
+          {isRecording && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-black/80" />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Full panel view ----
+  return (
+    <div
+      ref={panelRef}
+      style={{
+        position: 'fixed',
+        left: position.x,
+        top: position.y,
+        width: size.width,
+        height: size.height,
+        zIndex: 9999,
+      }}
+      onMouseDown={handleDragStart}
+      className={cn(
+        'rounded-2xl overflow-hidden flex flex-col',
+        'bg-black/70 backdrop-blur-xl border border-white/10',
+        'shadow-2xl',
+        isDragging ? 'cursor-grabbing select-none' : 'cursor-grab',
+        isResizing && 'cursor-se-resize'
+      )}
+    >
+      {/* ---- Header (drag handle) ---- */}
+      <div className="flex items-center justify-between px-3 h-[40px] shrink-0 bg-white/5 border-b border-white/5">
+        <div className="flex items-center gap-1.5 text-white/70 text-xs font-medium">
+          <GripHorizontal className="w-3.5 h-3.5" />
+          <span>Video Call</span>
+          {isRecording && (
+            <span className="flex items-center gap-1 ml-1 text-red-400 text-[10px] font-semibold animate-pulse">
+              <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+              REC
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-0.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-white/50 hover:text-white hover:bg-white/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMinimized(true);
+            }}
+          >
+            <Minimize2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* ---- Video Grid Area ---- */}
+      <div className="flex-1 relative overflow-hidden">
+        {/*
+          =====================================================
+          TODO: Replace placeholder grid with LiveKit components:
+          =====================================================
+          import { useTracks, VideoTrack, AudioTrack, useConnectionState, useParticipants, RoomAudioRenderer } from '@livekit/components-react';
+          import { Track } from 'livekit-client';
+
+          const connectionState = useConnectionState();
+          const participants = useParticipants();
+          const tracks = useTracks(
+            [Track.Source.Camera, Track.Source.Microphone],
+            { onlySubscribed: false }
+          );
+
+          // Render tracks using <VideoTrack> and <AudioTrack>
+          // Add <RoomAudioRenderer /> for audio playback
+          =====================================================
+        */}
+        <div className="grid grid-cols-2 h-full gap-0.5 p-0.5">
+          {PLACEHOLDER_PARTICIPANTS.map((participant) => (
+            <div
+              key={participant.identity}
+              className={cn(
+                'relative rounded-lg overflow-hidden flex flex-col items-center justify-center',
+                'bg-gradient-to-b from-slate-800/60 to-slate-900/80',
+                participant.isSpeaking && 'ring-2 ring-green-400/60'
+              )}
+            >
+              {/* Video placeholder area */}
+              <div className="flex-1 w-full flex items-center justify-center relative">
+                {participant.isCameraOn ? (
+                  <div className="flex flex-col items-center gap-2 text-white/30">
+                    {/*
+                      TODO: Replace with <VideoTrack track={...} />
+                    */}
+                    <Video className="w-10 h-10" />
+                    <span className="text-[10px]">Camera Active</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-white/20">
+                    <VideoOff className="w-10 h-10" />
+                    <span className="text-[10px]">Camera Off</span>
+                  </div>
+                )}
+
+                {/* Name tag */}
+                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1.5">
+                  <span
+                    className={cn(
+                      'text-[10px] font-medium text-white/90 px-1.5 py-0.5 rounded',
+                      'bg-black/60 backdrop-blur-sm'
+                    )}
+                  >
+                    {participant.name}
+                    {participant.isTutor && (
+                      <span className="ml-1 text-blue-400">★</span>
+                    )}
+                  </span>
+                </div>
+
+                {/* Mute indicator */}
+                {participant.isMuted && (
+                  <div className="absolute top-1.5 right-1.5">
+                    <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
+                      <MicOff className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Speaking animation ring */}
+                {participant.isSpeaking && (
+                  <div className="absolute inset-0 rounded-lg border-2 border-green-400/40 animate-pulse pointer-events-none" />
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Connection state overlay (placeholder) */}
+        {/*
+          TODO: Show connection state overlay:
+          const connectionState = useConnectionState();
+          {connectionState !== 'connected' && (
+            <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+              <p className="text-white/60 text-sm">Connecting...</p>
+            </div>
+          )}
+        */}
+      </div>
+
+      {/* ---- Controls Bar ---- */}
+      <div className="flex items-center justify-center gap-1.5 px-3 h-[52px] shrink-0 bg-white/5 border-t border-white/5">
+        {/* Camera toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10',
+            isCameraOff && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
+          )}
+          onClick={() => {
+            setIsCameraOff(!isCameraOff);
+            // TODO: room.localParticipant.setCameraEnabled(!isCameraOff);
+            console.log('TODO: Toggle camera', !isCameraOff);
+          }}
+        >
+          {isCameraOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+        </Button>
+
+        {/* Mic toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10',
+            isMuted && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
+          )}
+          onClick={() => {
+            setIsMuted(!isMuted);
+            // TODO: room.localParticipant.setMicrophoneEnabled(!isMuted);
+            console.log('TODO: Toggle microphone', !isMuted);
+          }}
+        >
+          {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </Button>
+
+        {/* Deafen toggle */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10',
+            isDeafened && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
+          )}
+          onClick={() => {
+            setIsDeafened(!isDeafened);
+            console.log('TODO: Toggle deafen', !isDeafened);
+          }}
+        >
+          {isDeafened ? <HeadphoneOff className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
+        </Button>
+
+        {/* Monitor/Speaker output */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+          onClick={() => console.log('TODO: Toggle speaker output')}
+        >
+          <MonitorSpeaker className="w-4 h-4" />
+        </Button>
+
+        {/* Recording button */}
+        <RecordButton />
+
+        {/* Leave call */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20"
+          onClick={() => {
+            console.log('TODO: Leave room / end call');
+            useAppStore.getState().setRoom({ isActive: false });
+          }}
+        >
+          <PhoneOff className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* ---- Resize handle (bottom-left corner) ---- */}
+      <div
+        onMouseDown={handleResizeStart}
+        className={cn(
+          'absolute bottom-0 left-0 w-4 h-4 cursor-se-resize',
+          'opacity-30 hover:opacity-60 transition-opacity'
+        )}
+      >
+        <svg viewBox="0 0 16 16" fill="currentColor" className="text-white/60 w-4 h-4">
+          <path d="M14 14H8V13H13V8H14V14Z" />
+          <path d="M14 10H9V9H13V5H14V10Z" opacity="0.6" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ---- Helper: Snap position to nearest corner ----
+
+function snapToEdge(
+  pos: PanelPosition,
+  width: number,
+  height: number
+): PanelPosition {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const centerX = pos.x + width / 2;
+  const centerY = pos.y + height / 2;
+
+  // Determine nearest corner
+  const snapX = centerX < vw / 2 ? EDGE_SNAP : vw - width - EDGE_SNAP;
+  const snapY = centerY < vh / 2 ? EDGE_SNAP : vh - height - EDGE_SNAP;
+
+  return { x: snapX, y: snapY };
+}
