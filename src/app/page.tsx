@@ -12,7 +12,7 @@ import { useAppStore } from '@/store/app-store';
 import { useCredits } from '@/hooks/useCredits';
 import { useTheme } from '@/hooks/useTheme';
 import { createClient } from '@/lib/supabase';
-import { authFetch } from '@/lib/auth-fetch';
+import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -106,6 +106,9 @@ export default function Dashboard() {
     const supabase = createClient();
     if (!supabase) { setAuthLoading(false); return; }
 
+    // Initialize auth fetch token caching
+    initAuthFetch();
+
     let mounted = true;
 
     // Listen for auth state changes FIRST to catch any race conditions
@@ -194,6 +197,7 @@ function LandingPage() {
       if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
       const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
       if (error) { setAuthError(error.message); return; }
+      initAuthFetch(); // Refresh token cache after login
       const { data: { user: u } } = await supabase.auth.getUser();
       if (u) {
         try {
@@ -752,9 +756,22 @@ function AuthenticatedDashboard({ user }: { user: User }) {
   const handleCreateLesson = useCallback(async () => {
     setCreating(true);
     try {
-      const response = await authFetch('/api/room', {
+      // Directly get session token from Supabase client
+      const supabase = createClient();
+      const { data: { session } } = await supabase!.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        console.error('[Dashboard] No session token available — are you logged in?');
+        setCreating(false);
+        return;
+      }
+
+      const response = await fetch('/api/room', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
       });
       if (!response.ok) {
