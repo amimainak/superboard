@@ -128,7 +128,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen gradient-auth flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-fade-in-up">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-violet-500/25">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25">
             <GraduationCap className="w-9 h-9 text-white" />
           </div>
           <p className="text-sm text-muted-foreground font-medium">Loading Superboard...</p>
@@ -207,7 +207,7 @@ function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-violet-500/20">
+            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <span className="text-lg font-bold tracking-tight text-gray-900">Superboard</span>
@@ -221,7 +221,7 @@ function LandingPage() {
             <Button variant="ghost" className="text-sm font-medium text-gray-700 hover:text-gray-900 hidden sm:inline-flex" onClick={() => setShowAuth('login')}>
               Sign In
             </Button>
-            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
+            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
               Get Started Free
             </Button>
           </div>
@@ -232,7 +232,7 @@ function LandingPage() {
       <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-violet-100/50 blur-[120px] animate-float-slow" />
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-emerald-100/50 blur-[120px] animate-float-slow" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-sky-100/40 blur-[100px] animate-float" />
           <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full bg-emerald-100/30 blur-[100px] animate-float-delay" />
         </div>
@@ -245,14 +245,14 @@ function LandingPage() {
             {/* Left: Copy */}
             <div className="max-w-xl">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-100 mb-6 animate-fade-in-up">
-                <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-                <span className="text-xs font-semibold text-violet-700">AI-Powered Tutoring Platform</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-xs font-semibold text-emerald-700">AI-Powered Tutoring Platform</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
                 Turn Every Lesson Into an{' '}
-                <span className="bg-gradient-to-r from-violet-600 via-indigo-500 to-sky-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
                   Interactive Experience
                 </span>
               </h1>
@@ -262,7 +262,7 @@ function LandingPage() {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 animate-fade-in-up-delay-2">
-                <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-7" onClick={() => setShowAuth('register')}>
+                <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-7" onClick={() => setShowAuth('register')}>
                   Start Teaching for Free
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -275,7 +275,7 @@ function LandingPage() {
               {/* Social proof */}
               <div className="mt-10 flex items-center gap-6 animate-fade-in-up-delay-3">
                 <div className="flex -space-x-2">
-                  {['bg-violet-400', 'bg-sky-400', 'bg-emerald-400', 'bg-amber-400'].map((bg, i) => (
+                  {['bg-emerald-400', 'bg-sky-400', 'bg-emerald-400', 'bg-amber-400'].map((bg, i) => (
                     <div key={i} className={`w-8 h-8 rounded-full ${bg} border-2 border-white flex items-center justify-center text-white text-[10px] font-bold`}>
                       {String.fromCharCode(65 + i)}
                     </div>
@@ -290,7 +290,7 @@ function LandingPage() {
 
             {/* Right: Hero Visual — Interactive whiteboard mockup */}
             <div className="relative animate-fade-in-up-delay-1">
-              <div className="relative rounded-2xl bg-gray-50 border border-gray-200 shadow-2xl shadow-violet-500/10 overflow-hidden">
+              <div className="relative rounded-2xl bg-gray-50 border border-gray-200 shadow-2xl shadow-emerald-500/10 overflow-hidden">
                 {/* Fake toolbar */}
                 <div className="bg-white border-b border-gray-100 px-4 py-2.5 flex items-center gap-2">
                   <div className="flex gap-1.5">
@@ -312,8 +312,8 @@ function LandingPage() {
                     <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shadow-md">
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
-                    <div className="flex-1 bg-violet-50 rounded-xl p-4 border border-violet-100">
-                      <p className="text-xs font-medium text-violet-600 mb-1">AI Generated</p>
+                    <div className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                      <p className="text-xs font-medium text-emerald-600 mb-1">AI Generated</p>
                       <p className="text-sm text-gray-700 font-medium">Solve for x: 3x + 7 = 22</p>
                       <p className="text-sm text-gray-500 mt-1">x = 5 (subtract 7, divide by 3)</p>
                     </div>
@@ -345,7 +345,7 @@ function LandingPage() {
 
                   {/* Floating video PiP */}
                   <div className="absolute bottom-4 right-4 w-24 h-16 rounded-lg bg-gray-800 shadow-lg flex items-center justify-center overflow-hidden z-20">
-                    <div className="w-full h-full bg-gradient-to-br from-violet-500 to-sky-500 flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center">
                       <Video className="w-5 h-5 text-white/80" />
                     </div>
                     <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />
@@ -367,8 +367,8 @@ function LandingPage() {
               {/* Floating badge 2 */}
               <div className="absolute -top-3 -right-3 bg-white rounded-xl shadow-lg px-4 py-3 border border-gray-100 animate-float-delay">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-violet-600" />
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <Brain className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-900">AI Active</p>
@@ -392,7 +392,7 @@ function LandingPage() {
               { value: '< 2s', label: 'AI Response Time', sub: 'for quiz generation' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-violet-600 to-sky-600 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">{stat.value}</p>
                 <p className="text-sm font-medium text-gray-900 mt-1">{stat.label}</p>
                 <p className="text-xs text-gray-400">{stat.sub}</p>
               </div>
@@ -411,7 +411,7 @@ function LandingPage() {
             </div>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
               One whiteboard.{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-sky-500 bg-clip-text text-transparent">Endless possibilities.</span>
+              <span className="bg-gradient-to-r from-emerald-600 to-sky-500 bg-clip-text text-transparent">Endless possibilities.</span>
             </h2>
             <p className="mt-4 text-lg text-gray-500">
               Purpose-built for K-12 tutoring with tools that actually make your lessons better.
@@ -420,20 +420,20 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain, title: 'AI Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions with Claude AI in seconds. Supports all K-12 subjects.', color: 'violet' },
+              { icon: Brain, title: 'AI Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions with Claude AI in seconds. Supports all K-12 subjects.', color: 'emerald' },
               { icon: Monitor, title: 'Real-Time Collaborative Whiteboard', desc: 'Unlimited canvas with shape tools, handwriting, sticky notes, and real-time cursor sync. Students see your strokes instantly.', color: 'sky' },
               { icon: Video, title: 'Built-In Video Calling', desc: 'No need for Zoom or Meet. Face-to-face video with PiP mode so you can teach and see your student at the same time.', color: 'emerald' },
               { icon: Calculator, title: 'GeoGebra Math Tools', desc: 'Interactive graphing calculator, function plotting, sliders for parameters, and geometry constructions — all inside the board.', color: 'amber' },
               { icon: PenTool, title: 'Subject-Specific Toolkits', desc: 'Math rulers & protractors, science lab diagrams, language annotations & mind maps. Switch toolkits based on your subject.', color: 'rose' },
-              { icon: Download, title: 'Branded PDF Exports', desc: 'Export your lesson as a beautiful PDF with your agency branding, logo, and student name. Perfect for record-keeping.', color: 'indigo' },
+              { icon: Download, title: 'Branded PDF Exports', desc: 'Export your lesson as a beautiful PDF with your agency branding, logo, and student name. Perfect for record-keeping.', color: 'teal' },
             ].map((feature) => {
               const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
-                violet: { bg: 'bg-violet-50', text: 'text-violet-600', iconBg: 'bg-violet-100' },
+                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
                 sky: { bg: 'bg-sky-50', text: 'text-sky-600', iconBg: 'bg-sky-100' },
                 emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
                 amber: { bg: 'bg-amber-50', text: 'text-amber-600', iconBg: 'bg-amber-100' },
                 rose: { bg: 'bg-rose-50', text: 'text-rose-600', iconBg: 'bg-rose-100' },
-                indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', iconBg: 'bg-indigo-100' },
+                teal: { bg: 'bg-teal-50', text: 'text-teal-600', iconBg: 'bg-teal-100' },
               };
               const c = colorMap[feature.color];
               return (
@@ -472,8 +472,8 @@ function LandingPage() {
             ].map((item) => (
               <div key={item.step} className="relative text-center group">
                 {/* Step number */}
-                <div className="text-6xl font-black text-gray-100 group-hover:text-violet-100 transition-colors duration-300 mb-4">{item.step}</div>
-                <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-violet-500/20 mb-5 -mt-10 relative z-10">
+                <div className="text-6xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors duration-300 mb-4">{item.step}</div>
+                <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20 mb-5 -mt-10 relative z-10">
                   <item.icon className="w-7 h-7 text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
@@ -490,13 +490,13 @@ function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
               Loved by tutors{' '}
-              <span className="bg-gradient-to-r from-violet-600 to-rose-500 bg-clip-text text-transparent">everywhere</span>
+              <span className="bg-gradient-to-r from-emerald-600 to-rose-500 bg-clip-text text-transparent">everywhere</span>
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The AI quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'violet' },
+              { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The AI quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'emerald' },
               { name: 'David K.', role: 'Science Tutor, 5 years', quote: 'Having video, whiteboard, and AI in one tool means zero app-switching. It just works. My students are more engaged than ever.', color: 'sky' },
               { name: 'Priya R.', role: 'Language Tutor, 12 years', quote: 'The mind map tool and annotation features are perfect for essay planning. The branded PDFs make me look incredibly professional.', color: 'emerald' },
             ].map((t) => (
@@ -539,10 +539,10 @@ function LandingPage() {
               { name: 'Pro Tutor', price: '$15', period: '/month', desc: 'For serious tutors who want more', features: ['100 AI credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recording/month', 'Save/Load boards'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
               { name: 'Agency', price: '$39', period: '/month', desc: 'For tutoring centers & teams', features: ['Everything in Pro', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Sub-tutor management', 'Admin dashboard'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
             ].map((plan) => (
-              <div key={plan.name} className={`rounded-2xl bg-white p-6 md:p-8 relative ${plan.ctaStyle === 'primary' ? 'border-2 border-violet-500 shadow-xl shadow-violet-500/10 scale-[1.02]' : 'border border-gray-200 shadow-sm hover:shadow-md'} transition-shadow duration-300`}>
+              <div key={plan.name} className={`rounded-2xl bg-white p-6 md:p-8 relative ${plan.ctaStyle === 'primary' ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02]' : 'border border-gray-200 shadow-sm hover:shadow-md'} transition-shadow duration-300`}>
                 {plan.badge && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full text-white ${plan.ctaStyle === 'primary' ? 'bg-violet-500' : 'bg-amber-500'}`}>{plan.badge}</span>
+                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full text-white ${plan.ctaStyle === 'primary' ? 'bg-emerald-500' : 'bg-amber-500'}`}>{plan.badge}</span>
                   </div>
                 )}
                 <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
@@ -562,7 +562,7 @@ function LandingPage() {
                   ))}
                 </ul>
                 <Button
-                  className={`w-full mt-6 rounded-xl font-semibold transition-all ${plan.ctaStyle === 'primary' ? 'gradient-primary border-0 text-white shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 hover:-translate-y-0.5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+                  className={`w-full mt-6 rounded-xl font-semibold transition-all ${plan.ctaStyle === 'primary' ? 'gradient-primary border-0 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                   onClick={() => setShowAuth('register')}
                 >
                   {plan.cta}
@@ -577,7 +577,7 @@ function LandingPage() {
       <section className="py-20 md:py-28 relative overflow-hidden">
         <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <GraduationCap className="w-14 h-14 mx-auto mb-6 text-violet-500" />
+          <GraduationCap className="w-14 h-14 mx-auto mb-6 text-emerald-500" />
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
             Ready to transform your tutoring?
           </h2>
@@ -585,7 +585,7 @@ function LandingPage() {
             Join thousands of tutors who&apos;ve made their lessons more engaging, more productive, and more fun with Superboard.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
+            <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
               Create Your Free Account
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -666,7 +666,7 @@ function LandingPage() {
                   <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
                   <Input id="login-password" type="password" placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required className="h-11 rounded-xl" />
                 </div>
-                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25">
+                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
                   Sign In
                 </Button>
               </form>
@@ -680,7 +680,7 @@ function LandingPage() {
                   <Label htmlFor="reg-password" className="text-sm font-medium">Password</Label>
                   <Input id="reg-password" type="password" placeholder="Min. 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} required minLength={6} className="h-11 rounded-xl" />
                 </div>
-                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25">
+                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
                   Create Free Account
                 </Button>
               </form>
@@ -753,7 +753,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-violet-500/20">
+            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -791,7 +791,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 
         {/* Usage Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-violet-500/15 card-hover animate-fade-in-up">
+          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">AI Credits</span></div>
@@ -823,7 +823,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           <div className="lg:w-72 flex-shrink-0 space-y-4 animate-fade-in-up-delay-3">
             <Dialog open={showNewLesson} onOpenChange={setShowNewLesson}>
               <DialogTrigger asChild>
-                <Button className="w-full h-14 text-base rounded-2xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all hover:-translate-y-0.5 text-[15px]">
+                <Button className="w-full h-14 text-base rounded-2xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px]">
                   <Plus className="w-5 h-5 mr-2" />New Lesson
                 </Button>
               </DialogTrigger>
@@ -854,7 +854,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
                       </div>
                     </div>
                   )}
-                  <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-violet-500/25" onClick={handleCreateLesson} disabled={creating}>
+                  <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25" onClick={handleCreateLesson} disabled={creating}>
                     {creating ? 'Creating...' : 'Start Lesson'}
                   </Button>
                 </div>
@@ -898,7 +898,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
                 <TabsContent value="admin" className="mt-6">
                   <Card className="rounded-2xl border-0 shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-violet-500" />Agency Admin Dashboard</CardTitle>
+                      <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
                       <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
                     </CardHeader>
                     <CardContent><AgencyAdminPanel agencyUserId={user?.id || ''} /></CardContent>
@@ -927,7 +927,7 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
         <CardDescription>Manage your subscription and payment methods.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center justify-between p-5 rounded-xl bg-gradient-to-r from-violet-50 to-sky-50 border border-violet-100">
+        <div className="flex items-center justify-between p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
               {tier === 'AGENCY' ? <Crown className="w-5 h-5 text-white" /> : tier === 'PRO' ? <Star className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
@@ -944,7 +944,7 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
           <>
             <Separator />
             <div className="space-y-4">
-              <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-violet-500" />Upgrade Options</h3>
+              <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" />Upgrade Options</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {tier === 'FREE' && (
                   <Card className="rounded-2xl border-2 border-emerald-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
@@ -987,7 +987,7 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
           <>
             <Separator />
             <div className="space-y-4">
-              <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-violet-500" />White-Label Settings</h3>
+              <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-emerald-500" />White-Label Settings</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Brand Color</Label>
@@ -1040,7 +1040,7 @@ function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
   if (loading) return (
     <Card className="rounded-2xl border-0 shadow-sm">
       <CardHeader><CardTitle>Saved Boards</CardTitle></CardHeader>
-      <CardContent><div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div></CardContent>
+      <CardContent><div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div></CardContent>
     </Card>
   );
 
@@ -1050,7 +1050,7 @@ function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
       <CardContent>
         {boards.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-violet-50 flex items-center justify-center"><BookOpen className="w-8 h-8 text-violet-400" /></div>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><BookOpen className="w-8 h-8 text-emerald-400" /></div>
             <p className="text-muted-foreground font-medium">No boards yet</p>
             <p className="text-sm text-muted-foreground mt-1">Create your first lesson to see it here</p>
           </div>
@@ -1125,13 +1125,13 @@ function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
             <SelectTrigger className="w-32 rounded-xl h-11"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="MATH">Math</SelectItem><SelectItem value="SCIENCE">Science</SelectItem><SelectItem value="LANGUAGE">Language</SelectItem><SelectItem value="GENERAL">General</SelectItem></SelectContent>
           </Select>
-          <Button onClick={handleCreate} disabled={saving || !newName.trim()} size="icon" className="rounded-xl h-11 w-11 gradient-primary border-0 text-white shadow-md shadow-violet-500/20"><Plus className="w-4 h-4" /></Button>
+          <Button onClick={handleCreate} disabled={saving || !newName.trim()} size="icon" className="rounded-xl h-11 w-11 gradient-primary border-0 text-white shadow-md shadow-emerald-500/20"><Plus className="w-4 h-4" /></Button>
         </div>
         {loading ? (
-          <div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /></div>
+          <div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
         ) : templates.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-violet-50 flex items-center justify-center"><LayoutTemplate className="w-8 h-8 text-violet-400" /></div>
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><LayoutTemplate className="w-8 h-8 text-emerald-400" /></div>
             <p className="text-muted-foreground font-medium">No templates yet</p>
           </div>
         ) : (
@@ -1169,11 +1169,11 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
     fetch(`/api/usage/agency?agencyId=${agencyUserId}`).then((res) => res.json()).then((data) => setSubTutors(data.subTutors || [])).catch(() => {}).finally(() => setLoading(false));
   }, [agencyUserId]);
 
-  if (loading) return <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div>;
+  if (loading) return <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div>;
 
   if (subTutors.length === 0) return (
     <div className="text-center py-12">
-      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-violet-50 flex items-center justify-center"><Users className="w-8 h-8 text-violet-400" /></div>
+      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><Users className="w-8 h-8 text-emerald-400" /></div>
       <p className="text-muted-foreground font-medium">No sub-tutors assigned yet</p>
     </div>
   );
@@ -1185,7 +1185,7 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-violet-500/15 card-hover"><p className="text-3xl font-bold">{subTutors.length}</p><p className="text-sm text-white/80 mt-1">Sub-Tutors</p></div>
+        <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{subTutors.length}</p><p className="text-sm text-white/80 mt-1">Sub-Tutors</p></div>
         <div className="rounded-2xl stat-gradient-video p-5 text-white shadow-lg shadow-sky-500/15 card-hover"><p className="text-3xl font-bold">{totalRooms}</p><p className="text-sm text-white/80 mt-1">Total Lessons</p></div>
         <div className="rounded-2xl stat-gradient-recordings p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{totalVideo} min</p><p className="text-sm text-white/80 mt-1">Video Used</p></div>
       </div>
