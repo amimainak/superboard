@@ -2,27 +2,53 @@
 // API Route: Auth Profile
 // ============================================================
 // Returns the user's profile from our PostgreSQL database.
-// Called after Supabase Auth confirms the user is logged in.
-// Returns tier, branding, and other profile data.
+// Now requires auth — the caller's JWT must match the requested userId.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
+    // --- Auth check: caller can only read their own profile ---
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Missing userId parameter' },
-        { status: 400 }
-      );
+    // Use authenticated user's ID if userId param not provided
+    const targetUserId = userId || auth.userId;
+
+    // Security: caller can only read their own profile (or their sub-tutors if agency)
+    if (userId && userId !== auth.userId) {
+      // Agency owners can view sub-tutor profiles
+      const caller = await db.user.findUnique({
+        where: { id: auth.userId },
+        select: { tier: true },
+      });
+      if (!caller || caller.tier !== 'AGENCY') {
+        return NextResponse.json(
+          { error: 'Forbidden — you can only view your own profile' },
+          { status: 403 }
+        );
+      }
+      // Check if the target is a sub-tutor under this agency
+      const target = await db.user.findUnique({
+        where: { id: userId },
+        select: { parentAgencyId: true },
+      });
+      if (!target || target.parentAgencyId !== auth.userId) {
+        return NextResponse.json(
+          { error: 'Forbidden — you can only view your own or sub-tutor profiles' },
+          { status: 403 }
+        );
+      }
     }
 
     const user = await db.user.findUnique({
-      where: { id: userId },
+      where: { id: targetUserId },
       select: {
         id: true,
         email: true,

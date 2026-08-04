@@ -4,12 +4,17 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
-// Append pgbouncer=true to avoid prepared statement conflicts
-// with Supabase's PgBouncer pooler (port 6543).
+// Properly append pgbouncer=true to the DATABASE_URL.
+// Handles URLs that may already have query parameters.
+// NOTE: We use string manipulation instead of new URL() because
+// new URL() mangles postgres:// protocol to postgres:/ format.
 function getDatabaseUrl(): string {
-  const baseUrl = process.env.DATABASE_URL || ''
-  if (baseUrl.includes('pgbouncer=')) return baseUrl
-  return baseUrl + '?pgbouncer=true'
+  const baseUrl = process.env.DATABASE_URL || '';
+  if (!baseUrl) return baseUrl;
+  if (baseUrl.includes('pgbouncer=')) return baseUrl;
+
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return baseUrl + separator + 'pgbouncer=true';
 }
 
 export const db =

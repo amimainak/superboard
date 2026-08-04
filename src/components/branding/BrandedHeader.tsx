@@ -32,6 +32,9 @@ export default function BrandedHeader({ onEndLesson }: Props) {
           <img
             src={branding.logoUrl}
             alt=""
+            width={28}
+            height={28}
+            loading="lazy"
             className="size-7 rounded-md object-contain"
           />
         ) : (

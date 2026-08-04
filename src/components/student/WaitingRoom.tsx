@@ -138,6 +138,9 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
           <img
             src={logoUrl}
             alt={`${agencyName} logo`}
+            width={96}
+            height={96}
+            loading="lazy"
             className="w-24 h-24 rounded-2xl object-contain drop-shadow-lg bg-white/10 p-2"
           />
         ) : (

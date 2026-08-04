@@ -10,7 +10,7 @@
 
 import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import type { RoomData, BrandingConfig } from '@/types';
 
 // Client component wrapper for the room page
@@ -22,7 +22,7 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   useEffect(() => {
     async function loadRoom() {
       try {
-        // Fetch room data from API
+        // Fetch room data from API (no auth needed — students access this too)
         const response = await fetch(`/api/room?roomId=${roomId}`);
         if (!response.ok) {
           if (response.status === 410) {
@@ -95,14 +95,15 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 }
 
 // Page component — uses params from the URL
+// In Next.js App Router, params is a Promise that we await
 export default function RoomPage({
   params,
 }: {
   params: Promise<{ roomId: string }>;
 }) {
-  // Use a synchronous approach to extract roomId
-  // In Next.js 16, we use React.use() to unwrap the Promise
-  const roomId = useRoomId();
+  // Use React.use() to unwrap the params Promise (Next.js 16 pattern)
+  // This avoids hydration mismatch from window.location access
+  const { roomId } = useRoomParams(params);
 
   if (!roomId) {
     return (
@@ -115,14 +116,13 @@ export default function RoomPage({
   return <RoomPageContent roomId={roomId} />;
 }
 
-// Hook to extract roomId from URL without setState in effect
-function useRoomId(): string | null {
-  // Use useMemo with a function that reads window.location synchronously
-  // This avoids the need for setState in an effect
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+// Safe hook to extract roomId from params without hydration issues
+function useRoomParams(params: Promise<{ roomId: string }>): { roomId: string | null } {
+  const [resolved, setResolved] = useState<{ roomId: string | null }>({ roomId: null });
 
-  return useMemo(() => {
-    const match = pathname.match(/\/room\/([^/]+)/);
-    return match ? match[1] : null;
-  }, [pathname]);
+  useEffect(() => {
+    params.then((p) => setResolved({ roomId: p.roomId || null }));
+  }, [params]);
+
+  return resolved;
 }

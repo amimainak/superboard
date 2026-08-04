@@ -31,6 +31,7 @@ import {
 import { Loader2, Sparkles, HelpCircle, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { QuizData, QuizQuestion } from '@/types';
+import { useAppStore } from '@/store/app-store';
 
 // ---- Constants ----
 
@@ -65,6 +66,7 @@ const QUESTION_COUNT_OPTIONS = [
 
 export default function QuizGenerator() {
   const subject = useAppStore((s) => s.room.subject);
+  const userId = useAppStore((s) => s.room.userId);
   const isTutor = useAppStore((s) => s.room.isTutor);
 
   // ---- Form state ----
@@ -91,17 +93,13 @@ export default function QuizGenerator() {
     setGeneratedQuiz(null);
 
     try {
-      const res = await fetch('/api/ai/action', {
+      const { authFetch } = await import('@/lib/auth-fetch');
+      const res = await authFetch('/api/ai/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'QUIZ',
-          payload: {
-            topic: topic.trim(),
-            grade,
-            questionCount: parseInt(questionCount, 10),
-            subject,
-          },
+          userId,
+          prompt: `Generate a quiz about ${topic.trim()} for grade ${grade}. Include ${questionCount} questions for subject ${subject}.`,
         }),
       });
 

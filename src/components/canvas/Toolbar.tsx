@@ -11,7 +11,7 @@
 import React from 'react';
 import { useAppStore } from '@/store/app-store';
 import type { Subject } from '@/types';
-import { Pen, MousePointer2, Eraser, Hand, Type, Square, Circle, Minus, ArrowUpRight } from 'lucide-react';
+import { Pen, MousePointer2, Eraser, Hand, Type, Square, Circle, Minus, ArrowUpRight, Sparkles, Brain, BookOpen, FlaskConical, Languages, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -29,11 +29,43 @@ interface ToolbarProps {
   activeTool?: string;
 }
 
+// AI feature definitions per subject (Blueprint §4.2)
+const SUBJECT_AI_TOOLS: Record<Subject, { id: string; icon: React.ElementType; label: string; action: string }[]> = {
+  MATH: [
+    { id: 'handwriting-to-math', icon: PenTool, label: 'Handwriting to Math', action: 'HANDWRITING_TO_MATH' },
+    { id: 'shape-perfect', icon: Brain, label: 'Shape Perfect', action: 'PERFECT_SHAPE' },
+    { id: 'plot-graph', icon: FlaskConical, label: 'AI Graph Plotter', action: 'PLOT_GRAPH' },
+    { id: 'quiz', icon: BookOpen, label: 'Math Quiz', action: 'QUIZ' },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+  ],
+  SCIENCE: [
+    { id: 'diagram-gen', icon: Brain, label: 'Diagram Generator', action: 'DIAGRAM_GENERATOR' },
+    { id: 'chem-balance', icon: FlaskConical, label: 'Equation Balancer', action: 'CHEMICAL_BALANCER' },
+    { id: 'lab-summary', icon: BookOpen, label: 'Lab Summary', action: 'LAB_SUMMARY' },
+    { id: 'quiz', icon: BookOpen, label: 'Science Quiz', action: 'QUIZ' },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+  ],
+  LANGUAGE: [
+    { id: 'grammar', icon: PenTool, label: 'Grammar Highlight', action: 'GRAMMAR' },
+    { id: 'vocab-quiz', icon: BookOpen, label: 'Vocab Quiz', action: 'VOCAB_QUIZ' },
+    { id: 'essay-outline', icon: Brain, label: 'Essay Outliner', action: 'OUTLINE' },
+    { id: 'phonics', icon: Languages, label: 'Phonics Helper', action: 'PHONICS_HELPER' },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+  ],
+  GENERAL: [
+    { id: 'timeline', icon: BookOpen, label: 'Timeline Generator', action: 'TIMELINE_GENERATOR' },
+    { id: 'summarizer', icon: Brain, label: 'Concept Summarizer', action: 'CONCEPT_SUMMARIZER' },
+    { id: 'quiz', icon: BookOpen, label: 'Quiz', action: 'QUIZ' },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+  ],
+};
+
 export default function Toolbar({ editor, onToolChange, activeTool }: ToolbarProps) {
   const subject = useAppStore((s) => s.room.subject);
   const isTutor = useAppStore((s) => s.room.isTutor);
   const aiFeaturesEnabled = useAppStore((s) => s.aiFeaturesEnabled);
   const tier = useAppStore((s) => s.tier);
+  const toggleAIPanel = useAppStore((s) => s.toggleAIPanel);
 
   const coreTools = [
     { id: 'select', icon: MousePointer2, label: 'Select' },
@@ -80,7 +112,7 @@ export default function Toolbar({ editor, onToolChange, activeTool }: ToolbarPro
         <>
           <Separator className="my-1 w-8" />
           <div className="flex flex-col gap-1">
-            <SubjectAIToolkitLoader subject={subject} editor={editor} />
+            <SubjectAIToolkitLoader subject={subject} tier={tier} aiFeaturesEnabled={aiFeaturesEnabled} />
           </div>
         </>
       )}
@@ -103,12 +135,84 @@ function SubjectToolkitLoader({ subject, editor }: { subject: Subject; editor: u
   }
 }
 
-function SubjectAIToolkitLoader({ subject, editor }: { subject: Subject; editor: unknown }) {
-  // Smart tools are rendered within each toolkit component
-  // This is a placeholder that's rendered by the toolkit panels
+function SubjectAIToolkitLoader({
+  subject,
+  tier,
+  aiFeaturesEnabled,
+}: {
+  subject: Subject;
+  tier: string;
+  aiFeaturesEnabled: Record<string, boolean>;
+}) {
+  // Filter to only show enabled AI features
+  const tools = SUBJECT_AI_TOOLS[subject].filter(
+    (tool) => aiFeaturesEnabled[tool.id] !== false
+  );
+
+  // If the user is free tier, show the AI panel button instead of individual tools
+  const hasAIAccess = tier === 'PRO' || tier === 'AGENCY';
+
+  if (!hasAIAccess) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-9 h-9 text-primary"
+            onClick={() => useAppStore.getState().openPaywall('aiTools')}
+          >
+            <Sparkles className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">
+          <span className="flex items-center gap-1">
+            AI Tools (Pro)
+          </span>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (tools.length === 0) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-9 h-9 text-primary"
+            onClick={() => useAppStore.getState().toggleAIPanel()}
+          >
+            <Sparkles className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">AI Control Panel</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   return (
-    <div className="text-xs text-muted-foreground text-center px-2">
-      Smart Tools
-    </div>
+    <>
+      {tools.map((tool) => (
+        <Tooltip key={tool.id}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-9 h-9 text-primary"
+              onClick={() => {
+                // Open AI panel with this action pre-selected
+                const store = useAppStore.getState();
+                if (!store.aiPanelOpen) store.toggleAIPanel();
+              }}
+            >
+              <tool.icon className="w-4 h-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">{tool.label}</TooltipContent>
+        </Tooltip>
+      ))}
+    </>
   );
 }

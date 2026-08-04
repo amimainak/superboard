@@ -11,6 +11,7 @@ import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 const isConfigured = supabaseUrl && supabaseAnonKey;
 
@@ -19,9 +20,7 @@ let browserClient: ReturnType<typeof createBrowserClient> | null = null;
 
 export function createClient() {
   if (!isConfigured) {
-    // Return a no-op stub so the landing page renders without crashing.
-    // Auth calls will simply fail gracefully.
-    return null as unknown as ReturnType<typeof createBrowserClient>;
+    return null;
   }
   if (!browserClient) {
     browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
@@ -32,12 +31,16 @@ export function createClient() {
 /**
  * Server-side Supabase client using service role key.
  * Use this in API routes / server components only.
+ * The service role key bypasses Row Level Security, giving
+ * the server full admin access to read/write any data.
  */
 export function createServerClient() {
-  if (!isConfigured) {
-    return null as unknown as ReturnType<typeof createBrowserClient>;
+  if (!isConfigured || !supabaseServiceRoleKey) {
+    return null;
   }
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  // Use the service role key for server-side operations
+  // This bypasses RLS policies so the server can read/write all data
+  return createBrowserClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
 export const supabase = isConfigured ? createClient() : null;

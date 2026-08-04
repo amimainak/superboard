@@ -7,6 +7,7 @@
 // ============================================================
 
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
+import { authFetch } from '@/lib/auth-fetch';
 
 let fpPromise: Promise<FingerprintJS.BrowserFingerprint> | null = null;
 
@@ -28,17 +29,18 @@ export async function getFingerprintHash(): Promise<string> {
 
 /**
  * Initialize fingerprinting and send to backend.
- * Call this on Dashboard mount.
+ * Call this on Dashboard mount with the authenticated user's ID.
+ *
+ * @param userId — The authenticated user's Supabase Auth ID
  */
-export async function reportFingerprint(): Promise<string> {
+export async function reportFingerprint(userId: string): Promise<string> {
   const hash = await getFingerprintHash();
 
-  // Send hash to backend for anti-fraud check
+  // Send hash + userId to backend for anti-fraud check
   try {
-    await fetch('/api/usage/fingerprint', {
+    await authFetch('/api/usage/fingerprint', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fingerprintHash: hash }),
+      body: JSON.stringify({ userId, fingerprintHash: hash }),
     });
   } catch (error) {
     console.error('[Fingerprint] Failed to report:', error);

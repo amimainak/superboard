@@ -5,16 +5,22 @@
 // - Text tasks → Claude 3 Haiku (cost savings)
 // - Vision tasks → Claude 3.5 Sonnet (high accuracy)
 // Deducts AI credits after successful completion.
+// Now requires auth — JWT must match the userId in the body.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
 import type { AIAction, Tier } from '@/types';
 import { TEXT_AI_ACTIONS } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Auth check: verify caller matches the userId ---
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const body = await request.json();
     const { userId, action, prompt, imageBase64, systemPrompt } = body;
 
@@ -23,6 +29,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing required fields: userId, action, prompt' },
         { status: 400 }
+      );
+    }
+
+    // Security: caller can only perform AI actions on their own account
+    if (userId !== auth.userId) {
+      return NextResponse.json(
+        { error: 'Forbidden — you can only use AI on your own account' },
+        { status: 403 }
       );
     }
 

@@ -4,13 +4,20 @@
 // Creates a User record in our PostgreSQL database after
 // a successful Supabase Auth sign-up.
 // This is called from the client after supabase.auth.signUp().
+// Now verifies that the caller's Supabase JWT matches the
+// requested user ID to prevent impersonation.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Auth check: verify caller matches the registered user ---
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const body = await request.json();
     const { id, email, name } = body;
 
@@ -25,6 +32,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'User ID (from Supabase Auth) is required' },
         { status: 400 }
+      );
+    }
+
+    // Security: caller can only register their own account
+    if (id !== auth.userId) {
+      return NextResponse.json(
+        { error: 'Forbidden — you can only register your own account' },
+        { status: 403 }
       );
     }
 

@@ -87,6 +87,7 @@ interface WorksheetData {
 
 export default function WorksheetGenerator() {
   const subject = useAppStore((s) => s.room.subject);
+  const userId = useAppStore((s) => s.room.userId);
   const setTotalPages = useAppStore((s) => s.setTotalPages);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
 
@@ -115,17 +116,13 @@ export default function WorksheetGenerator() {
     setWorksheetData(null);
 
     try {
-      const res = await fetch('/api/ai/action', {
+      const { authFetch } = await import('@/lib/auth-fetch');
+      const res = await authFetch('/api/ai/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'WORKSHEET',
-          payload: {
-            topic: topic.trim(),
-            grade,
-            questionCount: parseInt(questionCount, 10),
-            subject,
-          },
+          userId,
+          prompt: `Generate a worksheet about ${topic.trim()} for grade ${grade}. Include ${questionCount} problems for subject ${subject}.`,
         }),
       });
 

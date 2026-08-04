@@ -3,26 +3,53 @@
 // ============================================================
 // Returns the current period's usage for the authenticated user.
 // Used by the UsageBar component and the Dashboard.
+// Now requires auth — JWT must match the requested userId.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUsageLog } from '@/lib/usage';
+import { requireAuth } from '@/lib/auth';
 import type { Tier } from '@/types';
+import { TIER_LIMITS } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
+    // --- Auth check: caller can only view their own usage ---
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Missing userId parameter' },
-        { status: 400 }
-      );
+    // Use authenticated user's ID if userId param not provided
+    const targetUserId = userId || auth.userId;
+
+    // Security: caller can only view their own usage (agency owners can view sub-tutors)
+    if (userId && userId !== auth.userId) {
+      const caller = await db.user.findUnique({
+        where: { id: auth.userId },
+        select: { tier: true },
+      });
+      if (!caller || caller.tier !== 'AGENCY') {
+        return NextResponse.json(
+          { error: 'Forbidden — you can only view your own usage' },
+          { status: 403 }
+        );
+      }
+      const target = await db.user.findUnique({
+        where: { id: userId },
+        select: { parentAgencyId: true },
+      });
+      if (!target || target.parentAgencyId !== auth.userId) {
+        return NextResponse.json(
+          { error: 'Forbidden — you can only view your own or sub-tutor usage' },
+          { status: 403 }
+        );
+      }
     }
 
-    const user = await db.user.findUnique({ where: { id: userId } });
+    const user = await db.user.findUnique({ where: { id: targetUserId } });
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -30,22 +57,23 @@ export async function GET(request: NextRequest) {
     const tier = user.tier as Tier;
     const usageLog = await getCurrentUsageLog(userId, tier);
 
-    const limits: Record<Tier, { aiCreditsLimit: number; videoMinutesLimit: number; recordingsLimit: number }> = {
-      FREE: { aiCreditsLimit: 10, videoMinutesLimit: 120, recordingsLimit: 0 },
-      PRO: { aiCreditsLimit: 100, videoMinutesLimit: Infinity, recordingsLimit: 2 },
-      AGENCY: { aiCreditsLimit: Infinity, videoMinutesLimit: Infinity, recordingsLimit: Infinity },
-    };
+    // Use centralized TIER_LIMITS instead of duplicated constants
+    const tierConfig = TIER_LIMITS[tier];
 
-    const tierLimits = limits[tier];
+    // Map the tier config to the response format expected by the frontend
+    const aiCreditsLimit =
+      tier === 'FREE'
+        ? tierConfig.aiCreditsPerWeek
+        : tierConfig.aiCreditsPerMonth;
 
     return NextResponse.json({
       tier,
       aiCreditsUsed: usageLog.aiCreditsUsed,
-      aiCreditsLimit: tierLimits.aiCreditsLimit,
+      aiCreditsLimit,
       videoMinutesUsed: usageLog.videoMinutesUsed,
-      videoMinutesLimit: tierLimits.videoMinutesLimit,
+      videoMinutesLimit: tierConfig.videoMinutesPerWeek,
       recordingsUsed: usageLog.recordingsUsed,
-      recordingsLimit: tierLimits.recordingsLimit,
+      recordingsLimit: tierConfig.recordingsPerMonth,
     });
   } catch (error) {
     console.error('[Usage Current] Error:', error);

@@ -3,13 +3,19 @@
 // ============================================================
 // Receives device fingerprint hash from the client.
 // If the hash exists on a DIFFERENT user ID, downgrade to restricted tier.
+// Now requires auth — JWT must match the userId in the body.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Auth check: caller can only submit fingerprints for themselves ---
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const body = await request.json();
     const { userId, fingerprintHash } = body;
 
@@ -17,6 +23,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Missing userId or fingerprintHash' },
         { status: 400 }
+      );
+    }
+
+    // Security: caller can only submit fingerprint for their own account
+    if (userId !== auth.userId) {
+      return NextResponse.json(
+        { error: 'Forbidden — you can only submit fingerprint for your own account' },
+        { status: 403 }
       );
     }
 

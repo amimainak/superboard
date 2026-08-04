@@ -12,6 +12,7 @@ import { useAppStore } from '@/store/app-store';
 import { useCredits } from '@/hooks/useCredits';
 import { useTheme } from '@/hooks/useTheme';
 import { createClient } from '@/lib/supabase';
+import { authFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -104,11 +105,17 @@ export default function Dashboard() {
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) { setAuthLoading(false); return; }
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+
+    let mounted = true;
+
+    // Listen for auth state changes FIRST to catch any race conditions
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+      const user = session?.user ?? null;
       setUser(user);
       if (user) {
         try {
-          const tierRes = await fetch(`/api/auth/profile?userId=${user.id}`);
+          const tierRes = await authFetch(`/api/auth/profile?userId=${user.id}`);
           if (tierRes.ok) {
             const profileData = await tierRes.json();
             if (profileData.tier) setTier(profileData.tier as Tier);
@@ -117,10 +124,27 @@ export default function Dashboard() {
       }
       setAuthLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+
+    // Then check for existing session
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!mounted) return;
+      if (user) {
+        setUser(user);
+        try {
+          const tierRes = await authFetch(`/api/auth/profile?userId=${user.id}`);
+          if (tierRes.ok) {
+            const profileData = await tierRes.json();
+            if (profileData.tier) setTier(profileData.tier as Tier);
+          }
+        } catch { /* ignore */ }
+      }
+      setAuthLoading(false);
     });
-    return () => subscription.unsubscribe();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // --- Loading state ---
@@ -173,7 +197,7 @@ function LandingPage() {
       const { data: { user: u } } = await supabase.auth.getUser();
       if (u) {
         try {
-          const tierRes = await fetch(`/api/auth/profile?userId=${u.id}`);
+          const tierRes = await authFetch(`/api/auth/profile?userId=${u.id}`);
           if (tierRes.ok) { const d = await tierRes.json(); if (d.tier) setTier(d.tier as Tier); }
         } catch { /* ignore */ }
       }
@@ -192,7 +216,7 @@ function LandingPage() {
       const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
       if (error) { setAuthError(error.message); return; }
       if (data.user && data.session) {
-        try { await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: data.user.id, email: registerEmail }) }); } catch { /* */ }
+        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail }) }); } catch { /* */ }
       } else {
         setAuthMessage('Check your email for a confirmation link.');
       }
@@ -492,8 +516,17 @@ function LandingPage() {
             {[
               { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'emerald' },
               { name: 'David K.', role: 'Science Tutor, 5 years', quote: 'Having video, whiteboard, and smart tools in one place means zero app-switching. It just works. My students are more engaged than ever.', color: 'sky' },
-              { name: 'Priya R.', role: 'Language Tutor, 12 years', quote: 'The mind map tool and annotation features are perfect for essay planning. The branded PDFs make me look incredibly professional.', color: 'emerald' },
-            ].map((t) => (
+              { name: 'Priya R.', role: 'Language Tutor, 12 years', quote: 'The mind map tool and annotation features are perfect for essay planning. The branded PDFs make me look incredibly professional.', color: 'rose' },
+            ].map((t) => {
+              const colorClasses: Record<string, { bg: string; text: string }> = {
+                emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+                sky: { bg: 'bg-sky-100', text: 'text-sky-600' },
+                rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
+                amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
+                violet: { bg: 'bg-violet-100', text: 'text-violet-600' },
+              };
+              const colors = colorClasses[t.color] || colorClasses.emerald;
+              return (
               <div key={t.name} className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
                 {/* Stars */}
                 <div className="flex gap-0.5 mb-4">
@@ -503,7 +536,7 @@ function LandingPage() {
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full bg-${t.color}-100 flex items-center justify-center text-${t.color}-600 font-bold text-sm`}>
+                  <div className={`w-10 h-10 rounded-full ${colors.bg} flex items-center justify-center ${colors.text} font-bold text-sm`}>
                     {t.name.charAt(0)}
                   </div>
                   <div>
@@ -512,7 +545,8 @@ function LandingPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -1009,7 +1043,7 @@ function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
-    fetch(`/api/room?tutorId=${userId}`).then((res) => res.json()).then((data) => {
+    authFetch(`/api/room?tutorId=${userId}`).then((res) => res.json()).then((data) => {
       if (Array.isArray(data)) setBoards(data.map((r: any) => ({ id: r.id, subject: r.subject, isActive: r.isActive, createdAt: r.createdAt, brandingColor: r.brandingColor })));
     }).catch(() => {}).finally(() => setLoading(false));
   }, [userId]);
@@ -1082,7 +1116,7 @@ function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
   const fetchTemplates = useCallback(() => {
     if (!userId || !canAccess) return;
     setLoading(true);
-    fetch(`/api/room/templates?tutorId=${userId}`).then((res) => res.json()).then((data) => setTemplates(Array.isArray(data) ? data : [])).catch(() => {}).finally(() => setLoading(false));
+    authFetch(`/api/room/templates?tutorId=${userId}`).then((res) => res.json()).then((data) => setTemplates(Array.isArray(data) ? data : [])).catch(() => {}).finally(() => setLoading(false));
   }, [userId, canAccess]);
   useEffect(() => { fetchTemplates(); }, [fetchTemplates]);
 
@@ -1154,7 +1188,7 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
   useEffect(() => {
     if (!agencyUserId) return;
     setLoading(true);
-    fetch(`/api/usage/agency?agencyId=${agencyUserId}`).then((res) => res.json()).then((data) => setSubTutors(data.subTutors || [])).catch(() => {}).finally(() => setLoading(false));
+    authFetch(`/api/usage/agency?agencyId=${agencyUserId}`).then((res) => res.json()).then((data) => setSubTutors(data.subTutors || [])).catch(() => {}).finally(() => setLoading(false));
   }, [agencyUserId]);
 
   if (loading) return <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div>;

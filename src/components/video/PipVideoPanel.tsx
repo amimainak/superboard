@@ -94,6 +94,7 @@ export default function PipVideoPanel() {
   const roomActive = useAppStore((s) => s.room.isActive);
   const isRecording = useAppStore((s) => s.room.isRecording);
   const isTutor = useAppStore((s) => s.room.isTutor);
+  const roomId = useAppStore((s) => s.room.roomId);
 
   // ---- Panel state ----
   const [position, setPosition] = useState<PanelPosition>(() => ({
@@ -107,6 +108,9 @@ export default function PipVideoPanel() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+
+  // ---- In-call state (separate from room active so panel doesn't disappear) ----
+  const [inCall, setInCall] = useState(true);
 
   // ---- Local media state (placeholder) ----
   const [isMuted, setIsMuted] = useState(false);
@@ -207,8 +211,8 @@ export default function PipVideoPanel() {
     [isDragging, size]
   );
 
-  // ---- Don't render if room is not active ----
-  if (!roomActive) return null;
+  // ---- Don't render if room is not active or call has ended ----
+  if (!roomActive || !inCall) return null;
 
   // ---- Minimized view: small circle with last speaker avatar ----
   if (isMinimized) {
@@ -474,7 +478,7 @@ export default function PipVideoPanel() {
           className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20"
           onClick={() => {
             console.log('TODO: Leave room / end call');
-            useAppStore.getState().setRoom({ isActive: false });
+            setInCall(false);
           }}
         >
           <PhoneOff className="w-4 h-4" />

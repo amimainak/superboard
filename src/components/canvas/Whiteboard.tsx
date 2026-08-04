@@ -44,9 +44,19 @@ export default function Whiteboard() {
   const canvasRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<unknown>(null);
   const [activeTool, setActiveTool] = useState('draw');
-  const [showWaitingRoom, setShowWaitingRoom] = useState(!isTutor);
+  // Initialize waiting room: only show for students (isTutor defaults to false,
+  // so we use isTutor explicitly to avoid showing it briefly for tutors before
+  // room data sets isTutor=true)
+  const [showWaitingRoom, setShowWaitingRoom] = useState(isTutor ? false : true);
   const [showNameModal, setShowNameModal] = useState(false);
   const [tutorPresent, setTutorPresent] = useState(isTutor);
+
+  // Sync waiting room with isTutor state changes
+  useEffect(() => {
+    if (isTutor) {
+      setShowWaitingRoom(false);
+    }
+  }, [isTutor]);
 
   // Handle student joining flow
   const handleJoin = useCallback(() => {
