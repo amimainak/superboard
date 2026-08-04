@@ -15,8 +15,14 @@ import type { Subject } from '@/types';
 export async function POST(request: NextRequest) {
   try {
     // --- Auth check: only authenticated tutors can create rooms ---
+    const authHeader = request.headers.get('Authorization');
+    console.log('[Room POST] Authorization header:', authHeader ? `${authHeader.slice(0, 20)}...` : 'MISSING');
     const auth = await requireAuth(request);
-    if (auth instanceof NextResponse) return auth;
+    if (auth instanceof NextResponse) {
+      console.log('[Room POST] Auth failed, returning 401');
+      return auth;
+    }
+    console.log('[Room POST] Auth success, userId:', auth.userId);
 
     const body = await request.json();
     const { tutorId, subject, brandingLogo, brandingColor, brandingAgencyName } = body;

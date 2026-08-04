@@ -8,6 +8,7 @@
 // ============================================================
 
 import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -29,18 +30,20 @@ export function createClient() {
 }
 
 /**
- * Server-side Supabase client using service role key.
+ * Server-side Supabase admin client using service role key.
  * Use this in API routes / server components only.
- * The service role key bypasses Row Level Security, giving
- * the server full admin access to read/write any data.
+ *
+ * Uses createClient from @supabase/supabase-js (NOT createBrowserClient)
+ * because API routes run server-side and need:
+ *  - The service role key to bypass RLS
+ *  - Plain createClient for proper JWT verification via getUser(token)
+ *  - No cookie handling (browser-only concern)
  */
 export function createServerClient() {
-  if (!isConfigured || !supabaseServiceRoleKey) {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
     return null;
   }
-  // Use the service role key for server-side operations
-  // This bypasses RLS policies so the server can read/write all data
-  return createBrowserClient(supabaseUrl, supabaseServiceRoleKey);
+  return createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
 export const supabase = isConfigured ? createClient() : null;

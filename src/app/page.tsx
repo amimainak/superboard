@@ -757,7 +757,11 @@ function AuthenticatedDashboard({ user }: { user: User }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
       });
-      if (!response.ok) throw new Error('Failed to create room');
+      if (!response.ok) {
+        const errBody = await response.text().catch(() => '');
+        console.error('[Dashboard] Room creation failed:', response.status, errBody);
+        throw new Error(`Failed to create room (${response.status}): ${errBody}`);
+      }
       const data = await response.json();
       window.location.href = `/room/${data.roomId}`;
     } catch (error) {

@@ -17,11 +17,21 @@ export async function authFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   const supabase = createClient();
-  const accessToken = supabase?.auth.getSession;
 
-  // Get the current session
-  const { data: { session } } = await (supabase?.auth.getSession() ?? Promise.resolve({ data: { session: null } }));
+  if (!supabase) {
+    console.warn('[authFetch] Supabase client not configured — sending unauthenticated request');
+    return fetch(url, options);
+  }
+
+  // Get the current session — getSession() reads from the in-memory auth state
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   const token = session?.access_token;
+
+  if (!token) {
+    console.warn('[authFetch] No active session found — sending unauthenticated request to', url);
+  }
 
   const headers = new Headers(options.headers || {});
 
