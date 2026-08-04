@@ -1,0 +1,1212 @@
+     1→// ============================================================
+     2→// K-12 AI Superboard — Landing Page + Dashboard
+     3→// ============================================================
+     4→// Unauthenticated visitors see a marketing landing page.
+     5→// Authenticated tutors see the full dashboard.
+     6→// ============================================================
+     7→
+     8→'use client';
+     9→
+    10→import React, { useEffect, useState, useCallback, useRef } from 'react';
+    11→import { useAppStore } from '@/store/app-store';
+    12→import { useCredits } from '@/hooks/useCredits';
+    13→import { useTheme } from '@/hooks/useTheme';
+    14→import { createClient } from '@/lib/supabase';
+    15→import { Button } from '@/components/ui/button';
+    16→import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+    17→import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+    18→import { Badge } from '@/components/ui/badge';
+    19→import { Separator } from '@/components/ui/separator';
+    20→import { Progress } from '@/components/ui/progress';
+    21→import {
+    22→  Dialog,
+    23→  DialogContent,
+    24→  DialogDescription,
+    25→  DialogHeader,
+    26→  DialogTitle,
+    27→  DialogTrigger,
+    28→} from '@/components/ui/dialog';
+    29→import { Input } from '@/components/ui/input';
+    30→import { Label } from '@/components/ui/label';
+    31→import {
+    32→  Select,
+    33→  SelectContent,
+    34→  SelectItem,
+    35→  SelectTrigger,
+    36→  SelectValue,
+    37→} from '@/components/ui/select';
+    38→import {
+    39→  Plus,
+    40→  BookOpen,
+    41→  LayoutTemplate,
+    42→  CreditCard,
+    43→  Settings,
+    44→  Users,
+    45→  GraduationCap,
+    46→  Clock,
+    47→  Sparkles,
+    48→  Palette,
+    49→  Globe,
+    50→  ChevronRight,
+    51→  Video,
+    52→  FileText,
+    53→  LogOut,
+    54→  Calculator,
+    55→  FlaskConical,
+    56→  Languages,
+    57→  ClipboardList,
+    58→  Zap,
+    59→  Star,
+    60→  Crown,
+    61→  TrendingUp,
+    62→  Play,
+    63→  ArrowRight,
+    64→  Check,
+    65→  Monitor,
+    66→  Brain,
+    67→  Mic,
+    68→  PenTool,
+    69→  Download,
+    70→  Shield,
+    71→  MousePointerClick,
+    72→} from 'lucide-react';
+    73→import type { Subject, Tier } from '@/types';
+    74→import type { User } from '@supabase/supabase-js';
+    75→
+    76→// ============================================================
+    77→// Shared subject metadata
+    78→// ============================================================
+    79→const subjectMeta: Record<string, { icon: React.ElementType; gradient: string; emoji: string; label: string }> = {
+    80→  MATH: { icon: Calculator, gradient: 'stat-gradient-sparkles', emoji: '\u{1F4D0}', label: 'Mathematics' },
+    81→  SCIENCE: { icon: FlaskConical, gradient: 'stat-gradient-video', emoji: '\u{1F52C}', label: 'Science' },
+    82→  LANGUAGE: { icon: Languages, gradient: 'stat-gradient-recordings', emoji: '\u270D\uFE0F', label: 'Language' },
+    83→  GENERAL: { icon: ClipboardList, gradient: 'stat-gradient-sparkles', emoji: '\u{1F4CB}', label: 'General' },
+    84→};
+    85→
+    86→// ============================================================
+    87→// MAIN EXPORT — Auth Gate → Landing or Dashboard
+    88→// ============================================================
+    89→export default function Dashboard() {
+    90→  const { tier, setTier, setRoom } = useAppStore();
+    91→  const { brandColor, agencyName, setBrandColor } = useTheme();
+    92→  const {
+    93→    aiCreditsUsed,
+    94→    aiCreditsLimit,
+    95→    videoMinutesUsed,
+    96→    videoMinutesLimit,
+    97→    loading: usageLoading,
+    98→  } = useCredits();
+    99→
+   100→  const [user, setUser] = useState<User | null>(null);
+   101→  const [authLoading, setAuthLoading] = useState(true);
+   102→
+   103→  // --- Auth check on mount ---
+   104→  useEffect(() => {
+   105→    const supabase = createClient();
+   106→    if (!supabase) { setAuthLoading(false); return; }
+   107→    supabase.auth.getUser().then(async ({ data: { user } }) => {
+   108→      setUser(user);
+   109→      if (user) {
+   110→        try {
+   111→          const tierRes = await fetch(`/api/auth/profile?userId=${user.id}`);
+   112→          if (tierRes.ok) {
+   113→            const profileData = await tierRes.json();
+   114→            if (profileData.tier) setTier(profileData.tier as Tier);
+   115→          }
+   116→        } catch { /* ignore */ }
+   117→      }
+   118→      setAuthLoading(false);
+   119→    });
+   120→    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+   121→      setUser(session?.user ?? null);
+   122→    });
+   123→    return () => subscription.unsubscribe();
+   124→  }, []);
+   125→
+   126→  // --- Loading state ---
+   127→  if (authLoading) {
+   128→    return (
+   129→      <div className="min-h-screen gradient-auth flex items-center justify-center">
+   130→        <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+   131→          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25">
+   132→            <GraduationCap className="w-9 h-9 text-white" />
+   133→          </div>
+   134→          <p className="text-sm text-muted-foreground font-medium">Loading Superboard...</p>
+   135→        </div>
+   136→      </div>
+   137→    );
+   138→  }
+   139→
+   140→  // --- Not logged in → Show Landing Page ---
+   141→  if (!user) {
+   142→    return <LandingPage />;
+   143→  }
+   144→
+   145→  // --- Logged in → Show Dashboard ---
+   146→  return <AuthenticatedDashboard user={user} />;
+   147→}
+   148→
+   149→// ============================================================
+   150→// LANDING PAGE — Marketing / Auth Gate
+   151→// ============================================================
+   152→function LandingPage() {
+   153→  const { setTier } = useAppStore();
+   154→
+   155→  const [loginEmail, setLoginEmail] = useState('');
+   156→  const [loginPassword, setLoginPassword] = useState('');
+   157→  const [registerEmail, setRegisterEmail] = useState('');
+   158→  const [registerPassword, setRegisterPassword] = useState('');
+   159→  const [authError, setAuthError] = useState('');
+   160→  const [authMessage, setAuthMessage] = useState('');
+   161→  const [showAuth, setShowAuth] = useState<'login' | 'register' | null>(null);
+   162→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   163→
+   164→  const handleLogin = useCallback(async (e: React.FormEvent) => {
+   165→    e.preventDefault();
+   166→    setAuthError('');
+   167→    setAuthMessage('');
+   168→    try {
+   169→      const supabase = createClient();
+   170→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+   171→      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+   172→      if (error) { setAuthError(error.message); return; }
+   173→      const { data: { user: u } } = await supabase.auth.getUser();
+   174→      if (u) {
+   175→        try {
+   176→          const tierRes = await fetch(`/api/auth/profile?userId=${u.id}`);
+   177→          if (tierRes.ok) { const d = await tierRes.json(); if (d.tier) setTier(d.tier as Tier); }
+   178→        } catch { /* ignore */ }
+   179→      }
+   180→      setLoginEmail(''); setLoginPassword('');
+   181→    } catch { setAuthError('Network error'); }
+   182→  }, [loginEmail, loginPassword, setTier]);
+   183→
+   184→  const handleRegister = useCallback(async (e: React.FormEvent) => {
+   185→    e.preventDefault();
+   186→    setAuthError('');
+   187→    setAuthMessage('');
+   188→    try {
+   189→      const supabase = createClient();
+   190→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+   191→      const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
+   192→      if (error) { setAuthError(error.message); return; }
+   193→      if (data.user && data.session) {
+   194→        try { await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: registerEmail, password: registerPassword }) }); } catch { /* */ }
+   195→      } else {
+   196→        setAuthMessage('Check your email for a confirmation link.');
+   197→      }
+   198→      setRegisterEmail(''); setRegisterPassword('');
+   199→    } catch { setAuthError('Network error'); }
+   200→  }, [registerEmail, registerPassword]);
+   201→
+   202→  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); };
+   203→
+   204→  return (
+   205→    <div className="min-h-screen bg-white">
+   206→      {/* ===== NAVBAR ===== */}
+   207→      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100">
+   208→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   209→          <div className="flex items-center gap-3">
+   210→            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   211→              <GraduationCap className="w-5 h-5 text-white" />
+   212→            </div>
+   213→            <span className="text-lg font-bold tracking-tight text-gray-900">Superboard</span>
+   214→          </div>
+   215→          <div className="hidden md:flex items-center gap-8">
+   216→            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+   217→            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
+   218→            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+   219→          </div>
+   220→          <div className="flex items-center gap-3">
+   221→            <Button variant="ghost" className="text-sm font-medium text-gray-700 hover:text-gray-900 hidden sm:inline-flex" onClick={() => setShowAuth('login')}>
+   222→              Sign In
+   223→            </Button>
+   224→            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
+   225→              Get Started Free
+   226→            </Button>
+   227→          </div>
+   228→        </div>
+   229→      </nav>
+   230→
+   231→      {/* ===== HERO SECTION ===== */}
+   232→      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
+   233→        {/* Background decorations */}
+   234→        <div className="absolute inset-0 pointer-events-none">
+   235→          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-emerald-100/50 blur-[120px] animate-float-slow" />
+   236→          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-sky-100/40 blur-[100px] animate-float" />
+   237→          <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full bg-emerald-100/30 blur-[100px] animate-float-delay" />
+   238→        </div>
+   239→
+   240→        {/* Dot grid pattern */}
+   241→        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+   242→
+   243→        <div className="max-w-7xl mx-auto px-6 relative z-10">
+   244→          <div className="grid md:grid-cols-2 gap-12 items-center">
+   245→            {/* Left: Copy */}
+   246→            <div className="max-w-xl">
+   247→              {/* Badge */}
+   248→              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
+   249→                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+   250→                <span className="text-xs font-semibold text-emerald-700">AI-Powered Tutoring Platform</span>
+   251→              </div>
+   252→
+   253→              <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
+   254→                Turn Every Lesson Into an{' '}
+   255→                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+   256→                  Interactive Experience
+   257→                </span>
+   258→              </h1>
+   259→
+   260→              <p className="mt-6 text-lg text-gray-500 leading-relaxed animate-fade-in-up-delay-1">
+   261→                The all-in-one whiteboard that combines real-time collaboration, AI-generated quizzes and worksheets, built-in video calling, and GeoGebra graphing — designed specifically for K-12 tutors.
+   262→              </p>
+   263→
+   264→              <div className="mt-8 flex flex-col sm:flex-row gap-4 animate-fade-in-up-delay-2">
+   265→                <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-7" onClick={() => setShowAuth('register')}>
+   266→                  Start Teaching for Free
+   267→                  <ArrowRight className="w-4 h-4 ml-2" />
+   268→                </Button>
+   269→                <Button size="lg" variant="outline" className="h-13 rounded-xl border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-all text-[15px] px-7" onClick={() => { document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}>
+   270→                  See How It Works
+   271→                  <Play className="w-4 h-4 ml-2" />
+   272→                </Button>
+   273→              </div>
+   274→
+   275→              {/* Social proof */}
+   276→              <div className="mt-10 flex items-center gap-6 animate-fade-in-up-delay-3">
+   277→                <div className="flex -space-x-2">
+   278→                  {['bg-emerald-400', 'bg-sky-400', 'bg-emerald-400', 'bg-amber-400'].map((bg, i) => (
+   279→                    <div key={i} className={`w-8 h-8 rounded-full ${bg} border-2 border-white flex items-center justify-center text-white text-[10px] font-bold`}>
+   280→                      {String.fromCharCode(65 + i)}
+   281→                    </div>
+   282→                  ))}
+   283→                </div>
+   284→                <div>
+   285→                  <p className="text-sm font-semibold text-gray-900">2,000+ tutors</p>
+   286→                  <p className="text-xs text-gray-500">already teaching on Superboard</p>
+   287→                </div>
+   288→              </div>
+   289→            </div>
+   290→
+   291→            {/* Right: Hero Visual — Interactive whiteboard mockup */}
+   292→            <div className="relative animate-fade-in-up-delay-1">
+   293→              <div className="relative rounded-2xl bg-gray-50 border border-gray-200 shadow-2xl shadow-emerald-500/10 overflow-hidden">
+   294→                {/* Fake toolbar */}
+   295→                <div className="bg-white border-b border-gray-100 px-4 py-2.5 flex items-center gap-2">
+   296→                  <div className="flex gap-1.5">
+   297→                    <div className="w-3 h-3 rounded-full bg-red-400" />
+   298→                    <div className="w-3 h-3 rounded-full bg-amber-400" />
+   299→                    <div className="w-3 h-3 rounded-full bg-emerald-400" />
+   300→                  </div>
+   301→                  <div className="ml-3 flex-1 h-6 rounded-lg bg-gray-100 flex items-center px-3">
+   302→                    <span className="text-[10px] text-gray-400 font-medium">superboard.app/room/abc123</span>
+   303→                  </div>
+   304→                </div>
+   305→                {/* Mock whiteboard content */}
+   306→                <div className="p-6 bg-white min-h-[320px] relative">
+   307→                  {/* Grid background */}
+   308→                  <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+   309→
+   310→                  {/* Mock math equation */}
+   311→                  <div className="relative z-10 flex items-start gap-4 mb-6">
+   312→                    <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center shadow-md">
+   313→                      <Sparkles className="w-5 h-5 text-white" />
+   314→                    </div>
+   315→                    <div className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+   316→                      <p className="text-xs font-medium text-emerald-600 mb-1">AI Generated</p>
+   317→                      <p className="text-sm text-gray-700 font-medium">Solve for x: 3x + 7 = 22</p>
+   318→                      <p className="text-sm text-gray-500 mt-1">x = 5 (subtract 7, divide by 3)</p>
+   319→                    </div>
+   320→                  </div>
+   321→
+   322→                  {/* Mock graph */}
+   323→                  <div className="relative z-10 bg-sky-50 rounded-xl p-4 border border-sky-100 mb-6">
+   324→                    <p className="text-xs font-medium text-sky-600 mb-2">GeoGebra Graph</p>
+   325→                    <svg viewBox="0 0 200 80" className="w-full h-20">
+   326→                      <line x1="20" y1="40" x2="180" y2="40" stroke="#94a3b8" strokeWidth="0.5" />
+   327→                      <line x1="100" y1="10" x2="100" y2="70" stroke="#94a3b8" strokeWidth="0.5" />
+   328→                      <path d="M 20 65 Q 60 60 100 35 Q 140 10 180 20" fill="none" stroke="#0ea5e9" strokeWidth="2" strokeLinecap="round" />
+   329→                      <circle cx="100" cy="35" r="3" fill="#0ea5e9" />
+   330→                    </svg>
+   331→                  </div>
+   332→
+   333→                  {/* Mock shapes */}
+   334→                  <div className="relative z-10 flex gap-3">
+   335→                    <div className="w-16 h-16 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center">
+   336→                      <div className="w-8 h-8 rounded-sm bg-emerald-300 rotate-45" />
+   337→                    </div>
+   338→                    <div className="w-16 h-16 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center">
+   339→                      <div className="w-10 h-10 rounded-full bg-amber-300" />
+   340→                    </div>
+   341→                    <div className="w-16 h-16 rounded-xl bg-rose-100 border border-rose-200 flex items-center justify-center">
+   342→                      <div className="w-0 h-0 border-l-[16px] border-r-[16px] border-b-[28px] border-l-transparent border-r-transparent border-b-rose-300" />
+   343→                    </div>
+   344→                  </div>
+   345→
+   346→                  {/* Floating video PiP */}
+   347→                  <div className="absolute bottom-4 right-4 w-24 h-16 rounded-lg bg-gray-800 shadow-lg flex items-center justify-center overflow-hidden z-20">
+   348→                    <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center">
+   349→                      <Video className="w-5 h-5 text-white/80" />
+   350→                    </div>
+   351→                    <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 shadow-sm" />
+   352→                  </div>
+   353→                </div>
+   354→              </div>
+   355→              {/* Floating badge */}
+   356→              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl shadow-lg px-4 py-3 border border-gray-100 animate-float">
+   357→                <div className="flex items-center gap-2">
+   358→                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+   359→                    <Check className="w-4 h-4 text-emerald-600" />
+   360→                  </div>
+   361→                  <div>
+   362→                    <p className="text-xs font-semibold text-gray-900">Quiz Generated</p>
+   363→                    <p className="text-[10px] text-gray-500">5 questions in 2.3s</p>
+   364→                  </div>
+   365→                </div>
+   366→              </div>
+   367→              {/* Floating badge 2 */}
+   368→              <div className="absolute -top-3 -right-3 bg-white rounded-xl shadow-lg px-4 py-3 border border-gray-100 animate-float-delay">
+   369→                <div className="flex items-center gap-2">
+   370→                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+   371→                    <Brain className="w-4 h-4 text-emerald-600" />
+   372→                  </div>
+   373→                  <div>
+   374→                    <p className="text-xs font-semibold text-gray-900">AI Active</p>
+   375→                    <p className="text-[10px] text-gray-500">Claude Sonnet 4</p>
+   376→                  </div>
+   377→                </div>
+   378→              </div>
+   379→            </div>
+   380→          </div>
+   381→        </div>
+   382→      </section>
+   383→
+   384→      {/* ===== SOCIAL PROOF BAR ===== */}
+   385→      <section className="border-y border-gray-100 bg-gray-50/50 py-8">
+   386→        <div className="max-w-7xl mx-auto px-6">
+   387→          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+   388→            {[
+   389→              { value: '2,000+', label: 'Active Tutors', sub: 'and growing' },
+   390→              { value: '50,000+', label: 'Lessons Taught', sub: 'on Superboard' },
+   391→              { value: '4.9/5', label: 'Average Rating', sub: 'from tutor reviews' },
+   392→              { value: '< 2s', label: 'AI Response Time', sub: 'for quiz generation' },
+   393→            ].map((stat) => (
+   394→              <div key={stat.label} className="text-center">
+   395→                <p className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">{stat.value}</p>
+   396→                <p className="text-sm font-medium text-gray-900 mt-1">{stat.label}</p>
+   397→                <p className="text-xs text-gray-400">{stat.sub}</p>
+   398→              </div>
+   399→            ))}
+   400→          </div>
+   401→        </div>
+   402→      </section>
+   403→
+   404→      {/* ===== FEATURES SECTION ===== */}
+   405→      <section id="features" className="py-20 md:py-28">
+   406→        <div className="max-w-7xl mx-auto px-6">
+   407→          <div className="text-center max-w-2xl mx-auto mb-16">
+   408→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 mb-4">
+   409→              <Zap className="w-3.5 h-3.5 text-sky-500" />
+   410→              <span className="text-xs font-semibold text-sky-700">Everything You Need</span>
+   411→            </div>
+   412→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   413→              One whiteboard.{' '}
+   414→              <span className="bg-gradient-to-r from-emerald-600 to-sky-500 bg-clip-text text-transparent">Endless possibilities.</span>
+   415→            </h2>
+   416→            <p className="mt-4 text-lg text-gray-500">
+   417→              Purpose-built for K-12 tutoring with tools that actually make your lessons better.
+   418→            </p>
+   419→          </div>
+   420→
+   421→          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+   422→            {[
+   423→              { icon: Brain, title: 'AI Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions with Claude AI in seconds. Supports all K-12 subjects.', color: 'emerald' },
+   424→              { icon: Monitor, title: 'Real-Time Collaborative Whiteboard', desc: 'Unlimited canvas with shape tools, handwriting, sticky notes, and real-time cursor sync. Students see your strokes instantly.', color: 'sky' },
+   425→              { icon: Video, title: 'Built-In Video Calling', desc: 'No need for Zoom or Meet. Face-to-face video with PiP mode so you can teach and see your student at the same time.', color: 'emerald' },
+   426→              { icon: Calculator, title: 'GeoGebra Math Tools', desc: 'Interactive graphing calculator, function plotting, sliders for parameters, and geometry constructions — all inside the board.', color: 'amber' },
+   427→              { icon: PenTool, title: 'Subject-Specific Toolkits', desc: 'Math rulers & protractors, science lab diagrams, language annotations & mind maps. Switch toolkits based on your subject.', color: 'rose' },
+   428→              { icon: Download, title: 'Branded PDF Exports', desc: 'Export your lesson as a beautiful PDF with your agency branding, logo, and student name. Perfect for record-keeping.', color: 'teal' },
+   429→            ].map((feature) => {
+   430→              const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
+   431→                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+   432→                sky: { bg: 'bg-sky-50', text: 'text-sky-600', iconBg: 'bg-sky-100' },
+   433→                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+   434→                amber: { bg: 'bg-amber-50', text: 'text-amber-600', iconBg: 'bg-amber-100' },
+   435→                rose: { bg: 'bg-rose-50', text: 'text-rose-600', iconBg: 'bg-rose-100' },
+   436→                teal: { bg: 'bg-teal-50', text: 'text-teal-600', iconBg: 'bg-teal-100' },
+   437→              };
+   438→              const c = colorMap[feature.color];
+   439→              return (
+   440→                <div key={feature.title} className={`group rounded-2xl ${c.bg} border border-transparent hover:border-gray-200 p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}>
+   441→                  <div className={`w-12 h-12 rounded-xl ${c.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+   442→                    <feature.icon className={`w-6 h-6 ${c.text}`} />
+   443→                  </div>
+   444→                  <h3 className="text-base font-bold text-gray-900 mb-2">{feature.title}</h3>
+   445→                  <p className="text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
+   446→                </div>
+   447→              );
+   448→            })}
+   449→          </div>
+   450→        </div>
+   451→      </section>
+   452→
+   453→      {/* ===== HOW IT WORKS ===== */}
+   454→      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/80">
+   455→        <div className="max-w-7xl mx-auto px-6">
+   456→          <div className="text-center max-w-2xl mx-auto mb-16">
+   457→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
+   458→              <MousePointerClick className="w-3.5 h-3.5 text-emerald-500" />
+   459→              <span className="text-xs font-semibold text-emerald-700">Simple Setup</span>
+   460→            </div>
+   461→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   462→              Start teaching in{' '}
+   463→              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">under 60 seconds</span>
+   464→            </h2>
+   465→          </div>
+   466→
+   467→          <div className="grid md:grid-cols-3 gap-8">
+   468→            {[
+   469→              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — no sign-up required for them.', icon: Plus },
+   470→              { step: '02', title: 'Teach & Collaborate', desc: 'Draw, write, use AI tools, graph functions, and talk face-to-face. Everything happens on one infinite canvas.', icon: Monitor },
+   471→              { step: '03', title: 'Save & Share', desc: 'Export branded PDFs, save board templates, and review recordings. Your students get a polished takeaway.', icon: Download },
+   472→            ].map((item) => (
+   473→              <div key={item.step} className="relative text-center group">
+   474→                {/* Step number */}
+   475→                <div className="text-6xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors duration-300 mb-4">{item.step}</div>
+   476→                <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20 mb-5 -mt-10 relative z-10">
+   477→                  <item.icon className="w-7 h-7 text-white" />
+   478→                </div>
+   479→                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+   480→                <p className="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+   481→              </div>
+   482→            ))}
+   483→          </div>
+   484→        </div>
+   485→      </section>
+   486→
+   487→      {/* ===== TESTIMONIALS ===== */}
+   488→      <section className="py-20 md:py-28">
+   489→        <div className="max-w-7xl mx-auto px-6">
+   490→          <div className="text-center max-w-2xl mx-auto mb-16">
+   491→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   492→              Loved by tutors{' '}
+   493→              <span className="bg-gradient-to-r from-emerald-600 to-rose-500 bg-clip-text text-transparent">everywhere</span>
+   494→            </h2>
+   495→          </div>
+   496→
+   497→          <div className="grid md:grid-cols-3 gap-6">
+   498→            {[
+   499→              { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The AI quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'emerald' },
+   500→              { name: 'David K.', role: 'Science Tutor, 5 years', quote: 'Having video, whiteboard, and AI in one tool means zero app-switching. It just works. My students are more engaged than ever.', color: 'sky' },
+   501→              { name: 'Priya R.', role: 'Language Tutor, 12 years', quote: 'The mind map tool and annotation features are perfect for essay planning. The branded PDFs make me look incredibly professional.', color: 'emerald' },
+   502→            ].map((t) => (
+   503→              <div key={t.name} className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+   504→                {/* Stars */}
+   505→                <div className="flex gap-0.5 mb-4">
+   506→                  {[...Array(5)].map((_, i) => (
+   507→                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+   508→                  ))}
+   509→                </div>
+   510→                <p className="text-sm text-gray-600 leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
+   511→                <div className="flex items-center gap-3">
+   512→                  <div className={`w-10 h-10 rounded-full bg-${t.color}-100 flex items-center justify-center text-${t.color}-600 font-bold text-sm`}>
+   513→                    {t.name.charAt(0)}
+   514→                  </div>
+   515→                  <div>
+   516→                    <p className="text-sm font-semibold text-gray-900">{t.name}</p>
+   517→                    <p className="text-xs text-gray-500">{t.role}</p>
+   518→                  </div>
+   519→                </div>
+   520→              </div>
+   521→            ))}
+   522→          </div>
+   523→        </div>
+   524→      </section>
+   525→
+   526→      {/* ===== PRICING ===== */}
+   527→      <section id="pricing" className="py-20 md:py-28 bg-gray-50/80">
+   528→        <div className="max-w-7xl mx-auto px-6">
+   529→          <div className="text-center max-w-2xl mx-auto mb-16">
+   530→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   531→              Simple, transparent pricing
+   532→            </h2>
+   533→            <p className="mt-4 text-lg text-gray-500">Start free. Upgrade when you&apos;re ready.</p>
+   534→          </div>
+   535→
+   536→          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+   537→            {[
+   538→              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['5 AI credits/day', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
+   539→              { name: 'Pro Tutor', price: '$15', period: '/month', desc: 'For serious tutors who want more', features: ['100 AI credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recording/month', 'Save/Load boards'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
+   540→              { name: 'Agency', price: '$39', period: '/month', desc: 'For tutoring centers & teams', features: ['Everything in Pro', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Sub-tutor management', 'Admin dashboard'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
+   541→            ].map((plan) => (
+   542→              <div key={plan.name} className={`rounded-2xl bg-white p-6 md:p-8 relative ${plan.ctaStyle === 'primary' ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02]' : 'border border-gray-200 shadow-sm hover:shadow-md'} transition-shadow duration-300`}>
+   543→                {plan.badge && (
+   544→                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+   545→                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full text-white ${plan.ctaStyle === 'primary' ? 'bg-emerald-500' : 'bg-amber-500'}`}>{plan.badge}</span>
+   546→                  </div>
+   547→                )}
+   548→                <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+   549→                <p className="text-xs text-gray-500 mt-1">{plan.desc}</p>
+   550→                <div className="mt-4 flex items-baseline gap-1">
+   551→                  <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
+   552→                  <span className="text-sm text-gray-500">{plan.period}</span>
+   553→                </div>
+   554→                <ul className="mt-6 space-y-3">
+   555→                  {plan.features.map((f) => (
+   556→                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+   557→                      <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+   558→                        <Check className="w-2.5 h-2.5 text-emerald-600" />
+   559→                      </div>
+   560→                      {f}
+   561→                    </li>
+   562→                  ))}
+   563→                </ul>
+   564→                <Button
+   565→                  className={`w-full mt-6 rounded-xl font-semibold transition-all ${plan.ctaStyle === 'primary' ? 'gradient-primary border-0 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+   566→                  onClick={() => setShowAuth('register')}
+   567→                >
+   568→                  {plan.cta}
+   569→                </Button>
+   570→              </div>
+   571→            ))}
+   572→          </div>
+   573→        </div>
+   574→      </section>
+   575→
+   576→      {/* ===== FINAL CTA ===== */}
+   577→      <section className="py-20 md:py-28 relative overflow-hidden">
+   578→        <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
+   579→        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+   580→          <GraduationCap className="w-14 h-14 mx-auto mb-6 text-emerald-500" />
+   581→          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   582→            Ready to transform your tutoring?
+   583→          </h2>
+   584→          <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
+   585→            Join thousands of tutors who&apos;ve made their lessons more engaging, more productive, and more fun with Superboard.
+   586→          </p>
+   587→          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+   588→            <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
+   589→              Create Your Free Account
+   590→              <ArrowRight className="w-4 h-4 ml-2" />
+   591→            </Button>
+   592→          </div>
+   593→          <p className="mt-4 text-xs text-gray-400">No credit card required. Set up in under 60 seconds.</p>
+   594→        </div>
+   595→      </section>
+   596→
+   597→      {/* ===== FOOTER ===== */}
+   598→      <footer className="border-t border-gray-100 py-8">
+   599→        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+   600→          <div className="flex items-center gap-2">
+   601→            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+   602→              <GraduationCap className="w-4 h-4 text-white" />
+   603→            </div>
+   604→            <span className="text-sm font-semibold text-gray-900">Superboard</span>
+   605→          </div>
+   606→          <p className="text-xs text-gray-400">&copy; 2025 K-12 AI Superboard. Built for tutors, by tutors.</p>
+   607→          <div className="flex gap-6">
+   608→            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
+   609→            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
+   610→            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Contact</a>
+   611→          </div>
+   612→        </div>
+   613→      </footer>
+   614→
+   615→      {/* ===== AUTH DIALOG ===== */}
+   616→      <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
+   617→        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+   618→          {/* Gradient header */}
+   619→          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   620→            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4">
+   621→              <GraduationCap className="w-8 h-8 text-white" />
+   622→            </div>
+   623→            <h2 className="text-xl font-bold text-white">
+   624→              {showAuth === 'login' ? 'Welcome back' : 'Create your account'}
+   625→            </h2>
+   626→            <p className="text-sm text-white/70 mt-1">
+   627→              {showAuth === 'login' ? 'Sign in to your tutor dashboard' : 'Start teaching in under 60 seconds'}
+   628→            </p>
+   629→          </div>
+   630→
+   631→          <div className="px-6 pb-6 pt-4">
+   632→            {/* Tab switcher */}
+   633→            <div className="flex mb-5 rounded-xl bg-gray-100 p-1">
+   634→              <button
+   635→                onClick={() => { setShowAuth('login'); setAuthError(''); setAuthMessage(''); }}
+   636→                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${showAuth === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+   637→              >
+   638→                Sign In
+   639→              </button>
+   640→              <button
+   641→                onClick={() => { setShowAuth('register'); setAuthError(''); setAuthMessage(''); }}
+   642→                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${showAuth === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+   643→              >
+   644→                Register
+   645→              </button>
+   646→            </div>
+   647→
+   648→            {authError && (
+   649→              <div className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 mb-4">
+   650→                <p className="text-sm text-rose-600">{authError}</p>
+   651→              </div>
+   652→            )}
+   653→            {authMessage && (
+   654→              <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-4 py-3 mb-4">
+   655→                <p className="text-sm text-emerald-600">{authMessage}</p>
+   656→              </div>
+   657→            )}
+   658→
+   659→            {showAuth === 'login' ? (
+   660→              <form onSubmit={handleLogin} className="space-y-4">
+   661→                <div className="space-y-1.5">
+   662→                  <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+   663→                  <Input id="login-email" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required className="h-11 rounded-xl" />
+   664→                </div>
+   665→                <div className="space-y-1.5">
+   666→                  <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
+   667→                  <Input id="login-password" type="password" placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required className="h-11 rounded-xl" />
+   668→                </div>
+   669→                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
+   670→                  Sign In
+   671→                </Button>
+   672→              </form>
+   673→            ) : (
+   674→              <form onSubmit={handleRegister} className="space-y-4">
+   675→                <div className="space-y-1.5">
+   676→                  <Label htmlFor="reg-email" className="text-sm font-medium">Email</Label>
+   677→                  <Input id="reg-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} required className="h-11 rounded-xl" />
+   678→                </div>
+   679→                <div className="space-y-1.5">
+   680→                  <Label htmlFor="reg-password" className="text-sm font-medium">Password</Label>
+   681→                  <Input id="reg-password" type="password" placeholder="Min. 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} required minLength={6} className="h-11 rounded-xl" />
+   682→                </div>
+   683→                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
+   684→                  Create Free Account
+   685→                </Button>
+   686→              </form>
+   687→            )}
+   688→
+   689→            <p className="text-center text-[11px] text-gray-400 mt-4">
+   690→              {showAuth === 'register' ? 'No credit card required' : 'Forgot password? Contact support'}
+   691→            </p>
+   692→          </div>
+   693→        </DialogContent>
+   694→      </Dialog>
+   695→    </div>
+   696→  );
+   697→}
+   698→
+   699→// ============================================================
+   700→// AUTHENTICATED DASHBOARD
+   701→// ============================================================
+   702→function AuthenticatedDashboard({ user }: { user: User }) {
+   703→  const { tier, setTier, setRoom } = useAppStore();
+   704→  const { brandColor, agencyName, setBrandColor } = useTheme();
+   705→  const {
+   706→    aiCreditsUsed,
+   707→    aiCreditsLimit,
+   708→    videoMinutesUsed,
+   709→    videoMinutesLimit,
+   710→    loading: usageLoading,
+   711→  } = useCredits();
+   712→
+   713→  const [showNewLesson, setShowNewLesson] = useState(false);
+   714→  const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
+   715→  const [creating, setCreating] = useState(false);
+   716→
+   717→  useEffect(() => {
+   718→    import('@/lib/fingerprint').then(({ reportFingerprint }) => {
+   719→      reportFingerprint().catch(console.error);
+   720→    });
+   721→  }, []);
+   722→
+   723→  const handleCreateLesson = useCallback(async () => {
+   724→    setCreating(true);
+   725→    try {
+   726→      const response = await fetch('/api/room', {
+   727→        method: 'POST',
+   728→        headers: { 'Content-Type': 'application/json' },
+   729→        body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
+   730→      });
+   731→      if (!response.ok) throw new Error('Failed to create room');
+   732→      const data = await response.json();
+   733→      window.location.href = `/room/${data.roomId}`;
+   734→    } catch (error) {
+   735→      console.error('[Dashboard] Failed to create lesson:', error);
+   736→      setCreating(false);
+   737→    }
+   738→  }, [selectedSubject, user?.id]);
+   739→
+   740→  const handleLogout = useCallback(async () => {
+   741→    const supabase = createClient();
+   742→    if (supabase) await supabase.auth.signOut();
+   743→    setTier('FREE');
+   744→  }, [setTier]);
+   745→
+   746→  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+   747→  const tierColor =
+   748→    tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800';
+   749→
+   750→  return (
+   751→    <div className="min-h-screen bg-background">
+   752→      {/* Header */}
+   753→      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border/50">
+   754→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   755→          <div className="flex items-center gap-3">
+   756→            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   757→              <GraduationCap className="w-5 h-5 text-white" />
+   758→            </div>
+   759→            <div>
+   760→              <h1 className="text-lg font-bold tracking-tight">{agencyName || 'K-12 Superboard'}</h1>
+   761→              <p className="text-[11px] text-muted-foreground font-medium">AI-Assisted Tutoring Whiteboard</p>
+   762→            </div>
+   763→          </div>
+   764→          <div className="flex items-center gap-2">
+   765→            <span className="text-sm text-muted-foreground hidden sm:inline mr-1">{user.email}</span>
+   766→            <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
+   767→              {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
+   768→              {tierLabel}
+   769→            </Badge>
+   770→            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/60" title="Settings">
+   771→              <Settings className="w-4 h-4" />
+   772→            </Button>
+   773→            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={handleLogout} title="Sign out">
+   774→              <LogOut className="w-4 h-4" />
+   775→            </Button>
+   776→          </div>
+   777→        </div>
+   778→      </header>
+   779→
+   780→      {/* Main Content */}
+   781→      <main className="max-w-7xl mx-auto px-6 py-8">
+   782→        {/* Welcome Banner */}
+   783→        <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 relative overflow-hidden animate-fade-in-up">
+   784→          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+   785→          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+   786→          <div className="relative z-10">
+   787→            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Welcome back! {user.email?.split('@')[0]}</h2>
+   788→            <p className="text-muted-foreground mt-2 max-w-xl">Create interactive lessons with AI-powered tools, video calling, and real-time collaboration. Your students will love the experience.</p>
+   789→          </div>
+   790→        </div>
+   791→
+   792→        {/* Usage Overview Cards */}
+   793→        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+   794→          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
+   795→            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+   796→            <div className="relative z-10">
+   797→              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">AI Credits</span></div>
+   798→              <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
+   799→              {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+   800→            </div>
+   801→          </div>
+   802→          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
+   803→            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+   804→            <div className="relative z-10">
+   805→              <div className="flex items-center gap-2 mb-1"><Video className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Video Minutes</span></div>
+   806→              <div className="text-3xl font-bold mt-2">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
+   807→              {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+   808→            </div>
+   809→          </div>
+   810→          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
+   811→            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+   812→            <div className="relative z-10">
+   813→              <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
+   814→              <div className="text-3xl font-bold mt-2">0</div>
+   815→              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? '2 per month included' : 'Unlimited'}</p>
+   816→            </div>
+   817→          </div>
+   818→        </div>
+   819→
+   820→        {/* Quick Actions + Content Tabs */}
+   821→        <div className="flex flex-col lg:flex-row gap-6">
+   822→          {/* Left: Quick Actions */}
+   823→          <div className="lg:w-72 flex-shrink-0 space-y-4 animate-fade-in-up-delay-3">
+   824→            <Dialog open={showNewLesson} onOpenChange={setShowNewLesson}>
+   825→              <DialogTrigger asChild>
+   826→                <Button className="w-full h-14 text-base rounded-2xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px]">
+   827→                  <Plus className="w-5 h-5 mr-2" />New Lesson
+   828→                </Button>
+   829→              </DialogTrigger>
+   830→              <DialogContent className="rounded-2xl">
+   831→                <DialogHeader>
+   832→                  <DialogTitle className="text-xl">Create New Lesson</DialogTitle>
+   833→                  <DialogDescription>Select a subject for your lesson. This determines which toolkit will be available on the whiteboard.</DialogDescription>
+   834→                </DialogHeader>
+   835→                <div className="space-y-4 py-4">
+   836→                  <div className="space-y-2">
+   837→                    <Label>Subject</Label>
+   838→                    <Select value={selectedSubject} onValueChange={(v) => setSelectedSubject(v as Subject)}>
+   839→                      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select subject" /></SelectTrigger>
+   840→                      <SelectContent>
+   841→                        <SelectItem value="MATH">Mathematics</SelectItem>
+   842→                        <SelectItem value="SCIENCE">Science</SelectItem>
+   843→                        <SelectItem value="LANGUAGE">English &amp; Language</SelectItem>
+   844→                        <SelectItem value="GENERAL">General / Other</SelectItem>
+   845→                      </SelectContent>
+   846→                    </Select>
+   847→                  </div>
+   848→                  {tier === 'AGENCY' && (
+   849→                    <div className="space-y-2">
+   850→                      <Label>Branding</Label>
+   851→                      <div className="flex items-center gap-2">
+   852→                        <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+   853→                        <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+   854→                      </div>
+   855→                    </div>
+   856→                  )}
+   857→                  <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25" onClick={handleCreateLesson} disabled={creating}>
+   858→                    {creating ? 'Creating...' : 'Start Lesson'}
+   859→                  </Button>
+   860→                </div>
+   861→              </DialogContent>
+   862→            </Dialog>
+   863→
+   864→            <Card className="rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow">
+   865→              <CardHeader className="pb-3">
+   866→                <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
+   867→              </CardHeader>
+   868→              <CardContent className="space-y-1.5">
+   869→                {(['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as Subject[]).map((subj) => {
+   870→                  const meta = subjectMeta[subj];
+   871→                  return (
+   872→                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-muted/50 transition-colors group">
+   873→                      <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
+   874→                      <div className="flex-1 min-w-0"><p className="text-sm font-medium">{meta.label}</p><p className="text-[11px] text-muted-foreground">Quick start</p></div>
+   875→                      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+   876→                    </button>
+   877→                  );
+   878→                })}
+   879→              </CardContent>
+   880→            </Card>
+   881→          </div>
+   882→
+   883→          {/* Right: Tabs Content */}
+   884→          <div className="flex-1 animate-fade-in-up-delay-2">
+   885→            <Tabs defaultValue="boards" className="w-full">
+   886→              <TabsList className="bg-muted/60 rounded-xl p-1 h-auto">
+   887→                <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
+   888→                <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
+   889→                <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
+   890→                {tier === 'AGENCY' && (
+   891→                  <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
+   892→                )}
+   893→              </TabsList>
+   894→              <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>
+   895→              <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>
+   896→              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor} setBrandColor={setBrandColor} /></TabsContent>
+   897→              {tier === 'AGENCY' && (
+   898→                <TabsContent value="admin" className="mt-6">
+   899→                  <Card className="rounded-2xl border-0 shadow-sm">
+   900→                    <CardHeader>
+   901→                      <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
+   902→                      <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
+   903→                    </CardHeader>
+   904→                    <CardContent><AgencyAdminPanel agencyUserId={user?.id || ''} /></CardContent>
+   905→                  </Card>
+   906→                </TabsContent>
+   907→              )}
+   908→            </Tabs>
+   909→          </div>
+   910→        </div>
+   911→      </main>
+   912→    </div>
+   913→  );
+   914→}
+   915→
+   916→// ============================================================
+   917→// Billing Panel
+   918→// ============================================================
+   919→function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void }) {
+   920→  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+   921→  const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800';
+   922→
+   923→  return (
+   924→    <Card className="rounded-2xl border-0 shadow-sm">
+   925→      <CardHeader>
+   926→        <CardTitle className="text-xl">Billing &amp; Subscription</CardTitle>
+   927→        <CardDescription>Manage your subscription and payment methods.</CardDescription>
+   928→      </CardHeader>
+   929→      <CardContent className="space-y-6">
+   930→        <div className="flex items-center justify-between p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-100">
+   931→          <div className="flex items-center gap-3">
+   932→            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
+   933→              {tier === 'AGENCY' ? <Crown className="w-5 h-5 text-white" /> : tier === 'PRO' ? <Star className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
+   934→            </div>
+   935→            <div>
+   936→              <p className="font-semibold">Current Plan</p>
+   937→              <p className="text-sm text-muted-foreground">{tier === 'FREE' && 'Free tier \u2014 Limited features'}{tier === 'PRO' && 'Pro Tutor \u2014 $15/month'}{tier === 'AGENCY' && 'Agency \u2014 $39/month'}</p>
+   938→            </div>
+   939→          </div>
+   940→          <Badge className={`rounded-full px-3 font-semibold ${tierColor}`}>{tierLabel}</Badge>
+   941→        </div>
+   942→
+   943→        {tier !== 'AGENCY' && (
+   944→          <>
+   945→            <Separator />
+   946→            <div className="space-y-4">
+   947→              <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" />Upgrade Options</h3>
+   948→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   949→                {tier === 'FREE' && (
+   950→                  <Card className="rounded-2xl border-2 border-emerald-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+   951→                    <div className="absolute top-3 right-3"><Badge className="bg-emerald-500 text-white rounded-full text-[10px]">Popular</Badge></div>
+   952→                    <CardHeader className="pb-2">
+   953→                      <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center"><Star className="w-4 h-4 text-emerald-600" /></div>Pro Tutor</CardTitle>
+   954→                      <CardDescription className="text-base font-semibold text-foreground">$15/month or $120/year</CardDescription>
+   955→                    </CardHeader>
+   956→                    <CardContent>
+   957→                      <ul className="text-sm space-y-2 mb-4">
+   958→                        {['Unlimited video calls', '100 AI credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
+   959→                          <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
+   960→                        ))}
+   961→                      </ul>
+   962→                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20">Upgrade to Pro</Button>
+   963→                    </CardContent>
+   964→                  </Card>
+   965→                )}
+   966→                <Card className="rounded-2xl border-2 border-amber-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+   967→                  <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
+   968→                  <CardHeader className="pb-2">
+   969→                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency / Center</CardTitle>
+   970→                    <CardDescription className="text-base font-semibold text-foreground">$39/month</CardDescription>
+   971→                  </CardHeader>
+   972→                  <CardContent>
+   973→                    <ul className="text-sm space-y-2 mb-4">
+   974→                      {['Everything in Pro', 'White-labeling', 'Custom domains', 'Unlimited recordings', 'Admin dashboard'].map((f) => (
+   975→                        <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
+   976→                      ))}
+   977→                    </ul>
+   978→                    <Button variant="outline" className="w-full rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 font-semibold">Contact Sales</Button>
+   979→                  </CardContent>
+   980→                </Card>
+   981→              </div>
+   982→            </div>
+   983→          </>
+   984→        )}
+   985→
+   986→        {tier === 'AGENCY' && (
+   987→          <>
+   988→            <Separator />
+   989→            <div className="space-y-4">
+   990→              <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-emerald-500" />White-Label Settings</h3>
+   991→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   992→                <div className="space-y-2">
+   993→                  <Label>Brand Color</Label>
+   994→                  <div className="flex items-center gap-2">
+   995→                    <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+   996→                    <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+   997→                  </div>
+   998→                </div>
+   999→                <div className="space-y-2">
+  1000→                  <Label>Custom Domain</Label>
+  1001→                  <Input placeholder="classroom.yourcenter.com" disabled className="rounded-xl" />
+  1002→                  <p className="text-xs text-muted-foreground">Configure via DNS settings</p>
+  1003→                </div>
+  1004→              </div>
+  1005→            </div>
+  1006→          </>
+  1007→        )}
+  1008→      </CardContent>
+  1009→    </Card>
+  1010→  );
+  1011→}
+  1012→
+  1013→// ============================================================
+  1014→// SavedBoardsPanel
+  1015→// ============================================================
+  1016→interface BoardRow { id: string; subject: string; isActive: boolean; createdAt: string; brandingColor: string | null; }
+  1017→
+  1018→function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
+  1019→  const [boards, setBoards] = useState<BoardRow[]>([]);
+  1020→  const [loading, setLoading] = useState(true);
+  1021→  useEffect(() => {
+  1022→    if (!userId) return;
+  1023→    setLoading(true);
+  1024→    fetch(`/api/room?tutorId=${userId}`).then((res) => res.json()).then((data) => {
+  1025→      if (Array.isArray(data)) setBoards(data.map((r: any) => ({ id: r.id, subject: r.subject, isActive: r.isActive, createdAt: r.createdAt, brandingColor: r.brandingColor })));
+  1026→    }).catch(() => {}).finally(() => setLoading(false));
+  1027→  }, [userId]);
+  1028→  const canAccess = tier === 'PRO' || tier === 'AGENCY';
+  1029→
+  1030→  if (!canAccess) return (
+  1031→    <Card className="rounded-2xl border-0 shadow-sm">
+  1032→      <CardHeader><CardTitle>Saved Boards</CardTitle><CardDescription>Save/Load requires Pro or Agency tier.</CardDescription></CardHeader>
+  1033→      <CardContent className="text-center py-12">
+  1034→        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 flex items-center justify-center"><Star className="w-8 h-8 text-amber-400" /></div>
+  1035→        <p className="text-muted-foreground font-medium">Upgrade to access saved boards</p>
+  1036→      </CardContent>
+  1037→    </Card>
+  1038→  );
+  1039→
+  1040→  if (loading) return (
+  1041→    <Card className="rounded-2xl border-0 shadow-sm">
+  1042→      <CardHeader><CardTitle>Saved Boards</CardTitle></CardHeader>
+  1043→      <CardContent><div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div></CardContent>
+  1044→    </Card>
+  1045→  );
+  1046→
+  1047→  return (
+  1048→    <Card className="rounded-2xl border-0 shadow-sm">
+  1049→      <CardHeader><CardTitle>Saved Boards</CardTitle><CardDescription>Your lesson history. Click to reopen.</CardDescription></CardHeader>
+  1050→      <CardContent>
+  1051→        {boards.length === 0 ? (
+  1052→          <div className="text-center py-12">
+  1053→            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><BookOpen className="w-8 h-8 text-emerald-400" /></div>
+  1054→            <p className="text-muted-foreground font-medium">No boards yet</p>
+  1055→            <p className="text-sm text-muted-foreground mt-1">Create your first lesson to see it here</p>
+  1056→          </div>
+  1057→        ) : (
+  1058→          <div className="space-y-2">
+  1059→            {boards.map((board) => {
+  1060→              const meta = subjectMeta[board.subject] || subjectMeta.GENERAL;
+  1061→              return (
+  1062→                <div key={board.id} className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3.5 hover:bg-muted/40 cursor-pointer transition-all group" onClick={() => (window.location.href = `/room/${board.id}`)}>
+  1063→                  <div className="flex items-center gap-3">
+  1064→                    <div className={`w-10 h-10 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-5 h-5 text-white" /></div>
+  1065→                    <div><p className="text-sm font-medium">{board.subject} Lesson</p><p className="text-xs text-muted-foreground">{new Date(board.createdAt).toLocaleDateString()}</p></div>
+  1066→                  </div>
+  1067→                  <div className="flex items-center gap-2">
+  1068→                    <Badge variant={board.isActive ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${board.isActive ? 'bg-emerald-100 text-emerald-700' : ''}`}>{board.isActive ? 'Active' : 'Ended'}</Badge>
+  1069→                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+  1070→                  </div>
+  1071→                </div>
+  1072→              );
+  1073→            })}
+  1074→          </div>
+  1075→        )}
+  1076→      </CardContent>
+  1077→    </Card>
+  1078→  );
+  1079→}
+  1080→
+  1081→// ============================================================
+  1082→// TemplatesPanel
+  1083→// ============================================================
+  1084→interface TemplateRow { id: string; name: string; subject: string; createdAt: string; }
+  1085→
+  1086→function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
+  1087→  const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  1088→  const [loading, setLoading] = useState(true);
+  1089→  const [newName, setNewName] = useState('');
+  1090→  const [newSubject, setNewSubject] = useState<Subject>('GENERAL');
+  1091→  const [saving, setSaving] = useState(false);
+  1092→  const canAccess = tier === 'PRO' || tier === 'AGENCY';
+  1093→
+  1094→  const fetchTemplates = useCallback(() => {
+  1095→    if (!userId || !canAccess) return;
+  1096→    setLoading(true);
+  1097→    fetch(`/api/room/templates?tutorId=${userId}`).then((res) => res.json()).then((data) => setTemplates(Array.isArray(data) ? data : [])).catch(() => {}).finally(() => setLoading(false));
+  1098→  }, [userId, canAccess]);
+  1099→  useEffect(() => { fetchTemplates(); }, [fetchTemplates]);
+  1100→
+  1101→  const handleCreate = useCallback(async () => {
+  1102→    if (!newName.trim() || !userId) return;
+  1103→    setSaving(true);
+  1104→    try { await fetch('/api/room/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tutorId: userId, name: newName.trim(), subject: newSubject }) }); setNewName(''); fetchTemplates(); } catch { /* */ }
+  1105→    setSaving(false);
+  1106→  }, [newName, newSubject, userId, fetchTemplates]);
+  1107→
+  1108→  if (!canAccess) return (
+  1109→    <Card className="rounded-2xl border-0 shadow-sm">
+  1110→      <CardHeader><CardTitle>Templates</CardTitle><CardDescription>Templates require Pro or Agency tier.</CardDescription></CardHeader>
+  1111→      <CardContent className="text-center py-12">
+  1112→        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sky-50 flex items-center justify-center"><LayoutTemplate className="w-8 h-8 text-sky-400" /></div>
+  1113→        <p className="text-muted-foreground font-medium">Upgrade to create templates</p>
+  1114→      </CardContent>
+  1115→    </Card>
+  1116→  );
+  1117→
+  1118→  return (
+  1119→    <Card className="rounded-2xl border-0 shadow-sm">
+  1120→      <CardHeader><CardTitle>Templates</CardTitle><CardDescription>Save board layouts as reusable templates.</CardDescription></CardHeader>
+  1121→      <CardContent className="space-y-4">
+  1122→        <div className="flex gap-2">
+  1123→          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Template name (e.g., 'Algebra Review')" className="flex-1 rounded-xl h-11" />
+  1124→          <Select value={newSubject} onValueChange={(v) => setNewSubject(v as Subject)}>
+  1125→            <SelectTrigger className="w-32 rounded-xl h-11"><SelectValue /></SelectTrigger>
+  1126→            <SelectContent><SelectItem value="MATH">Math</SelectItem><SelectItem value="SCIENCE">Science</SelectItem><SelectItem value="LANGUAGE">Language</SelectItem><SelectItem value="GENERAL">General</SelectItem></SelectContent>
+  1127→          </Select>
+  1128→          <Button onClick={handleCreate} disabled={saving || !newName.trim()} size="icon" className="rounded-xl h-11 w-11 gradient-primary border-0 text-white shadow-md shadow-emerald-500/20"><Plus className="w-4 h-4" /></Button>
+  1129→        </div>
+  1130→        {loading ? (
+  1131→          <div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
+  1132→        ) : templates.length === 0 ? (
+  1133→          <div className="text-center py-12">
+  1134→            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><LayoutTemplate className="w-8 h-8 text-emerald-400" /></div>
+  1135→            <p className="text-muted-foreground font-medium">No templates yet</p>
+  1136→          </div>
+  1137→        ) : (
+  1138→          <div className="space-y-2">
+  1139→            {templates.map((t) => {
+  1140→              const meta = subjectMeta[t.subject] || subjectMeta.GENERAL;
+  1141→              return (
+  1142→                <div key={t.id} className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3 hover:bg-muted/40 transition-all group">
+  1143→                  <div className="flex items-center gap-3">
+  1144→                    <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
+  1145→                    <div><p className="text-sm font-medium">{t.name}</p><p className="text-xs text-muted-foreground">{t.subject} &middot; {new Date(t.createdAt).toLocaleDateString()}</p></div>
+  1146→                  </div>
+  1147→                  <Button variant="ghost" size="sm" disabled className="rounded-lg opacity-0 group-hover:opacity-100"><Play className="w-4 h-4" /></Button>
+  1148→                </div>
+  1149→              );
+  1150→            })}
+  1151→          </div>
+  1152→        )}
+  1153→      </CardContent>
+  1154→    </Card>
+  1155→  );
+  1156→}
+  1157→
+  1158→// ============================================================
+  1159→// AgencyAdminPanel
+  1160→// ============================================================
+  1161→interface SubTutorRow { id: string; email: string; name: string | null; tier: string; totalRooms: number; totalVideoMinutes: number; totalAiCredits: number; lastActive: string | null; }
+  1162→
+  1163→function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
+  1164→  const [subTutors, setSubTutors] = useState<SubTutorRow[]>([]);
+  1165→  const [loading, setLoading] = useState(true);
+  1166→  useEffect(() => {
+  1167→    if (!agencyUserId) return;
+  1168→    setLoading(true);
+  1169→    fetch(`/api/usage/agency?agencyId=${agencyUserId}`).then((res) => res.json()).then((data) => setSubTutors(data.subTutors || [])).catch(() => {}).finally(() => setLoading(false));
+  1170→  }, [agencyUserId]);
+  1171→
+  1172→  if (loading) return <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div>;
+  1173→
+  1174→  if (subTutors.length === 0) return (
+  1175→    <div className="text-center py-12">
+  1176→      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><Users className="w-8 h-8 text-emerald-400" /></div>
+  1177→      <p className="text-muted-foreground font-medium">No sub-tutors assigned yet</p>
+  1178→    </div>
+  1179→  );
+  1180→
+  1181→  const totalVideo = subTutors.reduce((sum, t) => sum + t.totalVideoMinutes, 0);
+  1182→  const totalCredits = subTutors.reduce((sum, t) => sum + t.totalAiCredits, 0);
+  1183→  const totalRooms = subTutors.reduce((sum, t) => sum + t.totalRooms, 0);
+  1184→
+  1185→  return (
+  1186→    <div className="space-y-6">
+  1187→      <div className="grid grid-cols-3 gap-4">
+  1188→        <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{subTutors.length}</p><p className="text-sm text-white/80 mt-1">Sub-Tutors</p></div>
+  1189→        <div className="rounded-2xl stat-gradient-video p-5 text-white shadow-lg shadow-sky-500/15 card-hover"><p className="text-3xl font-bold">{totalRooms}</p><p className="text-sm text-white/80 mt-1">Total Lessons</p></div>
+  1190→        <div className="rounded-2xl stat-gradient-recordings p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{totalVideo} min</p><p className="text-sm text-white/80 mt-1">Video Used</p></div>
+  1191→      </div>
+  1192→      <div className="rounded-2xl border overflow-hidden shadow-sm">
+  1193→        <table className="w-full text-sm">
+  1194→          <thead className="bg-muted/50 border-b"><tr><th className="text-left px-4 py-3 font-semibold">Tutor</th><th className="text-left px-4 py-3 font-semibold">Tier</th><th className="text-right px-4 py-3 font-semibold">Lessons</th><th className="text-right px-4 py-3 font-semibold">Video</th><th className="text-right px-4 py-3 font-semibold">AI Credits</th><th className="text-right px-4 py-3 font-semibold">Last Active</th></tr></thead>
+  1195→          <tbody>
+  1196→            {subTutors.map((tutor) => (
+  1197→              <tr key={tutor.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+  1198→                <td className="px-4 py-3"><p className="font-medium">{tutor.name || '\u2014'}</p><p className="text-xs text-muted-foreground">{tutor.email}</p></td>
+  1199→                <td className="px-4 py-3"><Badge variant={tutor.tier === 'AGENCY' ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${tutor.tier === 'AGENCY' ? 'bg-amber-100 text-amber-700' : ''}`}>{tutor.tier}</Badge></td>
+  1200→                <td className="px-4 py-3 text-right font-medium">{tutor.totalRooms}</td>
+  1201→                <td className="px-4 py-3 text-right font-medium">{tutor.totalVideoMinutes}</td>
+  1202→                <td className="px-4 py-3 text-right font-medium">{tutor.totalAiCredits}</td>
+  1203→                <td className="px-4 py-3 text-right text-muted-foreground">{tutor.lastActive ? new Date(tutor.lastActive).toLocaleDateString() : '\u2014'}</td>
+  1204→              </tr>
+  1205→            ))}
+  1206→          </tbody>
+  1207→        </table>
+  1208→      </div>
+  1209→    </div>
+  1210→  );
+  1211→}
+  1212→
