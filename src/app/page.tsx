@@ -609,6 +609,7 @@ function LandingPage() {
       {/* ===== AUTH DIALOG ===== */}
       <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
         <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">{showAuth === 'login' ? 'Sign In' : 'Create Account'}</DialogTitle>
           {/* Gradient header */}
           <div className="gradient-primary px-6 pt-8 pb-6 text-center">
             <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
