@@ -119,7 +119,7 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
   const brand = branding ?? storeBranding;
 
   const brandColor = brand.color ?? '#6366f1';
-  const agencyName = brand.agencyName ?? 'K-12 Superboard';
+  const agencyName = brand.agencyName ?? 'Superboard';
   const logoUrl = brand.logoUrl;
 
   // Compute a lighter tint for the background

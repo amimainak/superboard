@@ -258,7 +258,7 @@ function LandingPage() {
               </h1>
 
               <p className="mt-6 text-lg text-gray-500 leading-relaxed animate-fade-in-up-delay-1">
-                The all-in-one whiteboard that combines real-time collaboration, instant quiz and worksheet generation, built-in video calling, and GeoGebra graphing — designed specifically for K-12 tutors.
+                The all-in-one whiteboard that combines real-time collaboration, instant quiz and worksheet generation, built-in video calling, and GeoGebra graphing — designed for tutors who want to teach better, not harder.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 animate-fade-in-up-delay-2">
@@ -414,13 +414,13 @@ function LandingPage() {
               <span className="bg-gradient-to-r from-emerald-600 to-sky-500 bg-clip-text text-transparent">Endless possibilities.</span>
             </h2>
             <p className="mt-4 text-lg text-gray-500">
-              Purpose-built for K-12 tutoring with tools that actually make your lessons better.
+              With dedicated K-12 support and tools for every subject, grade level, and learning style.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain, title: 'Smart Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions in seconds. Supports all K-12 subjects.', color: 'emerald' },
+              { icon: Brain, title: 'Smart Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions in seconds. Supports every subject and grade level.', color: 'emerald' },
               { icon: Monitor, title: 'Real-Time Collaborative Whiteboard', desc: 'Unlimited canvas with shape tools, handwriting, sticky notes, and real-time cursor sync. Students see your strokes instantly.', color: 'sky' },
               { icon: Video, title: 'Built-In Video Calling', desc: 'No need for Zoom or Meet. Face-to-face video with PiP mode so you can teach and see your student at the same time.', color: 'emerald' },
               { icon: Calculator, title: 'GeoGebra Math Tools', desc: 'Interactive graphing calculator, function plotting, sliders for parameters, and geometry constructions — all inside the board.', color: 'amber' },
@@ -603,7 +603,7 @@ function LandingPage() {
             </div>
             <span className="text-sm font-semibold text-gray-900">Superboard</span>
           </div>
-          <p className="text-xs text-gray-400">&copy; 2025 K-12 Superboard. Built for tutors, by tutors.</p>
+          <p className="text-xs text-gray-400">&copy; 2025 Superboard. Built for tutors, by tutors.</p>
           <div className="flex gap-6">
             <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
             <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
@@ -757,7 +757,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">{agencyName || 'K-12 Superboard'}</h1>
+              <h1 className="text-lg font-bold tracking-tight">{agencyName || 'Superboard'}</h1>
               <p className="text-[11px] text-muted-foreground font-medium">Smart Tutoring Whiteboard</p>
             </div>
           </div>

@@ -116,7 +116,7 @@ export default function PaywallModal() {
               className="mt-auto w-full border-amber-600 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40"
               onClick={() => {
                 // TODO: open contact form or redirect
-                window.open('mailto:sales@k12superboard.com?subject=Agency%20Plan%20Inquiry', '_self');
+                window.open('mailto:sales@superboard.com?subject=Agency%20Plan%20Inquiry', '_self');
               }}
             >
               <Building2 className="size-4" />

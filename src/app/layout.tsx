@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "K-12 Superboard",
-  description: "Smart Tutoring Whiteboard for K-12 Education",
-  keywords: ["K-12", "tutoring", "whiteboard", "education", "superboard", "smart tools"],
+  title: "Superboard",
+  description: "Smart Tutoring Whiteboard — Built for Tutors, by Tutors",
+  keywords: ["tutoring", "whiteboard", "education", "superboard", "smart tools", "online teaching"],
   icons: {
     icon: "/logo.svg",
   },

@@ -41,7 +41,7 @@ export default function BrandedHeader({ onEndLesson }: Props) {
         )}
 
         <span className="text-sm font-semibold truncate">
-          {hasAgencyBranding ? branding.agencyName ?? 'K-12 Superboard' : 'K-12 Superboard'}
+          {hasAgencyBranding ? branding.agencyName ?? 'Superboard' : 'Superboard'}
         </span>
 
         <Badge variant="secondary" className="hidden sm:inline-flex text-[11px]">
