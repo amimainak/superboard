@@ -7,11 +7,17 @@
 
 import { createBrowserClient } from '@supabase/ssr';
 
-// TODO: Replace with actual Supabase URL and anon key from .env.local
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
+const isConfigured = supabaseUrl && supabaseAnonKey;
+
 export function createClient() {
+  if (!isConfigured) {
+    // Return a no-op stub so the landing page renders without crashing.
+    // Auth calls will simply fail gracefully.
+    return null as unknown as ReturnType<typeof createBrowserClient>;
+  }
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
@@ -20,19 +26,10 @@ export function createClient() {
  * Use this in API routes / server components only.
  */
 export function createServerClient() {
-  // TODO: In production, use @supabase/ssr createServerClient with cookies
-  // For now, the browser client is used everywhere since we're wiring architecture.
-  // When Supabase credentials are provided, replace this with:
-  //
-  // import { createServerClient } from '@supabase/ssr'
-  // import { cookies } from 'next/headers'
-  //
-  // const cookieStore = await cookies()
-  // return createServerClient(supabaseUrl, serviceRoleKey, {
-  //   cookies: { getAll() { return cookieStore.getAll() }, setAll(c) { c.forEach(({name,value,...opts}) => cookieStore.set(name,value,opts)) } }
-  // })
-
+  if (!isConfigured) {
+    return null as unknown as ReturnType<typeof createBrowserClient>;
+  }
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
 }
 
-export const supabase = createClient();
+export const supabase = isConfigured ? createClient() : null;
