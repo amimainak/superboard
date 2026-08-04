@@ -103,19 +103,7 @@ export default function Dashboard() {
   // --- Auth check on mount ---
   useEffect(() => {
     const supabase = createClient();
-    if (!supabase) {
-      // Dev mode: check for dev-login session in localStorage
-      const devUser = localStorage.getItem('dev_user');
-      if (devUser) {
-        try {
-          const parsed = JSON.parse(devUser);
-          setUser(parsed);
-          setTier(parsed.tier as Tier || 'FREE');
-        } catch { localStorage.removeItem('dev_user'); }
-      }
-      setAuthLoading(false);
-      return;
-    }
+    if (!supabase) { setAuthLoading(false); return; }
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       setUser(user);
       if (user) {
