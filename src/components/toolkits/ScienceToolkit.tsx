@@ -62,19 +62,19 @@ const PREMIUM_FEATURES: {
   {
     id: 'DIAGRAM_GENERATOR',
     icon: Sparkles,
-    label: 'AI Diagram Generator',
+    label: 'Smart Diagram Generator',
     description: 'Generate science diagrams from text',
   },
   {
     id: 'CHEMICAL_BALANCER',
     icon: Atom,
-    label: 'AI Chemical Equation Balancer',
+    label: 'Smart Chemical Equation Balancer',
     description: 'Balance chemical equations automatically',
   },
   {
     id: 'LAB_SUMMARY',
     icon: FileText,
-    label: 'AI Lab Summary',
+    label: 'Smart Lab Summary',
     description: 'Summarize lab notes into a report',
   },
 ];
@@ -177,7 +177,7 @@ export default function ScienceToolkit({ editor: _editor }: ScienceToolkitProps)
       <Separator className="my-1 w-8" />
 
       {/* ---- Premium AI Features ---- */}
-      <SectionLabel>AI &amp; Premium</SectionLabel>
+      <SectionLabel>Smart &amp; Premium</SectionLabel>
       {PREMIUM_FEATURES.map((feature) => (
         <Tooltip key={feature.id}>
           <TooltipTrigger asChild>

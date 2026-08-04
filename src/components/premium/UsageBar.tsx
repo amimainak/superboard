@@ -39,7 +39,7 @@ export default function UsageBar() {
     <div className="fixed bottom-0 inset-x-0 z-50 pointer-events-none">
       <div className="mx-auto max-w-3xl px-3 pb-3 pointer-events-auto">
         <div className="rounded-xl border bg-background/80 backdrop-blur-md shadow-lg px-4 py-2.5 flex items-center gap-5 text-xs">
-          {/* AI Credits */}
+          {/* Smart Credits */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Sparkles className="size-3.5 shrink-0 text-primary" />
             {aiCreditsExhausted ? (
@@ -47,7 +47,7 @@ export default function UsageBar() {
                 variant="destructive"
                 size="sm"
                 className="h-6 px-2.5 text-xs font-semibold gap-1"
-                onClick={() => openPaywall('AI Credits exhausted')}
+                onClick={() => openPaywall('Smart Credits exhausted')}
               >
                 Upgrade
                 <ArrowUpRight className="size-3" />
@@ -55,7 +55,7 @@ export default function UsageBar() {
             ) : (
               <>
                 <span className="whitespace-nowrap text-muted-foreground">
-                  AI Credits: {aiCreditsUsed}/{aiCreditsLimit === Infinity ? '∞' : aiCreditsLimit}
+                  Smart Credits: {aiCreditsUsed}/{aiCreditsLimit === Infinity ? '∞' : aiCreditsLimit}
                 </span>
                 <Progress
                   value={aiPct}

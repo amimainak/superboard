@@ -64,19 +64,19 @@ const PREMIUM_FEATURES: { id: AIAction; icon: React.ElementType; label: string; 
   {
     id: 'PERFECT_SHAPE',
     icon: Sparkles,
-    label: 'AI Shape Perfection',
+    label: 'Smart Shape Perfection',
     description: 'Perfect your hand-drawn shapes',
   },
   {
     id: 'PLOT_GRAPH',
     icon: LineChart,
-    label: 'AI Graph Plotter',
+    label: 'Smart Graph Plotter',
     description: 'Plot functions from equations',
   },
   {
     id: 'WORKSHEET',
     icon: FileSpreadsheet,
-    label: 'AI Worksheet Generator',
+    label: 'Smart Worksheet Generator',
     description: 'Generate math worksheets',
   },
 ];
@@ -182,7 +182,7 @@ export default function MathToolkit({ editor: _editor }: MathToolkitProps) {
       <Separator className="my-1 w-8" />
 
       {/* ---- Premium Features ---- */}
-      <SectionLabel>AI &amp; Premium</SectionLabel>
+      <SectionLabel>Smart &amp; Premium</SectionLabel>
 
       {/* GeoGebra Integration */}
       <Tooltip>

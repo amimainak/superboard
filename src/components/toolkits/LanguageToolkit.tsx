@@ -61,25 +61,25 @@ const PREMIUM_FEATURES: {
   {
     id: 'GRAMMAR',
     icon: SpellCheck2,
-    label: 'AI Grammar Highlighter',
+    label: 'Smart Grammar Highlighter',
     description: 'Highlight grammar issues in text',
   },
   {
     id: 'VOCAB_QUIZ',
     icon: Languages,
-    label: 'AI Vocab Quiz',
+    label: 'Smart Vocab Quiz',
     description: 'Generate vocabulary quizzes',
   },
   {
     id: 'OUTLINE',
     icon: FileText,
-    label: 'AI Essay Outliner',
+    label: 'Smart Essay Outliner',
     description: 'Generate essay outlines',
   },
   {
     id: 'PHONICS_HELPER',
     icon: Baby,
-    label: 'AI Phonics Helper',
+    label: 'Smart Phonics Helper',
     description: 'Phonics and early reading support',
   },
 ];
@@ -210,7 +210,7 @@ export default function LanguageToolkit({ editor: _editor }: LanguageToolkitProp
       <Separator className="my-1 w-8" />
 
       {/* ---- Premium AI Features ---- */}
-      <SectionLabel>AI &amp; Premium</SectionLabel>
+      <SectionLabel>Smart &amp; Premium</SectionLabel>
       {PREMIUM_FEATURES.map((feature) => (
         <Tooltip key={feature.id}>
           <TooltipTrigger asChild>

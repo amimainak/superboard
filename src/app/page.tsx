@@ -247,7 +247,7 @@ function LandingPage() {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-xs font-semibold text-emerald-700">AI-Powered Tutoring Platform</span>
+                <span className="text-xs font-semibold text-emerald-700">Smart Tutoring Platform</span>
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
@@ -258,7 +258,7 @@ function LandingPage() {
               </h1>
 
               <p className="mt-6 text-lg text-gray-500 leading-relaxed animate-fade-in-up-delay-1">
-                The all-in-one whiteboard that combines real-time collaboration, AI-generated quizzes and worksheets, built-in video calling, and GeoGebra graphing — designed specifically for K-12 tutors.
+                The all-in-one whiteboard that combines real-time collaboration, instant quiz and worksheet generation, built-in video calling, and GeoGebra graphing — designed specifically for K-12 tutors.
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 animate-fade-in-up-delay-2">
@@ -313,7 +313,7 @@ function LandingPage() {
                       <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 bg-emerald-50 rounded-xl p-4 border border-emerald-100">
-                      <p className="text-xs font-medium text-emerald-600 mb-1">AI Generated</p>
+                      <p className="text-xs font-medium text-emerald-600 mb-1">Smart Generated</p>
                       <p className="text-sm text-gray-700 font-medium">Solve for x: 3x + 7 = 22</p>
                       <p className="text-sm text-gray-500 mt-1">x = 5 (subtract 7, divide by 3)</p>
                     </div>
@@ -371,8 +371,8 @@ function LandingPage() {
                     <Brain className="w-4 h-4 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-900">AI Active</p>
-                    <p className="text-[10px] text-gray-500">Claude Sonnet 4</p>
+                    <p className="text-xs font-semibold text-gray-900">Smart Tools Active</p>
+                    <p className="text-[10px] text-gray-500">Ready</p>
                   </div>
                 </div>
               </div>
@@ -389,7 +389,7 @@ function LandingPage() {
               { value: '2,000+', label: 'Active Tutors', sub: 'and growing' },
               { value: '50,000+', label: 'Lessons Taught', sub: 'on Superboard' },
               { value: '4.9/5', label: 'Average Rating', sub: 'from tutor reviews' },
-              { value: '< 2s', label: 'AI Response Time', sub: 'for quiz generation' },
+              { value: '< 2s', label: 'Response Time', sub: 'for quiz generation' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">{stat.value}</p>
@@ -420,7 +420,7 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Brain, title: 'AI Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions with Claude AI in seconds. Supports all K-12 subjects.', color: 'emerald' },
+              { icon: Brain, title: 'Smart Quiz & Worksheet Generator', desc: 'Generate topic-specific quizzes, worksheets, and step-by-step solutions in seconds. Supports all K-12 subjects.', color: 'emerald' },
               { icon: Monitor, title: 'Real-Time Collaborative Whiteboard', desc: 'Unlimited canvas with shape tools, handwriting, sticky notes, and real-time cursor sync. Students see your strokes instantly.', color: 'sky' },
               { icon: Video, title: 'Built-In Video Calling', desc: 'No need for Zoom or Meet. Face-to-face video with PiP mode so you can teach and see your student at the same time.', color: 'emerald' },
               { icon: Calculator, title: 'GeoGebra Math Tools', desc: 'Interactive graphing calculator, function plotting, sliders for parameters, and geometry constructions — all inside the board.', color: 'amber' },
@@ -467,7 +467,7 @@ function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — no sign-up required for them.', icon: Plus },
-              { step: '02', title: 'Teach & Collaborate', desc: 'Draw, write, use AI tools, graph functions, and talk face-to-face. Everything happens on one infinite canvas.', icon: Monitor },
+              { step: '02', title: 'Teach & Collaborate', desc: 'Draw, write, use smart tools, graph functions, and talk face-to-face. Everything happens on one infinite canvas.', icon: Monitor },
               { step: '03', title: 'Save & Share', desc: 'Export branded PDFs, save board templates, and review recordings. Your students get a polished takeaway.', icon: Download },
             ].map((item) => (
               <div key={item.step} className="relative text-center group">
@@ -496,8 +496,8 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The AI quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'emerald' },
-              { name: 'David K.', role: 'Science Tutor, 5 years', quote: 'Having video, whiteboard, and AI in one tool means zero app-switching. It just works. My students are more engaged than ever.', color: 'sky' },
+              { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'emerald' },
+              { name: 'David K.', role: 'Science Tutor, 5 years', quote: 'Having video, whiteboard, and smart tools in one place means zero app-switching. It just works. My students are more engaged than ever.', color: 'sky' },
               { name: 'Priya R.', role: 'Language Tutor, 12 years', quote: 'The mind map tool and annotation features are perfect for essay planning. The branded PDFs make me look incredibly professional.', color: 'emerald' },
             ].map((t) => (
               <div key={t.name} className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
@@ -535,8 +535,8 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['5 AI credits/day', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
-              { name: 'Pro Tutor', price: '$15', period: '/month', desc: 'For serious tutors who want more', features: ['100 AI credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recording/month', 'Save/Load boards'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
+              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['5 smart credits/day', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
+              { name: 'Pro Tutor', price: '$15', period: '/month', desc: 'For serious tutors who want more', features: ['100 smart credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recording/month', 'Save/Load boards'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
               { name: 'Agency', price: '$39', period: '/month', desc: 'For tutoring centers & teams', features: ['Everything in Pro', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Sub-tutor management', 'Admin dashboard'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
             ].map((plan) => (
               <div key={plan.name} className={`rounded-2xl bg-white p-6 md:p-8 relative ${plan.ctaStyle === 'primary' ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02]' : 'border border-gray-200 shadow-sm hover:shadow-md'} transition-shadow duration-300`}>
@@ -603,7 +603,7 @@ function LandingPage() {
             </div>
             <span className="text-sm font-semibold text-gray-900">Superboard</span>
           </div>
-          <p className="text-xs text-gray-400">&copy; 2025 K-12 AI Superboard. Built for tutors, by tutors.</p>
+          <p className="text-xs text-gray-400">&copy; 2025 K-12 Superboard. Built for tutors, by tutors.</p>
           <div className="flex gap-6">
             <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
             <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
@@ -758,7 +758,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight">{agencyName || 'K-12 Superboard'}</h1>
-              <p className="text-[11px] text-muted-foreground font-medium">AI-Assisted Tutoring Whiteboard</p>
+              <p className="text-[11px] text-muted-foreground font-medium">Smart Tutoring Whiteboard</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -785,7 +785,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
           <div className="relative z-10">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">Welcome back! {user.email?.split('@')[0]}</h2>
-            <p className="text-muted-foreground mt-2 max-w-xl">Create interactive lessons with AI-powered tools, video calling, and real-time collaboration. Your students will love the experience.</p>
+            <p className="text-muted-foreground mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
           </div>
         </div>
 
@@ -794,7 +794,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
             <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">AI Credits</span></div>
+              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Smart Credits</span></div>
               <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
               {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
             </div>
@@ -955,7 +955,7 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
                     </CardHeader>
                     <CardContent>
                       <ul className="text-sm space-y-2 mb-4">
-                        {['Unlimited video calls', '100 AI credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
+                        {['Unlimited video calls', '100 smart credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
                           <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
                         ))}
                       </ul>
@@ -1191,7 +1191,7 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
       </div>
       <div className="rounded-2xl border overflow-hidden shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b"><tr><th className="text-left px-4 py-3 font-semibold">Tutor</th><th className="text-left px-4 py-3 font-semibold">Tier</th><th className="text-right px-4 py-3 font-semibold">Lessons</th><th className="text-right px-4 py-3 font-semibold">Video</th><th className="text-right px-4 py-3 font-semibold">AI Credits</th><th className="text-right px-4 py-3 font-semibold">Last Active</th></tr></thead>
+          <thead className="bg-muted/50 border-b"><tr><th className="text-left px-4 py-3 font-semibold">Tutor</th><th className="text-left px-4 py-3 font-semibold">Tier</th><th className="text-right px-4 py-3 font-semibold">Lessons</th><th className="text-right px-4 py-3 font-semibold">Video</th><th className="text-right px-4 py-3 font-semibold">Smart Credits</th><th className="text-right px-4 py-3 font-semibold">Last Active</th></tr></thead>
           <tbody>
             {subTutors.map((tutor) => (
               <tr key={tutor.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">

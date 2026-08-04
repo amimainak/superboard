@@ -1,5 +1,5 @@
 // ============================================================
-// WorksheetGenerator — AI-Powered Worksheet Creator
+// WorksheetGenerator — Smart Worksheet Creator
 // ============================================================
 // Generates grid-layout worksheets on a NEW blank page.
 // Supports topic, grade level, and number of questions.

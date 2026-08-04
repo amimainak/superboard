@@ -88,7 +88,7 @@ const SUBJECT_FEATURES: SubjectGroup[] = [
       },
       {
         id: 'PLOT_GRAPH',
-        label: 'AI Graph Plotter',
+        label: 'Smart Graph Plotter',
         description: 'Plot functions from equations',
         icon: LineChart,
       },
@@ -195,10 +195,10 @@ export default function AIControlPanel() {
         <SheetHeader className="px-5 pt-5 pb-0">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-primary" />
-            AI Features
+            Smart Features
           </SheetTitle>
           <SheetDescription>
-            Toggle AI features on or off. Disabled features are hidden from the toolbar.
+            Toggle smart features on or off. Disabled features are hidden from the toolbar.
           </SheetDescription>
         </SheetHeader>
 
@@ -209,7 +209,7 @@ export default function AIControlPanel() {
               <div className="flex items-center gap-2">
                 <Puzzle className="w-4 h-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Enable All AI Features</p>
+                  <p className="text-sm font-medium">Enable All Smart Features</p>
                   <p className="text-xs text-muted-foreground">Quick toggle for all features</p>
                 </div>
               </div>

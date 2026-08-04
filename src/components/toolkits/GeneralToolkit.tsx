@@ -53,13 +53,13 @@ const PREMIUM_FEATURES: {
   {
     id: 'TIMELINE_GENERATOR',
     icon: TimerReset,
-    label: 'AI Timeline Generator',
+    label: 'Smart Timeline Generator',
     description: 'Generate historical timelines from topics',
   },
   {
     id: 'CONCEPT_SUMMARIZER',
     icon: BrainCircuit,
-    label: 'AI Concept Summarizer',
+    label: 'Smart Concept Summarizer',
     description: 'Summarize whiteboard content into key concepts',
   },
 ];
@@ -140,7 +140,7 @@ export default function GeneralToolkit({ editor: _editor }: GeneralToolkitProps)
       <Separator className="my-1 w-8" />
 
       {/* ---- Premium AI Features ---- */}
-      <SectionLabel>AI &amp; Premium</SectionLabel>
+      <SectionLabel>Smart &amp; Premium</SectionLabel>
       {PREMIUM_FEATURES.map((feature) => (
         <Tooltip key={feature.id}>
           <TooltipTrigger asChild>

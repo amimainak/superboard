@@ -104,11 +104,11 @@ function SubjectToolkitLoader({ subject, editor }: { subject: Subject; editor: u
 }
 
 function SubjectAIToolkitLoader({ subject, editor }: { subject: Subject; editor: unknown }) {
-  // AI tools are rendered within each toolkit component
+  // Smart tools are rendered within each toolkit component
   // This is a placeholder that's rendered by the toolkit panels
   return (
     <div className="text-xs text-muted-foreground text-center px-2">
-      AI Tools
+      Smart Tools
     </div>
   );
 }
