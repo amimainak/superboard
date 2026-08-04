@@ -5,18 +5,15 @@
 // Then upserts their PostgreSQL records with correct tiers.
 // ============================================================
 
-const SUPABASE_URL = 'https://ruygzmkqtdogtencjdzg.supabase.co';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const DATABASE_URL = process.env.DATABASE_URL!;
 
 const { createClient } = require('@supabase/supabase-js');
 const { PrismaClient } = require('@prisma/client');
 
 // Admin client — bypasses RLS, can create confirmed users
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-const prisma = new PrismaClient({
-  datasources: { db: { url: DATABASE_URL } },
-});
+const prisma = new PrismaClient();
 
 interface TestUser {
   email: string;

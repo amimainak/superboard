@@ -2,14 +2,11 @@
 // Superboard — Prisma Schema
 // ============================================================
 // PostgreSQL via Supabase. DATABASE_URL loaded from .env.
-// Fallback to direct URL if env var is not available (Turbopack compat).
-// NOTE: Temporarily set to sqlite for local dev testing.
-// Switch back to postgresql when using Supabase PostgreSQL.
 // ============================================================
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
 }
 
 generator client {
