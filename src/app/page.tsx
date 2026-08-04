@@ -126,12 +126,12 @@ export default function Dashboard() {
   // --- Loading state ---
   if (authLoading) {
     return (
-      <div className="min-h-screen gradient-auth flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-fade-in-up">
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
             <GraduationCap className="w-9 h-9 text-white" />
           </div>
-          <p className="text-sm text-muted-foreground font-medium">Loading Superboard...</p>
+          <p className="text-sm text-gray-500 font-medium">Loading Superboard...</p>
         </div>
       </div>
     );
@@ -204,7 +204,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* ===== NAVBAR ===== */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
@@ -229,16 +229,9 @@ function LandingPage() {
       </nav>
 
       {/* ===== HERO SECTION ===== */}
-      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-emerald-100/50 blur-[120px] animate-float-slow" />
-          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-sky-100/40 blur-[100px] animate-float" />
-          <div className="absolute top-1/2 left-0 w-[400px] h-[400px] rounded-full bg-emerald-100/30 blur-[100px] animate-float-delay" />
-        </div>
-
-        {/* Dot grid pattern */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-white">
+        {/* Subtle grid — no blur blobs */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.6px, transparent 0.6px)', backgroundSize: '24px 24px' }} />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -257,7 +250,7 @@ function LandingPage() {
                 </span>
               </h1>
 
-              <p className="mt-6 text-lg text-gray-500 leading-relaxed animate-fade-in-up-delay-1">
+              <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
                 The all-in-one whiteboard that combines real-time collaboration, instant quiz and worksheet generation, built-in video calling, and GeoGebra graphing — designed for tutors who want to teach better, not harder.
               </p>
 
@@ -750,7 +743,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-emerald-100/60">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
@@ -779,36 +772,29 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Welcome Banner */}
-        <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 relative overflow-hidden animate-fade-in-up">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">Welcome back! {user.email?.split('@')[0]}</h2>
-            <p className="text-muted-foreground mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
-          </div>
+        {/* Welcome Banner — sharp gradient, no blur blobs */}
+        <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 animate-fade-in-up">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {user.email?.split('@')[0]}</h2>
+          <p className="text-gray-700 mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
         </div>
 
         {/* Usage Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+          <div className="rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Smart Credits</span></div>
               <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
               {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+          <div className="rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1"><Video className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Video Minutes</span></div>
               <div className="text-3xl font-bold mt-2">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
               {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4" />
+          <div className="rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
               <div className="text-3xl font-bold mt-2">0</div>
@@ -861,7 +847,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
               </DialogContent>
             </Dialog>
 
-            <Card className="rounded-2xl border border-emerald-100/60 bg-white/80 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
               </CardHeader>
@@ -869,7 +855,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
                 {(['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as Subject[]).map((subj) => {
                   const meta = subjectMeta[subj];
                   return (
-                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50/60 transition-colors group">
+                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50 transition-colors group">
                       <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
                       <div className="flex-1 min-w-0"><p className="text-sm font-medium">{meta.label}</p><p className="text-[11px] text-muted-foreground">Quick start</p></div>
                       <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -883,7 +869,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           {/* Right: Tabs Content */}
           <div className="flex-1 animate-fade-in-up-delay-2">
             <Tabs defaultValue="boards" className="w-full">
-              <TabsList className="bg-emerald-50/60 rounded-xl p-1 h-auto">
+              <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
                 <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
                 <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
                 <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
@@ -896,7 +882,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
               <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor} setBrandColor={setBrandColor} /></TabsContent>
               {tier === 'AGENCY' && (
                 <TabsContent value="admin" className="mt-6">
-                  <Card className="rounded-2xl border border-emerald-100/60 bg-white/80 shadow-sm">
+                  <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
                       <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
@@ -921,7 +907,7 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
   const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
 
   return (
-    <Card className="rounded-2xl border border-emerald-100/60 bg-white/80 shadow-sm">
+    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
       <CardHeader>
         <CardTitle className="text-xl">Billing &amp; Subscription</CardTitle>
         <CardDescription>Manage your subscription and payment methods.</CardDescription>

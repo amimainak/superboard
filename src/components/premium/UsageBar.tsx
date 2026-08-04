@@ -38,7 +38,7 @@ export default function UsageBar() {
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 pointer-events-none">
       <div className="mx-auto max-w-3xl px-3 pb-3 pointer-events-auto">
-        <div className="rounded-xl border bg-background/80 backdrop-blur-md shadow-lg px-4 py-2.5 flex items-center gap-5 text-xs">
+        <div className="rounded-xl border bg-white shadow-lg px-4 py-2.5 flex items-center gap-5 text-xs">
           {/* Smart Credits */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Sparkles className="size-3.5 shrink-0 text-primary" />

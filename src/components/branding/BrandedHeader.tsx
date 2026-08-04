@@ -25,7 +25,7 @@ export default function BrandedHeader({ onEndLesson }: Props) {
   const hasAgencyBranding = !!(branding.logoUrl || branding.agencyName);
 
   return (
-    <header className="flex items-center justify-between h-12 px-4 border-b bg-background/95 backdrop-blur-sm shrink-0">
+    <header className="flex items-center justify-between h-12 px-4 border-b bg-white shrink-0">
       {/* Left: Logo + Name */}
       <div className="flex items-center gap-2.5 min-w-0">
         {hasAgencyBranding && branding.logoUrl ? (
