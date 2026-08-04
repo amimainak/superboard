@@ -3,6 +3,7 @@
 // ============================================================
 // Fetches current period usage from the backend and provides
 // real-time credit tracking for the UsageBar component.
+// Accepts an optional userId — if provided, passes it to the API.
 // ============================================================
 
 'use client';
@@ -20,16 +21,20 @@ interface UsageData {
   recordingsLimit: number;
 }
 
-export function useCredits() {
+export function useCredits(userId?: string | null) {
   const { tier, setUsage, aiCreditsUsed, aiCreditsLimit, videoMinutesUsed, videoMinutesLimit } =
     useAppStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsage = useCallback(async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const response = await fetch('/api/usage/current');
+      const response = await fetch(`/api/usage/current?userId=${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch usage data');
       }
@@ -41,7 +46,7 @@ export function useCredits() {
     } finally {
       setLoading(false);
     }
-  }, [setUsage]);
+  }, [userId, setUsage]);
 
   useEffect(() => {
     fetchUsage();

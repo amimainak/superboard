@@ -95,7 +95,7 @@ export default function Dashboard() {
     videoMinutesUsed,
     videoMinutesLimit,
     loading: usageLoading,
-  } = useCredits();
+  } = useCredits(null);
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -178,6 +178,7 @@ function LandingPage() {
         } catch { /* ignore */ }
       }
       setLoginEmail(''); setLoginPassword('');
+      closeAuth(); // Close the login dialog on success
     } catch { setAuthError('Network error'); }
   }, [loginEmail, loginPassword, setTier]);
 
@@ -701,7 +702,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
     videoMinutesUsed,
     videoMinutesLimit,
     loading: usageLoading,
-  } = useCredits();
+  } = useCredits(user.id);
 
   const [showNewLesson, setShowNewLesson] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');

@@ -1,9 +1,8 @@
 // ============================================================
-// K-12 AI SUPERBOARD — Prisma Schema
+// Superboard — Prisma Schema
 // ============================================================
-// NOTE: This schema uses SQLite for local development.
-// In production, swap the datasource provider to "postgresql"
-// and point DATABASE_URL to your Supabase PostgreSQL connection.
+// PostgreSQL via Supabase. DATABASE_URL loaded from .env.
+// Fallback to direct URL if env var is not available (Turbopack compat).
 // ============================================================
 
 datasource db {

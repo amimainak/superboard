@@ -1,50 +1,53 @@
 // ============================================================
-// Seed Script — Create 4 Test Accounts
+// Seed Script — Create 4 Test Accounts via Admin API
 // ============================================================
-// Creates users in Supabase Auth + sets their tiers in PostgreSQL
-// Run with: npx tsx scripts/seed-users.ts
+// Uses Supabase service_role key to create users without email.
+// Then upserts their PostgreSQL records with correct tiers.
 // ============================================================
 
-import { createClient } from '@supabase/supabase-js';
-import { PrismaClient } from '@prisma/client';
+const SUPABASE_URL = 'https://ruygzmkqtdogtencjdzg.supabase.co';
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const DATABASE_URL = process.env.DATABASE_URL!;
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const { createClient } = require('@supabase/supabase-js');
+const { PrismaClient } = require('@prisma/client');
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const prisma = new PrismaClient();
+// Admin client — bypasses RLS, can create confirmed users
+const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const prisma = new PrismaClient({
+  datasources: { db: { url: DATABASE_URL } },
+});
 
 interface TestUser {
   email: string;
   password: string;
   name: string;
   tier: 'FREE' | 'PRO' | 'AGENCY';
-  // For agency: extra branding fields
-  brandingColor?: string;
+  brandingColor?: string | null;
 }
 
 const TEST_USERS: TestUser[] = [
   {
-    email: 'student@test.com',
-    password: 'Test1234!',
+    email: 'student@superboard.app',
+    password: 'Student1234!',
     name: 'Test Student',
     tier: 'FREE',
   },
   {
-    email: 'free-tutor@test.com',
-    password: 'Test1234!',
+    email: 'free-tutor@superboard.app',
+    password: 'FreeTutor1234!',
     name: 'Free Tutor',
     tier: 'FREE',
   },
   {
-    email: 'pro-tutor@test.com',
-    password: 'Test1234!',
+    email: 'pro-tutor@superboard.app',
+    password: 'ProTutor1234!',
     name: 'Pro Tutor',
     tier: 'PRO',
   },
   {
-    email: 'agency@test.com',
-    password: 'Test1234!',
+    email: 'agency@superboard.app',
+    password: 'Agency1234!',
     name: 'Test Agency',
     tier: 'AGENCY',
     brandingColor: '#059669',
@@ -55,84 +58,89 @@ async function seed() {
   console.log('=== Superboard Test Account Seeding ===\n');
 
   for (const testUser of TEST_USERS) {
-    console.log(`Creating: ${testUser.email} (${testUser.tier})`);
+    console.log(`--- ${testUser.email} (${testUser.tier}) ---`);
 
-    // 1. Sign up via Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
-      email: testUser.email,
-      password: testUser.password,
-    });
+    // 1. Create user in Supabase Auth (admin API, auto-confirmed)
+    let authUserId: string | null = null;
 
-    if (error) {
-      // If user already exists, try to sign in to get the session
-      if (error.message.includes('already registered') || error.message.includes('User already registered')) {
-        console.log(`  → User already exists in Auth, signing in to get ID...`);
-        const signInResult = await supabase.auth.signInWithPassword({
-          email: testUser.email,
-          password: testUser.password,
-        });
-        if (signInResult.error) {
-          // Try without password - might need email confirmation
-          console.log(`  ⚠ Could not sign in: ${signInResult.error.message}`);
-          console.log(`  → Will try to find user in DB by email...`);
+    try {
+      const { data, error } = await supabaseAdmin.auth.admin.createUser({
+        email: testUser.email,
+        password: testUser.password,
+        email_confirm: true, // Skip email verification
+        user_metadata: { name: testUser.name },
+      });
+
+      if (error) {
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          console.log('  User already exists in Auth, fetching ID...');
+          // List users to find the existing one
+          const { data: listData } = await supabaseAdmin.auth.admin.listUsers({
+            filters: `email eq "${testUser.email}"`,
+          });
+          if (listData?.users?.length > 0) {
+            authUserId = listData.users[0].id;
+            console.log(`  Found existing auth user: ${authUserId}`);
+          } else {
+            console.log(`  ERROR: Could not find existing user`);
+            continue;
+          }
         } else {
-          const authUserId = signInResult.data.user.id;
-          await upsertDbUser(authUserId, testUser);
+          console.log(`  Auth error: ${error.message}`);
           continue;
         }
       } else {
-        console.log(`  ✗ Auth error: ${error.message}`);
-        continue;
+        authUserId = data.user.id;
+        console.log(`  Auth user created & confirmed: ${authUserId}`);
       }
+    } catch (err: any) {
+      console.log(`  Auth exception: ${err.message}`);
+      continue;
     }
 
-    // If sign up succeeded
-    if (data.user) {
-      const authUserId = data.user.id;
-      console.log(`  → Auth user created: ${authUserId}`);
-
-      // If we got a session (auto-confirmation enabled), great
-      if (data.session) {
-        console.log(`  → Auto-confirmed, session active`);
-      } else {
-        console.log(`  → Email confirmation may be required`);
+    // 2. Upsert in PostgreSQL
+    if (authUserId) {
+      try {
+        const dbUser = await prisma.user.upsert({
+          where: { email: testUser.email },
+          create: {
+            id: authUserId,
+            email: testUser.email,
+            name: testUser.name,
+            tier: testUser.tier,
+            brandingColor: testUser.brandingColor || null,
+          },
+          update: {
+            id: authUserId, // Ensure IDs match
+            tier: testUser.tier,
+            name: testUser.name,
+            brandingColor: testUser.brandingColor || null,
+          },
+        });
+        console.log(`  DB record: id=${dbUser.id}, tier=${dbUser.tier}`);
+      } catch (err: any) {
+        console.log(`  DB error: ${err.message}`);
       }
-
-      await upsertDbUser(authUserId, testUser);
     }
   }
 
-  // Summary: show all users in DB
-  console.log('\n=== Database Users ===');
+  // Summary
+  console.log('\n=== All Users in Database ===');
   const allUsers = await prisma.user.findMany({
     select: { id: true, email: true, name: true, tier: true, brandingColor: true },
   });
   for (const u of allUsers) {
-    console.log(`  ${u.email} | ${u.tier} | ${u.brandingColor || 'no brand color'}`);
+    const tierBadge = u.tier === 'AGENCY' ? '👑' : u.tier === 'PRO' ? '⭐' : '📘';
+    console.log(`  ${tierBadge} ${u.email} | ${u.tier} | color=${u.brandingColor || 'none'}`);
   }
 
-  console.log('\n=== Done ===');
-  await prisma.$disconnect();
-}
+  console.log('\n=== Test Credentials ===');
+  for (const u of TEST_USERS) {
+    console.log(`  ${u.email} / ${u.password} (${u.tier})`);
+  }
 
-async function upsertDbUser(authUserId: string, testUser: TestUser) {
-  // Upsert: create or update the user in PostgreSQL
-  const dbUser = await prisma.user.upsert({
-    where: { email: testUser.email },
-    create: {
-      id: authUserId,
-      email: testUser.email,
-      name: testUser.name,
-      tier: testUser.tier,
-      brandingColor: testUser.brandingColor || null,
-    },
-    update: {
-      tier: testUser.tier,
-      name: testUser.name,
-      brandingColor: testUser.brandingColor || null,
-    },
-  });
-  console.log(`  → DB record: id=${dbUser.id}, tier=${dbUser.tier}`);
+  console.log('\nDone!');
+  await prisma.$disconnect();
 }
 
 seed().catch((err) => {

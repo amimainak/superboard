@@ -3,6 +3,8 @@
 // ============================================================
 // Provides both browser-side and server-side Supabase clients.
 // In production, these connect to your Supabase project.
+// The browser client is cached as a singleton to ensure auth
+// state listeners work correctly across the app.
 // ============================================================
 
 import { createBrowserClient } from '@supabase/ssr';
@@ -12,13 +14,19 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 const isConfigured = supabaseUrl && supabaseAnonKey;
 
+// Singleton browser client — ensures auth state is shared
+let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+
 export function createClient() {
   if (!isConfigured) {
     // Return a no-op stub so the landing page renders without crashing.
     // Auth calls will simply fail gracefully.
     return null as unknown as ReturnType<typeof createBrowserClient>;
   }
-  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+  if (!browserClient) {
+    browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
+  }
+  return browserClient;
 }
 
 /**
