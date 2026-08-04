@@ -128,7 +128,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen gradient-auth flex items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-fade-in-up">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
             <GraduationCap className="w-9 h-9 text-white" />
           </div>
           <p className="text-sm text-muted-foreground font-medium">Loading Superboard...</p>
@@ -745,12 +745,12 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 
   const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
   const tierColor =
-    tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800';
+    tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-emerald-100/60">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
@@ -767,7 +767,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
               {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
               {tierLabel}
             </Badge>
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-muted/60" title="Settings">
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Settings">
               <Settings className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={handleLogout} title="Sign out">
@@ -861,7 +861,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
               </DialogContent>
             </Dialog>
 
-            <Card className="rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card className="rounded-2xl border border-emerald-100/60 bg-white/80 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
               </CardHeader>
@@ -869,7 +869,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
                 {(['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as Subject[]).map((subj) => {
                   const meta = subjectMeta[subj];
                   return (
-                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-muted/50 transition-colors group">
+                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50/60 transition-colors group">
                       <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
                       <div className="flex-1 min-w-0"><p className="text-sm font-medium">{meta.label}</p><p className="text-[11px] text-muted-foreground">Quick start</p></div>
                       <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -883,12 +883,12 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           {/* Right: Tabs Content */}
           <div className="flex-1 animate-fade-in-up-delay-2">
             <Tabs defaultValue="boards" className="w-full">
-              <TabsList className="bg-muted/60 rounded-xl p-1 h-auto">
-                <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
-                <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
-                <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
+              <TabsList className="bg-emerald-50/60 rounded-xl p-1 h-auto">
+                <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
+                <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
                 {tier === 'AGENCY' && (
-                  <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
+                  <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
                 )}
               </TabsList>
               <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>
@@ -896,7 +896,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
               <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor} setBrandColor={setBrandColor} /></TabsContent>
               {tier === 'AGENCY' && (
                 <TabsContent value="admin" className="mt-6">
-                  <Card className="rounded-2xl border-0 shadow-sm">
+                  <Card className="rounded-2xl border border-emerald-100/60 bg-white/80 shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
                       <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
@@ -918,10 +918,10 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 // ============================================================
 function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void }) {
   const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
-  const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-800';
+  const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
 
   return (
-    <Card className="rounded-2xl border-0 shadow-sm">
+    <Card className="rounded-2xl border border-emerald-100/60 bg-white/80 shadow-sm">
       <CardHeader>
         <CardTitle className="text-xl">Billing &amp; Subscription</CardTitle>
         <CardDescription>Manage your subscription and payment methods.</CardDescription>
@@ -1059,7 +1059,7 @@ function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
             {boards.map((board) => {
               const meta = subjectMeta[board.subject] || subjectMeta.GENERAL;
               return (
-                <div key={board.id} className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3.5 hover:bg-muted/40 cursor-pointer transition-all group" onClick={() => (window.location.href = `/room/${board.id}`)}>
+                <div key={board.id} className="flex items-center justify-between rounded-xl border border-emerald-100/40 px-4 py-3.5 hover:bg-emerald-50/40 cursor-pointer transition-all group" onClick={() => (window.location.href = `/room/${board.id}`)}>
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-5 h-5 text-white" /></div>
                     <div><p className="text-sm font-medium">{board.subject} Lesson</p><p className="text-xs text-muted-foreground">{new Date(board.createdAt).toLocaleDateString()}</p></div>
@@ -1139,7 +1139,7 @@ function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
             {templates.map((t) => {
               const meta = subjectMeta[t.subject] || subjectMeta.GENERAL;
               return (
-                <div key={t.id} className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3 hover:bg-muted/40 transition-all group">
+                <div key={t.id} className="flex items-center justify-between rounded-xl border border-emerald-100/40 px-4 py-3 hover:bg-emerald-50/40 transition-all group">
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
                     <div><p className="text-sm font-medium">{t.name}</p><p className="text-xs text-muted-foreground">{t.subject} &middot; {new Date(t.createdAt).toLocaleDateString()}</p></div>

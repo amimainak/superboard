@@ -89,24 +89,24 @@
 
 :root {
   --radius: 0.75rem;
-  /* Emerald-teal primary system */
-  --background: oklch(0.988 0.002 166);
+  /* Emerald-teal primary system — warm tinted surfaces */
+  --background: oklch(0.984 0.006 166);
   --foreground: oklch(0.168 0.03 160);
-  --card: oklch(1 0 0);
+  --card: oklch(0.997 0.003 166);
   --card-foreground: oklch(0.168 0.03 160);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.997 0.003 166);
   --popover-foreground: oklch(0.168 0.03 160);
   --primary: oklch(0.549 0.186 172.471);
   --primary-foreground: oklch(0.995 0 0);
-  --secondary: oklch(0.962 0.032 199.242);
+  --secondary: oklch(0.955 0.035 199.242);
   --secondary-foreground: oklch(0.228 0.05 160);
-  --muted: oklch(0.965 0.008 166);
+  --muted: oklch(0.962 0.012 166);
   --muted-foreground: oklch(0.50 0.03 166);
-  --accent: oklch(0.962 0.032 199.242);
+  --accent: oklch(0.955 0.035 199.242);
   --accent-foreground: oklch(0.228 0.05 160);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.928 0.01 166);
-  --input: oklch(0.928 0.01 166);
+  --border: oklch(0.935 0.015 166);
+  --input: oklch(0.935 0.015 166);
   --ring: oklch(0.549 0.186 172.471);
   --chart-1: oklch(0.549 0.186 172.471);
   --chart-2: oklch(0.656 0.168 196.832);

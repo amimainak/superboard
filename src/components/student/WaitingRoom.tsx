@@ -118,7 +118,7 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
   const storeBranding = useAppStore((s) => s.room.branding);
   const brand = branding ?? storeBranding;
 
-  const brandColor = brand.color ?? '#6366f1';
+  const brandColor = brand.color ?? '#059669';
   const agencyName = brand.agencyName ?? 'Superboard';
   const logoUrl = brand.logoUrl;
 
@@ -175,7 +175,7 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
             <p className="text-white/80 text-sm">Your tutor is ready!</p>
             <Button
               size="lg"
-              className="bg-white text-indigo-700 hover:bg-white/90 font-semibold shadow-xl rounded-xl px-8 h-12 text-base"
+              className="bg-white text-emerald-700 hover:bg-white/90 font-semibold shadow-xl rounded-xl px-8 h-12 text-base"
               onClick={onJoin}
             >
               Join Lesson

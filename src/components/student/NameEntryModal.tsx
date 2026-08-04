@@ -21,7 +21,7 @@ const CURSOR_COLORS = [
   '#eab308', // yellow
   '#22c55e', // green
   '#3b82f6', // blue
-  '#a855f7', // purple
+  '#14b8a6', // teal
 ];
 
 type Props = {
