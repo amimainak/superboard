@@ -36,7 +36,6 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult | nul
     // Verify the JWT and get user
     const { data: { user }, error } = await supabase.auth.getUser(token);
     if (error || !user) {
-      console.error('[Auth] getUser failed:', error?.message || 'no user returned');
       return null;
     }
 

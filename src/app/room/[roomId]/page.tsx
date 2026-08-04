@@ -10,6 +10,7 @@
 
 import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
+import { createClient } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import type { RoomData, BrandingConfig } from '@/types';
 
@@ -34,13 +35,27 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
         const roomData: RoomData = await response.json();
 
-        // Set room state
+        // Determine if the current user is the tutor by comparing
+        // the authenticated user's ID against the room's tutorId
+        let tutorMatch = false;
+        const supabase = createClient();
+        if (supabase) {
+          const { data: { session: sess } } = await supabase.auth.getSession();
+          const { data: { user } } = await supabase.auth.getUser();
+          tutorMatch = !!user && user.id === roomData.tutorId;
+          if (!tutorMatch && sess?.user?.id === roomData.tutorId) {
+            tutorMatch = true; // fallback to session user
+          }
+        }
+
+        // Set room state — include isTutor so whiteboard knows to skip waiting room
         setRoom({
           roomId: roomData.id,
           subject: roomData.subject as 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL',
           isActive: roomData.isActive,
           brandingLogo: roomData.brandingLogo || null,
           brandingColor: roomData.brandingColor || null,
+          isTutor: tutorMatch,
         });
 
         // Set branding config

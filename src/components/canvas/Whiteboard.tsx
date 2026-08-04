@@ -28,18 +28,8 @@ const WaitingRoom = dynamic(() => import('@/components/student/WaitingRoom'), { 
 const NameEntryModal = dynamic(() => import('@/components/student/NameEntryModal'), { ssr: false });
 
 export default function Whiteboard() {
-  const {
-    roomId,
-    subject,
-    isTutor,
-    currentPageIndex,
-    totalPages,
-    branding,
-    focusMode,
-    setRoom,
-    setCurrentPage,
-    setTotalPages,
-  } = useAppStore();
+  const { room, setRoom, setCurrentPage, setTotalPages } = useAppStore();
+  const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<unknown>(null);
