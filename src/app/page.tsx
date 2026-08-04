@@ -752,7 +752,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
   const handleCreateLesson = useCallback(async () => {
     setCreating(true);
     try {
-      const response = await fetch('/api/room', {
+      const response = await authFetch('/api/room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
@@ -1123,7 +1123,7 @@ function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
   const handleCreate = useCallback(async () => {
     if (!newName.trim() || !userId) return;
     setSaving(true);
-    try { await fetch('/api/room/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tutorId: userId, name: newName.trim(), subject: newSubject }) }); setNewName(''); fetchTemplates(); } catch { /* */ }
+    try { await authFetch('/api/room/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tutorId: userId, name: newName.trim(), subject: newSubject }) }); setNewName(''); fetchTemplates(); } catch { /* */ }
     setSaving(false);
   }, [newName, newSubject, userId, fetchTemplates]);
 
