@@ -192,7 +192,7 @@ function LandingPage() {
       const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
       if (error) { setAuthError(error.message); return; }
       if (data.user && data.session) {
-        try { await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: registerEmail, password: registerPassword }) }); } catch { /* */ }
+        try { await fetch('/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: data.user.id, email: registerEmail }) }); } catch { /* */ }
       } else {
         setAuthMessage('Check your email for a confirmation link.');
       }
@@ -611,7 +611,7 @@ function LandingPage() {
         <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
           {/* Gradient header */}
           <div className="gradient-primary px-6 pt-8 pb-6 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
               <GraduationCap className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-xl font-bold text-white">

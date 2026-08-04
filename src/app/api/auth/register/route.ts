@@ -12,7 +12,7 @@ import { db } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name } = body;
+    const { id, email, name } = body;
 
     if (!email) {
       return NextResponse.json(
@@ -21,19 +21,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists in our DB
-    const existing = await db.user.findUnique({ where: { email } });
-    if (existing) {
+    if (!id) {
+      return NextResponse.json(
+        { error: 'User ID (from Supabase Auth) is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists in our DB (match by Supabase Auth ID first)
+    const existingById = await db.user.findUnique({ where: { id } });
+    if (existingById) {
       return NextResponse.json({
-        id: existing.id,
-        email: existing.email,
-        tier: existing.tier,
+        id: existingById.id,
+        email: existingById.email,
+        tier: existingById.tier,
       });
     }
 
-    // Create new user record with FREE tier default
+    // Also check by email (in case of legacy records without matching IDs)
+    const existingByEmail = await db.user.findUnique({ where: { email } });
+    if (existingByEmail) {
+      // Update the existing record's ID to match Supabase Auth
+      const updated = await db.user.update({
+        where: { id: existingByEmail.id },
+        data: { id, name: name || existingByEmail.name },
+      });
+      return NextResponse.json({
+        id: updated.id,
+        email: updated.email,
+        tier: updated.tier,
+      });
+    }
+
+    // Create new user record with FREE tier default, using Supabase Auth ID
     const user = await db.user.create({
       data: {
+        id,
         email,
         name: name || null,
         tier: 'FREE',

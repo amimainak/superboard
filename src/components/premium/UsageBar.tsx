@@ -8,6 +8,7 @@ import { Sparkles, Video, ArrowUpRight } from 'lucide-react';
 
 export default function UsageBar() {
   const tier = useAppStore((s) => s.tier);
+  const userId = useAppStore((s) => s.room.userId);
   const openPaywall = useAppStore((s) => s.openPaywall);
 
   const {
@@ -18,7 +19,7 @@ export default function UsageBar() {
     videoMinutesLimit,
     videoMinutesExhausted,
     loading,
-  } = useCredits();
+  } = useCredits(userId);
 
   // Hidden entirely for AGENCY tier (unlimited)
   if (tier === 'AGENCY') return null;
