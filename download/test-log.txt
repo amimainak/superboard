@@ -1,0 +1,106 @@
+Server ready after 2s
+Landing buttons:
+Sign In navbar ref: e5
+Dialog elements:
+Email: @e5, Pass: @e6, Submit: @e7
+Clicking submit @e7...
+URL: http://localhost:3000/
+Page content:
+- generic
+  - button "Open Next.js Dev Tools" [expanded=false, ref=e8]
+    - image
+  - button "Open issues overlay" [ref=e9]
+    - StaticText "1"
+    - StaticText "Issue"
+  - button "Collapse issues badge" [ref=e10]
+    - image
+  - dialog
+    - heading "Welcome back" [level=2, ref=e1]
+    - paragraph
+    - button "Sign In" [ref=e2]
+    - button "Register" [ref=e3]
+    - paragraph
+    - form
+      - textbox "Email" [required, ref=e5]: free-tutor@superboard.app
+      - textbox "Password" [required, ref=e6]: ••••••••••••••
+      - button "Sign In" [ref=e7]
+    - button "Close" [ref=e4]
+Console errors:
+Network (auth):
+[6024.22] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script) 200
+[6024.92] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script)
+[6024.150] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script) 200
+[6024.221] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script)
+[6024.279] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script) 200
+[6024.349] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script) 200
+[6024.417] GET http://localhost:3000/_next/static/chunks/node_modules_%40supabase_auth-js_dist_module_e6c70351._.js (Script) 200
+[6024.464] POST https://ruygzmkqtdogtencjdzg.supabase.co/auth/v1/token?grant_type=password (Fetch) 401
+[3275AB78F5039D6A8823CB6FBBFCCC6E] OPTIONS https://ruygzmkqtdogtencjdzg.supabase.co/auth/v1/token?grant_type=password (Other) 200
+Pro tutor URL: http://localhost:3000/
+- generic
+  - button "Open Next.js Dev Tools" [expanded=false, ref=e8]
+    - image
+  - button "Open issues overlay" [ref=e9]
+    - StaticText "1"
+    - StaticText "Issue"
+  - button "Collapse issues badge" [ref=e10]
+    - image
+  - dialog
+    - heading "Welcome back" [level=2, ref=e1]
+    - paragraph
+    - button "Sign In" [ref=e2]
+    - button "Register" [ref=e3]
+    - paragraph
+    - form
+      - textbox "Email" [required, ref=e5]: pro-tutor@superboard.app
+      - textbox "Password" [required, ref=e6]: •••••••••••••
+      - button "Sign In" [ref=e7]
+    - button "Close" [ref=e4]
+Agency URL: http://localhost:3000/
+- generic
+  - button "Open Next.js Dev Tools" [expanded=false, ref=e8]
+    - image
+  - button "Open issues overlay" [ref=e9]
+    - StaticText "1"
+    - StaticText "Issue"
+  - button "Collapse issues badge" [ref=e10]
+    - image
+  - dialog
+    - heading "Welcome back" [level=2, ref=e1]
+    - paragraph
+    - button "Sign In" [ref=e2]
+    - button "Register" [ref=e3]
+    - paragraph
+    - form
+      - textbox "Email" [required, ref=e5]: agency@superboard.app
+      - textbox "Password" [required, ref=e6]: •••••••••••
+      - button "Sign In" [ref=e7]
+    - button "Close" [ref=e4]
+Student URL: http://localhost:3000/room/test-room-abc
+- image
+- heading "Lesson Not Available" [level=2, ref=e1]
+- paragraph
+  - StaticText "Failed to load room"
+- region "Notifications (F8)" [ref=e2]
+  - list
+- button "Open Next.js Dev Tools" [expanded=false, ref=e3]
+  - image
+- alert
+▲ Next.js 16.1.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://21.0.7.174:3000
+- Environments: .env.local, .env
+- Experiments (use with caution):
+  · optimizePackageImports
+
+✓ Starting...
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+✓ Ready in 785ms
+○ Compiling / ...
+ GET / 200 in 3.7s (compile: 3.4s, proxy.ts: 67ms, render: 209ms)
+ GET / 200 in 3.7s (compile: 3.4s, proxy.ts: 7ms, render: 279ms)
+ GET / 200 in 968ms (compile: 830ms, proxy.ts: 47ms, render: 92ms)
+ GET / 200 in 67ms (compile: 10ms, proxy.ts: 4ms, render: 52ms)
+ GET / 200 in 61ms (compile: 3ms, proxy.ts: 6ms, render: 52ms)
+ GET /room/test-room-abc 200 in 717ms (compile: 608ms, proxy.ts: 16ms, render: 94ms)
+ GET /api/room?roomId=test-room-abc 404 in 712ms (compile: 122ms, render: 590ms)
