@@ -38,10 +38,12 @@ function RoomPageContent({ roomId }: { roomId: string }) {
         // Determine if the current user is the tutor by comparing
         // the authenticated user's ID against the room's tutorId
         let tutorMatch = false;
+        let user: import('@supabase/supabase-js').User | null = null;
         const supabase = createClient();
         if (supabase) {
           const { data: { session: sess } } = await supabase.auth.getSession();
-          const { data: { user } } = await supabase.auth.getUser();
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          user = currentUser;
           tutorMatch = !!user && user.id === roomData.tutorId;
           if (!tutorMatch && sess?.user?.id === roomData.tutorId) {
             tutorMatch = true; // fallback to session user
@@ -66,6 +68,31 @@ function RoomPageContent({ roomId }: { roomId: string }) {
           customDomain: null,
         };
         setBranding(branding);
+
+        // Track student participation (for agency billing)
+        if (!tutorMatch) {
+          // Student joined — track via fingerprint or user ID
+          let studentIdentity = user?.id || '';
+          if (!studentIdentity) {
+            // Generate a session-based identity for anonymous students
+            try {
+              const { reportFingerprint } = await import('@/lib/fingerprint');
+              const fp = await reportFingerprint();
+              studentIdentity = fp || `anon_${roomId}_${Date.now()}`;
+            } catch {
+              studentIdentity = `anon_${roomId}_${Date.now()}`;
+            }
+          }
+          fetch('/api/room/participants', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomId,
+              studentIdentity,
+              studentName: user?.user_metadata?.name || null,
+            }),
+          }).catch(() => { /* silent — don't block the lesson */ });
+        }
 
         setLoading(false);
       } catch (err) {

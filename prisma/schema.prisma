@@ -13,24 +13,45 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ============================================================
+// User — Tutors & Agency Owners
+// ============================================================
+// parentAgencyId links a sub-tutor to their agency owner.
+// An agency owner has tier=AGENCY and no parentAgencyId.
+// ============================================================
+
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
+  id                String          @id @default(uuid())
+  email             String          @unique
   name              String?
-  stripeCustomerId  String?   @unique
-  tier              String    @default("FREE") // "FREE", "PRO", "AGENCY"
+  stripeCustomerId  String?         @unique
+  stripeSubscriptionId String?      // Active Stripe subscription ID
+  tier              String          @default("FREE") // "FREE", "PRO", "AGENCY"
   fingerprintHash   String?
   // Agency Features
-  customDomain      String?   @unique
+  customDomain      String?         @unique
   brandingLogoUrl   String?
-  brandingColor     String?   // Hex code e.g., #FF5733
-  parentAgencyId    String?    // If this user is a sub-tutor under an agency
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  brandingColor     String?         // Hex code e.g., #FF5733
+  parentAgencyId    String?         // If this user is a sub-tutor under an agency
+  agencyOwner      User?           @relation("AgencySubTutors", fields: [parentAgencyId], references: [id], onDelete: SetNull)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  // Relations
   rooms             Room[]
   usageLogs         UsageLog[]
   templates         Template[]
+  sentInvites       AgencyInvite[]  @relation("InviteSender")
+  receivedInvite    AgencyInvite?   @relation("InviteRecipient")
+  subTutors        User[]          @relation("AgencySubTutors")
 }
+
+// ============================================================
+// UsageLog — Per-Period Usage Tracking
+// ============================================================
+// FREE:  period resets Monday 00:00 UTC (weekly)
+// PRO:   period resets on billing cycle date (monthly)
+// AGENCY: period resets on billing cycle date (monthly)
+// ============================================================
 
 model UsageLog {
   id               String   @id @default(uuid())
@@ -46,20 +67,29 @@ model UsageLog {
   @@unique([userId, periodStartDate])
 }
 
+// ============================================================
+// Room — Lesson Rooms
+// ============================================================
+// Each room belongs to a tutor (who may be a sub-tutor under an agency).
+// Students join rooms and are tracked via RoomParticipant.
+// ============================================================
+
 model Room {
-  id            String     @id @default(uuid())
-  tutorId       String
-  tutor         User       @relation(fields: [tutorId], references: [id], onDelete: Cascade)
-  subject       String     @default("GENERAL") // MATH, SCIENCE, LANGUAGE, GENERAL
-  isActive      Boolean    @default(true)
+  id              String              @id @default(uuid())
+  tutorId         String
+  tutor           User                @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  subject         String              @default("GENERAL") // MATH, SCIENCE, LANGUAGE, GENERAL
+  isActive        Boolean             @default(true)
   // Branding snapshot taken at room creation so it persists
   // even if agency changes logo later
-  brandingLogo  String?
-  brandingColor String?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  pages         BoardPage[]
-  recordings    Recording[]
+  brandingLogo    String?
+  brandingColor   String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  // Relations
+  pages           BoardPage[]
+  recordings      Recording[]
+  participants    RoomParticipant[]
 }
 
 model BoardPage {
@@ -72,6 +102,40 @@ model BoardPage {
   updatedAt DateTime @updatedAt
 }
 
+// ============================================================
+// RoomParticipant — Student Join Tracking
+// ============================================================
+// Tracks every time a student joins a room.
+// Used for agency per-student billing: an "active student" is a
+// unique studentIdentity who joined at least 1 room (under an
+// agency's sub-tutors) in the current billing period.
+//
+// studentIdentity can be:
+//   - A User ID (if the student has an account)
+//   - A fingerprint hash (if anonymous, from browser fingerprint)
+//   - A session-provided name (fallback: "Student_<uuid>")
+//
+// This allows billing even for anonymous students who join via link.
+// ============================================================
+
+model RoomParticipant {
+  id               String   @id @default(uuid())
+  roomId           String
+  room             Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  studentIdentity  String   // User ID or fingerprint hash — unique per student
+  studentName      String?  // Display name provided during join
+  joinedAt         DateTime @default(now())
+  lastActiveAt     DateTime @default(now())
+
+  // A student can join a room multiple times, but we track
+  // the latest visit via lastActiveAt (upserted on rejoin).
+  @@unique([roomId, studentIdentity]) // One record per student per room
+}
+
+// ============================================================
+// Template — Saved Board Layouts
+// ============================================================
+
 model Template {
   id        String   @id @default(uuid())
   tutorId   String
@@ -83,6 +147,10 @@ model Template {
   updatedAt DateTime @updatedAt
 }
 
+// ============================================================
+// Recording — Lesson Recordings
+// ============================================================
+
 model Recording {
   id        String   @id @default(uuid())
   roomId    String
@@ -90,4 +158,29 @@ model Recording {
   tutorId   String
   url       String   // Storage URL for the video file (Supabase Storage)
   createdAt DateTime @default(now())
+}
+
+// ============================================================
+// AgencyInvite — Sub-Tutor Invitation
+// ============================================================
+// An agency owner sends an invite to a tutor's email.
+// The tutor clicks the invite link to accept and become a sub-tutor.
+//
+// Status flow: PENDING → ACCEPTED | EXPIRED | CANCELLED
+// An invite expires after 7 days automatically.
+// ============================================================
+
+model AgencyInvite {
+  id             String   @id @default(uuid())
+  code           String   @unique // 8-char alphanumeric code for URL: /invite/{code}
+  agencyId       String
+  agency         User     @relation("InviteSender", fields: [agencyId], references: [id], onDelete: Cascade)
+  invitedEmail   String   // The email of the person being invited
+  recipientId    String?  @unique // Set when the invite is accepted (links to User)
+  recipient      User?    @relation("InviteRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+  status         String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
+  expiresAt      DateTime // Invite expires at this time
+  acceptedAt     DateTime? // Set when accepted
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

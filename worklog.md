@@ -54,3 +54,39 @@ Stage Summary:
 - Credits: FREE 25/week, PRO 500/mo, AGENCY 5000/mo (soft cap)
 - Server running persistently with watchdog on port 3000
 ---
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Build student tracking system + sub-tutor invite system + Stripe architecture
+
+Work Log:
+- Updated prisma/schema.prisma with RoomParticipant + AgencyInvite models
+- Ran database migration via pg module to create new tables
+- Built 6 new API routes:
+  - POST/GET /api/room/participants (student join tracking)
+  - GET /api/agency/students (active student count for billing)
+  - POST/GET /api/agency/invite (create + list invites)
+  - GET/POST /api/agency/invite/[code] (view + accept invite)
+  - POST /api/agency/invite/[code]/cancel (cancel invite)
+  - DELETE /api/agency/subtutors/[tutorId] (remove sub-tutor)
+- Updated AgencyAdminPanel in page.tsx with invite UI:
+  - "Invite Sub-Tutor" button + email dialog
+  - Pending invites list with status badges + cancel
+  - Remove button on sub-tutor rows with confirmation
+- Created /app/invite/[code]/page.tsx (invite accept page)
+- Wired student tracking into room page (non-tutor joins trigger participant tracking)
+- Created src/lib/stripe-billing.ts with complete metered billing architecture:
+  - createAgencyCheckoutSession (base + metered line items)
+  - createProCheckoutSession ($10/mo or $96/yr)
+  - reportStudentUsage (usage records for metered billing)
+  - reportExtraSubTutorUsage ($5/mo per extra beyond 5)
+  - getOrCreateStripeCustomer, createPortalSession
+- Updated stripe webhook to handle invoice.created (usage reporting)
+- Build passed: 21 routes registered, zero errors
+- Server restarted PID 10678, HTTP 200
+
+Stage Summary:
+- Student tracking: fully functional (anonymous + authenticated)
+- Sub-tutor invite: fully functional (create, accept, cancel, remove)
+- Stripe metered billing: architecture complete, awaiting price IDs from user

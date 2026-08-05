@@ -1,8 +1,18 @@
 // ============================================================
 // API Route: Stripe Webhook
 // ============================================================
-// Handles Pro/Agency subscription upgrades, downgrades, and cancellations.
-// Verifies webhook signature, updates user tier in DB.
+// Handles:
+// - PRO subscription upgrades/downgrades/cancellations
+// - Agency base fee subscription
+// - Agency metered billing (per-student) — invoice.created triggers usage reporting
+// - Subscription deletion → downgrade to FREE
+//
+// Webhook events handled:
+//   checkout.session.completed    → Activate tier
+//   customer.subscription.updated → Update tier status
+//   customer.subscription.deleted → Downgrade to FREE
+//   invoice.created                → Report agency student usage for metered billing
+//   invoice.paid                   → Log successful payment
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -36,8 +46,9 @@ export async function POST(request: NextRequest) {
 
     // Handle specific events
     switch (event.type) {
+      // ---- Checkout Complete: Activate tier ----
       case 'checkout.session.completed': {
-        const session = event.data.object;
+        const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
         const targetTier = session.metadata?.targetTier as Tier | undefined;
 
@@ -47,6 +58,9 @@ export async function POST(request: NextRequest) {
             data: {
               tier: targetTier,
               stripeCustomerId: session.customer as string,
+              ...(session.subscription
+                ? { stripeSubscriptionId: session.subscription as string }
+                : {}),
             },
           });
           console.log(`[Stripe] User ${userId} upgraded to ${targetTier}`);
@@ -54,18 +68,21 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      // ---- Subscription Updated: Sync tier status ----
       case 'customer.subscription.updated': {
-        const subscription = event.data.object;
+        const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata?.userId;
         const targetTier = subscription.metadata?.targetTier as Tier | undefined;
 
         if (userId && targetTier) {
-          // Update tier based on subscription status
           const newStatus = subscription.status;
           if (newStatus === 'active') {
             await db.user.update({
               where: { id: userId },
-              data: { tier: targetTier },
+              data: {
+                tier: targetTier,
+                stripeSubscriptionId: subscription.id,
+              },
             });
           } else if (newStatus === 'canceled' || newStatus === 'past_due') {
             await db.user.update({
@@ -77,17 +94,139 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      // ---- Subscription Deleted: Downgrade to FREE ----
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object;
+        const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata?.userId;
 
         if (userId) {
           // Downgrade to FREE
           await db.user.update({
             where: { id: userId },
-            data: { tier: 'FREE' },
+            data: { tier: 'FREE', stripeSubscriptionId: null },
           });
           console.log(`[Stripe] User ${userId} downgraded to FREE`);
+        }
+        break;
+      }
+
+      // ---- Invoice Created: Report agency student usage ----
+      // This fires at the END of each billing cycle, BEFORE the invoice is finalized.
+      // We need to report how many active students the agency had so Stripe
+      // can calculate the metered charge ($1.50 × active students).
+      case 'invoice.created': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string | null;
+
+        if (subscriptionId && invoice.billing_reason === 'subscription_cycle') {
+          // Find the user who owns this subscription
+          const user = await db.user.findFirst({
+            where: { stripeSubscriptionId: subscriptionId },
+            select: { id: true, tier: true },
+          });
+
+          if (user && user.tier === 'AGENCY') {
+            try {
+              // Count active students for this agency
+              const subTutors = await db.user.findMany({
+                where: { parentAgencyId: user.id },
+                select: { id: true },
+              });
+              const subTutorIds = subTutors.map((t) => t.id);
+
+              const activeRooms = await db.room.findMany({
+                where: {
+                  tutorId: { in: subTutorIds },
+                  isActive: true,
+                },
+                select: { id: true },
+              });
+              const activeRoomIds = activeRooms.map((r) => r.id);
+
+              if (activeRoomIds.length > 0) {
+                // Get unique active students in this billing period
+                const billingPeriodStart = new Date(
+                  invoice.period_start * 1000
+                );
+
+                const activeStudents = await db.roomParticipant.findMany({
+                  where: {
+                    roomId: { in: activeRoomIds },
+                    lastActiveAt: { gte: billingPeriodStart },
+                  },
+                  select: { studentIdentity: true },
+                  distinct: ['studentIdentity'],
+                });
+
+                // Report usage to Stripe
+                // The metered price item needs to be looked up from the subscription
+                const { getStripeClient } = await import('@/lib/stripe');
+                const stripe = getStripeClient();
+                const subscription = await stripe.subscriptions.retrieve(
+                  subscriptionId,
+                  { expand: ['items.data.price'] }
+                );
+
+                // Find the metered item (usage_type === 'metered')
+                const meteredItem = subscription.items.data.find(
+                  (item) =>
+                    item.price.recurring?.usage_type === 'metered' ||
+                    item.price.billing_scheme === 'per_unit'
+                );
+
+                if (meteredItem) {
+                  await stripe.subscriptionItems.createUsageRecord(
+                    meteredItem.id,
+                    {
+                      quantity: activeStudents.length,
+                      action: 'set',
+                      timestamp: Math.floor(Date.now() / 1000),
+                    }
+                  );
+                  console.log(
+                    `[Stripe] Reported ${activeStudents.length} active students ` +
+                    `for agency ${user.id} (subscription ${subscriptionId})`
+                  );
+                } else {
+                  console.log(
+                    `[Stripe] No metered item found on subscription ${subscriptionId}. ` +
+                    'Student usage not reported.'
+                  );
+                }
+              } else {
+                console.log(
+                  `[Stripe] Agency ${user.id} has no active rooms — reporting 0 students.`
+                );
+              }
+            } catch (usageError) {
+              console.error(
+                `[Stripe] Failed to report student usage for agency ${user.id}:`,
+                usageError
+              );
+              // Don't fail the webhook — Stripe will retry
+            }
+          }
+        }
+        break;
+      }
+
+      // ---- Invoice Paid: Log successful payment ----
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string | null;
+
+        if (subscriptionId) {
+          const user = await db.user.findFirst({
+            where: { stripeSubscriptionId: subscriptionId },
+            select: { id: true },
+          });
+
+          if (user) {
+            console.log(
+              `[Stripe] Invoice paid for user ${user.id}: ` +
+              `$${invoice.amount_paid / 100} (subscription ${subscriptionId})`
+            );
+          }
         }
         break;
       }
@@ -105,3 +244,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Need Stripe types for webhook processing
+import Stripe from 'stripe';
