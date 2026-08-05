@@ -116,7 +116,7 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-6 max-w-md mx-auto px-6">
           <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
             <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

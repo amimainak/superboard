@@ -257,9 +257,7 @@
    ============================================================ */
 
 /* Gradient backgrounds */
-.gradient-auth {
-  background: #ffffff;
-}
+/* .surface-white — solid white background (previously gradient-auth) */
 
 .gradient-hero {
   background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 50%, #f0f9ff 100%);
@@ -269,9 +267,7 @@
   background: linear-gradient(135deg, #059669, #0891b2);
 }
 
-.gradient-emerald-teal {
-  background: linear-gradient(135deg, #059669, #0891b2);
-}
+/* .gradient-emerald-teal removed — use .gradient-primary instead */
 
 .gradient-teal-cyan {
   background: linear-gradient(135deg, #0891b2, #0ea5e9);
@@ -285,7 +281,7 @@
   background: linear-gradient(135deg, #f59e0b, #f43f5e);
 }
 
-/* Sharp card effect — NO blur, NO transparency */
+/* Sharp card effect — clean white card with subtle shadow */
 .glass-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;

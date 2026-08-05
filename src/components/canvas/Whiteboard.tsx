@@ -167,7 +167,7 @@ export default function Whiteboard() {
           />
 
           {/* Toolbar */}
-          <div className="flex-shrink-0 flex items-start pt-4 pl-2">
+          <div className="flex-shrink-0 flex items-start pt-4 pl-2" role="toolbar" aria-label="Whiteboard tools">
             <ToolbarWrapper
               editorRef={editorRef}
               activeTool={activeTool}
@@ -176,7 +176,7 @@ export default function Whiteboard() {
           </div>
 
           {/* Canvas Container */}
-          <div
+          <main
             ref={canvasRef}
             className="flex-1 relative overflow-hidden"
             id="whiteboard-canvas"
@@ -221,7 +221,7 @@ export default function Whiteboard() {
                         : 'General Whiteboard'}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Tldraw canvas will mount here when configured.
+                  Your interactive whiteboard is loading...
                   <br />
                   Room: {roomId} | Page: {currentPageIndex + 1}/{totalPages}
                 </p>
@@ -235,7 +235,7 @@ export default function Whiteboard() {
 
             {/* Floating PiP Video Panel — ALWAYS VISIBLE */}
             <PipVideoPanel />
-          </div>
+          </main>
 
           {/* AI Control Panel (Sheet, slides from right) */}
           <AIControlPanel />

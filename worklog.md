@@ -90,3 +90,20 @@ Stage Summary:
 - Student tracking: fully functional (anonymous + authenticated)
 - Sub-tutor invite: fully functional (create, accept, cancel, remove)
 - Stripe metered billing: architecture complete, awaiting price IDs from user
+---
+Task ID: design-audit-fixes
+Agent: Main Agent
+Task: Fix all design audit issues identified during comprehensive website review
+
+Work Log:
+- Read all source files: page.tsx, layout.tsx, globals.css, UsageBar.tsx, PipVideoPanel.tsx, RecordButton.tsx, Toolbar.tsx, Whiteboard.tsx, app-store.ts, room page.tsx, and all 4 toolkit files
+- Created comprehensive fix script (scripts/fix-design-audit.py) and applied 16 categories of fixes
+- Fixed syntax errors in PipVideoPanel.tsx (JSX nesting) and toolkit files (duplicate component definitions)
+- Rebuilt production build successfully
+- Verified landing page renders with new title, footer, and all CSS
+
+Stage Summary:
+- 16 design audit fixes applied across 14 files
+- Created shared ToolkitShared.tsx component (DRY refactor)
+- All fixes pass production build
+- Server restarted with watchdog monitoring

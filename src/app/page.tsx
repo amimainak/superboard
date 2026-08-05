@@ -7,12 +7,13 @@
 
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useCredits } from '@/hooks/useCredits';
 import { useTheme } from '@/hooks/useTheme';
 import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
+import { TIER_LIMITS } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -99,7 +100,9 @@ export default function Dashboard() {
   } = useCredits(null);
 
   const [user, setUser] = useState<User | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [tierLoading, setTierLoading] = useState(true);
 
   // --- Auth check on mount ---
   useEffect(() => {
@@ -122,10 +125,12 @@ export default function Dashboard() {
           if (tierRes.ok) {
             const profileData = await tierRes.json();
             if (profileData.tier) setTier(profileData.tier as Tier);
+            if (profileData.name) setUserName(profileData.name);
           }
         } catch { /* ignore */ }
       }
       setAuthLoading(false);
+      setTierLoading(false);
     });
 
     // Then check for existing session
@@ -138,10 +143,12 @@ export default function Dashboard() {
           if (tierRes.ok) {
             const profileData = await tierRes.json();
             if (profileData.tier) setTier(profileData.tier as Tier);
+            if (profileData.name) setUserName(profileData.name);
           }
         } catch { /* ignore */ }
       }
       setAuthLoading(false);
+      setTierLoading(false);
     });
 
     return () => {
@@ -170,7 +177,7 @@ export default function Dashboard() {
   }
 
   // --- Logged in → Show Dashboard ---
-  return <AuthenticatedDashboard user={user} />;
+  return <AuthenticatedDashboard user={user} userName={userName} tierLoading={tierLoading} />;
 }
 
 // ============================================================
@@ -187,6 +194,7 @@ function LandingPage() {
   const [authMessage, setAuthMessage] = useState('');
   const [showAuth, setShowAuth] = useState<'login' | 'register' | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,8 +261,32 @@ function LandingPage() {
             <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
               Get Started Free
             </Button>
+            {/* Mobile hamburger */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {mobileMenuOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+              </svg>
+            </button>
           </div>
         </div>
+        {/* Mobile dropdown menu */}
+        {mobileMenuOpen && (
+          <div ref={mobileMenuRef} className="md:hidden border-t border-gray-200 bg-white px-6 py-4 space-y-3 animate-fade-in-up">
+            <a href="#features" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
+            <a href="#how-it-works" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
+            <a href="#pricing" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+            <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+              <Button variant="ghost" className="text-sm font-medium text-gray-700 justify-start" onClick={() => { setShowAuth('login'); setMobileMenuOpen(false); }}>Sign In</Button>
+              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm" onClick={() => { setShowAuth('register'); setMobileMenuOpen(false); }}>Get Started Free</Button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ===== HERO SECTION ===== */}
@@ -284,11 +316,11 @@ function LandingPage() {
               </p>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-4 animate-fade-in-up-delay-2">
-                <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-7" onClick={() => setShowAuth('register')}>
+                <Button size="lg" className="h-[52px] rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-7" onClick={() => setShowAuth('register')}>
                   Start Teaching for Free
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="h-13 rounded-xl border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-all text-[15px] px-7" onClick={() => { document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}>
+                <Button size="lg" variant="outline" className="h-[52px] rounded-xl border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-all text-[15px] px-7" onClick={() => { document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }); }}>
                   See How It Works
                   <Play className="w-4 h-4 ml-2" />
                 </Button>
@@ -617,7 +649,7 @@ function LandingPage() {
             Join thousands of tutors who&apos;ve made their lessons more engaging, more productive, and more fun with Superboard.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
+            <Button size="lg" className="h-[52px] rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
               Create Your Free Account
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -637,9 +669,9 @@ function LandingPage() {
           </div>
           <p className="text-xs text-gray-400">&copy; 2025 Superboard. Built for tutors, by tutors.</p>
           <div className="flex gap-6">
-            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
-            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
-            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Contact</a>
+            <a href="#pricing" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Pricing</a>
+            <a href="#features" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Features</a>
+            <a href="mailto:hello@superboard.app" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Contact</a>
           </div>
         </div>
       </footer>
@@ -732,7 +764,7 @@ function LandingPage() {
 // ============================================================
 // AUTHENTICATED DASHBOARD
 // ============================================================
-function AuthenticatedDashboard({ user }: { user: User }) {
+function AuthenticatedDashboard({ user, userName, tierLoading }: { user: User; userName: string | null; tierLoading: boolean }) {
   const { tier, setTier, setRoom } = useAppStore();
   const { brandColor, agencyName, setBrandColor } = useTheme();
   const {
@@ -748,6 +780,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
   const [showNewLesson, setShowNewLesson] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
   const [creating, setCreating] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     import('@/lib/fingerprint').then(({ reportFingerprint }) => {
@@ -815,11 +848,13 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground hidden sm:inline mr-1">{user.email}</span>
-            <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
-              {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
-              {tierLabel}
-            </Badge>
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Settings">
+            {!tierLoading && (
+              <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
+                {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
+                {tierLabel}
+              </Badge>
+            )}
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Settings" onClick={() => setShowSettings(true)}>
               <Settings className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={handleLogout} title="Sign out">
@@ -833,7 +868,7 @@ function AuthenticatedDashboard({ user }: { user: User }) {
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Banner — sharp gradient, no blur blobs */}
         <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 animate-fade-in-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {user.email?.split('@')[0]}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {userName || user.user_metadata?.name || user.email?.split('@')[0]}</h2>
           <p className="text-gray-700 mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
         </div>
 
@@ -1445,6 +1480,39 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
           </table>
         </div>
       )}
+
+      {/* ===== SETTINGS DIALOG ===== */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Settings</DialogTitle>
+          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+              <Settings className="w-7 h-7 text-emerald-600" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Settings</h2>
+            <p className="text-sm text-white/70 mt-1">Manage your account preferences</p>
+          </div>
+          <div className="px-6 pb-6 pt-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Email</Label>
+              <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{user.email}</div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Current Plan</Label>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
+                  {tierLabel}
+                </Badge>
+              </div>
+            </div>
+            <Separator />
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Need to change your email or password?</p>
+              <Button variant="link" className="text-xs text-primary mt-1">Contact Support</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

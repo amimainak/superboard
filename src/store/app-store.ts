@@ -97,7 +97,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   room: initialRoomState,
   tier: 'FREE',
   aiCreditsUsed: 0,
-  aiCreditsLimit: 10,
+  aiCreditsLimit: 25,
   videoMinutesUsed: 0,
   videoMinutesLimit: 120,
   recordingsUsed: 0,

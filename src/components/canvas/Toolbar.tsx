@@ -80,7 +80,7 @@ export default function Toolbar({ editor, onToolChange, activeTool }: ToolbarPro
   ];
 
   return (
-    <div className="flex flex-col items-center gap-1 p-2 bg-card border rounded-xl shadow-lg">
+    <div className="flex flex-col items-center gap-1 p-2 bg-card border rounded-xl shadow-lg" role="toolbar" aria-label="Drawing and subject tools">
       {/* Column 1: Core Tools — always visible */}
       <div className="flex flex-col gap-1">
         {coreTools.map((tool) => (
@@ -91,6 +91,7 @@ export default function Toolbar({ editor, onToolChange, activeTool }: ToolbarPro
                 size="icon"
                 className="w-9 h-9"
                 onClick={() => onToolChange?.(tool.id)}
+                aria-label={tool.label}
               >
                 <tool.icon className="w-4 h-4" />
               </Button>

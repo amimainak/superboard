@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { useAppStore } from '@/store/app-store';
 import type { AIAction } from '@/types';
 import {
-  Lock,
   Grid3X3,
   Triangle,
   Pentagon,
@@ -226,24 +225,6 @@ export default function MathToolkit({ editor: _editor }: MathToolkitProps) {
           </TooltipContent>
         </Tooltip>
       ))}
-    </div>
-  );
-}
-
-// ---- Reusable Sub-components ----
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium text-center mt-1 mb-0.5">
-      {children}
-    </span>
-  );
-}
-
-function LockOverlay() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <Lock className="w-3 h-3 text-muted-foreground" />
     </div>
   );
 }

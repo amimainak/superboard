@@ -66,24 +66,7 @@ interface PlaceholderParticipant {
 
 // TODO: Replace with real LiveKit `useParticipants()` data once connected
 const PLACEHOLDER_PARTICIPANTS: PlaceholderParticipant[] = [
-  {
-    identity: 'tutor-001',
-    name: 'Ms. Johnson',
-    isTutor: true,
-    isMuted: false,
-    isDeafened: false,
-    isCameraOn: true,
-    isSpeaking: false,
-  },
-  {
-    identity: 'student-001',
-    name: 'Alex',
-    isTutor: false,
-    isMuted: true,
-    isDeafened: false,
-    isCameraOn: true,
-    isSpeaking: false,
-  },
+  // Populated dynamically when LiveKit is connected
 ];
 
 // ============================================================
@@ -217,6 +200,39 @@ export default function PipVideoPanel() {
   // ---- Minimized view: small circle with last speaker avatar ----
   if (isMinimized) {
     const lastSpeaker = PLACEHOLDER_PARTICIPANTS.find((p) => p.isSpeaking) || PLACEHOLDER_PARTICIPANTS[0];
+    if (!lastSpeaker) {
+      // No participants yet — show a generic camera icon
+      return (
+        <div
+          ref={panelRef}
+          style={{
+            position: 'fixed',
+            left: position.x,
+            top: position.y,
+            width: MINIMIZED_SIZE,
+            height: MINIMIZED_SIZE,
+            zIndex: 9999,
+          }}
+          onMouseDown={handleDragStart}
+          className={cn(
+            'cursor-grab active:cursor-grabbing rounded-full',
+            'bg-black/80 backdrop-blur-xl border border-white/10',
+            'shadow-2xl flex items-center justify-center',
+            'transition-shadow hover:shadow-[0_0_24px_rgba(59,130,246,0.3)]',
+            'group'
+          )}
+          onClick={() => setIsMinimized(false)}
+          title="Click to expand video panel"
+        >
+          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/80">
+            <Video className="w-5 h-5 text-white" />
+          </div>
+          {isRecording && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-black/80" />
+          )}
+        </div>
+      );
+    }
     return (
       <div
         ref={panelRef}
@@ -335,63 +351,71 @@ export default function PipVideoPanel() {
           =====================================================
         */}
         <div className="grid grid-cols-2 h-full gap-0.5 p-0.5">
-          {PLACEHOLDER_PARTICIPANTS.map((participant) => (
-            <div
-              key={participant.identity}
-              className={cn(
-                'relative rounded-lg overflow-hidden flex flex-col items-center justify-center',
-                'bg-gradient-to-b from-slate-800/60 to-slate-900/80',
-                participant.isSpeaking && 'ring-2 ring-green-400/60'
-              )}
-            >
-              {/* Video placeholder area */}
-              <div className="flex-1 w-full flex items-center justify-center relative">
-                {participant.isCameraOn ? (
-                  <div className="flex flex-col items-center gap-2 text-white/30">
-                    {/*
-                      TODO: Replace with <VideoTrack track={...} />
-                    */}
-                    <Video className="w-10 h-10" />
-                    <span className="text-[10px]">Camera Active</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 text-white/20">
-                    <VideoOff className="w-10 h-10" />
-                    <span className="text-[10px]">Camera Off</span>
-                  </div>
-                )}
-
-                {/* Name tag */}
-                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1.5">
-                  <span
-                    className={cn(
-                      'text-[10px] font-medium text-white/90 px-1.5 py-0.5 rounded',
-                      'bg-black/60 backdrop-blur-sm'
-                    )}
-                  >
-                    {participant.name}
-                    {participant.isTutor && (
-                      <span className="ml-1 text-blue-400">★</span>
-                    )}
-                  </span>
-                </div>
-
-                {/* Mute indicator */}
-                {participant.isMuted && (
-                  <div className="absolute top-1.5 right-1.5">
-                    <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
-                      <MicOff className="w-3 h-3 text-white" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Speaking animation ring */}
-                {participant.isSpeaking && (
-                  <div className="absolute inset-0 rounded-lg border-2 border-green-400/40 animate-pulse pointer-events-none" />
-                )}
-              </div>
+          {PLACEHOLDER_PARTICIPANTS.length === 0 ? (
+            <div className="col-span-2 h-full flex flex-col items-center justify-center gap-3 text-white/30">
+              <Video className="w-12 h-12" />
+              <span className="text-xs">Video call ready</span>
+              <span className="text-[10px] text-white/20">Participants will appear here</span>
             </div>
-          ))}
+          ) : (
+            PLACEHOLDER_PARTICIPANTS.map((participant) => (
+              <div
+                key={participant.identity}
+                className={cn(
+                  'relative rounded-lg overflow-hidden flex flex-col items-center justify-center',
+                  'bg-gradient-to-b from-slate-800/60 to-slate-900/80',
+                  participant.isSpeaking && 'ring-2 ring-green-400/60'
+                )}
+              >
+                {/* Video placeholder area */}
+                <div className="flex-1 w-full flex items-center justify-center relative">
+                  {participant.isCameraOn ? (
+                    <div className="flex flex-col items-center gap-2 text-white/30">
+                      {/*
+                        TODO: Replace with <VideoTrack track={...} />
+                      */}
+                      <Video className="w-10 h-10" />
+                      <span className="text-[10px]">Camera Active</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-white/20">
+                      <VideoOff className="w-10 h-10" />
+                      <span className="text-[10px]">Camera Off</span>
+                    </div>
+                  )}
+
+                  {/* Name tag */}
+                  <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1.5">
+                    <span
+                      className={cn(
+                        'text-[10px] font-medium text-white/90 px-1.5 py-0.5 rounded',
+                        'bg-black/60 backdrop-blur-sm'
+                      )}
+                    >
+                      {participant.name}
+                      {participant.isTutor && (
+                        <span className="ml-1 text-blue-400">&#9733;</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Mute indicator */}
+                  {participant.isMuted && (
+                    <div className="absolute top-1.5 right-1.5">
+                      <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
+                        <MicOff className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Speaking animation ring */}
+                  {participant.isSpeaking && (
+                    <div className="absolute inset-0 rounded-lg border-2 border-green-400/40 animate-pulse pointer-events-none" />
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Connection state overlay (placeholder) */}
