@@ -102,7 +102,15 @@ do_start() {
   # --- launch with setsid (new session, no controlling terminal) ---
   log "Starting Superboard on port $PORT ..."
   cd "$STANDALONE_DIR"
-  setsid env PORT=$PORT NODE_ENV=production node server.js \
+  # Build env-string from .env so setsid'd node inherits ALL vars
+  # (setsid creates a new session — exported parent vars are NOT inherited)
+  local env_args=""
+  while IFS='=' read -r key value; do
+    [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]] && continue
+    value=$(echo "$value" | sed 's/^"//;s/"$//')  # strip optional quotes
+    env_args="${env_args} ${key}=${value}"
+  done < "$STANDALONE_DIR/.env"
+  setsid env PORT=$PORT NODE_ENV=production $env_args node server.js \
     >> "$SERVER_LOG" 2>&1 < /dev/null &
   local child_pid=$!
   # The setsid'd session leader is the parent of $child_pid
