@@ -94,11 +94,26 @@ export interface BrandingConfig {
   customDomain: string | null;
 }
 
+// ============================================================
+// Pricing & Tier Configuration
+// ============================================================
+// FREE:   $0/mo  — Conversion funnel (1 room, 25 AI credits/week)
+// PRO:    $10/mo ($96/yr) — Freelance tutors (unlimited rooms, 500 credits/mo)
+// AGENCY: $39/mo base + $1.50/active student/mo — Tutoring centers
+// ============================================================
+
+export const PRICING = {
+  FREE: { monthly: 0, annual: 0, label: 'Free' },
+  PRO:  { monthly: 10, annual: 96, label: 'Pro Tutor' },
+  AGENCY: { monthly: 39, annual: 390, label: 'Agency', perStudent: 1.50 },
+} as const;
+
 // Tier limits configuration
 export const TIER_LIMITS = {
   FREE: {
+    maxActiveRooms: 1,
     videoMinutesPerWeek: 120,
-    aiCreditsPerWeek: 10,
+    aiCreditsPerWeek: 25,
     recordingsPerMonth: 0,
     features: {
       uploads: false,
@@ -115,8 +130,9 @@ export const TIER_LIMITS = {
     },
   },
   PRO: {
+    maxActiveRooms: Infinity,
     videoMinutesPerWeek: Infinity,
-    aiCreditsPerMonth: 100,
+    aiCreditsPerMonth: 500,
     recordingsPerMonth: 2,
     features: {
       uploads: true,
@@ -133,8 +149,9 @@ export const TIER_LIMITS = {
     },
   },
   AGENCY: {
+    maxActiveRooms: Infinity,
     videoMinutesPerWeek: Infinity,
-    aiCreditsPerMonth: Infinity,
+    aiCreditsPerMonth: 5000,
     recordingsPerMonth: Infinity,
     features: {
       uploads: true,

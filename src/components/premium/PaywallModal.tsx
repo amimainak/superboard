@@ -30,7 +30,8 @@ const FEATURES: { label: string; free: boolean; pro: boolean; agency: boolean }[
   { label: 'Lesson recordings', free: false, pro: true, agency: true },
   { label: 'White-label branding', free: false, pro: false, agency: true },
   { label: 'Admin dashboard', free: false, pro: false, agency: true },
-  { label: 'Unlimited smart credits', free: false, pro: false, agency: true },
+  { label: 'Up to 500 smart credits/mo', free: false, pro: true, agency: true },
+  { label: 'Unlimited smart credits (5K/mo)', free: false, pro: false, agency: true },
 ];
 
 function CheckIcon({ on }: { on: boolean }) {
@@ -75,11 +76,11 @@ export default function PaywallModal() {
               <span className="text-lg font-bold">Pro</span>
             </div>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold">$15</span>
+              <span className="text-3xl font-extrabold">$10</span>
               <span className="text-sm text-muted-foreground">/month</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Perfect for individual tutors who want the full toolkit.
+              $96/year. Full toolkit for individual tutors.
             </p>
             <Button
               className="mt-auto w-full"
@@ -106,10 +107,10 @@ export default function PaywallModal() {
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-extrabold">$39</span>
-              <span className="text-sm text-muted-foreground">/month</span>
+              <span className="text-sm text-muted-foreground">/month + per student</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              White-label branding, admin dashboard &amp; unlimited usage for tutoring centres.
+              Base fee includes 5 sub-tutors. $1.50/active student/mo.
             </p>
             <Button
               variant="outline"

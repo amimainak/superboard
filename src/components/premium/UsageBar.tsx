@@ -21,8 +21,8 @@ export default function UsageBar() {
     loading,
   } = useCredits(userId);
 
-  // Hidden entirely for AGENCY tier (unlimited)
-  if (tier === 'AGENCY') return null;
+  // Agency tier has a soft cap of 5,000 credits — show usage bar for tracking
+  // Only hide if no userId is available
 
   // Don't render while data is loading to avoid flash of zeros
   if (loading) return null;
@@ -43,7 +43,7 @@ export default function UsageBar() {
           {/* Smart Credits */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Sparkles className="size-3.5 shrink-0 text-primary" />
-            {aiCreditsExhausted ? (
+            {aiCreditsExhausted && tier !== 'AGENCY' ? (
               <Button
                 variant="destructive"
                 size="sm"

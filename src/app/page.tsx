@@ -567,9 +567,9 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['10 smart credits/week', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
-              { name: 'Pro Tutor', price: '$15', period: '/month', desc: 'For serious tutors who want more', features: ['100 smart credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recording/month', 'Save/Load boards'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
-              { name: 'Agency', price: '$39', period: '/month', desc: 'For tutoring centers & teams', features: ['Everything in Pro', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Sub-tutor management', 'Admin dashboard'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
+              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['25 smart credits/week', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
+              { name: 'Pro Tutor', price: '$10', period: '/month', desc: 'For serious tutors who want more', features: ['500 smart credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recordings/month', 'Save/Load & PDF export'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
+              { name: 'Agency', price: '$39', period: '/month + per student', desc: 'For tutoring centers & teams', features: ['$39/mo base fee', 'Up to 5 sub-tutors included', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Admin dashboard & analytics'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
             ].map((plan) => (
               <div key={plan.name} className={`rounded-2xl bg-white p-6 md:p-8 relative ${plan.ctaStyle === 'primary' ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02]' : 'border border-gray-200 shadow-sm hover:shadow-md'} transition-shadow duration-300`}>
                 {plan.badge && (
@@ -983,7 +983,7 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
             </div>
             <div>
               <p className="font-semibold">Current Plan</p>
-              <p className="text-sm text-muted-foreground">{tier === 'FREE' && 'Free tier \u2014 Limited features'}{tier === 'PRO' && 'Pro Tutor \u2014 $15/month'}{tier === 'AGENCY' && 'Agency \u2014 $39/month'}</p>
+              <p className="text-sm text-muted-foreground">{tier === 'FREE' && 'Free tier \u2014 Limited features'}{tier === 'PRO' && 'Pro Tutor \u2014 $10/month'}{tier === 'AGENCY' && 'Agency \u2014 $39/month + per student'}</p>
             </div>
           </div>
           <Badge className={`rounded-full px-3 font-semibold ${tierColor}`}>{tierLabel}</Badge>
@@ -1000,11 +1000,11 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
                     <div className="absolute top-3 right-3"><Badge className="bg-emerald-500 text-white rounded-full text-[10px]">Popular</Badge></div>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center"><Star className="w-4 h-4 text-emerald-600" /></div>Pro Tutor</CardTitle>
-                      <CardDescription className="text-base font-semibold text-foreground">$15/month or $120/year</CardDescription>
+                      <CardDescription className="text-base font-semibold text-foreground">$10/month or $96/year</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <ul className="text-sm space-y-2 mb-4">
-                        {['Unlimited video calls', '100 smart credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
+                        {['Unlimited video calls', '500 smart credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
                           <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
                         ))}
                       </ul>
@@ -1016,11 +1016,11 @@ function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandCo
                   <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency / Center</CardTitle>
-                    <CardDescription className="text-base font-semibold text-foreground">$39/month</CardDescription>
+                    <CardDescription className="text-base font-semibold text-foreground">$39/month + per student</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="text-sm space-y-2 mb-4">
-                      {['Everything in Pro', 'White-labeling', 'Custom domains', 'Unlimited recordings', 'Admin dashboard'].map((f) => (
+                      {['Everything in Pro', '$39/mo base fee', 'White-labeling & branding', 'Custom domains', 'Unlimited recordings', 'Admin dashboard & analytics'].map((f) => (
                         <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
                       ))}
                     </ul>

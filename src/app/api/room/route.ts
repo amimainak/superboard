@@ -49,11 +49,12 @@ export async function POST(request: NextRequest) {
       where: { tutorId, isActive: true },
     });
 
-    // FREE tier: max 1 active room; PRO/AGENCY: unlimited
-    const maxRooms = tutorTier === 'FREE' ? 1 : Infinity;
+    // Use centralized TIER_LIMITS for max rooms
+    const { TIER_LIMITS } = await import('@/types');
+    const maxRooms = TIER_LIMITS[tutorTier].maxActiveRooms;
     if (activeRoomCount >= maxRooms) {
       return NextResponse.json(
-        { error: `ROOM_LIMIT_REACHED`, message: `Free tier allows 1 active room. Please end an existing room or upgrade to Pro for unlimited rooms.` },
+        { error: `ROOM_LIMIT_REACHED`, message: `Free tier allows 1 active room (${activeRoomCount}/1). Please end an existing room or upgrade to Pro for unlimited rooms.` },
         { status: 403 }
       );
     }

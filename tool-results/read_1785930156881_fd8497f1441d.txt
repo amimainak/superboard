@@ -1,0 +1,502 @@
+     1→   600→                  {plan.cta}
+     2→   601→                </Button>
+     3→   602→              </div>
+     4→   603→            ))}
+     5→   604→          </div>
+     6→   605→        </div>
+     7→   606→      </section>
+     8→   607→
+     9→   608→      {/* ===== FINAL CTA ===== */}
+    10→   609→      <section className="py-20 md:py-28 relative overflow-hidden">
+    11→   610→        <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
+    12→   611→        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+    13→   612→          <GraduationCap className="w-14 h-14 mx-auto mb-6 text-emerald-500" />
+    14→   613→          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+    15→   614→            Ready to transform your tutoring?
+    16→   615→          </h2>
+    17→   616→          <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
+    18→   617→            Join thousands of tutors who&apos;ve made their lessons more engaging, more productive, and more fun with Superboard.
+    19→   618→          </p>
+    20→   619→          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+    21→   620→            <Button size="lg" className="h-13 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
+    22→   621→              Create Your Free Account
+    23→   622→              <ArrowRight className="w-4 h-4 ml-2" />
+    24→   623→            </Button>
+    25→   624→          </div>
+    26→   625→          <p className="mt-4 text-xs text-gray-400">No credit card required. Set up in under 60 seconds.</p>
+    27→   626→        </div>
+    28→   627→      </section>
+    29→   628→
+    30→   629→      {/* ===== FOOTER ===== */}
+    31→   630→      <footer className="border-t border-gray-100 py-8">
+    32→   631→        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+    33→   632→          <div className="flex items-center gap-2">
+    34→   633→            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+    35→   634→              <GraduationCap className="w-4 h-4 text-white" />
+    36→   635→            </div>
+    37→   636→            <span className="text-sm font-semibold text-gray-900">Superboard</span>
+    38→   637→          </div>
+    39→   638→          <p className="text-xs text-gray-400">&copy; 2025 Superboard. Built for tutors, by tutors.</p>
+    40→   639→          <div className="flex gap-6">
+    41→   640→            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Privacy</a>
+    42→   641→            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Terms</a>
+    43→   642→            <a href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Contact</a>
+    44→   643→          </div>
+    45→   644→        </div>
+    46→   645→      </footer>
+    47→   646→
+    48→   647→      {/* ===== AUTH DIALOG ===== */}
+    49→   648→      <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
+    50→   649→        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+    51→   650→          <DialogTitle className="sr-only">{showAuth === 'login' ? 'Sign In' : 'Create Account'}</DialogTitle>
+    52→   651→          {/* Gradient header */}
+    53→   652→          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+    54→   653→            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+    55→   654→              <GraduationCap className="w-8 h-8 text-white" />
+    56→   655→            </div>
+    57→   656→            <h2 className="text-xl font-bold text-white">
+    58→   657→              {showAuth === 'login' ? 'Welcome back' : 'Create your account'}
+    59→   658→            </h2>
+    60→   659→            <p className="text-sm text-white/70 mt-1">
+    61→   660→              {showAuth === 'login' ? 'Sign in to your tutor dashboard' : 'Start teaching in under 60 seconds'}
+    62→   661→            </p>
+    63→   662→          </div>
+    64→   663→
+    65→   664→          <div className="px-6 pb-6 pt-4">
+    66→   665→            {/* Tab switcher */}
+    67→   666→            <div className="flex mb-5 rounded-xl bg-gray-100 p-1">
+    68→   667→              <button
+    69→   668→                onClick={() => { setShowAuth('login'); setAuthError(''); setAuthMessage(''); }}
+    70→   669→                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${showAuth === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+    71→   670→              >
+    72→   671→                Sign In
+    73→   672→              </button>
+    74→   673→              <button
+    75→   674→                onClick={() => { setShowAuth('register'); setAuthError(''); setAuthMessage(''); }}
+    76→   675→                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${showAuth === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+    77→   676→              >
+    78→   677→                Register
+    79→   678→              </button>
+    80→   679→            </div>
+    81→   680→
+    82→   681→            {authError && (
+    83→   682→              <div className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 mb-4">
+    84→   683→                <p className="text-sm text-rose-600">{authError}</p>
+    85→   684→              </div>
+    86→   685→            )}
+    87→   686→            {authMessage && (
+    88→   687→              <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-4 py-3 mb-4">
+    89→   688→                <p className="text-sm text-emerald-600">{authMessage}</p>
+    90→   689→              </div>
+    91→   690→            )}
+    92→   691→
+    93→   692→            {showAuth === 'login' ? (
+    94→   693→              <form onSubmit={handleLogin} className="space-y-4">
+    95→   694→                <div className="space-y-1.5">
+    96→   695→                  <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+    97→   696→                  <Input id="login-email" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required className="h-11 rounded-xl" />
+    98→   697→                </div>
+    99→   698→                <div className="space-y-1.5">
+   100→   699→                  <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
+   101→   700→                  <Input id="login-password" type="password" placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required className="h-11 rounded-xl" />
+   102→   701→                </div>
+   103→   702→                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
+   104→   703→                  Sign In
+   105→   704→                </Button>
+   106→   705→              </form>
+   107→   706→            ) : (
+   108→   707→              <form onSubmit={handleRegister} className="space-y-4">
+   109→   708→                <div className="space-y-1.5">
+   110→   709→                  <Label htmlFor="reg-email" className="text-sm font-medium">Email</Label>
+   111→   710→                  <Input id="reg-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} required className="h-11 rounded-xl" />
+   112→   711→                </div>
+   113→   712→                <div className="space-y-1.5">
+   114→   713→                  <Label htmlFor="reg-password" className="text-sm font-medium">Password</Label>
+   115→   714→                  <Input id="reg-password" type="password" placeholder="Min. 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} required minLength={6} className="h-11 rounded-xl" />
+   116→   715→                </div>
+   117→   716→                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
+   118→   717→                  Create Free Account
+   119→   718→                </Button>
+   120→   719→              </form>
+   121→   720→            )}
+   122→   721→
+   123→   722→            <p className="text-center text-[11px] text-gray-400 mt-4">
+   124→   723→              {showAuth === 'register' ? 'No credit card required' : 'Forgot password? Contact support'}
+   125→   724→            </p>
+   126→   725→          </div>
+   127→   726→        </DialogContent>
+   128→   727→      </Dialog>
+   129→   728→    </div>
+   130→   729→  );
+   131→   730→}
+   132→   731→
+   133→   732→// ============================================================
+   134→   733→// AUTHENTICATED DASHBOARD
+   135→   734→// ============================================================
+   136→   735→function AuthenticatedDashboard({ user }: { user: User }) {
+   137→   736→  const { tier, setTier, setRoom } = useAppStore();
+   138→   737→  const { brandColor, agencyName, setBrandColor } = useTheme();
+   139→   738→  const {
+   140→   739→    aiCreditsUsed,
+   141→   740→    aiCreditsLimit,
+   142→   741→    videoMinutesUsed,
+   143→   742→    videoMinutesLimit,
+   144→   743→    recordingsUsed,
+   145→   744→    recordingsLimit,
+   146→   745→    loading: usageLoading,
+   147→   746→  } = useCredits(user.id);
+   148→   747→
+   149→   748→  const [showNewLesson, setShowNewLesson] = useState(false);
+   150→   749→  const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
+   151→   750→  const [creating, setCreating] = useState(false);
+   152→   751→
+   153→   752→  useEffect(() => {
+   154→   753→    import('@/lib/fingerprint').then(({ reportFingerprint }) => {
+   155→   754→      reportFingerprint().catch(console.error);
+   156→   755→    });
+   157→   756→  }, []);
+   158→   757→
+   159→   758→  const handleCreateLesson = useCallback(async () => {
+   160→   759→    setCreating(true);
+   161→   760→    try {
+   162→   761→      // Directly get session token from Supabase client
+   163→   762→      const supabase = createClient();
+   164→   763→      const { data: { session } } = await supabase!.auth.getSession();
+   165→   764→      const token = session?.access_token;
+   166→   765→      if (!token) {
+   167→   766→        console.error('[Dashboard] No session token available — are you logged in?');
+   168→   767→        setCreating(false);
+   169→   768→        return;
+   170→   769→      }
+   171→   770→
+   172→   771→      const response = await fetch('/api/room', {
+   173→   772→        method: 'POST',
+   174→   773→        headers: {
+   175→   774→          'Content-Type': 'application/json',
+   176→   775→          'Authorization': `Bearer ${token}`,
+   177→   776→        },
+   178→   777→        body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
+   179→   778→      });
+   180→   779→      if (!response.ok) {
+   181→   780→        const errBody = await response.text().catch(() => '');
+   182→   781→        console.error('[Dashboard] Room creation failed:', response.status, errBody);
+   183→   782→        throw new Error(`Failed to create room (${response.status}): ${errBody}`);
+   184→   783→      }
+   185→   784→      const data = await response.json();
+   186→   785→      window.location.href = `/room/${data.roomId}`;
+   187→   786→    } catch (error) {
+   188→   787→      console.error('[Dashboard] Failed to create lesson:', error);
+   189→   788→      setCreating(false);
+   190→   789→    }
+   191→   790→  }, [selectedSubject, user?.id]);
+   192→   791→
+   193→   792→  const handleLogout = useCallback(async () => {
+   194→   793→    const supabase = createClient();
+   195→   794→    if (supabase) await supabase.auth.signOut();
+   196→   795→    setTier('FREE');
+   197→   796→  }, [setTier]);
+   198→   797→
+   199→   798→  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+   200→   799→  const tierColor =
+   201→   800→    tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
+   202→   801→
+   203→   802→  return (
+   204→   803→    <div className="min-h-screen bg-background">
+   205→   804→      {/* Header */}
+   206→   805→      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+   207→   806→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   208→   807→          <div className="flex items-center gap-3">
+   209→   808→            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   210→   809→              <GraduationCap className="w-5 h-5 text-white" />
+   211→   810→            </div>
+   212→   811→            <div>
+   213→   812→              <h1 className="text-lg font-bold tracking-tight">{agencyName || 'Superboard'}</h1>
+   214→   813→              <p className="text-[11px] text-muted-foreground font-medium">Smart Tutoring Whiteboard</p>
+   215→   814→            </div>
+   216→   815→          </div>
+   217→   816→          <div className="flex items-center gap-2">
+   218→   817→            <span className="text-sm text-muted-foreground hidden sm:inline mr-1">{user.email}</span>
+   219→   818→            <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
+   220→   819→              {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
+   221→   820→              {tierLabel}
+   222→   821→            </Badge>
+   223→   822→            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Settings">
+   224→   823→              <Settings className="w-4 h-4" />
+   225→   824→            </Button>
+   226→   825→            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={handleLogout} title="Sign out">
+   227→   826→              <LogOut className="w-4 h-4" />
+   228→   827→            </Button>
+   229→   828→          </div>
+   230→   829→        </div>
+   231→   830→      </header>
+   232→   831→
+   233→   832→      {/* Main Content */}
+   234→   833→      <main className="max-w-7xl mx-auto px-6 py-8">
+   235→   834→        {/* Welcome Banner — sharp gradient, no blur blobs */}
+   236→   835→        <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 animate-fade-in-up">
+   237→   836→          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {user.email?.split('@')[0]}</h2>
+   238→   837→          <p className="text-gray-700 mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
+   239→   838→        </div>
+   240→   839→
+   241→   840→        {/* Usage Overview Cards */}
+   242→   841→        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+   243→   842→          <div className="rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
+   244→   843→            <div className="relative z-10">
+   245→   844→              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Smart Credits</span></div>
+   246→   845→              <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
+   247→   846→              {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+   248→   847→            </div>
+   249→   848→          </div>
+   250→   849→          <div className="rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
+   251→   850→            <div className="relative z-10">
+   252→   851→              <div className="flex items-center gap-2 mb-1"><Video className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Video Minutes</span></div>
+   253→   852→              <div className="text-3xl font-bold mt-2">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
+   254→   853→              {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+   255→   854→            </div>
+   256→   855→          </div>
+   257→   856→          <div className="rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
+   258→   857→            <div className="relative z-10">
+   259→   858→              <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
+   260→   859→              <div className="text-3xl font-bold mt-2">{recordingsUsed}{recordingsLimit !== Infinity ? ` / ${recordingsLimit}` : ''}</div>
+   261→   860→              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? `${recordingsLimit} per month included` : 'Unlimited'}</p>
+   262→   861→            </div>
+   263→   862→          </div>
+   264→   863→        </div>
+   265→   864→
+   266→   865→        {/* Quick Actions + Content Tabs */}
+   267→   866→        <div className="flex flex-col lg:flex-row gap-6">
+   268→   867→          {/* Left: Quick Actions */}
+   269→   868→          <div className="lg:w-72 flex-shrink-0 space-y-4 animate-fade-in-up-delay-3">
+   270→   869→            <Dialog open={showNewLesson} onOpenChange={setShowNewLesson}>
+   271→   870→              <DialogTrigger asChild>
+   272→   871→                <Button className="w-full h-14 text-base rounded-2xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px]">
+   273→   872→                  <Plus className="w-5 h-5 mr-2" />New Lesson
+   274→   873→                </Button>
+   275→   874→              </DialogTrigger>
+   276→   875→              <DialogContent className="rounded-2xl">
+   277→   876→                <DialogHeader>
+   278→   877→                  <DialogTitle className="text-xl">Create New Lesson</DialogTitle>
+   279→   878→                  <DialogDescription>Select a subject for your lesson. This determines which toolkit will be available on the whiteboard.</DialogDescription>
+   280→   879→                </DialogHeader>
+   281→   880→                <div className="space-y-4 py-4">
+   282→   881→                  <div className="space-y-2">
+   283→   882→                    <Label>Subject</Label>
+   284→   883→                    <Select value={selectedSubject} onValueChange={(v) => setSelectedSubject(v as Subject)}>
+   285→   884→                      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select subject" /></SelectTrigger>
+   286→   885→                      <SelectContent>
+   287→   886→                        <SelectItem value="MATH">Mathematics</SelectItem>
+   288→   887→                        <SelectItem value="SCIENCE">Science</SelectItem>
+   289→   888→                        <SelectItem value="LANGUAGE">English &amp; Language</SelectItem>
+   290→   889→                        <SelectItem value="GENERAL">General / Other</SelectItem>
+   291→   890→                      </SelectContent>
+   292→   891→                    </Select>
+   293→   892→                  </div>
+   294→   893→                  {tier === 'AGENCY' && (
+   295→   894→                    <div className="space-y-2">
+   296→   895→                      <Label>Branding</Label>
+   297→   896→                      <div className="flex items-center gap-2">
+   298→   897→                        <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+   299→   898→                        <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+   300→   899→                      </div>
+   301→   900→                    </div>
+   302→   901→                  )}
+   303→   902→                  <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25" onClick={handleCreateLesson} disabled={creating}>
+   304→   903→                    {creating ? 'Creating...' : 'Start Lesson'}
+   305→   904→                  </Button>
+   306→   905→                </div>
+   307→   906→              </DialogContent>
+   308→   907→            </Dialog>
+   309→   908→
+   310→   909→            <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+   311→   910→              <CardHeader className="pb-3">
+   312→   911→                <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
+   313→   912→              </CardHeader>
+   314→   913→              <CardContent className="space-y-1.5">
+   315→   914→                {(['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as Subject[]).map((subj) => {
+   316→   915→                  const meta = subjectMeta[subj];
+   317→   916→                  return (
+   318→   917→                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50 transition-colors group">
+   319→   918→                      <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
+   320→   919→                      <div className="flex-1 min-w-0"><p className="text-sm font-medium">{meta.label}</p><p className="text-[11px] text-muted-foreground">Quick start</p></div>
+   321→   920→                      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+   322→   921→                    </button>
+   323→   922→                  );
+   324→   923→                })}
+   325→   924→              </CardContent>
+   326→   925→            </Card>
+   327→   926→          </div>
+   328→   927→
+   329→   928→          {/* Right: Tabs Content */}
+   330→   929→          <div className="flex-1 animate-fade-in-up-delay-2">
+   331→   930→            <Tabs defaultValue="billing" className="w-full">
+   332→   931→              <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
+   333→   932→                {(tier === 'PRO' || tier === 'AGENCY') && (
+   334→   933→                  <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
+   335→   934→                )}
+   336→   935→                {(tier === 'PRO' || tier === 'AGENCY') && (
+   337→   936→                  <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
+   338→   937→                )}
+   339→   938→                <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
+   340→   939→                {tier === 'AGENCY' && (
+   341→   940→                  <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
+   342→   941→                )}
+   343→   942→              </TabsList>
+   344→   943→              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+   345→   944→              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+   346→   945→              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor} setBrandColor={setBrandColor} /></TabsContent>
+   347→   946→              {tier === 'AGENCY' && (
+   348→   947→                <TabsContent value="admin" className="mt-6">
+   349→   948→                  <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   350→   949→                    <CardHeader>
+   351→   950→                      <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
+   352→   951→                      <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
+   353→   952→                    </CardHeader>
+   354→   953→                    <CardContent><AgencyAdminPanel agencyUserId={user?.id || ''} /></CardContent>
+   355→   954→                  </Card>
+   356→   955→                </TabsContent>
+   357→   956→              )}
+   358→   957→            </Tabs>
+   359→   958→          </div>
+   360→   959→        </div>
+   361→   960→      </main>
+   362→   961→    </div>
+   363→   962→  );
+   364→   963→}
+   365→   964→
+   366→   965→// ============================================================
+   367→   966→// Billing Panel
+   368→   967→// ============================================================
+   369→   968→function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void }) {
+   370→   969→  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+   371→   970→  const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
+   372→   971→
+   373→   972→  return (
+   374→   973→    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   375→   974→      <CardHeader>
+   376→   975→        <CardTitle className="text-xl">Billing &amp; Subscription</CardTitle>
+   377→   976→        <CardDescription>Manage your subscription and payment methods.</CardDescription>
+   378→   977→      </CardHeader>
+   379→   978→      <CardContent className="space-y-6">
+   380→   979→        <div className="flex items-center justify-between p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-100">
+   381→   980→          <div className="flex items-center gap-3">
+   382→   981→            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
+   383→   982→              {tier === 'AGENCY' ? <Crown className="w-5 h-5 text-white" /> : tier === 'PRO' ? <Star className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
+   384→   983→            </div>
+   385→   984→            <div>
+   386→   985→              <p className="font-semibold">Current Plan</p>
+   387→   986→              <p className="text-sm text-muted-foreground">{tier === 'FREE' && 'Free tier \u2014 Limited features'}{tier === 'PRO' && 'Pro Tutor \u2014 $15/month'}{tier === 'AGENCY' && 'Agency \u2014 $39/month'}</p>
+   388→   987→            </div>
+   389→   988→          </div>
+   390→   989→          <Badge className={`rounded-full px-3 font-semibold ${tierColor}`}>{tierLabel}</Badge>
+   391→   990→        </div>
+   392→   991→
+   393→   992→        {tier !== 'AGENCY' && (
+   394→   993→          <>
+   395→   994→            <Separator />
+   396→   995→            <div className="space-y-4">
+   397→   996→              <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" />Upgrade Options</h3>
+   398→   997→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   399→   998→                {tier === 'FREE' && (
+   400→   999→                  <Card className="rounded-2xl border-2 border-emerald-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+   401→  1000→                    <div className="absolute top-3 right-3"><Badge className="bg-emerald-500 text-white rounded-full text-[10px]">Popular</Badge></div>
+   402→  1001→                    <CardHeader className="pb-2">
+   403→  1002→                      <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center"><Star className="w-4 h-4 text-emerald-600" /></div>Pro Tutor</CardTitle>
+   404→  1003→                      <CardDescription className="text-base font-semibold text-foreground">$15/month or $120/year</CardDescription>
+   405→  1004→                    </CardHeader>
+   406→  1005→                    <CardContent>
+   407→  1006→                      <ul className="text-sm space-y-2 mb-4">
+   408→  1007→                        {['Unlimited video calls', '100 smart credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
+   409→  1008→                          <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
+   410→  1009→                        ))}
+   411→  1010→                      </ul>
+   412→  1011→                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20">Upgrade to Pro</Button>
+   413→  1012→                    </CardContent>
+   414→  1013→                  </Card>
+   415→  1014→                )}
+   416→  1015→                <Card className="rounded-2xl border-2 border-amber-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+   417→  1016→                  <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
+   418→  1017→                  <CardHeader className="pb-2">
+   419→  1018→                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency / Center</CardTitle>
+   420→  1019→                    <CardDescription className="text-base font-semibold text-foreground">$39/month</CardDescription>
+   421→  1020→                  </CardHeader>
+   422→  1021→                  <CardContent>
+   423→  1022→                    <ul className="text-sm space-y-2 mb-4">
+   424→  1023→                      {['Everything in Pro', 'White-labeling', 'Custom domains', 'Unlimited recordings', 'Admin dashboard'].map((f) => (
+   425→  1024→                        <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
+   426→  1025→                      ))}
+   427→  1026→                    </ul>
+   428→  1027→                    <Button variant="outline" className="w-full rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 font-semibold">Contact Sales</Button>
+   429→  1028→                  </CardContent>
+   430→  1029→                </Card>
+   431→  1030→              </div>
+   432→  1031→            </div>
+   433→  1032→          </>
+   434→  1033→        )}
+   435→  1034→
+   436→  1035→        {tier === 'AGENCY' && (
+   437→  1036→          <>
+   438→  1037→            <Separator />
+   439→  1038→            <div className="space-y-4">
+   440→  1039→              <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-emerald-500" />White-Label Settings</h3>
+   441→  1040→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   442→  1041→                <div className="space-y-2">
+   443→  1042→                  <Label>Brand Color</Label>
+   444→  1043→                  <div className="flex items-center gap-2">
+   445→  1044→                    <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+   446→  1045→                    <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+   447→  1046→                  </div>
+   448→  1047→                </div>
+   449→  1048→                <div className="space-y-2">
+   450→  1049→                  <Label>Custom Domain</Label>
+   451→  1050→                  <Input placeholder="classroom.yourcenter.com" disabled className="rounded-xl" />
+   452→  1051→                  <p className="text-xs text-muted-foreground">Configure via DNS settings</p>
+   453→  1052→                </div>
+   454→  1053→              </div>
+   455→  1054→            </div>
+   456→  1055→          </>
+   457→  1056→        )}
+   458→  1057→      </CardContent>
+   459→  1058→    </Card>
+   460→  1059→  );
+   461→  1060→}
+   462→  1061→
+   463→  1062→// ============================================================
+   464→  1063→// SavedBoardsPanel
+   465→  1064→// ============================================================
+   466→  1065→interface BoardRow { id: string; subject: string; isActive: boolean; createdAt: string; brandingColor: string | null; }
+   467→  1066→
+   468→  1067→function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
+   469→  1068→  const [boards, setBoards] = useState<BoardRow[]>([]);
+   470→  1069→  const [loading, setLoading] = useState(true);
+   471→  1070→  useEffect(() => {
+   472→  1071→    if (!userId) return;
+   473→  1072→    setLoading(true);
+   474→  1073→    authFetch(`/api/room?tutorId=${userId}`).then((res) => res.json()).then((data) => {
+   475→  1074→      if (Array.isArray(data)) setBoards(data.map((r: any) => ({ id: r.id, subject: r.subject, isActive: r.isActive, createdAt: r.createdAt, brandingColor: r.brandingColor })));
+   476→  1075→    }).catch(() => {}).finally(() => setLoading(false));
+   477→  1076→  }, [userId]);
+   478→  1077→  const canAccess = tier === 'PRO' || tier === 'AGENCY';
+   479→  1078→
+   480→  1079→  if (!canAccess) return (
+   481→  1080→    <Card className="rounded-2xl border-0 shadow-sm">
+   482→  1081→      <CardHeader><CardTitle>Saved Boards</CardTitle><CardDescription>Save/Load requires Pro or Agency tier.</CardDescription></CardHeader>
+   483→  1082→      <CardContent className="text-center py-12">
+   484→  1083→        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 flex items-center justify-center"><Star className="w-8 h-8 text-amber-400" /></div>
+   485→  1084→        <p className="text-muted-foreground font-medium">Upgrade to access saved boards</p>
+   486→  1085→      </CardContent>
+   487→  1086→    </Card>
+   488→  1087→  );
+   489→  1088→
+   490→  1089→  if (loading) return (
+   491→  1090→    <Card className="rounded-2xl border-0 shadow-sm">
+   492→  1091→      <CardHeader><CardTitle>Saved Boards</CardTitle></CardHeader>
+   493→  1092→      <CardContent><div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div></CardContent>
+   494→  1093→    </Card>
+   495→  1094→  );
+   496→  1095→
+   497→  1096→  return (
+   498→  1097→    <Card className="rounded-2xl border-0 shadow-sm">
+   499→  1098→      <CardHeader><CardTitle>Saved Boards</CardTitle><CardDescription>Your lesson history. Click to reopen.</CardDescription></CardHeader>
+   500→  1099→      <CardContent>
+
+[showing lines 1-500 of 662; use offset=501 with limit to continue reading]

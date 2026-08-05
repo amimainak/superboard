@@ -32,3 +32,25 @@ Stage Summary:
 - 31 fixes applied successfully (2 deferred: TypeScript strict mode needs Tldraw types, Stripe checkout needs Stripe keys)
 - All files created/modified: auth.ts, auth-fetch.ts, supabase.ts, db.ts, fingerprint.ts, 7 API routes, 2 new API routes, page.tsx, room page, Whiteboard.tsx, PipVideoPanel.tsx, Toolbar.tsx, BrandedHeader.tsx, WaitingRoom.tsx, QuizGenerator.tsx, WorksheetGenerator.tsx
 - Build passes cleanly
+---
+Task ID: 1
+Agent: Main Agent
+Task: Commit complete pricing and tier structure changes to codebase
+
+Work Log:
+- Read all relevant source files (types, usage, credits hook, page.tsx, PaywallModal, UsageBar, all API routes, all toolkits, RecordButton, BrandedPdfExport)
+- Updated src/types/index.ts: Changed FREE credits from 10/week to 25/week, PRO credits from 100/mo to 500/mo, AGENCY from Infinity to 5000 soft cap. Added PRICING constant ($10/mo PRO, $96/yr, $39/mo AGENCY base + $1.50/student). Added maxActiveRooms to TIER_LIMITS.
+- Updated src/app/page.tsx: Landing pricing cards ($10/mo PRO, $39/mo+per student Agency), billing panel descriptions, upgrade cards with new prices and features (500 credits, $96/yr, agency base fee + sub-tutors)
+- Updated src/components/premium/PaywallModal.tsx: Pro price $15→$10, Agency price now shows "+ per student", added 2 new feature comparison rows (500 credits for PRO, 5K for Agency)
+- Updated src/components/premium/UsageBar.tsx: Removed agency hide rule, agency now sees usage bar with 5K soft cap tracking. Upgrade button hidden for agency users.
+- Updated src/app/api/room/route.ts: Room limit now reads from centralized TIER_LIMITS.maxActiveRooms instead of hardcoded ternary
+- Verified all API routes (usage/current, usage/agency, ai/action, livekit/token) dynamically read from TIER_LIMITS — no hardcoded values
+- Build passed with zero TypeScript errors
+- Server restarted successfully (PID 8331, HTTP 200)
+
+Stage Summary:
+- All 6 files updated with new pricing/tier structure
+- Pricing: FREE $0, PRO $10/mo ($96/yr), AGENCY $39/mo + $1.50/student
+- Credits: FREE 25/week, PRO 500/mo, AGENCY 5000/mo (soft cap)
+- Server running persistently with watchdog on port 3000
+---
