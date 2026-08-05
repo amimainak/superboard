@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     }
 
     const tier = user.tier as Tier;
-    const usageLog = await getCurrentUsageLog(userId, tier);
+    const usageLog = await getCurrentUsageLog(targetUserId, tier);
 
     // Use centralized TIER_LIMITS instead of duplicated constants
     const tierConfig = TIER_LIMITS[tier];

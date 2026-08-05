@@ -567,7 +567,7 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
-              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['5 smart credits/day', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
+              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['10 smart credits/week', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
               { name: 'Pro Tutor', price: '$15', period: '/month', desc: 'For serious tutors who want more', features: ['100 smart credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recording/month', 'Save/Load boards'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
               { name: 'Agency', price: '$39', period: '/month', desc: 'For tutoring centers & teams', features: ['Everything in Pro', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Sub-tutor management', 'Admin dashboard'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
             ].map((plan) => (
@@ -740,6 +740,8 @@ function AuthenticatedDashboard({ user }: { user: User }) {
     aiCreditsLimit,
     videoMinutesUsed,
     videoMinutesLimit,
+    recordingsUsed,
+    recordingsLimit,
     loading: usageLoading,
   } = useCredits(user.id);
 
@@ -854,8 +856,8 @@ function AuthenticatedDashboard({ user }: { user: User }) {
           <div className="rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
-              <div className="text-3xl font-bold mt-2">0</div>
-              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? '2 per month included' : 'Unlimited'}</p>
+              <div className="text-3xl font-bold mt-2">{recordingsUsed}{recordingsLimit !== Infinity ? ` / ${recordingsLimit}` : ''}</div>
+              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? `${recordingsLimit} per month included` : 'Unlimited'}</p>
             </div>
           </div>
         </div>
@@ -925,17 +927,21 @@ function AuthenticatedDashboard({ user }: { user: User }) {
 
           {/* Right: Tabs Content */}
           <div className="flex-1 animate-fade-in-up-delay-2">
-            <Tabs defaultValue="boards" className="w-full">
+            <Tabs defaultValue="billing" className="w-full">
               <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
-                <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
-                <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
+                {(tier === 'PRO' || tier === 'AGENCY') && (
+                  <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
+                )}
+                {(tier === 'PRO' || tier === 'AGENCY') && (
+                  <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
+                )}
                 <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
                 {tier === 'AGENCY' && (
                   <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
                 )}
               </TabsList>
-              <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>
-              <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>
+              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
               <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor} setBrandColor={setBrandColor} /></TabsContent>
               {tier === 'AGENCY' && (
                 <TabsContent value="admin" className="mt-6">
@@ -1201,7 +1207,7 @@ function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
 // ============================================================
 // AgencyAdminPanel
 // ============================================================
-interface SubTutorRow { id: string; email: string; name: string | null; tier: string; totalRooms: number; totalVideoMinutes: number; totalAiCredits: number; lastActive: string | null; }
+interface SubTutorRow { id: string; email: string; name: string | null; tier: string; activeRooms: number; videoMinutesUsed: number; aiCreditsUsed: number; joinedAt: string | null; }
 
 function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
   const [subTutors, setSubTutors] = useState<SubTutorRow[]>([]);
@@ -1221,9 +1227,9 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
     </div>
   );
 
-  const totalVideo = subTutors.reduce((sum, t) => sum + t.totalVideoMinutes, 0);
-  const totalCredits = subTutors.reduce((sum, t) => sum + t.totalAiCredits, 0);
-  const totalRooms = subTutors.reduce((sum, t) => sum + t.totalRooms, 0);
+  const totalVideo = subTutors.reduce((sum, t) => sum + t.videoMinutesUsed, 0);
+  const totalCredits = subTutors.reduce((sum, t) => sum + t.aiCreditsUsed, 0);
+  const totalRooms = subTutors.reduce((sum, t) => sum + t.activeRooms, 0);
 
   return (
     <div className="space-y-6">
@@ -1240,10 +1246,10 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
               <tr key={tutor.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3"><p className="font-medium">{tutor.name || '\u2014'}</p><p className="text-xs text-muted-foreground">{tutor.email}</p></td>
                 <td className="px-4 py-3"><Badge variant={tutor.tier === 'AGENCY' ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${tutor.tier === 'AGENCY' ? 'bg-amber-100 text-amber-700' : ''}`}>{tutor.tier}</Badge></td>
-                <td className="px-4 py-3 text-right font-medium">{tutor.totalRooms}</td>
-                <td className="px-4 py-3 text-right font-medium">{tutor.totalVideoMinutes}</td>
-                <td className="px-4 py-3 text-right font-medium">{tutor.totalAiCredits}</td>
-                <td className="px-4 py-3 text-right text-muted-foreground">{tutor.lastActive ? new Date(tutor.lastActive).toLocaleDateString() : '\u2014'}</td>
+                <td className="px-4 py-3 text-right font-medium">{tutor.activeRooms}</td>
+                <td className="px-4 py-3 text-right font-medium">{tutor.videoMinutesUsed}</td>
+                <td className="px-4 py-3 text-right font-medium">{tutor.aiCreditsUsed}</td>
+                <td className="px-4 py-3 text-right text-muted-foreground">{tutor.joinedAt ? new Date(tutor.joinedAt).toLocaleDateString() : '\u2014'}</td>
               </tr>
             ))}
           </tbody>

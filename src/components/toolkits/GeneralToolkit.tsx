@@ -70,6 +70,11 @@ export default function GeneralToolkit({ editor: _editor }: GeneralToolkitProps)
   const isPremium = tier === 'PRO' || tier === 'AGENCY';
 
   const handleStandardTool = (toolId: string) => {
+    // Tier gate: image upload requires PRO or AGENCY
+    if (toolId === 'image-upload' && !isPremium) {
+      openPaywall('uploads');
+      return;
+    }
     // TODO: Activate standard tool via tldraw editor
     console.log('Standard tool:', toolId);
   };

@@ -19,6 +19,7 @@ type Props = {
   canvasElement: HTMLElement | null;
   studentName: string;
   branding?: BrandingConfig;
+  tier?: string;
 };
 
 export interface BrandedPdfExportRef {
@@ -41,9 +42,17 @@ export interface BrandedPdfExportRef {
  *
  * TODO: Install html2canvas and jsPDF, then replace the console stubs.
  */
-export async function exportToPdf({ canvasElement, studentName, branding }: Props) {
+export async function exportToPdf({ canvasElement, studentName, branding, tier }: Props) {
   if (!canvasElement) {
     console.warn('[BrandedPdfExport] No canvas element provided.');
+    return;
+  }
+
+  // Tier gate: PDF download requires PRO or AGENCY
+  const { hasFeature } = await import('@/lib/usage');
+  if (!hasFeature((tier || 'FREE') as any, 'downloadPdf')) {
+    const { useAppStore } = await import('@/store/app-store');
+    useAppStore.getState().openPaywall('downloadPdf');
     return;
   }
 
@@ -122,9 +131,9 @@ export async function exportToPdf({ canvasElement, studentName, branding }: Prop
  * ```
  */
 const BrandedPdfExport = forwardRef<BrandedPdfExportRef, Props>(
-  function BrandedPdfExport({ canvasElement, studentName, branding }, ref) {
+  function BrandedPdfExport({ canvasElement, studentName, branding, tier }, ref) {
     useImperativeHandle(ref, () => ({
-      generatePdf: () => exportToPdf({ canvasElement, studentName, branding }),
+      generatePdf: () => exportToPdf({ canvasElement, studentName, branding, tier }),
     }));
 
     return null;

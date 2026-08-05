@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 // ---------- Feature comparison rows ----------
 const FEATURES: { label: string; free: boolean; pro: boolean; agency: boolean }[] = [
-  { label: 'Smart credits / week', free: false, pro: true, agency: true },
+  { label: 'AI Smart Tools', free: false, pro: true, agency: true },
   { label: 'Save & load boards', free: false, pro: true, agency: true },
   { label: 'Upload images', free: false, pro: true, agency: true },
   { label: 'Download as PDF', free: false, pro: true, agency: true },

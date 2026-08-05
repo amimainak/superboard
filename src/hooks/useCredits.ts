@@ -22,7 +22,7 @@ interface UsageData {
 }
 
 export function useCredits(userId?: string | null) {
-  const { tier, setUsage, aiCreditsUsed, aiCreditsLimit, videoMinutesUsed, videoMinutesLimit } =
+  const { tier, setUsage, aiCreditsUsed, aiCreditsLimit, videoMinutesUsed, videoMinutesLimit, recordingsUsed, recordingsLimit } =
     useAppStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,8 @@ export function useCredits(userId?: string | null) {
     aiCreditsLimit,
     videoMinutesUsed,
     videoMinutesLimit,
+    recordingsUsed,
+    recordingsLimit,
     loading,
     error,
     refresh,

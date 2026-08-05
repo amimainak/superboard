@@ -11,6 +11,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
+import { hasFeature } from '@/lib/usage';
+import type { Tier } from '@/types';
 
 // ---- Helpers ----
 
@@ -34,6 +36,11 @@ function formatDuration(totalSeconds: number): string {
 export default function RecordButton() {
   const isRecording = useAppStore((s) => s.room.isRecording);
   const setRecording = useAppStore((s) => s.setRecording);
+  const tier = useAppStore((s) => s.tier);
+  const openPaywall = useAppStore((s) => s.openPaywall);
+
+  // Tier gate: recordings require PRO or AGENCY
+  const canRecord = hasFeature(tier as Tier, 'recordings');
 
   // Local timer state
   const [elapsed, setElapsed] = useState(0);
@@ -63,6 +70,12 @@ export default function RecordButton() {
 
   // ---- Toggle handler ----
   const handleToggle = useCallback(async () => {
+    // Block if tier doesn't have recording feature
+    if (!canRecord) {
+      openPaywall('recordings');
+      return;
+    }
+
     if (isRecording) {
       // Stop recording
       setIsStopping(true);
@@ -92,7 +105,7 @@ export default function RecordButton() {
     }
   }, [isRecording, setRecording]);
 
-  const isDisabled = isStarting || isStopping;
+  const isDisabled = isStarting || isStopping || !canRecord;
 
   return (
     <div className="flex items-center gap-2">

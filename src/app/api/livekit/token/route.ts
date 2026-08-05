@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check video minutes limit (server-side gating)
+    // Check video minutes limit against the tutor's account (not the student's)
     const tier = room.tutor.tier as Tier;
-    const videoCheck = await checkVideoLimit(userId, tier);
+    const videoCheck = await checkVideoLimit(room.tutorId, tier);
 
     if (!videoCheck.allowed) {
       return NextResponse.json(

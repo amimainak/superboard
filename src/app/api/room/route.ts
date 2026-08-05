@@ -10,7 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth } from '@/lib/auth';
-import type { Subject } from '@/types';
+import { hasFeature } from '@/lib/usage';
+import type { Subject, Tier } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,6 +41,21 @@ export async function POST(request: NextRequest) {
     const tutor = await db.user.findUnique({ where: { id: tutorId } });
     if (!tutor) {
       return NextResponse.json({ error: 'Tutor not found' }, { status: 404 });
+    }
+
+    // --- Tier gate: check room creation limits ---
+    const tutorTier = tutor.tier as Tier;
+    const activeRoomCount = await db.room.count({
+      where: { tutorId, isActive: true },
+    });
+
+    // FREE tier: max 1 active room; PRO/AGENCY: unlimited
+    const maxRooms = tutorTier === 'FREE' ? 1 : Infinity;
+    if (activeRoomCount >= maxRooms) {
+      return NextResponse.json(
+        { error: `ROOM_LIMIT_REACHED`, message: `Free tier allows 1 active room. Please end an existing room or upgrade to Pro for unlimited rooms.` },
+        { status: 403 }
+      );
     }
 
     // Create the room with branding snapshot
