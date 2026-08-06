@@ -31,7 +31,6 @@ import {
 import { Loader2, Sparkles, HelpCircle, StickyNote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { QuizData, QuizQuestion } from '@/types';
-import { useAppStore } from '@/store/app-store';
 
 // ---- Constants ----
 

@@ -58,7 +58,7 @@ export default function InvitePage({
     }
 
     // Check auth
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: any) => {
       if (user?.email) {
         setIsAuthenticated(true);
         setUserEmail(user.email.toLowerCase());

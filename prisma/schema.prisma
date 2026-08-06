@@ -65,6 +65,7 @@ model UsageLog {
   updatedAt        DateTime @updatedAt
 
   @@unique([userId, periodStartDate])
+  @@index([userId])
 }
 
 // ============================================================
@@ -90,6 +91,8 @@ model Room {
   pages           BoardPage[]
   recordings      Recording[]
   participants    RoomParticipant[]
+
+  @@index([tutorId, isActive])
 }
 
 model BoardPage {
@@ -100,6 +103,8 @@ model BoardPage {
   snapshot  String   // Yjs document state serialized as JSON string
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([roomId, pageIndex])
 }
 
 // ============================================================
@@ -130,6 +135,8 @@ model RoomParticipant {
   // A student can join a room multiple times, but we track
   // the latest visit via lastActiveAt (upserted on rejoin).
   @@unique([roomId, studentIdentity]) // One record per student per room
+  @@index([roomId, lastActiveAt])
+  @@index([studentIdentity, lastActiveAt])
 }
 
 // ============================================================
@@ -145,6 +152,8 @@ model Template {
   snapshot  String   // Yjs document state serialized as JSON string
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tutorId, updatedAt])
 }
 
 // ============================================================
@@ -183,4 +192,6 @@ model AgencyInvite {
   acceptedAt     DateTime? // Set when accepted
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([invitedEmail, status])
 }

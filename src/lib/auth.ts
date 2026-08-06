@@ -41,7 +41,7 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult | nul
 
     return {
       userId: user.id,
-      email: user.email,
+      email: user.email ?? null,
     };
   } catch {
     return null;

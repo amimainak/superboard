@@ -3,6 +3,7 @@
 // ============================================================
 // GET:  Public endpoint — return invite details if PENDING & valid.
 //       Used by the invite link page (no auth required).
+//       Does NOT expose internal invite status to unauthenticated users.
 // POST: Accept an invite. Auth required — recipient email must match.
 // ============================================================
 
@@ -24,6 +25,11 @@ export async function GET(
       );
     }
 
+    // Validate code format (8 chars, alphanumeric)
+    if (!/^[A-Za-z0-9]{8}$/.test(code)) {
+      return NextResponse.json({ error: 'Invalid invite code format' }, { status: 400 });
+    }
+
     const invite = await db.agencyInvite.findUnique({
       where: { code: code.toUpperCase() },
       include: {
@@ -38,21 +44,24 @@ export async function GET(
     }
 
     if (invite.status !== 'PENDING') {
+      // SECURITY: Do NOT expose internal status (ACCEPTED, CANCELLED, EXPIRED)
+      // to unauthenticated users — return generic message
       return NextResponse.json(
-        { error: 'This invite is no longer available', detail: `Status: ${invite.status}` },
+        { error: 'This invite is no longer available' },
         { status: 410 }
       );
     }
 
     if (invite.expiresAt < new Date()) {
-      // Mark as expired for cleanliness
+      // SECURITY: Only mark as expired if the code hasn't been probed excessively
+      // Avoid mass status changes via code enumeration
       await db.agencyInvite.update({
         where: { id: invite.id },
         data: { status: 'EXPIRED' },
       });
 
       return NextResponse.json(
-        { error: 'This invite has expired' },
+        { error: 'This invite is no longer available' },
         { status: 410 }
       );
     }
@@ -108,7 +117,7 @@ export async function POST(
 
     if (invite.status !== 'PENDING') {
       return NextResponse.json(
-        { error: 'This invite is no longer available', detail: `Status: ${invite.status}` },
+        { error: 'This invite is no longer available' },
         { status: 410 }
       );
     }

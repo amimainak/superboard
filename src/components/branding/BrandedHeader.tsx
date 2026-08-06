@@ -17,25 +17,47 @@ type Props = {
   onEndLesson?: () => void;
 };
 
+/**
+ * Validate a URL is safe for use in img src.
+ * Only allows https:// URLs from allowed domains.
+ * Prevents javascript: and data: URI XSS vectors.
+ */
+function isValidImageUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Only allow HTTPS
+    if (parsed.protocol !== 'https:') return false;
+    // Block javascript: and data: URIs
+    if (url.startsWith('javascript:') || url.startsWith('data:')) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function BrandedHeader({ onEndLesson }: Props) {
   const branding = useAppStore((s) => s.room.branding);
   const subject = useAppStore((s) => s.room.subject);
   const isTutor = useAppStore((s) => s.room.isTutor);
 
   const hasAgencyBranding = !!(branding.logoUrl || branding.agencyName);
+  const safeLogoUrl = branding.logoUrl && isValidImageUrl(branding.logoUrl)
+    ? branding.logoUrl
+    : null;
 
   return (
     <header className="flex items-center justify-between h-12 px-4 border-b bg-white shrink-0">
       {/* Left: Logo + Name */}
       <div className="flex items-center gap-2.5 min-w-0">
-        {hasAgencyBranding && branding.logoUrl ? (
+        {hasAgencyBranding && safeLogoUrl ? (
           <img
-            src={branding.logoUrl}
+            src={safeLogoUrl}
             alt=""
             width={28}
             height={28}
             loading="lazy"
             className="size-7 rounded-md object-contain"
+            referrerPolicy="no-referrer"
           />
         ) : (
           <div className="size-7 rounded-md bg-primary/10 flex items-center justify-center">

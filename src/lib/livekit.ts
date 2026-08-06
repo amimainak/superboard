@@ -2,14 +2,12 @@
 // LiveKit Client Configuration (Self-Hosted)
 // ============================================================
 // Connects to a SELF-HOSTED LiveKit server.
-// Do NOT use LiveKit Cloud.
+// Secrets are accessed via env vars ONLY — never exported.
 // ============================================================
 
-import { LiveKitClient, Room as LiveKitRoom, RoomEvent, Track } from 'livekit-client';
+import { Room as LiveKitRoom, RoomEvent, Track, RemoteParticipant, RemoteTrackPublication } from 'livekit-client';
 
 const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
-const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || '';
-const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || '';
 
 /**
  * Create a LiveKit Room instance for the client.
@@ -17,10 +15,10 @@ const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || '';
  */
 export function createLiveKitRoom(token: string): LiveKitRoom {
   return new LiveKitRoom({
-    token,
+    token: token as any,
     adaptiveStream: true,
     dynacast: true,
-  });
+  } as any);
 }
 
 /**
@@ -34,7 +32,7 @@ export async function connectToRoom(
     videoEnabled?: boolean;
     onConnected?: () => void;
     onDisconnected?: () => void;
-    onTrackSubscribed?: (track: Track, participant: LiveKitClient.RemoteParticipant) => void;
+    onTrackSubscribed?: (track: Track, publication: RemoteTrackPublication, participant: RemoteParticipant) => void;
   }
 ): Promise<LiveKitRoom> {
   const room = createLiveKitRoom(token);
@@ -46,7 +44,8 @@ export async function connectToRoom(
     room.on(RoomEvent.Disconnected, options.onDisconnected);
   }
   if (options?.onTrackSubscribed) {
-    room.on(RoomEvent.TrackSubscribed, options.onTrackSubscribed);
+    // LiveKit v2: TrackSubscribed fires with (track, publication, participant)
+    room.on(RoomEvent.TrackSubscribed, options.onTrackSubscribed as any);
   }
 
   await room.connect(LIVEKIT_URL, token, {
@@ -55,17 +54,17 @@ export async function connectToRoom(
 
   // Publish local audio/video based on options
   if (options?.audioEnabled !== false) {
-    await room.localParticipant.enableMicrophone();
+    await room.localParticipant.setMicrophoneEnabled(true);
   }
   if (options?.videoEnabled !== false) {
-    await room.localParticipant.enableCamera();
+    await room.localParticipant.setCameraEnabled(true);
   }
 
   return room;
 }
 
-export { LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET };
+export { LIVEKIT_URL };
 export type { LiveKitRoom };
 
 // Re-export LiveKit components for convenience
-export { LiveKitClient, RoomEvent, Track };
+export { RoomEvent, Track, RemoteParticipant, RemoteTrackPublication };

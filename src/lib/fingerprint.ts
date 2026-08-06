@@ -9,7 +9,7 @@
 import FingerprintJS from '@fingerprintjs/fingerprintjs';
 import { authFetch } from '@/lib/auth-fetch';
 
-let fpPromise: Promise<FingerprintJS.BrowserFingerprint> | null = null;
+let fpPromise: Promise<any> | null = null;
 
 /**
  * Get the visitor fingerprint hash.

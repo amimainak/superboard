@@ -4,12 +4,13 @@
 // POST: Creates a new lesson room. Requires auth — tutorId must match caller.
 // GET: Fetches a room by roomId (unauthenticated — students need access).
 //      Also supports ?tutorId= to list all rooms for a tutor (auth required).
+// FIXED: Consolidated double-fetch for tutor view into single query.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
-import { requireAuth } from '@/lib/auth';
+import { requireAuth, verifyAuth } from '@/lib/auth';
 import { hasFeature } from '@/lib/usage';
 import type { Subject, Tier } from '@/types';
 
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ rooms });
     }
 
-    // --- Case 2: Get single room by roomId (open — students need access) ---
+    // --- Case 2: Get single room by roomId ---
     if (!roomId) {
       return NextResponse.json(
         { error: 'Missing roomId or tutorId parameter' },
@@ -141,12 +142,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Check if caller is authenticated (for conditional include)
+    const auth = await verifyAuth(request);
+    const isOwner = auth !== null;
+
+    // FIXED: Single query with conditional email inclusion
     const room = await db.room.findUnique({
       where: { id: roomId },
       include: {
         tutor: {
-          select: { id: true, name: true, tier: true },
-          // Intentionally exclude email from student-facing responses
+          select: {
+            id: true,
+            name: true,
+            tier: true,
+            // Only include email if the caller is the room owner
+            ...(isOwner ? { email: true } : {}),
+          },
         },
         pages: {
           orderBy: { pageIndex: 'asc' },
@@ -162,27 +173,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Room is no longer active' }, { status: 410 });
     }
 
-    // If the caller is the tutor, include email
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader?.startsWith('Bearer ')) {
-      // We have a token — check if it's the room owner
-      const { requireAuth } = await import('@/lib/auth');
-      const auth = await requireAuth(request);
-      if (!(auth instanceof NextResponse) && auth.userId === room.tutorId) {
-        // Re-fetch with email included for the tutor
-        const roomWithEmail = await db.room.findUnique({
-          where: { id: roomId },
-          include: {
-            tutor: {
-              select: { id: true, name: true, email: true, tier: true },
-            },
-            pages: {
-              orderBy: { pageIndex: 'asc' },
-            },
-          },
-        });
-        return NextResponse.json(roomWithEmail);
-      }
+    // If authenticated but NOT the owner, strip the email field
+    if (auth && auth.userId !== room.tutorId) {
+      const { email: _email, ...tutorWithoutEmail } = room.tutor as any;
+      return NextResponse.json({ ...room, tutor: tutorWithoutEmail });
     }
 
     return NextResponse.json(room);

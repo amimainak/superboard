@@ -2,7 +2,10 @@
 // AnswerKeyModal — Private Answer Key Popup (TUTOR ONLY)
 // ============================================================
 // Dialog that shows the answer key for a generated quiz or worksheet.
-// Students CANNOT see this modal — it checks isTutor from the store.
+// SECURITY NOTE: The client-side isTutor check is a convenience gate only.
+// TODO: Create a /api/ai/answer-key endpoint that verifies tutor status
+// server-side before returning answer data. Currently, a student could
+// modify the Zustand store to bypass this check.
 // Shows question number, correct answer, and explanation.
 // ============================================================
 
@@ -203,7 +206,7 @@ export default function AnswerKeyModal({
         <DialogFooter className="flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
             <ShieldCheck className="w-3 h-3" />
-            Encrypted — visible to tutor session only
+            Tutor-only view — TODO: add server-side answer key verification endpoint
           </span>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close

@@ -21,12 +21,12 @@ export function initAuthFetch(): void {
   const supabase = createClient();
   if (!supabase) return;
 
-  supabase.auth.getSession().then(({ data: { session } }) => {
+  supabase.auth.getSession().then(({ data: { session } }: any) => {
     _cachedToken = session?.access_token ?? null;
   });
 
   // Keep token fresh — update on any auth state change
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.onAuthStateChange((_event: any, session: any) => {
     _cachedToken = session?.access_token ?? null;
   });
 }

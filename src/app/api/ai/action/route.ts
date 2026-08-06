@@ -4,15 +4,15 @@
 // Routes AI requests to the correct Claude model:
 // - Text tasks → Claude 3 Haiku (cost savings)
 // - Vision tasks → Claude 3.5 Sonnet (high accuracy)
-// Deducts AI credits after successful completion.
-// Now requires auth — JWT must match the userId in the body.
+// Deducts AI credits only when real AI is used.
+// Requires auth — JWT must match the userId in the body.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
-import type { AIAction, Tier } from '@/types';
+import type { Tier } from '@/types';
 import { TEXT_AI_ACTIONS } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -28,6 +28,20 @@ export async function POST(request: NextRequest) {
     if (!userId || !action || !prompt) {
       return NextResponse.json(
         { error: 'Missing required fields: userId, action, prompt' },
+        { status: 400 }
+      );
+    }
+
+    // Input validation — prevent abuse
+    if (typeof prompt !== 'string' || prompt.length > 50_000) {
+      return NextResponse.json(
+        { error: 'Prompt too long (max 50,000 characters)' },
+        { status: 400 }
+      );
+    }
+    if (imageBase64 && typeof imageBase64 === 'string' && imageBase64.length > 20_000_000) {
+      return NextResponse.json(
+        { error: 'Image too large (max ~15MB)' },
         { status: 400 }
       );
     }
@@ -56,18 +70,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Check AI credits
-    const creditCheck = await checkAICreditLimit(userId, tier);
-    if (!creditCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: 'LIMIT_REACHED',
-          message: 'AI credits exhausted for this period.',
-          creditsUsed: creditCheck.creditsUsed,
-          creditsLimit: creditCheck.creditsLimit,
-        },
-        { status: 403 }
-      );
+    // 3. Check AI credits (only for real API calls)
+    const apiKey = process.env.ANTHROPIC_API_KEY || '';
+    const isRealApiAvailable = !!apiKey && !apiKey.startsWith('TODO_');
+
+    if (isRealApiAvailable) {
+      const creditCheck = await checkAICreditLimit(userId, tier);
+      if (!creditCheck.allowed) {
+        return NextResponse.json(
+          {
+            error: 'LIMIT_REACHED',
+            message: 'AI credits exhausted for this period.',
+            creditsUsed: creditCheck.creditsUsed,
+            creditsLimit: creditCheck.creditsLimit,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // 4. MANDATORY ROUTING LOGIC FOR COST
@@ -76,11 +95,9 @@ export async function POST(request: NextRequest) {
 
     // 5. Call Anthropic API
     let result: string;
-    const apiKey = process.env.ANTHROPIC_API_KEY || '';
 
-    if (!apiKey || apiKey.startsWith('TODO_')) {
-      // TODO: When Anthropic API key is configured, replace this with actual API call
-      // Import and use { callTextAI } or { callVisionAI } from '@/lib/ai'
+    if (!isRealApiAvailable) {
+      // No real API key — return placeholder WITHOUT charging credits
       result = generatePlaceholderResponse(action, prompt);
     } else {
       // TODO: Actual Anthropic API integration
@@ -95,18 +112,26 @@ export async function POST(request: NextRequest) {
       result = generatePlaceholderResponse(action, prompt);
     }
 
-    // 6. Upon success, increment aiCreditsUsed by 1
-    await incrementAICredits(userId, tier);
+    // 6. Only deduct credits for REAL API calls, not placeholders
+    if (isRealApiAvailable) {
+      await incrementAICredits(userId, tier);
+    }
+
+    const creditCheck = isRealApiAvailable
+      ? await checkAICreditLimit(userId, tier)
+      : null;
 
     return NextResponse.json({
       success: true,
       model: targetModel,
       action,
       result,
-      creditsRemaining:
-        creditCheck.creditsLimit === Infinity
+      isPlaceholder: !isRealApiAvailable,
+      creditsRemaining: creditCheck
+        ? creditCheck.creditsLimit === Infinity
           ? Infinity
-          : creditCheck.creditsLimit - creditCheck.creditsUsed - 1,
+          : creditCheck.creditsLimit - creditCheck.creditsUsed
+        : null,
     });
   } catch (error) {
     console.error('[AI Action] Error:', error);

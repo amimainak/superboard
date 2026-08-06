@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
     // Map the tier config to the response format expected by the frontend
     const aiCreditsLimit =
       tier === 'FREE'
-        ? tierConfig.aiCreditsPerWeek
-        : tierConfig.aiCreditsPerMonth;
+        ? (tierConfig as any).aiCreditsPerWeek
+        : (tierConfig as any).aiCreditsPerMonth;
 
     return NextResponse.json({
       tier,

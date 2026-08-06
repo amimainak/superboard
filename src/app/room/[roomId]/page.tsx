@@ -55,10 +55,13 @@ function RoomPageContent({ roomId }: { roomId: string }) {
           roomId: roomData.id,
           subject: roomData.subject as 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL',
           isActive: roomData.isActive,
-          brandingLogo: roomData.brandingLogo || null,
-          brandingColor: roomData.brandingColor || null,
+          branding: {
+            logoUrl: roomData.brandingLogo || null,
+            color: roomData.brandingColor || null,
+            agencyName: roomData.tutor?.name || null,
+          },
           isTutor: tutorMatch,
-        });
+        } as any);
 
         // Set branding config
         const branding: BrandingConfig = {
@@ -76,9 +79,14 @@ function RoomPageContent({ roomId }: { roomId: string }) {
           if (!studentIdentity) {
             // Generate a session-based identity for anonymous students
             try {
-              const { reportFingerprint } = await import('@/lib/fingerprint');
-              const fp = await reportFingerprint();
+              const { getFingerprintHash } = await import('@/lib/fingerprint');
+              const fp = await getFingerprintHash();
               studentIdentity = fp || `anon_${roomId}_${Date.now()}`;
+              // Also report fingerprint if user is logged in
+              if (user?.id) {
+                const { reportFingerprint } = await import('@/lib/fingerprint');
+                reportFingerprint(user.id).catch(() => {});
+              }
             } catch {
               studentIdentity = `anon_${roomId}_${Date.now()}`;
             }

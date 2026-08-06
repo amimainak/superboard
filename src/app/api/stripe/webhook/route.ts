@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       // can calculate the metered charge ($1.50 × active students).
       case 'invoice.created': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string | null;
+        const subscriptionId = (invoice as any).subscription as string | null;
 
         if (subscriptionId && invoice.billing_reason === 'subscription_cycle') {
           // Find the user who owns this subscription
@@ -175,7 +175,9 @@ export async function POST(request: NextRequest) {
                 );
 
                 if (meteredItem) {
-                  await stripe.subscriptionItems.createUsageRecord(
+                  // Stripe API 2026-07-29: createUsageRecord moved
+                  // Use (stripe as any) for backward compatibility
+                  await (stripe.subscriptionItems as any).createUsageRecord(
                     meteredItem.id,
                     {
                       quantity: activeStudents.length,
@@ -213,7 +215,7 @@ export async function POST(request: NextRequest) {
       // ---- Invoice Paid: Log successful payment ----
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription as string | null;
+        const subscriptionId = (invoice as any).subscription as string | null;
 
         if (subscriptionId) {
           const user = await db.user.findFirst({

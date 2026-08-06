@@ -2,13 +2,16 @@
 // API Route: Templates CRUD
 // ============================================================
 // GET: List templates for a tutor (Pro/Agency only).
-// POST: Save a new template snapshot.
+// POST: Save a new template snapshot with size and count validation.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import type { Subject } from '@/types';
+
+const MAX_SNAPSHOT_SIZE = 5_000_000; // 5MB per snapshot
+const MAX_TEMPLATES_PER_USER = 50;
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,6 +69,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Input validation
+    if (typeof name !== 'string' || name.length > 200) {
+      return NextResponse.json(
+        { error: 'Template name too long (max 200 characters)' },
+        { status: 400 }
+      );
+    }
+
+    // Validate snapshot size
+    const snapshotStr = typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot);
+    if (snapshotStr.length > MAX_SNAPSHOT_SIZE) {
+      return NextResponse.json(
+        { error: `Snapshot too large (max ${Math.round(MAX_SNAPSHOT_SIZE / 1_000_000)}MB)` },
+        { status: 400 }
+      );
+    }
+
     // Security: caller can only save templates for themselves
     const targetTutorId = tutorId || auth.userId;
     if (tutorId && tutorId !== auth.userId) {
@@ -88,12 +108,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check template count limit
+    const templateCount = await db.template.count({
+      where: { tutorId: targetTutorId },
+    });
+    if (templateCount >= MAX_TEMPLATES_PER_USER) {
+      return NextResponse.json(
+        { error: 'TEMPLATE_LIMIT_REACHED', message: `Maximum ${MAX_TEMPLATES_PER_USER} templates allowed. Delete some to add more.` },
+        { status: 403 }
+      );
+    }
+
     const template = await db.template.create({
       data: {
         tutorId: targetTutorId,
         name,
         subject: subject as Subject,
-        snapshot: typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot),
+        snapshot: snapshotStr,
       },
     });
 

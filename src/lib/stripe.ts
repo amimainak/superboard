@@ -2,29 +2,32 @@
 // Stripe Payment Utilities
 // ============================================================
 // Handles Stripe Checkout session creation and webhook processing.
+// Secrets are accessed via env vars ONLY — never exported.
 // ============================================================
 
 import Stripe from 'stripe';
-
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 let stripeClient: Stripe | null = null;
 
 export function getStripeClient(): Stripe {
   if (!stripeClient) {
-    if (!STRIPE_SECRET_KEY || STRIPE_SECRET_KEY === 'TODO_STRIPE_SECRET_KEY') {
+    const apiKey = process.env.STRIPE_SECRET_KEY || '';
+    if (!apiKey || apiKey === 'TODO_STRIPE_SECRET_KEY') {
       throw new Error('Stripe secret key not configured');
     }
-    stripeClient = new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: '2025-06-30.basil',
+    stripeClient = new Stripe(apiKey, {
+      apiVersion: '2026-07-29.dahlia',
     });
   }
   return stripeClient;
 }
 
 export function getWebhookSecret(): string {
-  return STRIPE_WEBHOOK_SECRET;
+  const secret = process.env.STRIPE_WEBHOOK_SECRET || '';
+  if (!secret || secret.startsWith('TODO_')) {
+    throw new Error('Stripe webhook secret not configured');
+  }
+  return secret;
 }
 
 /**
@@ -50,7 +53,7 @@ export async function createCheckoutSession(params: {
     priceId =
       params.billingPeriod === 'yearly'
         ? (process.env.STRIPE_PRO_YEARLY_PRICE_ID || '')
-        : (process.env.STRIPE_PRO_PRICE_ID || '');
+        : (process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '');
   } else {
     priceId = process.env.STRIPE_AGENCY_PRICE_ID || '';
   }
@@ -76,7 +79,7 @@ export async function createCheckoutSession(params: {
         userId: params.userId,
         targetTier: params.tier,
       },
-    },
+    } as any,
   });
 
   return session.url || '';
@@ -93,11 +96,5 @@ export function verifyWebhookSignature(
   const stripe = getStripeClient();
   const webhookSecret = getWebhookSecret();
 
-  if (!webhookSecret || webhookSecret.startsWith('TODO_')) {
-    throw new Error('Stripe webhook secret not configured');
-  }
-
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }
-
-export { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET };

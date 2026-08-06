@@ -2,7 +2,8 @@
 // KaTeX Rendering Utility
 // ============================================================
 // Renders LaTeX strings into HTML using KaTeX.
-// Used after Mathpix OCR or AI-generated math output.
+// SECURITY: trust is set to FALSE to prevent HTML injection
+// via LaTeX commands like \html{...}
 // ============================================================
 
 import katex from 'katex';
@@ -18,15 +19,15 @@ export function renderLatex(latex: string, displayMode: boolean = false): string
   try {
     return katex.renderToString(latex, {
       displayMode,
-      throwOnError: false,
-      strict: false,
-      trust: true,
-      // Output HTML for insertion into DOM elements
+      throwOnError: true,
+      strict: true,
+      // SECURITY: trust must be false to prevent HTML injection via \html{...}
+      trust: false,
       output: 'html',
     });
   } catch (error) {
     console.error('[KaTeX] Render error:', error);
-    // Return the raw LaTeX if KaTeX fails
+    // Return the raw LaTeX escaped if KaTeX fails
     return `<span class="katex-error" style="color:red">${escapeHtml(latex)}</span>`;
   }
 }
@@ -46,9 +47,10 @@ export function renderLatexToElement(
   try {
     katex.render(latex, element, {
       displayMode,
-      throwOnError: false,
-      strict: false,
-      trust: true,
+      throwOnError: true,
+      strict: true,
+      // SECURITY: trust must be false
+      trust: false,
     });
   } catch (error) {
     console.error('[KaTeX] Render to element error:', error);

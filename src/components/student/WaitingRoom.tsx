@@ -120,7 +120,9 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
 
   const brandColor = brand.color ?? '#059669';
   const agencyName = brand.agencyName ?? 'Superboard';
-  const logoUrl = brand.logoUrl;
+  // Validate logo URL to prevent XSS (javascript:, data: URIs)
+  const rawLogoUrl = brand.logoUrl;
+  const logoUrl = rawLogoUrl && /^https:\/\/.+/.test(rawLogoUrl) ? rawLogoUrl : null;
 
   // Compute a lighter tint for the background
   const bgStyle: React.CSSProperties = {
@@ -141,6 +143,7 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
             width={96}
             height={96}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="w-24 h-24 rounded-2xl object-contain drop-shadow-lg bg-white/10 p-2"
           />
         ) : (

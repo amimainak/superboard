@@ -2,20 +2,16 @@
 // API Route: LiveKit Token Generation
 // ============================================================
 // Generates a LiveKit access token for a given room.
+// REQUIRES authentication — caller must be the room tutor or
+// a registered participant.
 // CHECKS tier limits (video minutes) before granting token.
-// Never cuts active calls — only blocks next initiation.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { checkVideoLimit, incrementVideoMinutes } from '@/lib/usage';
+import { requireAuth } from '@/lib/auth';
+import { checkVideoLimit } from '@/lib/usage';
 import type { Tier } from '@/types';
-import { v4 as uuidv4 } from 'uuid';
-
-// TODO: Import livekit-server-sdk when deploying to production
-// For now, token generation is architecturally wired.
-// In production:
-//   import { AccessToken } from 'livekit-server-sdk';
 
 const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || '';
@@ -23,6 +19,10 @@ const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || '';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Auth check: REQUIRE authentication for token generation ---
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const body = await request.json();
     const { roomId, userId, userName, isTutor } = body;
 
@@ -31,6 +31,22 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: roomId, userId, userName' },
         { status: 400 }
       );
+    }
+
+    // Security: caller can only request tokens for themselves
+    if (userId !== auth.userId) {
+      return NextResponse.json(
+        { error: 'Forbidden — you can only generate tokens for your own account' },
+        { status: 403 }
+      );
+    }
+
+    // Validate inputs
+    if (typeof roomId !== 'string' || roomId.length > 100) {
+      return NextResponse.json({ error: 'Invalid roomId' }, { status: 400 });
+    }
+    if (typeof userName !== 'string' || userName.length > 100) {
+      return NextResponse.json({ error: 'Invalid userName' }, { status: 400 });
     }
 
     // Verify room exists and is active
@@ -72,7 +88,7 @@ export async function POST(request: NextRequest) {
     // at.addGrant({
     //   roomJoin: true,
     //   room: roomId,
-    //   canPublish: true,
+    //   canPublish: isTutor !== false,
     //   canSubscribe: true,
     //   canPublishData: true,
     // });
@@ -99,12 +115,10 @@ export async function POST(request: NextRequest) {
  * TODO: Replace with livekit-server-sdk AccessToken when deploying.
  */
 function generatePlaceholderToken(userId: string, userName: string, roomId: string): string {
-  if (LIVEKIT_API_KEY === '' || LIVEKIT_API_KEY.startsWith('TODO_')) {
-    // Return a mock token structure for development
+  if (!LIVEKIT_API_KEY || LIVEKIT_API_KEY.startsWith('TODO_')) {
     return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${Buffer.from(JSON.stringify({ sub: userId, name: userName, room: roomId, iss: LIVEKIT_API_KEY, nbf: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64')}.mock_signature`;
   }
 
-  // TODO: Use livekit-server-sdk here in production
   console.warn('[LiveKit] Using placeholder token. Configure LIVEKIT_API_KEY in .env.local');
   return `mock_token_${roomId}_${userId}`;
 }

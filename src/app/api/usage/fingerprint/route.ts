@@ -26,6 +26,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate fingerprint hash format (SHA-256 hex, 64 chars)
+    if (typeof fingerprintHash !== 'string' || !/^[a-fA-F0-9]{64}$/.test(fingerprintHash)) {
+      return NextResponse.json(
+        { error: 'Invalid fingerprint hash format' },
+        { status: 400 }
+      );
+    }
+
     // Security: caller can only submit fingerprint for their own account
     if (userId !== auth.userId) {
       return NextResponse.json(

@@ -81,8 +81,8 @@ export async function GET(request: NextRequest) {
         aiCreditsUsed: currentUsage?.aiCreditsUsed || 0,
         aiCreditsLimit:
           tier === 'FREE'
-            ? tierConfig.aiCreditsPerWeek
-            : tierConfig.aiCreditsPerMonth,
+            ? (tierConfig as any).aiCreditsPerWeek
+            : (tierConfig as any).aiCreditsPerMonth,
         videoMinutesUsed: currentUsage?.videoMinutesUsed || 0,
         videoMinutesLimit: tierConfig.videoMinutesPerWeek,
         recordingsUsed: currentUsage?.recordingsUsed || 0,

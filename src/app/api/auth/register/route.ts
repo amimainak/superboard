@@ -28,6 +28,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate email format
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json(
+        { error: 'Invalid email format' },
+        { status: 400 }
+      );
+    }
+
     if (!id) {
       return NextResponse.json(
         { error: 'User ID (from Supabase Auth) is required' },
@@ -43,7 +51,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists in our DB (match by Supabase Auth ID first)
+    // Validate name length if provided
+    if (name && (typeof name !== 'string' || name.length > 200)) {
+      return NextResponse.json(
+        { error: 'Name too long (max 200 characters)' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already exists in our DB (match by Supabase Auth ID)
     const existingById = await db.user.findUnique({ where: { id } });
     if (existingById) {
       return NextResponse.json({
@@ -53,18 +69,20 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Also check by email (in case of legacy records without matching IDs)
+    // SECURITY FIX: Removed unsafe primary key modification.
+    // Previously, if a user was found by email, the code would change the
+    // UUID primary key at runtime, risking cascading foreign key failures.
+    // Now we create a new record if no match by ID, and do NOT modify
+    // existing records' primary keys.
+
+    // Check if email is already taken by a different user
     const existingByEmail = await db.user.findUnique({ where: { email } });
     if (existingByEmail) {
-      // Update the existing record's ID to match Supabase Auth
-      const updated = await db.user.update({
-        where: { id: existingByEmail.id },
-        data: { id, name: name || existingByEmail.name },
-      });
+      // Return existing user info without modifying the PK
       return NextResponse.json({
-        id: updated.id,
-        email: updated.email,
-        tier: updated.tier,
+        id: existingByEmail.id,
+        email: existingByEmail.email,
+        tier: existingByEmail.tier,
       });
     }
 

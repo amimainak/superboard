@@ -115,7 +115,7 @@ export default function Dashboard() {
     let mounted = true;
 
     // Listen for auth state changes FIRST to catch any race conditions
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
       if (!mounted) return;
       const user = session?.user ?? null;
       setUser(user);
@@ -134,7 +134,7 @@ export default function Dashboard() {
     });
 
     // Then check for existing session
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }: any) => {
       if (!mounted) return;
       if (user) {
         setUser(user);
@@ -484,7 +484,6 @@ function LandingPage() {
               const colorMap: Record<string, { bg: string; text: string; iconBg: string }> = {
                 emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
                 sky: { bg: 'bg-sky-50', text: 'text-sky-600', iconBg: 'bg-sky-100' },
-                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
                 amber: { bg: 'bg-amber-50', text: 'text-amber-600', iconBg: 'bg-amber-100' },
                 rose: { bg: 'bg-rose-50', text: 'text-rose-600', iconBg: 'bg-rose-100' },
                 teal: { bg: 'bg-teal-50', text: 'text-teal-600', iconBg: 'bg-teal-100' },
@@ -784,9 +783,11 @@ function AuthenticatedDashboard({ user, userName, tierLoading }: { user: User; u
 
   useEffect(() => {
     import('@/lib/fingerprint').then(({ reportFingerprint }) => {
-      reportFingerprint().catch(console.error);
+      if (user?.id) {
+        reportFingerprint(user.id).catch(console.error);
+      }
     });
-  }, []);
+  }, [user?.id]);
 
   const handleCreateLesson = useCallback(async () => {
     setCreating(true);
@@ -977,7 +978,7 @@ function AuthenticatedDashboard({ user, userName, tierLoading }: { user: User; u
               </TabsList>
               {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
               {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
-              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor} setBrandColor={setBrandColor} /></TabsContent>
+              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor || ''} setBrandColor={setBrandColor} /></TabsContent>
               {tier === 'AGENCY' && (
                 <TabsContent value="admin" className="mt-6">
                   <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -1250,6 +1251,9 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
   const [loading, setLoading] = useState(true);
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [invitesLoading, setInvitesLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userTier, setUserTier] = useState<string>('AGENCY');
 
   // Invite modal state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -1495,13 +1499,13 @@ function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
           <div className="px-6 pb-6 pt-4 space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Email</Label>
-              <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{user.email}</div>
+              <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{userEmail || ''}</div>
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium">Current Plan</Label>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
-                  {tierLabel}
+                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${userTier === 'AGENCY' ? 'bg-purple-50 text-purple-600 border-purple-200' : userTier === 'PRO' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                  {userTier === 'AGENCY' ? 'Agency' : userTier === 'PRO' ? 'Pro' : 'Free'}
                 </Badge>
               </div>
             </div>

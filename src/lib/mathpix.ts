@@ -3,10 +3,8 @@
 // ============================================================
 // Converts handwriting/images to LaTeX using Mathpix API.
 // The LaTeX output is then rendered via KaTeX on the whiteboard.
+// Secrets are accessed via env vars ONLY — never exported.
 // ============================================================
-
-const MATHPIX_APP_ID = process.env.MATHPIX_APP_ID || '';
-const MATHPIX_APP_KEY = process.env.MATHPIX_APP_KEY || '';
 
 const MATHPIX_API_URL = 'https://api.mathpix.com/v3/text';
 
@@ -17,17 +15,25 @@ const MATHPIX_API_URL = 'https://api.mathpix.com/v3/text';
  * @returns LaTeX string
  */
 export async function mathpixImageToLatex(imageBase64: string): Promise<string> {
-  if (!MATHPIX_APP_ID || MATHPIX_APP_ID === 'TODO_MATHPIX_APP_ID') {
+  const appId = process.env.MATHPIX_APP_ID || '';
+  const appKey = process.env.MATHPIX_APP_KEY || '';
+
+  if (!appId || appId === 'TODO_MATHPIX_APP_ID') {
     throw new Error(
       'Mathpix credentials not configured. Set MATHPIX_APP_ID and MATHPIX_APP_KEY in .env.local'
     );
   }
 
+  // Validate base64 size (max 10MB)
+  if (imageBase64.length > 14_000_000) {
+    throw new Error('Image too large — maximum 10MB allowed');
+  }
+
   const response = await fetch(MATHPIX_API_URL, {
     method: 'POST',
     headers: {
-      'app_id': MATHPIX_APP_ID,
-      'app_key': MATHPIX_APP_KEY,
+      'app_id': appId,
+      'app_key': appKey,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -65,5 +71,3 @@ export function validateLatex(latex: string): boolean {
   // Basic validation — KaTeX will do full validation at render time
   return latex.length > 0 && latex.length < 5000;
 }
-
-export { MATHPIX_APP_ID, MATHPIX_APP_KEY };

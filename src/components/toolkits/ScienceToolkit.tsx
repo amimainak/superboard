@@ -8,6 +8,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { SectionLabel, LockOverlay } from './ToolkitShared';
 import { useAppStore } from '@/store/app-store';
 import type { AIAction } from '@/types';
 import {
