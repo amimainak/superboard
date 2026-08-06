@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { createInviteSchema, validateInput } from '@/lib/validations';
 import crypto from 'crypto';
 
 /**
@@ -28,17 +29,10 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const { email, role } = body;
-
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { error: 'Missing required field: email' },
-        { status: 400 }
-      );
-    }
-
+    const parsed = validateInput<{ email: string; role: string }>(createInviteSchema, body);
+    if (!parsed.success) return parsed.response;
+    const { email } = parsed.data;
     const normalizedEmail = email.trim().toLowerCase();
-    const inviteRole = role === 'sub_tutor' ? 'sub_tutor' : 'sub_tutor'; // Only sub_tutor role supported
 
     // Verify the caller is an agency
     const agency = await db.user.findUnique({

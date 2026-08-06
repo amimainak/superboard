@@ -37,9 +37,10 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
+      // Fetch target user with tier info now to avoid a redundant second query
       const target = await db.user.findUnique({
         where: { id: userId },
-        select: { parentAgencyId: true },
+        select: { parentAgencyId: true, tier: true },
       });
       if (!target || target.parentAgencyId !== auth.userId) {
         return NextResponse.json(
@@ -47,6 +48,23 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
+      // Target verified and tier available — compute usage inline to skip second fetch
+      const tier = target.tier as Tier;
+      const usageLog = await getCurrentUsageLog(targetUserId!, tier);
+      const tierConfig = TIER_LIMITS[tier];
+      const aiCreditsLimit =
+        tier === 'FREE'
+          ? (tierConfig as any).aiCreditsPerWeek
+          : (tierConfig as any).aiCreditsPerMonth;
+      return NextResponse.json({
+        tier,
+        aiCreditsUsed: usageLog.aiCreditsUsed,
+        aiCreditsLimit,
+        videoMinutesUsed: usageLog.videoMinutesUsed,
+        videoMinutesLimit: tierConfig.videoMinutesPerWeek,
+        recordingsUsed: usageLog.recordingsUsed,
+        recordingsLimit: tierConfig.recordingsPerMonth,
+      });
     }
 
     const user = await db.user.findUnique({ where: { id: targetUserId } });

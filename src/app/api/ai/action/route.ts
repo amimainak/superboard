@@ -12,7 +12,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
-import type { Tier } from '@/types';
+import { aiActionSchema, validateInput } from '@/lib/validations';
+import type { Tier, AIAction } from '@/types';
 import { TEXT_AI_ACTIONS } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -22,29 +23,9 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const { userId, action, prompt, imageBase64, systemPrompt } = body;
-
-    // Validate required fields
-    if (!userId || !action || !prompt) {
-      return NextResponse.json(
-        { error: 'Missing required fields: userId, action, prompt' },
-        { status: 400 }
-      );
-    }
-
-    // Input validation — prevent abuse
-    if (typeof prompt !== 'string' || prompt.length > 50_000) {
-      return NextResponse.json(
-        { error: 'Prompt too long (max 50,000 characters)' },
-        { status: 400 }
-      );
-    }
-    if (imageBase64 && typeof imageBase64 === 'string' && imageBase64.length > 20_000_000) {
-      return NextResponse.json(
-        { error: 'Image too large (max ~15MB)' },
-        { status: 400 }
-      );
-    }
+    const parsed = validateInput<{ userId: string; action: string; prompt: string; imageBase64?: string; systemPrompt?: string }>(aiActionSchema, body);
+    if (!parsed.success) return parsed.response;
+    const { userId, action, prompt, imageBase64, systemPrompt } = parsed.data;
 
     // Security: caller can only perform AI actions on their own account
     if (userId !== auth.userId) {
@@ -90,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. MANDATORY ROUTING LOGIC FOR COST
-    const isTextAction = TEXT_AI_ACTIONS.includes(action);
+    const isTextAction = TEXT_AI_ACTIONS.includes(action as AIAction);
     const targetModel = isTextAction ? 'claude-3-haiku-20240307' : 'claude-3-5-sonnet-20241022';
 
     // 5. Call Anthropic API

@@ -113,7 +113,6 @@ export default function QuizGenerator() {
       // TODO: Dispatch quiz data to tldraw canvas as sticky notes
       // Example: for each question, create a sticky note at a grid position
       // on the current page.
-      console.log('Quiz generated — TODO: Place sticky notes on canvas', data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate quiz.');
     } finally {

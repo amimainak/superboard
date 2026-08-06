@@ -88,17 +88,14 @@ export default function MathToolkit({ editor: _editor }: MathToolkitProps) {
 
   const handleBackgroundToggle = (bgId: string) => {
     // TODO: Implement background switching via tldraw editor
-    console.log('Background toggle:', bgId);
   };
 
   const handleGeometryShape = (shapeId: string) => {
     // TODO: Stamp geometry shape onto canvas via tldraw editor
-    console.log('Geometry shape:', shapeId);
   };
 
   const handleOverlay = (overlayId: string) => {
     // TODO: Toggle ruler/protractor SVG overlay
-    console.log('Overlay toggle:', overlayId);
   };
 
   const handlePremiumFeature = (featureId: AIAction) => {
@@ -107,7 +104,6 @@ export default function MathToolkit({ editor: _editor }: MathToolkitProps) {
       return;
     }
     // TODO: Dispatch AI action
-    console.log('AI Feature:', featureId);
   };
 
   const handleGeoGebra = () => {
@@ -116,7 +112,6 @@ export default function MathToolkit({ editor: _editor }: MathToolkitProps) {
       return;
     }
     // TODO: Open GeoGebra integration
-    console.log('Open GeoGebra');
   };
 
   return (

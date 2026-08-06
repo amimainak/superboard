@@ -131,6 +131,9 @@ export default function WaitingRoom({ onJoin, branding, roomCode, tutorPresent =
 
   return (
     <div
+      role="dialog"
+      aria-modal="false"
+      aria-label="Waiting room"
       className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 text-white"
       style={bgStyle}
     >

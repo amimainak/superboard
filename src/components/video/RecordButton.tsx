@@ -81,7 +81,6 @@ export default function RecordButton() {
       setIsStopping(true);
       try {
         // TODO: POST /api/room/recording/end
-        console.log('TODO: POST /api/room/recording/end');
         // await fetch('/api/room/recording/end', { method: 'POST' });
         setRecording(false);
       } catch (err) {
@@ -94,7 +93,6 @@ export default function RecordButton() {
       setIsStarting(true);
       try {
         // TODO: POST /api/room/recording/start
-        console.log('TODO: POST /api/room/recording/start');
         // await fetch('/api/room/recording/start', { method: 'POST' });
         setRecording(true);
       } catch (err) {

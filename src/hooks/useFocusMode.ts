@@ -34,7 +34,6 @@ export function useFocusMode() {
       // The Hocuspocus server will broadcast this to all connected clients.
       // In the whiteboard component, students will receive this and
       // set their camera to match.
-      console.log('[FocusMode] Broadcasting viewport:', viewport);
     },
     [focusMode, isTutor]
   );
@@ -47,7 +46,6 @@ export function useFocusMode() {
     if (focusMode) {
       // TODO: Apply viewport to the Tldraw canvas
       // editor.camera = { x: viewport.x, y: viewport.y, z: viewport.zoom }
-      console.log('[FocusMode] Applying viewport:', viewport);
     }
   }, [focusMode]);
 

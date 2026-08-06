@@ -9,38 +9,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { joinRoomSchema, validateInput } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { roomId, studentIdentity, studentName } = body;
-
-    if (!roomId || !studentIdentity) {
-      return NextResponse.json(
-        { error: 'Missing required fields: roomId, studentIdentity' },
-        { status: 400 }
-      );
-    }
-
-    // Input validation: prevent abuse via oversized strings
-    if (typeof roomId !== 'string' || roomId.length > 100) {
-      return NextResponse.json(
-        { error: 'Invalid roomId format or length' },
-        { status: 400 }
-      );
-    }
-    if (typeof studentIdentity !== 'string' || studentIdentity.length > 200) {
-      return NextResponse.json(
-        { error: 'Invalid studentIdentity format or length' },
-        { status: 400 }
-      );
-    }
-    if (studentName && (typeof studentName !== 'string' || studentName.length > 200)) {
-      return NextResponse.json(
-        { error: 'Invalid studentName format or length' },
-        { status: 400 }
-      );
-    }
+    const parsed = validateInput<{ roomId: string; studentIdentity: string; studentName?: string | null }>(joinRoomSchema, body);
+    if (!parsed.success) return parsed.response;
+    const { roomId, studentIdentity, studentName } = parsed.data;
 
     // Validate room exists and is active
     const room = await db.room.findUnique({

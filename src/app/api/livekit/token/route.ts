@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkVideoLimit } from '@/lib/usage';
+import { livekitTokenSchema, validateInput } from '@/lib/validations';
 import type { Tier } from '@/types';
 
 const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
@@ -24,14 +25,9 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const { roomId, userId, userName, isTutor } = body;
-
-    if (!roomId || !userId || !userName) {
-      return NextResponse.json(
-        { error: 'Missing required fields: roomId, userId, userName' },
-        { status: 400 }
-      );
-    }
+    const parsed = validateInput<{ roomId: string; userId: string; userName: string; isTutor?: boolean }>(livekitTokenSchema, body);
+    if (!parsed.success) return parsed.response;
+    const { roomId, userId, userName, isTutor } = parsed.data;
 
     // Security: caller can only request tokens for themselves
     if (userId !== auth.userId) {
@@ -39,14 +35,6 @@ export async function POST(request: NextRequest) {
         { error: 'Forbidden — you can only generate tokens for your own account' },
         { status: 403 }
       );
-    }
-
-    // Validate inputs
-    if (typeof roomId !== 'string' || roomId.length > 100) {
-      return NextResponse.json({ error: 'Invalid roomId' }, { status: 400 });
-    }
-    if (typeof userName !== 'string' || userName.length > 100) {
-      return NextResponse.json({ error: 'Invalid userName' }, { status: 400 });
     }
 
     // Verify room exists and is active

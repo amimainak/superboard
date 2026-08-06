@@ -58,7 +58,6 @@ export default function Whiteboard() {
     setShowNameModal(false);
     setShowWaitingRoom(false);
     // TODO: Join Yjs room and announce presence
-    console.log(`[Student] ${name} joined with color ${color}`);
   }, [setRoom]);
 
   // Initialize Yjs connection
@@ -88,8 +87,6 @@ export default function Whiteboard() {
     //   if (tutor) setTutorPresent(true);
     // })
 
-    console.log(`[Whiteboard] Initializing Yjs for room: ${roomId}`);
-
     return () => {
       // TODO: Cleanup Yjs connection
       // provider.destroy()
@@ -101,7 +98,6 @@ export default function Whiteboard() {
     (index: number) => {
       setCurrentPage(index);
       // TODO: Load page snapshot from Yjs
-      console.log(`[Whiteboard] Switching to page ${index}`);
     },
     [setCurrentPage]
   );
@@ -129,7 +125,6 @@ export default function Whiteboard() {
     setActiveTool(tool);
     // TODO: Set Tldraw tool
     // editorRef.current?.setCurrentTool(tool)
-    console.log(`[Whiteboard] Tool changed to: ${tool}`);
   }, []);
 
   return (

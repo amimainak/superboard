@@ -239,7 +239,7 @@ function LandingPage() {
   const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); };
 
   return (
-    <div className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white">
       {/* ===== NAVBAR ===== */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -353,7 +353,7 @@ function LandingPage() {
                     <div className="w-3 h-3 rounded-full bg-emerald-400" />
                   </div>
                   <div className="ml-3 flex-1 h-6 rounded-lg bg-gray-100 flex items-center px-3">
-                    <span className="text-[10px] text-gray-400 font-medium">superboard.app/room/abc123</span>
+                    <span className="text-[10px] text-gray-500 font-medium">superboard.app/room/abc123</span>
                   </div>
                 </div>
                 {/* Mock whiteboard content */}
@@ -448,7 +448,7 @@ function LandingPage() {
               <div key={stat.label} className="text-center">
                 <p className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-sky-600 bg-clip-text text-transparent">{stat.value}</p>
                 <p className="text-sm font-medium text-gray-900 mt-1">{stat.label}</p>
-                <p className="text-xs text-gray-400">{stat.sub}</p>
+                <p className="text-xs text-gray-500">{stat.sub}</p>
               </div>
             ))}
           </div>
@@ -653,7 +653,7 @@ function LandingPage() {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
-          <p className="mt-4 text-xs text-gray-400">No credit card required. Set up in under 60 seconds.</p>
+          <p className="mt-4 text-xs text-gray-500">No credit card required. Set up in under 60 seconds.</p>
         </div>
       </section>
 
@@ -666,11 +666,11 @@ function LandingPage() {
             </div>
             <span className="text-sm font-semibold text-gray-900">Superboard</span>
           </div>
-          <p className="text-xs text-gray-400">&copy; 2025 Superboard. Built for tutors, by tutors.</p>
+          <p className="text-xs text-gray-500">&copy; 2025 Superboard. Built for tutors, by tutors.</p>
           <div className="flex gap-6">
-            <a href="#pricing" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Pricing</a>
-            <a href="#features" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Features</a>
-            <a href="mailto:hello@superboard.app" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Contact</a>
+            <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-600 transition-colors">Pricing</a>
+            <a href="#features" className="text-xs text-gray-500 hover:text-gray-600 transition-colors">Features</a>
+            <a href="mailto:hello@superboard.app" className="text-xs text-gray-500 hover:text-gray-600 transition-colors">Contact</a>
           </div>
         </div>
       </footer>
@@ -710,12 +710,12 @@ function LandingPage() {
             </div>
 
             {authError && (
-              <div className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 mb-4">
+              <div role="alert" className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 mb-4">
                 <p className="text-sm text-rose-600">{authError}</p>
               </div>
             )}
             {authMessage && (
-              <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-4 py-3 mb-4">
+              <div aria-live="polite" className="rounded-lg bg-emerald-50 border border-emerald-100 px-4 py-3 mb-4">
                 <p className="text-sm text-emerald-600">{authMessage}</p>
               </div>
             )}
@@ -750,13 +750,13 @@ function LandingPage() {
               </form>
             )}
 
-            <p className="text-center text-[11px] text-gray-400 mt-4">
+            <p className="text-center text-[11px] text-gray-500 mt-4">
               {showAuth === 'register' ? 'No credit card required' : 'Forgot password? Contact support'}
             </p>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </main>
   );
 }
 

@@ -2,16 +2,14 @@
 // AnswerKeyModal — Private Answer Key Popup (TUTOR ONLY)
 // ============================================================
 // Dialog that shows the answer key for a generated quiz or worksheet.
-// SECURITY NOTE: The client-side isTutor check is a convenience gate only.
-// TODO: Create a /api/ai/answer-key endpoint that verifies tutor status
-// server-side before returning answer data. Currently, a student could
-// modify the Zustand store to bypass this check.
+// SECURITY: Server-side verification via /api/ai/answer-key endpoint.
+// The modal calls the server to verify tutor status before displaying answers.
 // Shows question number, correct answer, and explanation.
 // ============================================================
 
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import {
   Dialog,
@@ -64,6 +62,39 @@ export default function AnswerKeyModal({
   const [copied, setCopied] = React.useState(false);
   const [showAllExplanations, setShowAllExplanations] = React.useState(true);
 
+  // ---- Server-side tutor verification before displaying answers ----
+  const [serverVerified, setServerVerified] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  useEffect(() => {
+    if (open && isTutor) {
+      // Verify tutor status server-side before showing answer keys
+      setVerifying(true);
+      setServerVerified(false);
+      const roomId = useAppStore.getState().room.roomId;
+      if (!roomId) {
+        setVerifying(false);
+        return;
+      }
+      fetch('/api/ai/answer-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId }),
+      })
+        .then((res) => {
+          if (res.ok) {
+            setServerVerified(true);
+          } else {
+            setServerVerified(false);
+          }
+        })
+        .catch(() => setServerVerified(false))
+        .finally(() => setVerifying(false));
+    } else if (!open) {
+      setServerVerified(false);
+    }
+  }, [open, isTutor]);
+
   // ---- Copy all answers to clipboard ---- (hook must be before conditional return)
   const handleCopyAll = React.useCallback(async () => {
     const text = answers
@@ -82,6 +113,7 @@ export default function AnswerKeyModal({
   }, [answers]);
 
   // ---- Security gate: students cannot see ----
+  // Client-side check (convenience) + server-side verification required
   if (!isTutor) {
     return null;
   }
@@ -89,6 +121,17 @@ export default function AnswerKeyModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh]">
+        {verifying ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <span className="ml-3 text-sm text-muted-foreground">Verifying tutor access...</span>
+          </div>
+        ) : !serverVerified ? (
+          <div className="flex items-center justify-center py-12 text-center">
+            <ShieldCheck className="w-10 h-10 text-red-400 mb-3" />
+            <p className="text-sm text-muted-foreground">Unable to verify tutor access. Answer keys are hidden for security.</p>
+          </div>
+        ) : (<>
         <DialogHeader>
           <div className="flex items-center gap-3">
             <DialogTitle className="flex items-center gap-2">
@@ -206,12 +249,13 @@ export default function AnswerKeyModal({
         <DialogFooter className="flex items-center justify-between">
           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
             <ShieldCheck className="w-3 h-3" />
-            Tutor-only view — TODO: add server-side answer key verification endpoint
+            Tutor-only view — verified server-side
           </span>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>
+        </>) }
       </DialogContent>
     </Dialog>
   );

@@ -222,7 +222,16 @@ export default function PipVideoPanel() {
             'group'
           )}
           onClick={() => setIsMinimized(false)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setIsMinimized(false);
+            }
+          }}
+          role="button"
+          tabIndex={0}
           title="Click to expand video panel"
+          aria-label="Expand video panel"
         >
           <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/80">
             <Video className="w-5 h-5 text-white" />
@@ -253,7 +262,16 @@ export default function PipVideoPanel() {
           'group'
         )}
         onClick={() => setIsMinimized(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setIsMinimized(false);
+          }
+        }}
+        role="button"
+        tabIndex={0}
         title="Click to expand video panel"
+        aria-label="Expand video panel"
       >
         {/* Speaker avatar */}
         <div className="relative">
@@ -304,7 +322,27 @@ export default function PipVideoPanel() {
       )}
     >
       {/* ---- Header (drag handle) ---- */}
-      <div className="flex items-center justify-between px-3 h-[40px] shrink-0 bg-white/5 border-b border-white/5">
+      <div
+        className="flex items-center justify-between px-3 h-[40px] shrink-0 bg-white/5 border-b border-white/5"
+        aria-label="Video panel - drag handle. Use arrow keys to move."
+        tabIndex={0}
+        role="toolbar"
+        onKeyDown={(e) => {
+          const step = e.shiftKey ? 50 : 10;
+          let dx = 0;
+          let dy = 0;
+          if (e.key === 'ArrowLeft') dx = -step;
+          else if (e.key === 'ArrowRight') dx = step;
+          else if (e.key === 'ArrowUp') dy = -step;
+          else if (e.key === 'ArrowDown') dy = step;
+          else return;
+          e.preventDefault();
+          setPosition((prev) => ({
+            x: Math.max(0, Math.min(prev.x + dx, window.innerWidth - size.width)),
+            y: Math.max(0, Math.min(prev.y + dy, window.innerHeight - size.height)),
+          }));
+        }}
+      >
         <div className="flex items-center gap-1.5 text-white/70 text-xs font-medium">
           <GripHorizontal className="w-3.5 h-3.5" />
           <span>Video Call</span>
@@ -324,6 +362,7 @@ export default function PipVideoPanel() {
               e.stopPropagation();
               setIsMinimized(true);
             }}
+            aria-label="Minimize video panel"
           >
             <Minimize2 className="w-3.5 h-3.5" />
           </Button>
@@ -443,8 +482,8 @@ export default function PipVideoPanel() {
           onClick={() => {
             setIsCameraOff(!isCameraOff);
             // TODO: room.localParticipant.setCameraEnabled(!isCameraOff);
-            console.log('TODO: Toggle camera', !isCameraOff);
           }}
+          aria-label={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
         >
           {isCameraOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
         </Button>
@@ -460,8 +499,8 @@ export default function PipVideoPanel() {
           onClick={() => {
             setIsMuted(!isMuted);
             // TODO: room.localParticipant.setMicrophoneEnabled(!isMuted);
-            console.log('TODO: Toggle microphone', !isMuted);
           }}
+          aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
         >
           {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
         </Button>
@@ -476,8 +515,8 @@ export default function PipVideoPanel() {
           )}
           onClick={() => {
             setIsDeafened(!isDeafened);
-            console.log('TODO: Toggle deafen', !isDeafened);
           }}
+          aria-label={isDeafened ? 'Undeafen audio' : 'Deafen audio'}
         >
           {isDeafened ? <HeadphoneOff className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
         </Button>
@@ -487,7 +526,10 @@ export default function PipVideoPanel() {
           variant="ghost"
           size="icon"
           className="h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10"
-          onClick={() => console.log('TODO: Toggle speaker output')}
+          onClick={() => {
+            // TODO: Toggle speaker output
+          }}
+          aria-label="Toggle speaker output"
         >
           <MonitorSpeaker className="w-4 h-4" />
         </Button>
@@ -501,9 +543,10 @@ export default function PipVideoPanel() {
           size="icon"
           className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20"
           onClick={() => {
-            console.log('TODO: Leave room / end call');
+            // TODO: Leave room / end call
             setInCall(false);
           }}
+          aria-label="Leave call"
         >
           <PhoneOff className="w-4 h-4" />
         </Button>
@@ -516,8 +559,27 @@ export default function PipVideoPanel() {
           'absolute bottom-0 left-0 w-4 h-4 cursor-se-resize',
           'opacity-30 hover:opacity-60 transition-opacity'
         )}
+        role="separator"
+        aria-label="Resize video panel. Use Shift+Arrow keys to resize."
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (!e.shiftKey) return;
+          const step = 10;
+          let dw = 0;
+          let dh = 0;
+          if (e.key === 'ArrowRight') dw = step;
+          else if (e.key === 'ArrowUp') dh = step;
+          else if (e.key === 'ArrowLeft') dw = -step;
+          else if (e.key === 'ArrowDown') dh = -step;
+          else return;
+          e.preventDefault();
+          setSize((prev) => ({
+            width: Math.max(MIN_WIDTH, Math.min(prev.width + dw, 600)),
+            height: Math.max(MIN_HEIGHT, Math.min(prev.height + dh, 500)),
+          }));
+        }}
       >
-        <svg viewBox="0 0 16 16" fill="currentColor" className="text-white/60 w-4 h-4">
+        <svg viewBox="0 0 16 16" fill="currentColor" className="text-white/60 w-4 h-4" aria-hidden="true">
           <path d="M14 14H8V13H13V8H14V14Z" />
           <path d="M14 10H9V9H13V5H14V10Z" opacity="0.6" />
         </svg>

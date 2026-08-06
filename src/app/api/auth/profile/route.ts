@@ -34,10 +34,20 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
-      // Check if the target is a sub-tutor under this agency
+      // Check if the target is a sub-tutor under this agency.
+      // Fetch full profile fields now to avoid a redundant second query.
       const target = await db.user.findUnique({
         where: { id: userId },
-        select: { parentAgencyId: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          tier: true,
+          brandingColor: true,
+          brandingLogoUrl: true,
+          customDomain: true,
+          parentAgencyId: true,
+        },
       });
       if (!target || target.parentAgencyId !== auth.userId) {
         return NextResponse.json(
@@ -45,6 +55,8 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
+      // Target already fetched with full fields — return directly
+      return NextResponse.json(target);
     }
 
     const user = await db.user.findUnique({

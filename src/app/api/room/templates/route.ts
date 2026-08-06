@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { createTemplateSchema, validateInput } from '@/lib/validations';
 import type { Subject } from '@/types';
 
 const MAX_SNAPSHOT_SIZE = 5_000_000; // 5MB per snapshot
@@ -60,22 +61,9 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const { tutorId, name, subject, snapshot } = body;
-
-    if (!name || !subject || !snapshot) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, subject, snapshot' },
-        { status: 400 }
-      );
-    }
-
-    // Input validation
-    if (typeof name !== 'string' || name.length > 200) {
-      return NextResponse.json(
-        { error: 'Template name too long (max 200 characters)' },
-        { status: 400 }
-      );
-    }
+    const parsed = validateInput<{ tutorId?: string; name: string; subject: string; snapshot: string | Record<string, unknown> }>(createTemplateSchema, body);
+    if (!parsed.success) return parsed.response;
+    const { tutorId, name, subject, snapshot } = parsed.data;
 
     // Validate snapshot size
     const snapshotStr = typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot);

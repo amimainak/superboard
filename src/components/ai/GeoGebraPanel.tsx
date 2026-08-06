@@ -139,7 +139,6 @@ export default function GeoGebraPanel({ open, onOpenChange }: GeoGebraPanelProps
     //   Use <iframe> with material_id or direct URL
     //
     // For now, show a placeholder.
-    console.log('[GeoGebraPanel] Panel opened — applet mount point ready');
     // Simulate a brief load
     const timer = setTimeout(() => setAppletLoaded(true), 800);
     return () => clearTimeout(timer);
@@ -191,7 +190,6 @@ export default function GeoGebraPanel({ open, onOpenChange }: GeoGebraPanelProps
     // }
 
     const cmdStr = buildGeoGebraCommand(command);
-    console.log('[GeoGebraPanel] Plotting:', cmdStr);
 
     // Add to plotted items
     const newItem: PlottedItem = {
@@ -213,7 +211,6 @@ export default function GeoGebraPanel({ open, onOpenChange }: GeoGebraPanelProps
     //   applet.clearAll();
     //   applet.setRepaintingActive(true);
     // }
-    console.log('[GeoGebraPanel] Clearing all plots');
     setPlottedItems([]);
     colorIndexRef.current = 0;
   }, []);

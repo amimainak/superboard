@@ -91,22 +91,18 @@ export default function LanguageToolkit({ editor: _editor }: LanguageToolkitProp
 
   const handleHighlighter = (highlighterId: string) => {
     // TODO: Activate highlighter tool with the given color via tldraw editor
-    console.log('Highlighter:', highlighterId);
   };
 
   const handleAnnotation = (toolId: string) => {
     // TODO: Activate annotation tool (brackets / underlines) via tldraw editor
-    console.log('Annotation tool:', toolId);
   };
 
   const handleMindMap = () => {
     // TODO: Create connected mind map nodes on canvas
-    console.log('Mind map nodes');
   };
 
   const handleBackgroundToggle = (bgId: string) => {
     // TODO: Switch background paper style
-    console.log('Background toggle:', bgId);
   };
 
   const handlePremiumFeature = (featureId: AIAction) => {
@@ -115,7 +111,6 @@ export default function LanguageToolkit({ editor: _editor }: LanguageToolkitProp
       return;
     }
     // TODO: Dispatch AI action
-    console.log('AI Feature:', featureId);
   };
 
   return (

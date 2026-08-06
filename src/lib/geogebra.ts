@@ -71,7 +71,6 @@ export function executeGeoGebraCommands(
     const cmdStr = buildGeoGebraCommand(cmd);
     // TODO: When GeoGebra applet is loaded, call:
     // window.ggbApplet[appletId].evalCommand(cmdStr);
-    console.log(`[GeoGebra] Command for ${appletId}: ${cmdStr}`);
   });
 }
 

@@ -86,17 +86,14 @@ export default function ScienceToolkit({ editor: _editor }: ScienceToolkitProps)
 
   const handleVectorArrow = (arrowId: string, strokeColor: string) => {
     // TODO: Stamp a pre-colored arrow onto the canvas via tldraw editor
-    console.log('Vector arrow:', arrowId, 'color:', strokeColor);
   };
 
   const handleLabDiagram = (diagramId: string) => {
     // TODO: Drag-and-drop lab diagram SVG onto canvas
-    console.log('Lab diagram:', diagramId);
   };
 
   const handleGraphPaper = () => {
     // TODO: Toggle graph paper background
-    console.log('Graph paper background toggle');
   };
 
   const handlePremiumFeature = (featureId: AIAction) => {
@@ -105,7 +102,6 @@ export default function ScienceToolkit({ editor: _editor }: ScienceToolkitProps)
       return;
     }
     // TODO: Dispatch AI action
-    console.log('AI Feature:', featureId);
   };
 
   return (

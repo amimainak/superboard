@@ -130,12 +130,15 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.rewrite(url);
     response.headers.set('Content-Security-Policy', cspDirectives);
     response.headers.set('X-Nonce', nonce);
+    response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
     return response;
   }
 
   const response = NextResponse.next();
   response.headers.set('Content-Security-Policy', cspDirectives);
   response.headers.set('X-Nonce', nonce);
+  // Security headers (supplementary to next.config.ts static headers)
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   return response;
 }
 

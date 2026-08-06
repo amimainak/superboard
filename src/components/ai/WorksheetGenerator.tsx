@@ -138,7 +138,6 @@ export default function WorksheetGenerator() {
       // 1. Add a new page to the tldraw document
       // 2. Switch to the new page
       // 3. Render problems in a grid layout on that page
-      console.log('Worksheet generated — TODO: Render on new blank page', data);
       if (data.totalPages > 1) {
         setTotalPages(data.totalPages);
       }
@@ -160,7 +159,6 @@ export default function WorksheetGenerator() {
       // 1. Use browser print API: window.print() with a print stylesheet
       // 2. Use a server-side PDF generation endpoint
       // 3. Use @tldraw/export or canvas-to-blob
-      console.log('TODO: Download worksheet as PDF', worksheetData);
 
       // Placeholder: Use browser print
       window.print();

@@ -60,7 +60,6 @@ export async function exportToPdf({ canvasElement, studentName, branding, tier }
 
   // --- Step 1: Capture the main whiteboard canvas ---
   // TODO: const boardCanvas = await html2canvas(canvasElement, { scale: 2, useCORS: true });
-  console.log('[BrandedPdfExport] Step 1 — Capture whiteboard canvas', canvasElement);
 
   // --- Step 2: If branding, create a header with logo + agency name ---
   if (hasBranding) {
@@ -68,15 +67,9 @@ export async function exportToPdf({ canvasElement, studentName, branding, tier }
     //   - Draw agency logo (preloaded) on the left
     //   - Draw agency name next to it
     //   - Add a thin coloured rule underneath (using branding.color)
-    console.log(
-      '[BrandedPdfExport] Step 2 — Branded header:',
-      branding?.agencyName,
-      branding?.logoUrl,
-    );
 
     if (branding?.logoUrl) {
       // TODO: const logoImg = await preloadImage(branding.logoUrl);
-      console.log('[BrandedPdfExport] Step 2a — Preload logo from', branding.logoUrl);
     }
   }
 
@@ -86,7 +79,6 @@ export async function exportToPdf({ canvasElement, studentName, branding, tier }
     //   - Left: studentName
     //   - Right: new Date().toLocaleDateString()
     //   - Thin rule on top
-    console.log('[BrandedPdfExport] Step 3 — Branded footer:', studentName);
   }
 
   // --- Step 4: Compose PDF ---
@@ -102,7 +94,6 @@ export async function exportToPdf({ canvasElement, studentName, branding, tier }
   //   } else {
   //     pdf.addImage(boardCanvas, 'PNG', 0, 0, boardCanvas.width, boardCanvas.height);
   //   }
-  console.log('[BrandedPdfExport] Step 4 — Compose PDF pages');
 
   // --- Step 5: Trigger download ---
   const timestamp = new Date().toISOString().slice(0, 10);
@@ -111,7 +102,6 @@ export async function exportToPdf({ canvasElement, studentName, branding, tier }
     : `superboard_${studentName}_${timestamp}.pdf`;
 
   // TODO: pdf.save(filename);
-  console.log(`[BrandedPdfExport] Step 5 — Would download: ${filename}`);
 }
 
 // ---------- Component ----------

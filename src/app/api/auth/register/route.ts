@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { registerSchema, validateInput } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,43 +20,15 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const { id, email, name } = body;
-
-    if (!email) {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      );
-    }
-
-    // Validate email format
-    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'User ID (from Supabase Auth) is required' },
-        { status: 400 }
-      );
-    }
+    const parsed = validateInput<{ id: string; email: string; name?: string | null }>(registerSchema, body);
+    if (!parsed.success) return parsed.response;
+    const { id, email, name } = parsed.data;
 
     // Security: caller can only register their own account
     if (id !== auth.userId) {
       return NextResponse.json(
         { error: 'Forbidden — you can only register your own account' },
         { status: 403 }
-      );
-    }
-
-    // Validate name length if provided
-    if (name && (typeof name !== 'string' || name.length > 200)) {
-      return NextResponse.json(
-        { error: 'Name too long (max 200 characters)' },
-        { status: 400 }
       );
     }
 

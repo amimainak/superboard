@@ -76,17 +76,14 @@ export default function GeneralToolkit({ editor: _editor }: GeneralToolkitProps)
       return;
     }
     // TODO: Activate standard tool via tldraw editor
-    console.log('Standard tool:', toolId);
   };
 
   const handleMapOverlays = () => {
     // TODO: Open map overlay panel
-    console.log('Map overlays');
   };
 
   const handleTimelineBuilder = () => {
     // TODO: Create timeline axis on canvas
-    console.log('Timeline builder');
   };
 
   const handlePremiumFeature = (featureId: AIAction) => {
@@ -95,7 +92,6 @@ export default function GeneralToolkit({ editor: _editor }: GeneralToolkitProps)
       return;
     }
     // TODO: Dispatch AI action
-    console.log('AI Feature:', featureId);
   };
 
   return (
