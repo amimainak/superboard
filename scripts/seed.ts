@@ -9,6 +9,9 @@
 // Run: npx tsx scripts/seed.ts
 // ============================================================
 
+// Load .env so Prisma Client + Supabase SDK can find their vars at runtime
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env'), override: true });
+
 const { PrismaClient } = require('@prisma/client');
 const crypto = require('crypto');
 
