@@ -137,6 +137,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Lazy cleanup: batch-expire any PENDING invites past their expiresAt
+    // This ensures the list always shows accurate status without a separate cron job
+    await db.agencyInvite.updateMany({
+      where: {
+        agencyId: auth.userId,
+        status: 'PENDING',
+        expiresAt: { lt: new Date() },
+      },
+      data: { status: 'EXPIRED' },
+    });
+
     const invites = await db.agencyInvite.findMany({
       where: { agencyId: auth.userId },
       select: {

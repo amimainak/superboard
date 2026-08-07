@@ -9,6 +9,8 @@
 import { Server } from '@hocuspocus/server';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
+import { onLoadDocument, onStoreDocument } from './persistence';
+import http from 'http';
 
 const PORT = parseInt(process.env.HOCUSPOCUS_PORT || '3001', 10);
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -152,18 +154,73 @@ const server = Server.configure({
   },
 
   // Storage hook — load document state from database
-  async onLoadDocument({ documentName, document }) {
-    const roomId = documentName.replace('room-', '');
-    console.log(`[Hocuspocus] Loaded document for room: ${roomId}`);
+  async onLoadDocument(args) {
+    const roomId = args.documentName.replace('room-', '');
+    console.log(`[Hocuspocus] Loading document for room: ${roomId}`);
+    await onLoadDocument(args);
   },
 
   // Store hook — save document state to database
-  async onStoreDocument({ documentName, document }) {
-    const roomId = documentName.replace('room-', '');
-    console.log(`[Hocuspocus] Stored document for room: ${roomId}`);
+  async onStoreDocument(args) {
+    const roomId = args.documentName.replace('room-', '');
+    console.log(`[Hocuspocus] Storing document for room: ${roomId}`);
+    await onStoreDocument(args);
   },
 });
 
 server.listen().then(() => {
   console.log(`[Hocuspocus] Yjs sync server running on port ${PORT}`);
+
+  // ============================================================
+  // HTTP Health Check Server (separate from WebSocket)
+  // ============================================================
+  // Provides /health endpoint for Docker HEALTHCHECK and load balancers
+  const healthServer = http.createServer((req, res) => {
+    if (req.url === '/health' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok', service: 'hocuspocus', timestamp: new Date().toISOString() }));
+    } else {
+      res.writeHead(404);
+      res.end('Not Found');
+    }
+  });
+  healthServer.listen(PORT + 1, () => {
+    console.log(`[Hocuspocus] Health check server running on port ${PORT + 1}`);
+  });
+
+  // ============================================================
+  // Background Task: Invite Auto-Expire Cleanup
+  // ============================================================
+  // Runs every 15 minutes to proactively mark expired PENDING invites.
+  // Complements the lazy cleanup in GET /api/agency/invite.
+  // ============================================================
+  const INVITE_CLEANUP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+
+  async function expireStaleInvites() {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
+
+    try {
+      // Use Supabase RPC or direct SQL to batch-update expired invites
+      // Since the mini-service doesn't have Prisma, we use Supabase's update
+      const { error } = await supabaseAdmin
+        .from('AgencyInvite')
+        .update({ status: 'EXPIRED', updatedAt: new Date().toISOString() })
+        .eq('status', 'PENDING')
+        .lt('expiresAt', new Date().toISOString());
+
+      if (error) {
+        console.error('[InviteCleanup] Error expiring invites:', error.message);
+      } else {
+        console.log(`[InviteCleanup] Completed at ${new Date().toISOString()}`);
+      }
+    } catch (err) {
+      console.error('[InviteCleanup] Unexpected error:', err);
+    }
+  }
+
+  // Run first cleanup after 30 seconds, then every 15 minutes
+  setTimeout(() => {
+    expireStaleInvites();
+    setInterval(expireStaleInvites, INVITE_CLEANUP_INTERVAL_MS);
+  }, 30_000);
 });

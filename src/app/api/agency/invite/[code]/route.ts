@@ -53,15 +53,14 @@ export async function GET(
     }
 
     if (invite.expiresAt < new Date()) {
-      // SECURITY: Only mark as expired if the code hasn't been probed excessively
-      // Avoid mass status changes via code enumeration
+      // Mark as expired — return distinct message so frontend can show correct state
       await db.agencyInvite.update({
         where: { id: invite.id },
         data: { status: 'EXPIRED' },
       });
 
       return NextResponse.json(
-        { error: 'This invite is no longer available' },
+        { error: 'This invite has expired' },
         { status: 410 }
       );
     }
@@ -116,6 +115,8 @@ export async function POST(
     }
 
     if (invite.status !== 'PENDING') {
+      // SECURITY: Do NOT expose internal status (ACCEPTED, CANCELLED, EXPIRED)
+      // to unauthenticated users — return generic message
       return NextResponse.json(
         { error: 'This invite is no longer available' },
         { status: 410 }

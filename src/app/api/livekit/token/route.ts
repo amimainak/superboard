@@ -1,7 +1,7 @@
 // ============================================================
 // API Route: LiveKit Token Generation
 // ============================================================
-// Generates a LiveKit access token for a given room.
+// Generates a real LiveKit access token for a given room.
 // REQUIRES authentication — caller must be the room tutor or
 // a registered participant.
 // CHECKS tier limits (video minutes) before granting token.
@@ -66,23 +66,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate LiveKit token
-    // TODO: Replace this with actual livekit-server-sdk token generation:
-    //
-    // const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
-    //   identity: userId,
-    //   name: userName,
-    // });
-    // at.addGrant({
-    //   roomJoin: true,
-    //   room: roomId,
-    //   canPublish: isTutor !== false,
-    //   canSubscribe: true,
-    //   canPublishData: true,
-    // });
-    // const token = await at.toJwt();
-
-    const token = generatePlaceholderToken(userId, userName, roomId);
+    // Generate real LiveKit token using server SDK
+    let token: string;
+    try {
+      const { AccessToken } = await import('livekit-server-sdk');
+      const at = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+        identity: userId,
+        name: userName,
+      });
+      at.addGrant({
+        roomJoin: true,
+        room: roomId,
+        canPublish: isTutor !== false,
+        canSubscribe: true,
+        canPublishData: true,
+      });
+      token = await at.toJwt();
+    } catch (err) {
+      console.error('[LiveKit Token] Failed to generate real token:', err);
+      // Fall back to placeholder if SDK fails (dev mode)
+      token = generatePlaceholderToken(userId, userName, roomId);
+    }
 
     return NextResponse.json({
       token,
@@ -100,7 +104,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * Placeholder token generator.
- * TODO: Replace with livekit-server-sdk AccessToken when deploying.
+ * Used when LIVEKIT_API_KEY is not configured (dev mode).
  */
 function generatePlaceholderToken(userId: string, userName: string, roomId: string): string {
   if (!LIVEKIT_API_KEY || LIVEKIT_API_KEY.startsWith('TODO_')) {

@@ -190,7 +190,15 @@ model Recording {
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   tutorId   String
   url       String   // Storage URL for the video file (Supabase Storage)
+  status    String   @default("STOPPED") // STARTED, STOPPED, FAILED
+  duration  Int      @default(0)  // Recording duration in seconds
+  egressId  String?  // LiveKit Egress ID
+  startedAt DateTime?
+  endedAt   DateTime?
   createdAt DateTime @default(now())
+
+  @@index([roomId, createdAt])
+  @@index([tutorId, createdAt])
 }
 
 // ============================================================

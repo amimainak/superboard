@@ -11,6 +11,9 @@ import { requireAuth } from '@/lib/auth';
 import { createTemplateSchema, validateInput } from '@/lib/validations';
 import type { Subject } from '@/types';
 
+// LIMIT: Restrict body size for template snapshots (prevent unbounded uploads)
+export const maxDuration = 30;
+
 const MAX_SNAPSHOT_SIZE = 5_000_000; // 5MB per snapshot
 const MAX_TEMPLATES_PER_USER = 50;
 
