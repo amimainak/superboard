@@ -32,6 +32,7 @@ model User {
   stripeSubscriptionId String?      // Active Stripe subscription ID
   // SECURITY FIX (V-15): Enum constraint for tier — prevents invalid tier values
   tier              Tier            @default(FREE)
+  isAdmin           Boolean         @default(false)
   fingerprintHash   String?
   // Agency Features
   customDomain      String?         @unique

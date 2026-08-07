@@ -64,6 +64,31 @@ export async function requireAuth(request: NextRequest): Promise<AuthResult | Ne
 }
 
 /**
+ * Require admin access — verifies auth AND checks isAdmin flag in DB.
+ * Returns 403 if the user is not an admin.
+ */
+export async function requireAdmin(request: NextRequest): Promise<AuthResult | NextResponse> {
+  const auth = await requireAuth(request);
+  if (auth instanceof NextResponse) return auth;
+
+  // Dynamically import db to avoid circular dependency
+  const { db } = await import('@/lib/db');
+  const user = await db.user.findUnique({
+    where: { id: auth.userId },
+    select: { isAdmin: true },
+  });
+
+  if (!user || !user.isAdmin) {
+    return NextResponse.json(
+      { error: 'Admin access required. You do not have permission to perform this action.' },
+      { status: 403 }
+    );
+  }
+
+  return auth;
+}
+
+/**
  * Extract the Supabase access token from the request for client-side calls.
  * The client sends the token via Authorization: Bearer <token>.
  */

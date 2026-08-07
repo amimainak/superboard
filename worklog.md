@@ -208,3 +208,34 @@ Stage Summary:
 - Prisma: enums generated successfully (Tier, Subject, InviteStatus)
 - 5 partially fixable items noted but not blocking (V-08 rate limiting needs Redis, V-10 service role key is architectural, V-16 CSP styles needs nonce migration, V-24 Stripe metadata partially fixed, I-05 minimal as-any remaining)
 - 6 out-of-scope items remain (CRDT implementation, recording API, invite auto-expire cron, unbounded DB snapshots, monolithic page.tsx refactoring, Docker hardening)
+---
+Task ID: 1
+Agent: Main Agent
+Task: Build Admin Control Panel for Superboard platform
+
+Work Log:
+- Added `isAdmin` boolean field to User model in Prisma schema
+- Pushed schema to Supabase PostgreSQL via `prisma db push`
+- Created `requireAdmin()` auth helper in src/lib/auth.ts
+- Built 5 admin API routes:
+  - GET/POST /api/admin/users — List/create users with pagination & search
+  - PATCH/DELETE /api/admin/users/[userId] — Update tier/name/admin flag, delete users
+  - GET /api/admin/stats — Platform overview stats (users, rooms, usage, tiers breakdown)
+  - GET/PATCH/DELETE /api/admin/rooms — List/update/delete rooms
+  - GET /api/admin/check — Check if current user is admin
+- Built full AdminPanel component (src/components/admin/AdminPanel.tsx) with 3 tabs:
+  - Overview: KPI cards, tier distribution bars, subject breakdown charts
+  - Users: Searchable/filterable table, add/edit/delete users, change tiers via dialog
+  - Rooms: Searchable table, close/open rooms, delete rooms
+- Updated Zustand store with isAdmin state
+- Updated page.tsx auth gate to detect admin and show floating shield button
+- Set agency@superboard.app user as admin in database
+- Verified production build compiles all routes (including 5 admin routes) with zero errors
+- Verified all admin-related code passes ESLint with zero new errors
+
+Stage Summary:
+- Admin Control Panel fully built and integrated
+- 5 API routes, 1 UI component, 1 auth guard
+- Database schema updated with isAdmin field
+- agency@superboard.app promoted to admin
+- Build verified: all 28+ routes compile cleanly

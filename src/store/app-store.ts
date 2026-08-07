@@ -33,6 +33,8 @@ export interface AppState {
   // User tier — DISPLAY ONLY, not authoritative
   // Server-side validation in API routes is the source of truth
   tier: Tier;
+  // Admin status — DISPLAY ONLY, not authoritative
+  isAdmin: boolean;
   // Usage — DISPLAY ONLY, not authoritative
   aiCreditsUsed: number;
   aiCreditsLimit: number;
@@ -62,6 +64,7 @@ interface AppActions {
   setBranding: (branding: BrandingConfig) => void;
   // Tier & usage (display sync from server)
   setTier: (tier: Tier) => void;
+  setIsAdmin: (isAdmin: boolean) => void;
   setUsage: (usage: {
     aiCreditsUsed?: number;
     aiCreditsLimit?: number;
@@ -103,6 +106,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   // Initial state
   room: initialRoomState,
   tier: 'FREE',
+  isAdmin: false,
   aiCreditsUsed: 0,
   aiCreditsLimit: 25,
   videoMinutesUsed: 0,
@@ -162,6 +166,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
 
   // Tier & usage — synced from server, display-only
   setTier: (tier) => set({ tier }),
+  setIsAdmin: (isAdmin) => set({ isAdmin }),
   setUsage: (usage) => set((state) => ({ ...state, ...usage })),
 
   // AI
