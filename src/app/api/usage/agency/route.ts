@@ -11,6 +11,21 @@ import { requireAuth } from '@/lib/auth';
 import type { Tier } from '@/types';
 import { TIER_LIMITS } from '@/types';
 
+/**
+ * SECURITY FIX (I-05): Properly typed helper to get AI credit limit
+ * based on tier without 'as-any' casts.
+ */
+function getAICreditsLimit(tier: Tier): number {
+  if (tier === 'FREE') {
+    return TIER_LIMITS.FREE.aiCreditsPerWeek;
+  }
+  if (tier === 'PRO') {
+    return TIER_LIMITS.PRO.aiCreditsPerMonth;
+  }
+  // AGENCY — unlimited
+  return Infinity;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAuth(request);
@@ -79,10 +94,7 @@ export async function GET(request: NextRequest) {
         totalRooms: tutor.rooms.length,
         activeRooms: tutor.rooms.filter((r) => r.isActive).length,
         aiCreditsUsed: currentUsage?.aiCreditsUsed || 0,
-        aiCreditsLimit:
-          tier === 'FREE'
-            ? (tierConfig as any).aiCreditsPerWeek
-            : (tierConfig as any).aiCreditsPerMonth,
+        aiCreditsLimit: getAICreditsLimit(tier),
         videoMinutesUsed: currentUsage?.videoMinutesUsed || 0,
         videoMinutesLimit: tierConfig.videoMinutesPerWeek,
         recordingsUsed: currentUsage?.recordingsUsed || 0,

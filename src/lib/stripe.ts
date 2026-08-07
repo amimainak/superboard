@@ -6,6 +6,7 @@
 // ============================================================
 
 import Stripe from 'stripe';
+import type { Tier } from '@/types';
 
 let stripeClient: Stripe | null = null;
 
@@ -20,6 +21,37 @@ export function getStripeClient(): Stripe {
     });
   }
   return stripeClient;
+}
+
+/**
+ * SECURITY (V-24): Derive tier from Stripe Price ID.
+ * This is the authoritative mapping — used by the webhook to determine
+ * what tier a subscription corresponds to, WITHOUT trusting client-side metadata.
+ *
+ * In production, set these env vars to your actual Stripe Price IDs.
+ * The metadata.targetTier field is kept as a secondary confirmation only.
+ */
+const PRICE_ID_TO_TIER: Record<string, Tier> = {};
+
+function initPriceTierMap(): void {
+  const proMonthly = process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '';
+  const proYearly = process.env.STRIPE_PRO_YEARLY_PRICE_ID || '';
+  const agencyPrice = process.env.STRIPE_AGENCY_PRICE_ID || '';
+
+  if (proMonthly && !proMonthly.startsWith('TODO_')) PRICE_ID_TO_TIER[proMonthly] = 'PRO';
+  if (proYearly && !proYearly.startsWith('TODO_')) PRICE_ID_TO_TIER[proYearly] = 'PRO';
+  if (agencyPrice && !agencyPrice.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyPrice] = 'AGENCY';
+}
+
+// Build the map once at module load time
+initPriceTierMap();
+
+/**
+ * Look up the tier corresponding to a Stripe Price ID.
+ * Returns null if the price ID is not recognized.
+ */
+export function getTierFromPriceId(priceId: string): Tier | null {
+  return PRICE_ID_TO_TIER[priceId] || null;
 }
 
 export function getWebhookSecret(): string {

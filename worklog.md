@@ -1,4 +1,24 @@
 ---
+Task ID: 4
+Agent: Main Agent
+Task: Fix V-24 (Stripe price-to-tier derivation) and I-05 duplicates (usage/agency as-any casts)
+
+Work Log:
+- V-24 FULL FIX: Added PRICE_ID_TO_TIER map in stripe.ts that auto-initializes from STRIPE_PRO_MONTHLY_PRICE_ID, STRIPE_PRO_YEARLY_PRICE_ID, STRIPE_AGENCY_PRICE_ID env vars at module load
+- V-24: Added getTierFromPriceId(priceId) export that looks up tier from server-side price configuration
+- V-24: Rewrote checkout.session.completed handler — PRIMARY source is session.line_items price ID lookup, FALLBACK is validated metadata with a console.warn
+- V-24: Rewrote customer.subscription.updated handler — derives tier from subscription.items.data price IDs, same fallback pattern
+- V-24: Fixed session.subscription type access (Stripe API 2026 expandable type) with safe narrowing
+- I-05: Added getAICreditsLimit(tier) helper to usage/agency/route.ts, replacing 2 (tierConfig as any).aiCreditsPerWeek/Month casts
+- TypeScript: zero errors after all changes
+- Remaining as-any count: down from 11 to 8 (all genuine upstream API type mismatches: Stripe createUsageRecord, LiveKit callbacks, Prisma conditional include, Stripe subscription_data.metadata)
+
+Stage Summary:
+- V-24 is now FULLY FIXED — tier is derived from server-side Price ID, metadata is secondary fallback only
+- I-05 duplicate in usage/agency eliminated — same pattern as usage/current fix
+- Files modified: src/lib/stripe.ts, src/app/api/stripe/webhook/route.ts, src/app/api/usage/agency/route.ts
+
+---
 Task ID: 3
 Agent: Main Agent
 Task: Implement all 29 fixable security findings from white-box audit v2

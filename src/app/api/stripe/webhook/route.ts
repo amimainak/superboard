@@ -51,52 +51,99 @@ export async function POST(request: NextRequest) {
     // Handle specific events
     switch (event.type) {
       // ---- Checkout Complete: Activate tier ----
+      // SECURITY (V-24 FULL FIX): Derive tier from Stripe Price ID (server-side only),
+      // NOT from client-submitted metadata. Metadata is used only as a cross-check.
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
-        const targetTier = session.metadata?.targetTier;
 
-        // SECURITY (V-24): Validate tier before applying
-        if (userId && isValidTier(targetTier)) {
+        if (!userId) break;
+
+        // PRIMARY: Derive tier from line_items price ID (server-authoritative)
+        let resolvedTier: Tier | null = null;
+        const { getTierFromPriceId } = await import('@/lib/stripe');
+
+        if (session.line_items && typeof session.line_items === 'object') {
+          const lineItems = (session.line_items as Stripe.ApiList<Stripe.LineItem>).data;
+          for (const item of lineItems) {
+            const tierFromPrice = getTierFromPriceId(item.price?.id || '');
+            if (tierFromPrice) {
+              resolvedTier = tierFromPrice;
+              break;
+            }
+          }
+        }
+
+        // FALLBACK: If price lookup fails (e.g., Price IDs not configured yet),
+        // validate metadata as secondary source
+        if (!resolvedTier && isValidTier(session.metadata?.targetTier)) {
+          resolvedTier = session.metadata?.targetTier;
+          console.warn('[Stripe] Price-to-tier lookup returned null; fell back to metadata (less secure)');
+        }
+
+        if (resolvedTier) {
           await db.user.update({
             where: { id: userId },
             data: {
-              tier: targetTier,
+              tier: resolvedTier,
               stripeCustomerId: session.customer as string,
               ...(session.subscription
-                ? { stripeSubscriptionId: session.subscription as string }
+                ? { stripeSubscriptionId: typeof session.subscription === 'string'
+                    ? session.subscription
+                    : (session.subscription as unknown as { id?: string }).id || null }
                 : {}),
             },
           });
-          console.log(`[Stripe] User ${userId} upgraded to ${targetTier}`);
-        } else if (userId && targetTier) {
-          console.error(`[Stripe] Invalid tier in checkout metadata: ${targetTier}`);
+          console.log(`[Stripe] User ${userId} upgraded to ${resolvedTier}`);
+        } else {
+          console.error(`[Stripe] Could not resolve tier from price ID or metadata for user ${userId}`);
         }
         break;
       }
 
       // ---- Subscription Updated: Sync tier status ----
+      // SECURITY (V-24): Derive tier from subscription's price items
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata?.userId;
-        const targetTier = subscription.metadata?.targetTier;
 
-        if (userId && isValidTier(targetTier)) {
-          const newStatus = subscription.status;
-          if (newStatus === 'active') {
-            await db.user.update({
-              where: { id: userId },
-              data: {
-                tier: targetTier,
-                stripeSubscriptionId: subscription.id,
-              },
-            });
-          } else if (newStatus === 'canceled' || newStatus === 'past_due') {
-            await db.user.update({
-              where: { id: userId },
-              data: { tier: 'FREE' },
-            });
+        if (!userId) break;
+
+        const newStatus = subscription.status;
+
+        if (newStatus === 'canceled' || newStatus === 'past_due') {
+          await db.user.update({
+            where: { id: userId },
+            data: { tier: 'FREE' },
+          });
+          break;
+        }
+
+        // Derive tier from subscription's price items
+        const { getTierFromPriceId } = await import('@/lib/stripe');
+        let resolvedTier: Tier | null = null;
+        for (const item of subscription.items.data) {
+          const tierFromPrice = getTierFromPriceId(item.price?.id || '');
+          if (tierFromPrice) {
+            resolvedTier = tierFromPrice;
+            break;
           }
+        }
+
+        // FALLBACK: metadata cross-check
+        if (!resolvedTier && isValidTier(subscription.metadata?.targetTier)) {
+          resolvedTier = subscription.metadata?.targetTier;
+          console.warn('[Stripe] Sub update: price lookup null; fell back to metadata');
+        }
+
+        if (newStatus === 'active' && resolvedTier) {
+          await db.user.update({
+            where: { id: userId },
+            data: {
+              tier: resolvedTier,
+              stripeSubscriptionId: subscription.id,
+            },
+          });
         }
         break;
       }
