@@ -92,7 +92,7 @@ function statusBadge(s: string) {
   const v = m[s] || m.ACTIVE;
   return <Badge variant="secondary" className={`${v.bg} ${v.text} border-0`}><v.icon className="w-3 h-3 mr-1" />{s}</Badge>;
 }
-function Pagination({ page, totalPages, setPage }: { page: number; totalPages: number; setPage: (p: number) => void }) {
+function Pagination({ page, totalPages, setPage }: { page: number; totalPages: number; setPage: (p: number | ((prev: number) => number)) => void }) {
   return (
     <div className="flex items-center justify-between px-4 py-3 border-t">
       <p className="text-sm text-gray-500">Page {page} of {totalPages}</p>
