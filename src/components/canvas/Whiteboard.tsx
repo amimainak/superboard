@@ -12,10 +12,12 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useYjsProvider } from '@/hooks/useYjsProvider';
 import dynamic from 'next/dynamic';
+import type { Editor } from 'tldraw';
 
 // Lazy load heavy components (Performance Mandate)
 const Toolbar = dynamic(() => import('@/components/canvas/Toolbar'), { ssr: false });
 const PageSidebar = dynamic(() => import('@/components/canvas/PageSidebar'), { ssr: false });
+const TldrawCanvas = dynamic(() => import('@/components/canvas/TldrawCanvas'), { ssr: false });
 const PipVideoPanel = dynamic(() => import('@/components/video/PipVideoPanel'), { ssr: false });
 const AIControlPanel = dynamic(() => import('@/components/ai/AIControlPanel'), { ssr: false });
 const BrandedHeader = dynamic(() => import('@/components/branding/BrandedHeader'), { ssr: false });
@@ -29,7 +31,7 @@ export default function Whiteboard() {
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<unknown>(null);
+  const editorRef = useRef<Editor | null>(null);
   const [activeTool, setActiveTool] = useState('draw');
   const [showWaitingRoom, setShowWaitingRoom] = useState(isTutor ? false : true);
   const [showNameModal, setShowNameModal] = useState(false);
@@ -131,12 +133,47 @@ export default function Whiteboard() {
     [totalPages, currentPageIndex, setCurrentPage, setTotalPages, ydoc]
   );
 
-  // Handle tool changes
+  // ============================================================
+  // Tool changes — wire to Tldraw editor
+  // ============================================================
+  // Map our tool IDs to Tldraw tool IDs
+  const TOOL_MAP: Record<string, string> = {
+    select: 'select',
+    hand: 'hand',
+    draw: 'draw',
+    eraser: 'eraser',
+    text: 'text',
+    rectangle: 'geo',
+    ellipse: 'geo',
+    line: 'draw',
+    arrow: 'arrow',
+  };
+
   const handleToolChange = useCallback((tool: string) => {
     setActiveTool(tool);
-    // TODO: Set Tldraw tool once editor is mounted
-    // editorRef.current?.setCurrentTool(tool)
+    const editor = editorRef.current;
+    if (editor) {
+      const tldrawTool = TOOL_MAP[tool] || tool;
+      try {
+        editor.setCurrentTool(tldrawTool);
+      } catch {
+        // Tool may not be available — ignore gracefully
+      }
+    }
   }, []);
+
+  // Called by TldrawCanvas when the editor mounts
+  const handleEditorReady = useCallback((editor: Editor) => {
+    editorRef.current = editor;
+
+    // Apply the current active tool
+    const tldrawTool = TOOL_MAP[activeTool] || activeTool;
+    try {
+      editor.setCurrentTool(tldrawTool);
+    } catch {
+      // Ignore if tool not available yet
+    }
+  }, [activeTool]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
@@ -201,62 +238,20 @@ export default function Whiteboard() {
             />
           </div>
 
-          {/* Canvas Container */}
+          {/* Canvas Container — Tldraw Editor */}
           <main
             ref={canvasRef}
             className="flex-1 relative overflow-hidden"
             id="whiteboard-canvas"
           >
-            {/* 
-              TODO: Mount Tldraw Editor here
-              The Tldraw component connects to Yjs via the provider.
-              
-              Example (Tldraw v5):
-              <Tldraw
-                onMount={(editor) => { editorRef.current = editor }}
-                components={{ ... }}
-              />
-            */}
-
-            {/* Placeholder canvas while Tldraw loads */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-                  <svg
-                    className="w-8 h-8 text-primary"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold">
-                  {subject === 'MATH'
-                    ? 'Mathematics Whiteboard'
-                    : subject === 'SCIENCE'
-                      ? 'Science Whiteboard'
-                      : subject === 'LANGUAGE'
-                        ? 'Language Whiteboard'
-                        : 'General Whiteboard'}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {isYjsConnected
-                    ? `Connected — Room: ${roomId} | Page: ${currentPageIndex + 1}/${totalPages}`
-                    : `Connecting... Room: ${roomId} | Page: ${currentPageIndex + 1}/${totalPages}`}
-                </p>
-                {focusMode && (
-                  <div className="mt-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-medium inline-block">
-                    Focus Mode Active
-                  </div>
-                )}
-              </div>
-            </div>
+            {/* Tldraw Canvas with Yjs Sync */}
+            <TldrawCanvas
+              ydoc={ydoc}
+              onEditorReady={handleEditorReady}
+              pageIndex={currentPageIndex}
+              isTutor={isTutor}
+              readOnly={!isTutor && focusMode}
+            />
 
             {/* Floating PiP Video Panel — ALWAYS VISIBLE */}
             <PipVideoPanel />
@@ -282,11 +277,11 @@ function ToolbarWrapper({
   activeTool,
   onToolChange,
 }: {
-  editorRef: React.RefObject<unknown>;
+  editorRef: React.RefObject<Editor | null>;
   activeTool: string;
   onToolChange: (tool: string) => void;
 }) {
-  const [editor, setEditor] = useState<unknown>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
 
   useEffect(() => {
     if (editorRef.current) {
