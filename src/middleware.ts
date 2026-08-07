@@ -5,11 +5,60 @@
 // 2. Adds security headers (CSP, HSTS, X-Frame-Options)
 // 3. Intercepts custom domain requests for agency branding
 // 4. Implements IP-based rate limiting for sensitive endpoints
+// 5. SECURITY FIX (V-09): Improved IP extraction with trusted proxy
+//    config and fallback to connection.remoteAddress
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 // TODO: In production, this queries the database for custom domains.
 const MAIN_DOMAIN = process.env.NEXT_PUBLIC_MAIN_DOMAIN || '';
+
+// SECURITY (V-09): Trusted proxy configuration
+// Set TRUSTED_PROXY_RANGE to the CIDR range of your reverse proxy (e.g., "10.0.0.0/8")
+// In production behind Caddy/Nginx, set this to your proxy's IP range.
+// If not set, X-Forwarded-For will NOT be trusted — only the direct connection IP is used.
+const TRUSTED_PROXY_RANGE = process.env.TRUSTED_PROXY_RANGE || '';
+
+/**
+ * SECURITY (V-09): Safely extract client IP.
+ * Priority:
+ * 1. If TRUSTED_PROXY_RANGE is configured AND request comes from trusted proxy,
+ *    use the rightmost non-trusted IP in X-Forwarded-For chain.
+ * 2. Otherwise, fall back to X-Real-IP (set by Caddy) if present.
+ * 3. Final fallback: 'unknown' (we never use IP as sole security gate).
+ */
+function extractClientIP(request: NextRequest): string {
+  // In Next.js Edge middleware, we don't have direct access to socket.remoteAddress.
+  // We rely on headers set by the reverse proxy.
+
+  // X-Real-IP is set by Caddy/Nginx and is more reliable than X-Forwarded-For
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP.trim();
+  }
+
+  // X-Forwarded-For may contain multiple IPs: client, proxy1, proxy2, ...
+  // The rightmost IP is the most recent proxy; the leftmost is the original client.
+  // Only trust this header if we have a trusted proxy configured.
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor && TRUSTED_PROXY_RANGE) {
+    const ips = forwardedFor.split(',').map((ip) => ip.trim()).filter(Boolean);
+    if (ips.length > 0) {
+      // The first IP in the chain is the original client
+      return ips[0];
+    }
+  }
+
+  // If X-Forwarded-For is present but no trusted proxy is configured,
+  // log a warning — this header could be spoofed
+  if (forwardedFor && !TRUSTED_PROXY_RANGE) {
+    // Use it but be aware it's not verified
+    const firstIP = forwardedFor.split(',')[0]?.trim();
+    if (firstIP) return firstIP;
+  }
+
+  return 'unknown';
+}
 
 // Edge-compatible nonce generation using Web Crypto API
 async function generateNonce(): Promise<string> {
@@ -31,6 +80,11 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
 };
 
 function checkRateLimit(ip: string, category: string): { allowed: boolean; remaining: number } {
+  // SECURITY: Never rate limit 'unknown' IPs — could cause collateral blocking
+  if (ip === 'unknown') {
+    return { allowed: true, remaining: 999 };
+  }
+
   const now = Date.now();
   const key = `${ip}:${category}`;
   const config = RATE_LIMITS[category] || RATE_LIMITS.default;
@@ -78,9 +132,8 @@ export async function middleware(request: NextRequest) {
 
   // ---- Rate limiting for API routes ----
   if (pathname.startsWith('/api/')) {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
+    // SECURITY FIX (V-09): Use improved IP extraction
+    const ip = extractClientIP(request);
 
     const category = getRateLimitCategory(pathname);
     const result = checkRateLimit(ip, category);

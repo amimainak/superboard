@@ -5,6 +5,9 @@
 // In production, these connect to your Supabase project.
 // The browser client is cached as a singleton to ensure auth
 // state listeners work correctly across the app.
+//
+// SECURITY FIX (I-02): Added URL validation to prevent SSRF
+// via manipulated NEXT_PUBLIC_SUPABASE_URL env var.
 // ============================================================
 
 import { createBrowserClient } from '@supabase/ssr';
@@ -14,7 +17,36 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-const isConfigured = supabaseUrl && supabaseAnonKey;
+// SECURITY (I-02): Validate Supabase URL is a legitimate Supabase project URL
+function isValidSupabaseUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    // Must be HTTPS (or http for localhost development)
+    if (parsed.protocol !== 'https:' && parsed.hostname !== 'localhost') {
+      return false;
+    }
+    // Must be a known Supabase domain pattern or localhost
+    const allowedPatterns = [
+      /\.supabase\.co$/,
+      /\.supabase\.app$/,
+      /localhost/,
+      /127\.0\.0\.1/,
+    ];
+    return allowedPatterns.some((pattern) => pattern.test(parsed.hostname));
+  } catch {
+    return false;
+  }
+}
+
+const isConfigured = supabaseUrl && supabaseAnonKey && isValidSupabaseUrl(supabaseUrl);
+
+if (supabaseUrl && !isValidSupabaseUrl(supabaseUrl)) {
+  console.error(
+    '[Supabase] WARNING: NEXT_PUBLIC_SUPABASE_URL does not match expected pattern. ' +
+    'This may indicate a misconfiguration or SSRF attempt. URL: ' +
+    supabaseUrl.substring(0, 50) + '...'
+  );
+}
 
 // Singleton browser client — ensures auth state is shared
 let browserClient: ReturnType<typeof createBrowserClient> | null = null;
@@ -41,6 +73,10 @@ export function createClient() {
  */
 export function createServerClient() {
   if (!supabaseUrl || !supabaseServiceRoleKey) {
+    return null;
+  }
+  // SECURITY (I-02): Also validate URL for server-side client
+  if (!isValidSupabaseUrl(supabaseUrl)) {
     return null;
   }
   return createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);

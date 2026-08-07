@@ -2,6 +2,8 @@
 // API Route: Room Participants
 // ============================================================
 // POST: Student joins a room (upsert by roomId + studentIdentity).
+//       SECURITY FIX (V-07): Now requires authentication.
+//       Previously allowed unauthenticated participant injection.
 //       Validates input lengths and formats.
 // GET:  List participants in a room. Requires authentication.
 // ============================================================
@@ -13,15 +15,29 @@ import { joinRoomSchema, validateInput } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX (V-07): Require authentication for participant joins.
+    // Previously, anyone could inject participants into any active room.
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const body = await request.json();
     const parsed = validateInput<{ roomId: string; studentIdentity: string; studentName?: string | null }>(joinRoomSchema, body);
     if (!parsed.success) return parsed.response;
     const { roomId, studentIdentity, studentName } = parsed.data;
 
+    // SECURITY: Caller can only join as themselves (studentIdentity must match auth userId)
+    // This prevents authenticated users from injecting arbitrary participant identities
+    if (studentIdentity !== auth.userId) {
+      return NextResponse.json(
+        { error: 'Forbidden — studentIdentity must match your authenticated user ID' },
+        { status: 403 }
+      );
+    }
+
     // Validate room exists and is active
     const room = await db.room.findUnique({
       where: { id: roomId },
-      select: { id: true, isActive: true },
+      select: { id: true, isActive: true, tutorId: true },
     });
 
     if (!room) {

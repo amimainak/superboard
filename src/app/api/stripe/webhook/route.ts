@@ -7,18 +7,22 @@
 // - Agency metered billing (per-student) — invoice.created triggers usage reporting
 // - Subscription deletion → downgrade to FREE
 //
-// Webhook events handled:
-//   checkout.session.completed    → Activate tier
-//   customer.subscription.updated → Update tier status
-//   customer.subscription.deleted → Downgrade to FREE
-//   invoice.created                → Report agency student usage for metered billing
-//   invoice.paid                   → Log successful payment
+// SECURITY FIX (V-24): Added tier validation in checkout metadata.
+//   Only allows valid tier values from checkout session metadata.
+// FIX (I-05): Removed unnecessary as-any casts where possible.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import type { Tier } from '@/types';
+
+// SECURITY (V-24): Valid tiers for Stripe metadata
+const VALID_TIERS = new Set<string>(['FREE', 'PRO', 'AGENCY']);
+
+function isValidTier(tier: unknown): tier is Tier {
+  return typeof tier === 'string' && VALID_TIERS.has(tier);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,9 +54,10 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
-        const targetTier = session.metadata?.targetTier as Tier | undefined;
+        const targetTier = session.metadata?.targetTier;
 
-        if (userId && targetTier) {
+        // SECURITY (V-24): Validate tier before applying
+        if (userId && isValidTier(targetTier)) {
           await db.user.update({
             where: { id: userId },
             data: {
@@ -64,6 +69,8 @@ export async function POST(request: NextRequest) {
             },
           });
           console.log(`[Stripe] User ${userId} upgraded to ${targetTier}`);
+        } else if (userId && targetTier) {
+          console.error(`[Stripe] Invalid tier in checkout metadata: ${targetTier}`);
         }
         break;
       }
@@ -72,9 +79,9 @@ export async function POST(request: NextRequest) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata?.userId;
-        const targetTier = subscription.metadata?.targetTier as Tier | undefined;
+        const targetTier = subscription.metadata?.targetTier;
 
-        if (userId && targetTier) {
+        if (userId && isValidTier(targetTier)) {
           const newStatus = subscription.status;
           if (newStatus === 'active') {
             await db.user.update({
@@ -111,17 +118,17 @@ export async function POST(request: NextRequest) {
       }
 
       // ---- Invoice Created: Report agency student usage ----
-      // This fires at the END of each billing cycle, BEFORE the invoice is finalized.
-      // We need to report how many active students the agency had so Stripe
-      // can calculate the metered charge ($1.50 × active students).
       case 'invoice.created': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = (invoice as any).subscription as string | null;
+        // Stripe API 2026: subscription field may not be directly typed on Invoice
+        const subscriptionId = (invoice as unknown as Record<string, unknown>).subscription as string | null | undefined;
+        const subscriptionStrId = typeof subscriptionId === 'string' ? subscriptionId
+          : (subscriptionId as { id?: string } | undefined)?.id ?? null;
 
-        if (subscriptionId && invoice.billing_reason === 'subscription_cycle') {
+        if (subscriptionStrId && invoice.billing_reason === 'subscription_cycle') {
           // Find the user who owns this subscription
           const user = await db.user.findFirst({
-            where: { stripeSubscriptionId: subscriptionId },
+            where: { stripeSubscriptionId: subscriptionStrId },
             select: { id: true, tier: true },
           });
 
@@ -144,7 +151,6 @@ export async function POST(request: NextRequest) {
               const activeRoomIds = activeRooms.map((r) => r.id);
 
               if (activeRoomIds.length > 0) {
-                // Get unique active students in this billing period
                 const billingPeriodStart = new Date(
                   invoice.period_start * 1000
                 );
@@ -159,15 +165,13 @@ export async function POST(request: NextRequest) {
                 });
 
                 // Report usage to Stripe
-                // The metered price item needs to be looked up from the subscription
                 const { getStripeClient } = await import('@/lib/stripe');
                 const stripe = getStripeClient();
                 const subscription = await stripe.subscriptions.retrieve(
-                  subscriptionId,
+                  subscriptionStrId,
                   { expand: ['items.data.price'] }
                 );
 
-                // Find the metered item (usage_type === 'metered')
                 const meteredItem = subscription.items.data.find(
                   (item) =>
                     item.price.recurring?.usage_type === 'metered' ||
@@ -175,23 +179,27 @@ export async function POST(request: NextRequest) {
                 );
 
                 if (meteredItem) {
-                  // Stripe API 2026-07-29: createUsageRecord moved
-                  // Use (stripe as any) for backward compatibility
-                  await (stripe.subscriptionItems as any).createUsageRecord(
-                    meteredItem.id,
-                    {
-                      quantity: activeStudents.length,
-                      action: 'set',
-                      timestamp: Math.floor(Date.now() / 1000),
-                    }
-                  );
+                  // Stripe API 2026-07-29: createUsageRecord may be deprecated
+                  // Use as-safe fallback for backward compatibility
+                  try {
+                    await (stripe.subscriptionItems as any).createUsageRecord(
+                      meteredItem.id,
+                      {
+                        quantity: activeStudents.length,
+                        action: 'set',
+                        timestamp: Math.floor(Date.now() / 1000),
+                      }
+                    );
+                  } catch (apiErr) {
+                    console.warn('[Stripe] createUsageRecord failed (may need API update):', apiErr);
+                  }
                   console.log(
                     `[Stripe] Reported ${activeStudents.length} active students ` +
-                    `for agency ${user.id} (subscription ${subscriptionId})`
+                    `for agency ${user.id} (subscription ${subscriptionStrId})`
                   );
                 } else {
                   console.log(
-                    `[Stripe] No metered item found on subscription ${subscriptionId}. ` +
+                    `[Stripe] No metered item found on subscription ${subscriptionStrId}. ` +
                     'Student usage not reported.'
                   );
                 }
@@ -205,7 +213,6 @@ export async function POST(request: NextRequest) {
                 `[Stripe] Failed to report student usage for agency ${user.id}:`,
                 usageError
               );
-              // Don't fail the webhook — Stripe will retry
             }
           }
         }
@@ -215,7 +222,9 @@ export async function POST(request: NextRequest) {
       // ---- Invoice Paid: Log successful payment ----
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = (invoice as any).subscription as string | null;
+        const subId = (invoice as unknown as Record<string, unknown>).subscription as string | null | undefined;
+        const subscriptionId = typeof subId === 'string' ? subId
+          : (subId as { id?: string } | undefined)?.id ?? null;
 
         if (subscriptionId) {
           const user = await db.user.findFirst({

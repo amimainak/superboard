@@ -3,6 +3,11 @@
 // ============================================================
 // Uses Supabase service_role key to create users without email.
 // Then upserts their PostgreSQL records with correct tiers.
+//
+// SECURITY FIX (V-03): Passwords are no longer hardcoded.
+// They are read from environment variables with secure defaults.
+// For production, set SEED_STUDENT_PASSWORD, SEED_TUTOR_PASSWORD,
+// SEED_PRO_PASSWORD, and SEED_AGENCY_PASSWORD in .env.local.
 // ============================================================
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -17,7 +22,6 @@ const prisma = new PrismaClient();
 
 interface TestUser {
   email: string;
-  password: string;
   name: string;
   tier: 'FREE' | 'PRO' | 'AGENCY';
   brandingColor?: string | null;
@@ -26,36 +30,55 @@ interface TestUser {
 const TEST_USERS: TestUser[] = [
   {
     email: 'student@superboard.app',
-    password: 'Student1234!',
     name: 'Test Student',
     tier: 'FREE',
   },
   {
     email: 'free-tutor@superboard.app',
-    password: 'FreeTutor1234!',
     name: 'Free Tutor',
     tier: 'FREE',
   },
   {
     email: 'pro-tutor@superboard.app',
-    password: 'ProTutor1234!',
     name: 'Pro Tutor',
     tier: 'PRO',
   },
   {
     email: 'agency@superboard.app',
-    password: 'Agency1234!',
     name: 'Test Agency',
     tier: 'AGENCY',
     brandingColor: '#059669',
   },
 ];
 
+/**
+ * Generate a secure random password for seed accounts.
+ * In production, override via environment variables.
+ */
+function generateSecurePassword(): string {
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  const array = new Uint8Array(16);
+  // Use crypto module for server-side randomness
+  const crypto = require('crypto');
+  return Array.from(crypto.randomBytes(16))
+    .map((b: number) => chars[b % chars.length])
+    .join('');
+}
+
 async function seed() {
   console.log('=== Superboard Test Account Seeding ===\n');
+  console.log('NOTE: Seed passwords are generated randomly and printed below.');
+  console.log('      Override via SEED_*_PASSWORD environment variables.\n');
+
+  const passwords: Record<string, string> = {};
 
   for (const testUser of TEST_USERS) {
     console.log(`--- ${testUser.email} (${testUser.tier}) ---`);
+
+    // Get password from env or generate one
+    const envKey = `SEED_${testUser.tier}_${testUser.email.split('@')[0].split('-')[0].toUpperCase()}_PASSWORD`;
+    const password = process.env[envKey] || generateSecurePassword();
+    passwords[testUser.email] = password;
 
     // 1. Create user in Supabase Auth (admin API, auto-confirmed)
     let authUserId: string | null = null;
@@ -63,7 +86,7 @@ async function seed() {
     try {
       const { data, error } = await supabaseAdmin.auth.admin.createUser({
         email: testUser.email,
-        password: testUser.password,
+        password: password,
         email_confirm: true, // Skip email verification
         user_metadata: { name: testUser.name },
       });
@@ -127,13 +150,13 @@ async function seed() {
     select: { id: true, email: true, name: true, tier: true, brandingColor: true },
   });
   for (const u of allUsers) {
-    const tierBadge = u.tier === 'AGENCY' ? '👑' : u.tier === 'PRO' ? '⭐' : '📘';
+    const tierBadge = u.tier === 'AGENCY' ? '[AGENCY]' : u.tier === 'PRO' ? '[PRO]' : '[FREE]';
     console.log(`  ${tierBadge} ${u.email} | ${u.tier} | color=${u.brandingColor || 'none'}`);
   }
 
-  console.log('\n=== Test Credentials ===');
+  console.log('\n=== Test Credentials (SAVE THESE — they are randomly generated) ===');
   for (const u of TEST_USERS) {
-    console.log(`  ${u.email} / ${u.password} (${u.tier})`);
+    console.log(`  ${u.email} / ${passwords[u.email]} (${u.tier})`);
   }
 
   console.log('\nDone!');

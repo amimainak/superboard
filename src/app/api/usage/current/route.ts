@@ -4,6 +4,9 @@
 // Returns the current period's usage for the authenticated user.
 // Used by the UsageBar component and the Dashboard.
 // Now requires auth — JWT must match the requested userId.
+//
+// SECURITY FIX (I-05): Removed unsafe 'as-any' casts for tier config
+// access. Uses proper type narrowing instead.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,6 +15,21 @@ import { getCurrentUsageLog } from '@/lib/usage';
 import { requireAuth } from '@/lib/auth';
 import type { Tier } from '@/types';
 import { TIER_LIMITS } from '@/types';
+
+/**
+ * SECURITY FIX (I-05): Properly typed helper to get AI credit limit
+ * based on tier without 'as-any' casts.
+ */
+function getAICreditsLimit(tier: Tier): number {
+  if (tier === 'FREE') {
+    return TIER_LIMITS.FREE.aiCreditsPerWeek;
+  }
+  if (tier === 'PRO') {
+    return TIER_LIMITS.PRO.aiCreditsPerMonth;
+  }
+  // AGENCY — unlimited
+  return Infinity;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,14 +70,10 @@ export async function GET(request: NextRequest) {
       const tier = target.tier as Tier;
       const usageLog = await getCurrentUsageLog(targetUserId!, tier);
       const tierConfig = TIER_LIMITS[tier];
-      const aiCreditsLimit =
-        tier === 'FREE'
-          ? (tierConfig as any).aiCreditsPerWeek
-          : (tierConfig as any).aiCreditsPerMonth;
       return NextResponse.json({
         tier,
         aiCreditsUsed: usageLog.aiCreditsUsed,
-        aiCreditsLimit,
+        aiCreditsLimit: getAICreditsLimit(tier),
         videoMinutesUsed: usageLog.videoMinutesUsed,
         videoMinutesLimit: tierConfig.videoMinutesPerWeek,
         recordingsUsed: usageLog.recordingsUsed,
@@ -78,16 +92,10 @@ export async function GET(request: NextRequest) {
     // Use centralized TIER_LIMITS instead of duplicated constants
     const tierConfig = TIER_LIMITS[tier];
 
-    // Map the tier config to the response format expected by the frontend
-    const aiCreditsLimit =
-      tier === 'FREE'
-        ? (tierConfig as any).aiCreditsPerWeek
-        : (tierConfig as any).aiCreditsPerMonth;
-
     return NextResponse.json({
       tier,
       aiCreditsUsed: usageLog.aiCreditsUsed,
-      aiCreditsLimit,
+      aiCreditsLimit: getAICreditsLimit(tier),
       videoMinutesUsed: usageLog.videoMinutesUsed,
       videoMinutesLimit: tierConfig.videoMinutesPerWeek,
       recordingsUsed: usageLog.recordingsUsed,

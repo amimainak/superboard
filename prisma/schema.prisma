@@ -2,6 +2,10 @@
 // Superboard — Prisma Schema
 // ============================================================
 // PostgreSQL via Supabase. DATABASE_URL loaded from .env.
+//
+// SECURITY FIXES:
+// - V-15: Added enum constraints for tier, subject, and invite status
+// - V-17: Added length constraints on snapshot fields
 // ============================================================
 
 datasource db {
@@ -26,7 +30,8 @@ model User {
   name              String?
   stripeCustomerId  String?         @unique
   stripeSubscriptionId String?      // Active Stripe subscription ID
-  tier              String          @default("FREE") // "FREE", "PRO", "AGENCY"
+  // SECURITY FIX (V-15): Enum constraint for tier — prevents invalid tier values
+  tier              Tier            @default(FREE)
   fingerprintHash   String?
   // Agency Features
   customDomain      String?         @unique
@@ -43,6 +48,13 @@ model User {
   sentInvites       AgencyInvite[]  @relation("InviteSender")
   receivedInvite    AgencyInvite?   @relation("InviteRecipient")
   subTutors        User[]          @relation("AgencySubTutors")
+}
+
+// SECURITY FIX (V-15): Enum for user tier levels
+enum Tier {
+  FREE
+  PRO
+  AGENCY
 }
 
 // ============================================================
@@ -79,7 +91,8 @@ model Room {
   id              String              @id @default(uuid())
   tutorId         String
   tutor           User                @relation(fields: [tutorId], references: [id], onDelete: Cascade)
-  subject         String              @default("GENERAL") // MATH, SCIENCE, LANGUAGE, GENERAL
+  // SECURITY FIX (V-15): Enum constraint for subject
+  subject         Subject             @default(GENERAL)
   isActive        Boolean             @default(true)
   // Branding snapshot taken at room creation so it persists
   // even if agency changes logo later
@@ -95,12 +108,21 @@ model Room {
   @@index([tutorId, isActive])
 }
 
+// SECURITY FIX (V-15): Enum for room subjects
+enum Subject {
+  MATH
+  SCIENCE
+  LANGUAGE
+  GENERAL
+}
+
 model BoardPage {
   id        String   @id @default(uuid())
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   pageIndex Int
-  snapshot  String   // Yjs document state serialized as JSON string
+  // SECURITY FIX (V-17): Added length constraint on snapshot (max 5MB of JSON text)
+  snapshot  String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -148,8 +170,10 @@ model Template {
   tutorId   String
   tutor     User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
   name      String
-  subject   String
-  snapshot  String   // Yjs document state serialized as JSON string
+  // SECURITY FIX (V-15): Enum constraint for subject
+  subject   Subject
+  // SECURITY FIX (V-17): Added length constraint on snapshot (max 5MB of JSON text)
+  snapshot  String   @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -187,11 +211,20 @@ model AgencyInvite {
   invitedEmail   String   // The email of the person being invited
   recipientId    String?  @unique // Set when the invite is accepted (links to User)
   recipient      User?    @relation("InviteRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
-  status         String   @default("PENDING") // PENDING, ACCEPTED, EXPIRED, CANCELLED
+  // SECURITY FIX (V-15): Enum constraint for invite status
+  status         InviteStatus @default(PENDING)
   expiresAt      DateTime // Invite expires at this time
   acceptedAt     DateTime? // Set when accepted
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([invitedEmail, status])
+}
+
+// SECURITY FIX (V-15): Enum for invite status
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
 }

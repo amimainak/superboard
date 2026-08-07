@@ -1,23 +1,51 @@
+# ============================================================
+# Superboard — Caddy Reverse Proxy Configuration
+# ============================================================
+# SECURITY FIX (V-01): Removed SSRF-vulnerable XTransformPort handler.
+# Previously, a query parameter allowed proxying to ANY localhost port.
+# Now only proxies to the Next.js app on port 3000.
+# ============================================================
+
+# ---- Production HTTPS (auto-provisioned by Caddy) ----
+{$DOMAIN:superboard.app} {
+	# SECURITY (V-11): TLS configuration
+	tls {
+		protocols tls1.2 tls1.3
+		ciphers TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	}
+
+	# Limit request body size (prevent oversized payloads)
+	request_body {
+		max_size 50MB
+	}
+
+	# Security headers
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Reverse proxy to Next.js
+	reverse_proxy localhost:3000 {
+		header_up Host {host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Real-IP {remote_host}
+	}
+}
+
+# ---- Development HTTP (localhost only) ----
 :81 {
-	@transform_port_query {
-		query XTransformPort=*
-	}
+	# Restrict to localhost only
+	@notlocal not remote_ip 127.0.0.1 ::1
+	respond @notlocal "Forbidden" 403
 
-	handle @transform_port_query {
-		reverse_proxy localhost:{query.XTransformPort} {
-			header_up Host {host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-			header_up X-Real-IP {remote_host}
-		}
-	}
-
-	handle {
-		reverse_proxy localhost:3000 {
-			header_up Host {host}
-			header_up X-Forwarded-For {remote_host}
-			header_up X-Forwarded-Proto {scheme}
-			header_up X-Real-IP {remote_host}
-		}
+	reverse_proxy localhost:3000 {
+		header_up Host {host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Real-IP {remote_host}
 	}
 }

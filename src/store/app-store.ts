@@ -1,6 +1,12 @@
 // ============================================================
 // Zustand Store — Global Application State
 // ============================================================
+// SECURITY NOTE (V-05): Tier, role, and usage data here is for
+// DISPLAY ONLY. All authorization and gating decisions MUST be
+// made server-side (see src/lib/usage.ts and API route checks).
+// The client-side store is inherently mutable — never trust it
+// for security decisions.
+// ============================================================
 
 import { create } from 'zustand';
 import type { Subject, BrandingConfig, Participant, Tier } from '@/types';
@@ -24,9 +30,10 @@ export interface RoomState {
 export interface AppState {
   // Room
   room: RoomState;
-  // User tier
+  // User tier — DISPLAY ONLY, not authoritative
+  // Server-side validation in API routes is the source of truth
   tier: Tier;
-  // Usage
+  // Usage — DISPLAY ONLY, not authoritative
   aiCreditsUsed: number;
   aiCreditsLimit: number;
   videoMinutesUsed: number;
@@ -53,7 +60,7 @@ interface AppActions {
   setRecording: (recording: boolean) => void;
   // Branding
   setBranding: (branding: BrandingConfig) => void;
-  // Tier & usage
+  // Tier & usage (display sync from server)
   setTier: (tier: Tier) => void;
   setUsage: (usage: {
     aiCreditsUsed?: number;
@@ -153,7 +160,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
       room: { ...state.room, branding },
     })),
 
-  // Tier & usage
+  // Tier & usage — synced from server, display-only
   setTier: (tier) => set({ tier }),
   setUsage: (usage) => set((state) => ({ ...state, ...usage })),
 

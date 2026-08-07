@@ -21,9 +21,22 @@ for p in $orphans; do
   kill -9 "$p" 2>/dev/null || true
 done
 
+# SECURITY FIX (V-02): Use .env.local for DATABASE_URL, not hardcoded credentials.
+# Load environment variables from .env.local if it exists.
+if [[ -f "$PROJECT_ROOT/.env.local" ]]; then
+  set -a
+  source "$PROJECT_ROOT/.env.local"
+  set +a
+fi
+
+# Validate DATABASE_URL is set
+if [[ -z "${DATABASE_URL:-}" ]]; then
+  echo "ERROR: DATABASE_URL is not set. Create .env.local with your DATABASE_URL."
+  exit 1
+fi
+
 # Start in background
 cd "$PROJECT_ROOT"
-DATABASE_URL="postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" \
 PORT=3000 \
 setsid npx next dev --turbopack -p 3000 \
   >> "$LOG" 2>&1 < /dev/null &
@@ -51,7 +64,6 @@ while true; do
     kill "$pid" 2>/dev/null || true
     sleep 2
     cd "$PROJECT_ROOT"
-    DATABASE_URL="postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres" \
     PORT=3000 \
     setsid npx next dev --turbopack -p 3000 \
       >> "$LOG" 2>&1 < /dev/null &

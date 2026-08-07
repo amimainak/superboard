@@ -2,9 +2,10 @@
 // API Route: Create Room / Get Room(s)
 // ============================================================
 // POST: Creates a new lesson room. Requires auth — tutorId must match caller.
-// GET: Fetches a room by roomId (unauthenticated — students need access).
+// GET: Fetches a room by roomId.
+//      SECURITY FIX (V-06): All GET requests now require authentication.
+//      Students who need access should use their authenticated session.
 //      Also supports ?tutorId= to list all rooms for a tutor (auth required).
-// FIXED: Consolidated double-fetch for tutor view into single query.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -97,21 +98,42 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // SECURITY FIX (V-06): Require authentication for ALL GET requests.
+    // Previously, single-room GET used verifyAuth (optional), exposing
+    // room data (including tutor email) to unauthenticated users.
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = new URL(request.url);
     const roomId = searchParams.get('roomId');
     const tutorId = searchParams.get('tutorId');
 
-    // --- Case 1: List rooms by tutorId (auth required) ---
+    // --- Case 1: List rooms by tutorId ---
     if (tutorId && !roomId) {
-      const auth = await requireAuth(request);
-      if (auth instanceof NextResponse) return auth;
-
       // Security: caller can only list their own rooms
       if (tutorId !== auth.userId) {
-        return NextResponse.json(
-          { error: 'Forbidden' },
-          { status: 403 }
-        );
+        // Allow agency owners to list sub-tutor rooms
+        const caller = await db.user.findUnique({
+          where: { id: auth.userId },
+          select: { tier: true },
+        });
+        if (!caller || caller.tier !== 'AGENCY') {
+          return NextResponse.json(
+            { error: 'Forbidden' },
+            { status: 403 }
+          );
+        }
+        // Verify the tutor is a sub-tutor under this agency
+        const tutor = await db.user.findUnique({
+          where: { id: tutorId },
+          select: { parentAgencyId: true },
+        });
+        if (!tutor || tutor.parentAgencyId !== auth.userId) {
+          return NextResponse.json(
+            { error: 'Forbidden' },
+            { status: 403 }
+          );
+        }
       }
 
       const rooms = await db.room.findMany({
@@ -138,11 +160,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if caller is authenticated (for conditional include)
-    const auth = await verifyAuth(request);
-    const isOwner = auth !== null;
+    const isOwner = auth.userId;
 
-    // FIXED: Single query with conditional email inclusion
     const room = await db.room.findUnique({
       where: { id: roomId },
       include: {
@@ -151,8 +170,7 @@ export async function GET(request: NextRequest) {
             id: true,
             name: true,
             tier: true,
-            // Only include email if the caller is the room owner
-            ...(isOwner ? { email: true } : {}),
+            email: true,
           },
         },
         pages: {
@@ -169,8 +187,39 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Room is no longer active' }, { status: 410 });
     }
 
-    // If authenticated but NOT the owner, strip the email field
-    if (auth && auth.userId !== room.tutorId) {
+    // SECURITY (V-06): Strip tutor email from non-owners
+    if (auth.userId !== room.tutorId) {
+      // Check if caller is a participant in this room
+      const isParticipant = await db.roomParticipant.findUnique({
+        where: {
+          roomId_studentIdentity: { roomId, studentIdentity: auth.userId },
+        },
+      });
+
+      // Allow agency owners to view sub-tutor rooms
+      let isAgencyOwner = false;
+      if (!isParticipant) {
+        const caller = await db.user.findUnique({
+          where: { id: auth.userId },
+          select: { tier: true },
+        });
+        if (caller?.tier === 'AGENCY') {
+          const tutor = await db.user.findUnique({
+            where: { id: room.tutorId },
+            select: { parentAgencyId: true },
+          });
+          isAgencyOwner = tutor?.parentAgencyId === auth.userId;
+        }
+      }
+
+      if (!isParticipant && !isAgencyOwner) {
+        return NextResponse.json(
+          { error: 'Forbidden — you do not have access to this room' },
+          { status: 403 }
+        );
+      }
+
+      // Strip sensitive tutor info for non-owners
       const { email: _email, ...tutorWithoutEmail } = room.tutor as any;
       return NextResponse.json({ ...room, tutor: tutorWithoutEmail });
     }
