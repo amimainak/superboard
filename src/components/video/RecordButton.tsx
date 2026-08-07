@@ -12,6 +12,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { cn } from '@/lib/utils';
 import { hasFeature } from '@/lib/usage';
+import { authFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 
 // ---- Helpers ----
@@ -76,12 +77,24 @@ export default function RecordButton() {
       return;
     }
 
+    const roomId = useAppStore.getState().room.roomId;
+    if (!roomId) {
+      console.error('Cannot toggle recording: no active room');
+      return;
+    }
+
     if (isRecording) {
-      // Stop recording
+      // Stop recording via DELETE /api/room/[roomId]/recording
       setIsStopping(true);
       try {
-        // TODO: POST /api/room/recording/end
-        // await fetch('/api/room/recording/end', { method: 'POST' });
+        const res = await authFetch(`/api/room/${roomId}/recording`, {
+          method: 'DELETE',
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          console.error('Failed to stop recording:', data.error || res.statusText);
+          return;
+        }
         setRecording(false);
       } catch (err) {
         console.error('Failed to stop recording:', err);
@@ -89,11 +102,26 @@ export default function RecordButton() {
         setIsStopping(false);
       }
     } else {
-      // Start recording
+      // Start recording via POST /api/room/[roomId]/recording
       setIsStarting(true);
       try {
-        // TODO: POST /api/room/recording/start
-        // await fetch('/api/room/recording/start', { method: 'POST' });
+        const res = await authFetch(`/api/room/${roomId}/recording`, {
+          method: 'POST',
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          if (data.error === 'RECORDING_LIMIT_REACHED' || data.error === 'VIDEO_LIMIT_REACHED') {
+            openPaywall('recordings');
+            return;
+          }
+          if (data.error === 'RECORDING_ACTIVE') {
+            // Already recording — sync UI state
+            setRecording(true);
+            return;
+          }
+          console.error('Failed to start recording:', data.error || res.statusText);
+          return;
+        }
         setRecording(true);
       } catch (err) {
         console.error('Failed to start recording:', err);
@@ -101,7 +129,7 @@ export default function RecordButton() {
         setIsStarting(false);
       }
     }
-  }, [isRecording, setRecording]);
+  }, [isRecording, setRecording, canRecord, openPaywall]);
 
   const isDisabled = isStarting || isStopping || !canRecord;
 

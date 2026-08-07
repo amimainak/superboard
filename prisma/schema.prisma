@@ -126,6 +126,7 @@ model BoardPage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([roomId, pageIndex])
   @@index([roomId, pageIndex])
 }
 
