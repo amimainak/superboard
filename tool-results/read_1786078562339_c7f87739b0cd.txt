@@ -1,0 +1,524 @@
+  1000→
+  1001→// ============================================================
+  1002→// Billing Panel
+  1003→// ============================================================
+  1004→function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void }) {
+  1005→  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+  1006→  const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
+  1007→
+  1008→  return (
+  1009→    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+  1010→      <CardHeader>
+  1011→        <CardTitle className="text-xl">Billing &amp; Subscription</CardTitle>
+  1012→        <CardDescription>Manage your subscription and payment methods.</CardDescription>
+  1013→      </CardHeader>
+  1014→      <CardContent className="space-y-6">
+  1015→        <div className="flex items-center justify-between p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-100">
+  1016→          <div className="flex items-center gap-3">
+  1017→            <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
+  1018→              {tier === 'AGENCY' ? <Crown className="w-5 h-5 text-white" /> : tier === 'PRO' ? <Star className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
+  1019→            </div>
+  1020→            <div>
+  1021→              <p className="font-semibold">Current Plan</p>
+  1022→              <p className="text-sm text-muted-foreground">{tier === 'FREE' && 'Free tier \u2014 Limited features'}{tier === 'PRO' && 'Pro Tutor \u2014 $10/month'}{tier === 'AGENCY' && 'Agency \u2014 $39/month + per student'}</p>
+  1023→            </div>
+  1024→          </div>
+  1025→          <Badge className={`rounded-full px-3 font-semibold ${tierColor}`}>{tierLabel}</Badge>
+  1026→        </div>
+  1027→
+  1028→        {tier !== 'AGENCY' && (
+  1029→          <>
+  1030→            <Separator />
+  1031→            <div className="space-y-4">
+  1032→              <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" />Upgrade Options</h3>
+  1033→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  1034→                {tier === 'FREE' && (
+  1035→                  <Card className="rounded-2xl border-2 border-emerald-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+  1036→                    <div className="absolute top-3 right-3"><Badge className="bg-emerald-500 text-white rounded-full text-[10px]">Popular</Badge></div>
+  1037→                    <CardHeader className="pb-2">
+  1038→                      <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center"><Star className="w-4 h-4 text-emerald-600" /></div>Pro Tutor</CardTitle>
+  1039→                      <CardDescription className="text-base font-semibold text-foreground">$10/month or $96/year</CardDescription>
+  1040→                    </CardHeader>
+  1041→                    <CardContent>
+  1042→                      <ul className="text-sm space-y-2 mb-4">
+  1043→                        {['Unlimited video calls', '500 smart credits/month', 'GeoGebra & Mathpix', 'Save/Load & Templates', '2 recordings/month'].map((f) => (
+  1044→                          <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
+  1045→                        ))}
+  1046→                      </ul>
+  1047→                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20">Upgrade to Pro</Button>
+  1048→                    </CardContent>
+  1049→                  </Card>
+  1050→                )}
+  1051→                <Card className="rounded-2xl border-2 border-amber-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+  1052→                  <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
+  1053→                  <CardHeader className="pb-2">
+  1054→                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency / Center</CardTitle>
+  1055→                    <CardDescription className="text-base font-semibold text-foreground">$39/month + per student</CardDescription>
+  1056→                  </CardHeader>
+  1057→                  <CardContent>
+  1058→                    <ul className="text-sm space-y-2 mb-4">
+  1059→                      {['Everything in Pro', '$39/mo base fee', 'White-labeling & branding', 'Custom domains', 'Unlimited recordings', 'Admin dashboard & analytics'].map((f) => (
+  1060→                        <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
+  1061→                      ))}
+  1062→                    </ul>
+  1063→                    <Button variant="outline" className="w-full rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 font-semibold">Contact Sales</Button>
+  1064→                  </CardContent>
+  1065→                </Card>
+  1066→              </div>
+  1067→            </div>
+  1068→          </>
+  1069→        )}
+  1070→
+  1071→        {tier === 'AGENCY' && (
+  1072→          <>
+  1073→            <Separator />
+  1074→            <div className="space-y-4">
+  1075→              <h3 className="font-semibold flex items-center gap-2"><Palette className="w-4 h-4 text-emerald-500" />White-Label Settings</h3>
+  1076→              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  1077→                <div className="space-y-2">
+  1078→                  <Label>Brand Color</Label>
+  1079→                  <div className="flex items-center gap-2">
+  1080→                    <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+  1081→                    <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+  1082→                  </div>
+  1083→                </div>
+  1084→                <div className="space-y-2">
+  1085→                  <Label>Custom Domain</Label>
+  1086→                  <Input placeholder="classroom.yourcenter.com" disabled className="rounded-xl" />
+  1087→                  <p className="text-xs text-muted-foreground">Configure via DNS settings</p>
+  1088→                </div>
+  1089→              </div>
+  1090→            </div>
+  1091→          </>
+  1092→        )}
+  1093→      </CardContent>
+  1094→    </Card>
+  1095→  );
+  1096→}
+  1097→
+  1098→// ============================================================
+  1099→// SavedBoardsPanel
+  1100→// ============================================================
+  1101→interface BoardRow { id: string; subject: string; isActive: boolean; createdAt: string; brandingColor: string | null; }
+  1102→
+  1103→function SavedBoardsPanel({ userId, tier }: { userId: string; tier: Tier }) {
+  1104→  const [boards, setBoards] = useState<BoardRow[]>([]);
+  1105→  const [loading, setLoading] = useState(true);
+  1106→  useEffect(() => {
+  1107→    if (!userId) return;
+  1108→    setLoading(true);
+  1109→    authFetch(`/api/room?tutorId=${userId}`).then((res) => res.json()).then((data) => {
+  1110→      if (Array.isArray(data)) setBoards(data.map((r: any) => ({ id: r.id, subject: r.subject, isActive: r.isActive, createdAt: r.createdAt, brandingColor: r.brandingColor })));
+  1111→    }).catch(() => {}).finally(() => setLoading(false));
+  1112→  }, [userId]);
+  1113→  const canAccess = tier === 'PRO' || tier === 'AGENCY';
+  1114→
+  1115→  if (!canAccess) return (
+  1116→    <Card className="rounded-2xl border-0 shadow-sm">
+  1117→      <CardHeader><CardTitle>Saved Boards</CardTitle><CardDescription>Save/Load requires Pro or Agency tier.</CardDescription></CardHeader>
+  1118→      <CardContent className="text-center py-12">
+  1119→        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 flex items-center justify-center"><Star className="w-8 h-8 text-amber-400" /></div>
+  1120→        <p className="text-muted-foreground font-medium">Upgrade to access saved boards</p>
+  1121→      </CardContent>
+  1122→    </Card>
+  1123→  );
+  1124→
+  1125→  if (loading) return (
+  1126→    <Card className="rounded-2xl border-0 shadow-sm">
+  1127→      <CardHeader><CardTitle>Saved Boards</CardTitle></CardHeader>
+  1128→      <CardContent><div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div></CardContent>
+  1129→    </Card>
+  1130→  );
+  1131→
+  1132→  return (
+  1133→    <Card className="rounded-2xl border-0 shadow-sm">
+  1134→      <CardHeader><CardTitle>Saved Boards</CardTitle><CardDescription>Your lesson history. Click to reopen.</CardDescription></CardHeader>
+  1135→      <CardContent>
+  1136→        {boards.length === 0 ? (
+  1137→          <div className="text-center py-12">
+  1138→            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><BookOpen className="w-8 h-8 text-emerald-400" /></div>
+  1139→            <p className="text-muted-foreground font-medium">No boards yet</p>
+  1140→            <p className="text-sm text-muted-foreground mt-1">Create your first lesson to see it here</p>
+  1141→          </div>
+  1142→        ) : (
+  1143→          <div className="space-y-2">
+  1144→            {boards.map((board) => {
+  1145→              const meta = subjectMeta[board.subject] || subjectMeta.GENERAL;
+  1146→              return (
+  1147→                <div key={board.id} className="flex items-center justify-between rounded-xl border border-emerald-100/40 px-4 py-3.5 hover:bg-emerald-50/40 cursor-pointer transition-all group" onClick={() => (window.location.href = `/room/${board.id}`)}>
+  1148→                  <div className="flex items-center gap-3">
+  1149→                    <div className={`w-10 h-10 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-5 h-5 text-white" /></div>
+  1150→                    <div><p className="text-sm font-medium">{board.subject} Lesson</p><p className="text-xs text-muted-foreground">{new Date(board.createdAt).toLocaleDateString()}</p></div>
+  1151→                  </div>
+  1152→                  <div className="flex items-center gap-2">
+  1153→                    <Badge variant={board.isActive ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${board.isActive ? 'bg-emerald-100 text-emerald-700' : ''}`}>{board.isActive ? 'Active' : 'Ended'}</Badge>
+  1154→                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+  1155→                  </div>
+  1156→                </div>
+  1157→              );
+  1158→            })}
+  1159→          </div>
+  1160→        )}
+  1161→      </CardContent>
+  1162→    </Card>
+  1163→  );
+  1164→}
+  1165→
+  1166→// ============================================================
+  1167→// TemplatesPanel
+  1168→// ============================================================
+  1169→interface TemplateRow { id: string; name: string; subject: string; createdAt: string; }
+  1170→
+  1171→function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
+  1172→  const [templates, setTemplates] = useState<TemplateRow[]>([]);
+  1173→  const [loading, setLoading] = useState(true);
+  1174→  const [newName, setNewName] = useState('');
+  1175→  const [newSubject, setNewSubject] = useState<Subject>('GENERAL');
+  1176→  const [saving, setSaving] = useState(false);
+  1177→  const canAccess = tier === 'PRO' || tier === 'AGENCY';
+  1178→
+  1179→  const fetchTemplates = useCallback(() => {
+  1180→    if (!userId || !canAccess) return;
+  1181→    setLoading(true);
+  1182→    authFetch(`/api/room/templates?tutorId=${userId}`).then((res) => res.json()).then((data) => setTemplates(Array.isArray(data) ? data : [])).catch(() => {}).finally(() => setLoading(false));
+  1183→  }, [userId, canAccess]);
+  1184→  useEffect(() => { fetchTemplates(); }, [fetchTemplates]);
+  1185→
+  1186→  const handleCreate = useCallback(async () => {
+  1187→    if (!newName.trim() || !userId) return;
+  1188→    setSaving(true);
+  1189→    try { await authFetch('/api/room/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tutorId: userId, name: newName.trim(), subject: newSubject }) }); setNewName(''); fetchTemplates(); } catch { /* */ }
+  1190→    setSaving(false);
+  1191→  }, [newName, newSubject, userId, fetchTemplates]);
+  1192→
+  1193→  if (!canAccess) return (
+  1194→    <Card className="rounded-2xl border-0 shadow-sm">
+  1195→      <CardHeader><CardTitle>Templates</CardTitle><CardDescription>Templates require Pro or Agency tier.</CardDescription></CardHeader>
+  1196→      <CardContent className="text-center py-12">
+  1197→        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-sky-50 flex items-center justify-center"><LayoutTemplate className="w-8 h-8 text-sky-400" /></div>
+  1198→        <p className="text-muted-foreground font-medium">Upgrade to create templates</p>
+  1199→      </CardContent>
+  1200→    </Card>
+  1201→  );
+  1202→
+  1203→  return (
+  1204→    <Card className="rounded-2xl border-0 shadow-sm">
+  1205→      <CardHeader><CardTitle>Templates</CardTitle><CardDescription>Save board layouts as reusable templates.</CardDescription></CardHeader>
+  1206→      <CardContent className="space-y-4">
+  1207→        <div className="flex gap-2">
+  1208→          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Template name (e.g., 'Algebra Review')" className="flex-1 rounded-xl h-11" />
+  1209→          <Select value={newSubject} onValueChange={(v) => setNewSubject(v as Subject)}>
+  1210→            <SelectTrigger className="w-32 rounded-xl h-11"><SelectValue /></SelectTrigger>
+  1211→            <SelectContent><SelectItem value="MATH">Math</SelectItem><SelectItem value="SCIENCE">Science</SelectItem><SelectItem value="LANGUAGE">Language</SelectItem><SelectItem value="GENERAL">General</SelectItem></SelectContent>
+  1212→          </Select>
+  1213→          <Button onClick={handleCreate} disabled={saving || !newName.trim()} size="icon" className="rounded-xl h-11 w-11 gradient-primary border-0 text-white shadow-md shadow-emerald-500/20"><Plus className="w-4 h-4" /></Button>
+  1214→        </div>
+  1215→        {loading ? (
+  1216→          <div className="flex items-center justify-center py-8"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>
+  1217→        ) : templates.length === 0 ? (
+  1218→          <div className="text-center py-12">
+  1219→            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><LayoutTemplate className="w-8 h-8 text-emerald-400" /></div>
+  1220→            <p className="text-muted-foreground font-medium">No templates yet</p>
+  1221→          </div>
+  1222→        ) : (
+  1223→          <div className="space-y-2">
+  1224→            {templates.map((t) => {
+  1225→              const meta = subjectMeta[t.subject] || subjectMeta.GENERAL;
+  1226→              return (
+  1227→                <div key={t.id} className="flex items-center justify-between rounded-xl border border-emerald-100/40 px-4 py-3 hover:bg-emerald-50/40 transition-all group">
+  1228→                  <div className="flex items-center gap-3">
+  1229→                    <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
+  1230→                    <div><p className="text-sm font-medium">{t.name}</p><p className="text-xs text-muted-foreground">{t.subject} &middot; {new Date(t.createdAt).toLocaleDateString()}</p></div>
+  1231→                  </div>
+  1232→                  <Button variant="ghost" size="sm" disabled className="rounded-lg opacity-0 group-hover:opacity-100"><Play className="w-4 h-4" /></Button>
+  1233→                </div>
+  1234→              );
+  1235→            })}
+  1236→          </div>
+  1237→        )}
+  1238→      </CardContent>
+  1239→    </Card>
+  1240→  );
+  1241→}
+  1242→
+  1243→// ============================================================
+  1244→// AgencyAdminPanel
+  1245→// ============================================================
+  1246→interface SubTutorRow { id: string; email: string; name: string | null; tier: string; activeRooms: number; videoMinutesUsed: number; aiCreditsUsed: number; joinedAt: string | null; }
+  1247→interface InviteRow { id: string; code: string; invitedEmail: string; status: string; expiresAt: string; acceptedAt: string | null; createdAt: string; recipient: { id: string; name: string | null; email: string | null } | null; }
+  1248→
+  1249→function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
+  1250→  const [subTutors, setSubTutors] = useState<SubTutorRow[]>([]);
+  1251→  const [loading, setLoading] = useState(true);
+  1252→  const [invites, setInvites] = useState<InviteRow[]>([]);
+  1253→  const [invitesLoading, setInvitesLoading] = useState(true);
+  1254→  const [showSettings, setShowSettings] = useState(false);
+  1255→  const [userEmail, setUserEmail] = useState<string | null>(null);
+  1256→  const [userTier, setUserTier] = useState<string>('AGENCY');
+  1257→
+  1258→  // Invite modal state
+  1259→  const [inviteOpen, setInviteOpen] = useState(false);
+  1260→  const [inviteEmail, setInviteEmail] = useState('');
+  1261→  const [inviteSending, setInviteSending] = useState(false);
+  1262→  const [inviteError, setInviteError] = useState('');
+  1263→  const [inviteSuccess, setInviteSuccess] = useState<{ code: string; expiresAt: string; warning?: string } | null>(null);
+  1264→  const [inviteLinkCopied, setInviteLinkCopied] = useState(false);
+  1265→
+  1266→  // Remove confirmation state
+  1267→  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
+  1268→  const [removing, setRemoving] = useState(false);
+  1269→
+  1270→  const loadSubTutors = useCallback(() => {
+  1271→    if (!agencyUserId) return;
+  1272→    setLoading(true);
+  1273→    authFetch(`/api/usage/agency?agencyId=${agencyUserId}`).then((res) => res.json()).then((data) => setSubTutors(data.subTutors || [])).catch(() => {}).finally(() => setLoading(false));
+  1274→  }, [agencyUserId]);
+  1275→
+  1276→  const loadInvites = useCallback(() => {
+  1277→    if (!agencyUserId) return;
+  1278→    setInvitesLoading(true);
+  1279→    authFetch('/api/agency/invite').then((res) => res.json()).then((data) => setInvites(data.invites || [])).catch(() => {}).finally(() => setInvitesLoading(false));
+  1280→  }, [agencyUserId]);
+  1281→
+  1282→  useEffect(() => {
+  1283→    loadSubTutors();
+  1284→    loadInvites();
+  1285→  }, [loadSubTutors, loadInvites]);
+  1286→
+  1287→  const handleSendInvite = async () => {
+  1288→    const email = inviteEmail.trim().toLowerCase();
+  1289→    if (!email) return;
+  1290→    setInviteError('');
+  1291→    setInviteSuccess(null);
+  1292→    setInviteSending(true);
+  1293→    try {
+  1294→      const res = await authFetch('/api/agency/invite', {
+  1295→        method: 'POST',
+  1296→        headers: { 'Content-Type': 'application/json' },
+  1297→        body: JSON.stringify({ email }),
+  1298→      });
+  1299→      const data = await res.json();
+  1300→      if (!res.ok) {
+  1301→        setInviteError(data.message || data.error || 'Failed to send invite');
+  1302→        return;
+  1303→      }
+  1304→      setInviteSuccess({ code: data.code, expiresAt: data.expiresAt, warning: data.warning });
+  1305→      setInviteEmail('');
+  1306→      loadInvites();
+  1307→      loadSubTutors();
+  1308→    } catch {
+  1309→      setInviteError('Network error. Please try again.');
+  1310→    } finally {
+  1311→      setInviteSending(false);
+  1312→    }
+  1313→  };
+  1314→
+  1315→  const handleCancelInvite = async (code: string) => {
+  1316→    try {
+  1317→      await authFetch(`/api/agency/invite/${code}/cancel`, { method: 'POST' });
+  1318→      loadInvites();
+  1319→    } catch { /* silent */ }
+  1320→  };
+  1321→
+  1322→  const handleRemoveTutor = async (tutorId: string) => {
+  1323→    setRemoving(true);
+  1324→    try {
+  1325→      const res = await authFetch(`/api/agency/subtutors/${tutorId}`, { method: 'DELETE' });
+  1326→      if (res.ok) {
+  1327→        loadSubTutors();
+  1328→        loadInvites();
+  1329→      }
+  1330→    } catch { /* silent */ }
+  1331→    setRemoving(false);
+  1332→    setRemoveConfirmId(null);
+  1333→  };
+  1334→
+  1335→  const copyInviteLink = (code: string) => {
+  1336→    const link = `${window.location.origin}/invite/${code}`;
+  1337→    navigator.clipboard.writeText(link).then(() => {
+  1338→      setInviteLinkCopied(true);
+  1339→      setTimeout(() => setInviteLinkCopied(false), 2000);
+  1340→    }).catch(() => { /* clipboard may be blocked */ });
+  1341→  };
+  1342→
+  1343→  if (loading) return <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div>;
+  1344→
+  1345→  const totalVideo = subTutors.reduce((sum, t) => sum + t.videoMinutesUsed, 0);
+  1346→  const totalCredits = subTutors.reduce((sum, t) => sum + t.aiCreditsUsed, 0);
+  1347→  const totalRooms = subTutors.reduce((sum, t) => sum + t.activeRooms, 0);
+  1348→  const pendingInvites = invites.filter((i) => i.status === 'PENDING');
+  1349→
+  1350→  return (
+  1351→    <div className="space-y-6">
+  1352→      {/* Invite Sub-Tutor Button */}
+  1353→      <div className="flex items-center justify-between">
+  1354→        <div />
+  1355→        <Dialog open={inviteOpen} onOpenChange={(open) => { setInviteOpen(open); if (!open) { setInviteError(''); setInviteSuccess(null); setInviteEmail(''); } }}>
+  1356→          <DialogTrigger asChild>
+  1357→            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2">
+  1358→              <Plus className="w-4 h-4" /> Invite Sub-Tutor
+  1359→            </Button>
+  1360→          </DialogTrigger>
+  1361→          <DialogContent className="sm:max-w-md">
+  1362→            <DialogHeader>
+  1363→              <DialogTitle className="text-lg">Invite a Sub-Tutor</DialogTitle>
+  1364→              <DialogDescription>Send an invite link to a tutor you&apos;d like to add to your agency.</DialogDescription>
+  1365→            </DialogHeader>
+  1366→            {inviteSuccess ? (
+  1367→              <div className="space-y-4">
+  1368→                <div className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+  1369→                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-4 h-4 text-emerald-600" /></div>
+  1370→                  <div><p className="text-sm font-medium text-emerald-800">Invite sent successfully!</p><p className="text-xs text-emerald-600">Link expires in 7 days</p></div>
+  1371→                </div>
+  1372→                {inviteSuccess.warning && (
+  1373→                  <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 p-3">
+  1374→                    <Crown className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+  1375→                    <p className="text-xs text-amber-700">{inviteSuccess.warning}</p>
+  1376→                  </div>
+  1377→                )}
+  1378→                <div className="space-y-2">
+  1379→                  <p className="text-xs font-medium text-muted-foreground">Invite link</p>
+  1380→                  <div className="flex items-center gap-2">
+  1381→                    <code className="flex-1 text-xs bg-muted rounded-lg px-3 py-2 truncate block">{window.location.origin}/invite/{inviteSuccess.code}</code>
+  1382→                    <Button size="sm" variant="outline" className="flex-shrink-0 text-xs" onClick={() => copyInviteLink(inviteSuccess.code)}>
+  1383→                      {inviteLinkCopied ? <Check className="w-3 h-3" /> : <Download className="w-3 h-3" />}
+  1384→                      {inviteLinkCopied ? 'Copied' : 'Copy'}
+  1385→                    </Button>
+  1386→                  </div>
+  1387→                </div>
+  1388→                <Button variant="outline" className="w-full mt-2" onClick={() => setInviteSuccess(null)}>Send another invite</Button>
+  1389→              </div>
+  1390→            ) : (
+  1391→              <div className="space-y-4">
+  1392→                <div className="space-y-2">
+  1393→                  <Label htmlFor="invite-email" className="text-sm font-medium">Email address</Label>
+  1394→                  <Input id="invite-email" type="email" placeholder="tutor@example.com" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendInvite()} className="rounded-xl" />
+  1395→                </div>
+  1396→                {inviteError && (
+  1397→                  <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{inviteError}</p>
+  1398→                )}
+  1399→                <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all" onClick={handleSendInvite} disabled={inviteSending || !inviteEmail.trim()}>
+  1400→                  {inviteSending ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" /> Sending...</> : 'Send Invite'}
+  1401→                </Button>
+  1402→              </div>
+  1403→            )}
+  1404→          </DialogContent>
+  1405→        </Dialog>
+  1406→      </div>
+  1407→
+  1408→      {/* Stats Grid */}
+  1409→      <div className="grid grid-cols-3 gap-4">
+  1410→        <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{subTutors.length}</p><p className="text-sm text-white/80 mt-1">Sub-Tutors</p></div>
+  1411→        <div className="rounded-2xl stat-gradient-video p-5 text-white shadow-lg shadow-sky-500/15 card-hover"><p className="text-3xl font-bold">{totalRooms}</p><p className="text-sm text-white/80 mt-1">Total Lessons</p></div>
+  1412→        <div className="rounded-2xl stat-gradient-recordings p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{totalVideo} min</p><p className="text-sm text-white/80 mt-1">Video Used</p></div>
+  1413→      </div>
+  1414→
+  1415→      {/* Pending Invites */}
+  1416→      {invitesLoading ? null : invites.length === 0 ? null : (
+  1417→        <div className="rounded-2xl border overflow-hidden shadow-sm">
+  1418→          <div className="px-4 py-3 bg-muted/50 border-b flex items-center justify-between">
+  1419→            <h3 className="text-sm font-semibold">Invites ({pendingInvites.length} pending)</h3>
+  1420→          </div>
+  1421→          <div className="divide-y">
+  1422→            {invites.map((invite) => {
+  1423→              const isExpired = invite.status === 'EXPIRED' || (invite.status === 'PENDING' && new Date(invite.expiresAt) < new Date());
+  1424→              const isAccepted = invite.status === 'ACCEPTED';
+  1425→              const isCancelled = invite.status === 'CANCELLED';
+  1426→              return (
+  1427→                <div key={invite.id} className="px-4 py-3 flex items-center justify-between gap-3">
+  1428→                  <div className="min-w-0 flex-1">
+  1429→                    <p className="text-sm font-medium truncate">{invite.invitedEmail}</p>
+  1430→                    <p className="text-xs text-muted-foreground">Expires {new Date(invite.expiresAt).toLocaleDateString()}</p>
+  1431→                  </div>
+  1432→                  <div className="flex items-center gap-2 flex-shrink-0">
+  1433→                    {isAccepted && <Badge className="bg-emerald-100 text-emerald-700 text-[10px] rounded-full border-0">Accepted{invite.recipient?.name ? ` by ${invite.recipient.name}` : ''}</Badge>}
+  1434→                    {isExpired && <Badge variant="secondary" className="text-[10px] rounded-full text-muted-foreground">Expired</Badge>}
+  1435→                    {isCancelled && <Badge variant="secondary" className="text-[10px] rounded-full text-muted-foreground">Cancelled</Badge>}
+  1436→                    {!isAccepted && !isExpired && !isCancelled && (
+  1437→                      <>
+  1438→                        <Badge className="bg-amber-100 text-amber-700 text-[10px] rounded-full border-0">Pending</Badge>
+  1439→                        <Button size="sm" variant="ghost" className="text-xs text-muted-foreground hover:text-red-600 h-7 px-2" onClick={() => handleCancelInvite(invite.code)}>Cancel</Button>
+  1440→                      </>
+  1441→                    )}
+  1442→                  </div>
+  1443→                </div>
+  1444→              );
+  1445→            })}
+  1446→          </div>
+  1447→        </div>
+  1448→      )}
+  1449→
+  1450→      {/* Sub-Tutors Table */}
+  1451→      {subTutors.length === 0 && invites.length === 0 ? (
+  1452→        <div className="text-center py-12">
+  1453→          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-emerald-50 flex items-center justify-center"><Users className="w-8 h-8 text-emerald-400" /></div>
+  1454→          <p className="text-muted-foreground font-medium">No sub-tutors assigned yet</p>
+  1455→          <p className="text-xs text-muted-foreground mt-1">Invite a tutor to get started</p>
+  1456→        </div>
+  1457→      ) : subTutors.length === 0 ? null : (
+  1458→        <div className="rounded-2xl border overflow-hidden shadow-sm">
+  1459→          <table className="w-full text-sm">
+  1460→            <thead className="bg-muted/50 border-b"><tr><th className="text-left px-4 py-3 font-semibold">Tutor</th><th className="text-left px-4 py-3 font-semibold">Tier</th><th className="text-right px-4 py-3 font-semibold">Lessons</th><th className="text-right px-4 py-3 font-semibold">Video</th><th className="text-right px-4 py-3 font-semibold">Smart Credits</th><th className="text-right px-4 py-3 font-semibold">Last Active</th><th className="px-4 py-3" /></tr></thead>
+  1461→            <tbody>
+  1462→              {subTutors.map((tutor) => (
+  1463→                <tr key={tutor.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+  1464→                  <td className="px-4 py-3"><p className="font-medium">{tutor.name || '\u2014'}</p><p className="text-xs text-muted-foreground">{tutor.email}</p></td>
+  1465→                  <td className="px-4 py-3"><Badge variant={tutor.tier === 'AGENCY' ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${tutor.tier === 'AGENCY' ? 'bg-amber-100 text-amber-700' : ''}`}>{tutor.tier}</Badge></td>
+  1466→                  <td className="px-4 py-3 text-right font-medium">{tutor.activeRooms}</td>
+  1467→                  <td className="px-4 py-3 text-right font-medium">{tutor.videoMinutesUsed}</td>
+  1468→                  <td className="px-4 py-3 text-right font-medium">{tutor.aiCreditsUsed}</td>
+  1469→                  <td className="px-4 py-3 text-right text-muted-foreground">{tutor.joinedAt ? new Date(tutor.joinedAt).toLocaleDateString() : '\u2014'}</td>
+  1470→                  <td className="px-4 py-3 text-right">
+  1471→                    {removeConfirmId === tutor.id ? (
+  1472→                      <div className="flex items-center gap-1 justify-end">
+  1473→                        <span className="text-xs text-red-500 mr-1">Sure?</span>
+  1474→                        <Button size="sm" variant="destructive" className="h-7 text-xs px-2" disabled={removing} onClick={() => handleRemoveTutor(tutor.id)}>{removing ? '...' : 'Yes'}</Button>
+  1475→                        <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => setRemoveConfirmId(null)}>No</Button>
+  1476→                      </div>
+  1477→                    ) : (
+  1478→                      <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-red-600" onClick={() => setRemoveConfirmId(tutor.id)}>Remove</Button>
+  1479→                    )}
+  1480→                  </td>
+  1481→                </tr>
+  1482→              ))}
+  1483→            </tbody>
+  1484→          </table>
+  1485→        </div>
+  1486→      )}
+  1487→
+  1488→      {/* ===== SETTINGS DIALOG ===== */}
+  1489→      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+  1490→        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+  1491→          <DialogTitle className="sr-only">Settings</DialogTitle>
+  1492→          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+  1493→            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+  1494→              <Settings className="w-7 h-7 text-emerald-600" />
+  1495→            </div>
+  1496→            <h2 className="text-xl font-bold text-white">Settings</h2>
+  1497→            <p className="text-sm text-white/70 mt-1">Manage your account preferences</p>
+  1498→          </div>
+  1499→          <div className="px-6 pb-6 pt-4 space-y-4">
+  1500→            <div className="space-y-2">
+  1501→              <Label className="text-sm font-medium">Email</Label>
+  1502→              <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{userEmail || ''}</div>
+  1503→            </div>
+  1504→            <div className="space-y-2">
+  1505→              <Label className="text-sm font-medium">Current Plan</Label>
+  1506→              <div className="flex items-center gap-2">
+  1507→                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${userTier === 'AGENCY' ? 'bg-purple-50 text-purple-600 border-purple-200' : userTier === 'PRO' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+  1508→                  {userTier === 'AGENCY' ? 'Agency' : userTier === 'PRO' ? 'Pro' : 'Free'}
+  1509→                </Badge>
+  1510→              </div>
+  1511→            </div>
+  1512→            <Separator />
+  1513→            <div className="text-center">
+  1514→              <p className="text-xs text-muted-foreground">Need to change your email or password?</p>
+  1515→              <Button variant="link" className="text-xs text-primary mt-1">Contact Support</Button>
+  1516→            </div>
+  1517→          </div>
+  1518→        </DialogContent>
+  1519→      </Dialog>
+  1520→    </div>
+  1521→  );
+
+[showing lines 1000-1521 of 1523; use offset=1522 with limit to continue reading]

@@ -170,3 +170,43 @@ export const TIER_LIMITS = {
 } as const;
 
 export type FeatureFlag = keyof typeof TIER_LIMITS.FREE.features;
+
+// ============================================================
+// Dashboard Row Types
+// ============================================================
+export interface BoardRow {
+  id: string;
+  subject: string;
+  isActive: boolean;
+  createdAt: string;
+  brandingColor: string | null;
+}
+
+export interface TemplateRow {
+  id: string;
+  name: string;
+  subject: string;
+  createdAt: string;
+}
+
+export interface SubTutorRow {
+  id: string;
+  email: string;
+  name: string | null;
+  tier: string;
+  activeRooms: number;
+  videoMinutesUsed: number;
+  aiCreditsUsed: number;
+  joinedAt: string | null;
+}
+
+export interface InviteRow {
+  id: string;
+  code: string;
+  invitedEmail: string;
+  status: string;
+  expiresAt: string;
+  acceptedAt: string | null;
+  createdAt: string;
+  recipient: { id: string; name: string | null; email: string | null } | null;
+}

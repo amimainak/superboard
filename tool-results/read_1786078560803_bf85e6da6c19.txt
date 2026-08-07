@@ -1,0 +1,502 @@
+   500→              );
+   501→            })}
+   502→          </div>
+   503→        </div>
+   504→      </section>
+   505→
+   506→      {/* ===== HOW IT WORKS ===== */}
+   507→      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/80">
+   508→        <div className="max-w-7xl mx-auto px-6">
+   509→          <div className="text-center max-w-2xl mx-auto mb-16">
+   510→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
+   511→              <MousePointerClick className="w-3.5 h-3.5 text-emerald-500" />
+   512→              <span className="text-xs font-semibold text-emerald-700">Simple Setup</span>
+   513→            </div>
+   514→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   515→              Start teaching in{' '}
+   516→              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">under 60 seconds</span>
+   517→            </h2>
+   518→          </div>
+   519→
+   520→          <div className="grid md:grid-cols-3 gap-8">
+   521→            {[
+   522→              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — no sign-up required for them.', icon: Plus },
+   523→              { step: '02', title: 'Teach & Collaborate', desc: 'Draw, write, use smart tools, graph functions, and talk face-to-face. Everything happens on one infinite canvas.', icon: Monitor },
+   524→              { step: '03', title: 'Save & Share', desc: 'Export branded PDFs, save board templates, and review recordings. Your students get a polished takeaway.', icon: Download },
+   525→            ].map((item) => (
+   526→              <div key={item.step} className="relative text-center group">
+   527→                {/* Step number */}
+   528→                <div className="text-6xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors duration-300 mb-4">{item.step}</div>
+   529→                <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20 mb-5 -mt-10 relative z-10">
+   530→                  <item.icon className="w-7 h-7 text-white" />
+   531→                </div>
+   532→                <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+   533→                <p className="text-sm text-gray-500 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+   534→              </div>
+   535→            ))}
+   536→          </div>
+   537→        </div>
+   538→      </section>
+   539→
+   540→      {/* ===== TESTIMONIALS ===== */}
+   541→      <section className="py-20 md:py-28">
+   542→        <div className="max-w-7xl mx-auto px-6">
+   543→          <div className="text-center max-w-2xl mx-auto mb-16">
+   544→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   545→              Loved by tutors{' '}
+   546→              <span className="bg-gradient-to-r from-emerald-600 to-rose-500 bg-clip-text text-transparent">everywhere</span>
+   547→            </h2>
+   548→          </div>
+   549→
+   550→          <div className="grid md:grid-cols-3 gap-6">
+   551→            {[
+   552→              { name: 'Sarah M.', role: 'Math Tutor, 8 years', quote: 'The quiz generator saves me 30 minutes per lesson. My students love the instant feedback and the interactive graphs.', color: 'emerald' },
+   553→              { name: 'David K.', role: 'Science Tutor, 5 years', quote: 'Having video, whiteboard, and smart tools in one place means zero app-switching. It just works. My students are more engaged than ever.', color: 'sky' },
+   554→              { name: 'Priya R.', role: 'Language Tutor, 12 years', quote: 'The mind map tool and annotation features are perfect for essay planning. The branded PDFs make me look incredibly professional.', color: 'rose' },
+   555→            ].map((t) => {
+   556→              const colorClasses: Record<string, { bg: string; text: string }> = {
+   557→                emerald: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+   558→                sky: { bg: 'bg-sky-100', text: 'text-sky-600' },
+   559→                rose: { bg: 'bg-rose-100', text: 'text-rose-600' },
+   560→                amber: { bg: 'bg-amber-100', text: 'text-amber-600' },
+   561→                violet: { bg: 'bg-violet-100', text: 'text-violet-600' },
+   562→              };
+   563→              const colors = colorClasses[t.color] || colorClasses.emerald;
+   564→              return (
+   565→              <div key={t.name} className="rounded-2xl bg-white border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+   566→                {/* Stars */}
+   567→                <div className="flex gap-0.5 mb-4">
+   568→                  {[...Array(5)].map((_, i) => (
+   569→                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+   570→                  ))}
+   571→                </div>
+   572→                <p className="text-sm text-gray-600 leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
+   573→                <div className="flex items-center gap-3">
+   574→                  <div className={`w-10 h-10 rounded-full ${colors.bg} flex items-center justify-center ${colors.text} font-bold text-sm`}>
+   575→                    {t.name.charAt(0)}
+   576→                  </div>
+   577→                  <div>
+   578→                    <p className="text-sm font-semibold text-gray-900">{t.name}</p>
+   579→                    <p className="text-xs text-gray-500">{t.role}</p>
+   580→                  </div>
+   581→                </div>
+   582→              </div>
+   583→              );
+   584→            })}
+   585→          </div>
+   586→        </div>
+   587→      </section>
+   588→
+   589→      {/* ===== PRICING ===== */}
+   590→      <section id="pricing" className="py-20 md:py-28 bg-gray-50/80">
+   591→        <div className="max-w-7xl mx-auto px-6">
+   592→          <div className="text-center max-w-2xl mx-auto mb-16">
+   593→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   594→              Simple, transparent pricing
+   595→            </h2>
+   596→            <p className="mt-4 text-lg text-gray-500">Start free. Upgrade when you&apos;re ready.</p>
+   597→          </div>
+   598→
+   599→          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+   600→            {[
+   601→              { name: 'Free', price: '$0', period: 'forever', desc: 'Perfect for trying out Superboard', features: ['25 smart credits/week', 'Basic whiteboard tools', '1 active room', 'Student join via link'], cta: 'Get Started', ctaStyle: 'outline', badge: null },
+   602→              { name: 'Pro Tutor', price: '$10', period: '/month', desc: 'For serious tutors who want more', features: ['500 smart credits/month', 'Unlimited rooms & templates', 'Built-in video calling', 'GeoGebra & Mathpix', '2 recordings/month', 'Save/Load & PDF export'], cta: 'Start Free Trial', ctaStyle: 'primary', badge: 'Most Popular' },
+   603→              { name: 'Agency', price: '$39', period: '/month + per student', desc: 'For tutoring centers & teams', features: ['$39/mo base fee', 'Up to 5 sub-tutors included', 'White-label branding', 'Custom domains', 'Unlimited recordings', 'Admin dashboard & analytics'], cta: 'Contact Sales', ctaStyle: 'outline', badge: 'Best Value' },
+   604→            ].map((plan) => (
+   605→              <div key={plan.name} className={`rounded-2xl bg-white p-6 md:p-8 relative ${plan.ctaStyle === 'primary' ? 'border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 scale-[1.02]' : 'border border-gray-200 shadow-sm hover:shadow-md'} transition-shadow duration-300`}>
+   606→                {plan.badge && (
+   607→                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+   608→                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full text-white ${plan.ctaStyle === 'primary' ? 'bg-emerald-500' : 'bg-amber-500'}`}>{plan.badge}</span>
+   609→                  </div>
+   610→                )}
+   611→                <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+   612→                <p className="text-xs text-gray-500 mt-1">{plan.desc}</p>
+   613→                <div className="mt-4 flex items-baseline gap-1">
+   614→                  <span className="text-4xl font-extrabold text-gray-900">{plan.price}</span>
+   615→                  <span className="text-sm text-gray-500">{plan.period}</span>
+   616→                </div>
+   617→                <ul className="mt-6 space-y-3">
+   618→                  {plan.features.map((f) => (
+   619→                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
+   620→                      <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+   621→                        <Check className="w-2.5 h-2.5 text-emerald-600" />
+   622→                      </div>
+   623→                      {f}
+   624→                    </li>
+   625→                  ))}
+   626→                </ul>
+   627→                <Button
+   628→                  className={`w-full mt-6 rounded-xl font-semibold transition-all ${plan.ctaStyle === 'primary' ? 'gradient-primary border-0 text-white shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}
+   629→                  onClick={() => setShowAuth('register')}
+   630→                >
+   631→                  {plan.cta}
+   632→                </Button>
+   633→              </div>
+   634→            ))}
+   635→          </div>
+   636→        </div>
+   637→      </section>
+   638→
+   639→      {/* ===== FINAL CTA ===== */}
+   640→      <section className="py-20 md:py-28 relative overflow-hidden">
+   641→        <div className="absolute inset-0 gradient-primary opacity-[0.03]" />
+   642→        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+   643→          <GraduationCap className="w-14 h-14 mx-auto mb-6 text-emerald-500" />
+   644→          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   645→            Ready to transform your tutoring?
+   646→          </h2>
+   647→          <p className="mt-4 text-lg text-gray-500 max-w-xl mx-auto">
+   648→            Join thousands of tutors who&apos;ve made their lessons more engaging, more productive, and more fun with Superboard.
+   649→          </p>
+   650→          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+   651→            <Button size="lg" className="h-[52px] rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8" onClick={() => setShowAuth('register')}>
+   652→              Create Your Free Account
+   653→              <ArrowRight className="w-4 h-4 ml-2" />
+   654→            </Button>
+   655→          </div>
+   656→          <p className="mt-4 text-xs text-gray-500">No credit card required. Set up in under 60 seconds.</p>
+   657→        </div>
+   658→      </section>
+   659→
+   660→      {/* ===== FOOTER ===== */}
+   661→      <footer className="border-t border-gray-100 py-8">
+   662→        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+   663→          <div className="flex items-center gap-2">
+   664→            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+   665→              <GraduationCap className="w-4 h-4 text-white" />
+   666→            </div>
+   667→            <span className="text-sm font-semibold text-gray-900">Superboard</span>
+   668→          </div>
+   669→          <p className="text-xs text-gray-500">&copy; 2025 Superboard. Built for tutors, by tutors.</p>
+   670→          <div className="flex gap-6">
+   671→            <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-600 transition-colors">Pricing</a>
+   672→            <a href="#features" className="text-xs text-gray-500 hover:text-gray-600 transition-colors">Features</a>
+   673→            <a href="mailto:hello@superboard.app" className="text-xs text-gray-500 hover:text-gray-600 transition-colors">Contact</a>
+   674→          </div>
+   675→        </div>
+   676→      </footer>
+   677→
+   678→      {/* ===== AUTH DIALOG ===== */}
+   679→      <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
+   680→        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+   681→          <DialogTitle className="sr-only">{showAuth === 'login' ? 'Sign In' : 'Create Account'}</DialogTitle>
+   682→          {/* Gradient header */}
+   683→          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   684→            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   685→              <GraduationCap className="w-8 h-8 text-white" />
+   686→            </div>
+   687→            <h2 className="text-xl font-bold text-white">
+   688→              {showAuth === 'login' ? 'Welcome back' : 'Create your account'}
+   689→            </h2>
+   690→            <p className="text-sm text-white/70 mt-1">
+   691→              {showAuth === 'login' ? 'Sign in to your tutor dashboard' : 'Start teaching in under 60 seconds'}
+   692→            </p>
+   693→          </div>
+   694→
+   695→          <div className="px-6 pb-6 pt-4">
+   696→            {/* Tab switcher */}
+   697→            <div className="flex mb-5 rounded-xl bg-gray-100 p-1">
+   698→              <button
+   699→                onClick={() => { setShowAuth('login'); setAuthError(''); setAuthMessage(''); }}
+   700→                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${showAuth === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+   701→              >
+   702→                Sign In
+   703→              </button>
+   704→              <button
+   705→                onClick={() => { setShowAuth('register'); setAuthError(''); setAuthMessage(''); }}
+   706→                className={`flex-1 rounded-lg py-2 text-sm font-semibold transition-all ${showAuth === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+   707→              >
+   708→                Register
+   709→              </button>
+   710→            </div>
+   711→
+   712→            {authError && (
+   713→              <div role="alert" className="rounded-lg bg-rose-50 border border-rose-100 px-4 py-3 mb-4">
+   714→                <p className="text-sm text-rose-600">{authError}</p>
+   715→              </div>
+   716→            )}
+   717→            {authMessage && (
+   718→              <div aria-live="polite" className="rounded-lg bg-emerald-50 border border-emerald-100 px-4 py-3 mb-4">
+   719→                <p className="text-sm text-emerald-600">{authMessage}</p>
+   720→              </div>
+   721→            )}
+   722→
+   723→            {showAuth === 'login' ? (
+   724→              <form onSubmit={handleLogin} className="space-y-4">
+   725→                <div className="space-y-1.5">
+   726→                  <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+   727→                  <Input id="login-email" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required className="h-11 rounded-xl" />
+   728→                </div>
+   729→                <div className="space-y-1.5">
+   730→                  <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
+   731→                  <Input id="login-password" type="password" placeholder="Enter your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required className="h-11 rounded-xl" />
+   732→                </div>
+   733→                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
+   734→                  Sign In
+   735→                </Button>
+   736→              </form>
+   737→            ) : (
+   738→              <form onSubmit={handleRegister} className="space-y-4">
+   739→                <div className="space-y-1.5">
+   740→                  <Label htmlFor="reg-email" className="text-sm font-medium">Email</Label>
+   741→                  <Input id="reg-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} required className="h-11 rounded-xl" />
+   742→                </div>
+   743→                <div className="space-y-1.5">
+   744→                  <Label htmlFor="reg-password" className="text-sm font-medium">Password</Label>
+   745→                  <Input id="reg-password" type="password" placeholder="Min. 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} required minLength={6} className="h-11 rounded-xl" />
+   746→                </div>
+   747→                <Button type="submit" className="w-full h-11 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25">
+   748→                  Create Free Account
+   749→                </Button>
+   750→              </form>
+   751→            )}
+   752→
+   753→            <p className="text-center text-[11px] text-gray-500 mt-4">
+   754→              {showAuth === 'register' ? 'No credit card required' : 'Forgot password? Contact support'}
+   755→            </p>
+   756→          </div>
+   757→        </DialogContent>
+   758→      </Dialog>
+   759→    </main>
+   760→  );
+   761→}
+   762→
+   763→// ============================================================
+   764→// AUTHENTICATED DASHBOARD
+   765→// ============================================================
+   766→function AuthenticatedDashboard({ user, userName, tierLoading }: { user: User; userName: string | null; tierLoading: boolean }) {
+   767→  const { tier, setTier, setRoom } = useAppStore();
+   768→  const { brandColor, agencyName, setBrandColor } = useTheme();
+   769→  const {
+   770→    aiCreditsUsed,
+   771→    aiCreditsLimit,
+   772→    videoMinutesUsed,
+   773→    videoMinutesLimit,
+   774→    recordingsUsed,
+   775→    recordingsLimit,
+   776→    loading: usageLoading,
+   777→  } = useCredits(user.id);
+   778→
+   779→  const [showNewLesson, setShowNewLesson] = useState(false);
+   780→  const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
+   781→  const [creating, setCreating] = useState(false);
+   782→  const [showSettings, setShowSettings] = useState(false);
+   783→
+   784→  useEffect(() => {
+   785→    import('@/lib/fingerprint').then(({ reportFingerprint }) => {
+   786→      if (user?.id) {
+   787→        reportFingerprint(user.id).catch(console.error);
+   788→      }
+   789→    });
+   790→  }, [user?.id]);
+   791→
+   792→  const handleCreateLesson = useCallback(async () => {
+   793→    setCreating(true);
+   794→    try {
+   795→      // Directly get session token from Supabase client
+   796→      const supabase = createClient();
+   797→      const { data: { session } } = await supabase!.auth.getSession();
+   798→      const token = session?.access_token;
+   799→      if (!token) {
+   800→        console.error('[Dashboard] No session token available — are you logged in?');
+   801→        setCreating(false);
+   802→        return;
+   803→      }
+   804→
+   805→      const response = await fetch('/api/room', {
+   806→        method: 'POST',
+   807→        headers: {
+   808→          'Content-Type': 'application/json',
+   809→          'Authorization': `Bearer ${token}`,
+   810→        },
+   811→        body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
+   812→      });
+   813→      if (!response.ok) {
+   814→        const errBody = await response.text().catch(() => '');
+   815→        console.error('[Dashboard] Room creation failed:', response.status, errBody);
+   816→        throw new Error(`Failed to create room (${response.status}): ${errBody}`);
+   817→      }
+   818→      const data = await response.json();
+   819→      window.location.href = `/room/${data.roomId}`;
+   820→    } catch (error) {
+   821→      console.error('[Dashboard] Failed to create lesson:', error);
+   822→      setCreating(false);
+   823→    }
+   824→  }, [selectedSubject, user?.id]);
+   825→
+   826→  const handleLogout = useCallback(async () => {
+   827→    const supabase = createClient();
+   828→    if (supabase) await supabase.auth.signOut();
+   829→    setTier('FREE');
+   830→  }, [setTier]);
+   831→
+   832→  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+   833→  const tierColor =
+   834→    tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
+   835→
+   836→  return (
+   837→    <div className="min-h-screen bg-background">
+   838→      {/* Header */}
+   839→      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+   840→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   841→          <div className="flex items-center gap-3">
+   842→            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   843→              <GraduationCap className="w-5 h-5 text-white" />
+   844→            </div>
+   845→            <div>
+   846→              <h1 className="text-lg font-bold tracking-tight">{agencyName || 'Superboard'}</h1>
+   847→              <p className="text-[11px] text-muted-foreground font-medium">Smart Tutoring Whiteboard</p>
+   848→            </div>
+   849→          </div>
+   850→          <div className="flex items-center gap-2">
+   851→            <span className="text-sm text-muted-foreground hidden sm:inline mr-1">{user.email}</span>
+   852→            {!tierLoading && (
+   853→              <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
+   854→                {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
+   855→                {tierLabel}
+   856→              </Badge>
+   857→            )}
+   858→            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Settings" onClick={() => setShowSettings(true)}>
+   859→              <Settings className="w-4 h-4" />
+   860→            </Button>
+   861→            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={handleLogout} title="Sign out">
+   862→              <LogOut className="w-4 h-4" />
+   863→            </Button>
+   864→          </div>
+   865→        </div>
+   866→      </header>
+   867→
+   868→      {/* Main Content */}
+   869→      <main className="max-w-7xl mx-auto px-6 py-8">
+   870→        {/* Welcome Banner — sharp gradient, no blur blobs */}
+   871→        <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 animate-fade-in-up">
+   872→          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {userName || user.user_metadata?.name || user.email?.split('@')[0]}</h2>
+   873→          <p className="text-gray-700 mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
+   874→        </div>
+   875→
+   876→        {/* Usage Overview Cards */}
+   877→        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+   878→          <div className="rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
+   879→            <div className="relative z-10">
+   880→              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Smart Credits</span></div>
+   881→              <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
+   882→              {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+   883→            </div>
+   884→          </div>
+   885→          <div className="rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
+   886→            <div className="relative z-10">
+   887→              <div className="flex items-center gap-2 mb-1"><Video className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Video Minutes</span></div>
+   888→              <div className="text-3xl font-bold mt-2">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
+   889→              {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+   890→            </div>
+   891→          </div>
+   892→          <div className="rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
+   893→            <div className="relative z-10">
+   894→              <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
+   895→              <div className="text-3xl font-bold mt-2">{recordingsUsed}{recordingsLimit !== Infinity ? ` / ${recordingsLimit}` : ''}</div>
+   896→              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? `${recordingsLimit} per month included` : 'Unlimited'}</p>
+   897→            </div>
+   898→          </div>
+   899→        </div>
+   900→
+   901→        {/* Quick Actions + Content Tabs */}
+   902→        <div className="flex flex-col lg:flex-row gap-6">
+   903→          {/* Left: Quick Actions */}
+   904→          <div className="lg:w-72 flex-shrink-0 space-y-4 animate-fade-in-up-delay-3">
+   905→            <Dialog open={showNewLesson} onOpenChange={setShowNewLesson}>
+   906→              <DialogTrigger asChild>
+   907→                <Button className="w-full h-14 text-base rounded-2xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px]">
+   908→                  <Plus className="w-5 h-5 mr-2" />New Lesson
+   909→                </Button>
+   910→              </DialogTrigger>
+   911→              <DialogContent className="rounded-2xl">
+   912→                <DialogHeader>
+   913→                  <DialogTitle className="text-xl">Create New Lesson</DialogTitle>
+   914→                  <DialogDescription>Select a subject for your lesson. This determines which toolkit will be available on the whiteboard.</DialogDescription>
+   915→                </DialogHeader>
+   916→                <div className="space-y-4 py-4">
+   917→                  <div className="space-y-2">
+   918→                    <Label>Subject</Label>
+   919→                    <Select value={selectedSubject} onValueChange={(v) => setSelectedSubject(v as Subject)}>
+   920→                      <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select subject" /></SelectTrigger>
+   921→                      <SelectContent>
+   922→                        <SelectItem value="MATH">Mathematics</SelectItem>
+   923→                        <SelectItem value="SCIENCE">Science</SelectItem>
+   924→                        <SelectItem value="LANGUAGE">English &amp; Language</SelectItem>
+   925→                        <SelectItem value="GENERAL">General / Other</SelectItem>
+   926→                      </SelectContent>
+   927→                    </Select>
+   928→                  </div>
+   929→                  {tier === 'AGENCY' && (
+   930→                    <div className="space-y-2">
+   931→                      <Label>Branding</Label>
+   932→                      <div className="flex items-center gap-2">
+   933→                        <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+   934→                        <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+   935→                      </div>
+   936→                    </div>
+   937→                  )}
+   938→                  <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25" onClick={handleCreateLesson} disabled={creating}>
+   939→                    {creating ? 'Creating...' : 'Start Lesson'}
+   940→                  </Button>
+   941→                </div>
+   942→              </DialogContent>
+   943→            </Dialog>
+   944→
+   945→            <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+   946→              <CardHeader className="pb-3">
+   947→                <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
+   948→              </CardHeader>
+   949→              <CardContent className="space-y-1.5">
+   950→                {(['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as Subject[]).map((subj) => {
+   951→                  const meta = subjectMeta[subj];
+   952→                  return (
+   953→                    <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50 transition-colors group">
+   954→                      <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
+   955→                      <div className="flex-1 min-w-0"><p className="text-sm font-medium">{meta.label}</p><p className="text-[11px] text-muted-foreground">Quick start</p></div>
+   956→                      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+   957→                    </button>
+   958→                  );
+   959→                })}
+   960→              </CardContent>
+   961→            </Card>
+   962→          </div>
+   963→
+   964→          {/* Right: Tabs Content */}
+   965→          <div className="flex-1 animate-fade-in-up-delay-2">
+   966→            <Tabs defaultValue="billing" className="w-full">
+   967→              <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
+   968→                {(tier === 'PRO' || tier === 'AGENCY') && (
+   969→                  <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
+   970→                )}
+   971→                {(tier === 'PRO' || tier === 'AGENCY') && (
+   972→                  <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
+   973→                )}
+   974→                <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
+   975→                {tier === 'AGENCY' && (
+   976→                  <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
+   977→                )}
+   978→              </TabsList>
+   979→              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+   980→              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+   981→              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor || ''} setBrandColor={setBrandColor} /></TabsContent>
+   982→              {tier === 'AGENCY' && (
+   983→                <TabsContent value="admin" className="mt-6">
+   984→                  <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   985→                    <CardHeader>
+   986→                      <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
+   987→                      <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
+   988→                    </CardHeader>
+   989→                    <CardContent><AgencyAdminPanel agencyUserId={user?.id || ''} /></CardContent>
+   990→                  </Card>
+   991→                </TabsContent>
+   992→              )}
+   993→            </Tabs>
+   994→          </div>
+   995→        </div>
+   996→      </main>
+   997→    </div>
+   998→  );
+   999→}
+
+[showing lines 500-999 of 1523; use offset=1000 with limit to continue reading]
