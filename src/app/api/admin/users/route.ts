@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth, requireAdmin } from '@/lib/auth';
+import { logAudit } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   // Verify admin access
@@ -51,6 +52,8 @@ export async function GET(request: NextRequest) {
           name: true,
           tier: true,
           isAdmin: true,
+          status: true,
+          gracePeriodEndsAt: true,
           stripeCustomerId: true,
           parentAgencyId: true,
           customDomain: true,
@@ -113,6 +116,8 @@ export async function POST(request: NextRequest) {
         isAdmin: makeAdmin || false,
       },
     });
+
+    await logAudit(adminCheck.userId, 'USER_CREATE', 'User', user.id, { email, tier: tier || 'FREE', isAdmin: makeAdmin || false });
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error: any) {

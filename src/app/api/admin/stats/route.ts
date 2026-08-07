@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       recentUsers,
       totalUsageThisPeriod,
       totalParticipants,
+      usersByStatus,
     ] = await Promise.all([
       // Total user count
       db.user.count(),
@@ -67,7 +68,17 @@ export async function GET(request: NextRequest) {
         by: ['studentIdentity'],
         _count: { studentIdentity: true },
       }),
+
+      // User status breakdown (ACTIVE, SUSPENDED, BANNED)
+      db.user.groupBy({
+        by: ['status'],
+        _count: { status: true },
+      }),
     ]);
+
+    // Extract status counts
+    const suspendedUsers = (usersByStatus as any[]).find(s => s.status === 'SUSPENDED')?._count?.status || 0;
+    const bannedUsers = (usersByStatus as any[]).find(s => s.status === 'BANNED')?._count?.status || 0;
 
     // Daily signups over last 14 days
     const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
@@ -93,10 +104,16 @@ export async function GET(request: NextRequest) {
         totalTemplates,
         totalRecordings,
         totalParticipants: totalParticipants.length,
+        suspendedUsers,
+        bannedUsers,
       },
       usersByTier: usersByTier.map((t) => ({
         tier: t.tier,
         count: t._count.tier,
+      })),
+      usersByStatus: (usersByStatus as any[]).map((s) => ({
+        status: s.status,
+        count: s._count.status,
       })),
       roomsBySubject: roomsBySubject.map((r) => ({
         subject: r.subject,

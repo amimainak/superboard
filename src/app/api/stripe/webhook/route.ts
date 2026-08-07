@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import type { Tier } from '@/types';
+import { logAudit } from '@/lib/audit';
 
 // SECURITY (V-24): Valid tiers for Stripe metadata
 const VALID_TIERS = new Set<string>(['FREE', 'PRO', 'AGENCY']);
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (resolvedTier) {
-          await db.user.update({
+          const updatedUser = await db.user.update({
             where: { id: userId },
             data: {
               tier: resolvedTier,
@@ -95,6 +96,30 @@ export async function POST(request: NextRequest) {
             },
           });
           console.log(`[Stripe] User ${userId} upgraded to ${resolvedTier}`);
+
+          // Sync Subscription table
+          try {
+            const subId = typeof session.subscription === 'string'
+              ? session.subscription
+              : (session.subscription as unknown as { id?: string }).id || null;
+            if (subId) {
+              await db.subscription.upsert({
+                where: { stripeSubscriptionId: subId },
+                update: { status: 'active', userId: updatedUser.id },
+                create: {
+                  userId: updatedUser.id,
+                  stripeSubscriptionId: subId,
+                  planName: resolvedTier === 'PRO' ? 'Pro Tutor' : 'Agency',
+                  status: 'active',
+                  currentPeriodStart: new Date(),
+                  currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+                  amountMonthlyCents: resolvedTier === 'PRO' ? 1000 : 3900,
+                },
+              });
+            }
+          } catch (subErr) {
+            console.warn('[Stripe] Subscription table sync failed:', subErr);
+          }
         } else {
           console.error(`[Stripe] Could not resolve tier from price ID or metadata for user ${userId}`);
         }
@@ -116,6 +141,24 @@ export async function POST(request: NextRequest) {
             where: { id: userId },
             data: { tier: 'FREE' },
           });
+          // Sync subscription status
+          try {
+            await db.subscription.upsert({
+              where: { stripeSubscriptionId: subscription.id },
+              update: { status: newStatus },
+              create: {
+                userId,
+                stripeSubscriptionId: subscription.id,
+                planName: 'Unknown',
+                status: newStatus,
+                currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+                currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                amountMonthlyCents: 0,
+              },
+            });
+          } catch (subErr) {
+            console.warn('[Stripe] Subscription table sync failed:', subErr);
+          }
           break;
         }
 
@@ -144,6 +187,30 @@ export async function POST(request: NextRequest) {
               stripeSubscriptionId: subscription.id,
             },
           });
+          // Sync subscription table
+          try {
+            await db.subscription.upsert({
+              where: { stripeSubscriptionId: subscription.id },
+              update: {
+                status: 'active',
+                currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+                currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                cancelAtPeriodEnd: (subscription as any).cancel_at_period_end || false,
+              },
+              create: {
+                userId,
+                stripeSubscriptionId: subscription.id,
+                planName: resolvedTier === 'PRO' ? 'Pro Tutor' : 'Agency',
+                status: 'active',
+                currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+                currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                cancelAtPeriodEnd: (subscription as any).cancel_at_period_end || false,
+                amountMonthlyCents: resolvedTier === 'PRO' ? 1000 : 3900,
+              },
+            });
+          } catch (subErr) {
+            console.warn('[Stripe] Subscription table sync failed on update:', subErr);
+          }
         }
         break;
       }
@@ -159,6 +226,15 @@ export async function POST(request: NextRequest) {
             where: { id: userId },
             data: { tier: 'FREE', stripeSubscriptionId: null },
           });
+          // Mark subscription as canceled
+          try {
+            await db.subscription.updateMany({
+              where: { stripeSubscriptionId: subscription.id },
+              data: { status: 'canceled' },
+            });
+          } catch (subErr) {
+            console.warn('[Stripe] Subscription table update on delete:', subErr);
+          }
           console.log(`[Stripe] User ${userId} downgraded to FREE`);
         }
         break;

@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
+import { logAudit } from '@/lib/audit';
 
 export async function GET(request: NextRequest) {
   const adminCheck = await requireAdmin(request);
@@ -101,6 +102,10 @@ export async function PATCH(request: NextRequest) {
       data: updateData,
     });
 
+    if (isActive !== undefined) {
+      await logAudit(adminCheck.userId, isActive ? 'ROOM_OPEN' : 'ROOM_CLOSE', 'Room', roomId, updateData);
+    }
+
     return NextResponse.json({ room });
   } catch (error: any) {
     console.error('[Admin Rooms PATCH]', error);
@@ -127,6 +132,7 @@ export async function DELETE(request: NextRequest) {
 
   try {
     await db.room.delete({ where: { id: roomId } });
+    await logAudit(adminCheck.userId, 'ROOM_DELETE', 'Room', roomId);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('[Admin Rooms DELETE]', error);
