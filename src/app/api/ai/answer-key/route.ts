@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { isAgencyTier } from '@/types';
 import { z } from 'zod';
 
 const answerKeyVerifySchema = z.object({
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
         where: { id: auth.userId },
         select: { tier: true },
       });
-      if (!caller || caller.tier !== 'AGENCY') {
+      if (!caller || !isAgencyTier(caller.tier)) {
         return NextResponse.json(
           { error: 'Forbidden — only the room tutor can access answer keys' },
           { status: 403 }

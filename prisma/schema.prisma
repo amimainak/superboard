@@ -6,6 +6,8 @@
 // SECURITY FIXES:
 // - V-15: Added enum constraints for tier, subject, and invite status
 // - V-17: Added length constraints on snapshot fields
+// - V-18: Added AGENCY_STANDARD/AGENCY_PREMIUM tiers, Student model,
+//         Room duration tracking, lesson hour metered billing
 // ============================================================
 
 datasource db {
@@ -21,7 +23,7 @@ generator client {
 // User — Tutors & Agency Owners
 // ============================================================
 // parentAgencyId links a sub-tutor to their agency owner.
-// An agency owner has tier=AGENCY and no parentAgencyId.
+// An agency owner has tier=AGENCY_STANDARD or AGENCY_PREMIUM and no parentAgencyId.
 // ============================================================
 
 model User {
@@ -53,13 +55,16 @@ model User {
   receivedInvite    AgencyInvite?   @relation("InviteRecipient")
   subTutors        User[]          @relation("AgencySubTutors")
   auditLogs         AuditLog[]
+  students          Student[]       // Students registered by this agency owner
 }
 
-// SECURITY FIX (V-15): Enum for user tier levels
+// SECURITY FIX (V-15, V-18): Enum for user tier levels
 enum Tier {
   FREE
   PRO
   AGENCY
+  AGENCY_STANDARD
+  AGENCY_PREMIUM
 }
 
 // User account status
@@ -70,11 +75,37 @@ enum UserStatus {
 }
 
 // ============================================================
+// Student — Agency Student Roster
+// ============================================================
+// Agencies register their students with email + name.
+// Students must be active to join lessons.
+// Unique per agency+email — same email can exist at different agencies.
+// ============================================================
+
+model Student {
+  id              String    @id @default(uuid())
+  agencyId        String
+  agency          User      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  email           String
+  name            String
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  deactivatedAt   DateTime? // Set when student leaves the agency
+
+  @@unique([agencyId, email])
+  @@index([agencyId, isActive])
+  @@index([email])
+
+  // Relations
+  roomParticipants  RoomParticipant[]
+}
+
+// ============================================================
 // UsageLog — Per-Period Usage Tracking
 // ============================================================
 // FREE:  period resets Monday 00:00 UTC (weekly)
 // PRO:   period resets on billing cycle date (monthly)
-// AGENCY: period resets on billing cycle date (monthly)
+// AGENCY_STANDARD/PREMIUM: period resets on billing cycle date (monthly)
 // ============================================================
 
 model UsageLog {
@@ -97,6 +128,7 @@ model UsageLog {
 // ============================================================
 // Each room belongs to a tutor (who may be a sub-tutor under an agency).
 // Students join rooms and are tracked via RoomParticipant.
+// Duration tracking for metered hourly billing.
 // ============================================================
 
 model Room {
@@ -106,7 +138,9 @@ model Room {
   // SECURITY FIX (V-15): Enum constraint for subject
   subject         Subject             @default(GENERAL)
   isActive        Boolean             @default(true)
-  startedAt       DateTime?            // When the session was started (for duration tracking)
+  startedAt       DateTime?            // When the session was started (first participant joins)
+  endedAt         DateTime?            // When the tutor closes the session
+  durationMinutes Int                 @default(0) // Calculated on room close
   // Branding snapshot taken at room creation so it persists
   // even if agency changes logo later
   brandingLogo    String?
@@ -119,6 +153,7 @@ model Room {
   participants    RoomParticipant[]
 
   @@index([tutorId, isActive])
+  @@index([endedAt])
 }
 
 // SECURITY FIX (V-15): Enum for room subjects
@@ -147,23 +182,19 @@ model BoardPage {
 // RoomParticipant — Student Join Tracking
 // ============================================================
 // Tracks every time a student joins a room.
-// Used for agency per-student billing: an "active student" is a
-// unique studentIdentity who joined at least 1 room (under an
-// agency's sub-tutors) in the current billing period.
+// Used for agency billing and attendance tracking.
 //
-// studentIdentity can be:
-//   - A User ID (if the student has an account)
-//   - A fingerprint hash (if anonymous, from browser fingerprint)
-//   - A session-provided name (fallback: "Student_<uuid>")
-//
-// This allows billing even for anonymous students who join via link.
+// studentId links to the Student model (registered agency students).
+// studentIdentity is the display identifier (Student.name or fallback).
 // ============================================================
 
 model RoomParticipant {
   id               String   @id @default(uuid())
   roomId           String
   room             Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  studentIdentity  String   // User ID or fingerprint hash — unique per student
+  studentId        String?  // FK to Student model (nullable for backward compat)
+  student          Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  studentIdentity  String   // Display name or identifier
   studentName      String?  // Display name provided during join
   joinedAt         DateTime @default(now())
   lastActiveAt     DateTime @default(now())
@@ -173,6 +204,7 @@ model RoomParticipant {
   @@unique([roomId, studentIdentity]) // One record per student per room
   @@index([roomId, lastActiveAt])
   @@index([studentIdentity, lastActiveAt])
+  @@index([studentId])
 }
 
 // ============================================================
@@ -263,7 +295,7 @@ model Subscription {
   userId                String
   user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   stripeSubscriptionId  String          @unique
-  planName              String          // e.g., "Pro Tutor", "Agency"
+  planName              String          // e.g., "Pro Tutor", "Agency Standard", "Agency Premium"
   status                String          // active, past_due, canceled, trialing, unpaid
   currentPeriodStart    DateTime
   currentPeriodEnd      DateTime

@@ -1,5 +1,7 @@
 'use client';
 
+import { isAgencyTier } from '@/types';
+
 import { useCredits } from '@/hooks/useCredits';
 import { useAppStore } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
@@ -43,7 +45,7 @@ export default function UsageBar() {
           {/* Smart Credits */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Sparkles className="size-3.5 shrink-0 text-primary" />
-            {aiCreditsExhausted && tier !== 'AGENCY' ? (
+            {aiCreditsExhausted && !isAgencyTier(tier) ? (
               <Button
                 variant="destructive"
                 size="sm"

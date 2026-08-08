@@ -378,7 +378,7 @@ function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
             {/* Free */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
               <div className="mb-6">
@@ -421,21 +421,42 @@ function LandingPage() {
               </ul>
             </div>
 
-            {/* Agency */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+            {/* Agency Standard */}
+            <div className="rounded-2xl border-2 border-amber-500 bg-white p-6 hover:shadow-lg transition-shadow relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-semibold">Best Value</div>
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Agency</h3>
-                <p className="text-sm text-gray-500 mt-1">For tutoring centers</p>
+                <h3 className="text-lg font-semibold text-gray-900">Agency Standard</h3>
+                <p className="text-sm text-gray-500 mt-1">For growing centers</p>
               </div>
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-gray-900">$39</span>
-                <span className="text-gray-500 text-sm">/month + $1.50/student</span>
+                <span className="text-gray-500 text-sm">/month + $3/hr</span>
+              </div>
+              <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+                Get Started
+              </Button>
+              <ul className="mt-6 space-y-3">
+                {['Everything in Pro', '5,000 AI credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Up to 5 sub-tutors', 'Student roster', 'Per-hour billing'].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-amber-500 flex-shrink-0" />{f}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Agency Premium */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Agency Premium</h3>
+                <p className="text-sm text-gray-500 mt-1">For established centers</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-extrabold text-gray-900">$79</span>
+                <span className="text-gray-500 text-sm">/month + $2/hr</span>
               </div>
               <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
                 Contact Sales
               </Button>
               <ul className="mt-6 space-y-3">
-                {['Everything in Pro', '5,000 AI credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Sub-tutor management', 'Custom domain', 'Priority support'].map((f) => (
+                {['Everything in Standard', 'Unlimited sub-tutors', '$2/hr volume discount', 'Priority support', 'Advanced analytics', 'Custom domain', 'Student roster', 'API access'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
                 ))}
               </ul>

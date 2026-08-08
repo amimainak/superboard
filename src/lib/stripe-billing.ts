@@ -1,9 +1,11 @@
 // ============================================================
-// Stripe Metered Billing — Agency Per-Student Architecture
+// Stripe Metered Billing — Agency Hourly Architecture
 // ============================================================
-// FIXED: Uses subscription ITEM ID (not subscription ID) for
-// createUsageRecord calls. Stores subscription item IDs when
-// the checkout session is created.
+// Agency Standard: $39/mo base + $3.00/hr metered
+// Agency Premium:  $79/mo base + $2.00/hr metered
+//
+// Replaces the previous per-student billing model.
+// Uses subscription ITEM ID for createUsageRecord calls.
 // ============================================================
 
 import Stripe from 'stripe';
@@ -12,34 +14,32 @@ import Stripe from 'stripe';
 export { getStripeClient, getWebhookSecret, verifyWebhookSignature } from './stripe';
 
 /**
- * Create a Stripe Checkout Session for Agency tier.
+ * Create a Stripe Checkout Session for Agency Standard tier.
  * Includes:
  * - Base fee ($39/mo) as recurring line item
- * - Metered per-student billing ($1.50/student)
- *
- * FIXED: Removed `add_invoice_items` from subscription_data (deprecated in API 2026-07-29)
+ * - Metered per-hour billing ($3.00/hr)
  */
-export async function createAgencyCheckoutSession(params: {
+export async function createAgencyStandardCheckoutSession(params: {
   userId: string;
   customerId?: string;
   appUrl: string;
 }): Promise<string> {
   const stripe = await getStripeClientAsync();
 
-  const basePriceId = process.env.STRIPE_AGENCY_BASE_PRICE_ID || '';
-  const meteredPriceId = process.env.STRIPE_AGENCY_METERED_PRICE_ID || '';
+  const basePriceId = process.env.STRIPE_AGENCY_STD_BASE_PRICE_ID || '';
+  const hourlyPriceId = process.env.STRIPE_AGENCY_STD_HOURLY_PRICE_ID || '';
 
   if (!basePriceId || basePriceId.startsWith('TODO_')) {
     throw new Error(
-      'STRIPE_AGENCY_BASE_PRICE_ID not configured. ' +
+      'STRIPE_AGENCY_STD_BASE_PRICE_ID not configured. ' +
       'Create a $39/mo recurring price in Stripe Dashboard first.'
     );
   }
 
-  if (!meteredPriceId || meteredPriceId.startsWith('TODO_')) {
+  if (!hourlyPriceId || hourlyPriceId.startsWith('TODO_')) {
     throw new Error(
-      'STRIPE_AGENCY_METERED_PRICE_ID not configured. ' +
-      'Create a $1.50 metered price in Stripe Dashboard first.'
+      'STRIPE_AGENCY_STD_HOURLY_PRICE_ID not configured. ' +
+      'Create a $3.00/hr metered price in Stripe Dashboard first.'
     );
   }
 
@@ -48,25 +48,75 @@ export async function createAgencyCheckoutSession(params: {
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [
-      {
-        price: basePriceId,
-        quantity: 1,
-      },
-      {
-        price: meteredPriceId,
-      },
+      { price: basePriceId, quantity: 1 },
+      { price: hourlyPriceId },
     ],
     subscription_data: {
       metadata: {
         userId: params.userId,
-        targetTier: 'AGENCY',
+        targetTier: 'AGENCY_STANDARD',
       },
     },
-    success_url: `${params.appUrl}/?upgrade=success`,
-    cancel_url: `${params.appUrl}/?upgrade=cancelled`,
+    success_url: `${params.appUrl}/dashboard?upgrade=success`,
+    cancel_url: `${params.appUrl}/dashboard?upgrade=cancelled`,
     metadata: {
       userId: params.userId,
-      targetTier: 'AGENCY',
+      targetTier: 'AGENCY_STANDARD',
+    },
+  });
+
+  return session.url || '';
+}
+
+/**
+ * Create a Stripe Checkout Session for Agency Premium tier.
+ * Includes:
+ * - Base fee ($79/mo) as recurring line item
+ * - Metered per-hour billing ($2.00/hr)
+ */
+export async function createAgencyPremiumCheckoutSession(params: {
+  userId: string;
+  customerId?: string;
+  appUrl: string;
+}): Promise<string> {
+  const stripe = await getStripeClientAsync();
+
+  const basePriceId = process.env.STRIPE_AGENCY_PREM_BASE_PRICE_ID || '';
+  const hourlyPriceId = process.env.STRIPE_AGENCY_PREM_HOURLY_PRICE_ID || '';
+
+  if (!basePriceId || basePriceId.startsWith('TODO_')) {
+    throw new Error(
+      'STRIPE_AGENCY_PREM_BASE_PRICE_ID not configured. ' +
+      'Create a $79/mo recurring price in Stripe Dashboard first.'
+    );
+  }
+
+  if (!hourlyPriceId || hourlyPriceId.startsWith('TODO_')) {
+    throw new Error(
+      'STRIPE_AGENCY_PREM_HOURLY_PRICE_ID not configured. ' +
+      'Create a $2.00/hr metered price in Stripe Dashboard first.'
+    );
+  }
+
+  const session = await stripe.checkout.sessions.create({
+    customer: params.customerId || undefined,
+    mode: 'subscription',
+    payment_method_types: ['card'],
+    line_items: [
+      { price: basePriceId, quantity: 1 },
+      { price: hourlyPriceId },
+    ],
+    subscription_data: {
+      metadata: {
+        userId: params.userId,
+        targetTier: 'AGENCY_PREMIUM',
+      },
+    },
+    success_url: `${params.appUrl}/dashboard?upgrade=success`,
+    cancel_url: `${params.appUrl}/dashboard?upgrade=cancelled`,
+    metadata: {
+      userId: params.userId,
+      targetTier: 'AGENCY_PREMIUM',
     },
   });
 
@@ -104,8 +154,8 @@ export async function createProCheckoutSession(params: {
     mode: 'subscription',
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${params.appUrl}/?upgrade=success`,
-    cancel_url: `${params.appUrl}/?upgrade=cancelled`,
+    success_url: `${params.appUrl}/dashboard?upgrade=success`,
+    cancel_url: `${params.appUrl}/dashboard?upgrade=cancelled`,
     metadata: {
       userId: params.userId,
       targetTier: 'PRO',
@@ -123,61 +173,96 @@ export async function createProCheckoutSession(params: {
 }
 
 /**
- * Report active student usage to Stripe for metered billing.
- * FIXED: Uses subscriptionItem ID (not subscription ID) for createUsageRecord.
+ * Report lesson hour usage to Stripe for metered billing.
+ * Queries completed rooms (endedAt is not null) within the billing period,
+ * sums durationMinutes, converts to hours, and reports to Stripe.
  *
- * @param subscriptionItemId - Stripe subscription ITEM ID (not subscription ID)
- * @param activeStudentCount - Number of unique active students this period
- * @param action - 'set' to replace, 'increment' to add (default: 'set')
+ * @param subscriptionId - Stripe subscription ID
+ * @param billingPeriodStart - Start of the current billing period
  */
-export async function reportStudentUsage(params: {
-  subscriptionItemId: string;
-  activeStudentCount: number;
-  action?: 'set' | 'increment';
+export async function reportHourlyUsage(params: {
+  subscriptionId: string;
+  billingPeriodStart: Date;
 }): Promise<void> {
   const stripe = await getStripeClientAsync();
 
-  if (params.activeStudentCount <= 0) return;
-
-  await (stripe.subscriptionItems as any).createUsageRecord(
-    params.subscriptionItemId,
-    {
-      quantity: params.activeStudentCount,
-      action: params.action || 'set',
-      timestamp: Math.floor(Date.now() / 1000),
-    }
+  // Retrieve the subscription with its items
+  const subscription = await stripe.subscriptions.retrieve(
+    params.subscriptionId,
+    { expand: ['items.data.price'] }
   );
 
-  console.log(
-    `[Stripe] Reported ${params.activeStudentCount} student(s) ` +
-    `for subscription item ${params.subscriptionItemId}`
-  );
-}
-
-/**
- * Report extra sub-tutor usage to Stripe.
- */
-export async function reportExtraSubTutorUsage(params: {
-  subscriptionItemId: string;
-  extraSubTutorCount: number;
-}): Promise<void> {
-  const stripe = await getStripeClientAsync();
-
-  if (params.extraSubTutorCount <= 0) return;
-
-  await (stripe.subscriptionItems as any).createUsageRecord(
-    params.subscriptionItemId,
-    {
-      quantity: params.extraSubTutorCount,
-      action: 'set',
-      timestamp: Math.floor(Date.now() / 1000),
-    }
+  // Find the metered (hourly) line item
+  const meteredItem = subscription.items.data.find(
+    (item) =>
+      item.price.recurring?.usage_type === 'metered' ||
+      item.price.billing_scheme === 'per_unit'
   );
 
-  console.log(
-    `[Stripe] Reported ${params.extraSubTutorCount} extra sub-tutor(s) ` +
-    `for subscription item ${params.subscriptionItemId}`
-  );
+  if (!meteredItem) {
+    console.log(
+      `[Stripe] No metered item found on subscription ${params.subscriptionId}. ` +
+      'Hourly usage not reported.'
+    );
+    return;
+  }
+
+  // Query the database for total lesson hours in the billing period
+  const { db } = await import('@/lib/db');
+
+  // Find the user who owns this subscription
+  const user = await db.user.findFirst({
+    where: { stripeSubscriptionId: params.subscriptionId },
+    select: { id: true },
+  });
+
+  if (!user) {
+    console.error(`[Stripe] No user found for subscription ${params.subscriptionId}`);
+    return;
+  }
+
+  // Get all sub-tutor IDs under this agency
+  const subTutors = await db.user.findMany({
+    where: { parentAgencyId: user.id },
+    select: { id: true },
+  });
+  const subTutorIds = subTutors.map((t) => t.id);
+
+  // Also include the agency owner's own rooms
+  const allTutorIds = [...subTutorIds, user.id];
+
+  // Sum durationMinutes for completed rooms in the billing period
+  const rooms = await db.room.findMany({
+    where: {
+      tutorId: { in: allTutorIds },
+      endedAt: { gte: params.billingPeriodStart },
+    },
+    select: { durationMinutes: true },
+  });
+
+  const totalMinutes = rooms.reduce((sum, r) => sum + r.durationMinutes, 0);
+  // Convert to hours, round up to nearest hour (minimum 0)
+  const totalHours = Math.ceil(totalMinutes / 60);
+
+  if (totalHours <= 0) return;
+
+  // Report to Stripe
+  try {
+    await (stripe.subscriptionItems as any).createUsageRecord(
+      meteredItem.id,
+      {
+        quantity: totalHours,
+        action: 'set',
+        timestamp: Math.floor(Date.now() / 1000),
+      }
+    );
+    console.log(
+      `[Stripe] Reported ${totalHours} lesson hours (${totalMinutes} minutes) ` +
+      `for subscription ${params.subscriptionId}`
+    );
+  } catch (apiErr) {
+    console.warn('[Stripe] createUsageRecord failed (may need API update):', apiErr);
+  }
 }
 
 /**
@@ -241,9 +326,11 @@ async function getStripeClientAsync(): Promise<Stripe> {
 
 // ---- Checkout Session Types ----
 
+export type AgencyPlan = 'agency-standard' | 'agency-premium';
+
 export interface CheckoutSessionParams {
   userId: string;
-  tier: 'PRO' | 'AGENCY';
+  tier: 'PRO' | 'AGENCY_STANDARD' | 'AGENCY_PREMIUM';
   customerId?: string;
   billingPeriod?: 'monthly' | 'yearly';
   appUrl: string;
@@ -251,10 +338,19 @@ export interface CheckoutSessionParams {
 
 /**
  * Unified checkout session creation.
+ * Routes to the correct function based on tier.
  */
 export async function createCheckoutSession(params: CheckoutSessionParams): Promise<string> {
-  if (params.tier === 'AGENCY') {
-    return createAgencyCheckoutSession({
+  if (params.tier === 'AGENCY_STANDARD') {
+    return createAgencyStandardCheckoutSession({
+      userId: params.userId,
+      customerId: params.customerId,
+      appUrl: params.appUrl,
+    });
+  }
+
+  if (params.tier === 'AGENCY_PREMIUM') {
+    return createAgencyPremiumCheckoutSession({
       userId: params.userId,
       customerId: params.customerId,
       appUrl: params.appUrl,

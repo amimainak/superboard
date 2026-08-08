@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { createInviteSchema, validateInput } from '@/lib/validations';
+import { isAgencyTier } from '@/types';
 import crypto from 'crypto';
 
 /**
@@ -40,17 +41,28 @@ export async function POST(request: NextRequest) {
       select: { tier: true, name: true },
     });
 
-    if (!agency || agency.tier !== 'AGENCY') {
+    if (!agency || !isAgencyTier(agency.tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'Only Agency tier users can create invites' },
         { status: 403 }
       );
     }
 
-    // Check sub-tutor count
+    // Check sub-tutor count against tier limit
     const subTutorCount = await db.user.count({
       where: { parentAgencyId: auth.userId },
     });
+
+    // Enforce sub-tutor limit for AGENCY_STANDARD (5 max)
+    const { TIER_LIMITS } = await import('@/types');
+    const effectiveTier = agency.tier === 'AGENCY' ? 'AGENCY_STANDARD' : agency.tier;
+    const maxSubTutors = TIER_LIMITS[effectiveTier]?.maxSubTutors ?? Infinity;
+    if (subTutorCount >= maxSubTutors) {
+      return NextResponse.json(
+        { error: 'SUB_TUTOR_LIMIT_REACHED', message: `You've reached the ${maxSubTutors} sub-tutor limit. Upgrade to Agency Premium for unlimited sub-tutors.` },
+        { status: 403 }
+      );
+    }
 
     // Check for duplicate pending invite for same email
     const existingInvite = await db.agencyInvite.findFirst({
@@ -97,10 +109,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Warning if over 5 sub-tutors ($5/mo per extra)
+    // Warning if approaching sub-tutor limit
     const warning =
-      subTutorCount >= 5
-        ? `You now have ${subTutorCount} sub-tutors. Each sub-tutor beyond 5 costs an additional $5/month.`
+      maxSubTutors !== Infinity && subTutorCount >= maxSubTutors - 1
+        ? `You now have ${subTutorCount + 1} sub-tutors. The limit for Agency Standard is ${maxSubTutors}. Upgrade to Agency Premium for unlimited sub-tutors.`
         : undefined;
 
     return NextResponse.json({
@@ -130,7 +142,7 @@ export async function GET(request: NextRequest) {
       select: { tier: true },
     });
 
-    if (!agency || agency.tier !== 'AGENCY') {
+    if (!agency || !isAgencyTier(agency.tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }

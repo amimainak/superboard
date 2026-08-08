@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import type { SubTutorRow, InviteRow } from '@/types';
+import { isAgencyTier } from '@/types';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
   const [showSettings, setShowSettings] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userTier, setUserTier] = useState<string>('AGENCY');
+  const [maxSubTutors, setMaxSubTutors] = useState<number>(5);
 
   // Invite modal state
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -190,7 +192,7 @@ export function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{subTutors.length}</p><p className="text-sm text-white/80 mt-1">Sub-Tutors</p></div>
+        <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{subTutors.length}{maxSubTutors !== Infinity ? <span className="text-base font-normal">/{maxSubTutors}</span> : ''}</p><p className="text-sm text-white/80 mt-1">Sub-Tutors</p></div>
         <div className="rounded-2xl stat-gradient-video p-5 text-white shadow-lg shadow-sky-500/15 card-hover"><p className="text-3xl font-bold">{totalRooms}</p><p className="text-sm text-white/80 mt-1">Total Lessons</p></div>
         <div className="rounded-2xl stat-gradient-recordings p-5 text-white shadow-lg shadow-emerald-500/15 card-hover"><p className="text-3xl font-bold">{totalVideo} min</p><p className="text-sm text-white/80 mt-1">Video Used</p></div>
       </div>
@@ -245,7 +247,7 @@ export function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
               {subTutors.map((tutor) => (
                 <tr key={tutor.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                   <td className="px-4 py-3"><p className="font-medium">{tutor.name || '\u2014'}</p><p className="text-xs text-muted-foreground">{tutor.email}</p></td>
-                  <td className="px-4 py-3"><Badge variant={tutor.tier === 'AGENCY' ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${tutor.tier === 'AGENCY' ? 'bg-amber-100 text-amber-700' : ''}`}>{tutor.tier}</Badge></td>
+                  <td className="px-4 py-3"><Badge variant={isAgencyTier(tutor.tier as any) ? 'default' : 'secondary'} className={`text-[10px] rounded-full ${isAgencyTier(tutor.tier as any) ? 'bg-amber-100 text-amber-700' : ''}`}>{tutor.tier}</Badge></td>
                   <td className="px-4 py-3 text-right font-medium">{tutor.activeRooms}</td>
                   <td className="px-4 py-3 text-right font-medium">{tutor.videoMinutesUsed}</td>
                   <td className="px-4 py-3 text-right font-medium">{tutor.aiCreditsUsed}</td>
@@ -287,8 +289,8 @@ export function AgencyAdminPanel({ agencyUserId }: { agencyUserId: string }) {
             <div className="space-y-2">
               <Label className="text-sm font-medium">Current Plan</Label>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${userTier === 'AGENCY' ? 'bg-purple-50 text-purple-600 border-purple-200' : userTier === 'PRO' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
-                  {userTier === 'AGENCY' ? 'Agency' : userTier === 'PRO' ? 'Pro' : 'Free'}
+                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${isAgencyTier(userTier as any) ? 'bg-purple-50 text-purple-600 border-purple-200' : userTier === 'PRO' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}>
+                  {userTier === 'AGENCY_PREMIUM' ? 'Agency Premium' : userTier === 'AGENCY_STANDARD' ? 'Agency Standard' : userTier === 'AGENCY' ? 'Agency' : userTier === 'PRO' ? 'Pro' : 'Free'}
                 </Badge>
               </div>
             </div>

@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import type { Tier } from '@/types';
-import { TIER_LIMITS } from '@/types';
+import { isAgencyTier, TIER_LIMITS } from '@/types';
 
 /**
  * SECURITY FIX (I-05): Properly typed helper to get AI credit limit
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       select: { tier: true },
     });
 
-    if (!agency || agency.tier !== 'AGENCY') {
+    if (!agency || !isAgencyTier(agency.tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }

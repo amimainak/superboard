@@ -2,7 +2,12 @@
 // K-12 AI SUPERBOARD — Shared Types
 // ============================================================
 
-export type Tier = 'FREE' | 'PRO' | 'AGENCY';
+export type Tier = 'FREE' | 'PRO' | 'AGENCY' | 'AGENCY_STANDARD' | 'AGENCY_PREMIUM';
+
+/** Check if a tier is any agency tier (AGENCY, AGENCY_STANDARD, or AGENCY_PREMIUM) */
+export function isAgencyTier(tier: Tier): boolean {
+  return tier === 'AGENCY' || tier === 'AGENCY_STANDARD' || tier === 'AGENCY_PREMIUM';
+}
 
 export type Subject = 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL';
 
@@ -97,21 +102,39 @@ export interface BrandingConfig {
 // ============================================================
 // Pricing & Tier Configuration
 // ============================================================
-// FREE:   $0/mo  — Conversion funnel (1 room, 25 AI credits/week)
-// PRO:    $10/mo ($96/yr) — Freelance tutors (unlimited rooms, 500 credits/mo)
-// AGENCY: $39/mo base + $1.50/active student/mo — Tutoring centers
+// FREE:             $0/mo  — Conversion funnel (1 room, 25 AI credits/week)
+// PRO:              $10/mo ($96/yr) — Freelance tutors (unlimited rooms, 500 credits/mo)
+// AGENCY_STANDARD:  $39/mo + $3.00/hr — Small agencies (up to 5 sub-tutors)
+// AGENCY_PREMIUM:   $79/mo + $2.00/hr — Large agencies (unlimited sub-tutors)
 // ============================================================
 
 export const PRICING = {
   FREE: { monthly: 0, annual: 0, label: 'Free' },
   PRO:  { monthly: 10, annual: 96, label: 'Pro Tutor' },
-  AGENCY: { monthly: 39, annual: 390, label: 'Agency', perStudent: 1.50 },
+  AGENCY: { monthly: 39, annual: 390, label: 'Agency', perHour: 3.00 }, // Legacy fallback
+  AGENCY_STANDARD: { monthly: 39, annual: 390, label: 'Agency Standard', perHour: 3.00, maxSubTutors: 5 },
+  AGENCY_PREMIUM:  { monthly: 79, annual: 790, label: 'Agency Premium', perHour: 2.00, maxSubTutors: Infinity },
 } as const;
 
 // Tier limits configuration
+const AGENCY_FEATURES = {
+  uploads: true,
+  saveLoad: true,
+  templates: true,
+  downloadPdf: true,
+  geogebra: true,
+  shapePerfect: true,
+  mathpix: true,
+  aiTools: true,
+  recordings: true,
+  whiteLabel: true,
+  adminDashboard: true,
+};
+
 export const TIER_LIMITS = {
   FREE: {
     maxActiveRooms: 1,
+    maxSubTutors: 0,
     videoMinutesPerWeek: 120,
     aiCreditsPerWeek: 25,
     recordingsPerMonth: 0,
@@ -131,6 +154,7 @@ export const TIER_LIMITS = {
   },
   PRO: {
     maxActiveRooms: Infinity,
+    maxSubTutors: 0,
     videoMinutesPerWeek: Infinity,
     aiCreditsPerMonth: 500,
     recordingsPerMonth: 2,
@@ -150,22 +174,27 @@ export const TIER_LIMITS = {
   },
   AGENCY: {
     maxActiveRooms: Infinity,
+    maxSubTutors: 5,
     videoMinutesPerWeek: Infinity,
     aiCreditsPerMonth: 5000,
     recordingsPerMonth: Infinity,
-    features: {
-      uploads: true,
-      saveLoad: true,
-      templates: true,
-      downloadPdf: true,
-      geogebra: true,
-      shapePerfect: true,
-      mathpix: true,
-      aiTools: true,
-      recordings: true,
-      whiteLabel: true,
-      adminDashboard: true,
-    },
+    features: AGENCY_FEATURES,
+  },
+  AGENCY_STANDARD: {
+    maxActiveRooms: Infinity,
+    maxSubTutors: 5,
+    videoMinutesPerWeek: Infinity,
+    aiCreditsPerMonth: 5000,
+    recordingsPerMonth: Infinity,
+    features: AGENCY_FEATURES,
+  },
+  AGENCY_PREMIUM: {
+    maxActiveRooms: Infinity,
+    maxSubTutors: Infinity,
+    videoMinutesPerWeek: Infinity,
+    aiCreditsPerMonth: 5000,
+    recordingsPerMonth: Infinity,
+    features: AGENCY_FEATURES,
   },
 } as const;
 
@@ -198,6 +227,17 @@ export interface SubTutorRow {
   videoMinutesUsed: number;
   aiCreditsUsed: number;
   joinedAt: string | null;
+}
+
+export interface StudentRow {
+  id: string;
+  email: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+  deactivatedAt: string | null;
+  lessonsAttended?: number;
+  lastSeen?: string | null;
 }
 
 export interface InviteRow {

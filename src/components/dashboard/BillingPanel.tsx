@@ -5,17 +5,47 @@
 
 import React from 'react';
 import type { Tier } from '@/types';
+import { isAgencyTier } from '@/types';
+import { PRICING } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Crown, Star, Zap, TrendingUp, Check, Palette } from 'lucide-react';
+import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield } from 'lucide-react';
+
+function getTierLabel(tier: Tier): string {
+  if (tier === 'AGENCY_STANDARD') return 'Agency Standard';
+  if (tier === 'AGENCY_PREMIUM') return 'Agency Premium';
+  if (tier === 'AGENCY') return 'Agency';
+  if (tier === 'PRO') return 'Pro';
+  return 'Free';
+}
+
+function getTierColor(tier: Tier): string {
+  if (tier === 'AGENCY_PREMIUM') return 'bg-purple-100 text-purple-800';
+  if (tier === 'AGENCY_STANDARD' || tier === 'AGENCY') return 'bg-amber-100 text-amber-800';
+  if (tier === 'PRO') return 'bg-emerald-100 text-emerald-800';
+  return 'bg-teal-50 text-teal-700';
+}
+
+function getTierDescription(tier: Tier): string {
+  if (tier === 'AGENCY_PREMIUM') return 'Agency Premium \u2014 $79/month + $2/hr';
+  if (tier === 'AGENCY_STANDARD') return 'Agency Standard \u2014 $39/month + $3/hr';
+  if (tier === 'AGENCY') return 'Agency \u2014 $39/month + per hour';
+  if (tier === 'PRO') return 'Pro Tutor \u2014 $10/month';
+  return 'Free tier \u2014 Limited features';
+}
 
 export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void }) {
-  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
-  const tierColor = tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
+  const tierLabel = getTierLabel(tier);
+  const tierColor = getTierColor(tier);
+  const tierDesc = getTierDescription(tier);
+
+  const handleUpgrade = (plan: string) => {
+    window.open(`/api/stripe/checkout?plan=${plan}`, '_self');
+  };
 
   return (
     <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -24,25 +54,28 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
         <CardDescription>Manage your subscription and payment methods.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Current Plan */}
         <div className="flex items-center justify-between p-5 rounded-xl bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
-              {tier === 'AGENCY' ? <Crown className="w-5 h-5 text-white" /> : tier === 'PRO' ? <Star className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
+              {tier === 'AGENCY_PREMIUM' ? <Shield className="w-5 h-5 text-white" /> : tier === 'AGENCY_STANDARD' || tier === 'AGENCY' ? <Crown className="w-5 h-5 text-white" /> : tier === 'PRO' ? <Star className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
             </div>
             <div>
               <p className="font-semibold">Current Plan</p>
-              <p className="text-sm text-muted-foreground">{tier === 'FREE' && 'Free tier \u2014 Limited features'}{tier === 'PRO' && 'Pro Tutor \u2014 $10/month'}{tier === 'AGENCY' && 'Agency \u2014 $39/month + per student'}</p>
+              <p className="text-sm text-muted-foreground">{tierDesc}</p>
             </div>
           </div>
           <Badge className={`rounded-full px-3 font-semibold ${tierColor}`}>{tierLabel}</Badge>
         </div>
 
-        {tier !== 'AGENCY' && (
+        {/* Upgrade Options — only show if not an agency tier */}
+        {!isAgencyTier(tier) && (
           <>
             <Separator />
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" />Upgrade Options</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Pro */}
                 {tier === 'FREE' && (
                   <Card className="rounded-2xl border-2 border-emerald-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                     <div className="absolute top-3 right-3"><Badge className="bg-emerald-500 text-white rounded-full text-[10px]">Popular</Badge></div>
@@ -56,23 +89,42 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
                           <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
                         ))}
                       </ul>
-                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20">Upgrade to Pro</Button>
+                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20" onClick={() => handleUpgrade('pro')}>Upgrade to Pro</Button>
                     </CardContent>
                   </Card>
                 )}
+
+                {/* Agency Standard */}
                 <Card className="rounded-2xl border-2 border-amber-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                   <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency / Center</CardTitle>
-                    <CardDescription className="text-base font-semibold text-foreground">$39/month + per student</CardDescription>
+                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency Standard</CardTitle>
+                    <CardDescription className="text-base font-semibold text-foreground">$39/month + $3/hr</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="text-sm space-y-2 mb-4">
-                      {['Everything in Pro', '$39/mo base fee', 'White-labeling & branding', 'Custom domains', 'Unlimited recordings', 'Admin dashboard & analytics'].map((f) => (
+                      {['Everything in Pro', '$39/mo base fee', 'Up to 5 sub-tutors', 'White-label branding', 'Unlimited recordings', 'Admin dashboard'].map((f) => (
                         <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
                       ))}
                     </ul>
-                    <Button variant="outline" className="w-full rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50 font-semibold">Contact Sales</Button>
+                    <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-md shadow-amber-500/20" onClick={() => handleUpgrade('agency-standard')}>Get Agency Standard</Button>
+                  </CardContent>
+                </Card>
+
+                {/* Agency Premium */}
+                <Card className="rounded-2xl border-2 border-purple-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                  <div className="absolute top-3 right-3"><Badge className="bg-purple-500 text-white rounded-full text-[10px]">Scale</Badge></div>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center"><Shield className="w-4 h-4 text-purple-600" /></div>Agency Premium</CardTitle>
+                    <CardDescription className="text-base font-semibold text-foreground">$79/month + $2/hr</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="text-sm space-y-2 mb-4">
+                      {['Everything in Standard', '$79/mo base fee', 'Unlimited sub-tutors', '$2/hr (volume discount)', 'Priority support', 'Advanced analytics'].map((f) => (
+                        <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-purple-600" /></div>{f}</li>
+                      ))}
+                    </ul>
+                    <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md shadow-purple-500/20" onClick={() => handleUpgrade('agency-premium')}>Get Agency Premium</Button>
                   </CardContent>
                 </Card>
               </div>
@@ -80,7 +132,27 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
           </>
         )}
 
-        {tier === 'AGENCY' && (
+        {/* Agency Upsell — if on Standard, show Premium upgrade */}
+        {tier === 'AGENCY_STANDARD' && (
+          <>
+            <Separator />
+            <div className="space-y-4">
+              <h3 className="font-semibold flex items-center gap-2"><Shield className="w-4 h-4 text-purple-500" />Upgrade to Agency Premium</h3>
+              <div className="rounded-xl border-2 border-purple-200 p-4 bg-purple-50/50">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-purple-900">Need unlimited sub-tutors or lower hourly rates?</p>
+                    <p className="text-sm text-purple-700">Upgrade to Agency Premium for unlimited sub-tutors and $2/hr instead of $3/hr. The crossover point is just 40 hours/month.</p>
+                  </div>
+                  <Button className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold flex-shrink-0" onClick={() => handleUpgrade('agency-premium')}>Upgrade</Button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* White-Label Settings — for any agency tier */}
+        {isAgencyTier(tier) && (
           <>
             <Separator />
             <div className="space-y-4">

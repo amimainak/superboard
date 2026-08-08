@@ -10,6 +10,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { createClient } from '@/lib/supabase';
 import { subjectMeta } from '@/lib/subject-meta';
 import type { Subject, Tier } from '@/types';
+import { isAgencyTier } from '@/types';
 import type { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -119,9 +120,16 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
     setTier('FREE');
   }, [setTier]);
 
-  const tierLabel = tier === 'AGENCY' ? 'Agency' : tier === 'PRO' ? 'Pro' : 'Free';
+  const tierLabel = isAgencyTier(tier)
+    ? tier === 'AGENCY_PREMIUM' ? 'Agency Premium'
+    : tier === 'AGENCY_STANDARD' ? 'Agency Standard'
+    : 'Agency'
+    : tier === 'PRO' ? 'Pro' : 'Free';
   const tierColor =
-    tier === 'AGENCY' ? 'bg-amber-100 text-amber-800' : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-50 text-teal-700';
+    tier === 'AGENCY_PREMIUM' ? 'bg-purple-100 text-purple-800'
+    : tier === 'AGENCY_STANDARD' || tier === 'AGENCY' ? 'bg-amber-100 text-amber-800'
+    : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800'
+    : 'bg-teal-50 text-teal-700';
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,7 +149,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
             <span className="text-sm text-muted-foreground hidden sm:inline mr-1">{user.email}</span>
             {!tierLoading && (
               <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>
-                {tier === 'AGENCY' && <Crown className="w-3 h-3 mr-1" />}
+                {isAgencyTier(tier) && <Crown className="w-3 h-3 mr-1" />}
                 {tierLabel}
               </Badge>
             )}
@@ -255,21 +263,21 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
           <div className="flex-1 animate-fade-in-up-delay-2">
             <Tabs defaultValue="billing" className="w-full">
               <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
-                {(tier === 'PRO' || tier === 'AGENCY') && (
+                {isAgencyTier(tier) && (
                   <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>
                 )}
-                {(tier === 'PRO' || tier === 'AGENCY') && (
+                {isAgencyTier(tier) && (
                   <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><LayoutTemplate className="w-4 h-4" />Templates</TabsTrigger>
                 )}
                 <TabsTrigger value="billing" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><CreditCard className="w-4 h-4" />Billing</TabsTrigger>
-                {tier === 'AGENCY' && (
+                {isAgencyTier(tier) && (
                   <TabsTrigger value="admin" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><Users className="w-4 h-4" />Admin</TabsTrigger>
                 )}
               </TabsList>
-              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
-              {(tier === 'PRO' || tier === 'AGENCY') && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+              {isAgencyTier(tier) && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
+              {isAgencyTier(tier) && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
               <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor || ''} setBrandColor={setBrandColor} /></TabsContent>
-              {tier === 'AGENCY' && (
+              {isAgencyTier(tier) && (
                 <TabsContent value="admin" className="mt-6">
                   <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
                     <CardHeader>

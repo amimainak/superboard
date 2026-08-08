@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { joinRoomSchema, validateInput } from '@/lib/validations';
+import { isAgencyTier } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
         where: { id: auth.userId },
         select: { tier: true },
       });
-      if (!caller || caller.tier !== 'AGENCY') {
+      if (!caller || !isAgencyTier(caller.tier)) {
         return NextResponse.json(
           { error: 'Forbidden — only the room tutor can list participants' },
           { status: 403 }

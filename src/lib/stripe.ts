@@ -7,6 +7,7 @@
 
 import Stripe from 'stripe';
 import type { Tier } from '@/types';
+import { isAgencyTier } from '@/types';
 
 let stripeClient: Stripe | null = null;
 
@@ -28,8 +29,14 @@ export function getStripeClient(): Stripe {
  * This is the authoritative mapping — used by the webhook to determine
  * what tier a subscription corresponds to, WITHOUT trusting client-side metadata.
  *
- * In production, set these env vars to your actual Stripe Price IDs.
- * The metadata.targetTier field is kept as a secondary confirmation only.
+ * Supports 4 agency price IDs:
+ *   - STRIPE_AGENCY_STD_BASE_PRICE_ID    → AGENCY_STANDARD (base)
+ *   - STRIPE_AGENCY_STD_HOURLY_PRICE_ID  → AGENCY_STANDARD (metered)
+ *   - STRIPE_AGENCY_PREM_BASE_PRICE_ID   → AGENCY_PREMIUM (base)
+ *   - STRIPE_AGENCY_PREM_HOURLY_PRICE_ID  → AGENCY_PREMIUM (metered)
+ * Plus legacy:
+ *   - STRIPE_AGENCY_PRICE_ID             → AGENCY (legacy)
+ *   - STRIPE_AGENCY_BASE_PRICE_ID         → AGENCY (legacy)
  */
 const PRICE_ID_TO_TIER: Record<string, Tier> = {};
 
@@ -37,10 +44,26 @@ function initPriceTierMap(): void {
   const proMonthly = process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '';
   const proYearly = process.env.STRIPE_PRO_YEARLY_PRICE_ID || '';
   const agencyPrice = process.env.STRIPE_AGENCY_PRICE_ID || '';
+  const agencyBasePrice = process.env.STRIPE_AGENCY_BASE_PRICE_ID || '';
+  const agencyMeteredPrice = process.env.STRIPE_AGENCY_METERED_PRICE_ID || '';
+  const agencyStdBase = process.env.STRIPE_AGENCY_STD_BASE_PRICE_ID || '';
+  const agencyStdHourly = process.env.STRIPE_AGENCY_STD_HOURLY_PRICE_ID || '';
+  const agencyPremBase = process.env.STRIPE_AGENCY_PREM_BASE_PRICE_ID || '';
+  const agencyPremHourly = process.env.STRIPE_AGENCY_PREM_HOURLY_PRICE_ID || '';
 
   if (proMonthly && !proMonthly.startsWith('TODO_')) PRICE_ID_TO_TIER[proMonthly] = 'PRO';
   if (proYearly && !proYearly.startsWith('TODO_')) PRICE_ID_TO_TIER[proYearly] = 'PRO';
+
+  // Legacy agency prices
   if (agencyPrice && !agencyPrice.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyPrice] = 'AGENCY';
+  if (agencyBasePrice && !agencyBasePrice.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyBasePrice] = 'AGENCY';
+  if (agencyMeteredPrice && !agencyMeteredPrice.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyMeteredPrice] = 'AGENCY';
+
+  // New agency tier prices
+  if (agencyStdBase && !agencyStdBase.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyStdBase] = 'AGENCY_STANDARD';
+  if (agencyStdHourly && !agencyStdHourly.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyStdHourly] = 'AGENCY_STANDARD';
+  if (agencyPremBase && !agencyPremBase.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyPremBase] = 'AGENCY_PREMIUM';
+  if (agencyPremHourly && !agencyPremHourly.startsWith('TODO_')) PRICE_ID_TO_TIER[agencyPremHourly] = 'AGENCY_PREMIUM';
 }
 
 // Build the map once at module load time
@@ -64,12 +87,7 @@ export function getWebhookSecret(): string {
 
 /**
  * Create a Stripe Checkout Session for tier upgrade.
- *
- * @param userId - The user's ID in our database
- * @param customerId - Stripe Customer ID (if existing)
- * @param tier - Target tier: PRO or AGENCY
- * @param billingPeriod - 'monthly' or 'yearly' (yearly only for PRO)
- * @returns Stripe Checkout Session URL
+ * @deprecated Use createCheckoutSession from stripe-billing.ts instead.
  */
 export async function createCheckoutSession(params: {
   userId: string;

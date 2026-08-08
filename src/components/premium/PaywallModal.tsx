@@ -14,24 +14,26 @@ import {
   Lock,
   Check,
   Sparkles,
-  Building2,
   Zap,
+  Crown,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ---------- Feature comparison rows ----------
-const FEATURES: { label: string; free: boolean; pro: boolean; agency: boolean }[] = [
-  { label: 'AI Smart Tools', free: false, pro: true, agency: true },
-  { label: 'Save & load boards', free: false, pro: true, agency: true },
-  { label: 'Upload images', free: false, pro: true, agency: true },
-  { label: 'Download as PDF', free: false, pro: true, agency: true },
-  { label: 'GeoGebra integration', free: false, pro: true, agency: true },
-  { label: 'Mathpix handwriting', free: false, pro: true, agency: true },
-  { label: 'Lesson recordings', free: false, pro: true, agency: true },
-  { label: 'White-label branding', free: false, pro: false, agency: true },
-  { label: 'Admin dashboard', free: false, pro: false, agency: true },
-  { label: 'Up to 500 smart credits/mo', free: false, pro: true, agency: true },
-  { label: 'Unlimited smart credits (5K/mo)', free: false, pro: false, agency: true },
+const FEATURES: { label: string; free: boolean; pro: boolean; agencyStandard: boolean; agencyPremium: boolean }[] = [
+  { label: 'AI Smart Tools', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Save & load boards', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Upload images', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Download as PDF', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'GeoGebra integration', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Mathpix handwriting', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Lesson recordings', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'White-label branding', free: false, pro: false, agencyStandard: true, agencyPremium: true },
+  { label: 'Admin dashboard', free: false, pro: false, agencyStandard: true, agencyPremium: true },
+  { label: 'Up to 5 sub-tutors', free: false, pro: false, agencyStandard: true, agencyPremium: true },
+  { label: 'Unlimited sub-tutors', free: false, pro: false, agencyStandard: false, agencyPremium: true },
+  { label: 'Priority support', free: false, pro: false, agencyStandard: false, agencyPremium: true },
 ];
 
 function CheckIcon({ on }: { on: boolean }) {
@@ -85,7 +87,6 @@ export default function PaywallModal() {
             <Button
               className="mt-auto w-full"
               onClick={() => {
-                // TODO: redirect to Stripe checkout for Pro
                 window.open('/api/stripe/checkout?plan=pro', '_self');
               }}
             >
@@ -94,7 +95,7 @@ export default function PaywallModal() {
             </Button>
           </div>
 
-          {/* Agency */}
+          {/* Agency Standard */}
           <div
             className={cn(
               'relative rounded-xl border-2 p-5 flex flex-col gap-3 transition-shadow hover:shadow-lg',
@@ -102,28 +103,38 @@ export default function PaywallModal() {
             )}
           >
             <div className="flex items-center gap-2">
-              <Building2 className="size-5 text-amber-600" />
-              <span className="text-lg font-bold">Agency</span>
+              <Crown className="size-5 text-amber-600" />
+              <span className="text-lg font-bold">Agency Standard</span>
             </div>
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-extrabold">$39</span>
-              <span className="text-sm text-muted-foreground">/month + per student</span>
+              <span className="text-sm text-muted-foreground">/month + $3/hr</span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Base fee includes 5 sub-tutors. $1.50/active student/mo.
+              Up to 5 sub-tutors. $3/hr metered billing.
             </p>
             <Button
               variant="outline"
               className="mt-auto w-full border-amber-600 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40"
               onClick={() => {
-                // TODO: open contact form or redirect
-                window.open('mailto:sales@superboard.com?subject=Agency%20Plan%20Inquiry', '_self');
+                window.open('/api/stripe/checkout?plan=agency-standard', '_self');
               }}
             >
-              <Building2 className="size-4" />
-              Contact for Agency
+              <Crown className="size-4" />
+              Get Agency Standard
             </Button>
           </div>
+        </div>
+
+        {/* Agency Premium teaser */}
+        <div className="rounded-xl border border-purple-200 p-3 flex items-center justify-between bg-purple-50/50">
+          <div className="flex items-center gap-2">
+            <Shield className="size-4 text-purple-600" />
+            <span className="text-sm font-medium text-purple-900">Agency Premium: $79/mo + $2/hr — Unlimited sub-tutors & volume discount</span>
+          </div>
+          <Button size="sm" variant="outline" className="border-purple-400 text-purple-700 text-xs" onClick={() => { window.open('/api/stripe/checkout?plan=agency-premium', '_self'); }}>
+            Upgrade
+          </Button>
         </div>
 
         {/* Feature comparison table */}
@@ -132,9 +143,10 @@ export default function PaywallModal() {
             <thead>
               <tr className="bg-muted/50">
                 <th className="text-left px-3 py-2 font-medium">Feature</th>
-                <th className="w-20 text-center px-3 py-2 font-medium">Free</th>
-                <th className="w-20 text-center px-3 py-2 font-medium text-primary">Pro</th>
-                <th className="w-20 text-center px-3 py-2 font-medium text-amber-600">Agency</th>
+                <th className="w-16 text-center px-3 py-2 font-medium">Free</th>
+                <th className="w-16 text-center px-3 py-2 font-medium text-primary">Pro</th>
+                <th className="w-20 text-center px-3 py-2 font-medium text-amber-600">Std</th>
+                <th className="w-20 text-center px-3 py-2 font-medium text-purple-600">Prem</th>
               </tr>
             </thead>
             <tbody>
@@ -151,7 +163,10 @@ export default function PaywallModal() {
                     <CheckIcon on={f.pro} />
                   </td>
                   <td className="flex justify-center py-1.5">
-                    <CheckIcon on={f.agency} />
+                    <CheckIcon on={f.agencyStandard} />
+                  </td>
+                  <td className="flex justify-center py-1.5">
+                    <CheckIcon on={f.agencyPremium} />
                   </td>
                 </tr>
               ))}

@@ -7,19 +7,22 @@
 
 import { db } from '@/lib/db';
 import type { Tier, FeatureFlag } from '@/types';
-import { TIER_LIMITS } from '@/types';
+import { TIER_LIMITS, isAgencyTier } from '@/types';
 
 /**
  * Check if a user's tier has access to a specific feature.
  */
 export function hasFeature(tier: Tier, feature: FeatureFlag): boolean {
-  return TIER_LIMITS[tier].features[feature];
+  // Handle legacy AGENCY tier — treat as AGENCY_STANDARD
+  const effectiveTier = tier === 'AGENCY' ? 'AGENCY_STANDARD' : tier;
+  if (!(effectiveTier in TIER_LIMITS)) return false;
+  return TIER_LIMITS[effectiveTier as keyof typeof TIER_LIMITS].features[feature];
 }
 
 /**
  * Get the current or create a new usage log for the given period.
  * Free tier: period resets Monday 00:00 UTC.
- * Pro/Agency: period resets on billing cycle date.
+ * Pro/Agency: period resets on billing cycle date (first of month).
  */
 export async function getCurrentUsageLog(userId: string, tier: Tier) {
   const now = new Date();
@@ -76,7 +79,8 @@ function getPeriodStart(date: Date, tier: Tier): Date {
  */
 export async function checkVideoLimit(userId: string, tier: Tier) {
   const usageLog = await getCurrentUsageLog(userId, tier);
-  const limit = TIER_LIMITS[tier].videoMinutesPerWeek;
+  const effectiveTier = tier === 'AGENCY' ? 'AGENCY_STANDARD' : tier;
+  const limit = TIER_LIMITS[effectiveTier as keyof typeof TIER_LIMITS]?.videoMinutesPerWeek ?? Infinity;
 
   return {
     allowed: limit === Infinity || usageLog.videoMinutesUsed < limit,
@@ -91,12 +95,17 @@ export async function checkVideoLimit(userId: string, tier: Tier) {
  */
 export async function checkAICreditLimit(userId: string, tier: Tier) {
   const usageLog = await getCurrentUsageLog(userId, tier);
-  const limit =
-    tier === 'FREE'
-      ? TIER_LIMITS.FREE.aiCreditsPerWeek
-      : tier === 'PRO'
-        ? TIER_LIMITS.PRO.aiCreditsPerMonth
-        : Infinity;
+  const effectiveTier = tier === 'AGENCY' ? 'AGENCY_STANDARD' : tier;
+
+  let limit: number;
+  if (effectiveTier === 'FREE') {
+    limit = TIER_LIMITS.FREE.aiCreditsPerWeek;
+  } else if (effectiveTier === 'PRO') {
+    limit = TIER_LIMITS.PRO.aiCreditsPerMonth;
+  } else {
+    // Any agency tier
+    limit = Infinity;
+  }
 
   return {
     allowed: limit === Infinity || usageLog.aiCreditsUsed < limit,
@@ -132,7 +141,8 @@ export async function incrementVideoMinutes(userId: string, minutes: number, tie
  */
 export async function checkRecordingLimit(userId: string, tier: Tier) {
   const usageLog = await getCurrentUsageLog(userId, tier);
-  const limit = TIER_LIMITS[tier].recordingsPerMonth;
+  const effectiveTier = tier === 'AGENCY' ? 'AGENCY_STANDARD' : tier;
+  const limit = TIER_LIMITS[effectiveTier as keyof typeof TIER_LIMITS]?.recordingsPerMonth ?? 0;
 
   return {
     allowed: limit === Infinity || usageLog.recordingsUsed < limit,

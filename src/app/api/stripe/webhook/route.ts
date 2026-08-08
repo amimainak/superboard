@@ -3,26 +3,52 @@
 // ============================================================
 // Handles:
 // - PRO subscription upgrades/downgrades/cancellations
-// - Agency base fee subscription
-// - Agency metered billing (per-student) — invoice.created triggers usage reporting
+// - Agency Standard/Premium base fee + metered hourly billing
 // - Subscription deletion → downgrade to FREE
 //
 // SECURITY FIX (V-24): Added tier validation in checkout metadata.
 //   Only allows valid tier values from checkout session metadata.
-// FIX (I-05): Removed unnecessary as-any casts where possible.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { db } from '@/lib/db';
 import type { Tier } from '@/types';
+import { isAgencyTier } from '@/types';
 import { logAudit } from '@/lib/audit';
 
-// SECURITY (V-24): Valid tiers for Stripe metadata
-const VALID_TIERS = new Set<string>(['FREE', 'PRO', 'AGENCY']);
+// Valid tiers for Stripe metadata (includes new agency tiers)
+const VALID_TIERS = new Set<string>([
+  'FREE', 'PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM',
+]);
 
 function isValidTier(tier: unknown): tier is Tier {
   return typeof tier === 'string' && VALID_TIERS.has(tier);
+}
+
+/**
+ * Resolve the canonical tier from a potentially legacy tier value.
+ * AGENCY → AGENCY_STANDARD (migration path)
+ */
+function resolveTier(tier: Tier): Tier {
+  if (tier === 'AGENCY') return 'AGENCY_STANDARD';
+  return tier;
+}
+
+/**
+ * Get the plan name and monthly amount for a given tier.
+ */
+function getPlanInfo(tier: Tier): { planName: string; amountMonthlyCents: number } {
+  switch (tier) {
+    case 'AGENCY_STANDARD':
+      return { planName: 'Agency Standard', amountMonthlyCents: 3900 };
+    case 'AGENCY_PREMIUM':
+      return { planName: 'Agency Premium', amountMonthlyCents: 7900 };
+    case 'PRO':
+      return { planName: 'Pro Tutor', amountMonthlyCents: 1000 };
+    default:
+      return { planName: 'Unknown', amountMonthlyCents: 0 };
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -52,8 +78,6 @@ export async function POST(request: NextRequest) {
     // Handle specific events
     switch (event.type) {
       // ---- Checkout Complete: Activate tier ----
-      // SECURITY (V-24 FULL FIX): Derive tier from Stripe Price ID (server-side only),
-      // NOT from client-submitted metadata. Metadata is used only as a cross-check.
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
@@ -75,14 +99,15 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // FALLBACK: If price lookup fails (e.g., Price IDs not configured yet),
-        // validate metadata as secondary source
+        // FALLBACK: If price lookup fails, validate metadata as secondary source
         if (!resolvedTier && isValidTier(session.metadata?.targetTier)) {
           resolvedTier = session.metadata?.targetTier;
-          console.warn('[Stripe] Price-to-tier lookup returned null; fell back to metadata (less secure)');
+          console.warn('[Stripe] Price-to-tier lookup returned null; fell back to metadata');
         }
 
         if (resolvedTier) {
+          resolvedTier = resolveTier(resolvedTier);
+
           const updatedUser = await db.user.update({
             where: { id: userId },
             data: {
@@ -103,17 +128,18 @@ export async function POST(request: NextRequest) {
               ? session.subscription
               : (session.subscription as unknown as { id?: string }).id || null;
             if (subId) {
+              const planInfo = getPlanInfo(resolvedTier);
               await db.subscription.upsert({
                 where: { stripeSubscriptionId: subId },
-                update: { status: 'active', userId: updatedUser.id },
+                update: { status: 'active', userId: updatedUser.id, planName: planInfo.planName },
                 create: {
                   userId: updatedUser.id,
                   stripeSubscriptionId: subId,
-                  planName: resolvedTier === 'PRO' ? 'Pro Tutor' : 'Agency',
+                  planName: planInfo.planName,
                   status: 'active',
                   currentPeriodStart: new Date(),
                   currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-                  amountMonthlyCents: resolvedTier === 'PRO' ? 1000 : 3900,
+                  amountMonthlyCents: planInfo.amountMonthlyCents,
                 },
               });
             }
@@ -121,13 +147,12 @@ export async function POST(request: NextRequest) {
             console.warn('[Stripe] Subscription table sync failed:', subErr);
           }
         } else {
-          console.error(`[Stripe] Could not resolve tier from price ID or metadata for user ${userId}`);
+          console.error(`[Stripe] Could not resolve tier for user ${userId}`);
         }
         break;
       }
 
       // ---- Subscription Updated: Sync tier status ----
-      // SECURITY (V-24): Derive tier from subscription's price items
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         const userId = subscription.metadata?.userId;
@@ -180,6 +205,8 @@ export async function POST(request: NextRequest) {
         }
 
         if (newStatus === 'active' && resolvedTier) {
+          resolvedTier = resolveTier(resolvedTier);
+
           await db.user.update({
             where: { id: userId },
             data: {
@@ -189,10 +216,12 @@ export async function POST(request: NextRequest) {
           });
           // Sync subscription table
           try {
+            const planInfo = getPlanInfo(resolvedTier);
             await db.subscription.upsert({
               where: { stripeSubscriptionId: subscription.id },
               update: {
                 status: 'active',
+                planName: planInfo.planName,
                 currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
                 currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
                 cancelAtPeriodEnd: (subscription as any).cancel_at_period_end || false,
@@ -200,12 +229,12 @@ export async function POST(request: NextRequest) {
               create: {
                 userId,
                 stripeSubscriptionId: subscription.id,
-                planName: resolvedTier === 'PRO' ? 'Pro Tutor' : 'Agency',
+                planName: planInfo.planName,
                 status: 'active',
                 currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
                 currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
                 cancelAtPeriodEnd: (subscription as any).cancel_at_period_end || false,
-                amountMonthlyCents: resolvedTier === 'PRO' ? 1000 : 3900,
+                amountMonthlyCents: planInfo.amountMonthlyCents,
               },
             });
           } catch (subErr) {
@@ -221,12 +250,10 @@ export async function POST(request: NextRequest) {
         const userId = subscription.metadata?.userId;
 
         if (userId) {
-          // Downgrade to FREE
           await db.user.update({
             where: { id: userId },
             data: { tier: 'FREE', stripeSubscriptionId: null },
           });
-          // Mark subscription as canceled
           try {
             await db.subscription.updateMany({
               where: { stripeSubscriptionId: subscription.id },
@@ -240,10 +267,9 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      // ---- Invoice Created: Report agency student usage ----
+      // ---- Invoice Created: Report agency hourly usage ----
       case 'invoice.created': {
         const invoice = event.data.object as Stripe.Invoice;
-        // Stripe API 2026: subscription field may not be directly typed on Invoice
         const subscriptionId = (invoice as unknown as Record<string, unknown>).subscription as string | null | undefined;
         const subscriptionStrId = typeof subscriptionId === 'string' ? subscriptionId
           : (subscriptionId as { id?: string } | undefined)?.id ?? null;
@@ -255,85 +281,23 @@ export async function POST(request: NextRequest) {
             select: { id: true, tier: true },
           });
 
-          if (user && user.tier === 'AGENCY') {
+          if (user && isAgencyTier(user.tier)) {
             try {
-              // Count active students for this agency
-              const subTutors = await db.user.findMany({
-                where: { parentAgencyId: user.id },
-                select: { id: true },
+              const billingPeriodStart = new Date(invoice.period_start * 1000);
+
+              const { reportHourlyUsage } = await import('@/lib/stripe-billing');
+              await reportHourlyUsage({
+                subscriptionId: subscriptionStrId,
+                billingPeriodStart,
               });
-              const subTutorIds = subTutors.map((t) => t.id);
 
-              const activeRooms = await db.room.findMany({
-                where: {
-                  tutorId: { in: subTutorIds },
-                  isActive: true,
-                },
-                select: { id: true },
-              });
-              const activeRoomIds = activeRooms.map((r) => r.id);
-
-              if (activeRoomIds.length > 0) {
-                const billingPeriodStart = new Date(
-                  invoice.period_start * 1000
-                );
-
-                const activeStudents = await db.roomParticipant.findMany({
-                  where: {
-                    roomId: { in: activeRoomIds },
-                    lastActiveAt: { gte: billingPeriodStart },
-                  },
-                  select: { studentIdentity: true },
-                  distinct: ['studentIdentity'],
-                });
-
-                // Report usage to Stripe
-                const { getStripeClient } = await import('@/lib/stripe');
-                const stripe = getStripeClient();
-                const subscription = await stripe.subscriptions.retrieve(
-                  subscriptionStrId,
-                  { expand: ['items.data.price'] }
-                );
-
-                const meteredItem = subscription.items.data.find(
-                  (item) =>
-                    item.price.recurring?.usage_type === 'metered' ||
-                    item.price.billing_scheme === 'per_unit'
-                );
-
-                if (meteredItem) {
-                  // Stripe API 2026-07-29: createUsageRecord may be deprecated
-                  // Use as-safe fallback for backward compatibility
-                  try {
-                    await (stripe.subscriptionItems as any).createUsageRecord(
-                      meteredItem.id,
-                      {
-                        quantity: activeStudents.length,
-                        action: 'set',
-                        timestamp: Math.floor(Date.now() / 1000),
-                      }
-                    );
-                  } catch (apiErr) {
-                    console.warn('[Stripe] createUsageRecord failed (may need API update):', apiErr);
-                  }
-                  console.log(
-                    `[Stripe] Reported ${activeStudents.length} active students ` +
-                    `for agency ${user.id} (subscription ${subscriptionStrId})`
-                  );
-                } else {
-                  console.log(
-                    `[Stripe] No metered item found on subscription ${subscriptionStrId}. ` +
-                    'Student usage not reported.'
-                  );
-                }
-              } else {
-                console.log(
-                  `[Stripe] Agency ${user.id} has no active rooms — reporting 0 students.`
-                );
-              }
+              console.log(
+                `[Stripe] Hourly usage reported for agency ${user.id} ` +
+                `(subscription ${subscriptionStrId})`
+              );
             } catch (usageError) {
               console.error(
-                `[Stripe] Failed to report student usage for agency ${user.id}:`,
+                `[Stripe] Failed to report hourly usage for agency ${user.id}:`,
                 usageError
               );
             }

@@ -1,85 +1,109 @@
 // ============================================================
-// API Route: Agency Active Student Count (for Billing)
+// API Route: Agency Students — List & Manage Student Roster
 // ============================================================
-// GET: Counts unique active students across all sub-tutor rooms
-//      in the current billing period. Agency owner auth required.
+// GET: Lists all students for an agency (with optional status filter).
+//      Agency owner or sub-tutor auth required.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { isAgencyTier } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;
 
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') || 'active'; // 'active' | 'all' | 'inactive'
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+
     // Verify the caller is an agency
     const agency = await db.user.findUnique({
       where: { id: auth.userId },
-      select: { tier: true, name: true },
+      select: { tier: true, parentAgencyId: true },
     });
 
-    if (!agency || agency.tier !== 'AGENCY') {
+    if (!agency || !isAgencyTier(agency.tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }
       );
     }
 
-    // 1. Get all sub-tutor IDs under this agency
-    const subTutors = await db.user.findMany({
-      where: { parentAgencyId: auth.userId },
-      select: { id: true },
-    });
+    // Determine agency ID (for sub-tutors, use their parent agency)
+    const agencyId = agency.parentAgencyId || auth.userId;
 
-    const subTutorIds = subTutors.map((t) => t.id);
+    // Build query filter
+    const whereFilter: any = { agencyId };
+    if (status === 'active') whereFilter.isActive = true;
+    if (status === 'inactive') whereFilter.isActive = false;
 
-    // 2. Get all active rooms for those sub-tutors
-    const activeRooms = await db.room.findMany({
-      where: {
-        tutorId: { in: subTutorIds },
-        isActive: true,
-      },
-      select: { id: true },
-    });
+    const [students, totalCount] = await Promise.all([
+      db.student.findMany({
+        where: whereFilter,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          isActive: true,
+          createdAt: true,
+          deactivatedAt: true,
+          _count: {
+            select: { roomParticipants: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      db.student.count({ where: whereFilter }),
+    ]);
 
-    const activeRoomIds = activeRooms.map((r) => r.id);
+    // Get the last-seen date for each student from their most recent room participation
+    const studentIds = students.map((s) => s.id);
+    const lastSeenMap = new Map<string, string | null>();
 
-    // 3. Calculate billing period start (first of current month, UTC)
-    const now = new Date();
-    const billingPeriodStart = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0)
-    );
-
-    // 4. Get all unique studentIdentities from RoomParticipant
-    //    for those rooms, where lastActiveAt is within the billing period
-    if (activeRoomIds.length === 0) {
-      return NextResponse.json({
-        activeStudentCount: 0,
-        billingPeriodStart,
-        subTutorIds,
+    if (studentIds.length > 0) {
+      const latestParticipations = await db.roomParticipant.findMany({
+        where: { studentId: { in: studentIds } },
+        select: { studentId: true, lastActiveAt: true },
+        orderBy: { lastActiveAt: 'desc' },
       });
+
+      for (const p of latestParticipations) {
+        if (p.studentId) {
+          lastSeenMap.set(p.studentId, p.lastActiveAt ? p.lastActiveAt.toISOString() : null);
+        }
+      }
     }
 
-    const activeStudents = await db.roomParticipant.findMany({
-      where: {
-        roomId: { in: activeRoomIds },
-        lastActiveAt: { gte: billingPeriodStart },
-      },
-      select: { studentIdentity: true },
-      distinct: ['studentIdentity'],
-    });
+    const studentRows = students.map((s) => ({
+      id: s.id,
+      email: s.email,
+      name: s.name,
+      isActive: s.isActive,
+      createdAt: s.createdAt.toISOString(),
+      deactivatedAt: s.deactivatedAt?.toISOString() || null,
+      lessonsAttended: s._count.roomParticipants,
+      lastSeen: lastSeenMap.get(s.id) || null,
+    }));
 
     return NextResponse.json({
-      activeStudentCount: activeStudents.length,
-      billingPeriodStart,
-      subTutorIds,
+      students: studentRows,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
     });
   } catch (error) {
     console.error('[Agency Students] Error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch active student count' },
+      { error: 'Failed to fetch students' },
       { status: 500 }
     );
   }

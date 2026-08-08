@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { createTemplateSchema, validateInput } from '@/lib/validations';
-import type { Subject } from '@/types';
+import { isAgencyTier, type Subject } from '@/types';
 
 // LIMIT: Restrict body size for template snapshots (prevent unbounded uploads)
 export const maxDuration = 30;
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (user.tier !== 'PRO' && user.tier !== 'AGENCY') {
+    if (user.tier !== 'PRO' && !isAgencyTier(user.tier)) {
       return NextResponse.json(
         { error: 'FEATURE_LOCKED', message: 'Templates require Pro or Agency tier' },
         { status: 403 }
