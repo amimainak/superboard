@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield } from 'lucide-react';
 
 function getTierLabel(tier: Tier): string {
@@ -174,6 +175,15 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
             </div>
           </>
         )}
+        {/* Legal Notice */}
+        <Separator />
+        <p className="text-xs text-muted-foreground leading-relaxed text-center">
+          By upgrading, you agree to our{' '}
+          <Link href="/terms" className="text-emerald-600 hover:underline" target="_blank">Terms &amp; Conditions</Link>,{' '}
+          <Link href="/privacy" className="text-emerald-600 hover:underline" target="_blank">Privacy Policy</Link>, and{' '}
+          <Link href="/refund" className="text-emerald-600 hover:underline" target="_blank">Refund Policy</Link>.
+          Payments processed securely via Stripe.
+        </p>
       </CardContent>
     </Card>
   );

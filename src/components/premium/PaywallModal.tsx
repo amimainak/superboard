@@ -1,5 +1,7 @@
 'use client';
 
+import React, { useState } from 'react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +11,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAppStore } from '@/store/app-store';
 import {
   Lock,
@@ -49,9 +52,15 @@ export default function PaywallModal() {
   const paywallOpen = useAppStore((s) => s.paywallOpen);
   const paywallFeature = useAppStore((s) => s.paywallFeature);
   const closePaywall = useAppStore((s) => s.closePaywall);
+  const [tcAccepted, setTcAccepted] = useState(false);
+
+  const handleCheckout = (plan: string) => {
+    if (!tcAccepted) return;
+    window.open(`/api/stripe/checkout?plan=${plan}`, '_self');
+  };
 
   return (
-    <Dialog open={paywallOpen} onOpenChange={(open) => !open && closePaywall()}>
+    <Dialog open={paywallOpen} onOpenChange={(open) => { if (!open) { closePaywall(); setTcAccepted(false); } }}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
@@ -86,9 +95,8 @@ export default function PaywallModal() {
             </p>
             <Button
               className="mt-auto w-full"
-              onClick={() => {
-                window.open('/api/stripe/checkout?plan=pro', '_self');
-              }}
+              disabled={!tcAccepted}
+              onClick={() => handleCheckout('pro')}
             >
               <Sparkles className="size-4" />
               Upgrade to Pro
@@ -116,9 +124,8 @@ export default function PaywallModal() {
             <Button
               variant="outline"
               className="mt-auto w-full border-amber-600 text-amber-700 hover:bg-amber-100 dark:hover:bg-amber-950/40"
-              onClick={() => {
-                window.open('/api/stripe/checkout?plan=agency-standard', '_self');
-              }}
+              disabled={!tcAccepted}
+              onClick={() => handleCheckout('agency-standard')}
             >
               <Crown className="size-4" />
               Get Agency Standard
@@ -132,7 +139,7 @@ export default function PaywallModal() {
             <Shield className="size-4 text-purple-600" />
             <span className="text-sm font-medium text-purple-900">Agency Premium: $79/mo + $2/hr — Unlimited sub-tutors & volume discount</span>
           </div>
-          <Button size="sm" variant="outline" className="border-purple-400 text-purple-700 text-xs" onClick={() => { window.open('/api/stripe/checkout?plan=agency-premium', '_self'); }}>
+          <Button size="sm" variant="outline" className="border-purple-400 text-purple-700 text-xs" disabled={!tcAccepted} onClick={() => handleCheckout('agency-premium')}>
             Upgrade
           </Button>
         </div>
@@ -172,6 +179,24 @@ export default function PaywallModal() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* T&C Checkbox */}
+        <div className="rounded-xl bg-muted/30 border p-3 mt-3">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <Checkbox
+              checked={tcAccepted}
+              onCheckedChange={(checked) => setTcAccepted(checked === true)}
+              className="mt-0.5"
+            />
+            <span className="text-xs text-muted-foreground leading-relaxed">
+              I agree to the{' '}
+              <Link href="/terms" className="text-emerald-600 hover:underline" target="_blank">Terms &amp; Conditions</Link>,{' '}
+              <Link href="/privacy" className="text-emerald-600 hover:underline" target="_blank">Privacy Policy</Link>, and{' '}
+              <Link href="/refund" className="text-emerald-600 hover:underline" target="_blank">Refund Policy</Link>.
+              Payments are processed securely by Stripe.
+            </span>
+          </label>
         </div>
 
         <DialogFooter className="mt-2">

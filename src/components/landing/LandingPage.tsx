@@ -481,18 +481,29 @@ function LandingPage() {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="bg-gray-50 border-t border-gray-100 py-8">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
-              <GraduationCap className="w-4 h-4 text-white" />
+      <footer className="bg-gray-50 border-t border-gray-100 py-10">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Top row: branding + nav */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+                <GraduationCap className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-sm font-semibold text-gray-900">Superboard</span>
             </div>
-            <span className="text-sm font-semibold text-gray-900">Superboard</span>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
+              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
+              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms &amp; Conditions</a>
+              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy Policy</a>
+              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Refund Policy</a>
+              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Cookie Policy</a>
+              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+            </div>
           </div>
-          <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Superboard. Built for K-12 tutors.</p>
-          <div className="flex items-center gap-4">
-            <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
-            <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
+          {/* Bottom row: copyright */}
+          <div className="pt-6 border-t border-gray-100">
+            <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Superboard. All rights reserved. Built for K-12 tutors.</p>
           </div>
         </div>
       </footer>
