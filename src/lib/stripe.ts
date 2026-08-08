@@ -86,56 +86,6 @@ export function getWebhookSecret(): string {
 }
 
 /**
- * Create a Stripe Checkout Session for tier upgrade.
- * @deprecated Use createCheckoutSession from stripe-billing.ts instead.
- */
-export async function createCheckoutSession(params: {
-  userId: string;
-  customerId?: string;
-  tier: 'PRO' | 'AGENCY';
-  billingPeriod: 'monthly' | 'yearly';
-  appUrl: string;
-}): Promise<string> {
-  const stripe = getStripeClient();
-
-  let priceId: string;
-  if (params.tier === 'PRO') {
-    priceId =
-      params.billingPeriod === 'yearly'
-        ? (process.env.STRIPE_PRO_YEARLY_PRICE_ID || '')
-        : (process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '');
-  } else {
-    priceId = process.env.STRIPE_AGENCY_PRICE_ID || '';
-  }
-
-  if (!priceId || priceId.startsWith('TODO_')) {
-    throw new Error(`Stripe price ID not configured for ${params.tier} ${params.billingPeriod}`);
-  }
-
-  const session = await stripe.checkout.sessions.create({
-    customer: params.customerId || undefined,
-    mode: 'subscription',
-    payment_method_types: ['card'],
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${params.appUrl}/dashboard?upgrade=success&session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${params.appUrl}/dashboard?upgrade=cancelled`,
-    metadata: {
-      userId: params.userId,
-      targetTier: params.tier,
-      billingPeriod: params.billingPeriod,
-    },
-    subscription_data: {
-      metadata: {
-        userId: params.userId,
-        targetTier: params.tier,
-      },
-    } as any,
-  });
-
-  return session.url || '';
-}
-
-/**
  * Verify a Stripe webhook signature.
  * Used in /api/stripe/webhook to verify event authenticity.
  */

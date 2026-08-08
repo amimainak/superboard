@@ -224,7 +224,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
                       </SelectContent>
                     </Select>
                   </div>
-                  {tier === 'AGENCY' && (
+                  {isAgencyTier(tier) && (
                     <div className="space-y-2">
                       <Label>Branding</Label>
                       <div className="flex items-center gap-2">
@@ -282,9 +282,9 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
                   <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-xl flex items-center gap-2"><Users className="w-5 h-5 text-emerald-500" />Agency Admin Dashboard</CardTitle>
-                      <CardDescription>View aggregate usage and students of sub-tutors.</CardDescription>
+                      <CardDescription>Manage sub-tutors, student roster, and view usage.</CardDescription>
                     </CardHeader>
-                    <CardContent><AgencyAdminPanel agencyUserId={user?.id || ''} /></CardContent>
+                    <CardContent><AgencyAdminPanel agencyUserId={user?.id || ''} userTier={tier} /></CardContent>
                   </Card>
                 </TabsContent>
               )}

@@ -26,3 +26,23 @@ Stage Summary:
 - Schema pushed to Supabase successfully
 - 17 files modified, 7 new files created
 - Backward compatible: legacy AGENCY tier auto-migrates to AGENCY_STANDARD
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: Complete remaining implementation — room duration tracking, StudentManagementPanel, AgencyAdminPanel tabs, cleanup
+
+Work Log:
+- Updated PATCH /api/room/[roomId] — Now calculates durationMinutes from startedAt, sets endedAt timestamp, returns durationMinutes in response. Also allows agency owners to end sub-tutor lessons.
+- Created src/components/dashboard/StudentManagementPanel.tsx — Full student roster UI: paginated table, add single student dialog, bulk CSV import dialog, deactivate/reactivate/delete with confirmation, status filter (active/inactive/all)
+- Rewrote src/components/dashboard/AgencyAdminPanel.tsx — Now accepts userTier prop, shows tier badge + lesson hours summary, 4-column stats grid (sub-tutors/lessons hours/total lessons/est. cost), upsell warning at sub-tutor limit for Standard tier, Tabs for Sub-Tutors vs Students with StudentManagementPanel integration
+- Updated DashboardPage.tsx — Passes userTier to AgencyAdminPanel, fixed branding visibility to use isAgencyTier() instead of hardcoded 'AGENCY', updated admin tab description
+- Removed deprecated createCheckoutSession from stripe.ts (no longer imported anywhere)
+- Verified zero TypeScript errors — `next build` compiled successfully, all 36 pages generated
+
+Stage Summary:
+- Build: 0 errors, all 36 routes recognized
+- New component: StudentManagementPanel (full-featured student roster management)
+- Enhanced: AgencyAdminPanel now has Sub-Tutors + Students tabs, tier-aware limits, upsell CTA
+- Room close now tracks duration for metered hourly billing
+- Deprecated code removed from stripe.ts
