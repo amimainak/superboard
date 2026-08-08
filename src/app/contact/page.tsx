@@ -90,7 +90,7 @@ export default function ContactPage() {
           <a href="mailto:grievance@superboard.live">grievance@superboard.live</a>
         </li>
         <li>
-          <strong>Acknowledgment:</strong> Within 24 hours of receiving your grievance.
+          <strong>Acknowledgment:</strong> As soon as possible upon receiving your grievance.
         </li>
         <li>
           <strong>Resolution:</strong> Within 30 calendar days.

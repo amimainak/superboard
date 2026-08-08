@@ -526,7 +526,7 @@ export default function TermsPage() {
         Under the IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, our
         designated Grievance Officer is contactable at{' '}
         <a href="mailto:grievance@superboard.live">grievance@superboard.live</a>. Grievances will
-        be acknowledged within 24 hours and resolved within 30 days.
+        be acknowledged as soon as possible and resolved within 30 days.
       </p>
     </LegalPageLayout>
   );
