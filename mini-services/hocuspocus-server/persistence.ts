@@ -11,16 +11,35 @@
 import { encodeStateAsUpdate, applyUpdate } from 'yjs';
 import { PrismaClient } from '@prisma/client';
 
+// ============================================================
+// Supabase PostgreSQL Connection via Prisma
+// ============================================================
+// Uses DATABASE_URL pointing to Supabase (with pgbouncer for
+// connection pooling). Reuses the same connection pattern as
+// the main app's src/lib/db.ts.
+// ============================================================
+
 // Prisma client singleton (cached across requests)
 let _prisma: PrismaClient | null = null;
+function getDatabaseUrl(): string {
+  const baseUrl = process.env.DATABASE_URL || '';
+  if (!baseUrl) return baseUrl;
+  // Append pgbouncer=true for Supabase connection pooling
+  if (baseUrl.includes('pgbouncer=')) return baseUrl;
+  const separator = baseUrl.includes('?') ? '&' : '?';
+  return baseUrl + separator + 'pgbouncer=true';
+}
 function getPrisma(): PrismaClient {
   if (!_prisma) {
-    const databaseUrl = process.env.DATABASE_URL;
+    const databaseUrl = getDatabaseUrl();
     if (!databaseUrl) {
       console.error('[Persistence] DATABASE_URL not set — document persistence disabled');
       throw new Error('DATABASE_URL not set');
     }
-    _prisma = new PrismaClient({ datasources: { db: { url: databaseUrl } } });
+    _prisma = new PrismaClient({
+      datasources: { db: { url: databaseUrl } },
+      log: process.env.NODE_ENV === 'development' ? ['error'] : [],
+    });
   }
   return _prisma;
 }

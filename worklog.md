@@ -1,4 +1,32 @@
 ---
+Task ID: supabase-migration
+Agent: Main Agent
+Task: Replace all SQLite/localhost DB references with Supabase equivalents
+
+Work Log:
+- Audited entire codebase for SQLite, localhost DB, and hardcoded connection references
+- Confirmed core app already uses Supabase: schema.prisma (postgresql), db.ts (DATABASE_URL env), supabase.ts, auth.ts all correct
+- Fixed mini-services/hocuspocus-server/persistence.ts: Added pgbouncer=true to DATABASE_URL (matches main app pattern), added error logging config
+- Fixed mini-services/hocuspocus-server/index.ts: Removed dev-mode JWT bypass (was skipping auth when Supabase not configured), added fatal error if DATABASE_URL/SUPABASE vars missing, made invite cleanup unconditional
+- Fixed mini-services/hocuspocus-server/package.json: Added @prisma/client and @supabase/supabase-js dependencies
+- Fixed src/middleware.ts CSP: Removed hardcoded ws://localhost:3001 from connect-src, now dynamically includes NEXT_PUBLIC_HOCUSPOCUS_URL
+- Fixed src/hooks/useYjsProvider.ts: Removed ws://localhost:3001 fallback, now returns empty string if no env/origin available
+- Fixed docker-compose.yml: Added DATABASE_URL to hocuspocus service environment
+- Fixed scripts/migrate.ts: Removed hardcoded Supabase DB URL, now reads from .env via dotenv
+- Fixed Caddyfile: Replaced localhost:3000/3001 with Docker service names (app:3000, hocuspocus:3001) for production block
+- Verified: npx tsc --noEmit passes with ZERO errors
+- Verified: npx prisma generate succeeds
+- Remaining localhost refs in supabase.ts (URL validation whitelist) and middleware.ts (hostname parsing) are correct
+
+Stage Summary:
+- 7 files modified across hocuspocus, middleware, hooks, docker, scripts, and Caddy config
+- All database operations now go through Supabase PostgreSQL
+- Hocuspocus requires DATABASE_URL + Supabase env vars (no dev-mode bypass)
+- No SQLite references remain in any source code
+- CSP no longer allows ws://localhost:3001
+- TypeScript: zero errors, Prisma: generate succeeds
+
+---
 Task ID: 8
 Agent: Main Agent
 Task: Execute Option 1 (Prisma migrations) and Option 3 (Mount Tldraw editor)

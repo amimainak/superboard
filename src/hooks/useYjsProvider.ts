@@ -65,7 +65,7 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
     const wsUrl = process.env.NEXT_PUBLIC_HOCUSPOCUS_URL || 
       (typeof window !== 'undefined' 
         ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/hocuspocus`
-        : 'ws://localhost:3001');
+        : '');
 
     // Create Hocuspocus WebSocket provider
     // HocuspocusProvider options

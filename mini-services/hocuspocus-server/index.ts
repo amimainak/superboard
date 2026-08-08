@@ -1,9 +1,15 @@
 // ============================================================
 // Hocuspocus Yjs Sync Server (Mini Service)
 // ============================================================
-// Deployed as a serverless function (scales to zero when not in use).
 // Handles real-time drawing sync and cursor presence.
-// SECURITY: onAuthenticate validates JWT token and room access.
+// Connects to Supabase PostgreSQL for document persistence
+// and Supabase Auth for JWT verification.
+//
+// Required environment variables:
+//   - DATABASE_URL              (Supabase PostgreSQL connection string)
+//   - NEXT_PUBLIC_SUPABASE_URL   (Supabase project URL)
+//   - SUPABASE_SERVICE_ROLE_KEY (Supabase service role key)
+//   - HOCUSPOCUS_PORT            (optional, default: 3001)
 // ============================================================
 
 import { Server } from '@hocuspocus/server';
@@ -16,10 +22,18 @@ const PORT = parseInt(process.env.HOCUSPOCUS_PORT || '3001', 10);
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+// Validate required environment variables
+if (!process.env.DATABASE_URL) {
+  console.error('[Hocuspocus] FATAL: DATABASE_URL is not set. Document persistence requires a Supabase PostgreSQL connection.');
+  process.exit(1);
+}
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('[Hocuspocus] FATAL: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for JWT authentication.');
+  process.exit(1);
+}
+
 // Create Supabase admin client for JWT verification
-const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-  : null;
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // Simple in-memory rate limiter for connection attempts
 const connectionAttempts = new Map<string, { count: number; resetAt: number }>();
@@ -71,19 +85,14 @@ const server = Server.configure({
       throw new Error('Authentication required — valid token and userId needed');
     }
 
-    // SECURITY (V-04): Verify JWT token against Supabase
-    if (!supabaseAdmin) {
-      // In development without Supabase, log warning but allow
-      console.warn('[Hocuspocus] Supabase not configured — skipping JWT verification (dev mode only)');
-    } else {
-      try {
-        const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-        if (error || !user || user.id !== userId) {
-          throw new Error('Invalid or expired authentication token');
-        }
-      } catch (err) {
-        throw new Error('Token verification failed');
+    // SECURITY: Verify JWT token against Supabase Auth
+    try {
+      const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+      if (error || !user || user.id !== userId) {
+        throw new Error('Invalid or expired authentication token');
       }
+    } catch (err) {
+      throw new Error('Token verification failed');
     }
 
     // SECURITY: Verify room access — check that the room exists and is active
@@ -197,11 +206,8 @@ server.listen().then(() => {
   const INVITE_CLEANUP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
   async function expireStaleInvites() {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
-
     try {
-      // Use Supabase RPC or direct SQL to batch-update expired invites
-      // Since the mini-service doesn't have Prisma, we use Supabase's update
+      // Use Supabase client to batch-update expired PENDING invites
       const { error } = await supabaseAdmin
         .from('AgencyInvite')
         .update({ status: 'EXPIRED', updatedAt: new Date().toISOString() })

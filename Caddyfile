@@ -6,6 +6,7 @@
 # ============================================================
 
 # ---- Production HTTPS (auto-provisioned by Caddy) ----
+# {$DOMAIN} defaults to superboard.app; override via CADDY_DOMAIN env var
 {$DOMAIN:superboard.app} {
         # SECURITY (V-11): TLS configuration
         tls {
@@ -34,7 +35,7 @@
 
         # WebSocket proxy for Hocuspocus CRDT collaboration server
         handle /hocuspocus/* {
-                reverse_proxy localhost:3001 {
+                reverse_proxy hocuspocus:3001 {
                         header_up Host {host}
                         header_up X-Forwarded-For {remote_host}
                         header_up X-Forwarded-Proto {scheme}
@@ -44,7 +45,7 @@
 
         # Health check endpoint (no auth required)
         handle /api/health {
-                reverse_proxy localhost:3000 {
+                reverse_proxy app:3000 {
                         header_up Host {host}
                         header_up X-Forwarded-For {remote_host}
                         header_up X-Forwarded-Proto {scheme}
@@ -54,7 +55,7 @@
 
         # Reverse proxy to Next.js (all other routes)
         handle {
-                reverse_proxy localhost:3000 {
+                reverse_proxy app:3000 {
                         header_up Host {host}
                         header_up X-Forwarded-For {remote_host}
                         header_up X-Forwarded-Proto {scheme}

@@ -160,7 +160,11 @@ export async function middleware(request: NextRequest) {
   // ---- CSP Nonce for non-API, non-static routes ----
   const nonce = await generateNonce();
 
-  const cspDirectives = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.superboard.app https://superboard.app https://lh3.googleusercontent.com; connect-src 'self' wss://*.livekit.io https://*.supabase.co https://api.stripe.com https://api.mathpix.com https://api.anthropic.com wss://*.hocuspocus.com ws://localhost:3001; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; frame-ancestors 'self'; upgrade-insecure-requests`;
+  // Build connect-src dynamically: include Hocuspocus WebSocket URL if configured
+  const hocuspocusWsUrl = process.env.NEXT_PUBLIC_HOCUSPOCUS_URL || '';
+  const hocuspocusCspEntry = hocuspocusWsUrl ? ` ${hocuspocusWsUrl}` : '';
+
+  const cspDirectives = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.superboard.app https://superboard.app https://lh3.googleusercontent.com; connect-src 'self' wss://*.livekit.io https://*.supabase.co https://api.stripe.com https://api.mathpix.com https://api.anthropic.com wss://*.hocuspocus.com${hocuspocusCspEntry}; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; frame-ancestors 'self'; upgrade-insecure-requests`;
 
   // ---- Custom domain routing ----
   if (MAIN_DOMAIN && hostnameWithoutPort !== MAIN_DOMAIN && hostnameWithoutPort !== 'localhost') {

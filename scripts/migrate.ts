@@ -2,11 +2,22 @@
 // Migration Script: Add RoomParticipant + AgencyInvite tables
 // ============================================================
 // Run with: npx ts-node scripts/migrate.ts
+// Requires DATABASE_URL in environment (from .env or .env.local)
 // ============================================================
 
 import { PrismaClient } from '@prisma/client';
 
-const DATABASE_URL = 'postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
+// Load environment from .env if available
+try {
+  require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+} catch { /* dotenv optional */ }
+
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL is not set. Create .env with your Supabase DATABASE_URL.');
+  process.exit(1);
+}
 
 async function migrate() {
   const prisma = new PrismaClient({ datasourceUrl: DATABASE_URL });
