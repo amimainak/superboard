@@ -11,6 +11,7 @@
 import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
+import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
 import type { RoomData, BrandingConfig } from '@/types';
 
@@ -23,8 +24,8 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   useEffect(() => {
     async function loadRoom() {
       try {
-        // Fetch room data from API (no auth needed — students access this too)
-        const response = await fetch(`/api/room?roomId=${roomId}`);
+        // Fetch room data from API (auth required — uses authFetch for token)
+        const response = await authFetch(`/api/room?roomId=${roomId}`);
         if (!response.ok) {
           if (response.status === 410) {
             setError('This lesson has ended. The link is no longer active.');
@@ -50,11 +51,13 @@ function RoomPageContent({ roomId }: { roomId: string }) {
           }
         }
 
-        // Set room state — include isTutor so whiteboard knows to skip waiting room
+        // Set room state — include isTutor, userId, userName for whiteboard
         setRoom({
           roomId: roomData.id,
           subject: roomData.subject as 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL',
           isActive: roomData.isActive,
+          userId: user?.id || null,
+          userName: user?.user_metadata?.name || user?.email || null,
           branding: {
             logoUrl: roomData.brandingLogo || null,
             color: roomData.brandingColor || null,
@@ -91,9 +94,8 @@ function RoomPageContent({ roomId }: { roomId: string }) {
               studentIdentity = `anon_${roomId}_${Date.now()}`;
             }
           }
-          fetch('/api/room/participants', {
+          authFetch('/api/room/participants', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               roomId,
               studentIdentity,

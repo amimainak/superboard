@@ -29,6 +29,14 @@
 - grievance@superboard.live
 - abuse@superboard.live
 
+## Test Accounts
+| Role | Email | Password |
+|------|-------|----------|
+| Student | student@superboard.app | TestPass123! |
+| Free Tutor | free-tutor@superboard.app | TestPass123! |
+| Pro Tutor | pro-tutor@superboard.app | TestPass123! |
+| Agency (Admin) | agency@superboard.app | TestPass123! |
+
 ## Pending Tasks
 - [ ] Create 4 Stripe prices in Stripe Dashboard and set env vars
 - [ ] Test student join flow end-to-end
