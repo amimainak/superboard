@@ -76,14 +76,22 @@ export default function RefundPage() {
         agency account.
       </p>
 
-      <h2>4. Service Interruptions</h2>
+      <h2>4. Service Interruptions &amp; No SLA Disclaimer</h2>
       <p>
-        If the Service experiences a significant outage or downtime exceeding 24 consecutive
-        hours, affected users may contact us to request a prorated credit toward their next billing
-        cycle. The credit amount will be proportional to the duration of the outage relative to
-        the billing period. This provision does not apply to minor interruptions, planned
-        maintenance (for which we will provide advance notice), or issues caused by factors outside
-        our control (e.g., internet service provider outages, local network issues).
+        <strong>Superboard does not provide a service level agreement (SLA) or guarantee any
+        specific level of uptime, availability, or performance.</strong> The Service is provided on an
+        &quot;as is&quot; and &quot;as available&quot; basis as described in our{' '}
+        <a href="/terms">Terms &amp; Conditions</a>.
+      </p>
+      <p>
+        In the event of a significant outage or downtime exceeding 24 consecutive hours, affected
+        users may contact us to request a prorated credit toward their next billing cycle, which
+        we will provide at our sole and absolute discretion. The credit amount, if any, will be
+        proportional to the duration of the outage relative to the billing period. This provision
+        is a discretionary accommodation and does not constitute a guarantee or SLA. It does not
+        apply to minor interruptions, planned maintenance (for which we will provide advance notice
+        when possible), or issues caused by factors outside our control (e.g., internet service
+        provider outages, local network issues, third-party infrastructure failures).
       </p>
 
       <h2>5. How to Request a Refund</h2>
@@ -128,14 +136,22 @@ export default function RefundPage() {
         session history will be permanently removed.
       </p>
 
-      <h2>8. Changes to This Policy</h2>
+      <h2>8. Taxes</h2>
+      <p>
+        All prices listed are exclusive of applicable taxes unless stated otherwise. For users in
+        India, GST will be charged at the applicable rate. For international users receiving
+        export of services, prices are exclusive of GST under the LUT mechanism. You are
+        responsible for any taxes levied by your local jurisdiction.
+      </p>
+
+      <h2>9. Changes to This Policy</h2>
       <p>
         We reserve the right to modify this Refund and Cancellation Policy at any time. Material
         changes will be posted on this page with an updated &quot;Last updated&quot; date. Your continued
         use of the Service after changes are posted constitutes acceptance of the revised Policy.
       </p>
 
-      <h2>9. Contact</h2>
+      <h2>10. Contact</h2>
       <p>
         For questions about refunds or cancellations, contact us at{' '}
         <a href="mailto:support@superboard.live">support@superboard.live</a> or visit
