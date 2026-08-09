@@ -1,24 +1,23 @@
+# SuperBoard Worklog
+
 ---
-Task ID: 1
+Task ID: 2
 Agent: Main Agent
-Task: Implement all 30 identified issues from Phase 1 audit
+Task: Phase 2 — Structural Improvements (Dashboard IA, Student Experience, Tutor Onboarding)
 
 Work Log:
-- Read and analyzed all source files (LandingPage, DashboardPage, Whiteboard, BrandedHeader, Toolbar, MyRoomsPanel, page.tsx, globals.css, layout.tsx, not-found.tsx, etc.)
-- Discovered 22/30 issues were ALREADY fixed in previous sessions
-- Added Google OAuth button with inline Google "G" SVG to both Sign In and Register dialogs in LandingPage.tsx
-- Added handleGoogleAuth callback using supabase.auth.signInWithOAuth
-- Generated og-image.png (1200x630) using Pillow with branded Superboard design
-- Generated favicon.ico (16/32/48), favicon-32.png, and apple-touch-icon.png (180x180) using Pillow
-- Updated layout.tsx metadata: proper icon array with ico + png, apple-touch-icon reference, removed TODO comment
-- Added invite_accepted URL param cleanup in page.tsx
-- Ran TypeScript check: 0 errors
-- Ran Next.js build: successful, all pages compile
+- Explored entire codebase structure: all routes, components, types, database schema, auth system
+- Identified current dashboard as single monolithic component with no sidebar navigation
+- Planned Phase 2 implementation across 3 major features
+- Created OnboardingWizard component (3-step: Profile → Subject → Create First Lesson)
+- Created StudentDashboard component (Quick Join, Recent Lessons, Getting Started Guide)
+- Completely rewrote DashboardPage.tsx with collapsible sidebar navigation and 6 views
+- Fixed TypeScript compilation errors (string type narrowing, union type handling)
+- Verified build passes successfully with all changes
 
 Stage Summary:
-- 28/30 issues confirmed FIXED (22 were already done, 6 new fixes applied)
-- Google OAuth UI is ready but REQUIRES user to configure Google provider in Supabase Dashboard
-  (Authentication > Providers > Google, add Client ID + Secret from Google Cloud Console)
-- OG image generated at /public/og-image.png
-- Favicon set generated at /public/favicon.ico, /public/favicon-32.png, /public/apple-touch-icon.png
-- Build passes cleanly with no TypeScript or compilation errors
+- **Dashboard IA Reorganization**: Complete. Sidebar navigation with collapsible state, categorized nav groups (Main, Workspace, Team, Account), 6 distinct views (Overview, Lessons, Resources, Agency, Billing, Settings)
+- **Dedicated Student Experience**: Complete. StudentDashboard component with quick join input, lesson history, getting started guide. Accessible via "Student View" toggle on overview page.
+- **Tutor Onboarding Flow**: Complete. 3-step wizard (Profile/Color → Subject Selection → Create First Lesson) shown to first-time tutors with no existing rooms
+- **Files modified**: DashboardPage.tsx (rewrite), OnboardingWizard.tsx (new), StudentDashboard.tsx (new)
+- **Build status**: ✅ Passes successfully
