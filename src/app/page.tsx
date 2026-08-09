@@ -106,11 +106,16 @@ export default function Dashboard() {
   }, []);
 
   // --- Check for ?admin=1 query param on mount ---
+  // --- Check for ?invite_accepted=1 (from invite page redirect) ---
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       if (params.get('admin') === '1' && isAdmin) {
         setShowAdminState(true);
+      }
+      if (params.get('invite_accepted') === '1') {
+        // Clean URL
+        window.history.replaceState({}, '', '/');
       }
     }
   }, [isAdmin]);

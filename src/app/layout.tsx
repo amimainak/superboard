@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   description: "The all-in-one whiteboard for K-12 tutors. Real-time collaboration, AI quiz generation, built-in video calling, and GeoGebra graphing — designed for tutors who want to teach better, not harder.",
   keywords: ["tutoring", "whiteboard", "education", "superboard", "smart tools", "online teaching", "K-12", "AI tutoring", "interactive whiteboard"],
   icons: {
-    icon: "/logo.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "48x48" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     title: "Superboard — Smart Tutoring Whiteboard",
@@ -27,7 +31,6 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Superboard",
-    // TODO: Generate og-image.png — see scripts/generate-og-image.js
     images: ['/og-image.png'],
   },
   twitter: {
