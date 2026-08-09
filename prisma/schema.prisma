@@ -46,6 +46,7 @@ model User {
   customDomain      String?         @unique
   brandingLogoUrl   String?
   brandingColor     String?         // Hex code e.g., #FF5733
+  agencyName        String?         // Display name for the agency (for branded experiences)
   parentAgencyId    String?         // If this user is a sub-tutor under an agency
   agencyOwner      User?           @relation("AgencySubTutors", fields: [parentAgencyId], references: [id], onDelete: SetNull)
   createdAt         DateTime        @default(now())
@@ -62,6 +63,11 @@ model User {
   students          Student[]       // Students registered by this agency owner
   scheduledLessons  ScheduledLesson[]
   webhooks          WebhookConfig[]
+  lessonNotes       LessonNote[]
+  homeworksAgency   Homework[]       @relation("AgencyHomeworks")
+  homeworksTutor    Homework[]       @relation("TutorHomeworks")
+  resourceLibrary   ResourceLibrary[] @relation("AgencyResources")
+  invoices          Invoice[]        @relation("AgencyInvoices")
 }
 
 // Lesson scheduling status
@@ -102,16 +108,26 @@ model Student {
   agency          User      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   email           String
   name            String
+  grade           String?   // e.g., "Grade 5", "Year 10"
+  phone           String?   // Student or parent contact phone
+  parentName      String?   // Parent/guardian name
+  parentEmail     String?   // Parent/guardian email for notifications
+  parentAccessToken String? @unique // Token for parent portal access (no login required)
   isActive        Boolean   @default(true)
   createdAt       DateTime  @default(now())
   deactivatedAt   DateTime? // Set when student leaves the agency
+  notes           String?   @db.Text // General notes about the student (learning style, goals, etc.)
 
   @@unique([agencyId, email])
   @@index([agencyId, isActive])
   @@index([email])
+  @@index([parentAccessToken])
 
   // Relations
   roomParticipants  RoomParticipant[]
+  homeworks         Homework[]
+  lessonNotes      LessonNote[]
+  invoices         Invoice[]
 }
 
 // ============================================================
@@ -159,6 +175,7 @@ model Room {
   // even if agency changes logo later
   brandingLogo    String?
   brandingColor   String?
+  lessonNotes     LessonNote[]
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
   // Relations
@@ -366,6 +383,8 @@ model ScheduledLesson {
   status        LessonStatus @default(SCHEDULED)
   roomUrl       String?   // Generated room URL when created
   reminderSent  Boolean   @default(false)
+  maxStudents   Int       @default(1)  // Max students for group lessons (1 = individual)
+  isGroup       Boolean   @default(false) // Whether this is a group lesson
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -398,4 +417,141 @@ model PlatformConfig {
   maintenanceMode   Boolean  @default(false)
   announcementText String? @db.Text
   updatedAt         DateTime @updatedAt
+}
+
+// ============================================================
+// Homework — Assignments for Students
+// ============================================================
+// Tutors can assign homework after a lesson. Students (or their parents)
+// can view pending homework. Tutors can mark as complete and add feedback.
+// ============================================================
+
+enum HomeworkStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+  OVERDUE
+}
+
+model Homework {
+  id              String         @id @default(uuid())
+  agencyId        String
+  agency          User           @relation("AgencyHomeworks", fields: [agencyId], references: [id], onDelete: Cascade)
+  studentId       String?
+  student         Student?        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tutorId         String
+  tutor           User           @relation("TutorHomeworks", fields: [tutorId], references: [id], onDelete: Cascade)
+  roomId          String?         // Which lesson this homework relates to
+  title           String
+  description     String?        @db.Text
+  subject         Subject        @default(GENERAL)
+  dueDate         DateTime?
+  status          HomeworkStatus  @default(PENDING)
+  snapshot        String?        @db.Text // Board snapshot as homework reference
+  tutorFeedback   String?        @db.Text // Feedback after grading
+  grade           String?        // Grade/score (e.g., "A", "85%", "9/10")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([agencyId, status])
+  @@index([studentId, status])
+  @@index([tutorId, status])
+  @@index([dueDate])
+}
+
+// ============================================================
+// LessonNote — Post-Lesson Notes & Feedback
+// ============================================================
+// After a lesson, tutors write notes about what was covered,
+// student performance, and topics for next time.
+// ============================================================
+
+model LessonNote {
+  id              String   @id @default(uuid())
+  roomId          String
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tutorId         String
+  tutor           User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  studentId       String?
+  student         Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  content         String   @db.Text // What was covered in the lesson
+  tutorFeedback   String?  @db.Text // Feedback on student performance
+  topicsForNext   String?  @db.Text // Topics to cover next session
+  rating          Int?     // Student performance rating (1-5)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([roomId]) // One set of notes per room/lesson
+  @@index([tutorId, createdAt])
+  @@index([studentId, createdAt])
+}
+
+// ============================================================
+// ResourceLibrary — Shared Agency Resources
+// ============================================================
+// Agencies can upload and share resources (PDFs, worksheets,
+// reference materials) across all their sub-tutors.
+// ============================================================
+
+model ResourceLibrary {
+  id              String   @id @default(uuid())
+  agencyId        String
+  agency          User     @relation("AgencyResources", fields: [agencyId], references: [id], onDelete: Cascade)
+  uploadedByTutorId String  // Which tutor uploaded it
+  name            String
+  description     String?  @db.Text
+  category        String   @default("general") // general, worksheet, reference, exam, template
+  subject         Subject  @default(GENERAL)
+  fileUrl         String   // URL to the stored file
+  fileType        String   // MIME type (e.g., "application/pdf")
+  fileSize        Int      @default(0) // File size in bytes
+  downloadCount   Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([agencyId, category])
+  @@index([agencyId, subject])
+  @@index([uploadedByTutorId])
+}
+
+// ============================================================
+// Invoice — Agency Billing Invoices
+// ============================================================
+// Agencies generate invoices for individual students or families.
+// Tracks payment status and links to lessons/hours.
+// ============================================================
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+model Invoice {
+  id              String        @id @default(uuid())
+  agencyId        String
+  agency          User          @relation("AgencyInvoices", fields: [agencyId], references: [id], onDelete: Cascade)
+  studentId       String?
+  student         Student?       @relation(fields: [studentId], references: [id], onDelete: SetNull)
+  invoiceNumber   String        @unique // e.g., "INV-2024-001"
+  description     String?       @db.Text // Invoice description
+  amountCents     Int           // Total amount in cents
+  currency        String        @default("USD")
+  status          InvoiceStatus @default(DRAFT)
+  lessonHours     Float         @default(0) // Number of lesson hours billed
+  ratePerHourCents Int          @default(0) // Rate per hour in cents
+  billingPeriodStart DateTime?  // Start of billing period
+  billingPeriodEnd   DateTime?  // End of billing period
+  paidAt          DateTime?
+  paidAmountCents Int           @default(0)
+  dueDate         DateTime?
+  notes           String?       @db.Text // Additional notes on the invoice
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([agencyId, status])
+  @@index([studentId, status])
+  @@index([dueDate])
 }

@@ -30,6 +30,8 @@ const WaitingRoom = dynamic(() => import('@/components/student/WaitingRoom'), { 
 const NameEntryModal = dynamic(() => import('@/components/student/NameEntryModal'), { ssr: false });
 const FileAttachmentsBar = dynamic(() => import('@/components/canvas/FileAttachmentsBar'), { ssr: false });
 const PresenceIndicator = dynamic(() => import('@/components/canvas/PresenceIndicator'), { ssr: false });
+const SessionTimer = dynamic(() => import('@/components/canvas/SessionTimer'), { ssr: false });
+const LivePollPanel = dynamic(() => import('@/components/canvas/LivePollPanel'), { ssr: false });
 
 export default function Whiteboard() {
   const router = useRouter();
@@ -230,6 +232,11 @@ export default function Whiteboard() {
         />
       </div>
 
+      {/* Session Timer (tutor only) */}
+      {isTutor && !showWaitingRoom && (
+        <SessionTimer isTutor={isTutor} onEndLesson={handleEndLesson} />
+      )}
+
       {/* Branded Header */}
       <BrandedHeader onEndLesson={isTutor ? handleEndLesson : undefined} />
 
@@ -292,6 +299,11 @@ export default function Whiteboard() {
 
           {/* AI Control Panel (Sheet, slides from right) */}
           <AIControlPanel />
+
+          {/* Live Poll Panel */}
+          {ydoc && (
+            <LivePollPanel ydoc={ydoc} isTutor={isTutor} />
+          )}
         </div>
       )}
 

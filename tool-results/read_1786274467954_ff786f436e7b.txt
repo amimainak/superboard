@@ -1,0 +1,744 @@
+     1→// ============================================================
+     2→// HomeworkPanel — Full homework management for tutors & agencies
+     3→// ============================================================
+     4→'use client';
+     5→
+     6→import React, { useEffect, useState, useCallback } from 'react';
+     7→import { authFetch } from '@/lib/auth-fetch';
+     8→import { subjectMeta } from '@/lib/subject-meta';
+     9→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    10→import { Button } from '@/components/ui/button';
+    11→import { Input } from '@/components/ui/input';
+    12→import { Label } from '@/components/ui/label';
+    13→import { Badge } from '@/components/ui/badge';
+    14→import { Textarea } from '@/components/ui/textarea';
+    15→import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+    16→import {
+    17→  Dialog,
+    18→  DialogContent,
+    19→  DialogDescription,
+    20→  DialogHeader,
+    21→  DialogTitle,
+    22→  DialogTrigger,
+    23→} from '@/components/ui/dialog';
+    24→import {
+    25→  Select,
+    26→  SelectContent,
+    27→  SelectItem,
+    28→  SelectTrigger,
+    29→  SelectValue,
+    30→} from '@/components/ui/select';
+    31→import {
+    32→  BookOpen,
+    33→  Plus,
+    34→  Loader2,
+    35→  FileText,
+    36→  CheckCircle,
+    37→  Clock,
+    38→  Eye,
+    39→  Star,
+    40→  Send,
+    41→  ClipboardCheck,
+    42→} from 'lucide-react';
+    43→import { useToast } from '@/hooks/use-toast';
+    44→
+    45→// ------------------------------------------------------------------
+    46→// Types
+    47→// ------------------------------------------------------------------
+    48→interface HomeworkItem {
+    49→  id: string;
+    50→  title: string;
+    51→  description: string | null;
+    52→  student: { id: string; name: string; email: string } | null;
+    53→  tutor: { id: string; name: string | null; email: string } | null;
+    54→  subject: string;
+    55→  status: 'PENDING' | 'SUBMITTED' | 'GRADED' | 'OVERDUE';
+    56→  dueDate: string | null;
+    57→  grade: string | null;
+    58→  tutorFeedback: string | null;
+    59→  createdAt: string;
+    60→  updatedAt: string;
+    61→}
+    62→
+    63→interface StudentOption {
+    64→  id: string;
+    65→  name: string;
+    66→  email: string;
+    67→}
+    68→
+    69→interface CreateForm {
+    70→  title: string;
+    71→  description: string;
+    72→  studentEmail: string;
+    73→  subject: string;
+    74→  dueDate: string;
+    75→}
+    76→
+    77→interface GradeForm {
+    78→  tutorFeedback: string;
+    79→  grade: string;
+    80→}
+    81→
+    82→const STATUS_OPTIONS = ['ALL', 'PENDING', 'SUBMITTED', 'GRADED', 'OVERDUE'] as const;
+    83→
+    84→const EMPTY_CREATE: CreateForm = {
+    85→  title: '',
+    86→  description: '',
+    87→  studentEmail: '',
+    88→  subject: 'MATH',
+    89→  dueDate: '',
+    90→};
+    91→
+    92→const EMPTY_GRADE: GradeForm = {
+    93→  tutorFeedback: '',
+    94→  grade: '',
+    95→};
+    96→
+    97→// ------------------------------------------------------------------
+    98→// Helpers
+    99→// ------------------------------------------------------------------
+   100→function statusBadge(status: HomeworkItem['status']) {
+   101→  const map: Record<HomeworkItem['status'], { cls: string; label: string }> = {
+   102→    PENDING: {
+   103→      cls: 'bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px] px-2 py-0 rounded-full font-medium',
+   104→      label: 'Pending',
+   105→    },
+   106→    SUBMITTED: {
+   107→      cls: 'bg-blue-100 text-blue-700 hover:bg-blue-100 text-[10px] px-2 py-0 rounded-full font-medium',
+   108→      label: 'Submitted',
+   109→    },
+   110→    GRADED: {
+   111→      cls: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-[10px] px-2 py-0 rounded-full font-medium',
+   112→      label: 'Graded',
+   113→    },
+   114→    OVERDUE: {
+   115→      cls: 'bg-red-100 text-red-600 hover:bg-red-100 text-[10px] px-2 py-0 rounded-full font-medium',
+   116→      label: 'Overdue',
+   117→    },
+   118→  };
+   119→  const { cls, label } = map[status];
+   120→  return <Badge className={cls}>{label}</Badge>;
+   121→}
+   122→
+   123→function formatDate(iso: string | null) {
+   124→  if (!iso) return '—';
+   125→  return new Date(iso).toLocaleDateString('en-US', {
+   126→    month: 'short',
+   127→    day: 'numeric',
+   128→    year: 'numeric',
+   129→  });
+   130→}
+   131→
+   132→function isOverdue(dueDate: string | null, status: string) {
+   133→  if (!dueDate || status === 'GRADED' || status === 'SUBMITTED') return false;
+   134→  return new Date(dueDate) < new Date();
+   135→}
+   136→
+   137→// ------------------------------------------------------------------
+   138→// Component
+   139→// ------------------------------------------------------------------
+   140→type Props = { userId: string; isAgency?: boolean };
+   141→
+   142→export function HomeworkPanel({ userId, isAgency = false }: Props) {
+   143→  const { toast } = useToast();
+   144→
+   145→  // My homework
+   146→  const [myHomework, setMyHomework] = useState<HomeworkItem[]>([]);
+   147→  // Agency all homework
+   148→  const [agencyHomework, setAgencyHomework] = useState<HomeworkItem[]>([]);
+   149→  const [loading, setLoading] = useState(true);
+   150→  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+   151→  const [students, setStudents] = useState<StudentOption[]>([]);
+   152→
+   153→  // Create dialog
+   154→  const [createOpen, setCreateOpen] = useState(false);
+   155→  const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE);
+   156→  const [creating, setCreating] = useState(false);
+   157→
+   158→  // Grade dialog
+   159→  const [gradeOpen, setGradeOpen] = useState(false);
+   160→  const [gradeForm, setGradeForm] = useState<GradeForm>(EMPTY_GRADE);
+   161→  const [gradingItem, setGradingItem] = useState<HomeworkItem | null>(null);
+   162→  const [grading, setGrading] = useState(false);
+   163→
+   164→  // Action loading
+   165→  const [actionLoading, setActionLoading] = useState<string | null>(null);
+   166→
+   167→  // ---- Fetch homework ----
+   168→  // The API automatically returns agency-wide data for agency owners,
+   169→  // and only own homework for tutors. We split on the client side.
+   170→  const fetchHomework = useCallback(async () => {
+   171→    try {
+   172→      const res = await authFetch('/api/homework?limit=100');
+   173→      if (!res.ok) return;
+   174→      const data = await res.json();
+   175→      const items: HomeworkItem[] = (data.homeworks || []).map((h: any) => {
+   176→        if (h.status === 'PENDING' && isOverdue(h.dueDate, h.status)) {
+   177→          return { ...h, status: 'OVERDUE' as const };
+   178→        }
+   179→        return h;
+   180→      });
+   181→      // For agency view: split into mine vs all
+   182→      if (isAgency) {
+   183→        setMyHomework(items.filter((h) => h.tutor?.id === userId));
+   184→        setAgencyHomework(items);
+   185→      } else {
+   186→        setMyHomework(items);
+   187→      }
+   188→    } catch {
+   189→      // silent
+   190→    }
+   191→  }, [userId, isAgency]);
+   192→
+   193→  const fetchAll = useCallback(async () => {
+   194→    setLoading(true);
+   195→    await fetchHomework();
+   196→    setLoading(false);
+   197→  }, [fetchHomework]);
+   198→
+   199→  // ---- Fetch students ----
+   200→  const fetchStudents = useCallback(async () => {
+   201→    try {
+   202→      const res = await authFetch('/api/agency/students?status=active&limit=200');
+   203→      if (!res.ok) return;
+   204→      const data = await res.json();
+   205→      setStudents((data.students || []).map((s: any) => ({
+   206→        id: s.id,
+   207→        name: s.name,
+   208→        email: s.email,
+   209→      })));
+   210→    } catch {
+   211→      // silent
+   212→    }
+   213→  }, []);
+   214→
+   215→  useEffect(() => {
+   216→    fetchAll();
+   217→    fetchStudents();
+   218→  }, [fetchAll, fetchStudents]);
+   219→
+   220→  // Re-filter when userId changes
+   221→  useEffect(() => {
+   222→    if (isAgency && agencyHomework.length > 0) {
+   223→      setMyHomework(agencyHomework.filter((h) => h.tutor?.id === userId));
+   224→    }
+   225→  }, [userId, isAgency, agencyHomework]);
+   226→
+   227→  // ---- Get active list ----
+   228→  const homework = isAgency ? agencyHomework : myHomework;
+   229→  const filtered = statusFilter === 'ALL'
+   230→    ? homework
+   231→    : homework.filter((h) => h.status === statusFilter);
+   232→
+   233→  // ---- Create ----
+   234→  const handleCreate = async () => {
+   235→    if (!createForm.title.trim() || !createForm.studentEmail.trim() || !createForm.dueDate) {
+   236→      toast({ title: 'Please fill in title, student email, and due date', variant: 'destructive' });
+   237→      return;
+   238→    }
+   239→    setCreating(true);
+   240→    try {
+   241→      // Find student by email
+   242→      const matchedStudent = students.find(
+   243→        (s) => s.email.toLowerCase() === createForm.studentEmail.trim().toLowerCase()
+   244→      );
+   245→      const body: Record<string, unknown> = {
+   246→        title: createForm.title,
+   247→        description: createForm.description || null,
+   248→        subject: createForm.subject,
+   249→        dueDate: new Date(createForm.dueDate).toISOString(),
+   250→        studentId: matchedStudent?.id || null,
+   251→      };
+   252→      const res = await authFetch('/api/homework', {
+   253→        method: 'POST',
+   254→        body: JSON.stringify(body),
+   255→      });
+   256→      if (!res.ok) {
+   257→        const bodyText = await res.text().catch(() => '');
+   258→        throw new Error(bodyText || 'Failed to create homework');
+   259→      }
+   260→      toast({ title: 'Homework assigned!', description: createForm.title });
+   261→      setCreateForm(EMPTY_CREATE);
+   262→      setCreateOpen(false);
+   263→      fetchAll();
+   264→    } catch (err: any) {
+   265→      toast({ title: 'Failed to create homework', description: err?.message || 'Please try again.', variant: 'destructive' });
+   266→    } finally {
+   267→      setCreating(false);
+   268→    }
+   269→  };
+   270→
+   271→  // ---- Grade ----
+   272→  const openGradeDialog = (item: HomeworkItem) => {
+   273→    setGradingItem(item);
+   274→    setGradeForm({
+   275→      tutorFeedback: item.tutorFeedback || '',
+   276→      grade: item.grade || '',
+   277→    });
+   278→    setGradeOpen(true);
+   279→  };
+   280→
+   281→  const handleGrade = async () => {
+   282→    if (!gradingItem) return;
+   283→    setGrading(true);
+   284→    try {
+   285→      const res = await authFetch(`/api/homework/${gradingItem.id}`, {
+   286→        method: 'PATCH',
+   287→        body: JSON.stringify({ status: 'GRADED', ...gradeForm }),
+   288→      });
+   289→      if (!res.ok) throw new Error('Failed to grade');
+   290→      toast({ title: 'Homework graded!', description: gradingItem.title });
+   291→      setGradeOpen(false);
+   292→      setGradingItem(null);
+   293→      fetchAll();
+   294→    } catch {
+   295→      toast({ title: 'Failed to grade homework', variant: 'destructive' });
+   296→    } finally {
+   297→      setGrading(false);
+   298→    }
+   299→  };
+   300→
+   301→  // ---- Mark submitted ----
+   302→  const handleMarkSubmitted = async (id: string) => {
+   303→    setActionLoading(id);
+   304→    try {
+   305→      const res = await authFetch(`/api/homework/${id}`, {
+   306→        method: 'PATCH',
+   307→        body: JSON.stringify({ status: 'SUBMITTED' }),
+   308→      });
+   309→      if (!res.ok) throw new Error('Failed to update');
+   310→      toast({ title: 'Marked as submitted' });
+   311→      fetchAll();
+   312→    } catch {
+   313→      toast({ title: 'Failed to update status', variant: 'destructive' });
+   314→    } finally {
+   315→      setActionLoading(null);
+   316→    }
+   317→  };
+   318→
+   319→  // ---- Mark graded (quick action) ----
+   320→  const handleMarkGraded = async (id: string) => {
+   321→    setActionLoading(id);
+   322→    try {
+   323→      const res = await authFetch(`/api/homework/${id}`, {
+   324→        method: 'PATCH',
+   325→        body: JSON.stringify({ status: 'GRADED' }),
+   326→      });
+   327→      if (!res.ok) throw new Error('Failed to update');
+   328→      toast({ title: 'Marked as graded' });
+   329→      fetchAll();
+   330→    } catch {
+   331→      toast({ title: 'Failed to update status', variant: 'destructive' });
+   332→    } finally {
+   333→      setActionLoading(null);
+   334→    }
+   335→  };
+   336→
+   337→  // ---- Loading ----
+   338→  if (loading) {
+   339→    return (
+   340→      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   341→        <CardHeader className="pb-3">
+   342→          <CardTitle className="text-lg font-bold flex items-center gap-2">
+   343→            <BookOpen className="w-5 h-5 text-emerald-500" />
+   344→            Homework
+   345→          </CardTitle>
+   346→        </CardHeader>
+   347→        <CardContent>
+   348→          <div className="space-y-3">
+   349→            {[1, 2, 3].map((i) => (
+   350→              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 animate-pulse">
+   351→                <div className="w-9 h-9 rounded-lg bg-gray-200" />
+   352→                <div className="flex-1 space-y-2">
+   353→                  <div className="h-4 bg-gray-200 rounded w-40" />
+   354→                  <div className="h-3 bg-gray-200 rounded w-24" />
+   355→                </div>
+   356→              </div>
+   357→            ))}
+   358→          </div>
+   359→        </CardContent>
+   360→      </Card>
+   361→    );
+   362→  }
+   363→
+   364→  // ---- Render table ----
+   365→  const renderTable = (items: HomeworkItem[]) => {
+   366→    if (items.length === 0) {
+   367→      return (
+   368→        <div className="text-center py-8">
+   369→          <CheckCircle className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
+   370→          <p className="text-sm text-muted-foreground">No homework matches this filter.</p>
+   371→        </div>
+   372→      );
+   373→    }
+   374→    return (
+   375→      <div className="rounded-xl border overflow-hidden max-h-[420px] overflow-y-auto">
+   376→        <table className="w-full text-sm">
+   377→          <thead className="bg-muted/50 border-b sticky top-0 z-10">
+   378→            <tr>
+   379→              <th className="text-left px-4 py-2.5 font-semibold text-xs">Title</th>
+   380→              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden sm:table-cell">Student</th>
+   381→              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden md:table-cell">Subject</th>
+   382→              <th className="text-left px-4 py-2.5 font-semibold text-xs">Status</th>
+   383→              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden lg:table-cell">Due Date</th>
+   384→              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden lg:table-cell">Grade</th>
+   385→              <th className="px-4 py-2.5" />
+   386→            </tr>
+   387→          </thead>
+   388→          <tbody>
+   389→            {items.map((hw) => {
+   390→              const meta = subjectMeta[hw.subject] || subjectMeta.GENERAL;
+   391→              return (
+   392→                <tr key={hw.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+   393→                  <td className="px-4 py-3">
+   394→                    <div className="flex items-center gap-2">
+   395→                      <div className={`w-7 h-7 rounded-md ${meta.gradient} flex items-center justify-center shrink-0`}>
+   396→                        <meta.icon className="w-3.5 h-3.5 text-white" />
+   397→                      </div>
+   398→                      <div className="min-w-0">
+   399→                        <p className="font-medium text-xs truncate max-w-[140px]">{hw.title}</p>
+   400→                      </div>
+   401→                    </div>
+   402→                  </td>
+   403→                  <td className="px-4 py-3 text-xs hidden sm:table-cell">
+   404→                    <div>
+   405→                      <p className="font-medium">{hw.student?.name || '—'}</p>
+   406→                      <p className="text-[10px] text-muted-foreground">{hw.student?.email}</p>
+   407→                    </div>
+   408→                  </td>
+   409→                  <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{meta.label}</td>
+   410→                  <td className="px-4 py-3">{statusBadge(hw.status)}</td>
+   411→                  <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
+   412→                    <span className="flex items-center gap-1">
+   413→                      <Clock className="w-3 h-3" />
+   414→                      {formatDate(hw.dueDate)}
+   415→                    </span>
+   416→                  </td>
+   417→                  <td className="px-4 py-3 text-xs font-medium hidden lg:table-cell">
+   418→                    {hw.grade ? (
+   419→                      <span className="flex items-center gap-1 text-emerald-600">
+   420→                        <Star className="w-3 h-3" />
+   421→                        {hw.grade}
+   422→                      </span>
+   423→                    ) : (
+   424→                      <span className="text-muted-foreground">—</span>
+   425→                    )}
+   426→                  </td>
+   427→                  <td className="px-4 py-3">
+   428→                    <div className="flex items-center gap-1">
+   429→                      {hw.status === 'SUBMITTED' && (
+   430→                        <Button
+   431→                          size="sm"
+   432→                          variant="ghost"
+   433→                          className="h-7 w-7 p-0 rounded-lg hover:bg-emerald-100 hover:text-emerald-700"
+   434→                          title="Grade"
+   435→                          onClick={() => openGradeDialog(hw)}
+   436→                        >
+   437→                          <Star className="w-3.5 h-3.5" />
+   438→                        </Button>
+   439→                      )}
+   440→                      {hw.status === 'PENDING' && (
+   441→                        <Button
+   442→                          size="sm"
+   443→                          variant="ghost"
+   444→                          className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600"
+   445→                          title="Mark Submitted"
+   446→                          disabled={actionLoading === hw.id}
+   447→                          onClick={() => handleMarkSubmitted(hw.id)}
+   448→                        >
+   449→                          {actionLoading === hw.id ? (
+   450→                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
+   451→                          ) : (
+   452→                            <Send className="w-3.5 h-3.5" />
+   453→                          )}
+   454→                        </Button>
+   455→                      )}
+   456→                      {hw.status === 'OVERDUE' && (
+   457→                        <Button
+   458→                          size="sm"
+   459→                          variant="ghost"
+   460→                          className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600"
+   461→                          title="Mark Submitted"
+   462→                          disabled={actionLoading === hw.id}
+   463→                          onClick={() => handleMarkSubmitted(hw.id)}
+   464→                        >
+   465→                          {actionLoading === hw.id ? (
+   466→                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
+   467→                          ) : (
+   468→                            <Send className="w-3.5 h-3.5" />
+   469→                          )}
+   470→                        </Button>
+   471→                      )}
+   472→                      {hw.status === 'SUBMITTED' && (
+   473→                        <Button
+   474→                          size="sm"
+   475→                          variant="ghost"
+   476→                          className="h-7 w-7 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-700"
+   477→                          title="Mark Graded"
+   478→                          disabled={actionLoading === hw.id}
+   479→                          onClick={() => handleMarkGraded(hw.id)}
+   480→                        >
+   481→                          {actionLoading === hw.id ? (
+   482→                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
+   483→                          ) : (
+   484→                            <ClipboardCheck className="w-3.5 h-3.5" />
+   485→                          )}
+   486→                        </Button>
+   487→                      )}
+   488→                      <Button
+   489→                        size="sm"
+   490→                        variant="ghost"
+   491→                        className="h-7 w-7 p-0 rounded-lg hover:bg-gray-100"
+   492→                        title="View details"
+   493→                        onClick={() => openGradeDialog(hw)}
+   494→                      >
+   495→                        <Eye className="w-3.5 h-3.5" />
+   496→                      </Button>
+   497→                    </div>
+   498→                  </td>
+   499→                </tr>
+   500→              );
+   501→            })}
+   502→          </tbody>
+   503→        </table>
+   504→      </div>
+   505→    );
+   506→  };
+   507→
+   508→  // ---- Render ----
+   509→  return (
+   510→    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   511→      <CardHeader className="pb-3">
+   512→        <div className="flex items-center justify-between">
+   513→          <CardTitle className="text-lg font-bold flex items-center gap-2">
+   514→            <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+   515→              <BookOpen className="w-4 h-4 text-emerald-600" />
+   516→            </div>
+   517→            Homework
+   518→            {homework.length > 0 && (
+   519→              <Badge variant="secondary" className="ml-1 text-xs font-medium">
+   520→                {homework.length}
+   521→              </Badge>
+   522→            )}
+   523→          </CardTitle>
+   524→
+   525→          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+   526→            <DialogTrigger asChild>
+   527→              <Button
+   528→                size="sm"
+   529→                className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
+   530→              >
+   531→                <Plus className="w-4 h-4" />
+   532→                Assign
+   533→              </Button>
+   534→            </DialogTrigger>
+   535→            <DialogContent className="rounded-2xl sm:max-w-md">
+   536→              <DialogHeader>
+   537→                <DialogTitle className="flex items-center gap-2">
+   538→                  <Plus className="w-5 h-5 text-emerald-500" />
+   539→                  Assign Homework
+   540→                </DialogTitle>
+   541→                <DialogDescription>Create a new homework assignment for a student.</DialogDescription>
+   542→              </DialogHeader>
+   543→              <div className="space-y-4 pt-2">
+   544→                <div>
+   545→                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Title</Label>
+   546→                  <Input
+   547→                    placeholder="e.g. Chapter 5 Practice Problems"
+   548→                    value={createForm.title}
+   549→                    onChange={(e) => setCreateForm((p) => ({ ...p, title: e.target.value }))}
+   550→                    className="rounded-xl"
+   551→                  />
+   552→                </div>
+   553→                <div>
+   554→                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Description</Label>
+   555→                  <Textarea
+   556→                    placeholder="Instructions or details..."
+   557→                    value={createForm.description}
+   558→                    onChange={(e) => setCreateForm((p) => ({ ...p, description: e.target.value }))}
+   559→                    className="rounded-xl min-h-[80px]"
+   560→                  />
+   561→                </div>
+   562→                <div>
+   563→                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Student Email</Label>
+   564→                  <Input
+   565→                    type="email"
+   566→                    placeholder="student@example.com"
+   567→                    value={createForm.studentEmail}
+   568→                    onChange={(e) => setCreateForm((p) => ({ ...p, studentEmail: e.target.value }))}
+   569→                    className="rounded-xl"
+   570→                  />
+   571→                </div>
+   572→                <div>
+   573→                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Subject</Label>
+   574→                  <Select value={createForm.subject} onValueChange={(v) => setCreateForm((p) => ({ ...p, subject: v }))}>
+   575→                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+   576→                    <SelectContent>
+   577→                      {Object.entries(subjectMeta).map(([key, meta]) => (
+   578→                        <SelectItem key={key} value={key}>{meta.label}</SelectItem>
+   579→                      ))}
+   580→                    </SelectContent>
+   581→                  </Select>
+   582→                </div>
+   583→                <div>
+   584→                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Due Date</Label>
+   585→                  <Input
+   586→                    type="date"
+   587→                    value={createForm.dueDate}
+   588→                    onChange={(e) => setCreateForm((p) => ({ ...p, dueDate: e.target.value }))}
+   589→                    className="rounded-xl"
+   590→                  />
+   591→                </div>
+   592→                <Button
+   593→                  onClick={handleCreate}
+   594→                  disabled={creating}
+   595→                  className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
+   596→                >
+   597→                  {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+   598→                  Assign Homework
+   599→                </Button>
+   600→              </div>
+   601→            </DialogContent>
+   602→          </Dialog>
+   603→        </div>
+   604→      </CardHeader>
+   605→
+   606→      <CardContent>
+   607→        {homework.length === 0 && myHomework.length === 0 && (!isAgency || agencyHomework.length === 0) ? (
+   608→          <div className="text-center py-10">
+   609→            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+   610→              <FileText className="w-7 h-7 text-emerald-400" />
+   611→            </div>
+   612→            <h3 className="text-sm font-semibold text-gray-900">No homework assigned</h3>
+   613→            <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first homework assignment.</p>
+   614→            <Button
+   615→              onClick={() => setCreateOpen(true)}
+   616→              className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
+   617→              size="sm"
+   618→            >
+   619→              <Plus className="w-4 h-4" />
+   620→              Assign Homework
+   621→            </Button>
+   622→          </div>
+   623→        ) : (
+   624→          <>
+   625→            {/* Tabs for agency view */}
+   626→            {isAgency && (
+   627→              <Tabs
+   628→                defaultValue="mine"
+   629→                className="w-full mb-4"
+   630→                onValueChange={() => {
+   631→                  setStatusFilter('ALL');
+   632→                }}
+   633→              >
+   634→                <TabsList className="w-full grid grid-cols-2 rounded-xl">
+   635→                  <TabsTrigger value="mine" className="rounded-lg text-xs font-medium">
+   636→                    My Homework
+   637→                  </TabsTrigger>
+   638→                  <TabsTrigger value="agency" className="rounded-lg text-xs font-medium">
+   639→                    Agency All
+   640→                  </TabsTrigger>
+   641→                </TabsList>
+   642→                <TabsContent value="mine" className="mt-3">
+   643→                  <StatusFilterButtons statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+   644→                  {renderTable(
+   645→                    (statusFilter === 'ALL' ? myHomework : myHomework.filter((h) => h.status === statusFilter))
+   646→                  )}
+   647→                </TabsContent>
+   648→                <TabsContent value="agency" className="mt-3">
+   649→                  <StatusFilterButtons statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+   650→                  {renderTable(
+   651→                    (statusFilter === 'ALL' ? agencyHomework : agencyHomework.filter((h) => h.status === statusFilter))
+   652→                  )}
+   653→                </TabsContent>
+   654→              </Tabs>
+   655→            )}
+   656→
+   657→            {/* Non-agency: simple filter + table */}
+   658→            {!isAgency && (
+   659→              <>
+   660→                <StatusFilterButtons statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+   661→                {renderTable(filtered)}
+   662→              </>
+   663→            )}
+   664→          </>
+   665→        )}
+   666→      </CardContent>
+   667→
+   668→      {/* Grade Dialog */}
+   669→      <Dialog open={gradeOpen} onOpenChange={setGradeOpen}>
+   670→        <DialogContent className="rounded-2xl sm:max-w-md">
+   671→          <DialogHeader>
+   672→            <DialogTitle className="flex items-center gap-2">
+   673→              <Star className="w-5 h-5 text-emerald-500" />
+   674→              {gradingItem?.status === 'SUBMITTED' ? 'Grade Homework' : 'Homework Details'}
+   675→            </DialogTitle>
+   676→            <DialogDescription>
+   677→              {gradingItem?.title} — {gradingItem?.student?.name || 'Unknown'}
+   678→            </DialogDescription>
+   679→          </DialogHeader>
+   680→          <div className="space-y-4 pt-2">
+   681→            {gradingItem?.description && (
+   682→              <div className="rounded-xl bg-gray-50 p-3">
+   683→                <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
+   684→                <p className="text-sm">{gradingItem.description}</p>
+   685→              </div>
+   686→            )}
+   687→            <div>
+   688→              <Label className="text-sm font-medium text-gray-700 mb-1 block">Grade</Label>
+   689→              <Input
+   690→                placeholder="e.g. A, 95%, 8/10"
+   691→                value={gradeForm.grade}
+   692→                onChange={(e) => setGradeForm((p) => ({ ...p, grade: e.target.value }))}
+   693→                className="rounded-xl"
+   694→                disabled={gradingItem?.status === 'GRADED'}
+   695→              />
+   696→            </div>
+   697→            <div>
+   698→              <Label className="text-sm font-medium text-gray-700 mb-1 block">Feedback</Label>
+   699→              <Textarea
+   700→                placeholder="Your feedback for the student..."
+   701→                value={gradeForm.tutorFeedback}
+   702→                onChange={(e) => setGradeForm((p) => ({ ...p, tutorFeedback: e.target.value }))}
+   703→                className="rounded-xl min-h-[100px]"
+   704→                disabled={gradingItem?.status === 'GRADED'}
+   705→              />
+   706→            </div>
+   707→            {gradingItem?.status !== 'GRADED' && (
+   708→              <Button
+   709→                onClick={handleGrade}
+   710→                disabled={grading}
+   711→                className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
+   712→              >
+   713→                {grading && <Loader2 className="w-4 h-4 animate-spin" />}
+   714→                Submit Grade
+   715→              </Button>
+   716→            )}
+   717→          </div>
+   718→        </DialogContent>
+   719→      </Dialog>
+   720→    </Card>
+   721→  );
+   722→}
+   723→
+   724→// ------------------------------------------------------------------
+   725→// Status Filter Buttons (extracted for reuse in tabs)
+   726→// ------------------------------------------------------------------
+   727→function StatusFilterButtons({ statusFilter, setStatusFilter }: { statusFilter: string; setStatusFilter: (v: string) => void }) {
+   728→  return (
+   729→    <div className="flex items-center gap-2 mb-4 flex-wrap">
+   730→      {STATUS_OPTIONS.map((s) => (
+   731→        <Button
+   732→          key={s}
+   733→          variant={statusFilter === s ? 'default' : 'outline'}
+   734→          size="sm"
+   735→          className={`rounded-lg text-xs h-7 px-2.5 ${statusFilter === s ? 'gradient-primary border-0 text-white' : ''}`}
+   736→          onClick={() => setStatusFilter(s)}
+   737→        >
+   738→          {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
+   739→        </Button>
+   740→      ))}
+   741→    </div>
+   742→  );
+   743→}
+   744→

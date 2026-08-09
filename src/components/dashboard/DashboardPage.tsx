@@ -85,6 +85,8 @@ import {
   PanelLeftClose,
   PanelLeft,
   ChevronDown,
+  Receipt,
+  ClipboardList,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BillingPanel } from './BillingPanel';
@@ -98,6 +100,12 @@ import { AnalyticsPanel } from './AnalyticsPanel';
 import { SchedulePanel } from './SchedulePanel';
 import { RecordingsPanel } from './RecordingsPanel';
 import { TemplateGallery, type TemplateInfo } from './TemplateGallery';
+import { HomeworkPanel } from './HomeworkPanel';
+import { LessonNotesPanel } from './LessonNotesPanel';
+import { ResourceLibraryPanel } from './ResourceLibraryPanel';
+import { InvoicePanel } from './InvoicePanel';
+import { AgencyAnalyticsPanel } from './AgencyAnalyticsPanel';
+import { StudentProgressPanel } from './StudentProgressPanel';
 
 // ============================================================
 // Types
@@ -112,7 +120,11 @@ type DashboardView =
   | 'recordings'
   | 'agency'
   | 'billing'
-  | 'settings';
+  | 'settings'
+  | 'homework'
+  | 'lesson-notes'
+  | 'invoices'
+  | 'student-progress';
 
 // ============================================================
 // Navigation Items
@@ -140,11 +152,16 @@ function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
   const workspace: NavItem[] = [
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Upcoming & past lessons' },
     { id: 'recordings', label: 'Recordings', icon: Video, description: 'Lesson recordings' },
+    { id: 'homework', label: 'Homework', icon: GraduationCap, description: 'Assignments & grading' },
+    { id: 'lesson-notes', label: 'Lesson Notes', icon: FileText, description: 'Post-lesson notes & feedback' },
   ];
 
   const resources: NavItem[] = isAgencyTier(tier) ? [
+    { id: 'resources', label: 'Resources', icon: FolderOpen, description: 'Saved boards, templates & library' },
+    { id: 'invoices', label: 'Invoices', icon: Receipt, description: 'Billing invoices & payments' },
+  ] : [
     { id: 'resources', label: 'Resources', icon: FolderOpen, description: 'Saved boards & templates' },
-  ] : [];
+  ];
 
   const agency: NavItem[] = isAgencyTier(tier) ? [
     { id: 'agency', label: 'Agency', icon: Users, description: 'Sub-tutors & students' },
@@ -295,6 +312,10 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
 
   // Student mode toggle
   const [isStudentMode, setIsStudentMode] = useState(false);
+
+  // Student progress drill-down state
+  const [progressStudentId, setProgressStudentId] = useState<string | null>(null);
+  const [progressStudentName, setProgressStudentName] = useState<string | null>(null);
 
   const { toast } = useToast();
 
@@ -801,12 +822,36 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             {/* ============================================================
                 VIEW: Resources (Saved Boards + Templates)
                 ============================================================ */}
-            {activeView === 'resources' && isAgencyTier(tier) && (
+            {activeView === 'resources' && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
                   <h3 className="text-lg font-bold">Resources</h3>
-                  <p className="text-sm text-muted-foreground">Your saved boards and reusable templates</p>
+                  <p className="text-sm text-muted-foreground">Your saved boards, templates, and shared library</p>
                 </div>
+                {isAgencyTier(tier) ? (
+                <Tabs defaultValue="boards" className="w-full">
+                  <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
+                    <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                      <BookOpen className="w-4 h-4" />Saved Boards
+                    </TabsTrigger>
+                    <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                      <LayoutTemplate className="w-4 h-4" />Templates
+                    </TabsTrigger>
+                    <TabsTrigger value="library" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                      <FolderOpen className="w-4 h-4" />Shared Library
+                    </TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="boards" className="mt-6">
+                    <SavedBoardsPanel userId={user?.id || ''} tier={tier} />
+                  </TabsContent>
+                  <TabsContent value="templates" className="mt-6">
+                    <TemplatesPanel userId={user?.id || ''} tier={tier} />
+                  </TabsContent>
+                  <TabsContent value="library" className="mt-6">
+                    <ResourceLibraryPanel agencyId={user?.id || ''} userId={user?.id || ''} />
+                  </TabsContent>
+                </Tabs>
+                ) : (
                 <Tabs defaultValue="boards" className="w-full">
                   <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
                     <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
@@ -823,6 +868,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                     <TemplatesPanel userId={user?.id || ''} tier={tier} />
                   </TabsContent>
                 </Tabs>
+                )}
               </div>
             )}
 
@@ -866,6 +912,32 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             )}
 
             {/* ============================================================
+                VIEW: Homework
+                ============================================================ */}
+            {activeView === 'homework' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Homework</h3>
+                  <p className="text-sm text-muted-foreground">Assign, track, and grade student homework</p>
+                </div>
+                <HomeworkPanel userId={user.id} agencyId={user?.id || ''} userTier={tier} />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Lesson Notes
+                ============================================================ */}
+            {activeView === 'lesson-notes' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Lesson Notes</h3>
+                  <p className="text-sm text-muted-foreground">Post-lesson notes, feedback, and topics for next session</p>
+                </div>
+                <LessonNotesPanel userId={user.id} />
+              </div>
+            )}
+
+            {/* ============================================================
                 VIEW: Agency (Sub-tutors + Students)
                 ============================================================ */}
             {activeView === 'agency' && isAgencyTier(tier) && (
@@ -875,6 +947,32 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                   <p className="text-sm text-muted-foreground">Manage your sub-tutors, student roster, and usage</p>
                 </div>
                 <AgencyAdminPanel agencyUserId={user?.id || ''} userTier={tier} />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Invoices
+                ============================================================ */}
+            {activeView === 'invoices' && isAgencyTier(tier) && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Invoices</h3>
+                  <p className="text-sm text-muted-foreground">Create and manage invoices for your students</p>
+                </div>
+                <InvoicePanel agencyId={user?.id || ''} userId={user?.id || ''} />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Student Progress
+                ============================================================ */}
+            {activeView === 'student-progress' && progressStudentId && (
+              <div className="space-y-6 animate-fade-in-up">
+                <StudentProgressPanel
+                  studentId={progressStudentId}
+                  studentName={progressStudentName || ''}
+                  onBack={() => { setProgressStudentId(null); setProgressStudentName(null); setActiveView('agency'); }}
+                />
               </div>
             )}
 
