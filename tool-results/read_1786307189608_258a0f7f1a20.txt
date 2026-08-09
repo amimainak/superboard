@@ -1,310 +1,3 @@
-    53→
-    54→// Inline Google "G" SVG — avoids adding a dependency
-    55→function GoogleIcon({ className }: { className?: string }) {
-    56→  return (
-    57→    <svg className={className} viewBox="0 0 24 24">
-    58→      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-    59→      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-    60→      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-    61→      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-    62→    </svg>
-    63→  );
-    64→}
-    65→
-    66→function LandingPage() {
-    67→  const { setTier } = useAppStore();
-    68→
-    69→  const [loginEmail, setLoginEmail] = useState('');
-    70→  const [loginPassword, setLoginPassword] = useState('');
-    71→  const [registerName, setRegisterName] = useState('');
-    72→  const [registerEmail, setRegisterEmail] = useState('');
-    73→  const [registerPassword, setRegisterPassword] = useState('');
-    74→  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
-    75→  const [showVerification, setShowVerification] = useState(false);
-    76→  const [authError, setAuthError] = useState('');
-    77→  const [authMessage, setAuthMessage] = useState('');
-    78→  const [showAuth, setShowAuth] = useState<'login' | 'register' | null>(null);
-    79→  const [isAnnual, setIsAnnual] = useState(false);
-    80→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    81→  const [showForgotPassword, setShowForgotPassword] = useState(false);
-    82→  const [forgotEmail, setForgotEmail] = useState('');
-    83→  const [forgotSuccess, setForgotSuccess] = useState(false);
-    84→  const mobileMenuRef = useRef<HTMLDivElement>(null);
-    85→
-    86→  // Read showAuth URL param from invite redirects
-    87→  useEffect(() => {
-    88→    const params = new URLSearchParams(window.location.search);
-    89→    if (params.get('showAuth') === 'login') {
-    90→      setShowAuth('login');
-    91→      // Clean the URL without reloading
-    92→      window.history.replaceState({}, '', '/');
-    93→    }
-    94→    if (params.get('showAuth') === 'register') {
-    95→      setShowAuth('register');
-    96→      window.history.replaceState({}, '', '/');
-    97→    }
-    98→  }, []);
-    99→
-   100→  const handleForgotPassword = useCallback(async (e: React.FormEvent) => {
-   101→    e.preventDefault();
-   102→    setAuthError('');
-   103→    try {
-   104→      const supabase = createClient();
-   105→      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
-   106→      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
-   107→      if (error) throw error;
-   108→      setForgotSuccess(true);
-   109→    } catch (err: any) {
-   110→      setAuthError(err?.message || 'Failed to send reset email.');
-   111→    }
-   112→  }, [forgotEmail]);
-   113→
-   114→  const handleLogin = useCallback(async (e: React.FormEvent) => {
-   115→    e.preventDefault();
-   116→    setAuthError('');
-   117→    setAuthMessage('');
-   118→    try {
-   119→      const supabase = createClient();
-   120→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
-   121→      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
-   122→      if (error) { setAuthError(error.message); return; }
-   123→      initAuthFetch();
-   124→      const { data: { user: u } } = await supabase.auth.getUser();
-   125→      if (u) {
-   126→        try {
-   127→          const tierRes = await authFetch(`/api/auth/profile?userId=${u.id}`);
-   128→          if (tierRes.ok) { const d = await tierRes.json(); if (d.tier) setTier(d.tier as Tier); }
-   129→        } catch { /* ignore */ }
-   130→      }
-   131→      setLoginEmail(''); setLoginPassword('');
-   132→      closeAuth();
-   133→    } catch { setAuthError('Network error'); }
-   134→  }, [loginEmail, loginPassword, setTier]);
-   135→
-   136→  const evaluatePasswordStrength = (password: string) => {
-   137→    let score = 0;
-   138→    if (password.length >= 6) score++;
-   139→    if (password.length >= 10) score++;
-   140→    if (/[A-Z]/.test(password)) score++;
-   141→    if (/[0-9]/.test(password)) score++;
-   142→    if (/[^A-Za-z0-9]/.test(password)) score++;
-   143→    if (score <= 1) return { score, label: 'Weak', color: 'bg-red-500' };
-   144→    if (score <= 3) return { score, label: 'Fair', color: 'bg-amber-500' };
-   145→    if (score <= 4) return { score, label: 'Good', color: 'bg-emerald-400' };
-   146→    return { score, label: 'Strong', color: 'bg-emerald-600' };
-   147→  };
-   148→
-   149→  const handleRegister = useCallback(async (e: React.FormEvent) => {
-   150→    e.preventDefault();
-   151→    setAuthError('');
-   152→    setAuthMessage('');
-   153→    try {
-   154→      const supabase = createClient();
-   155→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
-   156→      const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
-   157→      if (error) { setAuthError(error.message); return; }
-   158→      if (data.user && data.session) {
-   159→        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail, name: registerName }) }); } catch { /* */ }
-   160→      } else {
-   161→        setAuthMessage('Check your email...');
-   162→        setShowVerification(true);
-   163→        setShowAuth(null);
-   164→      }
-   165→      setRegisterEmail(''); setRegisterPassword(''); setRegisterName('');
-   166→    } catch { setAuthError('Network error'); }
-   167→  }, [registerEmail, registerPassword, registerName]);
-   168→
-   169→  const handleGoogleAuth = useCallback(async () => {
-   170→    setAuthError('');
-   171→    try {
-   172→      const supabase = createClient();
-   173→      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
-   174→      // Build redirect URL — preserve invite code if present, drop auth params
-   175→      const params = new URLSearchParams(window.location.search);
-   176→      params.delete('showAuth');
-   177→      const qs = params.toString();
-   178→      const redirectTo = window.location.origin + (qs ? `?${qs}` : '');
-   179→      const { error } = await supabase.auth.signInWithOAuth({
-   180→        provider: 'google',
-   181→        options: {
-   182→          redirectTo,
-   183→        },
-   184→      });
-   185→      if (error) { setAuthError(error.message); }
-   186→    } catch { setAuthError('Failed to connect to Google.'); }
-   187→  }, []);
-   188→
-   189→  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); };
-   190→
-   191→  return (
-   192→    <main className="min-h-screen bg-white">
-   193→      {/* ===== NAVBAR ===== */}
-   194→      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-   195→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-   196→          <div className="flex items-center gap-3">
-   197→            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
-   198→              <GraduationCap className="w-5 h-5 text-white" />
-   199→            </div>
-   200→            <span className="text-lg font-bold tracking-tight text-gray-900">Superboard</span>
-   201→          </div>
-   202→          <div className="hidden md:flex items-center gap-8">
-   203→            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a>
-   204→            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
-   205→            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
-   206→          </div>
-   207→          <div className="flex items-center gap-3">
-   208→            <Button variant="ghost" className="text-sm font-medium text-gray-700 hover:text-gray-900 hidden sm:inline-flex" onClick={() => setShowAuth('login')}>
-   209→              Sign In
-   210→            </Button>
-   211→            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
-   212→              Get Started Free
-   213→            </Button>
-   214→            {/* Mobile hamburger */}
-   215→            <button
-   216→              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-   217→              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-   218→              aria-label="Toggle navigation menu"
-   219→            >
-   220→              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-   221→                {mobileMenuOpen
-   222→                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-   223→                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
-   224→              </svg>
-   225→            </button>
-   226→          </div>
-   227→        </div>
-   228→        {/* Mobile dropdown menu */}
-   229→        {mobileMenuOpen && (
-   230→          <div ref={mobileMenuRef} className="md:hidden border-t border-gray-200 bg-white px-6 py-4 space-y-3 animate-fade-in-up">
-   231→            <a href="#features" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
-   232→            <a href="#how-it-works" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
-   233→            <a href="#pricing" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
-   234→            <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
-   235→              <Button variant="ghost" className="text-sm font-medium text-gray-700 justify-start" onClick={() => { setShowAuth('login'); setMobileMenuOpen(false); }}>Sign In</Button>
-   236→              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm" onClick={() => { setShowAuth('register'); setMobileMenuOpen(false); }}>Get Started Free</Button>
-   237→            </div>
-   238→          </div>
-   239→        )}
-   240→      </nav>
-   241→
-   242→      {/* ===== HERO SECTION ===== */}
-   243→      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-white">
-   244→        {/* Subtle grid — no blur blobs */}
-   245→        <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.6px, transparent 0.6px)', backgroundSize: '24px 24px' }} />
-   246→
-   247→        <div className="max-w-7xl mx-auto px-6 relative z-10">
-   248→          <div className="grid md:grid-cols-2 gap-12 items-center">
-   249→            {/* Left: Copy */}
-   250→            <div className="max-w-xl">
-   251→              {/* Badge */}
-   252→              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
-   253→                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
-   254→                <span className="text-xs font-semibold text-emerald-700">Smart Tutoring Platform</span>
-   255→              </div>
-   256→
-   257→              <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
-   258→                Turn Every Lesson Into an{' '}
-   259→                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
-   260→                  Interactive Experience
-   261→                </span>
-   262→              </h1>
-   263→
-   264→              <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
-   265→                The AI-powered whiteboard built for K-12 tutors. Draw, graph, use smart tools, and video-call your students — all on one infinite canvas. No student sign-up required.
-   266→              </p>
-   267→
-   268→              <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
-   269→                <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-6 h-12" onClick={() => setShowAuth('register')}>
-   270→                  Start Teaching Free — No Credit Card <ArrowRight className="w-4 h-4 ml-1.5" />
-   271→                </Button>
-   272→                <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
-   273→                  <Play className="w-4 h-4 mr-1.5" /> Watch Demo
-   274→                </Button>
-   275→              </div>
-   276→
-   277→              {/* Trust signals */}
-   278→              <div className="mt-10 flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up-delay-3">
-   279→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up needed</span>
-   280→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> AI-powered tools</span>
-   281→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free to start</span>
-   282→              </div>
-   283→            </div>
-   284→
-   285→            {/* Right: Hero Illustration */}
-   286→            <div className="hidden md:flex justify-center animate-fade-in-up-delay-1">
-   287→              <div className="relative w-full max-w-lg">
-   288→                {/* Canvas card */}
-   289→                <div className="rounded-2xl border border-gray-200 bg-white shadow-xl p-4 relative z-10">
-   290→                  {/* Mini toolbar */}
-   291→                  <div className="flex items-center gap-2 mb-4 px-1">
-   292→                    {[
-   293→                      { icon: PenTool, color: 'text-emerald-600 bg-emerald-50' },
-   294→                      { icon: Calculator, color: 'text-blue-600 bg-blue-50' },
-   295→                      { icon: FlaskConical, color: 'text-purple-600 bg-purple-50' },
-   296→                      { icon: Brain, color: 'text-amber-600 bg-amber-50' },
-   297→                    ].map(({ icon: Icon, color }) => (
-   298→                      <div key={color} className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center`}>
-   299→                        <Icon className="w-4 h-4" />
-   300→                      </div>
-   301→                    ))}
-   302→                    <div className="flex-1" />
-   303→                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><Video className="w-4 h-4" /></div>
-   304→                  </div>
-   305→                  {/* Mini canvas area */}
-   306→                  <div className="rounded-xl bg-gradient-to-br from-gray-50 to-white h-52 relative overflow-hidden">
-   307→                    {/* Fake grid */}
-   308→                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #000 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
-   309→                    {/* Fake math content */}
-   310→                    <div className="absolute top-4 left-4">
-   311→                      <div className="text-sm font-medium text-gray-700">f(x) = 2x + 3</div>
-   312→                      <div className="mt-2 text-xs text-gray-400">slope = 2, y-intercept = 3</div>
-   313→                    </div>
-   314→                    {/* Fake graph */}
-   315→                    <svg className="absolute bottom-4 right-4" width="140" height="100" viewBox="0 0 140 100">
-   316→                      <line x1="10" y1="90" x2="130" y2="10" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" />
-   317→                      <line x1="10" y1="90" x2="130" y2="90" stroke="#d1d5db" strokeWidth="1" />
-   318→                      <line x1="10" y1="90" x2="10" y2="10" stroke="#d1d5db" strokeWidth="1" />
-   319→                      <circle cx="70" cy="50" r="4" fill="#059669" />
-   320→                      <text x="75" y="54" fontSize="10" fill="#059669" fontWeight="bold">x=35</text>
-   321→                    </svg>
-   322→                    {/* Cursor dot */}
-   323→                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400/40 animate-pulse" />
-   324→                  </div>
-   325→                </div>
-   326→                {/* Decorative cards behind */}
-   327→                <div className="absolute -top-3 -right-3 w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 -z-10 rotate-6 opacity-60" />
-   328→                <div className="absolute -bottom-3 -left-3 w-20 h-20 rounded-xl bg-gradient-to-br from-sky-100 to-blue-50 -z-10 -rotate-6 opacity-60" />
-   329→              </div>
-   330→            </div>
-   331→          </div>
-   332→        </div>
-   333→      </section>
-   334→
-   335→      {/* ===== FEATURES ===== */}
-   336→      <section id="features" className="py-20 md:py-28 bg-white">
-   337→        <div className="max-w-7xl mx-auto px-6">
-   338→          <div className="text-center max-w-2xl mx-auto mb-16">
-   339→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 mb-4">
-   340→              <Zap className="w-3.5 h-3.5 text-sky-500" />
-   341→              <span className="text-xs font-semibold text-sky-700">Powerful Features</span>
-   342→            </div>
-   343→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
-   344→              Everything You Need,{' '}
-   345→              <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">Nothing You Don&apos;t</span>
-   346→            </h2>
-   347→          </div>
-   348→
-   349→          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-   350→            {[
-   351→              { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-500 to-teal-500' },
-   352→              { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-sky-500 to-blue-500' },
-   353→              { icon: Brain, title: 'AI-Powered Tools', desc: 'Auto-generate quizzes, plot graphs, balance equations, and summarize notes — all from your board.', gradient: 'from-purple-500 to-violet-500' },
-   354→              { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-amber-500 to-orange-500' },
-   355→              { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-rose-500 to-pink-500' },
-   356→              { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-indigo-500 to-blue-500' },
-   357→            ].map((item) => (
-   358→              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
-   359→                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
    360→                  <item.icon className="w-5 h-5 text-white" />
    361→                </div>
    362→                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
@@ -318,7 +11,7 @@
    370→      {/* ===== TRUST SIGNALS ===== */}
    371→      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
    372→        <div className="max-w-7xl mx-auto px-6">
-   373→          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+   373→          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
    374→            {[
    375→              { icon: Check, text: 'No student sign-up required' },
    376→              { icon: Shield, text: 'End-to-end encrypted' },
@@ -358,7 +51,7 @@
    410→            ].map((item) => (
    411→              <div key={item.step} className="relative text-center group">
    412→                {/* Step number */}
-   413→                <div className="absolute -top-3 -left-2 text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+   413→                <div className="absolute -top-3 -left-2 text-5xl md:text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
    414→                <div className="relative z-10">
    415→                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
    416→                    <item.icon className="w-7 h-7 text-white" />
@@ -427,7 +120,7 @@
    479→            </span>
    480→          </div>
    481→
-   482→          <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+   482→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto">
    483→            {/* Free */}
    484→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
    485→              <div className="mb-6">
@@ -562,13 +255,13 @@
    614→              <span className="text-sm font-semibold text-gray-900">Superboard</span>
    615→            </div>
    616→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-   617→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
-   618→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
-   619→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms &amp; Conditions</a>
-   620→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy Policy</a>
-   621→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Refund Policy</a>
-   622→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Cookie Policy</a>
-   623→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+   617→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
+   618→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
+   619→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
+   620→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
+   621→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
+   622→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
+   623→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
    624→            </div>
    625→          </div>
    626→          {/* Bottom row: copyright */}

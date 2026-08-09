@@ -40,7 +40,6 @@ import {
   Users,
   School,
   TrendingUp,
-  Play,
   ArrowRight,
   Check,
   Monitor,
@@ -262,23 +261,23 @@ function LandingPage() {
               </h1>
 
               <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
-                The AI-powered whiteboard built for K-12 tutors. Draw, graph, use smart tools, and video-call your students — all on one infinite canvas. No student sign-up required.
+                The interactive whiteboard built for K-12 tutors. Draw, graph, use subject tools, and video-call your students — all on one infinite canvas. No student sign-up required.
               </p>
 
               <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
                 <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-6 h-12" onClick={() => setShowAuth('register')}>
                   Start Teaching Free — No Credit Card <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
-                <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
-                  <Play className="w-4 h-4 mr-1.5" /> Watch Demo
+                <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <ClipboardList className="w-4 h-4 mr-1.5" /> See Plans
                 </Button>
               </div>
 
               {/* Trust signals */}
               <div className="mt-10 flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up-delay-3">
                 <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up needed</span>
-                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> AI-powered tools</span>
-                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free to start</span>
+                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free plan available</span>
+                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Upgrade anytime</span>
               </div>
             </div>
 
@@ -350,7 +349,7 @@ function LandingPage() {
             {[
               { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-500 to-teal-500' },
               { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-sky-500 to-blue-500' },
-              { icon: Brain, title: 'AI-Powered Tools', desc: 'Auto-generate quizzes, plot graphs, balance equations, and summarize notes — all from your board.', gradient: 'from-purple-500 to-violet-500' },
+              { icon: Brain, title: 'Smart Subject Tools', desc: 'Plot graphs, balance equations, generate quizzes, and use subject-specific tools — available on the Pro plan.', gradient: 'from-purple-500 to-violet-500' },
               { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-amber-500 to-orange-500' },
               { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-rose-500 to-pink-500' },
               { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-indigo-500 to-blue-500' },
@@ -374,8 +373,8 @@ function LandingPage() {
             {[
               { icon: Check, text: 'No student sign-up required' },
               { icon: Shield, text: 'End-to-end encrypted' },
-              { icon: Clock, text: 'Set up in under 60 seconds' },
               { icon: Globe, text: 'Works on any device' },
+              { icon: Zap, text: 'Free plan — no credit card' },
             ].map((item) => (
               <div key={item.text} className="flex flex-col items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
@@ -404,9 +403,9 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — no sign-up required for them.', icon: Plus },
-              { step: '02', title: 'Teach & Collaborate', desc: 'Draw, write, use smart tools, graph functions, and talk face-to-face. Everything happens on one infinite canvas.', icon: Monitor },
-              { step: '03', title: 'Save & Share', desc: 'Export branded PDFs, save board templates, and review recordings. Your students get a polished takeaway.', icon: Download },
+              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — they join without creating an account.', icon: Plus },
+              { step: '02', title: 'Teach on the Board', desc: 'Draw, write, use subject tools, and video-call your student. Everything happens on one infinite canvas.', icon: Monitor },
+              { step: '03', title: 'Upgrade When Ready', desc: 'The free plan gives you a room with video calling. Upgrade to Pro to save boards, export PDFs, use smart tools, and record lessons.', icon: Download },
             ].map((item) => (
               <div key={item.step} className="relative text-center group">
                 {/* Step number */}
@@ -484,7 +483,7 @@ function LandingPage() {
             <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900">Free</h3>
-                <p className="text-sm text-gray-500 mt-1">Get started with the basics</p>
+                <p className="text-sm text-gray-500 mt-1">Try it out with the basics</p>
               </div>
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-gray-900">$0</span>
@@ -494,10 +493,20 @@ function LandingPage() {
                 Get Started
               </Button>
               <ul className="mt-6 space-y-3">
-                {['1 active room', '25 AI credits/week', '120 min video/week', 'Basic whiteboard'].map((f) => (
+                {[
+                  '1 active room',
+                  '120 min video calling/week',
+                  'Basic whiteboard & drawing',
+                  'Share room link with students',
+                ].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Smart tools, save/load, templates, PDF export, and recordings require Pro or above.
+                </p>
+              </div>
             </div>
 
             {/* Pro */}
@@ -523,10 +532,10 @@ function LandingPage() {
                 )}
               </div>
               <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
-                Upgrade to Pro
+                Start Free, Upgrade Later
               </Button>
               <ul className="mt-6 space-y-3">
-                {['Unlimited rooms', '500 AI credits/month', 'Unlimited video', 'Save/Load boards', 'Templates', 'PDF export', 'GeoGebra integration', '2 recordings/month'].map((f) => (
+                {['Unlimited rooms', '500 smart credits/month', 'Unlimited video', 'Save/Load boards', 'Templates', 'PDF export', 'Graphing & geometry tools', '2 recordings/month'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
@@ -545,10 +554,10 @@ function LandingPage() {
                 {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
               </div>
               <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
-                Get Started
+                Start Free, Upgrade Later
               </Button>
               <ul className="mt-6 space-y-3">
-                {['Everything in Pro', '5,000 AI credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Up to 5 sub-tutors', 'Student roster', 'Per-hour billing'].map((f) => (
+                {['Everything in Pro', '5,000 smart credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Up to 5 sub-tutors', 'Student roster', 'Per-hour billing'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-amber-500 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
@@ -578,27 +587,88 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ===== FAQ ===== */}
-      <FAQSection />
+      {/* ===== FEATURE COMPARISON TABLE ===== */}
+      <section className="py-12 px-6 bg-white border-t border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <h3 className="text-lg font-bold text-gray-900 text-center mb-6">Feature comparison</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">Feature</th>
+                  <th className="text-center py-3 px-4 font-medium text-gray-500 w-24">Free</th>
+                  <th className="text-center py-3 px-4 font-medium text-emerald-600 w-24">Pro</th>
+                  <th className="text-center py-3 px-4 font-medium text-amber-600 w-24">Agency</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {[
+                  { feature: 'Active rooms', free: '1', pro: 'Unlimited', agency: 'Unlimited' },
+                  { feature: 'Video calling', free: '120 min/wk', pro: 'Unlimited', agency: 'Unlimited' },
+                  { feature: 'Whiteboard & drawing', free: true, pro: true, agency: true },
+                  { feature: 'Smart subject tools', free: false, pro: true, agency: true },
+                  { feature: 'Save & load boards', free: false, pro: true, agency: true },
+                  { feature: 'Templates', free: false, pro: true, agency: true },
+                  { feature: 'PDF export', free: false, pro: true, agency: true },
+                  { feature: 'Image uploads', free: false, pro: true, agency: true },
+                  { feature: 'Recordings', free: false, pro: '2/mo', agency: 'Unlimited' },
+                  { feature: 'Handwriting recognition', free: false, pro: true, agency: true },
+                  { feature: 'White-label branding', free: false, pro: false, agency: true },
+                  { feature: 'Admin dashboard', free: false, pro: false, agency: true },
+                  { feature: 'Sub-tutor management', free: false, pro: false, agency: true },
+                ].map((row) => (
+                  <tr key={row.feature} className="hover:bg-gray-50/50">
+                    <td className="py-2.5 px-4 text-gray-700">{row.feature}</td>
+                    {([row.free, row.pro, row.agency] as (boolean | string)[]).map((val, i) => (
+                      <td key={i} className="text-center py-2.5 px-4">
+                        {typeof val === 'boolean' ? (
+                          val ? <Check className="w-4 h-4 text-emerald-500 mx-auto" /> : <span className="text-gray-300">—</span>
+                        ) : (
+                          <span className="text-gray-600 text-xs">{val}</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400 text-center mt-4">
+            Smart subject tools include quiz generation, graphing, equation solving, grammar checks, and more.
+          </p>
+        </div>
+      </section>
 
-      {/* ===== SOCIAL PROOF ===== */}
+      {/* ===== SOCIAL PROOF (moved before FAQ for stronger impact) ===== */}
       <SocialProofSection />
 
       {/* ===== FEATURE SHOWCASE ===== */}
       <FeatureShowcase />
 
-      {/* ===== FINAL CTA ===== */}
-      <section className="py-20 md:py-28 bg-white">
+      {/* ===== FAQ ===== */}
+      <FAQSection />
+
+      {/* ===== FINAL CTA — honest, specific, creates urgency ===== */}
+      <section className="py-20 md:py-28 bg-gradient-to-br from-emerald-50 via-white to-sky-50">
         <div className="max-w-3xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
+            <Check className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="text-xs font-semibold text-emerald-700">No credit card required to start</span>
+          </div>
           <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
-            Ready to Transform Your Tutoring?
+            Try the free plan today
           </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
-            Join hundreds of tutors who have already made the switch. Your first lesson is free.
+          <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
+            Create a room, share the link with your student, and start teaching on an interactive whiteboard with video calling. When you need more — save boards, export PDFs, or use smart tools — upgrade to Pro in one click.
           </p>
-          <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
-            Create Your First Lesson <ArrowRight className="w-4 h-4 ml-1.5" />
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
+              Start Teaching Free <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+            <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+              Compare Plans
+            </Button>
+          </div>
         </div>
       </section>
 

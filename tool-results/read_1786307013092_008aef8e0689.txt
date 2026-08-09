@@ -53,7 +53,7 @@
     53→    question: 'How do I join a lesson?',
     54→    answer:
     55→      'Your tutor will send you a lesson link — it could be via WhatsApp, email, or SMS. Click the link, type in your name, and you\'re in. That\'s it. There\'s nothing to download, no account to create, and no app to install. It works on any device with a browser — laptop, tablet, or phone. If you\'re on a phone, you can even pin the page to your home screen so it feels like an app.',
-    56→    image: '/faq-images/student-join.png',
+    56→    image: '/faq-images/student-join.webp',
     57→    imageAlt: 'A student enters their name and joins a lesson in one click',
     58→    popular: true,
     59→  },
@@ -72,7 +72,7 @@
     72→    question: 'Can I write and draw on the whiteboard too, or do I just watch?',
     73→    answer:
     74→      'You can fully participate. Your tutor controls whether you have drawing permission, and once enabled, you can write, draw, type, add sticky notes, and place shapes right alongside your tutor. You\'ll see your own cursor and your tutor\'s cursor moving in real-time, so it feels like working on the same physical desk. Many tutors encourage students to solve problems directly on the board during the lesson.',
-    75→    image: '/faq-images/whiteboard-canvas.png',
+    75→    image: '/faq-images/whiteboard-canvas.webp',
     76→    imageAlt: 'A student and tutor drawing together on a shared whiteboard',
     77→  },
     78→  {
@@ -82,7 +82,7 @@
     82→    question: 'Will I get a recording of the lesson to revise later?',
     83→    answer:
     84→      'That\'s up to your tutor. If they enable recording, the entire lesson — the whiteboard, voice, and video — is captured as a single playback. After the lesson ends, your tutor can share a recording link with you. You can watch it as many times as you like, skip to specific moments, and use it to revise before exams. You don\'t need a Superboard account to view recordings.',
-    85→    image: '/faq-images/recording-playback.png',
+    85→    image: '/faq-images/recording-playback.webp',
     86→    imageAlt: 'Lesson recording playback with timeline for easy navigation',
     87→  },
     88→  {
@@ -92,7 +92,7 @@
     92→    question: 'I\'m a parent — can I see my child\'s schedule and progress?',
     93→    answer:
     94→      'Yes. If your child\'s tutor or tutoring centre uses Superboard, you\'ll receive a private parent portal link. This lets you see upcoming lessons, past lesson history, attendance, and progress across subjects — all in one place. For tutoring centres, the portal also shows invoices and payment history. It\'s designed to give you visibility without needing to call or message the tutor every time.',
-    95→    image: '/faq-images/parent-portal.png',
+    95→    image: '/faq-images/parent-portal.webp',
     96→    imageAlt: 'Parent portal showing upcoming lessons, attendance, and progress',
     97→  },
     98→  {
@@ -112,7 +112,7 @@
    112→    question: 'What exactly can I do on the whiteboard?',
    113→    answer:
    114→      'Think of it as an infinite canvas that you and your student share in real-time. You can draw freehand, add shapes, type text, place sticky notes, highlight sections, and use a laser pointer to draw attention to specific areas. The canvas scrolls and zooms endlessly, so you never run out of space. Every stroke appears instantly on your student\'s screen, and you can see their cursor and changes as they happen. It feels like standing at the same physical whiteboard together.',
-   115→    image: '/faq-images/whiteboard-canvas.png',
+   115→    image: '/faq-images/whiteboard-canvas.webp',
    116→    imageAlt: 'The interactive whiteboard with drawing tools and real-time collaboration',
    117→    popular: true,
    118→  },
@@ -123,7 +123,7 @@
    123→    question: 'I teach a specific subject — are there tools built for it?',
    124→    answer:
    125→      'Yes. Superboard includes four subject-specific toolkits that you can switch between during a lesson. The Maths toolkit gives you an interactive graphing calculator — plot functions, draw geometry, explore transformations with sliders — plus a beautiful equation renderer for writing formulas. The Science toolkit provides diagram builders, a periodic table reference, and equation-balancing helpers. The Language toolkit includes grammar annotations, vocabulary builders, and text-analysis tools. And the General toolkit covers everything else: timers, shapes, sticky notes, and more. You can mix tools from different kits in the same lesson.',
-   126→    image: '/faq-images/subject-toolkit.png',
+   126→    image: '/faq-images/subject-toolkit.webp',
    127→    imageAlt: 'Subject-specific toolkits for Maths, Science, Language, and General use',
    128→  },
    129→  {
@@ -133,7 +133,7 @@
    133→    question: 'How does the video calling work — do my students need a separate app?',
    134→    answer:
    135→      'No separate app needed. Video and voice calling are built directly into the lesson room. When you start a lesson, you can turn on your camera and microphone with one click. Your student sees and hears you right next to the whiteboard — no switching between tabs, no meeting links, no PIN codes. The video panel can be moved, resized, or minimized so it never covers your lesson content. If your student doesn\'t have a camera, they can still participate via voice and the whiteboard.',
-   136→    image: '/faq-images/video-tutoring.png',
+   136→    image: '/faq-images/video-tutoring.webp',
    137→    imageAlt: 'Video call alongside the whiteboard — everything in one place',
    138→  },
    139→  {
@@ -143,7 +143,7 @@
    143→    question: 'Can Superboard help me create worksheets and quizzes?',
    144→    answer:
    145→      'Absolutely. You can generate quizzes, worksheets, and answer keys directly from your whiteboard content. For example, you can select a topic you\'ve been teaching and instantly generate a multiple-choice quiz that appears right on the canvas. You can then edit the questions, adjust difficulty, and share them with your student in one click. You can also convert handwritten work into neat digital text with the built-in handwriting recognition, so students get clean printed materials even if you wrote on a tablet.',
-   146→    image: '/faq-images/ai-quiz.png',
+   146→    image: '/faq-images/ai-quiz.webp',
    147→    imageAlt: 'Generating a quiz from whiteboard content in one click',
    148→  },
    149→  {
@@ -177,7 +177,7 @@
    177→    question: 'Can I schedule lessons in advance?',
    178→    answer:
    179→      'Yes. Create lessons with a date, time, duration, student name, and subject. Your students and their parents see upcoming lessons in their portal. They can also add the lesson to their own phone or computer calendar with one click — it works with Google Calendar, Apple Calendar, and Outlook. If you need to reschedule or cancel, it updates everywhere instantly. Recurring lessons are supported too, so you can set up a weekly slot once and it fills your calendar automatically.',
-   180→    image: '/faq-images/scheduling.png',
+   180→    image: '/faq-images/scheduling.webp',
    181→    imageAlt: 'Weekly schedule with colour-coded lessons and one-click calendar sync',
    182→  },
    183→  {
@@ -205,7 +205,7 @@
    205→    question: 'How does Superboard help me run my tutoring centre?',
    206→    answer:
    207→      'Superboard gives you a central command dashboard for your entire operation. Add your tutors as team members — each gets their own login, their own lesson rooms, and their own schedule. From your dashboard, you can see every lesson happening across all tutors, track student attendance, monitor hours taught, and view revenue breakdowns. You can manage student rosters, assign students to specific tutors, and automatically generate invoices based on actual lesson time. Parents get their own portal so they can see their child\'s progress without calling your office. Essentially, Superboard replaces the spreadsheet chaos with a clean, automated system.',
-   208→    image: '/faq-images/agency-dashboard.png',
+   208→    image: '/faq-images/agency-dashboard.webp',
    209→    imageAlt: 'Agency dashboard showing all tutors, students, lessons, and revenue in one view',
    210→    popular: true,
    211→  },
@@ -256,7 +256,7 @@
    256→    question: 'Do parents have to contact my office for updates?',
    257→    answer:
    258→      'Not anymore. Every student\'s parent or guardian receives a secure portal link. From there, they see the upcoming schedule, attendance records, lesson notes from each session, progress indicators by subject, and invoices. They can message the assigned tutor directly through the portal if needed. This self-service model dramatically reduces administrative phone calls and emails, while giving parents more visibility than they had before. It\'s a win for everyone — parents feel informed, tutors stay focused on teaching, and your office staff aren\'t constantly answering routine questions.',
-   259→    image: '/faq-images/parent-portal.png',
+   259→    image: '/faq-images/parent-portal.webp',
    260→    imageAlt: 'The parent portal — schedule, progress, and invoices all in one place',
    261→  },
    262→  {
@@ -350,120 +350,122 @@
    350→        <div className="flex flex-wrap justify-center gap-2 mb-10">
    351→          <button
    352→            onClick={() => setActiveCategory(null)}
-   353→            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+   353→            className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
    354→              activeCategory === null
    355→                ? 'bg-gray-900 text-white shadow-md'
    356→                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
    357→            }`}
-   358→          >
-   359→            All Questions
-   360→          </button>
-   361→          {categories.map((cat) => (
-   362→            <button
-   363→              key={cat}
-   364→              onClick={() =>
-   365→                setActiveCategory(activeCategory === cat ? null : cat)
-   366→              }
-   367→              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-   368→                activeCategory === cat
-   369→                  ? 'bg-gray-900 text-white shadow-md'
-   370→                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-   371→              }`}
-   372→            >
-   373→              {cat}
-   374→            </button>
-   375→          ))}
-   376→        </div>
-   377→
-   378→        {/* FAQ Accordion */}
-   379→        <Accordion type="single" collapsible className="space-y-3">
-   380→          {filteredItems.map((item) => {
-   381→            const IconComp = item.icon;
-   382→            return (
-   383→              <AccordionItem
-   384→                key={item.id}
-   385→                value={item.id}
-   386→                className="rounded-2xl border border-gray-200 bg-white data-[state=open]:border-emerald-200 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 transition-all duration-300 overflow-hidden px-6"
-   387→              >
-   388→                <AccordionTrigger className="hover:no-underline py-5">
-   389→                  <div className="flex items-center gap-4 text-left">
-   390→                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
-   391→                      <IconComp className="w-5 h-5 text-emerald-600" />
-   392→                    </div>
-   393→                    <div className="flex-1">
-   394→                      <div className="flex items-center gap-2 mb-0.5">
-   395→                        <span className="text-[11px] font-medium uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-   396→                          {item.category}
-   397→                        </span>
-   398→                        {item.popular && (
-   399→                          <span className="text-[11px] font-medium uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-   400→                            Popular
-   401→                          </span>
-   402→                        )}
-   403→                      </div>
-   404→                      <h3 className="text-[15px] font-semibold text-gray-900">
-   405→                        {item.question}
-   406→                      </h3>
-   407→                    </div>
-   408→                  </div>
-   409→                </AccordionTrigger>
-   410→                <AccordionContent className="pb-6">
-   411→                  <div className="pl-14">
-   412→                    <p className="text-sm text-gray-600 leading-relaxed">
-   413→                      {item.answer}
-   414→                    </p>
-   415→                    {item.image && item.imageAlt && (
-   416→                      <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm group mt-5">
-   417→                        <div className="aspect-[16/9] bg-gray-100 relative">
-   418→                          <Image
-   419→                            src={item.image}
-   420→                            alt={item.imageAlt}
-   421→                            fill
-   422→                            className="object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
-   423→                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
-   424→                          />
-   425→                        </div>
-   426→                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-   427→                          <p className="text-xs text-white/90 font-medium">
-   428→                            {item.imageAlt}
-   429→                          </p>
-   430→                        </div>
-   431→                      </div>
-   432→                    )}
-   433→                  </div>
-   434→                </AccordionContent>
-   435→              </AccordionItem>
-   436→            );
-   437→          })}
-   438→        </Accordion>
-   439→
-   440→        {/* Bottom CTA */}
-   441→        <div className="mt-14 text-center">
-   442→          <p className="text-sm text-gray-500 mb-4">
-   443→            Still have questions? We&apos;re happy to help.
-   444→          </p>
-   445→          <a
-   446→            href="/contact"
-   447→            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-   448→          >
-   449→            Contact Support
-   450→            <svg
-   451→              className="w-3.5 h-3.5"
-   452→              fill="none"
-   453→              viewBox="0 0 24 24"
-   454→              stroke="currentColor"
-   455→              strokeWidth={2}
-   456→            >
-   457→              <path
-   458→                strokeLinecap="round"
-   459→                strokeLinejoin="round"
-   460→                d="M9 5l7 7-7 7"
-   461→              />
-   462→            </svg>
-   463→          </a>
-   464→        </div>
-   465→      </div>
-   466→    </section>
-   467→  );
-   468→}
-   469→
+   358→            aria-pressed={activeCategory === null}
+   359→          >
+   360→            All Questions
+   361→          </button>
+   362→          {categories.map((cat) => (
+   363→            <button
+   364→              key={cat}
+   365→              onClick={() =>
+   366→                setActiveCategory(activeCategory === cat ? null : cat)
+   367→              }
+   368→              className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+   369→                activeCategory === cat
+   370→                  ? 'bg-gray-900 text-white shadow-md'
+   371→                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+   372→              }`}
+   373→              aria-pressed={activeCategory === cat}
+   374→            >
+   375→              {cat}
+   376→            </button>
+   377→          ))}
+   378→        </div>
+   379→
+   380→        {/* FAQ Accordion */}
+   381→        <Accordion type="single" collapsible className="space-y-3">
+   382→          {filteredItems.map((item) => {
+   383→            const IconComp = item.icon;
+   384→            return (
+   385→              <AccordionItem
+   386→                key={item.id}
+   387→                value={item.id}
+   388→                className="rounded-2xl border border-gray-200 bg-white data-[state=open]:border-emerald-200 data-[state=open]:shadow-lg data-[state=open]:shadow-emerald-500/5 transition-all duration-300 overflow-hidden px-6"
+   389→              >
+   390→                <AccordionTrigger className="hover:no-underline py-5">
+   391→                  <div className="flex items-center gap-4 text-left">
+   392→                    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center">
+   393→                      <IconComp className="w-5 h-5 text-emerald-600" />
+   394→                    </div>
+   395→                    <div className="flex-1">
+   396→                      <div className="flex items-center gap-2 mb-0.5">
+   397→                        <span className="text-[11px] font-medium uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+   398→                          {item.category}
+   399→                        </span>
+   400→                        {item.popular && (
+   401→                          <span className="text-[11px] font-medium uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+   402→                            Popular
+   403→                          </span>
+   404→                        )}
+   405→                      </div>
+   406→                      <h3 className="text-[15px] font-semibold text-gray-900">
+   407→                        {item.question}
+   408→                      </h3>
+   409→                    </div>
+   410→                  </div>
+   411→                </AccordionTrigger>
+   412→                <AccordionContent className="pb-6">
+   413→                  <div className="pl-0 sm:pl-14">
+   414→                    <p className="text-sm text-gray-600 leading-relaxed">
+   415→                      {item.answer}
+   416→                    </p>
+   417→                    {item.image && item.imageAlt && (
+   418→                      <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm group mt-5">
+   419→                        <div className="aspect-[16/9] bg-gray-100 relative">
+   420→                          <Image
+   421→                            src={item.image}
+   422→                            alt={item.imageAlt}
+   423→                            fill
+   424→                            className="object-cover object-top group-hover:scale-[1.02] transition-transform duration-500"
+   425→                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
+   426→                          />
+   427→                        </div>
+   428→                        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+   429→                          <p className="text-xs text-white/90 font-medium">
+   430→                            {item.imageAlt}
+   431→                          </p>
+   432→                        </div>
+   433→                      </div>
+   434→                    )}
+   435→                  </div>
+   436→                </AccordionContent>
+   437→              </AccordionItem>
+   438→            );
+   439→          })}
+   440→        </Accordion>
+   441→
+   442→        {/* Bottom CTA */}
+   443→        <div className="mt-14 text-center">
+   444→          <p className="text-sm text-gray-500 mb-4">
+   445→            Still have questions? We&apos;re happy to help.
+   446→          </p>
+   447→          <a
+   448→            href="/contact"
+   449→            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+   450→          >
+   451→            Contact Support
+   452→            <svg
+   453→              className="w-3.5 h-3.5"
+   454→              fill="none"
+   455→              viewBox="0 0 24 24"
+   456→              stroke="currentColor"
+   457→              strokeWidth={2}
+   458→            >
+   459→              <path
+   460→                strokeLinecap="round"
+   461→                strokeLinejoin="round"
+   462→                d="M9 5l7 7-7 7"
+   463→              />
+   464→            </svg>
+   465→          </a>
+   466→        </div>
+   467→      </div>
+   468→    </section>
+   469→  );
+   470→}
+   471→

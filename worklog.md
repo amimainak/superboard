@@ -1,6 +1,35 @@
 # SuperBoard Worklog
 
 ---
+Task ID: 3-d
+Agent: Main Agent
+Task: Landing page honesty audit and free-to-paid conversion funnel optimization
+
+Work Log:
+- Audited entire landing page: hero, features, trust signals, how-it-works, pricing, FAQ, social proof, feature showcase, final CTA, footer, auth dialogs
+- Identified 7 critical honesty issues and 5 funnel flow problems
+- Fixed SocialProofSection: removed fabricated stats (10K+ tutors, 500K+ lessons, 4.9/5 rating, 50+ awards), replaced with honest platform capabilities. Testimonials now show tier context (Free/Pro/Agency).
+- Fixed FeatureShowcase: added tier badges to every feature card showing which plan level it requires. Added tier legend. Removed Claude AI mention.
+- Fixed LandingPage hero: replaced "AI-powered" with "interactive", changed "Watch Demo" (no demo exists) to "See Plans" (scrolls to pricing), honest trust signals
+- Fixed pricing section: Free card now clearly states what's NOT included with a disclaimer note. Pro/Agency buttons changed from misleading "Upgrade"/"Get Started" to "Start Free, Upgrade Later"
+- Added feature comparison table after pricing: 13-row table showing Free vs Pro vs Agency with clear ✗ marks for unavailable features
+- Fixed "How It Works" step 3: changed from "Save & Share" (paid features) to "Upgrade When Ready" (honest about the funnel)
+- Reordered sections: Social Proof now before FAQ (stronger impact), Feature Showcase before FAQ, comparison table after pricing
+- Rewrote final CTA: from generic "Transform Your Tutoring" to specific "Try the free plan today" with concrete description of what free includes and what Pro adds
+- Removed all tech stack names from landing: GeoGebra, Claude AI
+- Replaced "AI credits" with "smart credits" throughout pricing cards
+- Clean build and deployed to Vercel production
+
+Stage Summary:
+- Landing page is now honest: no fabricated stats, no misleading CTAs, no hidden limitations
+- Free tier limitations are transparent: users know exactly what they get before signing up
+- Conversion funnel is clear: Free → use product → hit limit → see paywall → upgrade to Pro
+- Feature comparison table lets users self-select their tier based on needs
+- Deployed to https://my-project-alpha-sooty-87.vercel.app
+
+---
+
+---
 Task ID: 2
 Agent: Main Agent
 Task: Phase 2 — Structural Improvements (Dashboard IA, Student Experience, Tutor Onboarding)

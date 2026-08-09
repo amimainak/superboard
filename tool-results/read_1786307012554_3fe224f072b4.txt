@@ -1,3 +1,55 @@
+     1→// ============================================================
+     2→// Landing Page — Marketing / Auth Gate
+     3→// ============================================================
+     4→'use client';
+     5→
+     6→import React, { useState, useCallback, useRef, useEffect } from 'react';
+     7→import { useAppStore } from '@/store/app-store';
+     8→import { createClient } from '@/lib/supabase';
+     9→import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
+    10→import type { Tier } from '@/types';
+    11→import { Button } from '@/components/ui/button';
+    12→import {
+    13→  Dialog,
+    14→  DialogContent,
+    15→  DialogDescription,
+    16→  DialogHeader,
+    17→  DialogTitle,
+    18→} from '@/components/ui/dialog';
+    19→import { Input } from '@/components/ui/input';
+    20→import { Label } from '@/components/ui/label';
+    21→import { SocialProofSection } from './SocialProofSection';
+    22→import { FeatureShowcase } from './FeatureShowcase';
+    23→import { FAQSection } from './FAQSection';
+    24→import {
+    25→  Plus,
+    26→  BookOpen,
+    27→  GraduationCap,
+    28→  Sparkles,
+    29→  ChevronRight,
+    30→  Video,
+    31→  FileText,
+    32→  Calculator,
+    33→  FlaskConical,
+    34→  Languages,
+    35→  ClipboardList,
+    36→  Zap,
+    37→  Shield,
+    38→  Clock,
+    39→  Globe,
+    40→  Users,
+    41→  School,
+    42→  TrendingUp,
+    43→  Play,
+    44→  ArrowRight,
+    45→  Check,
+    46→  Monitor,
+    47→  Brain,
+    48→  PenTool,
+    49→  Download,
+    50→  MousePointerClick,
+    51→  Mail,
+    52→} from 'lucide-react';
     53→
     54→// Inline Google "G" SVG — avoids adding a dependency
     55→function GoogleIcon({ className }: { className?: string }) {
@@ -318,7 +370,7 @@
    370→      {/* ===== TRUST SIGNALS ===== */}
    371→      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
    372→        <div className="max-w-7xl mx-auto px-6">
-   373→          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+   373→          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
    374→            {[
    375→              { icon: Check, text: 'No student sign-up required' },
    376→              { icon: Shield, text: 'End-to-end encrypted' },
@@ -358,7 +410,7 @@
    410→            ].map((item) => (
    411→              <div key={item.step} className="relative text-center group">
    412→                {/* Step number */}
-   413→                <div className="absolute -top-3 -left-2 text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+   413→                <div className="absolute -top-3 -left-2 text-5xl md:text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
    414→                <div className="relative z-10">
    415→                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
    416→                    <item.icon className="w-7 h-7 text-white" />
@@ -427,7 +479,7 @@
    479→            </span>
    480→          </div>
    481→
-   482→          <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+   482→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto">
    483→            {/* Free */}
    484→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
    485→              <div className="mb-6">
@@ -562,13 +614,13 @@
    614→              <span className="text-sm font-semibold text-gray-900">Superboard</span>
    615→            </div>
    616→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-   617→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
-   618→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
-   619→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms &amp; Conditions</a>
-   620→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy Policy</a>
-   621→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Refund Policy</a>
-   622→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Cookie Policy</a>
-   623→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+   617→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
+   618→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
+   619→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
+   620→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
+   621→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
+   622→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
+   623→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
    624→            </div>
    625→          </div>
    626→          {/* Bottom row: copyright */}

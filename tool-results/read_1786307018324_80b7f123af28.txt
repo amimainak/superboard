@@ -370,7 +370,7 @@
    370→   370→      {/* ===== TRUST SIGNALS ===== */}
    371→   371→      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
    372→   372→        <div className="max-w-7xl mx-auto px-6">
-   373→   373→          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+   373→   373→          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
    374→   374→            {[
    375→   375→              { icon: Check, text: 'No student sign-up required' },
    376→   376→              { icon: Shield, text: 'End-to-end encrypted' },
@@ -410,7 +410,7 @@
    410→   410→            ].map((item) => (
    411→   411→              <div key={item.step} className="relative text-center group">
    412→   412→                {/* Step number */}
-   413→   413→                <div className="absolute -top-3 -left-2 text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+   413→   413→                <div className="absolute -top-3 -left-2 text-5xl md:text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
    414→   414→                <div className="relative z-10">
    415→   415→                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
    416→   416→                    <item.icon className="w-7 h-7 text-white" />
@@ -479,7 +479,7 @@
    479→   479→            </span>
    480→   480→          </div>
    481→   481→
-   482→   482→          <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+   482→   482→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto">
    483→   483→            {/* Free */}
    484→   484→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
    485→   485→              <div className="mb-6">
@@ -614,13 +614,13 @@
    614→   614→              <span className="text-sm font-semibold text-gray-900">Superboard</span>
    615→   615→            </div>
    616→   616→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-   617→   617→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
-   618→   618→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
-   619→   619→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms &amp; Conditions</a>
-   620→   620→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy Policy</a>
-   621→   621→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Refund Policy</a>
-   622→   622→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Cookie Policy</a>
-   623→   623→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+   617→   617→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
+   618→   618→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
+   619→   619→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
+   620→   620→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
+   621→   621→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
+   622→   622→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
+   623→   623→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
    624→   624→            </div>
    625→   625→          </div>
    626→   626→          {/* Bottom row: copyright */}
