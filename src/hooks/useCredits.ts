@@ -10,6 +10,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { authFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 
 interface UsageData {
@@ -34,7 +35,7 @@ export function useCredits(userId?: string | null) {
     }
     try {
       setLoading(true);
-      const response = await fetch(`/api/usage/current?userId=${userId}`);
+      const response = await authFetch(`/api/usage/current?userId=${userId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch usage data');
       }

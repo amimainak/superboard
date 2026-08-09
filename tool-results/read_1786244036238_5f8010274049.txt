@@ -1,0 +1,737 @@
+     1→     1→// ============================================================
+     2→     2→// Landing Page — Marketing / Auth Gate
+     3→     3→// ============================================================
+     4→     4→'use client';
+     5→     5→
+     6→     6→import React, { useState, useCallback, useRef } from 'react';
+     7→     7→import { useAppStore } from '@/store/app-store';
+     8→     8→import { createClient } from '@/lib/supabase';
+     9→     9→import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
+    10→    10→import type { Tier } from '@/types';
+    11→    11→import { Button } from '@/components/ui/button';
+    12→    12→import {
+    13→    13→  Dialog,
+    14→    14→  DialogContent,
+    15→    15→  DialogDescription,
+    16→    16→  DialogHeader,
+    17→    17→  DialogTitle,
+    18→    18→} from '@/components/ui/dialog';
+    19→    19→import { Input } from '@/components/ui/input';
+    20→    20→import { Label } from '@/components/ui/label';
+    21→    21→import {
+    22→    22→  Plus,
+    23→    23→  BookOpen,
+    24→    24→  GraduationCap,
+    25→    25→  Sparkles,
+    26→    26→  ChevronRight,
+    27→    27→  Video,
+    28→    28→  FileText,
+    29→    29→  Calculator,
+    30→    30→  FlaskConical,
+    31→    31→  Languages,
+    32→    32→  ClipboardList,
+    33→    33→  Zap,
+    34→    34→  Shield,
+    35→    35→  Clock,
+    36→    36→  Globe,
+    37→    37→  Users,
+    38→    38→  School,
+    39→    39→  TrendingUp,
+    40→    40→  Play,
+    41→    41→  ArrowRight,
+    42→    42→  Check,
+    43→    43→  Monitor,
+    44→    44→  Brain,
+    45→    45→  PenTool,
+    46→    46→  Download,
+    47→    47→  MousePointerClick,
+    48→    48→  Mail,
+    49→    49→} from 'lucide-react';
+    50→    50→
+    51→    51→function LandingPage() {
+    52→    52→  const { setTier } = useAppStore();
+    53→    53→
+    54→    54→  const [loginEmail, setLoginEmail] = useState('');
+    55→    55→  const [loginPassword, setLoginPassword] = useState('');
+    56→    56→  const [registerName, setRegisterName] = useState('');
+    57→    57→  const [registerEmail, setRegisterEmail] = useState('');
+    58→    58→  const [registerPassword, setRegisterPassword] = useState('');
+    59→    59→  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+    60→    60→  const [showVerification, setShowVerification] = useState(false);
+    61→    61→  const [authError, setAuthError] = useState('');
+    62→    62→  const [authMessage, setAuthMessage] = useState('');
+    63→    63→  const [showAuth, setShowAuth] = useState<'login' | 'register' | null>(null);
+    64→    64→  const [isAnnual, setIsAnnual] = useState(false);
+    65→    65→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    66→    66→  const [showForgotPassword, setShowForgotPassword] = useState(false);
+    67→    67→  const [forgotEmail, setForgotEmail] = useState('');
+    68→    68→  const [forgotSuccess, setForgotSuccess] = useState(false);
+    69→    69→  const mobileMenuRef = useRef<HTMLDivElement>(null);
+    70→    70→
+    71→    71→  const handleForgotPassword = useCallback(async (e: React.FormEvent) => {
+    72→    72→    e.preventDefault();
+    73→    73→    setAuthError('');
+    74→    74→    try {
+    75→    75→      const supabase = createClient();
+    76→    76→      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
+    77→    77→      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
+    78→    78→      if (error) throw error;
+    79→    79→      setForgotSuccess(true);
+    80→    80→    } catch (err: any) {
+    81→    81→      setAuthError(err?.message || 'Failed to send reset email.');
+    82→    82→    }
+    83→    83→  }, [forgotEmail]);
+    84→    84→
+    85→    85→  const handleLogin = useCallback(async (e: React.FormEvent) => {
+    86→    86→    e.preventDefault();
+    87→    87→    setAuthError('');
+    88→    88→    setAuthMessage('');
+    89→    89→    try {
+    90→    90→      const supabase = createClient();
+    91→    91→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+    92→    92→      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    93→    93→      if (error) { setAuthError(error.message); return; }
+    94→    94→      initAuthFetch();
+    95→    95→      const { data: { user: u } } = await supabase.auth.getUser();
+    96→    96→      if (u) {
+    97→    97→        try {
+    98→    98→          const tierRes = await authFetch(`/api/auth/profile?userId=${u.id}`);
+    99→    99→          if (tierRes.ok) { const d = await tierRes.json(); if (d.tier) setTier(d.tier as Tier); }
+   100→   100→        } catch { /* ignore */ }
+   101→   101→      }
+   102→   102→      setLoginEmail(''); setLoginPassword('');
+   103→   103→      closeAuth();
+   104→   104→    } catch { setAuthError('Network error'); }
+   105→   105→  }, [loginEmail, loginPassword, setTier]);
+   106→   106→
+   107→   107→  const evaluatePasswordStrength = (password: string) => {
+   108→   108→    let score = 0;
+   109→   109→    if (password.length >= 6) score++;
+   110→   110→    if (password.length >= 10) score++;
+   111→   111→    if (/[A-Z]/.test(password)) score++;
+   112→   112→    if (/[0-9]/.test(password)) score++;
+   113→   113→    if (/[^A-Za-z0-9]/.test(password)) score++;
+   114→   114→    if (score <= 1) return { score, label: 'Weak', color: 'bg-red-500' };
+   115→   115→    if (score <= 3) return { score, label: 'Fair', color: 'bg-amber-500' };
+   116→   116→    if (score <= 4) return { score, label: 'Good', color: 'bg-emerald-400' };
+   117→   117→    return { score, label: 'Strong', color: 'bg-emerald-600' };
+   118→   118→  };
+   119→   119→
+   120→   120→  const handleRegister = useCallback(async (e: React.FormEvent) => {
+   121→   121→    e.preventDefault();
+   122→   122→    setAuthError('');
+   123→   123→    setAuthMessage('');
+   124→   124→    try {
+   125→   125→      const supabase = createClient();
+   126→   126→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+   127→   127→      const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
+   128→   128→      if (error) { setAuthError(error.message); return; }
+   129→   129→      if (data.user && data.session) {
+   130→   130→        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail, name: registerName }) }); } catch { /* */ }
+   131→   131→      } else {
+   132→   132→        setAuthMessage('Check your email...');
+   133→   133→        setShowVerification(true);
+   134→   134→        setShowAuth(null);
+   135→   135→      }
+   136→   136→      setRegisterEmail(''); setRegisterPassword(''); setRegisterName('');
+   137→   137→    } catch { setAuthError('Network error'); }
+   138→   138→  }, [registerEmail, registerPassword, registerName]);
+   139→   139→
+   140→   140→  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); };
+   141→   141→
+   142→   142→  return (
+   143→   143→    <main className="min-h-screen bg-white">
+   144→   144→      {/* ===== NAVBAR ===== */}
+   145→   145→      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+   146→   146→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   147→   147→          <div className="flex items-center gap-3">
+   148→   148→            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   149→   149→              <GraduationCap className="w-5 h-5 text-white" />
+   150→   150→            </div>
+   151→   151→            <span className="text-lg font-bold tracking-tight text-gray-900">Superboard</span>
+   152→   152→          </div>
+   153→   153→          <div className="hidden md:flex items-center gap-8">
+   154→   154→            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+   155→   155→            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
+   156→   156→            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+   157→   157→          </div>
+   158→   158→          <div className="flex items-center gap-3">
+   159→   159→            <Button variant="ghost" className="text-sm font-medium text-gray-700 hover:text-gray-900 hidden sm:inline-flex" onClick={() => setShowAuth('login')}>
+   160→   160→              Sign In
+   161→   161→            </Button>
+   162→   162→            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
+   163→   163→              Get Started Free
+   164→   164→            </Button>
+   165→   165→            {/* Mobile hamburger */}
+   166→   166→            <button
+   167→   167→              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+   168→   168→              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+   169→   169→              aria-label="Toggle navigation menu"
+   170→   170→            >
+   171→   171→              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   172→   172→                {mobileMenuOpen
+   173→   173→                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+   174→   174→                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+   175→   175→              </svg>
+   176→   176→            </button>
+   177→   177→          </div>
+   178→   178→        </div>
+   179→   179→        {/* Mobile dropdown menu */}
+   180→   180→        {mobileMenuOpen && (
+   181→   181→          <div ref={mobileMenuRef} className="md:hidden border-t border-gray-200 bg-white px-6 py-4 space-y-3 animate-fade-in-up">
+   182→   182→            <a href="#features" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
+   183→   183→            <a href="#how-it-works" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
+   184→   184→            <a href="#pricing" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+   185→   185→            <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+   186→   186→              <Button variant="ghost" className="text-sm font-medium text-gray-700 justify-start" onClick={() => { setShowAuth('login'); setMobileMenuOpen(false); }}>Sign In</Button>
+   187→   187→              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm" onClick={() => { setShowAuth('register'); setMobileMenuOpen(false); }}>Get Started Free</Button>
+   188→   188→            </div>
+   189→   189→          </div>
+   190→   190→        )}
+   191→   191→      </nav>
+   192→   192→
+   193→   193→      {/* ===== HERO SECTION ===== */}
+   194→   194→      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-white">
+   195→   195→        {/* Subtle grid — no blur blobs */}
+   196→   196→        <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.6px, transparent 0.6px)', backgroundSize: '24px 24px' }} />
+   197→   197→
+   198→   198→        <div className="max-w-7xl mx-auto px-6 relative z-10">
+   199→   199→          <div className="grid md:grid-cols-2 gap-12 items-center">
+   200→   200→            {/* Left: Copy */}
+   201→   201→            <div className="max-w-xl">
+   202→   202→              {/* Badge */}
+   203→   203→              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
+   204→   204→                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+   205→   205→                <span className="text-xs font-semibold text-emerald-700">Smart Tutoring Platform</span>
+   206→   206→              </div>
+   207→   207→
+   208→   208→              <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
+   209→   209→                Turn Every Lesson Into an{' '}
+   210→   210→                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+   211→   211→                  Interactive Experience
+   212→   212→                </span>
+   213→   213→              </h1>
+   214→   214→
+   215→   215→              <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
+   216→   216→                The AI-powered whiteboard built for K-12 tutors. Draw, graph, use smart tools, and video-call your students — all on one infinite canvas. No student sign-up required.
+   217→   217→              </p>
+   218→   218→
+   219→   219→              <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
+   220→   220→                <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-6 h-12" onClick={() => setShowAuth('register')}>
+   221→   221→                  Start Teaching Free — No Credit Card <ArrowRight className="w-4 h-4 ml-1.5" />
+   222→   222→                </Button>
+   223→   223→                <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
+   224→   224→                  <Play className="w-4 h-4 mr-1.5" /> Watch Demo
+   225→   225→                </Button>
+   226→   226→              </div>
+   227→   227→
+   228→   228→              {/* Trust signals */}
+   229→   229→              <div className="mt-10 flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up-delay-3">
+   230→   230→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up needed</span>
+   231→   231→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> AI-powered tools</span>
+   232→   232→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free to start</span>
+   233→   233→              </div>
+   234→   234→            </div>
+   235→   235→
+   236→   236→            {/* Right: Hero Illustration */}
+   237→   237→            <div className="hidden md:flex justify-center animate-fade-in-up-delay-1">
+   238→   238→              <div className="relative w-full max-w-lg">
+   239→   239→                {/* Canvas card */}
+   240→   240→                <div className="rounded-2xl border border-gray-200 bg-white shadow-xl p-4 relative z-10">
+   241→   241→                  {/* Mini toolbar */}
+   242→   242→                  <div className="flex items-center gap-2 mb-4 px-1">
+   243→   243→                    {[
+   244→   244→                      { icon: PenTool, color: 'text-emerald-600 bg-emerald-50' },
+   245→   245→                      { icon: Calculator, color: 'text-blue-600 bg-blue-50' },
+   246→   246→                      { icon: FlaskConical, color: 'text-purple-600 bg-purple-50' },
+   247→   247→                      { icon: Brain, color: 'text-amber-600 bg-amber-50' },
+   248→   248→                    ].map(({ icon: Icon, color }) => (
+   249→   249→                      <div key={color} className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center`}>
+   250→   250→                        <Icon className="w-4 h-4" />
+   251→   251→                      </div>
+   252→   252→                    ))}
+   253→   253→                    <div className="flex-1" />
+   254→   254→                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><Video className="w-4 h-4" /></div>
+   255→   255→                  </div>
+   256→   256→                  {/* Mini canvas area */}
+   257→   257→                  <div className="rounded-xl bg-gradient-to-br from-gray-50 to-white h-52 relative overflow-hidden">
+   258→   258→                    {/* Fake grid */}
+   259→   259→                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #000 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
+   260→   260→                    {/* Fake math content */}
+   261→   261→                    <div className="absolute top-4 left-4">
+   262→   262→                      <div className="text-sm font-medium text-gray-700">f(x) = 2x + 3</div>
+   263→   263→                      <div className="mt-2 text-xs text-gray-400">slope = 2, y-intercept = 3</div>
+   264→   264→                    </div>
+   265→   265→                    {/* Fake graph */}
+   266→   266→                    <svg className="absolute bottom-4 right-4" width="140" height="100" viewBox="0 0 140 100">
+   267→   267→                      <line x1="10" y1="90" x2="130" y2="10" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" />
+   268→   268→                      <line x1="10" y1="90" x2="130" y2="90" stroke="#d1d5db" strokeWidth="1" />
+   269→   269→                      <line x1="10" y1="90" x2="10" y2="10" stroke="#d1d5db" strokeWidth="1" />
+   270→   270→                      <circle cx="70" cy="50" r="4" fill="#059669" />
+   271→   271→                      <text x="75" y="54" fontSize="10" fill="#059669" fontWeight="bold">x=35</text>
+   272→   272→                    </svg>
+   273→   273→                    {/* Cursor dot */}
+   274→   274→                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400/40 animate-pulse" />
+   275→   275→                  </div>
+   276→   276→                </div>
+   277→   277→                {/* Decorative cards behind */}
+   278→   278→                <div className="absolute -top-3 -right-3 w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 -z-10 rotate-6 opacity-60" />
+   279→   279→                <div className="absolute -bottom-3 -left-3 w-20 h-20 rounded-xl bg-gradient-to-br from-sky-100 to-blue-50 -z-10 -rotate-6 opacity-60" />
+   280→   280→              </div>
+   281→   281→            </div>
+   282→   282→          </div>
+   283→   283→        </div>
+   284→   284→      </section>
+   285→   285→
+   286→   286→      {/* ===== FEATURES ===== */}
+   287→   287→      <section id="features" className="py-20 md:py-28 bg-white">
+   288→   288→        <div className="max-w-7xl mx-auto px-6">
+   289→   289→          <div className="text-center max-w-2xl mx-auto mb-16">
+   290→   290→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 mb-4">
+   291→   291→              <Zap className="w-3.5 h-3.5 text-sky-500" />
+   292→   292→              <span className="text-xs font-semibold text-sky-700">Powerful Features</span>
+   293→   293→            </div>
+   294→   294→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   295→   295→              Everything You Need,{' '}
+   296→   296→              <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">Nothing You Don&apos;t</span>
+   297→   297→            </h2>
+   298→   298→          </div>
+   299→   299→
+   300→   300→          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+   301→   301→            {[
+   302→   302→              { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-500 to-teal-500' },
+   303→   303→              { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-sky-500 to-blue-500' },
+   304→   304→              { icon: Brain, title: 'AI-Powered Tools', desc: 'Auto-generate quizzes, plot graphs, balance equations, and summarize notes — all from your board.', gradient: 'from-purple-500 to-violet-500' },
+   305→   305→              { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-amber-500 to-orange-500' },
+   306→   306→              { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-rose-500 to-pink-500' },
+   307→   307→              { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-indigo-500 to-blue-500' },
+   308→   308→            ].map((item) => (
+   309→   309→              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+   310→   310→                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+   311→   311→                  <item.icon className="w-5 h-5 text-white" />
+   312→   312→                </div>
+   313→   313→                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   314→   314→                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+   315→   315→              </div>
+   316→   316→            ))}
+   317→   317→          </div>
+   318→   318→        </div>
+   319→   319→      </section>
+   320→   320→
+   321→   321→      {/* ===== TRUST SIGNALS ===== */}
+   322→   322→      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
+   323→   323→        <div className="max-w-7xl mx-auto px-6">
+   324→   324→          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+   325→   325→            {[
+   326→   326→              { icon: Check, text: 'No student sign-up required' },
+   327→   327→              { icon: Shield, text: 'End-to-end encrypted' },
+   328→   328→              { icon: Clock, text: 'Set up in under 60 seconds' },
+   329→   329→              { icon: Globe, text: 'Works on any device' },
+   330→   330→            ].map((item) => (
+   331→   331→              <div key={item.text} className="flex flex-col items-center gap-3">
+   332→   332→                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+   333→   333→                  <item.icon className="w-6 h-6 text-emerald-600" />
+   334→   334→                </div>
+   335→   335→                <p className="text-sm text-gray-600 font-medium">{item.text}</p>
+   336→   336→              </div>
+   337→   337→            ))}
+   338→   338→          </div>
+   339→   339→        </div>
+   340→   340→      </section>
+   341→   341→
+   342→   342→      {/* ===== HOW IT WORKS ===== */}
+   343→   343→      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/80">
+   344→   344→        <div className="max-w-7xl mx-auto px-6">
+   345→   345→          <div className="text-center max-w-2xl mx-auto mb-16">
+   346→   346→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
+   347→   347→              <MousePointerClick className="w-3.5 h-3.5 text-emerald-500" />
+   348→   348→              <span className="text-xs font-semibold text-emerald-700">Simple Setup</span>
+   349→   349→            </div>
+   350→   350→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   351→   351→              Start teaching in{' '}
+   352→   352→              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">under 60 seconds</span>
+   353→   353→            </h2>
+   354→   354→          </div>
+   355→   355→
+   356→   356→          <div className="grid md:grid-cols-3 gap-8">
+   357→   357→            {[
+   358→   358→              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — no sign-up required for them.', icon: Plus },
+   359→   359→              { step: '02', title: 'Teach & Collaborate', desc: 'Draw, write, use smart tools, graph functions, and talk face-to-face. Everything happens on one infinite canvas.', icon: Monitor },
+   360→   360→              { step: '03', title: 'Save & Share', desc: 'Export branded PDFs, save board templates, and review recordings. Your students get a polished takeaway.', icon: Download },
+   361→   361→            ].map((item) => (
+   362→   362→              <div key={item.step} className="relative text-center group">
+   363→   363→                {/* Step number */}
+   364→   364→                <div className="absolute -top-3 -left-2 text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+   365→   365→                <div className="relative z-10">
+   366→   366→                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+   367→   367→                    <item.icon className="w-7 h-7 text-white" />
+   368→   368→                  </div>
+   369→   369→                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   370→   370→                  <p className="text-sm text-gray-600 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+   371→   371→                </div>
+   372→   372→              </div>
+   373→   373→            ))}
+   374→   374→          </div>
+   375→   375→        </div>
+   376→   376→      </section>
+   377→   377→
+   378→   378→      {/* ===== PERFECT FOR EVERY TUTOR ===== */}
+   379→   379→      <section className="py-20 md:py-28 bg-white">
+   380→   380→        <div className="max-w-7xl mx-auto px-6">
+   381→   381→          <div className="text-center max-w-2xl mx-auto mb-16">
+   382→   382→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   383→   383→              Perfect for <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">Every Tutor</span>
+   384→   384→            </h2>
+   385→   385→          </div>
+   386→   386→
+   387→   387→          <div className="grid md:grid-cols-3 gap-6">
+   388→   388→            {[
+   389→   389→              { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-500 to-teal-500' },
+   390→   390→              { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-orange-500' },
+   391→   391→              { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-sky-500 to-cyan-500' },
+   392→   392→            ].map((item) => (
+   393→   393→              <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+   394→   394→                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+   395→   395→                  <item.icon className="w-5 h-5 text-white" />
+   396→   396→                </div>
+   397→   397→                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   398→   398→                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+   399→   399→              </div>
+   400→   400→            ))}
+   401→   401→          </div>
+   402→   402→        </div>
+   403→   403→      </section>
+   404→   404→
+   405→   405→      {/* ===== PRICING ===== */}
+   406→   406→      <section id="pricing" className="py-20 md:py-28 bg-gray-50/80">
+   407→   407→        <div className="max-w-7xl mx-auto px-6">
+   408→   408→          <div className="text-center max-w-2xl mx-auto mb-16">
+   409→   409→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 mb-4">
+   410→   410→              <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+   411→   411→              <span className="text-xs font-semibold text-amber-700">Simple Pricing</span>
+   412→   412→            </div>
+   413→   413→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   414→   414→              Plans That <span className="bg-gradient-to-r from-emerald-500 to-amber-500 bg-clip-text text-transparent">Grow With You</span>
+   415→   415→            </h2>
+   416→   416→          </div>
+   417→   417→
+   418→   418→          {/* Billing Toggle */}
+   419→   419→          <div className="flex items-center justify-center gap-3 mb-10">
+   420→   420→            <span className={`text-sm font-medium ${!isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>Monthly</span>
+   421→   421→            <button
+   422→   422→              onClick={() => setIsAnnual(!isAnnual)}
+   423→   423→              className={`relative w-12 h-6 rounded-full transition-colors ${isAnnual ? 'bg-emerald-500' : 'bg-gray-300'}`}
+   424→   424→              aria-label="Toggle annual pricing"
+   425→   425→            >
+   426→   426→              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isAnnual ? 'translate-x-6' : ''}`} />
+   427→   427→            </button>
+   428→   428→            <span className={`text-sm font-medium ${isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
+   429→   429→              Annual <span className="text-emerald-600 font-semibold">Save 20%</span>
+   430→   430→            </span>
+   431→   431→          </div>
+   432→   432→
+   433→   433→          <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+   434→   434→            {/* Free */}
+   435→   435→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+   436→   436→              <div className="mb-6">
+   437→   437→                <h3 className="text-lg font-semibold text-gray-900">Free</h3>
+   438→   438→                <p className="text-sm text-gray-500 mt-1">Get started with the basics</p>
+   439→   439→              </div>
+   440→   440→              <div className="mb-6">
+   441→   441→                <span className="text-4xl font-extrabold text-gray-900">$0</span>
+   442→   442→                <span className="text-gray-500 text-sm">/month</span>
+   443→   443→              </div>
+   444→   444→              <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
+   445→   445→                Get Started
+   446→   446→              </Button>
+   447→   447→              <ul className="mt-6 space-y-3">
+   448→   448→                {['1 active room', '25 AI credits/week', '120 min video/week', 'Basic whiteboard'].map((f) => (
+   449→   449→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   450→   450→                ))}
+   451→   451→              </ul>
+   452→   452→            </div>
+   453→   453→
+   454→   454→            {/* Pro */}
+   455→   455→            <div className="rounded-2xl border-2 border-emerald-500 bg-white p-6 shadow-lg shadow-emerald-500/10 relative">
+   456→   456→              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full gradient-primary text-white text-xs font-semibold">Most Popular</div>
+   457→   457→              <div className="mb-6">
+   458→   458→                <h3 className="text-lg font-semibold text-gray-900">Pro Tutor</h3>
+   459→   459→                <p className="text-sm text-gray-500 mt-1">For serious educators</p>
+   460→   460→              </div>
+   461→   461→              <div className="mb-6">
+   462→   462→                {isAnnual ? (
+   463→   463→                  <>
+   464→   464→                    <span className="text-4xl font-extrabold text-gray-900">$96</span>
+   465→   465→                    <span className="text-gray-500 text-sm">/year</span>
+   466→   466→                    <p className="text-xs text-emerald-600 mt-1">Save 20% vs monthly</p>
+   467→   467→                  </>
+   468→   468→                ) : (
+   469→   469→                  <>
+   470→   470→                    <span className="text-4xl font-extrabold text-gray-900">$10</span>
+   471→   471→                    <span className="text-gray-500 text-sm">/month</span>
+   472→   472→                    <p className="text-xs text-emerald-600 mt-1">Or $96/year (save 20%)</p>
+   473→   473→                  </>
+   474→   474→                )}
+   475→   475→              </div>
+   476→   476→              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+   477→   477→                Upgrade to Pro
+   478→   478→              </Button>
+   479→   479→              <ul className="mt-6 space-y-3">
+   480→   480→                {['Unlimited rooms', '500 AI credits/month', 'Unlimited video', 'Save/Load boards', 'Templates', 'PDF export', 'GeoGebra integration', '2 recordings/month'].map((f) => (
+   481→   481→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   482→   482→                ))}
+   483→   483→              </ul>
+   484→   484→            </div>
+   485→   485→
+   486→   486→            {/* Agency Standard */}
+   487→   487→            <div className="rounded-2xl border-2 border-amber-500 bg-white p-6 hover:shadow-lg transition-shadow relative">
+   488→   488→              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-semibold">Best Value</div>
+   489→   489→              <div className="mb-6">
+   490→   490→                <h3 className="text-lg font-semibold text-gray-900">Agency Standard</h3>
+   491→   491→                <p className="text-sm text-gray-500 mt-1">For growing centers</p>
+   492→   492→              </div>
+   493→   493→              <div className="mb-6">
+   494→   494→                <span className="text-4xl font-extrabold text-gray-900">$39</span>
+   495→   495→                <span className="text-gray-500 text-sm">/month + $3/hr</span>
+   496→   496→                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
+   497→   497→              </div>
+   498→   498→              <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+   499→   499→                Get Started
+   500→   500→              </Button>
+   501→   501→              <ul className="mt-6 space-y-3">
+   502→   502→                {['Everything in Pro', '5,000 AI credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Up to 5 sub-tutors', 'Student roster', 'Per-hour billing'].map((f) => (
+   503→   503→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-amber-500 flex-shrink-0" />{f}</li>
+   504→   504→                ))}
+   505→   505→              </ul>
+   506→   506→            </div>
+   507→   507→
+   508→   508→            {/* Agency Premium */}
+   509→   509→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+   510→   510→              <div className="mb-6">
+   511→   511→                <h3 className="text-lg font-semibold text-gray-900">Agency Premium</h3>
+   512→   512→                <p className="text-sm text-gray-500 mt-1">For established centers</p>
+   513→   513→              </div>
+   514→   514→              <div className="mb-6">
+   515→   515→                <span className="text-4xl font-extrabold text-gray-900">$79</span>
+   516→   516→                <span className="text-gray-500 text-sm">/month + $2/hr</span>
+   517→   517→                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
+   518→   518→              </div>
+   519→   519→              <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
+   520→   520→                Contact Sales
+   521→   521→              </Button>
+   522→   522→              <ul className="mt-6 space-y-3">
+   523→   523→                {['Everything in Standard', 'Unlimited sub-tutors', '$2/hr volume discount', 'Priority support', 'Advanced analytics', 'Custom domain', 'Student roster', 'API access'].map((f) => (
+   524→   524→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   525→   525→                ))}
+   526→   526→              </ul>
+   527→   527→            </div>
+   528→   528→          </div>
+   529→   529→        </div>
+   530→   530→      </section>
+   531→   531→
+   532→   532→      {/* ===== FAQ ===== */}
+   533→   533→      <section className="py-20 md:py-28 bg-white">
+   534→   534→        <div className="max-w-3xl mx-auto px-6">
+   535→   535→          <div className="text-center mb-12">
+   536→   536→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   537→   537→              Frequently Asked Questions
+   538→   538→            </h2>
+   539→   539→          </div>
+   540→   540→          <div className="space-y-4">
+   541→   541→            {[
+   542→   542→              { q: 'Do my students need to create an account?', a: 'No! Students join lessons via a link you share. They just enter their name and they\'re in — no sign-up, no download, no hassle.' },
+   543→   543→              { q: 'What subjects does Superboard support?', a: 'Superboard has specialized toolkits for Mathematics (graphing, equation solving), Science (diagram generation, equation balancing), Language Arts (grammar, vocabulary), and General subjects.' },
+   544→   544→              { q: 'How does the agency per-hour billing work?', a: 'Agency plans include a base monthly fee plus per-hour billing for actual lesson time. Hours are tracked automatically when a lesson room is active with participants. You only pay for time used.' },
+   545→   545→              { q: 'Can I try Superboard before upgrading?', a: 'Absolutely. The Free plan includes 1 active room, 25 AI credits per week, and 120 minutes of video calling per week — no credit card required.' },
+   546→   546→              { q: 'Is my data secure?', a: 'Yes. All whiteboard sessions are encrypted. We comply with GDPR and India\'s DPDPA 2023. Your data is stored securely and never shared with third parties.' },
+   547→   547→              { q: 'Can I cancel my subscription anytime?', a: 'Yes, you can cancel anytime from your dashboard. No lock-in periods. Your access continues until the end of your billing period.' },
+   548→   548→            ].map((item) => (
+   549→   549→              <div key={item.q} className="rounded-2xl border border-gray-200 p-5 hover:border-emerald-100 transition-colors">
+   550→   550→                <h3 className="text-base font-semibold text-gray-900 mb-2">{item.q}</h3>
+   551→   551→                <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
+   552→   552→              </div>
+   553→   553→            ))}
+   554→   554→          </div>
+   555→   555→        </div>
+   556→   556→      </section>
+   557→   557→
+   558→   558→      {/* ===== FINAL CTA ===== */}
+   559→   559→      <section className="py-20 md:py-28 bg-white">
+   560→   560→        <div className="max-w-3xl mx-auto px-6 text-center">
+   561→   561→          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
+   562→   562→            Ready to Transform Your Tutoring?
+   563→   563→          </h2>
+   564→   564→          <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
+   565→   565→            Join hundreds of tutors who have already made the switch. Your first lesson is free.
+   566→   566→          </p>
+   567→   567→          <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
+   568→   568→            Create Your First Lesson <ArrowRight className="w-4 h-4 ml-1.5" />
+   569→   569→          </Button>
+   570→   570→        </div>
+   571→   571→      </section>
+   572→   572→
+   573→   573→      {/* ===== FOOTER ===== */}
+   574→   574→      <footer className="bg-gray-50 border-t border-gray-100 py-10">
+   575→   575→        <div className="max-w-7xl mx-auto px-6">
+   576→   576→          {/* Top row: branding + nav */}
+   577→   577→          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+   578→   578→            <div className="flex items-center gap-2">
+   579→   579→              <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+   580→   580→                <GraduationCap className="w-4 h-4 text-white" />
+   581→   581→              </div>
+   582→   582→              <span className="text-sm font-semibold text-gray-900">Superboard</span>
+   583→   583→            </div>
+   584→   584→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+   585→   585→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
+   586→   586→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
+   587→   587→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms &amp; Conditions</a>
+   588→   588→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy Policy</a>
+   589→   589→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Refund Policy</a>
+   590→   590→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Cookie Policy</a>
+   591→   591→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+   592→   592→            </div>
+   593→   593→          </div>
+   594→   594→          {/* Bottom row: copyright */}
+   595→   595→          <div className="pt-6 border-t border-gray-100">
+   596→   596→            <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Superboard. All rights reserved. Built for K-12 tutors.</p>
+   597→   597→          </div>
+   598→   598→        </div>
+   599→   599→      </footer>
+   600→   600→
+   601→   601→      {/* ===== AUTH DIALOG ===== */}
+   602→   602→      <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
+   603→   603→        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+   604→   604→          {showForgotPassword ? (
+   605→   605→            <>
+   606→   606→              <DialogTitle className="sr-only">Reset Password</DialogTitle>
+   607→   607→              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   608→   608→                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   609→   609→                  <Shield className="w-7 h-7 text-emerald-600" />
+   610→   610→                </div>
+   611→   611→                <h2 className="text-xl font-bold text-white">Reset Password</h2>
+   612→   612→                <p className="text-sm text-white/70 mt-1">We&apos;ll send you a reset link</p>
+   613→   613→              </div>
+   614→   614→              {forgotSuccess ? (
+   615→   615→                <div className="px-6 pb-6 pt-6 space-y-4 text-center">
+   616→   616→                  <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-4 py-3">Check your email for a reset link.</p>
+   617→   617→                  <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+   618→   618→                </div>
+   619→   619→              ) : (
+   620→   620→                <form onSubmit={handleForgotPassword} className="px-6 pb-6 pt-4 space-y-4">
+   621→   621→                  <div className="space-y-2">
+   622→   622→                    <Label htmlFor="forgot-email" className="text-sm font-medium">Email</Label>
+   623→   623→                    <Input id="forgot-email" type="email" placeholder="you@example.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="rounded-xl" required />
+   624→   624→                  </div>
+   625→   625→                  {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   626→   626→                  <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Send Reset Link</Button>
+   627→   627→                  <p className="text-center">
+   628→   628→                    <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+   629→   629→                  </p>
+   630→   630→                </form>
+   631→   631→              )}
+   632→   632→            </>
+   633→   633→          ) : showAuth === 'login' ? (
+   634→   634→            <>
+   635→   635→              <DialogTitle className="sr-only">Sign In</DialogTitle>
+   636→   636→              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   637→   637→                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   638→   638→                  <BookOpen className="w-7 h-7 text-emerald-600" />
+   639→   639→                </div>
+   640→   640→                <h2 className="text-xl font-bold text-white">Welcome Back</h2>
+   641→   641→                <p className="text-sm text-white/70 mt-1">Sign in to continue teaching</p>
+   642→   642→              </div>
+   643→   643→              <form onSubmit={handleLogin} className="px-6 pb-6 pt-4 space-y-4">
+   644→   644→                <div className="space-y-2">
+   645→   645→                  <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+   646→   646→                  <Input id="login-email" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="rounded-xl" required />
+   647→   647→                </div>
+   648→   648→                <div className="space-y-2">
+   649→   649→                  <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
+   650→   650→                  <Input id="login-password" type="password" placeholder="Your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="rounded-xl" required />
+   651→   651→                </div>
+   652→   652→                {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   653→   653→                <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Sign In</Button>
+   654→   654→                <div className="text-center space-y-2">
+   655→   655→                  <button type="button" className="text-xs text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(true); setForgotEmail(loginEmail); setAuthError(''); }}>Forgot password?</button>
+   656→   656→                  <p className="text-sm text-muted-foreground">
+   657→   657→                    Don&apos;t have an account?{' '}
+   658→   658→                    <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('register')}>Sign up</button>
+   659→   659→                  </p>
+   660→   660→                </div>
+   661→   661→              </form>
+   662→   662→            </>
+   663→   663→          ) : showAuth === 'register' ? (
+   664→   664→            <>
+   665→   665→              <DialogTitle className="sr-only">Create Account</DialogTitle>
+   666→   666→              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   667→   667→                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   668→   668→                  <Sparkles className="w-7 h-7 text-emerald-600" />
+   669→   669→                </div>
+   670→   670→                <h2 className="text-xl font-bold text-white">Create Your Account</h2>
+   671→   671→                <p className="text-sm text-white/70 mt-1">Start teaching in under a minute</p>
+   672→   672→              </div>
+   673→   673→              <form onSubmit={handleRegister} className="px-6 pb-6 pt-4 space-y-4">
+   674→   674→                <div className="space-y-2">
+   675→   675→                  <Label htmlFor="register-name" className="text-sm font-medium">Full Name</Label>
+   676→   676→                  <Input id="register-name" type="text" placeholder="Your name" value={registerName} onChange={(e) => setRegisterName(e.target.value)} className="rounded-xl" />
+   677→   677→                </div>
+   678→   678→                <div className="space-y-2">
+   679→   679→                  <Label htmlFor="register-email" className="text-sm font-medium">Email</Label>
+   680→   680→                  <Input id="register-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="rounded-xl" required />
+   681→   681→                </div>
+   682→   682→                <div className="space-y-2">
+   683→   683→                  <Label htmlFor="register-password" className="text-sm font-medium">Password</Label>
+   684→   684→                  <Input id="register-password" type="password" placeholder="Create a strong password" value={registerPassword} onChange={(e) => { setRegisterPassword(e.target.value); setPasswordStrength(evaluatePasswordStrength(e.target.value)); }} className="rounded-xl" required />
+   685→   685→                  {registerPassword && (
+   686→   686→                    <div className="space-y-1">
+   687→   687→                      <div className="flex gap-1">
+   688→   688→                        {[1,2,3,4,5].map((i) => (
+   689→   689→                          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'}`} />
+   690→   690→                        ))}
+   691→   691→                      </div>
+   692→   692→                      <p className={`text-xs ${passwordStrength.score <= 1 ? 'text-red-500' : passwordStrength.score <= 3 ? 'text-amber-500' : 'text-emerald-600'}`}>
+   693→   693→                        {passwordStrength.label}
+   694→   694→                      </p>
+   695→   695→                    </div>
+   696→   696→                  )}
+   697→   697→                </div>
+   698→   698→                {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   699→   699→                {authMessage && <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">{authMessage}</p>}
+   700→   700→                <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Create Account</Button>
+   701→   701→                <p className="text-center text-sm text-muted-foreground">
+   702→   702→                  Already have an account?{' '}
+   703→   703→                  <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('login')}>Sign in</button>
+   704→   704→                </p>
+   705→   705→              </form>
+   706→   706→            </>
+   707→   707→          ) : null}
+   708→   708→        </DialogContent>
+   709→   709→      </Dialog>
+   710→   710→
+   711→   711→      {/* ===== EMAIL VERIFICATION SCREEN ===== */}
+   712→   712→      {showVerification && (
+   713→   713→        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center px-6">
+   714→   714→          <div className="max-w-md w-full text-center space-y-6">
+   715→   715→            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
+   716→   716→              <Mail className="w-10 h-10 text-white" />
+   717→   717→            </div>
+   718→   718→            <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
+   719→   719→            <p className="text-gray-600 leading-relaxed">
+   720→   720→              We&apos;ve sent a confirmation link to <strong>{registerEmail}</strong>. 
+   721→   721→              Click the link to verify your account and start teaching.
+   722→   722→            </p>
+   723→   723→            <p className="text-sm text-gray-500">
+   724→   724→              Didn&apos;t receive the email? Check your spam folder.
+   725→   725→            </p>
+   726→   726→            <Button variant="outline" className="rounded-xl" onClick={() => setShowVerification(false)}>
+   727→   727→              Back to Sign In
+   728→   728→            </Button>
+   729→   729→          </div>
+   730→   730→        </div>
+   731→   731→      )}
+   732→   732→    </main>
+   733→   733→  );
+   734→   734→}
+   735→   735→
+   736→   736→export default LandingPage;
+   737→   737→

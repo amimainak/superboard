@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { useCredits } from '@/hooks/useCredits';
 import { useTheme } from '@/hooks/useTheme';
@@ -26,6 +26,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -50,15 +60,16 @@ import {
   LogOut,
   Zap,
   Crown,
-  Mail,
-  BadgeInfo,
+  Shield,
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { BillingPanel } from './BillingPanel';
 import { SavedBoardsPanel } from './SavedBoardsPanel';
 import { TemplatesPanel } from './TemplatesPanel';
 import { AgencyAdminPanel } from './AgencyAdminPanel';
+import { MyRoomsPanel } from './MyRoomsPanel';
 
-export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: User; userName: string | null; tierLoading: boolean }) {
+export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }: { user: User; userName: string | null; tierLoading: boolean; isAdmin?: boolean }) {
   const { tier, setTier, setRoom } = useAppStore();
   const { brandColor, agencyName, setBrandColor } = useTheme();
   const {
@@ -77,6 +88,44 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
   const [showSettings, setShowSettings] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const { toast } = useToast();
+
+  // Tab memory — persist last active tab in localStorage
+  const [defaultTab, setDefaultTab] = useState('billing');
+  const tabInitialized = useRef(false);
+  useEffect(() => {
+    if (!tabInitialized.current) {
+      const saved = localStorage.getItem('superboard-last-tab');
+      if (saved) setDefaultTab(saved);
+      tabInitialized.current = true;
+    }
+  }, []);
+  const handleTabChange = useCallback((value: string) => {
+    setDefaultTab(value);
+    localStorage.setItem('superboard-last-tab', value);
+  }, []);
+
+  // Dark mode: read persisted theme on mount
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const saved = localStorage.getItem('superboard-theme');
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    }
+  }, []);
+
+  const toggleDark = useCallback(() => {
+    const next = !isDark;
+    setIsDark(next);
+    if (next) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('superboard-theme', next ? 'dark' : 'light');
+  }, [isDark]);
 
   useEffect(() => {
     import('@/lib/fingerprint').then(({ reportFingerprint }) => {
@@ -113,8 +162,9 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
       }
       const data = await response.json();
       window.location.href = `/room/${data.roomId}`;
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Dashboard] Failed to create lesson:', error);
+      toast({ title: 'Failed to create lesson', description: error?.message || 'Please try again.', variant: 'destructive' });
       setCreating(false);
     }
   }, [selectedSubject, user?.id]);
@@ -181,7 +231,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title="Settings" onClick={() => setShowSettings(true)}>
               <Settings className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={handleLogout} title="Sign out">
+            <Button variant="ghost" size="icon" className="rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors" onClick={() => setShowSignOutConfirm(true)} title="Sign out">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
@@ -208,14 +258,24 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
               <Label className="text-sm font-medium">Current Plan</Label>
               <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>{tierLabel}</Badge>
             </div>
-            {isAgencyTier(tier) && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Brand Color</Label>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
-                  <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
-                </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Theme</Label>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Dark mode</span>
+                <button
+                  type="button"
+                  onClick={toggleDark}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${isDark ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                  aria-label="Toggle dark mode"
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isDark ? 'translate-x-6' : ''}`} />
+                </button>
               </div>
+            </div>
+            {isAdmin && (
+              <Button variant="outline" className="w-full rounded-xl" onClick={() => { setShowSettings(false); window.location.href = '/?admin=1'; }}>
+                <Shield className="w-4 h-4 mr-2" /> Admin Panel
+              </Button>
             )}
             <Separator />
             <div className="text-center">
@@ -226,47 +286,39 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
         </DialogContent>
       </Dialog>
 
+      {/* Sign Out Confirmation Dialog */}
+      <AlertDialog open={showSignOutConfirm} onOpenChange={setShowSignOutConfirm}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
+            <AlertDialogDescription>You will need to sign in again to access your lessons and boards.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white">Sign Out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Banner */}
         <div className="mb-8 rounded-2xl gradient-hero p-6 md:p-8 animate-fade-in-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {userName || user.user_metadata?.name || user.email?.split('@')[0]}</h2>
-          <p className="text-gray-700 mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration. Your students will love the experience.</p>
-        </div>
-
-        {/* Usage Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Smart Credits</span></div>
-              <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
-              {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Welcome back! {userName || user.user_metadata?.name || user.email?.split('@')[0]}</h2>
+              <p className="text-gray-700 mt-2 max-w-xl">Create interactive lessons with smart tools, video calling, and real-time collaboration.</p>
+              <div className="flex items-center gap-3 mt-4">
+                <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all text-sm" onClick={() => setShowNewLesson(true)}>
+                  <Plus className="w-4 h-4 mr-1.5" />Create a Lesson
+                </Button>
+                <p className="text-sm text-gray-600">or use quick start on the left</p>
+              </div>
             </div>
-          </div>
-          <div className="rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1"><Video className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Video Minutes</span></div>
-              <div className="text-3xl font-bold mt-2">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
-              {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
-            </div>
-          </div>
-          <div className="rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
-            <div className="relative z-10">
-              <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
-              <div className="text-3xl font-bold mt-2">{recordingsUsed}{recordingsLimit !== Infinity ? ` / ${recordingsLimit}` : ''}</div>
-              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? `${recordingsLimit} per month included` : 'Unlimited'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions + Content Tabs */}
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left: Quick Actions */}
-          <div className="lg:w-72 flex-shrink-0 space-y-4 animate-fade-in-up-delay-3">
             <Dialog open={showNewLesson} onOpenChange={setShowNewLesson}>
               <DialogTrigger asChild>
-                <Button className="w-full h-14 text-base rounded-2xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px]">
-                  <Plus className="w-5 h-5 mr-2" />New Lesson
+                <Button className="shrink-0 h-12 px-6 text-sm rounded-xl bg-white text-emerald-700 font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all border-0">
+                  <Plus className="w-4 h-4 mr-2" />Create Lesson
                 </Button>
               </DialogTrigger>
               <DialogContent className="rounded-2xl">
@@ -302,7 +354,46 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
                 </div>
               </DialogContent>
             </Dialog>
+          </div>
+        </div>
 
+        {/* Usage Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="rounded-2xl p-6 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1"><Sparkles className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Smart Credits</span></div>
+              <div className="text-3xl font-bold mt-2">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
+              {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+            </div>
+          </div>
+          <div className="rounded-2xl p-6 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1"><Video className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Video Minutes</span></div>
+              <div className="text-3xl font-bold mt-2">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
+              {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-3 h-2 bg-white/20 [&>div]:bg-white/90" />}
+            </div>
+          </div>
+          <div className="rounded-2xl p-6 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1"><FileText className="w-5 h-5 text-white/80" /><span className="text-sm font-medium text-white/80">Session Recordings</span></div>
+              <div className="text-3xl font-bold mt-2">{recordingsUsed}{recordingsLimit !== Infinity ? ` / ${recordingsLimit}` : ''}</div>
+              <p className="text-sm text-white/70 mt-2">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? `${recordingsLimit} per month included` : 'Unlimited'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* My Lessons Panel */}
+        <div className="mb-8 animate-fade-in-up-delay-1">
+          <MyRoomsPanel
+            userId={user.id}
+            onCreateLesson={() => setShowNewLesson(true)}
+          />
+        </div>
+
+        {/* Quick Actions + Content Tabs */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Left: Quick Start */}
+          <div className="lg:w-72 flex-shrink-0 space-y-4 animate-fade-in-up-delay-3">
             <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
@@ -324,7 +415,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
 
           {/* Right: Tabs Content */}
           <div className="flex-1 animate-fade-in-up-delay-2">
-            <Tabs defaultValue="billing" className="w-full">
+            <Tabs defaultValue={defaultTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
                 {isAgencyTier(tier) && (
                   <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm"><BookOpen className="w-4 h-4" />Saved Boards</TabsTrigger>

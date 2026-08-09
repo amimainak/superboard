@@ -3,7 +3,8 @@
 import { useAppStore } from '@/store/app-store';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, LogOut } from 'lucide-react';
+import { ArrowLeft, Image as ImageIcon, LogOut } from 'lucide-react';
+import Link from 'next/link';
 import type { Subject } from '@/types';
 
 const SUBJECT_LABELS: Record<Subject, string> = {
@@ -47,8 +48,22 @@ export default function BrandedHeader({ onEndLesson }: Props) {
 
   return (
     <header className="flex items-center justify-between h-12 px-4 border-b bg-white shrink-0">
-      {/* Left: Logo + Name */}
+      {/* Left: Back + Logo + Name */}
       <div className="flex items-center gap-2.5 min-w-0">
+        {/* Dashboard back link — visible only to tutors */}
+        {isTutor && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 -ml-1 text-muted-foreground hover:text-foreground rounded-lg"
+            asChild
+          >
+            <Link href="/">
+              <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </Link>
+          </Button>
+        )}
         {hasAgencyBranding && safeLogoUrl ? (
           <img
             src={safeLogoUrl}

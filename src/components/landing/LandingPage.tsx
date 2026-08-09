@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
@@ -31,8 +31,11 @@ import {
   Languages,
   ClipboardList,
   Zap,
-  Star,
-  Crown,
+  Shield,
+  Clock,
+  Globe,
+  Users,
+  School,
   TrendingUp,
   Play,
   ArrowRight,
@@ -42,6 +45,7 @@ import {
   PenTool,
   Download,
   MousePointerClick,
+  Mail,
 } from 'lucide-react';
 
 function LandingPage() {
@@ -49,13 +53,48 @@ function LandingPage() {
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+  const [showVerification, setShowVerification] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authMessage, setAuthMessage] = useState('');
   const [showAuth, setShowAuth] = useState<'login' | 'register' | null>(null);
+  const [isAnnual, setIsAnnual] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Read showAuth URL param from invite redirects
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('showAuth') === 'login') {
+      setShowAuth('login');
+      // Clean the URL without reloading
+      window.history.replaceState({}, '', '/');
+    }
+    if (params.get('showAuth') === 'register') {
+      setShowAuth('register');
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
+  const handleForgotPassword = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      const supabase = createClient();
+      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
+      if (error) throw error;
+      setForgotSuccess(true);
+    } catch (err: any) {
+      setAuthError(err?.message || 'Failed to send reset email.');
+    }
+  }, [forgotEmail]);
 
   const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +118,19 @@ function LandingPage() {
     } catch { setAuthError('Network error'); }
   }, [loginEmail, loginPassword, setTier]);
 
+  const evaluatePasswordStrength = (password: string) => {
+    let score = 0;
+    if (password.length >= 6) score++;
+    if (password.length >= 10) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    if (score <= 1) return { score, label: 'Weak', color: 'bg-red-500' };
+    if (score <= 3) return { score, label: 'Fair', color: 'bg-amber-500' };
+    if (score <= 4) return { score, label: 'Good', color: 'bg-emerald-400' };
+    return { score, label: 'Strong', color: 'bg-emerald-600' };
+  };
+
   const handleRegister = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -89,15 +141,17 @@ function LandingPage() {
       const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
       if (error) { setAuthError(error.message); return; }
       if (data.user && data.session) {
-        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail }) }); } catch { /* */ }
+        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail, name: registerName }) }); } catch { /* */ }
       } else {
-        setAuthMessage('Check your email for a confirmation link.');
+        setAuthMessage('Check your email...');
+        setShowVerification(true);
+        setShowAuth(null);
       }
-      setRegisterEmail(''); setRegisterPassword('');
+      setRegisterEmail(''); setRegisterPassword(''); setRegisterName('');
     } catch { setAuthError('Network error'); }
-  }, [registerEmail, registerPassword]);
+  }, [registerEmail, registerPassword, registerName]);
 
-  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); };
+  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); };
 
   return (
     <main className="min-h-screen bg-white">
@@ -178,16 +232,16 @@ function LandingPage() {
 
               <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
                 <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-6 h-12" onClick={() => setShowAuth('register')}>
-                  Start Teaching Free <ArrowRight className="w-4 h-4 ml-1.5" />
+                  Start Teaching Free — No Credit Card <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
                 <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>
-                  <Play className="w-4 h-4 mr-1.5" /> See How It Works
+                  <Play className="w-4 h-4 mr-1.5" /> Watch Demo
                 </Button>
               </div>
 
               {/* Trust signals */}
               <div className="mt-10 flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up-delay-3">
-                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up</span>
+                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up needed</span>
                 <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> AI-powered tools</span>
                 <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free to start</span>
               </div>
@@ -278,19 +332,21 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ===== STATS ===== */}
+      {/* ===== TRUST SIGNALS ===== */}
       <section className="py-16 bg-gray-50/80 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
-              { value: '10,000+', label: 'Lessons Taught' },
-              { value: '500+', label: 'Active Tutors' },
-              { value: '50,000+', label: 'AI Tools Used' },
-              { value: '4.9/5', label: 'Tutor Rating' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-emerald-600 to-sky-500 bg-clip-text text-transparent">{stat.value}</p>
-                <p className="text-sm text-gray-500 mt-1 font-medium">{stat.label}</p>
+              { icon: Check, text: 'No student sign-up required' },
+              { icon: Shield, text: 'End-to-end encrypted' },
+              { icon: Clock, text: 'Set up in under 60 seconds' },
+              { icon: Globe, text: 'Works on any device' },
+            ].map((item) => (
+              <div key={item.text} className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <item.icon className="w-6 h-6 text-emerald-600" />
+                </div>
+                <p className="text-sm text-gray-600 font-medium">{item.text}</p>
               </div>
             ))}
           </div>
@@ -333,32 +389,27 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS ===== */}
+      {/* ===== PERFECT FOR EVERY TUTOR ===== */}
       <section className="py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
-              Loved by <span className="bg-gradient-to-r from-amber-500 to-rose-500 bg-clip-text text-transparent">Tutors Everywhere</span>
+              Perfect for <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">Every Tutor</span>
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: 'Sarah Chen', role: 'Math Tutor, NYC', text: 'Superboard replaced my physical whiteboard, Zoom, and three different math tools. My students are more engaged than ever.', rating: 5 },
-              { name: 'James Rodriguez', role: 'Science Teacher, LA', text: 'The chemical equation balancer and diagram generator save me 30 minutes per lesson. This is what edtech should be.', rating: 5 },
-              { name: 'Emily Park', role: 'ELA Tutor, Chicago', text: 'I love that my students don\'t need to create accounts. I just send a link and we\'re drawing together in seconds.', rating: 5 },
+              { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-500 to-teal-500' },
+              { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-orange-500' },
+              { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-sky-500 to-cyan-500' },
             ].map((item) => (
-              <div key={item.name} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg transition-shadow">
-                <div className="flex items-center gap-1 mb-4">
-                  {Array.from({ length: item.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  ))}
+              <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+                  <item.icon className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed mb-4">&ldquo;{item.text}&rdquo;</p>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{item.name}</p>
-                  <p className="text-xs text-gray-500">{item.role}</p>
-                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -376,6 +427,21 @@ function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
               Plans That <span className="bg-gradient-to-r from-emerald-500 to-amber-500 bg-clip-text text-transparent">Grow With You</span>
             </h2>
+          </div>
+
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-3 mb-10">
+            <span className={`text-sm font-medium ${!isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>Monthly</span>
+            <button
+              onClick={() => setIsAnnual(!isAnnual)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${isAnnual ? 'bg-emerald-500' : 'bg-gray-300'}`}
+              aria-label="Toggle annual pricing"
+            >
+              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isAnnual ? 'translate-x-6' : ''}`} />
+            </button>
+            <span className={`text-sm font-medium ${isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
+              Annual <span className="text-emerald-600 font-semibold">Save 20%</span>
+            </span>
           </div>
 
           <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
@@ -407,9 +473,19 @@ function LandingPage() {
                 <p className="text-sm text-gray-500 mt-1">For serious educators</p>
               </div>
               <div className="mb-6">
-                <span className="text-4xl font-extrabold text-gray-900">$10</span>
-                <span className="text-gray-500 text-sm">/month</span>
-                <p className="text-xs text-emerald-600 mt-1">Or $96/year (save 20%)</p>
+                {isAnnual ? (
+                  <>
+                    <span className="text-4xl font-extrabold text-gray-900">$96</span>
+                    <span className="text-gray-500 text-sm">/year</span>
+                    <p className="text-xs text-emerald-600 mt-1">Save 20% vs monthly</p>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-4xl font-extrabold text-gray-900">$10</span>
+                    <span className="text-gray-500 text-sm">/month</span>
+                    <p className="text-xs text-emerald-600 mt-1">Or $96/year (save 20%)</p>
+                  </>
+                )}
               </div>
               <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
                 Upgrade to Pro
@@ -431,6 +507,7 @@ function LandingPage() {
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-gray-900">$39</span>
                 <span className="text-gray-500 text-sm">/month + $3/hr</span>
+                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
               </div>
               <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
                 Get Started
@@ -451,6 +528,7 @@ function LandingPage() {
               <div className="mb-6">
                 <span className="text-4xl font-extrabold text-gray-900">$79</span>
                 <span className="text-gray-500 text-sm">/month + $2/hr</span>
+                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
               </div>
               <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
                 Contact Sales
@@ -465,6 +543,32 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* ===== FAQ ===== */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-3xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+              Frequently Asked Questions
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {[
+              { q: 'Do my students need to create an account?', a: 'No! Students join lessons via a link you share. They just enter their name and they\'re in — no sign-up, no download, no hassle.' },
+              { q: 'What subjects does Superboard support?', a: 'Superboard has specialized toolkits for Mathematics (graphing, equation solving), Science (diagram generation, equation balancing), Language Arts (grammar, vocabulary), and General subjects.' },
+              { q: 'How does the agency per-hour billing work?', a: 'Agency plans include a base monthly fee plus per-hour billing for actual lesson time. Hours are tracked automatically when a lesson room is active with participants. You only pay for time used.' },
+              { q: 'Can I try Superboard before upgrading?', a: 'Absolutely. The Free plan includes 1 active room, 25 AI credits per week, and 120 minutes of video calling per week — no credit card required.' },
+              { q: 'Is my data secure?', a: 'Yes. All whiteboard sessions are encrypted. We comply with GDPR and India\'s DPDPA 2023. Your data is stored securely and never shared with third parties.' },
+              { q: 'Can I cancel my subscription anytime?', a: 'Yes, you can cancel anytime from your dashboard. No lock-in periods. Your access continues until the end of your billing period.' },
+            ].map((item) => (
+              <div key={item.q} className="rounded-2xl border border-gray-200 p-5 hover:border-emerald-100 transition-colors">
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{item.q}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== FINAL CTA ===== */}
       <section className="py-20 md:py-28 bg-white">
         <div className="max-w-3xl mx-auto px-6 text-center">
@@ -475,7 +579,7 @@ function LandingPage() {
             Join hundreds of tutors who have already made the switch. Your first lesson is free.
           </p>
           <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
-            Get Started Free <ArrowRight className="w-4 h-4 ml-1.5" />
+            Create Your First Lesson <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         </div>
       </section>
@@ -511,7 +615,36 @@ function LandingPage() {
       {/* ===== AUTH DIALOG ===== */}
       <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
         <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
-          {showAuth === 'login' ? (
+          {showForgotPassword ? (
+            <>
+              <DialogTitle className="sr-only">Reset Password</DialogTitle>
+              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+                  <Shield className="w-7 h-7 text-emerald-600" />
+                </div>
+                <h2 className="text-xl font-bold text-white">Reset Password</h2>
+                <p className="text-sm text-white/70 mt-1">We&apos;ll send you a reset link</p>
+              </div>
+              {forgotSuccess ? (
+                <div className="px-6 pb-6 pt-6 space-y-4 text-center">
+                  <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-4 py-3">Check your email for a reset link.</p>
+                  <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="px-6 pb-6 pt-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email" className="text-sm font-medium">Email</Label>
+                    <Input id="forgot-email" type="email" placeholder="you@example.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="rounded-xl" required />
+                  </div>
+                  {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+                  <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Send Reset Link</Button>
+                  <p className="text-center">
+                    <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+                  </p>
+                </form>
+              )}
+            </>
+          ) : showAuth === 'login' ? (
             <>
               <DialogTitle className="sr-only">Sign In</DialogTitle>
               <div className="gradient-primary px-6 pt-8 pb-6 text-center">
@@ -532,10 +665,13 @@ function LandingPage() {
                 </div>
                 {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
                 <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Sign In</Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  Don&apos;t have an account?{' '}
-                  <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('register')}>Sign up</button>
-                </p>
+                <div className="text-center space-y-2">
+                  <button type="button" className="text-xs text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(true); setForgotEmail(loginEmail); setAuthError(''); }}>Forgot password?</button>
+                  <p className="text-sm text-muted-foreground">
+                    Don&apos;t have an account?{' '}
+                    <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('register')}>Sign up</button>
+                  </p>
+                </div>
               </form>
             </>
           ) : showAuth === 'register' ? (
@@ -550,12 +686,28 @@ function LandingPage() {
               </div>
               <form onSubmit={handleRegister} className="px-6 pb-6 pt-4 space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="register-name" className="text-sm font-medium">Full Name</Label>
+                  <Input id="register-name" type="text" placeholder="Your name" value={registerName} onChange={(e) => setRegisterName(e.target.value)} className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="register-email" className="text-sm font-medium">Email</Label>
                   <Input id="register-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="rounded-xl" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password" className="text-sm font-medium">Password</Label>
-                  <Input id="register-password" type="password" placeholder="Min. 6 characters" value={registerPassword} onChange={(e) => setRegisterPassword(e.target.value)} className="rounded-xl" required />
+                  <Input id="register-password" type="password" placeholder="Create a strong password" value={registerPassword} onChange={(e) => { setRegisterPassword(e.target.value); setPasswordStrength(evaluatePasswordStrength(e.target.value)); }} className="rounded-xl" required />
+                  {registerPassword && (
+                    <div className="space-y-1">
+                      <div className="flex gap-1">
+                        {[1,2,3,4,5].map((i) => (
+                          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'}`} />
+                        ))}
+                      </div>
+                      <p className={`text-xs ${passwordStrength.score <= 1 ? 'text-red-500' : passwordStrength.score <= 3 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                        {passwordStrength.label}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
                 {authMessage && <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">{authMessage}</p>}
@@ -569,6 +721,28 @@ function LandingPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* ===== EMAIL VERIFICATION SCREEN ===== */}
+      {showVerification && (
+        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center px-6">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
+              <Mail className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
+            <p className="text-gray-600 leading-relaxed">
+              We&apos;ve sent a confirmation link to <strong>{registerEmail}</strong>. 
+              Click the link to verify your account and start teaching.
+            </p>
+            <p className="text-sm text-gray-500">
+              Didn&apos;t receive the email? Check your spam folder.
+            </p>
+            <Button variant="outline" className="rounded-xl" onClick={() => setShowVerification(false)}>
+              Back to Sign In
+            </Button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

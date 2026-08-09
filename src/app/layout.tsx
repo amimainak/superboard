@@ -27,6 +27,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Superboard",
+    // TODO: Generate og-image.png — see scripts/generate-og-image.js
+    images: ['/og-image.png'],
   },
   twitter: {
     card: "summary_large_image",

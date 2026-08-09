@@ -13,6 +13,7 @@ import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
 import { authFetch } from '@/lib/auth-fetch';
 import { useEffect, useState } from 'react';
+import { GraduationCap } from 'lucide-react';
 import type { RoomData, BrandingConfig } from '@/types';
 
 // Client component wrapper for the room page
@@ -118,8 +119,13 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
+            <GraduationCap className="w-9 h-9 text-white" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium">Loading your lesson...</p>
+        </div>
       </div>
     );
   }
@@ -159,8 +165,13 @@ export default function RoomPage({
 
   if (!roomId) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
+            <GraduationCap className="w-9 h-9 text-white" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium">Loading your lesson...</p>
+        </div>
       </div>
     );
   }

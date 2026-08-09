@@ -13,7 +13,7 @@ import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 import type { User } from '@supabase/supabase-js';
-import { GraduationCap, Shield } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import LandingPage from '@/components/landing/LandingPage';
 import { AuthenticatedDashboard } from '@/components/dashboard/DashboardPage';
 import AdminPanel from '@/components/admin/AdminPanel';
@@ -29,7 +29,6 @@ export default function Dashboard() {
   const [authLoading, setAuthLoading] = useState(true);
   const [tierLoading, setTierLoading] = useState(true);
   const [isAdmin, setIsAdminState] = useState(false);
-  const [showAdmin, setShowAdmin] = useState(false);
 
   // --- Auth check on mount ---
   useEffect(() => {
@@ -106,6 +105,18 @@ export default function Dashboard() {
     };
   }, []);
 
+  // --- Check for ?admin=1 query param on mount ---
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('admin') === '1' && isAdmin) {
+        setShowAdminState(true);
+      }
+    }
+  }, [isAdmin]);
+
+  const [showAdminState, setShowAdminState] = useState(false);
+
   // --- Loading state ---
   if (authLoading) {
     return (
@@ -126,23 +137,11 @@ export default function Dashboard() {
   }
 
   // --- Logged in → Show Dashboard (or Admin Panel if admin) ---
-  if (showAdmin && isAdmin) {
+  if (showAdminState && isAdmin) {
     return <AdminPanel />;
   }
 
   return (
-    <div className="relative">
-      <AuthenticatedDashboard user={user} userName={userName} tierLoading={tierLoading} />
-      {/* Admin Access Button — floating */}
-      {isAdmin && !showAdmin && (
-        <button
-          onClick={() => setShowAdmin(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full gradient-primary text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center"
-          title="Open Admin Panel"
-        >
-          <Shield className="w-6 h-6" />
-        </button>
-      )}
-    </div>
+    <AuthenticatedDashboard user={user} userName={userName} tierLoading={tierLoading} isAdmin={isAdmin} />
   );
 }

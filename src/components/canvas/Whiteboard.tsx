@@ -9,8 +9,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { useYjsProvider } from '@/hooks/useYjsProvider';
+import { authFetch } from '@/lib/auth-fetch';
+import { toast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import type { Editor } from 'tldraw';
 
@@ -27,6 +30,7 @@ const WaitingRoom = dynamic(() => import('@/components/student/WaitingRoom'), { 
 const NameEntryModal = dynamic(() => import('@/components/student/NameEntryModal'), { ssr: false });
 
 export default function Whiteboard() {
+  const router = useRouter();
   const { room, setRoom, setCurrentPage, setTotalPages } = useAppStore();
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
 
@@ -162,6 +166,32 @@ export default function Whiteboard() {
     }
   }, []);
 
+  // ============================================================
+  // End Lesson — calls PATCH /api/room/[roomId] to close the room
+  // ============================================================
+  const [endingLesson, setEndingLesson] = useState(false);
+  const handleEndLesson = useCallback(async () => {
+    if (endingLesson || !roomId) return;
+    setEndingLesson(true);
+    try {
+      const res = await authFetch(`/api/room/${roomId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive: false }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast({ title: 'Failed to end lesson', description: (data as { error?: string }).error || 'Please try again.' });
+        setEndingLesson(false);
+        return;
+      }
+      toast({ title: 'Lesson ended', description: 'Redirecting to dashboard...' });
+      setTimeout(() => router.push('/'), 1000);
+    } catch {
+      toast({ title: 'Failed to end lesson', description: 'Network error — please try again.' });
+      setEndingLesson(false);
+    }
+  }, [roomId, endingLesson, router]);
+
   // Called by TldrawCanvas when the editor mounts
   const handleEditorReady = useCallback((editor: Editor) => {
     editorRef.current = editor;
@@ -198,7 +228,7 @@ export default function Whiteboard() {
       </div>
 
       {/* Branded Header */}
-      <BrandedHeader />
+      <BrandedHeader onEndLesson={isTutor ? handleEndLesson : undefined} />
 
       {/* Student Waiting Room (shown before tutor joins) */}
       {showWaitingRoom && (
