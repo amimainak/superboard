@@ -1,0 +1,891 @@
+     1→     1→// ============================================================
+     2→     2→// Authenticated Dashboard — Restructured with Sidebar Navigation
+     3→     3→// ============================================================
+     4→     4→// Phase 2: Dashboard IA Reorganization
+     5→     5→// - Collapsible sidebar with categorized navigation
+     6→     6→// - Views: Overview, Lessons, Resources (saved boards + templates),
+     7→     7→//   Agency (admin + students), Billing, Settings
+     8→     8→// - Onboarding wizard for first-time tutors
+     9→     9→// - Student experience toggle
+    10→    10→// ============================================================
+    11→    11→'use client';
+    12→    12→
+    13→    13→import React, { useEffect, useState, useCallback, useRef } from 'react';
+    14→    14→import { useAppStore } from '@/store/app-store';
+    15→    15→import { useCredits } from '@/hooks/useCredits';
+    16→    16→import { useTheme } from '@/hooks/useTheme';
+    17→    17→import { createClient } from '@/lib/supabase';
+    18→    18→import { subjectMeta } from '@/lib/subject-meta';
+    19→    19→import type { Subject, Tier } from '@/types';
+    20→    20→import { isAgencyTier } from '@/types';
+    21→    21→import type { User } from '@supabase/supabase-js';
+    22→    22→import { Button } from '@/components/ui/button';
+    23→    23→import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+    24→    24→import { Badge } from '@/components/ui/badge';
+    25→    25→import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+    26→    26→import { Progress } from '@/components/ui/progress';
+    27→    27→import { Separator } from '@/components/ui/separator';
+    28→    28→import {
+    29→    29→  Dialog,
+    30→    30→  DialogContent,
+    31→    31→  DialogDescription,
+    32→    32→  DialogHeader,
+    33→    33→  DialogTitle,
+    34→    34→  DialogTrigger,
+    35→    35→} from '@/components/ui/dialog';
+    36→    36→import {
+    37→    37→  AlertDialog,
+    38→    38→  AlertDialogAction,
+    39→    39→  AlertDialogCancel,
+    40→    40→  AlertDialogContent,
+    41→    41→  AlertDialogDescription,
+    42→    42→  AlertDialogFooter,
+    43→    43→  AlertDialogHeader,
+    44→    44→  AlertDialogTitle,
+    45→    45→} from '@/components/ui/alert-dialog';
+    46→    46→import { Input } from '@/components/ui/input';
+    47→    47→import { Label } from '@/components/ui/label';
+    48→    48→import {
+    49→    49→  Select,
+    50→    50→  SelectContent,
+    51→    51→  SelectItem,
+    52→    52→  SelectTrigger,
+    53→    53→  SelectValue,
+    54→    54→} from '@/components/ui/select';
+    55→    55→import {
+    56→    56→  Tooltip,
+    57→    57→  TooltipContent,
+    58→    58→  TooltipProvider,
+    59→    59→  TooltipTrigger,
+    60→    60→} from '@/components/ui/tooltip';
+    61→    61→import {
+    62→    62→  Plus,
+    63→    63→  BookOpen,
+    64→    64→  LayoutTemplate,
+    65→    65→  CreditCard,
+    66→    66→  Settings,
+    67→    67→  Users,
+    68→    68→  GraduationCap,
+    69→    69→  Sparkles,
+    70→    70→  ChevronRight,
+    71→    71→  ChevronLeft,
+    72→    72→  Video,
+    73→    73→  FileText,
+    74→    74→  LogOut,
+    75→    75→  Zap,
+    76→    76→  Crown,
+    77→    77→  Shield,
+    78→    78→  LayoutDashboard,
+    79→    79→  Home,
+    80→    80→  FolderOpen,
+    81→    81→  BarChart3,
+    82→    82→  Palette,
+    83→    83→  Building2,
+    84→    84→  PanelLeftClose,
+    85→    85→  PanelLeft,
+    86→    86→  ChevronDown,
+    87→    87→} from 'lucide-react';
+    88→    88→import { useToast } from '@/hooks/use-toast';
+    89→    89→import { BillingPanel } from './BillingPanel';
+    90→    90→import { SavedBoardsPanel } from './SavedBoardsPanel';
+    91→    91→import { TemplatesPanel } from './TemplatesPanel';
+    92→    92→import { AgencyAdminPanel } from './AgencyAdminPanel';
+    93→    93→import { MyRoomsPanel } from './MyRoomsPanel';
+    94→    94→import OnboardingWizard from './OnboardingWizard';
+    95→    95→import StudentDashboard from './StudentDashboard';
+    96→    96→
+    97→    97→// ============================================================
+    98→    98→// Types
+    99→    99→// ============================================================
+   100→   100→
+   101→   101→type DashboardView =
+   102→   102→  | 'overview'
+   103→   103→  | 'lessons'
+   104→   104→  | 'resources'
+   105→   105→  | 'agency'
+   106→   106→  | 'billing'
+   107→   107→  | 'settings';
+   108→   108→
+   109→   109→// ============================================================
+   110→   110→// Navigation Items
+   111→   111→// ============================================================
+   112→   112→
+   113→   113→interface NavItem {
+   114→   114→  id: DashboardView;
+   115→   115→  label: string;
+   116→   116→  icon: React.ElementType;
+   117→   117→  description: string;
+   118→   118→}
+   119→   119→
+   120→   120→interface NavGroup {
+   121→   121→  group: string;
+   122→   122→  items: NavItem[];
+   123→   123→}
+   124→   124→
+   125→   125→function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
+   126→   126→  const common: NavItem[] = [
+   127→   127→    { id: 'overview', label: 'Overview', icon: Home, description: 'Dashboard overview' },
+   128→   128→    { id: 'lessons', label: 'My Lessons', icon: BookOpen, description: 'Active and past lessons' },
+   129→   129→  ];
+   130→   130→
+   131→   131→  const resources: NavItem[] = isAgencyTier(tier) ? [
+   132→   132→    { id: 'resources', label: 'Resources', icon: FolderOpen, description: 'Saved boards & templates' },
+   133→   133→  ] : [];
+   134→   134→
+   135→   135→  const agency: NavItem[] = isAgencyTier(tier) ? [
+   136→   136→    { id: 'agency', label: 'Agency', icon: Users, description: 'Sub-tutors & students' },
+   137→   137→  ] : [];
+   138→   138→
+   139→   139→  const account: NavItem[] = [
+   140→   140→    { id: 'billing', label: 'Billing', icon: CreditCard, description: 'Subscription & payments' },
+   141→   141→    { id: 'settings', label: 'Settings', icon: Settings, description: 'Account preferences' },
+   142→   142→  ];
+   143→   143→
+   144→   144→  return [
+   145→   145→    { group: 'Main', items: common },
+   146→   146→    ...(resources.length ? [{ group: 'Workspace', items: resources }] : []),
+   147→   147→    ...(agency.length ? [{ group: 'Team', items: agency }] : []),
+   148→   148→    { group: 'Account', items: account },
+   149→   149→  ];
+   150→   150→}
+   151→   151→
+   152→   152→// ============================================================
+   153→   153→// Settings Panel (extracted inline)
+   154→   154→// ============================================================
+   155→   155→
+   156→   156→function SettingsPanel({
+   157→   157→  user,
+   158→   158→  tier,
+   159→   159→  tierLabel,
+   160→   160→  tierColor,
+   161→   161→  isAdmin,
+   162→   162→  isDark,
+   163→   163→  toggleDark,
+   164→   164→  onClose,
+   165→   165→}: {
+   166→   166→  user: User;
+   167→   167→  tier: Tier;
+   168→   168→  tierLabel: string;
+   169→   169→  tierColor: string;
+   170→   170→  isAdmin: boolean;
+   171→   171→  isDark: boolean;
+   172→   172→  toggleDark: () => void;
+   173→   173→  onClose: () => void;
+   174→   174→}) {
+   175→   175→  return (
+   176→   176→    <div className="space-y-6">
+   177→   177→      {/* Account Information */}
+   178→   178→      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   179→   179→        <CardHeader>
+   180→   180→          <CardTitle className="text-lg flex items-center gap-2">
+   181→   181→            <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+   182→   182→              <Settings className="w-4 h-4 text-white" />
+   183→   183→            </div>
+   184→   184→            Account Information
+   185→   185→          </CardTitle>
+   186→   186→        </CardHeader>
+   187→   187→        <CardContent className="space-y-4">
+   188→   188→          <div className="space-y-2">
+   189→   189→            <Label className="text-sm font-medium">Email</Label>
+   190→   190→            <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{user.email || ''}</div>
+   191→   191→          </div>
+   192→   192→          <div className="space-y-2">
+   193→   193→            <Label className="text-sm font-medium">Current Plan</Label>
+   194→   194→            <div className="flex items-center gap-2">
+   195→   195→              <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>{tierLabel}</Badge>
+   196→   196→              <Button size="sm" variant="outline" className="rounded-lg text-xs" onClick={() => onClose()}>Change Plan</Button>
+   197→   197→            </div>
+   198→   198→          </div>
+   199→   199→        </CardContent>
+   200→   200→      </Card>
+   201→   201→
+   202→   202→      {/* Preferences */}
+   203→   203→      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+   204→   204→        <CardHeader>
+   205→   205→          <CardTitle className="text-lg flex items-center gap-2">
+   206→   206→            <Palette className="w-5 h-5 text-emerald-500" />
+   207→   207→            Preferences
+   208→   208→          </CardTitle>
+   209→   209→        </CardHeader>
+   210→   210→        <CardContent className="space-y-4">
+   211→   211→          <div className="flex items-center justify-between">
+   212→   212→            <div>
+   213→   213→              <p className="text-sm font-medium">Dark Mode</p>
+   214→   214→              <p className="text-xs text-muted-foreground">Switch between light and dark themes</p>
+   215→   215→            </div>
+   216→   216→            <button
+   217→   217→              type="button"
+   218→   218→              onClick={toggleDark}
+   219→   219→              className={`relative w-12 h-6 rounded-full transition-colors ${isDark ? 'bg-emerald-500' : 'bg-gray-300'}`}
+   220→   220→              aria-label="Toggle dark mode"
+   221→   221→            >
+   222→   222→              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isDark ? 'translate-x-6' : ''}`} />
+   223→   223→            </button>
+   224→   224→          </div>
+   225→   225→          <Separator />
+   226→   226→          <div className="text-center">
+   227→   227→            <p className="text-xs text-muted-foreground">Need to change your email or password?</p>
+   228→   228→            <a href="mailto:support@superboard.live" className="text-xs text-primary hover:underline mt-1 inline-block">Contact Support</a>
+   229→   229→          </div>
+   230→   230→          {isAdmin && (
+   231→   231→            <>
+   232→   232→              <Separator />
+   233→   233→              <Button variant="outline" className="w-full rounded-xl" onClick={() => { window.location.href = '/?admin=1'; }}>
+   234→   234→                <Shield className="w-4 h-4 mr-2" /> Open Admin Panel
+   235→   235→              </Button>
+   236→   236→            </>
+   237→   237→          )}
+   238→   238→        </CardContent>
+   239→   239→      </Card>
+   240→   240→    </div>
+   241→   241→  );
+   242→   242→}
+   243→   243→
+   244→   244→// ============================================================
+   245→   245→// Main Export — AuthenticatedDashboard
+   246→   246→// ============================================================
+   247→   247→export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }: { user: User; userName: string | null; tierLoading: boolean; isAdmin?: boolean }) {
+   248→   248→  const { tier, setTier, setRoom } = useAppStore();
+   249→   249→  const { brandColor, agencyName, setBrandColor } = useTheme();
+   250→   250→  const {
+   251→   251→    aiCreditsUsed,
+   252→   252→    aiCreditsLimit,
+   253→   253→    videoMinutesUsed,
+   254→   254→    videoMinutesLimit,
+   255→   255→    recordingsUsed,
+   256→   256→    recordingsLimit,
+   257→   257→    loading: usageLoading,
+   258→   258→  } = useCredits(user.id);
+   259→   259→
+   260→   260→  // ---- State ----
+   261→   261→  const [activeView, setActiveView] = useState<DashboardView>('overview');
+   262→   262→  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+   263→   263→  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   264→   264→
+   265→   265→  // Dialog state
+   266→   266→  const [showNewLesson, setShowNewLesson] = useState(false);
+   267→   267→  const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
+   268→   268→  const [creating, setCreating] = useState(false);
+   269→   269→  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+   270→   270→
+   271→   271→  // Settings state
+   272→   272→  const [saveLoading, setSaveLoading] = useState(false);
+   273→   273→  const [saveSuccess, setSaveSuccess] = useState(false);
+   274→   274→
+   275→   275→  // Onboarding state — show wizard to first-time users (no rooms yet)
+   276→   276→  const [showOnboarding, setShowOnboarding] = useState(false);
+   277→   277→  const [roomsFetched, setRoomsFetched] = useState(false);
+   278→   278→  const [hasRooms, setHasRooms] = useState(false);
+   279→   279→
+   280→   280→  // Student mode toggle
+   281→   281→  const [isStudentMode, setIsStudentMode] = useState(false);
+   282→   282→
+   283→   283→  const { toast } = useToast();
+   284→   284→
+   285→   285→  // ---- Check if user has any rooms (for onboarding) ----
+   286→   286→  useEffect(() => {
+   287→   287→    if (!user?.id) return;
+   288→   288→    const checkRooms = async () => {
+   289→   289→      try {
+   290→   290→        const { authFetch } = await import('@/lib/auth-fetch');
+   291→   291→        const res = await authFetch(`/api/room/list?tutorId=${user.id}`);
+   292→   292→        if (res.ok) {
+   293→   293→          const data = await res.json();
+   294→   294→          const rooms = data.rooms ?? [];
+   295→   295→          setHasRooms(rooms.length > 0);
+   296→   296→          if (rooms.length === 0) {
+   297→   297→            setShowOnboarding(true);
+   298→   298→          }
+   299→   299→        }
+   300→   300→      } catch { /* silent — proceed to dashboard */ }
+   301→   301→      setRoomsFetched(true);
+   302→   302→    };
+   303→   303→    checkRooms();
+   304→   304→  }, [user?.id]);
+   305→   305→
+   306→   306→  // ---- Dark mode ----
+   307→   307→  const [isDark, setIsDark] = useState(false);
+   308→   308→  useEffect(() => {
+   309→   309→    const saved = localStorage.getItem('superboard-theme');
+   310→   310→    if (saved === 'dark') {
+   311→   311→      document.documentElement.classList.add('dark');
+   312→   312→      setIsDark(true);
+   313→   313→    }
+   314→   314→  }, []);
+   315→   315→
+   316→   316→  const toggleDark = useCallback(() => {
+   317→   317→    const next = !isDark;
+   318→   318→    setIsDark(next);
+   319→   319→    if (next) {
+   320→   320→      document.documentElement.classList.add('dark');
+   321→   321→    } else {
+   322→   322→      document.documentElement.classList.remove('dark');
+   323→   323→    }
+   324→   324→    localStorage.setItem('superboard-theme', next ? 'dark' : 'light');
+   325→   325→  }, [isDark]);
+   326→   326→
+   327→   327→  // ---- Fingerprint reporting ----
+   328→   328→  useEffect(() => {
+   329→   329→    import('@/lib/fingerprint').then(({ reportFingerprint }) => {
+   330→   330→      if (user?.id) reportFingerprint(user.id).catch(console.error);
+   331→   331→    });
+   332→   332→  }, [user?.id]);
+   333→   333→
+   334→   334→  // ---- Create lesson handler ----
+   335→   335→  const handleCreateLesson = useCallback(async () => {
+   336→   336→    setCreating(true);
+   337→   337→    try {
+   338→   338→      const supabase = createClient();
+   339→   339→      const { data: { session } } = await supabase!.auth.getSession();
+   340→   340→      const token = session?.access_token;
+   341→   341→      if (!token) { setCreating(false); return; }
+   342→   342→      const response = await fetch('/api/room', {
+   343→   343→        method: 'POST',
+   344→   344→        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+   345→   345→        body: JSON.stringify({ tutorId: user?.id, subject: selectedSubject }),
+   346→   346→      });
+   347→   347→      if (!response.ok) {
+   348→   348→        const errBody = await response.text().catch(() => '');
+   349→   349→        throw new Error(`Failed to create room (${response.status}): ${errBody}`);
+   350→   350→      }
+   351→   351→      const data = await response.json();
+   352→   352→      window.location.href = `/room/${data.roomId}`;
+   353→   353→    } catch (error: any) {
+   354→   354→      toast({ title: 'Failed to create lesson', description: error?.message || 'Please try again.', variant: 'destructive' });
+   355→   355→      setCreating(false);
+   356→   356→    }
+   357→   357→  }, [selectedSubject, user?.id, toast]);
+   358→   358→
+   359→   359→  // ---- Save brand color handler ----
+   360→   360→  const handleSaveBrandColor = useCallback(async () => {
+   361→   361→    setSaveLoading(true);
+   362→   362→    setSaveSuccess(false);
+   363→   363→    try {
+   364→   364→      const supabase = createClient();
+   365→   365→      const { data: { session } } = await supabase!.auth.getSession();
+   366→   366→      const token = session?.access_token;
+   367→   367→      if (!token) return;
+   368→   368→      await fetch('/api/auth/profile', {
+   369→   369→        method: 'PATCH',
+   370→   370→        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+   371→   371→        body: JSON.stringify({ brandingColor: brandColor || null }),
+   372→   372→      });
+   373→   373→      setSaveSuccess(true);
+   374→   374→      setTimeout(() => setSaveSuccess(false), 2000);
+   375→   375→    } catch { /* silent */ }
+   376→   376→    setSaveLoading(false);
+   377→   377→  }, [brandColor]);
+   378→   378→
+   379→   379→  // ---- Logout handler ----
+   380→   380→  const handleLogout = useCallback(async () => {
+   381→   381→    const supabase = createClient();
+   382→   382→    if (supabase) await supabase.auth.signOut();
+   383→   383→    setTier('FREE');
+   384→   384→    window.location.href = '/';
+   385→   385→  }, [setTier]);
+   386→   386→
+   387→   387→  // ---- Onboarding complete handler ----
+   388→   388→  const handleOnboardingComplete = useCallback((roomId: string) => {
+   389→   389→    setShowOnboarding(false);
+   390→   390→    setHasRooms(true);
+   391→   391→    window.location.href = `/room/${roomId}`;
+   392→   392→  }, []);
+   393→   393→
+   394→   394→  const handleOnboardingSkip = useCallback(() => {
+   395→   395→    setShowOnboarding(false);
+   396→   396→    setHasRooms(false);
+   397→   397→  }, []);
+   398→   398→
+   399→   399→  // ---- Derived values ----
+   400→   400→  const tierLabel = isAgencyTier(tier)
+   401→   401→    ? tier === 'AGENCY_PREMIUM' ? 'Agency Premium'
+   402→   402→    : tier === 'AGENCY_STANDARD' ? 'Agency Standard'
+   403→   403→    : 'Agency'
+   404→   404→    : tier === 'PRO' ? 'Pro' : 'Free';
+   405→   405→  const tierColor =
+   406→   406→    tier === 'AGENCY_PREMIUM' ? 'bg-purple-100 text-purple-800'
+   407→   407→    : tier === 'AGENCY_STANDARD' || tier === 'AGENCY' ? 'bg-amber-100 text-amber-800'
+   408→   408→    : tier === 'PRO' ? 'bg-emerald-100 text-emerald-800'
+   409→   409→    : 'bg-teal-50 text-teal-700';
+   410→   410→
+   411→   411→  const navGroups = getNavItems(tier, !!isAdmin);
+   412→   412→
+   413→   413→  // ---- Show onboarding for first-time users ----
+   414→   414→  if (showOnboarding && roomsFetched) {
+   415→   415→    return (
+   416→   416→      <OnboardingWizard
+   417→   417→        userId={user.id}
+   418→   418→        userEmail={user.email || ''}
+   419→   419→        userName={userName}
+   420→   420→        onComplete={handleOnboardingComplete}
+   421→   421→        onSkip={handleOnboardingSkip}
+   422→   422→      />
+   423→   423→    );
+   424→   424→  }
+   425→   425→
+   426→   426→  // ---- Show student dashboard if in student mode ----
+   427→   427→  if (isStudentMode) {
+   428→   428→    return (
+   429→   429→      <StudentDashboard
+   430→   430→        userId={user.id}
+   431→   431→        userName={userName}
+   432→   432→        userEmail={user.email || null}
+   433→   433→      />
+   434→   434→    );
+   435→   435→  }
+   436→   436→
+   437→   437→  // ============================================================
+   438→   438→  // RENDER — Dashboard with Sidebar
+   439→   439→  // ============================================================
+   440→   440→  return (
+   441→   441→    <TooltipProvider delayDuration={0}>
+   442→   442→      <div className="min-h-screen bg-background flex">
+   443→   443→        {/* ============================================================
+   444→   444→            SIDEBAR — Collapsible on desktop, sheet on mobile
+   445→   445→            ============================================================ */}
+   446→   446→        {/* Mobile overlay */}
+   447→   447→        {mobileMenuOpen && (
+   448→   448→          <div
+   449→   449→            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+   450→   450→            onClick={() => setMobileMenuOpen(false)}
+   451→   451→          />
+   452→   452→        )}
+   453→   453→
+   454→   454→        {/* Sidebar */}
+   455→   455→        <aside
+   456→   456→          className={`
+   457→   457→            fixed lg:sticky top-0 left-0 z-50 lg:z-30
+   458→   458→            h-screen flex flex-col
+   459→   459→            bg-white border-r border-gray-200
+   460→   460→            transition-all duration-300 ease-in-out
+   461→   461→            ${sidebarCollapsed ? 'w-[68px]' : 'w-64'}
+   462→   462→            ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+   463→   463→          `}
+   464→   464→        >
+   465→   465→          {/* Sidebar Header / Logo */}
+   466→   466→          <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100 shrink-0">
+   467→   467→            <div className="flex items-center gap-2.5 min-w-0">
+   468→   468→              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
+   469→   469→                <GraduationCap className="w-5 h-5 text-white" />
+   470→   470→              </div>
+   471→   471→              {!sidebarCollapsed && (
+   472→   472→                <div className="min-w-0">
+   473→   473→                  <h1 className="text-sm font-bold tracking-tight truncate">{agencyName || 'Superboard'}</h1>
+   474→   474→                </div>
+   475→   475→              )}
+   476→   476→            </div>
+   477→   477→            {/* Mobile close */}
+   478→   478→            <Button
+   479→   479→              variant="ghost"
+   480→   480→              size="icon"
+   481→   481→              className="lg:hidden h-8 w-8 shrink-0"
+   482→   482→              onClick={() => setMobileMenuOpen(false)}
+   483→   483→            >
+   484→   484→              <PanelLeftClose className="w-4 h-4" />
+   485→   485→            </Button>
+   486→   486→          </div>
+   487→   487→
+   488→   488→          {/* Navigation */}
+   489→   489→          <nav className="flex-1 overflow-y-auto py-3 px-3 custom-scrollbar">
+   490→   490→            {navGroups.map((group, gi) => (
+   491→   491→              <div key={group.group} className={gi > 0 ? 'mt-4' : ''}>
+   492→   492→                {!sidebarCollapsed && (
+   493→   493→                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-2 mb-1.5">
+   494→   494→                    {group.group}
+   495→   495→                  </p>
+   496→   496→                )}
+   497→   497→                {group.items.map((item) => {
+   498→   498→                  const isActive = activeView === item.id;
+   499→   499→                  const Icon = item.icon;
+   500→   500→                  return (
+   501→   501→                    <Tooltip key={item.id}>
+   502→   502→                      <TooltipTrigger asChild>
+   503→   503→                        <button
+   504→   504→                          onClick={() => {
+   505→   505→                            setActiveView(item.id);
+   506→   506→                            setMobileMenuOpen(false);
+   507→   507→                          }}
+   508→   508→                          className={`
+   509→   509→                            w-full flex items-center gap-2.5 rounded-xl text-sm font-medium
+   510→   510→                            transition-all duration-150
+   511→   511→                            ${sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'}
+   512→   512→                            ${isActive
+   513→   513→                              ? 'bg-emerald-50 text-emerald-700 shadow-sm'
+   514→   514→                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+   515→   515→                            }
+   516→   516→                          `}
+   517→   517→                        >
+   518→   518→                          <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? 'text-emerald-600' : 'text-gray-400'}`} />
+   519→   519→                          {!sidebarCollapsed && (
+   520→   520→                            <span className="truncate">{item.label}</span>
+   521→   521→                          )}
+   522→   522→                          {isActive && !sidebarCollapsed && (
+   523→   523→                            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-500" />
+   524→   524→                          )}
+   525→   525→                        </button>
+   526→   526→                      </TooltipTrigger>
+   527→   527→                      {sidebarCollapsed && (
+   528→   528→                        <TooltipContent side="right" className="text-xs font-medium">
+   529→   529→                          {item.description}
+   530→   530→                        </TooltipContent>
+   531→   531→                      )}
+   532→   532→                    </Tooltip>
+   533→   533→                  );
+   534→   534→                })}
+   535→   535→              </div>
+   536→   536→            ))}
+   537→   537→          </nav>
+   538→   538→
+   539→   539→          {/* Sidebar Footer — Collapse toggle + User info */}
+   540→   540→          <div className="border-t border-gray-100 px-3 py-3 shrink-0">
+   541→   541→            {/* Collapse toggle (desktop only) */}
+   542→   542→            <button
+   543→   543→              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+   544→   544→              className="hidden lg:flex w-full items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:bg-gray-50 hover:text-gray-600 transition-colors mb-2"
+   545→   545→            >
+   546→   546→              {sidebarCollapsed ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
+   547→   547→              {!sidebarCollapsed && <span>Collapse</span>}
+   548→   548→            </button>
+   549→   549→
+   550→   550→            {/* User email + tier */}
+   551→   551→            <div className={`flex items-center gap-2.5 rounded-xl px-2 py-2 bg-gray-50 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+   552→   552→              <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
+   553→   553→                {(userName || user.email || '?').charAt(0).toUpperCase()}
+   554→   554→              </div>
+   555→   555→              {!sidebarCollapsed && (
+   556→   556→                <div className="min-w-0 flex-1">
+   557→   557→                  <p className="text-xs font-medium truncate">{userName || user.email?.split('@')[0]}</p>
+   558→   558→                  <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+   559→   559→                </div>
+   560→   560→              )}
+   561→   561→            </div>
+   562→   562→          </div>
+   563→   563→        </aside>
+   564→   564→
+   565→   565→        {/* ============================================================
+   566→   566→            MAIN CONTENT AREA
+   567→   567→            ============================================================ */}
+   568→   568→        <div className="flex-1 min-w-0 flex flex-col">
+   569→   569→          {/* Top Bar */}
+   570→   570→          <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
+   571→   571→            <div className="flex items-center justify-between px-4 sm:px-6 h-14">
+   572→   572→              <div className="flex items-center gap-3">
+   573→   573→                {/* Mobile menu toggle */}
+   574→   574→                <Button
+   575→   575→                  variant="ghost"
+   576→   576→                  size="icon"
+   577→   577→                  className="lg:hidden h-9 w-9 rounded-xl"
+   578→   578→                  onClick={() => setMobileMenuOpen(true)}
+   579→   579→                >
+   580→   580→                  <PanelLeft className="w-4 h-4" />
+   581→   581→                </Button>
+   582→   582→                {/* View title */}
+   583→   583→                <h2 className="text-base font-semibold text-gray-900">
+   584→   584→                  {navGroups.flatMap(g => g.items).find(i => i.id === activeView)?.label || 'Dashboard'}
+   585→   585→                </h2>
+   586→   586→              </div>
+   587→   587→              <div className="flex items-center gap-2">
+   588→   588→                {/* Quick create button */}
+   589→   589→                <Button
+   590→   590→                  className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/35 transition-all text-xs h-9 px-3"
+   591→   591→                  onClick={() => setShowNewLesson(true)}
+   592→   592→                >
+   593→   593→                  <Plus className="w-3.5 h-3.5 mr-1" />
+   594→   594→                  <span className="hidden sm:inline">New Lesson</span>
+   595→   595→                </Button>
+   596→   596→                {/* Tier badge */}
+   597→   597→                {!tierLoading && (
+   598→   598→                  <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 font-medium text-[11px] ${tierColor}`}>
+   599→   599→                    {isAgencyTier(tier) && <Crown className="w-3 h-3 mr-0.5" />}
+   600→   600→                    {tierLabel}
+   601→   601→                  </Badge>
+   602→   602→                )}
+   603→   603→                {/* Sign out */}
+   604→   604→                <Button
+   605→   605→                  variant="ghost"
+   606→   606→                  size="icon"
+   607→   607→                  className="h-9 w-9 rounded-xl hover:bg-rose-50 hover:text-rose-600 transition-colors"
+   608→   608→                  onClick={() => setShowSignOutConfirm(true)}
+   609→   609→                  title="Sign out"
+   610→   610→                >
+   611→   611→                  <LogOut className="w-4 h-4" />
+   612→   612→                </Button>
+   613→   613→              </div>
+   614→   614→            </div>
+   615→   615→          </header>
+   616→   616→
+   617→   617→          {/* Content */}
+   618→   618→          <main className="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto">
+   619→   619→            {/* ============================================================
+   620→   620→                VIEW: Overview
+   621→   621→                ============================================================ */}
+   622→   622→            {activeView === 'overview' && (
+   623→   623→              <div className="space-y-6">
+   624→   624→                {/* Welcome Banner */}
+   625→   625→                <div className="rounded-2xl gradient-hero p-5 sm:p-7 animate-fade-in-up">
+   626→   626→                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   627→   627→                    <div>
+   628→   628→                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+   629→   629→                        Welcome back! {userName || user.user_metadata?.name || user.email?.split('@')[0]}
+   630→   630→                      </h2>
+   631→   631→                      <p className="text-gray-600 mt-1.5 max-w-xl text-sm sm:text-base">
+   632→   632→                        Create interactive lessons with smart tools, video calling, and real-time collaboration.
+   633→   633→                      </p>
+   634→   634→                      <div className="flex items-center gap-3 mt-4">
+   635→   635→                        <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all text-sm" onClick={() => setShowNewLesson(true)}>
+   636→   636→                          <Plus className="w-4 h-4 mr-1.5" />Create a Lesson
+   637→   637→                        </Button>
+   638→   638→                        <p className="text-sm text-gray-600">or use quick start below</p>
+   639→   639→                      </div>
+   640→   640→                    </div>
+   641→   641→                  </div>
+   642→   642→                </div>
+   643→   643→
+   644→   644→                {/* Usage Overview Cards */}
+   645→   645→                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+   646→   646→                  <div className="rounded-2xl p-5 text-white stat-gradient-sparkles shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up">
+   647→   647→                    <div className="relative z-10">
+   648→   648→                      <div className="flex items-center gap-2 mb-1"><Sparkles className="w-4 h-4 text-white/80" /><span className="text-xs font-medium text-white/80">Smart Credits</span></div>
+   649→   649→                      <div className="text-2xl sm:text-3xl font-bold mt-1">{aiCreditsUsed}{aiCreditsLimit !== Infinity ? ` / ${aiCreditsLimit}` : ' / \u221E'}</div>
+   650→   650→                      {aiCreditsLimit !== Infinity && <Progress value={(aiCreditsUsed / aiCreditsLimit) * 100} className="mt-2 h-1.5 bg-white/20 [&>div]:bg-white/90" />}
+   651→   651→                    </div>
+   652→   652→                  </div>
+   653→   653→                  <div className="rounded-2xl p-5 text-white stat-gradient-video shadow-lg shadow-sky-500/15 card-hover animate-fade-in-up-delay-1">
+   654→   654→                    <div className="relative z-10">
+   655→   655→                      <div className="flex items-center gap-2 mb-1"><Video className="w-4 h-4 text-white/80" /><span className="text-xs font-medium text-white/80">Video Minutes</span></div>
+   656→   656→                      <div className="text-2xl sm:text-3xl font-bold mt-1">{videoMinutesUsed}{videoMinutesLimit !== Infinity ? ` / ${videoMinutesLimit}` : ' / \u221E'}</div>
+   657→   657→                      {videoMinutesLimit !== Infinity && <Progress value={(videoMinutesUsed / videoMinutesLimit) * 100} className="mt-2 h-1.5 bg-white/20 [&>div]:bg-white/90" />}
+   658→   658→                    </div>
+   659→   659→                  </div>
+   660→   660→                  <div className="rounded-2xl p-5 text-white stat-gradient-recordings shadow-lg shadow-emerald-500/15 card-hover animate-fade-in-up-delay-2">
+   661→   661→                    <div className="relative z-10">
+   662→   662→                      <div className="flex items-center gap-2 mb-1"><FileText className="w-4 h-4 text-white/80" /><span className="text-xs font-medium text-white/80">Recordings</span></div>
+   663→   663→                      <div className="text-2xl sm:text-3xl font-bold mt-1">{recordingsUsed}{recordingsLimit !== Infinity ? ` / ${recordingsLimit}` : ''}</div>
+   664→   664→                      <p className="text-xs text-white/70 mt-1.5">{tier === 'FREE' ? 'Requires Pro' : tier === 'PRO' ? `${recordingsLimit} per month` : 'Unlimited'}</p>
+   665→   665→                    </div>
+   666→   666→                  </div>
+   667→   667→                </div>
+   668→   668→
+   669→   669→                {/* My Lessons + Quick Start Grid */}
+   670→   670→                <div className="flex flex-col lg:flex-row gap-6">
+   671→   671→                  {/* My Lessons */}
+   672→   672→                  <div className="flex-1 animate-fade-in-up-delay-1">
+   673→   673→                    <MyRoomsPanel
+   674→   674→                      userId={user.id}
+   675→   675→                      onCreateLesson={() => setShowNewLesson(true)}
+   676→   676→                    />
+   677→   677→                  </div>
+   678→   678→
+   679→   679→                  {/* Quick Start */}
+   680→   680→                  <div className="lg:w-64 flex-shrink-0 animate-fade-in-up-delay-2">
+   681→   681→                    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+   682→   682→                      <CardHeader className="pb-3">
+   683→   683→                        <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
+   684→   684→                      </CardHeader>
+   685→   685→                      <CardContent className="space-y-1.5">
+   686→   686→                        {(['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as Subject[]).map((subj) => {
+   687→   687→                          const meta = subjectMeta[subj];
+   688→   688→                          return (
+   689→   689→                            <button key={subj} onClick={() => { setSelectedSubject(subj); setShowNewLesson(true); }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50 transition-colors group">
+   690→   690→                              <div className={`w-8 h-8 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
+   691→   691→                              <div className="flex-1 min-w-0">
+   692→   692→                                <p className="text-sm font-medium">{meta.label}</p>
+   693→   693→                                <p className="text-[10px] text-muted-foreground">Quick start</p>
+   694→   694→                              </div>
+   695→   695→                              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+   696→   696→                            </button>
+   697→   697→                          );
+   698→   698→                        })}
+   699→   699→                      </CardContent>
+   700→   700→                    </Card>
+   701→   701→                  </div>
+   702→   702→                </div>
+   703→   703→
+   704→   704→                {/* Student Mode Toggle */}
+   705→   705→                {!isAgencyTier(tier) && (
+   706→   706→                  <Card className="rounded-2xl border border-dashed border-gray-300 bg-gradient-to-r from-emerald-50/30 to-teal-50/30 animate-fade-in-up-delay-3">
+   707→   707→                    <CardContent className="p-4 sm:p-5">
+   708→   708→                      <div className="flex items-center justify-between gap-4">
+   709→   709→                        <div className="flex items-center gap-3">
+   710→   710→                          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+   711→   711→                            <GraduationCap className="w-5 h-5 text-emerald-600" />
+   712→   712→                          </div>
+   713→   713→                          <div>
+   714→   714→                            <p className="text-sm font-medium text-gray-900">Student View</p>
+   715→   715→                            <p className="text-xs text-muted-foreground">Switch to a simplified view for joining lessons</p>
+   716→   716→                          </div>
+   717→   717→                        </div>
+   718→   718→                        <Button
+   719→   719→                          variant="outline"
+   720→   720→                          size="sm"
+   721→   721→                          className="rounded-xl text-xs"
+   722→   722→                          onClick={() => setIsStudentMode(true)}
+   723→   723→                        >
+   724→   724→                          Switch to Student View
+   725→   725→                        </Button>
+   726→   726→                      </div>
+   727→   727→                    </CardContent>
+   728→   728→                  </Card>
+   729→   729→                )}
+   730→   730→              </div>
+   731→   731→            )}
+   732→   732→
+   733→   733→            {/* ============================================================
+   734→   734→                VIEW: Lessons (full page rooms list)
+   735→   735→                ============================================================ */}
+   736→   736→            {activeView === 'lessons' && (
+   737→   737→              <div className="space-y-6 animate-fade-in-up">
+   738→   738→                <div className="flex items-center justify-between">
+   739→   739→                  <div>
+   740→   740→                    <h3 className="text-lg font-bold">All Lessons</h3>
+   741→   741→                    <p className="text-sm text-muted-foreground">Manage your active and past lessons</p>
+   742→   742→                  </div>
+   743→   743→                  <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-md shadow-emerald-500/20 text-sm" onClick={() => setShowNewLesson(true)}>
+   744→   744→                    <Plus className="w-4 h-4 mr-1.5" />New Lesson
+   745→   745→                  </Button>
+   746→   746→                </div>
+   747→   747→                <MyRoomsPanel userId={user.id} onCreateLesson={() => setShowNewLesson(true)} />
+   748→   748→              </div>
+   749→   749→            )}
+   750→   750→
+   751→   751→            {/* ============================================================
+   752→   752→                VIEW: Resources (Saved Boards + Templates)
+   753→   753→                ============================================================ */}
+   754→   754→            {activeView === 'resources' && isAgencyTier(tier) && (
+   755→   755→              <div className="space-y-6 animate-fade-in-up">
+   756→   756→                <div>
+   757→   757→                  <h3 className="text-lg font-bold">Resources</h3>
+   758→   758→                  <p className="text-sm text-muted-foreground">Your saved boards and reusable templates</p>
+   759→   759→                </div>
+   760→   760→                <Tabs defaultValue="boards" className="w-full">
+   761→   761→                  <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
+   762→   762→                    <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+   763→   763→                      <BookOpen className="w-4 h-4" />Saved Boards
+   764→   764→                    </TabsTrigger>
+   765→   765→                    <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+   766→   766→                      <LayoutTemplate className="w-4 h-4" />Templates
+   767→   767→                    </TabsTrigger>
+   768→   768→                  </TabsList>
+   769→   769→                  <TabsContent value="boards" className="mt-6">
+   770→   770→                    <SavedBoardsPanel userId={user?.id || ''} tier={tier} />
+   771→   771→                  </TabsContent>
+   772→   772→                  <TabsContent value="templates" className="mt-6">
+   773→   773→                    <TemplatesPanel userId={user?.id || ''} tier={tier} />
+   774→   774→                  </TabsContent>
+   775→   775→                </Tabs>
+   776→   776→              </div>
+   777→   777→            )}
+   778→   778→
+   779→   779→            {/* ============================================================
+   780→   780→                VIEW: Agency (Sub-tutors + Students)
+   781→   781→                ============================================================ */}
+   782→   782→            {activeView === 'agency' && isAgencyTier(tier) && (
+   783→   783→              <div className="space-y-6 animate-fade-in-up">
+   784→   784→                <div>
+   785→   785→                  <h3 className="text-lg font-bold">Agency Management</h3>
+   786→   786→                  <p className="text-sm text-muted-foreground">Manage your sub-tutors, student roster, and usage</p>
+   787→   787→                </div>
+   788→   788→                <AgencyAdminPanel agencyUserId={user?.id || ''} userTier={tier} />
+   789→   789→              </div>
+   790→   790→            )}
+   791→   791→
+   792→   792→            {/* ============================================================
+   793→   793→                VIEW: Billing
+   794→   794→                ============================================================ */}
+   795→   795→            {activeView === 'billing' && (
+   796→   796→              <div className="space-y-6 animate-fade-in-up">
+   797→   797→                <div>
+   798→   798→                  <h3 className="text-lg font-bold">Billing & Subscription</h3>
+   799→   799→                  <p className="text-sm text-muted-foreground">Manage your plan, payments, and branding</p>
+   800→   800→                </div>
+   801→   801→                <BillingPanel
+   802→   802→                  tier={tier}
+   803→   803→                  brandColor={brandColor || ''}
+   804→   804→                  setBrandColor={setBrandColor}
+   805→   805→                  onSaveBrandColor={handleSaveBrandColor}
+   806→   806→                />
+   807→   807→              </div>
+   808→   808→            )}
+   809→   809→
+   810→   810→            {/* ============================================================
+   811→   811→                VIEW: Settings
+   812→   812→                ============================================================ */}
+   813→   813→            {activeView === 'settings' && (
+   814→   814→              <div className="space-y-6 animate-fade-in-up">
+   815→   815→                <div>
+   816→   816→                  <h3 className="text-lg font-bold">Settings</h3>
+   817→   817→                  <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
+   818→   818→                </div>
+   819→   819→                <SettingsPanel
+   820→   820→                  user={user}
+   821→   821→                  tier={tier}
+   822→   822→                  tierLabel={tierLabel}
+   823→   823→                  tierColor={tierColor}
+   824→   824→                  isAdmin={!!isAdmin}
+   825→   825→                  isDark={isDark}
+   826→   826→                  toggleDark={toggleDark}
+   827→   827→                  onClose={() => setActiveView('billing')}
+   828→   828→                />
+   829→   829→              </div>
+   830→   830→            )}
+   831→   831→          </main>
+   832→   832→        </div>
+   833→   833→
+   834→   834→        {/* ============================================================
+   835→   835→            DIALOGS (shared across views)
+   836→   836→            ============================================================ */}
+   837→   837→
+   838→   838→        {/* New Lesson Dialog */}
+   839→   839→        <Dialog open={showNewLesson} onOpenChange={setShowNewLesson}>
+   840→   840→          <DialogContent className="rounded-2xl">
+   841→   841→            <DialogHeader>
+   842→   842→              <DialogTitle className="text-xl">Create New Lesson</DialogTitle>
+   843→   843→              <DialogDescription>Select a subject for your lesson. This determines which toolkit will be available on the whiteboard.</DialogDescription>
+   844→   844→            </DialogHeader>
+   845→   845→            <div className="space-y-4 py-4">
+   846→   846→              <div className="space-y-2">
+   847→   847→                <Label>Subject</Label>
+   848→   848→                <Select value={selectedSubject} onValueChange={(v) => setSelectedSubject(v as Subject)}>
+   849→   849→                  <SelectTrigger className="rounded-xl"><SelectValue placeholder="Select subject" /></SelectTrigger>
+   850→   850→                  <SelectContent>
+   851→   851→                    <SelectItem value="MATH">Mathematics</SelectItem>
+   852→   852→                    <SelectItem value="SCIENCE">Science</SelectItem>
+   853→   853→                    <SelectItem value="LANGUAGE">English &amp; Language</SelectItem>
+   854→   854→                    <SelectItem value="GENERAL">General / Other</SelectItem>
+   855→   855→                  </SelectContent>
+   856→   856→                </Select>
+   857→   857→              </div>
+   858→   858→              {isAgencyTier(tier) && (
+   859→   859→                <div className="space-y-2">
+   860→   860→                  <Label>Branding</Label>
+   861→   861→                  <div className="flex items-center gap-2">
+   862→   862→                    <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+   863→   863→                    <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+   864→   864→                  </div>
+   865→   865→                </div>
+   866→   866→              )}
+   867→   867→              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25" onClick={handleCreateLesson} disabled={creating}>
+   868→   868→                {creating ? 'Creating...' : 'Start Lesson'}
+   869→   869→              </Button>
+   870→   870→            </div>
+   871→   871→          </DialogContent>
+   872→   872→        </Dialog>
+   873→   873→
+   874→   874→        {/* Sign Out Confirmation Dialog */}
+   875→   875→        <AlertDialog open={showSignOutConfirm} onOpenChange={setShowSignOutConfirm}>
+   876→   876→          <AlertDialogContent className="rounded-2xl">
+   877→   877→            <AlertDialogHeader>
+   878→   878→              <AlertDialogTitle>Are you sure you want to sign out?</AlertDialogTitle>
+   879→   879→              <AlertDialogDescription>You will need to sign in again to access your lessons and boards.</AlertDialogDescription>
+   880→   880→            </AlertDialogHeader>
+   881→   881→            <AlertDialogFooter>
+   882→   882→              <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+   883→   883→              <AlertDialogAction onClick={handleLogout} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white">Sign Out</AlertDialogAction>
+   884→   884→            </AlertDialogFooter>
+   885→   885→          </AlertDialogContent>
+   886→   886→        </AlertDialog>
+   887→   887→      </div>
+   888→   888→    </TooltipProvider>
+   889→   889→  );
+   890→   890→}
+   891→   891→

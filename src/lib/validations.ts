@@ -133,10 +133,56 @@ export const aiActionSchema = z.object({
   systemPrompt: z.string().max(10_000, 'System prompt too long').optional(),
 });
 
+export const createScheduleSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  description: z.string().max(2000).optional().nullable(),
+  subject: subjectSchema,
+  studentEmail: emailSchema.optional().nullable(),
+  studentName: z.string().max(200).optional().nullable(),
+  scheduledAt: z.string().datetime('Invalid date format'),
+  durationMinutes: z.number().int().min(15).max(480).optional().default(60),
+  timeZone: z.string().max(50).optional().default('UTC'),
+});
+
+export const updateScheduleSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional().nullable(),
+  subject: subjectSchema.optional(),
+  scheduledAt: z.string().datetime('Invalid date format').optional(),
+  durationMinutes: z.number().int().min(15).max(480).optional(),
+  status: z.enum(['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
+});
+
 // ---- Auth Profile API ----
 
 export const getProfileSchema = z.object({
   userId: z.string().max(100).optional(),
+});
+
+// ---- Referral API ----
+
+export const getReferralCodeSchema = z.object({});
+
+export const applyReferralSchema = z.object({
+  referralCode: z.string().min(4).max(20).regex(/^[A-Z0-9]+$/, 'Invalid referral code format'),
+});
+
+// ---- Webhook API ----
+
+export const registerWebhookSchema = z.object({
+  url: z
+    .string()
+    .url('Invalid URL format')
+    .refine(
+      (u) => u.startsWith('https://'),
+      'Webhook URL must use HTTPS'
+    )
+    .max(500, 'URL too long'),
+  events: z
+    .array(z.string().min(1).max(50))
+    .min(1, 'At least one event is required')
+    .max(20, 'Too many events (max 20)'),
+  secret: z.string().min(16, 'Secret must be at least 16 characters').max(128).optional(),
 });
 
 // ---- Helper: Validate and return parsed data or error response ----

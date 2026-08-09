@@ -81,6 +81,7 @@ import {
   BarChart3,
   Palette,
   Building2,
+  Calendar,
   PanelLeftClose,
   PanelLeft,
   ChevronDown,
@@ -93,6 +94,10 @@ import { AgencyAdminPanel } from './AgencyAdminPanel';
 import { MyRoomsPanel } from './MyRoomsPanel';
 import OnboardingWizard from './OnboardingWizard';
 import StudentDashboard from './StudentDashboard';
+import { AnalyticsPanel } from './AnalyticsPanel';
+import { SchedulePanel } from './SchedulePanel';
+import { RecordingsPanel } from './RecordingsPanel';
+import { TemplateGallery, type TemplateInfo } from './TemplateGallery';
 
 // ============================================================
 // Types
@@ -100,8 +105,11 @@ import StudentDashboard from './StudentDashboard';
 
 type DashboardView =
   | 'overview'
+  | 'analytics'
   | 'lessons'
+  | 'schedule'
   | 'resources'
+  | 'recordings'
   | 'agency'
   | 'billing'
   | 'settings';
@@ -125,7 +133,13 @@ interface NavGroup {
 function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
   const common: NavItem[] = [
     { id: 'overview', label: 'Overview', icon: Home, description: 'Dashboard overview' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Usage analytics & insights' },
     { id: 'lessons', label: 'My Lessons', icon: BookOpen, description: 'Active and past lessons' },
+  ];
+
+  const workspace: NavItem[] = [
+    { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Upcoming & past lessons' },
+    { id: 'recordings', label: 'Recordings', icon: Video, description: 'Lesson recordings' },
   ];
 
   const resources: NavItem[] = isAgencyTier(tier) ? [
@@ -143,7 +157,8 @@ function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
 
   return [
     { group: 'Main', items: common },
-    ...(resources.length ? [{ group: 'Workspace', items: resources }] : []),
+    ...(workspace.length ? [{ group: 'Workspace', items: workspace }] : []),
+    ...(resources.length ? [{ group: 'Resources', items: resources }] : []),
     ...(agency.length ? [{ group: 'Team', items: agency }] : []),
     { group: 'Account', items: account },
   ];
@@ -264,6 +279,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
 
   // Dialog state
   const [showNewLesson, setShowNewLesson] = useState(false);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
   const [creating, setCreating] = useState(false);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
@@ -394,6 +410,13 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
   const handleOnboardingSkip = useCallback(() => {
     setShowOnboarding(false);
     setHasRooms(false);
+  }, []);
+
+  // ---- Template gallery handler ----
+  const handleTemplateSelect = useCallback((template: TemplateInfo) => {
+    setShowTemplateGallery(false);
+    setSelectedSubject(template.subject);
+    setShowNewLesson(true);
   }, []);
 
   // ---- Derived values ----
@@ -535,6 +558,33 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
               </div>
             ))}
           </nav>
+
+          {/* Templates Button — opens Template Gallery dialog */}
+          <div className="px-3 pb-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setShowTemplateGallery(true)}
+                  className={`
+                    w-full flex items-center gap-2.5 rounded-xl text-sm font-medium
+                    transition-all duration-150
+                    ${sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'}
+                    text-gray-600 hover:bg-gray-50 hover:text-gray-900
+                  `}
+                >
+                  <LayoutTemplate className="w-4.5 h-4.5 shrink-0 text-gray-400" />
+                  {!sidebarCollapsed && (
+                    <span className="truncate">Templates</span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              {sidebarCollapsed && (
+                <TooltipContent side="right" className="text-xs font-medium">
+                  Browse pre-built templates
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
 
           {/* Sidebar Footer — Collapse toggle + User info */}
           <div className="border-t border-gray-100 px-3 py-3 shrink-0">
@@ -777,6 +827,45 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             )}
 
             {/* ============================================================
+                VIEW: Analytics
+                ============================================================ */}
+            {activeView === 'analytics' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Analytics</h3>
+                  <p className="text-sm text-muted-foreground">Usage analytics and insights across your lessons</p>
+                </div>
+                <AnalyticsPanel userId={user.id} />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Schedule
+                ============================================================ */}
+            {activeView === 'schedule' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Schedule</h3>
+                  <p className="text-sm text-muted-foreground">Upcoming and past scheduled lessons</p>
+                </div>
+                <SchedulePanel userId={user.id} />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Recordings
+                ============================================================ */}
+            {activeView === 'recordings' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Recordings</h3>
+                  <p className="text-sm text-muted-foreground">Playback and download lesson recordings</p>
+                </div>
+                <RecordingsPanel userId={user.id} tier={tier} />
+              </div>
+            )}
+
+            {/* ============================================================
                 VIEW: Agency (Sub-tutors + Students)
                 ============================================================ */}
             {activeView === 'agency' && isAgencyTier(tier) && (
@@ -884,6 +973,13 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Template Gallery Dialog */}
+        <TemplateGallery
+          open={showTemplateGallery}
+          onOpenChange={setShowTemplateGallery}
+          onSelectTemplate={handleTemplateSelect}
+        />
       </div>
     </TooltipProvider>
   );

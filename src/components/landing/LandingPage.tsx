@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SocialProofSection } from './SocialProofSection';
+import { FeatureShowcase } from './FeatureShowcase';
 import {
   Plus,
   BookOpen,
@@ -600,6 +602,12 @@ function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ===== SOCIAL PROOF ===== */}
+      <SocialProofSection />
+
+      {/* ===== FEATURE SHOWCASE ===== */}
+      <FeatureShowcase />
 
       {/* ===== FINAL CTA ===== */}
       <section className="py-20 md:py-28 bg-white">

@@ -28,10 +28,12 @@ const UsageBar = dynamic(() => import('@/components/premium/UsageBar'), { ssr: f
 const PaywallModal = dynamic(() => import('@/components/premium/PaywallModal'), { ssr: false });
 const WaitingRoom = dynamic(() => import('@/components/student/WaitingRoom'), { ssr: false });
 const NameEntryModal = dynamic(() => import('@/components/student/NameEntryModal'), { ssr: false });
+const FileAttachmentsBar = dynamic(() => import('@/components/canvas/FileAttachmentsBar'), { ssr: false });
+const PresenceIndicator = dynamic(() => import('@/components/canvas/PresenceIndicator'), { ssr: false });
 
 export default function Whiteboard() {
   const router = useRouter();
-  const { room, setRoom, setCurrentPage, setTotalPages } = useAppStore();
+  const { room, setRoom, setCurrentPage, setTotalPages, tier } = useAppStore();
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -208,7 +210,8 @@ export default function Whiteboard() {
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
       {/* Connection Status Indicator */}
-      <div className="fixed top-1 right-1 z-50">
+      <div className="fixed top-1 right-1 z-50 flex items-center gap-2">
+        <PresenceIndicator awareness={awareness} />
         <div
           className={`w-2.5 h-2.5 rounded-full transition-colors ${
             isYjsConnected
@@ -291,6 +294,14 @@ export default function Whiteboard() {
           <AIControlPanel />
         </div>
       )}
+
+      {/* File Attachments Bar (above Usage Bar) */}
+      <FileAttachmentsBar
+        roomId={roomId || ''}
+        isTutor={isTutor}
+        editorRef={editorRef}
+        tier={tier}
+      />
 
       {/* Usage Bar (Bottom) — Free/Pro users */}
       <UsageBar />

@@ -38,6 +38,10 @@ model User {
   status            UserStatus      @default(ACTIVE)
   fingerprintHash   String?
   gracePeriodEndsAt DateTime?
+  // Referral System
+  referralCode       String?         @unique // This user's unique referral code
+  referredByCode     String?         // Who referred this user
+  referralCount       Int             @default(0) // How many users this user has referred
   // Agency Features
   customDomain      String?         @unique
   brandingLogoUrl   String?
@@ -56,6 +60,16 @@ model User {
   subTutors        User[]          @relation("AgencySubTutors")
   auditLogs         AuditLog[]
   students          Student[]       // Students registered by this agency owner
+  scheduledLessons  ScheduledLesson[]
+  webhooks          WebhookConfig[]
+}
+
+// Lesson scheduling status
+enum LessonStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
 }
 
 // SECURITY FIX (V-15, V-18): Enum for user tier levels
@@ -331,11 +345,53 @@ model AuditLog {
 }
 
 // ============================================================
-// PlatformConfig — Dynamic Configuration
+// ScheduledLesson — Tutor Lesson Scheduling
 // ============================================================
-// Single-row table for platform-wide settings.
-// Seeded with defaults on first deploy.
+// Tutors can schedule future lessons. Each lesson has a time,
+// duration, subject, and optional student invite.
 // ============================================================
+
+model ScheduledLesson {
+  id            String    @id @default(uuid())
+  tutorId       String
+  tutor         User      @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?   @db.Text
+  subject       Subject   @default(GENERAL)
+  studentEmail  String?   // Email of invited student
+  studentName   String?   // Name of invited student
+  scheduledAt   DateTime  // When the lesson is scheduled
+  durationMinutes Int     @default(60)
+  timeZone      String    @default("UTC")
+  status        LessonStatus @default(SCHEDULED)
+  roomUrl       String?   // Generated room URL when created
+  reminderSent  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([tutorId, scheduledAt])
+  @@index([tutorId, status])
+}
+
+// ============================================================
+// WebhookConfig — User Webhook Endpoints
+// ============================================================
+// Users register webhook URLs to receive event notifications.
+// Each webhook has a unique HMAC secret for payload verification.
+// ============================================================
+
+model WebhookConfig {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url       String
+  events    String[] // Array of event types this webhook listens to
+  secret    String   // HMAC secret for signature verification
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
 
 model PlatformConfig {
   id                String   @id @default("platform") // Singleton row

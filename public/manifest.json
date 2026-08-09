@@ -1,0 +1,16 @@
+{
+  "name": "Superboard — AI Tutoring Whiteboard",
+  "short_name": "Superboard",
+  "description": "K-12 AI-powered collaborative tutoring whiteboard with real-time video, drawing, and AI tools",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "categories": ["education", "productivity"],
+  "screenshots": []
+}
