@@ -59,3 +59,42 @@ Stage Summary:
 - Build passes: 0 TypeScript errors
 - Deployed: https://my-project-alpha-sooty-87.vercel.app
 - Git: pushed to main (commit 166cb88)
+---
+Task ID: agency-features
+Agent: Main Agent
+Task: Agency-Critical Features — Homework, Parent Portal, Invoices, Lesson Notes, Resource Library, Session Timer, Live Polls, Calendar Sync, Student Progress
+
+Work Log:
+- Reviewed full codebase (40+ files) to understand current state and feature gaps
+- Updated Prisma schema with 4 new models (Homework, LessonNote, ResourceLibrary, Invoice) and 2 new enums (HomeworkStatus, InvoiceStatus)
+- Added new fields to Student (grade, phone, parentName, parentEmail, parentAccessToken, notes) and User (agencyName)
+- Added group lesson support to ScheduledLesson (isGroup, maxStudents)
+- Ran Supabase migration via pg driver with pooler connection (all tables created successfully)
+- Generated Prisma client with validated schema
+- Created 12 API routes (homework CRUD, lesson-notes CRUD, resources CRUD, invoices CRUD, parent portal, agency analytics, calendar ICS, student progress)
+- Created 10 frontend components (HomeworkPanel, LessonNotesPanel, ResourceLibraryPanel, InvoicePanel, AgencyAnalyticsPanel, StudentProgressPanel, SessionTimer, LivePollPanel, CalendarSync, Parent Portal page)
+- Integrated all new components into DashboardPage with expanded navigation (Homework, Lesson Notes, Invoices tabs)
+- Integrated SessionTimer and LivePollPanel into Whiteboard
+- Made Resources tab available for all tiers (not just agency)
+- Added student progress drill-down view in dashboard
+- Fixed all TypeScript build errors (dynamic imports, prop mismatches, Prisma query shapes)
+- Verified build passes with 0 errors
+- Pushed to GitHub (main branch, commit a870e39)
+- Vercel auto-deploy triggered from GitHub push
+
+Stage Summary:
+- **Homework System**: Full CRUD with assign/submit/grade workflow, status tracking, agency-wide view
+- **Parent Portal**: Read-only /parent/[token] page with schedule, progress, homework, notes tabs
+- **Invoice System**: Create/manage invoices with auto INV-YYYY-NNN numbers, status tracking, payment recording
+- **Lesson Notes**: Post-lesson notes with feedback, 1-5 star ratings, topics for next session
+- **Resource Library**: Shared file library for agencies with category/subject filters, download tracking
+- **Agency Analytics**: Agency-wide stats, tutor performance, student engagement, revenue tracking
+- **Student Progress**: Detailed per-student progress view with lessons, homework, notes tabs
+- **Session Timer**: Floating timer with 5-min warning, extend/end buttons in whiteboard
+- **Live Polls**: Real-time in-session polling via Yjs with vote counts and results
+- **Calendar Sync**: Google Calendar + ICS file export for scheduled lessons
+- **Group Lessons**: ScheduledLesson model updated with isGroup and maxStudents fields
+- **30 files changed, 10,166 lines added**
+- **Build: ✅ Passes with 0 TypeScript errors**
+- **Deployed: https://my-project-alpha-sooty-87.vercel.app**
+- **Git: commit a870e39 on main**
