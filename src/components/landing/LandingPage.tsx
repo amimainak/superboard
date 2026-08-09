@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SocialProofSection } from './SocialProofSection';
 import { FeatureShowcase } from './FeatureShowcase';
+import { FAQSection } from './FAQSection';
 import {
   Plus,
   BookOpen,
@@ -578,30 +579,7 @@ function LandingPage() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section className="py-20 md:py-28 bg-white">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
-              Frequently Asked Questions
-            </h2>
-          </div>
-          <div className="space-y-4">
-            {[
-              { q: 'Do my students need to create an account?', a: 'No! Students join lessons via a link you share. They just enter their name and they\'re in — no sign-up, no download, no hassle.' },
-              { q: 'What subjects does Superboard support?', a: 'Superboard has specialized toolkits for Mathematics (graphing, equation solving), Science (diagram generation, equation balancing), Language Arts (grammar, vocabulary), and General subjects.' },
-              { q: 'How does the agency per-hour billing work?', a: 'Agency plans include a base monthly fee plus per-hour billing for actual lesson time. Hours are tracked automatically when a lesson room is active with participants. You only pay for time used.' },
-              { q: 'Can I try Superboard before upgrading?', a: 'Absolutely. The Free plan includes 1 active room, 25 AI credits per week, and 120 minutes of video calling per week — no credit card required.' },
-              { q: 'Is my data secure?', a: 'Yes. All whiteboard sessions are encrypted. We comply with GDPR and India\'s DPDPA 2023. Your data is stored securely and never shared with third parties.' },
-              { q: 'Can I cancel my subscription anytime?', a: 'Yes, you can cancel anytime from your dashboard. No lock-in periods. Your access continues until the end of your billing period.' },
-            ].map((item) => (
-              <div key={item.q} className="rounded-2xl border border-gray-200 p-5 hover:border-emerald-100 transition-colors">
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{item.q}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FAQSection />
 
       {/* ===== SOCIAL PROOF ===== */}
       <SocialProofSection />
