@@ -41,7 +41,7 @@ export default function Dashboard() {
     let mounted = true;
 
     // Listen for auth state changes FIRST to catch any race conditions
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (!mounted) return;
       const user = session?.user ?? null;
       setUser(user);
@@ -52,6 +52,19 @@ export default function Dashboard() {
             const profileData = await tierRes.json();
             if (profileData.tier) setTier(profileData.tier as Tier);
             if (profileData.name) setUserName(profileData.name);
+          }
+          // Auto-register OAuth users (Google, etc.) — creates profile if missing
+          if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && user?.user_metadata) {
+            try {
+              await authFetch('/api/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                  id: user.id,
+                  email: user.email || '',
+                  name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+                }),
+              });
+            } catch { /* silent — profile may already exist */ }
           }
           // Check admin status
           try {

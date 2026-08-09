@@ -168,10 +168,15 @@ function LandingPage() {
     try {
       const supabase = createClient();
       if (!supabase) { setAuthError('Authentication is not configured.'); return; }
+      // Build redirect URL — preserve invite code if present, drop auth params
+      const params = new URLSearchParams(window.location.search);
+      params.delete('showAuth');
+      const qs = params.toString();
+      const redirectTo = window.location.origin + (qs ? `?${qs}` : '');
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo,
         },
       });
       if (error) { setAuthError(error.message); }

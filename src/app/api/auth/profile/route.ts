@@ -76,15 +76,37 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       // User exists in Supabase Auth but not in our DB yet.
-      // Return defaults so the app doesn't crash.
-      return NextResponse.json({
-        tier: 'FREE',
-        name: null,
-        brandingColor: null,
-        brandingLogoUrl: null,
-        customDomain: null,
-        parentAgencyId: null,
-      });
+      // Auto-create profile for OAuth users (Google, etc.)
+      try {
+        const newUser = await db.user.create({
+          data: {
+            id: targetUserId,
+            email: '', // Will be updated from auth metadata below
+            tier: 'FREE',
+            name: null,
+          },
+        });
+        return NextResponse.json({
+          id: newUser.id,
+          email: newUser.email,
+          name: newUser.name,
+          tier: newUser.tier,
+          brandingColor: null,
+          brandingLogoUrl: null,
+          customDomain: null,
+          parentAgencyId: null,
+        });
+      } catch {
+        // If create fails (race condition), return defaults
+        return NextResponse.json({
+          tier: 'FREE',
+          name: null,
+          brandingColor: null,
+          brandingLogoUrl: null,
+          customDomain: null,
+          parentAgencyId: null,
+        });
+      }
     }
 
     return NextResponse.json(user);
