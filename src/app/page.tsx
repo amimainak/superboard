@@ -14,9 +14,10 @@ import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 import type { User } from '@supabase/supabase-js';
 import { GraduationCap } from 'lucide-react';
-import LandingPage from '@/components/landing/LandingPage';
-import { AuthenticatedDashboard } from '@/components/dashboard/DashboardPage';
-import AdminPanel from '@/components/admin/AdminPanel';
+import dynamic from 'next/dynamic';
+const LandingPage = dynamic(() => import('@/components/landing/LandingPage'), { ssr: true });
+const AuthenticatedDashboard = dynamic(() => import('@/components/dashboard/DashboardPage').then(m => ({ default: m.AuthenticatedDashboard })), { ssr: false });
+const AdminPanel = dynamic(() => import('@/components/admin/AdminPanel'), { ssr: false });
 
 // ============================================================
 // MAIN EXPORT — Auth Gate → Landing or Dashboard

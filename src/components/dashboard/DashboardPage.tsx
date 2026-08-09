@@ -523,6 +523,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
               variant="ghost"
               size="icon"
               className="lg:hidden h-8 w-8 shrink-0"
+              aria-label="Close sidebar"
               onClick={() => setMobileMenuOpen(false)}
             >
               <PanelLeftClose className="w-4 h-4" />
@@ -646,6 +647,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                   variant="ghost"
                   size="icon"
                   className="lg:hidden h-9 w-9 rounded-xl"
+                  aria-label="Open sidebar"
                   onClick={() => setMobileMenuOpen(true)}
                 >
                   <PanelLeft className="w-4 h-4" />
@@ -806,7 +808,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                 ============================================================ */}
             {activeView === 'lessons' && (
               <div className="space-y-6 animate-fade-in-up">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <h3 className="text-lg font-bold">All Lessons</h3>
                     <p className="text-sm text-muted-foreground">Manage your active and past lessons</p>

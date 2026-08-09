@@ -420,12 +420,17 @@
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
   html {
     scroll-behavior: smooth;
@@ -445,5 +450,14 @@
   }
   ::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

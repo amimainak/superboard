@@ -30,10 +30,11 @@ const nextConfig: NextConfig = {
       '@tldraw/tldraw',
       'lucide-react',
       '@radix-ui/react-icons',
+      'yjs',
     ],
   },
   // Prevent server-only packages from leaking into client bundles
-  serverExternalPackages: ['@prisma/client', 'stripe'],
+  serverExternalPackages: ['@prisma/client', 'stripe', 'pg'],
   // Security headers
   async headers() {
     return [
@@ -54,7 +55,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(self), microphone=(self), geolocation=()',
           },
           {
             key: 'X-DNS-Prefetch-Control',

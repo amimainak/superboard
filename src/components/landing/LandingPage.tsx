@@ -370,7 +370,7 @@ function LandingPage() {
       {/* ===== TRUST SIGNALS ===== */}
       <section className="py-16 bg-gray-50/80 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
             {[
               { icon: Check, text: 'No student sign-up required' },
               { icon: Shield, text: 'End-to-end encrypted' },
@@ -410,7 +410,7 @@ function LandingPage() {
             ].map((item) => (
               <div key={item.step} className="relative text-center group">
                 {/* Step number */}
-                <div className="absolute -top-3 -left-2 text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+                <div className="absolute -top-3 -left-2 text-5xl md:text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
                 <div className="relative z-10">
                   <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
                     <item.icon className="w-7 h-7 text-white" />
@@ -479,7 +479,7 @@ function LandingPage() {
             </span>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto">
             {/* Free */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
               <div className="mb-6">
@@ -614,13 +614,13 @@ function LandingPage() {
               <span className="text-sm font-semibold text-gray-900">Superboard</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Features</a>
-              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Pricing</a>
-              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Terms &amp; Conditions</a>
-              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Privacy Policy</a>
-              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Refund Policy</a>
-              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Cookie Policy</a>
-              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors">Contact</a>
+              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
+              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
+              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
+              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
+              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
+              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
+              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
             </div>
           </div>
           {/* Bottom row: copyright */}

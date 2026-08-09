@@ -53,7 +53,7 @@ const faqItems: FAQItem[] = [
     question: 'How do I join a lesson?',
     answer:
       'Your tutor will send you a lesson link — it could be via WhatsApp, email, or SMS. Click the link, type in your name, and you\'re in. That\'s it. There\'s nothing to download, no account to create, and no app to install. It works on any device with a browser — laptop, tablet, or phone. If you\'re on a phone, you can even pin the page to your home screen so it feels like an app.',
-    image: '/faq-images/student-join.png',
+    image: '/faq-images/student-join.webp',
     imageAlt: 'A student enters their name and joins a lesson in one click',
     popular: true,
   },
@@ -72,7 +72,7 @@ const faqItems: FAQItem[] = [
     question: 'Can I write and draw on the whiteboard too, or do I just watch?',
     answer:
       'You can fully participate. Your tutor controls whether you have drawing permission, and once enabled, you can write, draw, type, add sticky notes, and place shapes right alongside your tutor. You\'ll see your own cursor and your tutor\'s cursor moving in real-time, so it feels like working on the same physical desk. Many tutors encourage students to solve problems directly on the board during the lesson.',
-    image: '/faq-images/whiteboard-canvas.png',
+    image: '/faq-images/whiteboard-canvas.webp',
     imageAlt: 'A student and tutor drawing together on a shared whiteboard',
   },
   {
@@ -82,7 +82,7 @@ const faqItems: FAQItem[] = [
     question: 'Will I get a recording of the lesson to revise later?',
     answer:
       'That\'s up to your tutor. If they enable recording, the entire lesson — the whiteboard, voice, and video — is captured as a single playback. After the lesson ends, your tutor can share a recording link with you. You can watch it as many times as you like, skip to specific moments, and use it to revise before exams. You don\'t need a Superboard account to view recordings.',
-    image: '/faq-images/recording-playback.png',
+    image: '/faq-images/recording-playback.webp',
     imageAlt: 'Lesson recording playback with timeline for easy navigation',
   },
   {
@@ -92,7 +92,7 @@ const faqItems: FAQItem[] = [
     question: 'I\'m a parent — can I see my child\'s schedule and progress?',
     answer:
       'Yes. If your child\'s tutor or tutoring centre uses Superboard, you\'ll receive a private parent portal link. This lets you see upcoming lessons, past lesson history, attendance, and progress across subjects — all in one place. For tutoring centres, the portal also shows invoices and payment history. It\'s designed to give you visibility without needing to call or message the tutor every time.',
-    image: '/faq-images/parent-portal.png',
+    image: '/faq-images/parent-portal.webp',
     imageAlt: 'Parent portal showing upcoming lessons, attendance, and progress',
   },
   {
@@ -112,7 +112,7 @@ const faqItems: FAQItem[] = [
     question: 'What exactly can I do on the whiteboard?',
     answer:
       'Think of it as an infinite canvas that you and your student share in real-time. You can draw freehand, add shapes, type text, place sticky notes, highlight sections, and use a laser pointer to draw attention to specific areas. The canvas scrolls and zooms endlessly, so you never run out of space. Every stroke appears instantly on your student\'s screen, and you can see their cursor and changes as they happen. It feels like standing at the same physical whiteboard together.',
-    image: '/faq-images/whiteboard-canvas.png',
+    image: '/faq-images/whiteboard-canvas.webp',
     imageAlt: 'The interactive whiteboard with drawing tools and real-time collaboration',
     popular: true,
   },
@@ -123,7 +123,7 @@ const faqItems: FAQItem[] = [
     question: 'I teach a specific subject — are there tools built for it?',
     answer:
       'Yes. Superboard includes four subject-specific toolkits that you can switch between during a lesson. The Maths toolkit gives you an interactive graphing calculator — plot functions, draw geometry, explore transformations with sliders — plus a beautiful equation renderer for writing formulas. The Science toolkit provides diagram builders, a periodic table reference, and equation-balancing helpers. The Language toolkit includes grammar annotations, vocabulary builders, and text-analysis tools. And the General toolkit covers everything else: timers, shapes, sticky notes, and more. You can mix tools from different kits in the same lesson.',
-    image: '/faq-images/subject-toolkit.png',
+    image: '/faq-images/subject-toolkit.webp',
     imageAlt: 'Subject-specific toolkits for Maths, Science, Language, and General use',
   },
   {
@@ -133,7 +133,7 @@ const faqItems: FAQItem[] = [
     question: 'How does the video calling work — do my students need a separate app?',
     answer:
       'No separate app needed. Video and voice calling are built directly into the lesson room. When you start a lesson, you can turn on your camera and microphone with one click. Your student sees and hears you right next to the whiteboard — no switching between tabs, no meeting links, no PIN codes. The video panel can be moved, resized, or minimized so it never covers your lesson content. If your student doesn\'t have a camera, they can still participate via voice and the whiteboard.',
-    image: '/faq-images/video-tutoring.png',
+    image: '/faq-images/video-tutoring.webp',
     imageAlt: 'Video call alongside the whiteboard — everything in one place',
   },
   {
@@ -143,7 +143,7 @@ const faqItems: FAQItem[] = [
     question: 'Can Superboard help me create worksheets and quizzes?',
     answer:
       'Absolutely. You can generate quizzes, worksheets, and answer keys directly from your whiteboard content. For example, you can select a topic you\'ve been teaching and instantly generate a multiple-choice quiz that appears right on the canvas. You can then edit the questions, adjust difficulty, and share them with your student in one click. You can also convert handwritten work into neat digital text with the built-in handwriting recognition, so students get clean printed materials even if you wrote on a tablet.',
-    image: '/faq-images/ai-quiz.png',
+    image: '/faq-images/ai-quiz.webp',
     imageAlt: 'Generating a quiz from whiteboard content in one click',
   },
   {
@@ -177,7 +177,7 @@ const faqItems: FAQItem[] = [
     question: 'Can I schedule lessons in advance?',
     answer:
       'Yes. Create lessons with a date, time, duration, student name, and subject. Your students and their parents see upcoming lessons in their portal. They can also add the lesson to their own phone or computer calendar with one click — it works with Google Calendar, Apple Calendar, and Outlook. If you need to reschedule or cancel, it updates everywhere instantly. Recurring lessons are supported too, so you can set up a weekly slot once and it fills your calendar automatically.',
-    image: '/faq-images/scheduling.png',
+    image: '/faq-images/scheduling.webp',
     imageAlt: 'Weekly schedule with colour-coded lessons and one-click calendar sync',
   },
   {
@@ -205,7 +205,7 @@ const faqItems: FAQItem[] = [
     question: 'How does Superboard help me run my tutoring centre?',
     answer:
       'Superboard gives you a central command dashboard for your entire operation. Add your tutors as team members — each gets their own login, their own lesson rooms, and their own schedule. From your dashboard, you can see every lesson happening across all tutors, track student attendance, monitor hours taught, and view revenue breakdowns. You can manage student rosters, assign students to specific tutors, and automatically generate invoices based on actual lesson time. Parents get their own portal so they can see their child\'s progress without calling your office. Essentially, Superboard replaces the spreadsheet chaos with a clean, automated system.',
-    image: '/faq-images/agency-dashboard.png',
+    image: '/faq-images/agency-dashboard.webp',
     imageAlt: 'Agency dashboard showing all tutors, students, lessons, and revenue in one view',
     popular: true,
   },
@@ -256,7 +256,7 @@ const faqItems: FAQItem[] = [
     question: 'Do parents have to contact my office for updates?',
     answer:
       'Not anymore. Every student\'s parent or guardian receives a secure portal link. From there, they see the upcoming schedule, attendance records, lesson notes from each session, progress indicators by subject, and invoices. They can message the assigned tutor directly through the portal if needed. This self-service model dramatically reduces administrative phone calls and emails, while giving parents more visibility than they had before. It\'s a win for everyone — parents feel informed, tutors stay focused on teaching, and your office staff aren\'t constantly answering routine questions.',
-    image: '/faq-images/parent-portal.png',
+    image: '/faq-images/parent-portal.webp',
     imageAlt: 'The parent portal — schedule, progress, and invoices all in one place',
   },
   {
@@ -350,11 +350,12 @@ export function FAQSection() {
         <div className="flex flex-wrap justify-center gap-2 mb-10">
           <button
             onClick={() => setActiveCategory(null)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+            className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
               activeCategory === null
                 ? 'bg-gray-900 text-white shadow-md'
                 : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
             }`}
+            aria-pressed={activeCategory === null}
           >
             All Questions
           </button>
@@ -364,11 +365,12 @@ export function FAQSection() {
               onClick={() =>
                 setActiveCategory(activeCategory === cat ? null : cat)
               }
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
                 activeCategory === cat
                   ? 'bg-gray-900 text-white shadow-md'
                   : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
               }`}
+              aria-pressed={activeCategory === cat}
             >
               {cat}
             </button>
@@ -408,7 +410,7 @@ export function FAQSection() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
-                  <div className="pl-14">
+                  <div className="pl-0 sm:pl-14">
                     <p className="text-sm text-gray-600 leading-relaxed">
                       {item.answer}
                     </p>

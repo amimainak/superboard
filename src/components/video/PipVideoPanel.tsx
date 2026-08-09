@@ -44,10 +44,10 @@ interface PanelSize {
 // ---- Constants ----
 
 const MINIMIZED_SIZE = 56;
-const DEFAULT_WIDTH = 360;
-const DEFAULT_HEIGHT = 300;
-const MIN_WIDTH = 280;
-const MIN_HEIGHT = 220;
+const DEFAULT_WIDTH = typeof window !== 'undefined' ? Math.min(360, window.innerWidth * 0.6) : 360;
+const DEFAULT_HEIGHT = typeof window !== 'undefined' ? Math.min(300, window.innerHeight * 0.4) : 300;
+const MIN_WIDTH = 200;
+const MIN_HEIGHT = 180;
 const HEADER_HEIGHT = 40;
 const CONTROLS_HEIGHT = 52;
 const EDGE_SNAP = 16;
@@ -81,8 +81,8 @@ export default function PipVideoPanel() {
 
   // ---- Panel state ----
   const [position, setPosition] = useState<PanelPosition>(() => ({
-    x: window.innerWidth - DEFAULT_WIDTH - EDGE_SNAP,
-    y: window.innerHeight - DEFAULT_HEIGHT - EDGE_SNAP,
+    x: Math.max(0, window.innerWidth - DEFAULT_WIDTH - EDGE_SNAP),
+    y: Math.max(0, window.innerHeight - DEFAULT_HEIGHT - EDGE_SNAP),
   }));
   const [size, setSize] = useState<PanelSize>({
     width: DEFAULT_WIDTH,
@@ -118,15 +118,25 @@ export default function PipVideoPanel() {
 
   // ---- Drag handlers ----
   const handleDragStart = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | React.TouchEvent) => {
       if (isResizing) return;
-      e.preventDefault();
-      const rect = panelRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      dragOffset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
-      };
+      if ('touches' in e) {
+        e.preventDefault();
+        const rect = panelRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        dragOffset.current = {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top,
+        };
+      } else {
+        e.preventDefault();
+        const rect = panelRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        dragOffset.current = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        };
+      }
       setIsDragging(true);
     },
     [isResizing]
@@ -135,9 +145,11 @@ export default function PipVideoPanel() {
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleDragMove = (e: MouseEvent) => {
-      const newX = e.clientX - dragOffset.current.x;
-      const newY = e.clientY - dragOffset.current.y;
+    const handleDragMove = (e: MouseEvent | TouchEvent) => {
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      const newX = clientX - dragOffset.current.x;
+      const newY = clientY - dragOffset.current.y;
       const currentW = isMinimized ? MINIMIZED_SIZE : size.width;
       const currentH = isMinimized ? MINIMIZED_SIZE : size.height;
 
@@ -155,27 +167,35 @@ export default function PipVideoPanel() {
 
     window.addEventListener('mousemove', handleDragMove);
     window.addEventListener('mouseup', handleDragEnd);
+    window.addEventListener('touchmove', handleDragMove, { passive: false });
+    window.addEventListener('touchend', handleDragEnd);
     return () => {
       window.removeEventListener('mousemove', handleDragMove);
       window.removeEventListener('mouseup', handleDragEnd);
+      window.removeEventListener('touchmove', handleDragMove);
+      window.removeEventListener('touchend', handleDragEnd);
     };
   }, [isDragging, size, isMinimized]);
 
   // ---- Resize handlers ----
   const handleResizeStart = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent | React.TouchEvent) => {
       if (isDragging) return;
       e.preventDefault();
       e.stopPropagation();
       setIsResizing(true);
-      const startX = e.clientX;
-      const startY = e.clientY;
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clientY = 'touches' in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+      const startX = clientX;
+      const startY = clientY;
       const startW = size.width;
       const startH = size.height;
 
-      const handleResizeMove = (moveE: MouseEvent) => {
-        const deltaW = startX - moveE.clientX;
-        const deltaH = startY - moveE.clientY;
+      const handleResizeMove = (moveE: MouseEvent | TouchEvent) => {
+        const moveX = 'touches' in moveE ? moveE.touches[0].clientX : (moveE as MouseEvent).clientX;
+        const moveY = 'touches' in moveE ? moveE.touches[0].clientY : (moveE as MouseEvent).clientY;
+        const deltaW = startX - moveX;
+        const deltaH = startY - moveY;
         setSize({
           width: Math.max(MIN_WIDTH, Math.min(startW + deltaW, 600)),
           height: Math.max(MIN_HEIGHT, Math.min(startH + deltaH, 500)),
@@ -186,10 +206,14 @@ export default function PipVideoPanel() {
         setIsResizing(false);
         window.removeEventListener('mousemove', handleResizeMove);
         window.removeEventListener('mouseup', handleResizeEnd);
+        window.removeEventListener('touchmove', handleResizeMove);
+        window.removeEventListener('touchend', handleResizeEnd);
       };
 
       window.addEventListener('mousemove', handleResizeMove);
       window.addEventListener('mouseup', handleResizeEnd);
+      window.addEventListener('touchmove', handleResizeMove, { passive: false });
+      window.addEventListener('touchend', handleResizeEnd);
     },
     [isDragging, size]
   );
@@ -214,6 +238,7 @@ export default function PipVideoPanel() {
             zIndex: 9999,
           }}
           onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
           className={cn(
             'cursor-grab active:cursor-grabbing rounded-full',
             'bg-black/80 backdrop-blur-xl border border-white/10',
@@ -254,6 +279,7 @@ export default function PipVideoPanel() {
           zIndex: 9999,
         }}
         onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
         className={cn(
           'cursor-grab active:cursor-grabbing rounded-full',
           'bg-black/80 backdrop-blur-xl border border-white/10',
@@ -313,6 +339,7 @@ export default function PipVideoPanel() {
         zIndex: 9999,
       }}
       onMouseDown={handleDragStart}
+      onTouchStart={handleDragStart}
       className={cn(
         'rounded-2xl overflow-hidden flex flex-col',
         'bg-black/70 backdrop-blur-xl border border-white/10',
@@ -357,7 +384,7 @@ export default function PipVideoPanel() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 text-white/50 hover:text-white hover:bg-white/10"
+            className="h-8 w-8 text-white/50 hover:text-white hover:bg-white/10"
             onClick={(e) => {
               e.stopPropagation();
               setIsMinimized(true);
@@ -476,7 +503,7 @@ export default function PipVideoPanel() {
           variant="ghost"
           size="icon"
           className={cn(
-            'h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10',
+            'h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10',
             isCameraOff && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
           )}
           onClick={() => {
@@ -493,7 +520,7 @@ export default function PipVideoPanel() {
           variant="ghost"
           size="icon"
           className={cn(
-            'h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10',
+            'h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10',
             isMuted && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
           )}
           onClick={() => {
@@ -510,7 +537,7 @@ export default function PipVideoPanel() {
           variant="ghost"
           size="icon"
           className={cn(
-            'h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10',
+            'h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10',
             isDeafened && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
           )}
           onClick={() => {
@@ -525,7 +552,7 @@ export default function PipVideoPanel() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+          className="h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10"
           onClick={() => {
             // TODO: Toggle speaker output
           }}
@@ -541,7 +568,7 @@ export default function PipVideoPanel() {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20"
+          className="h-10 w-10 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20"
           onClick={() => {
             // TODO: Leave room / end call
             setInCall(false);
@@ -555,8 +582,9 @@ export default function PipVideoPanel() {
       {/* ---- Resize handle (bottom-left corner) ---- */}
       <div
         onMouseDown={handleResizeStart}
+        onTouchStart={handleResizeStart}
         className={cn(
-          'absolute bottom-0 left-0 w-4 h-4 cursor-se-resize',
+          'absolute bottom-0 left-0 w-6 h-6 cursor-se-resize',
           'opacity-30 hover:opacity-60 transition-opacity'
         )}
         role="separator"
