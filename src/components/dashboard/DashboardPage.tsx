@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,8 @@ import {
   LogOut,
   Zap,
   Crown,
+  Mail,
+  BadgeInfo,
 } from 'lucide-react';
 import { BillingPanel } from './BillingPanel';
 import { SavedBoardsPanel } from './SavedBoardsPanel';
@@ -72,6 +75,8 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
   const [selectedSubject, setSelectedSubject] = useState<Subject>('GENERAL');
   const [creating, setCreating] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   useEffect(() => {
     import('@/lib/fingerprint').then(({ reportFingerprint }) => {
@@ -114,10 +119,30 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
     }
   }, [selectedSubject, user?.id]);
 
+  const handleSaveBrandColor = useCallback(async () => {
+    setSaveLoading(true);
+    setSaveSuccess(false);
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase!.auth.getSession();
+      const token = session?.access_token;
+      if (!token) return;
+      await fetch('/api/auth/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ brandingColor: brandColor || null }),
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch { /* silent */ }
+    setSaveLoading(false);
+  }, [brandColor]);
+
   const handleLogout = useCallback(async () => {
     const supabase = createClient();
     if (supabase) await supabase.auth.signOut();
     setTier('FREE');
+    window.location.href = '/';
   }, [setTier]);
 
   const tierLabel = isAgencyTier(tier)
@@ -162,6 +187,44 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
           </div>
         </div>
       </header>
+
+      {/* Settings Dialog */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+          <DialogTitle className="sr-only">Settings</DialogTitle>
+          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+              <Settings className="w-7 h-7 text-emerald-600" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Settings</h2>
+            <p className="text-sm text-white/70 mt-1">Manage your account preferences</p>
+          </div>
+          <div className="px-6 pb-6 pt-4 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Email</Label>
+              <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{user.email || ''}</div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Current Plan</Label>
+              <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${tierColor}`}>{tierLabel}</Badge>
+            </div>
+            {isAgencyTier(tier) && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Brand Color</Label>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+                  <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+                </div>
+              </div>
+            )}
+            <Separator />
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">Need to change your email or password?</p>
+              <a href="mailto:support@superboard.live" className="text-xs text-primary hover:underline mt-1 inline-block">Contact Support</a>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
@@ -276,7 +339,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading }: { user: 
               </TabsList>
               {isAgencyTier(tier) && <TabsContent value="boards" className="mt-6"><SavedBoardsPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
               {isAgencyTier(tier) && <TabsContent value="templates" className="mt-6"><TemplatesPanel userId={user?.id || ''} tier={tier} /></TabsContent>}
-              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor || ''} setBrandColor={setBrandColor} /></TabsContent>
+              <TabsContent value="billing" className="mt-6"><BillingPanel tier={tier} brandColor={brandColor || ''} setBrandColor={setBrandColor} onSaveBrandColor={handleSaveBrandColor} /></TabsContent>
               {isAgencyTier(tier) && (
                 <TabsContent value="admin" className="mt-6">
                   <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">

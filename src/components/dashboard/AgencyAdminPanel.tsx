@@ -29,7 +29,6 @@ import {
   Plus,
   Users,
   UserPlus,
-  Settings,
   Crown,
   Shield,
   Check,
@@ -57,8 +56,6 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
   const [loading, setLoading] = useState(true);
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [invitesLoading, setInvitesLoading] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [lessonHours, setLessonHours] = useState<{ totalHours: number; totalMinutes: number; completedRooms: number; activeRooms: number } | null>(null);
 
   const maxSubTutors = getMaxSubTutors(userTier);
@@ -390,38 +387,6 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
         </TabsContent>
       </Tabs>
 
-      {/* ===== SETTINGS DIALOG ===== */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
-          <DialogTitle className="sr-only">Settings</DialogTitle>
-          <div className="gradient-primary px-6 pt-8 pb-6 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
-              <Settings className="w-7 h-7 text-emerald-600" />
-            </div>
-            <h2 className="text-xl font-bold text-white">Settings</h2>
-            <p className="text-sm text-white/70 mt-1">Manage your account preferences</p>
-          </div>
-          <div className="px-6 pb-6 pt-4 space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Email</Label>
-              <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{userEmail || ''}</div>
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Current Plan</Label>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={`rounded-full px-3 py-0.5 font-medium ${userTier === 'AGENCY_PREMIUM' ? 'bg-purple-50 text-purple-600 border-purple-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
-                  {getTierLabel(userTier)}
-                </Badge>
-              </div>
-            </div>
-            <Separator />
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">Need to change your email or password?</p>
-              <Button variant="link" className="text-xs text-primary mt-1">Contact Support</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

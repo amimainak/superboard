@@ -96,3 +96,46 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// PATCH: Update user profile fields (e.g., brandingColor)
+export async function PATCH(request: NextRequest) {
+  try {
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
+    const body = await request.json();
+    const { brandingColor, brandingLogoUrl, name } = body;
+
+    // Build update payload with only provided fields
+    const updateData: Record<string, string | null> = {};
+    if (typeof brandingColor === 'string' || brandingColor === null) {
+      updateData.brandingColor = brandingColor;
+    }
+    if (typeof brandingLogoUrl === 'string' || brandingLogoUrl === null) {
+      updateData.brandingLogoUrl = brandingLogoUrl;
+    }
+    if (typeof name === 'string') {
+      updateData.name = name;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    // Upsert: update if exists, create if not (handles first-time branding save)
+    const updated = await db.user.upsert({
+      where: { id: auth.userId },
+      update: updateData,
+      create: { id: auth.userId, email: '', tier: 'FREE', ...updateData },
+      select: { id: true, brandingColor: true, brandingLogoUrl: true, name: true },
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    console.error('[Auth Profile PATCH] Error:', error);
+    return NextResponse.json(
+      { error: 'Failed to update profile' },
+      { status: 500 }
+    );
+  }
+}

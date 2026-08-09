@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield } from 'lucide-react';
+import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save } from 'lucide-react';
 
 function getTierLabel(tier: Tier): string {
   if (tier === 'AGENCY_STANDARD') return 'Agency Standard';
@@ -32,14 +32,14 @@ function getTierColor(tier: Tier): string {
 }
 
 function getTierDescription(tier: Tier): string {
-  if (tier === 'AGENCY_PREMIUM') return 'Agency Premium \u2014 $79/month + $2/hr';
-  if (tier === 'AGENCY_STANDARD') return 'Agency Standard \u2014 $39/month + $3/hr';
-  if (tier === 'AGENCY') return 'Agency \u2014 $39/month + per hour';
-  if (tier === 'PRO') return 'Pro Tutor \u2014 $10/month';
-  return 'Free tier \u2014 Limited features';
+  if (tier === 'AGENCY_PREMIUM') return 'Agency Premium — $79/month + $2/hr';
+  if (tier === 'AGENCY_STANDARD') return 'Agency Standard — $39/month + $3/hr';
+  if (tier === 'AGENCY') return 'Agency — $39/month + per hour';
+  if (tier === 'PRO') return 'Pro Tutor — $10/month';
+  return 'Free tier — Limited features';
 }
 
-export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void }) {
+export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void; onSaveBrandColor?: () => Promise<void> }) {
   const tierLabel = getTierLabel(tier);
   const tierColor = getTierColor(tier);
   const tierDesc = getTierDescription(tier);
@@ -69,14 +69,14 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
           <Badge className={`rounded-full px-3 font-semibold ${tierColor}`}>{tierLabel}</Badge>
         </div>
 
-        {/* Upgrade Options — only show if not an agency tier */}
+        {/* Upgrade Options — only show for non-agency tiers */}
         {!isAgencyTier(tier) && (
           <>
             <Separator />
             <div className="space-y-4">
               <h3 className="font-semibold flex items-center gap-2"><TrendingUp className="w-4 h-4 text-emerald-500" />Upgrade Options</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Pro */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Pro — only for FREE users */}
                 {tier === 'FREE' && (
                   <Card className="rounded-2xl border-2 border-emerald-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
                     <div className="absolute top-3 right-3"><Badge className="bg-emerald-500 text-white rounded-full text-[10px]">Popular</Badge></div>
@@ -95,39 +95,43 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
                   </Card>
                 )}
 
-                {/* Agency Standard */}
-                <Card className="rounded-2xl border-2 border-amber-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                  <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency Standard</CardTitle>
-                    <CardDescription className="text-base font-semibold text-foreground">$39/month + $3/hr</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="text-sm space-y-2 mb-4">
-                      {['Everything in Pro', '$39/mo base fee', 'Up to 5 sub-tutors', 'White-label branding', 'Unlimited recordings', 'Admin dashboard'].map((f) => (
-                        <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
-                      ))}
-                    </ul>
-                    <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-md shadow-amber-500/20" onClick={() => handleUpgrade('agency-standard')}>Get Agency Standard</Button>
-                  </CardContent>
-                </Card>
+                {/* Agency Standard — only for PRO users */}
+                {tier === 'PRO' && (
+                  <Card className="rounded-2xl border-2 border-amber-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div className="absolute top-3 right-3"><Badge className="bg-amber-500 text-white rounded-full text-[10px]">Best Value</Badge></div>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Crown className="w-4 h-4 text-amber-600" /></div>Agency Standard</CardTitle>
+                      <CardDescription className="text-base font-semibold text-foreground">$39/month + $3/hr</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="text-sm space-y-2 mb-4">
+                        {['Everything in Pro', '$39/mo base fee', 'Up to 5 sub-tutors', 'White-label branding', 'Unlimited recordings', 'Admin dashboard'].map((f) => (
+                          <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
+                        ))}
+                      </ul>
+                      <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-md shadow-amber-500/20" onClick={() => handleUpgrade('agency-standard')}>Get Agency Standard</Button>
+                    </CardContent>
+                  </Card>
+                )}
 
-                {/* Agency Premium */}
-                <Card className="rounded-2xl border-2 border-purple-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                  <div className="absolute top-3 right-3"><Badge className="bg-purple-500 text-white rounded-full text-[10px]">Scale</Badge></div>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center"><Shield className="w-4 h-4 text-purple-600" /></div>Agency Premium</CardTitle>
-                    <CardDescription className="text-base font-semibold text-foreground">$79/month + $2/hr</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="text-sm space-y-2 mb-4">
-                      {['Everything in Standard', '$79/mo base fee', 'Unlimited sub-tutors', '$2/hr (volume discount)', 'Priority support', 'Advanced analytics'].map((f) => (
-                        <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-purple-600" /></div>{f}</li>
-                      ))}
-                    </ul>
-                    <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md shadow-purple-500/20" onClick={() => handleUpgrade('agency-premium')}>Get Agency Premium</Button>
-                  </CardContent>
-                </Card>
+                {/* Agency Premium — only for PRO users */}
+                {tier === 'PRO' && (
+                  <Card className="rounded-2xl border-2 border-purple-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div className="absolute top-3 right-3"><Badge className="bg-purple-500 text-white rounded-full text-[10px]">Scale</Badge></div>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center"><Shield className="w-4 h-4 text-purple-600" /></div>Agency Premium</CardTitle>
+                      <CardDescription className="text-base font-semibold text-foreground">$79/month + $2/hr</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="text-sm space-y-2 mb-4">
+                        {['Everything in Standard', '$79/mo base fee', 'Unlimited sub-tutors', '$2/hr (volume discount)', 'Priority support', 'Advanced analytics (Coming Soon)'].map((f) => (
+                          <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-purple-600" /></div>{f}</li>
+                        ))}
+                      </ul>
+                      <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md shadow-purple-500/20" onClick={() => handleUpgrade('agency-premium')}>Get Agency Premium</Button>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </>
@@ -162,14 +166,25 @@ export function BillingPanel({ tier, brandColor, setBrandColor }: { tier: Tier; 
                 <div className="space-y-2">
                   <Label>Brand Color</Label>
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg border shadow-sm" style={{ backgroundColor: brandColor || '#000' }} />
+                    <div className="w-8 h-8 rounded-lg border shadow-sm flex-shrink-0" style={{ backgroundColor: brandColor || '#000' }} />
                     <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+                    {onSaveBrandColor && (
+                      <Button size="sm" variant="outline" className="rounded-xl text-xs gap-1 flex-shrink-0" onClick={onSaveBrandColor}>
+                        <Save className="w-3 h-3" />Save
+                      </Button>
+                    )}
                   </div>
+                  <p className="text-xs text-muted-foreground">Applied to new lessons automatically.</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Custom Domain</Label>
-                  <Input placeholder="classroom.yourcenter.com" disabled className="rounded-xl" />
-                  <p className="text-xs text-muted-foreground">Configure via DNS settings</p>
+                  <Input placeholder="classroom.yourcenter.com" disabled className="rounded-xl bg-muted" />
+                  <p className="text-xs text-muted-foreground">
+                    Custom domains require DNS configuration.{' '}
+                    <a href="mailto:sales@superboard.live" className="text-emerald-600 hover:underline inline-flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" />Contact Sales to enable
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>

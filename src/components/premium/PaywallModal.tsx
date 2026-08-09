@@ -37,6 +37,7 @@ const FEATURES: { label: string; free: boolean; pro: boolean; agencyStandard: bo
   { label: 'Up to 5 sub-tutors', free: false, pro: false, agencyStandard: true, agencyPremium: true },
   { label: 'Unlimited sub-tutors', free: false, pro: false, agencyStandard: false, agencyPremium: true },
   { label: 'Priority support', free: false, pro: false, agencyStandard: false, agencyPremium: true },
+  { label: 'Advanced analytics', free: false, pro: false, agencyStandard: false, agencyPremium: false },
 ];
 
 function CheckIcon({ on }: { on: boolean }) {
