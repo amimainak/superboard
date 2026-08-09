@@ -1,5 +1,5 @@
 // ============================================================
-// FAQ Section — Innovative Accordion with Illustrations
+// FAQ Section — Persona-based Accordion with Illustrations
 // ============================================================
 'use client';
 
@@ -15,13 +15,21 @@ import {
   Sparkles,
   Users,
   Video,
-  Brain,
   BarChart3,
   GraduationCap,
   CalendarDays,
   Shield,
   Clock,
   Lightbulb,
+  MonitorSmartphone,
+  CreditCard,
+  MessageSquare,
+  FolderOpen,
+  Timer,
+  Image as ImageIcon,
+  PenTool,
+  FileText,
+  CheckCircle2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -32,128 +40,282 @@ interface FAQItem {
   question: string;
   answer: string;
   image?: string;
-  imageAlt: string;
+  imageAlt?: string;
+  popular?: boolean;
 }
 
 const faqItems: FAQItem[] = [
+  // ── FOR STUDENTS & PARENTS ──────────────────────────────
   {
     id: 'student-join',
-    category: 'Getting Started',
+    category: 'For Students',
     icon: Users,
-    question: 'How do my students join a lesson — do they need to sign up?',
+    question: 'How do I join a lesson?',
     answer:
-      'No sign-up required at all. When you create a room, you get a unique lesson link. Share it with your student via email, WhatsApp, or any messenger. They click the link, enter their name in a one-step dialog, and they\'re instantly inside your whiteboard. No downloads, no account creation, no friction. This works on desktops, tablets, and phones — students just need a browser.',
+      'Your tutor will send you a lesson link — it could be via WhatsApp, email, or SMS. Click the link, type in your name, and you\'re in. That\'s it. There\'s nothing to download, no account to create, and no app to install. It works on any device with a browser — laptop, tablet, or phone. If you\'re on a phone, you can even pin the page to your home screen so it feels like an app.',
     image: '/faq-images/student-join.png',
-    imageAlt: 'Student join screen — just enter your name and start',
+    imageAlt: 'A student enters their name and joins a lesson in one click',
+    popular: true,
   },
   {
-    id: 'whiteboard-tools',
-    category: 'Whiteboard',
-    icon: Sparkles,
-    question: 'What can I actually do on the whiteboard?',
+    id: 'student-need',
+    category: 'For Students',
+    icon: MonitorSmartphone,
+    question: 'What do I need on my end to use Superboard?',
     answer:
-      'Superboard is a full-featured collaborative canvas powered by tldraw. You get freehand drawing, shapes, text, sticky notes, laser pointers, and an infinite canvas. On top of that, there are subject-specific toolkits: a Math toolkit with GeoGebra graphing and KaTeX equation rendering, a Science toolkit with diagrams and equation balancing, a Language toolkit with grammar and vocabulary tools, and a General toolkit. Every stroke is synced in real-time to all participants — you and your student see each other\'s cursors and changes live.',
+      'Just a device with a modern browser — Chrome, Safari, Edge, or Firefox will all work perfectly. For the best experience, use a laptop or tablet with a stable internet connection. If your lesson includes a video call, you\'ll also need a microphone and optionally a webcam. No stylus or drawing tablet is required, though if you have one, you can use it to write naturally on the board.',
+  },
+  {
+    id: 'student-interactive',
+    category: 'For Students',
+    icon: PenTool,
+    question: 'Can I write and draw on the whiteboard too, or do I just watch?',
+    answer:
+      'You can fully participate. Your tutor controls whether you have drawing permission, and once enabled, you can write, draw, type, add sticky notes, and place shapes right alongside your tutor. You\'ll see your own cursor and your tutor\'s cursor moving in real-time, so it feels like working on the same physical desk. Many tutors encourage students to solve problems directly on the board during the lesson.',
     image: '/faq-images/whiteboard-canvas.png',
-    imageAlt: 'Interactive whiteboard canvas with drawing tools and collaboration',
+    imageAlt: 'A student and tutor drawing together on a shared whiteboard',
   },
   {
-    id: 'ai-features',
-    category: 'AI Features',
-    icon: Brain,
-    question: 'How does the AI help during lessons?',
-    answer:
-      'Superboard has AI built directly into the whiteboard — not a separate chatbot, but tools that work inside your lesson. You can generate quizzes with multiple-choice questions, auto-create worksheets from your board content, get AI answer keys for any problem, and use OCR to convert handwritten equations to digital text (powered by Mathpix). Each action uses AI credits — Free users get 25 per week, Pro and Agency plans get substantially more. The AI generates content right on the canvas, so you can edit, annotate, and share it instantly.',
-    image: '/faq-images/ai-quiz.png',
-    imageAlt: 'AI quiz generator creating questions from whiteboard content',
-  },
-  {
-    id: 'video-calling',
-    category: 'Video & Recording',
-    icon: Video,
-    question: 'Do I need Zoom or Google Meet, or is video built in?',
-    answer:
-      'Video calling is built right into Superboard — no external tools needed. Powered by LiveKit, you get HD video and crystal-clear audio alongside your whiteboard. The video appears in a picture-in-picture panel that you can drag, resize, or minimize, so it never blocks your content. You can also record entire sessions — whiteboard strokes, voice, and video all get captured together. Recordings appear in your dashboard and can be shared with students who missed the lesson.',
-    image: '/faq-images/video-tutoring.png',
-    imageAlt: 'Split-screen tutoring session with whiteboard and video call',
-  },
-  {
-    id: 'agency-management',
-    category: 'For Agencies',
-    icon: BarChart3,
-    question: 'I run a tutoring centre — how does Superboard help me manage multiple tutors?',
-    answer:
-      'Superboard\'s Agency plan is built specifically for tutoring businesses. You get a management dashboard where you can add tutors as sub-users, each with their own rooms and schedules. Track every lesson across all tutors with analytics: total hours taught, student attendance, revenue per tutor, and subject-wise breakdowns. Create and manage student rosters, assign students to tutors, and generate invoices automatically based on per-hour billing. Parents get their own portal to view their child\'s schedule, progress, and lesson notes — without needing to contact you directly.',
-    image: '/faq-images/agency-dashboard.png',
-    imageAlt: 'Agency management dashboard with analytics and schedule',
-  },
-  {
-    id: 'scheduling',
-    category: 'Scheduling',
-    icon: CalendarDays,
-    question: 'Can I schedule lessons and send reminders automatically?',
-    answer:
-      'Yes. The scheduling system lets you create one-off or recurring lessons with date, time, duration, student, and subject. Students (and parents) can view upcoming lessons in their portal. When a lesson is scheduled, the system generates an ICS calendar file that students can add to Google Calendar, Apple Calendar, or Outlook with one click. You can also cancel or reschedule lessons from the dashboard, and the change is reflected everywhere. For agencies with Webhook integrations, scheduling events are pushed to your CRM or communication tools automatically.',
-    image: '/faq-images/scheduling.png',
-    imageAlt: 'Lesson scheduling calendar with color-coded sessions',
-  },
-  {
-    id: 'recordings-playback',
-    category: 'Video & Recording',
+    id: 'student-recordings',
+    category: 'For Students',
     icon: Clock,
-    question: 'What happens to lesson recordings — can students rewatch them?',
+    question: 'Will I get a recording of the lesson to revise later?',
     answer:
-      'Every recorded session is saved to your dashboard under "Recordings". Each recording captures the full whiteboard state, video, and audio. Students can access recordings through a shared link that you send them — they don\'t need an account. Recordings also include timestamped lesson notes, so students can jump to specific topics. This is especially useful for revision before exams. Recordings count toward your storage limits based on your plan tier.',
+      'That\'s up to your tutor. If they enable recording, the entire lesson — the whiteboard, voice, and video — is captured as a single playback. After the lesson ends, your tutor can share a recording link with you. You can watch it as many times as you like, skip to specific moments, and use it to revise before exams. You don\'t need a Superboard account to view recordings.',
     image: '/faq-images/recording-playback.png',
-    imageAlt: 'Lesson recording playback with timeline and notes',
+    imageAlt: 'Lesson recording playback with timeline for easy navigation',
   },
   {
     id: 'parent-portal',
+    category: 'For Students',
+    icon: GraduationCap,
+    question: 'I\'m a parent — can I see my child\'s schedule and progress?',
+    answer:
+      'Yes. If your child\'s tutor or tutoring centre uses Superboard, you\'ll receive a private parent portal link. This lets you see upcoming lessons, past lesson history, attendance, and progress across subjects — all in one place. For tutoring centres, the portal also shows invoices and payment history. It\'s designed to give you visibility without needing to call or message the tutor every time.',
+    image: '/faq-images/parent-portal.png',
+    imageAlt: 'Parent portal showing upcoming lessons, attendance, and progress',
+  },
+  {
+    id: 'student-missed',
+    category: 'For Students',
+    icon: CalendarDays,
+    question: 'What happens if I miss a scheduled lesson?',
+    answer:
+      'If your tutor records their lessons, you\'ll receive a recording link so you can catch up on everything you missed. You can also message your tutor through the platform to reschedule (if they allow it). Any homework or notes shared during the lesson will still be available to you. We recommend letting your tutor know in advance if you can\'t attend, so they can plan accordingly.',
+  },
+
+  // ── FOR TUTORS ──────────────────────────────────────────
+  {
+    id: 'tutor-whiteboard',
+    category: 'For Tutors',
+    icon: Sparkles,
+    question: 'What exactly can I do on the whiteboard?',
+    answer:
+      'Think of it as an infinite canvas that you and your student share in real-time. You can draw freehand, add shapes, type text, place sticky notes, highlight sections, and use a laser pointer to draw attention to specific areas. The canvas scrolls and zooms endlessly, so you never run out of space. Every stroke appears instantly on your student\'s screen, and you can see their cursor and changes as they happen. It feels like standing at the same physical whiteboard together.',
+    image: '/faq-images/whiteboard-canvas.png',
+    imageAlt: 'The interactive whiteboard with drawing tools and real-time collaboration',
+    popular: true,
+  },
+  {
+    id: 'tutor-subjects',
+    category: 'For Tutors',
+    icon: Lightbulb,
+    question: 'I teach a specific subject — are there tools built for it?',
+    answer:
+      'Yes. Superboard includes four subject-specific toolkits that you can switch between during a lesson. The Maths toolkit gives you an interactive graphing calculator — plot functions, draw geometry, explore transformations with sliders — plus a beautiful equation renderer for writing formulas. The Science toolkit provides diagram builders, a periodic table reference, and equation-balancing helpers. The Language toolkit includes grammar annotations, vocabulary builders, and text-analysis tools. And the General toolkit covers everything else: timers, shapes, sticky notes, and more. You can mix tools from different kits in the same lesson.',
+    image: '/faq-images/subject-toolkit.png',
+    imageAlt: 'Subject-specific toolkits for Maths, Science, Language, and General use',
+  },
+  {
+    id: 'tutor-video',
+    category: 'For Tutors',
+    icon: Video,
+    question: 'How does the video calling work — do my students need a separate app?',
+    answer:
+      'No separate app needed. Video and voice calling are built directly into the lesson room. When you start a lesson, you can turn on your camera and microphone with one click. Your student sees and hears you right next to the whiteboard — no switching between tabs, no meeting links, no PIN codes. The video panel can be moved, resized, or minimized so it never covers your lesson content. If your student doesn\'t have a camera, they can still participate via voice and the whiteboard.',
+    image: '/faq-images/video-tutoring.png',
+    imageAlt: 'Video call alongside the whiteboard — everything in one place',
+  },
+  {
+    id: 'tutor-generate',
+    category: 'For Tutors',
+    icon: Sparkles,
+    question: 'Can Superboard help me create worksheets and quizzes?',
+    answer:
+      'Absolutely. You can generate quizzes, worksheets, and answer keys directly from your whiteboard content. For example, you can select a topic you\'ve been teaching and instantly generate a multiple-choice quiz that appears right on the canvas. You can then edit the questions, adjust difficulty, and share them with your student in one click. You can also convert handwritten work into neat digital text with the built-in handwriting recognition, so students get clean printed materials even if you wrote on a tablet.',
+    image: '/faq-images/ai-quiz.png',
+    imageAlt: 'Generating a quiz from whiteboard content in one click',
+  },
+  {
+    id: 'tutor-templates',
+    category: 'For Tutors',
+    icon: FolderOpen,
+    question: 'Do I have to start from a blank canvas every lesson?',
+    answer:
+      'Not unless you want to. Superboard comes with a gallery of ready-made templates — lined paper, graph paper, Venn diagrams, fraction models, periodic tables, essay outlines, and more. Pick one and your lesson starts with the right layout from the first second. You can also save any board as your own reusable template. If you teach the same topic to multiple students, just load your saved template instead of recreating everything.',
+  },
+  {
+    id: 'tutor-record',
+    category: 'For Tutors',
+    icon: Timer,
+    question: 'Can I record my lessons?',
+    answer:
+      'Yes. Hit the record button at any point during a lesson and everything gets captured — your whiteboard strokes, voice, and video. When you stop recording, it saves to your dashboard automatically. From there, you can share a link with your student, watch it back yourself to reflect on your teaching, or keep a library of recorded lessons for future students. Recordings are a powerful way to add value to your tutoring — students love being able to revisit explanations before exams.',
+  },
+  {
+    id: 'tutor-homework',
+    category: 'For Tutors',
+    icon: FileText,
+    question: 'Is there a way to assign and track homework?',
+    answer:
+      'Yes. You can create homework tasks linked to specific lessons, set due dates, and assign them to individual students. Students (and parents) see pending homework in their portal with clear deadlines. When they complete it, you can review and mark it directly on the whiteboard — just like in a live lesson. You can also attach notes or voice comments to their work. Everything stays organized in one place, so you never lose track of who has submitted what.',
+  },
+  {
+    id: 'tutor-scheduling',
+    category: 'For Tutors',
+    icon: CalendarDays,
+    question: 'Can I schedule lessons in advance?',
+    answer:
+      'Yes. Create lessons with a date, time, duration, student name, and subject. Your students and their parents see upcoming lessons in their portal. They can also add the lesson to their own phone or computer calendar with one click — it works with Google Calendar, Apple Calendar, and Outlook. If you need to reschedule or cancel, it updates everywhere instantly. Recurring lessons are supported too, so you can set up a weekly slot once and it fills your calendar automatically.',
+    image: '/faq-images/scheduling.png',
+    imageAlt: 'Weekly schedule with colour-coded lessons and one-click calendar sync',
+  },
+  {
+    id: 'tutor-export',
+    category: 'For Tutors',
+    icon: ImageIcon,
+    question: 'Can I export or save my whiteboard content?',
+    answer:
+      'Of course. You can export any whiteboard as a high-resolution image (PNG) with one click — perfect for sharing notes with students after the lesson. You can also save boards as reusable templates, as described above. For agencies with branding enabled, exports can include your centre\'s logo and colour scheme on every document. Everything you create on Superboard belongs to you and is always available in your dashboard.',
+  },
+  {
+    id: 'tutor-notes',
+    category: 'For Tutors',
+    icon: MessageSquare,
+    question: 'Can I take lesson notes that students can review later?',
+    answer:
+      'Yes. Each lesson room has a built-in notes section where you can type summaries, key points, or action items. These notes are timestamped, so students can see exactly when each note was written relative to the lesson. Students and parents access these notes through their portal. It\'s a great way to ensure nothing gets forgotten after the lesson ends — you write "Revise Chapter 4 for next week" and both student and parent see it.',
+  },
+
+  // ── FOR TUTORING AGENCIES ───────────────────────────────
+  {
+    id: 'agency-overview',
+    category: 'For Agencies',
+    icon: BarChart3,
+    question: 'How does Superboard help me run my tutoring centre?',
+    answer:
+      'Superboard gives you a central command dashboard for your entire operation. Add your tutors as team members — each gets their own login, their own lesson rooms, and their own schedule. From your dashboard, you can see every lesson happening across all tutors, track student attendance, monitor hours taught, and view revenue breakdowns. You can manage student rosters, assign students to specific tutors, and automatically generate invoices based on actual lesson time. Parents get their own portal so they can see their child\'s progress without calling your office. Essentially, Superboard replaces the spreadsheet chaos with a clean, automated system.',
+    image: '/faq-images/agency-dashboard.png',
+    imageAlt: 'Agency dashboard showing all tutors, students, lessons, and revenue in one view',
+    popular: true,
+  },
+  {
+    id: 'agency-subtutors',
+    category: 'For Agencies',
+    icon: Users,
+    question: 'How do I add tutors to my agency account?',
+    answer:
+      'From your agency dashboard, invite tutors by email. They receive an invitation link and create their own login — you don\'t need to share passwords or manage accounts on their behalf. Once joined, each tutor operates independently with their own rooms, schedule, and students, but you retain full visibility into their activity. You can set permission levels — for example, a senior tutor might be able to create and share templates while a new tutor starts with basic room access only.',
+  },
+  {
+    id: 'agency-students',
     category: 'For Agencies',
     icon: GraduationCap,
-    question: 'Can parents see their child\'s progress without calling me?',
+    question: 'Can I manage all my students from one place?',
     answer:
-      'Exactly. Each student gets a unique parent portal link. When parents visit it, they see their child\'s upcoming schedule, past lesson history, attendance record, and subject-wise progress indicators — all without needing to email or call you. For agency plans, this portal also shows invoices, payment history, and tutor notes from each session. It dramatically reduces the "how\'s my child doing?" calls and builds trust with parents by giving them transparent, real-time visibility.',
+      'Yes. The student management panel lets you add, edit, and organise every student your agency works with. You can assign each student to one or more tutors, track their lesson history, attendance, and subject-wise progress over time. Import students in bulk using a spreadsheet upload, or add them one at a time. When a student needs to switch tutors, reassigning them takes two clicks. The entire student roster is searchable and filterable, so you can find any student\'s details in seconds.',
+  },
+  {
+    id: 'agency-billing',
+    category: 'For Agencies',
+    icon: CreditCard,
+    question: 'How does per-hour billing work for agencies?',
+    answer:
+      'Agency plans combine a fixed monthly subscription with pay-per-hour usage. When a tutor starts a lesson and a student joins, the timer begins. When the lesson ends or the student leaves, the timer pauses. You\'re billed only for minutes where both tutor and student were present in the room — no paying for empty rooms or no-shows. Hours are tracked automatically across all your tutors and summed into a single monthly invoice. You can see the breakdown by tutor, by student, and by date range in your billing panel.',
+  },
+  {
+    id: 'agency-invoices',
+    category: 'For Agencies',
+    icon: FileText,
+    question: 'Can I generate invoices for my clients?',
+    answer:
+      'Yes. Superboard can auto-generate invoices based on lesson records. Set your hourly rate per tutor or per subject, and the system calculates the total based on actual minutes taught. Invoices are itemised — each line shows the date, duration, student, tutor, and subject. You can add your agency\'s logo, address, and payment details. Export invoices as branded PDFs and send them directly to parents or schools from the dashboard. It eliminates manual bookkeeping entirely.',
+  },
+  {
+    id: 'agency-progress',
+    category: 'For Agencies',
+    icon: BarChart3,
+    question: 'How do I track student progress across my agency?',
+    answer:
+      'Each student has a progress profile that builds over time. After every lesson, tutors can log notes, topics covered, and a quick assessment. The system compiles this into a visual progress report showing strengths, areas for improvement, and attendance trends across subjects. Parents see this in their portal — building trust and reducing the "how is my child doing?" phone calls. As the agency owner, you can view progress across all students to spot trends, identify students who need extra support, and demonstrate value to parents.',
+  },
+  {
+    id: 'agency-parents',
+    category: 'For Agencies',
+    icon: MessageSquare,
+    question: 'Do parents have to contact my office for updates?',
+    answer:
+      'Not anymore. Every student\'s parent or guardian receives a secure portal link. From there, they see the upcoming schedule, attendance records, lesson notes from each session, progress indicators by subject, and invoices. They can message the assigned tutor directly through the portal if needed. This self-service model dramatically reduces administrative phone calls and emails, while giving parents more visibility than they had before. It\'s a win for everyone — parents feel informed, tutors stay focused on teaching, and your office staff aren\'t constantly answering routine questions.',
     image: '/faq-images/parent-portal.png',
-    imageAlt: 'Parent portal showing student progress and schedule',
+    imageAlt: 'The parent portal — schedule, progress, and invoices all in one place',
   },
   {
-    id: 'subjects',
-    category: 'Whiteboard',
-    icon: Lightbulb,
-    question: 'I teach [subject] — does Superboard have tools for my subject?',
+    id: 'agency-analytics',
+    category: 'For Agencies',
+    icon: BarChart3,
+    question: 'What kind of analytics and reports do I get?',
     answer:
-      'Superboard ships with four specialized subject toolkits. The Math toolkit includes a full GeoGebra graphing calculator for plotting functions, geometry construction, and interactive sliders. It also has KaTeX for rendering beautiful LaTeX equations and Mathpix OCR for digitizing handwritten math. The Science toolkit supports diagrams, periodic table references, and equation balancing. The Language toolkit has grammar checking, vocabulary builders, and annotation tools. The General toolkit covers everything else with shapes, sticky notes, and timers. You can switch toolkits mid-lesson or use tools from multiple kits simultaneously.',
-    image: '/faq-images/subject-toolkit.png',
-    imageAlt: 'Subject-specific toolkits for Math, Science, Language, and General',
+      'Your agency dashboard includes a rich analytics panel. See total lesson hours per week or month, revenue breakdowns by tutor and by subject, student attendance rates, tutor utilisation (how many hours each tutor is actually teaching vs. available), and growth trends over time. Charts update in real-time as lessons happen. You can filter by date range, tutor, or student. Export reports as spreadsheets for deeper analysis or for presentations to stakeholders. These insights help you optimise scheduling, identify your most effective tutors, and spot underperforming areas before they become problems.',
   },
   {
-    id: 'security',
-    category: 'Trust & Security',
+    id: 'agency-integrations',
+    category: 'For Agencies',
     icon: Shield,
-    question: 'Is student data safe? What about compliance?',
+    question: 'Can Superboard connect to my existing tools?',
     answer:
-      'All whiteboard sessions are end-to-end encrypted using TLS. Data is stored in SOC 2 compliant data centers (hosted on Supabase). We comply with GDPR (Europe), India\'s DPDPA 2023, and follow COPPA guidelines for students under 13. Room links are cryptographically random and unguessable — they can\'t be discovered by search engines. You control access: close a room and the link stops working immediately. Agency admins can enforce data retention policies and export or delete student data. We never sell data to third parties.',
-    image: '/faq-images/student-join.png',
-    imageAlt: 'Secure student join flow with encrypted connections',
+      'Yes. Superboard supports webhook integrations — whenever key events happen (a lesson is scheduled, a student joins, an invoice is generated, etc.), Superboard sends a notification to any system you use. Many agencies connect this to their CRM, communication platforms like WhatsApp Business, or accounting software. Calendar sync works with Google Calendar, Apple Calendar, and Outlook so lessons appear automatically in tutors\' and students\' personal calendars. If you need a custom integration, our webhook system makes it straightforward.',
+  },
+
+  // ── GENERAL ────────────────────────────────────────────
+  {
+    id: 'gen-devices',
+    category: 'General',
+    icon: MonitorSmartphone,
+    question: 'What devices and browsers are supported?',
+    answer:
+      'Superboard works in any modern browser — Chrome, Safari, Firefox, and Edge — on laptops, desktops, tablets, and phones. There\'s no app to download (though you can add it to your home screen on mobile for a native-app-like experience). For the best whiteboard experience, a tablet with a stylus or a laptop with a mouse works great. Video calling works on all devices with a front camera and microphone. We recommend a stable internet connection of at least 5 Mbps for smooth video and real-time collaboration.',
   },
   {
-    id: 'pricing-billing',
-    category: 'Billing',
-    icon: Sparkles,
-    question: 'How does billing work — are there hidden fees or lock-ins?',
+    id: 'gen-security',
+    category: 'General',
+    icon: Shield,
+    question: 'Is student data safe?',
     answer:
-      'Transparent and flexible. The Free plan costs nothing — no credit card required. Pro plans are billed monthly via Stripe, and Agency plans combine a monthly base fee with per-hour billing for actual lesson time (tracked automatically when rooms are active). You can upgrade, downgrade, or cancel anytime from your dashboard — there are no lock-in contracts. Usage is metered fairly: you only pay for hours where at least two participants (tutor + student) are in the room. All invoices are generated automatically and available in your billing panel.',
-    imageAlt: '',
+      'Yes. All sessions are encrypted end-to-end using TLS. Data is stored in enterprise-grade data centres with SOC 2 compliance. We follow GDPR (Europe), India\'s DPDPA 2023, and COPPA guidelines for students under 13. Room links are randomly generated and impossible to guess — they can\'t be found by search engines or accessed without the direct link. You control access: once you close a room, the link stops working immediately. Agency admins can enforce data retention policies, export data, or delete it on request. We never sell or share data with third parties.',
   },
   {
-    id: 'templates',
-    category: 'Whiteboard',
-    icon: Sparkles,
-    question: 'Do I have to start from a blank canvas every time?',
+    id: 'gen-pricing',
+    category: 'General',
+    icon: CreditCard,
+    question: 'How does pricing work — are there hidden fees or lock-in contracts?',
     answer:
-      'Not at all. Superboard has a template gallery with 14+ pre-built layouts: lined paper, grid paper, graph paper, Venn diagrams, fraction models, periodic tables, essay outlines, and more. You can also save any board state as your own custom template and reuse it across lessons. For agencies, shared templates let you standardize teaching materials across all your tutors — create a template once and every tutor on your team can use it.',
-    image: '/faq-images/whiteboard-canvas.png',
-    imageAlt: 'Template gallery with pre-built lesson layouts',
+      'No hidden fees and no lock-ins. The Free plan gives you 1 room, 25 smart credits per week, and 120 minutes of video calling per month — completely free, no credit card required. Pro plans unlock more rooms, more credits, and longer video sessions. Agency plans add a management dashboard, multi-tutor support, billing tools, parent portals, and analytics. Every plan can be upgraded, downgraded, or cancelled at any time from your dashboard. You\'re never locked into a contract — your access continues until the end of your current billing period.',
+  },
+  {
+    id: 'gen-referral',
+    category: 'General',
+    icon: Sparkles,
+    question: 'Is there a referral programme?',
+    answer:
+      'Yes. When you refer another tutor and they sign up using your unique referral link, both of you earn rewards. Your referral dashboard shows how many people you\'ve referred, who has signed up, and what rewards you\'ve earned. Referral credits are applied automatically to your account. It\'s a simple way to earn while helping other tutors discover a better teaching tool.',
+  },
+  {
+    id: 'gen-support',
+    category: 'General',
+    icon: MessageSquare,
+    question: 'What if I need help or something isn\'t working?',
+    answer:
+      'We\'re here to help. You can reach us through the contact page, and our team responds during business hours. Pro and Agency plan users get priority support with faster response times. We also maintain a growing library of help articles and video guides covering every feature in detail. If you encounter a bug or have a feature suggestion, we actively listen and ship improvements regularly.',
   },
 ];
 
@@ -179,8 +341,8 @@ export function FAQSection() {
             How Superboard Works
           </h2>
           <p className="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">
-            Real answers about real features. Click any question to see details and
-            screenshots.
+            Answers organised by role — whether you&apos;re a student, a tutor, or
+            running an agency. Click any question to learn more.
           </p>
         </div>
 
@@ -213,9 +375,9 @@ export function FAQSection() {
           ))}
         </div>
 
-        {/* FAQ Accordion with Images */}
+        {/* FAQ Accordion */}
         <Accordion type="single" collapsible className="space-y-3">
-          {filteredItems.map((item, index) => {
+          {filteredItems.map((item) => {
             const IconComp = item.icon;
             return (
               <AccordionItem
@@ -233,7 +395,7 @@ export function FAQSection() {
                         <span className="text-[11px] font-medium uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                           {item.category}
                         </span>
-                        {index < 3 && (
+                        {item.popular && (
                           <span className="text-[11px] font-medium uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
                             Popular
                           </span>
@@ -247,11 +409,11 @@ export function FAQSection() {
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">
                   <div className="pl-14">
-                    <p className="text-sm text-gray-600 leading-relaxed mb-5">
+                    <p className="text-sm text-gray-600 leading-relaxed">
                       {item.answer}
                     </p>
-                    {item.image && (
-                      <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm group">
+                    {item.image && item.imageAlt && (
+                      <div className="relative rounded-xl overflow-hidden border border-gray-200 shadow-sm group mt-5">
                         <div className="aspect-[16/9] bg-gray-100 relative">
                           <Image
                             src={item.image}
