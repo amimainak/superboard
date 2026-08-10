@@ -1,0 +1,534 @@
+     1→// ============================================================
+     2→// Terms & Conditions Page
+     3→// ============================================================
+     4→import LegalPageLayout from '@/components/legal/LegalPageLayout';
+     5→
+     6→export const metadata = {
+     7→  title: 'Terms of Service — Superboard',
+     8→  description: 'Terms and conditions governing the use of Superboard tutoring whiteboard platform.',
+     9→};
+    10→
+    11→export default function TermsPage() {
+    12→  return (
+    13→    <LegalPageLayout title="Terms &amp; Conditions" lastUpdated="August 8, 2026">
+    14→      {/* ===== PREAMBLE ===== */}
+    15→      <p>
+    16→        These Terms and Conditions (&quot;Terms&quot;) govern your access to and use of Superboard
+    17→        (&quot;Service&quot;), operated by Superboard, a sole proprietorship registered in India
+    18→        (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;). By creating an account or using the Service, you agree to
+    19→        be bound by these Terms. If you do not agree, do not use the Service.
+    20→      </p>
+    21→
+    22→      {/* ===== 1. DEFINITIONS ===== */}
+    23→      <h2>1. Definitions</h2>
+    24→      <ul>
+    25→        <li>
+    26→          <strong>&quot;Service&quot;</strong> means the Superboard platform, including the interactive
+    27→          whiteboard, video conferencing, AI tools, template library, and all related features
+    28→          accessible at superboard.live.
+    29→        </li>
+    30→        <li>
+    31→          <strong>&quot;User&quot; or &quot;Tutor&quot;</strong> means any individual or entity that registers an
+    32→          account on the Service.
+    33→        </li>
+    34→        <li>
+    35→          <strong>&quot;Agency Owner&quot;</strong> means a User on an Agency Standard or Agency Premium
+    36→          subscription plan who has administrative control over sub-tutors and students.
+    37→        </li>
+    38→        <li>
+    39→          <strong>&quot;Sub-Tutor&quot;</strong> means a tutor invited by an Agency Owner to conduct
+    40→          sessions under the agency account.
+    41→        </li>
+    42→        <li>
+    43→          <strong>&quot;Student&quot;</strong> means a learner who accesses tutoring sessions through an
+    44→          invitation link.
+    45→        </li>
+    46→        <li>
+    47→          <strong>&quot;User Content&quot;</strong> means any data, text, images, drawings, audio, video,
+    48→          worksheets, quizzes, or other materials created, uploaded, or shared by Users during
+    49→          use of the Service.
+    50→        </li>
+    51→      </ul>
+    52→
+    53→      {/* ===== 2. NATURE OF THE SERVICE ===== */}
+    54→      <h2>2. Nature of the Service</h2>
+    55→      <p>
+    56→        Superboard provides a software-as-a-service (SaaS) platform comprising an interactive
+    57→        whiteboard, real-time collaboration tools, video conferencing, and AI-powered educational
+    58→        utilities. The Service is a general-purpose tool designed to facilitate online tutoring
+    59→        sessions. Superboard does not provide educational curricula, lesson plans, or
+    60→        educational accreditation. We do not employ, supervise, or control the tutors or agencies
+    61→        who use our platform. The educational content, teaching methodology, and conduct of
+    62→        tutoring sessions are entirely the responsibility of the User or Agency Owner.
+    63→      </p>
+    64→      <p>
+    65→        Superboard acts as an <strong>intermediary</strong> (as defined under Section 2(w) of the
+    66→        Information Technology Act, 2000, India) that provides a technological platform for Users
+    67→        to conduct tutoring sessions. We do not pre-screen, monitor, edit, or approve User Content
+    68→        transmitted through the Service, except as may be required by applicable law.
+    69→      </p>
+    70→
+    71→      {/* ===== 3. ELIGIBILITY ===== */}
+    72→      <h2>3. Eligibility</h2>
+    73→      <p>
+    74→        You must be at least 18 years old (or the age of majority in your jurisdiction) to create
+    75→        an account. If you are under 18, you may use the Service only under the supervision of a
+    76→        parent or legal guardian who agrees to these Terms on your behalf and assumes full
+    77→        responsibility for your use of the Service. By using the Service, you represent and warrant
+    78→        that you meet these eligibility requirements and have the legal capacity to enter into
+    79→        these Terms.
+    80→      </p>
+    81→
+    82→      {/* ===== 4. ACCOUNT REGISTRATION ===== */}
+    83→      <h2>4. Account Registration &amp; Security</h2>
+    84→      <p>
+    85→        To access certain features of the Service, you must register for an account. You agree to
+    86→        provide accurate, current, and complete information during registration and to update such
+    87→        information as necessary. You are responsible for safeguarding your password and for all
+    88→        activities that occur under your account. You must notify us immediately of any
+    89→        unauthorized use of your account. You are solely responsible for maintaining the
+    90→        confidentiality of your account credentials.
+    91→      </p>
+    92→      <p>
+    93→        We reserve the right to suspend or terminate accounts that have been inactive for more than
+    94→        12 consecutive months.
+    95→      </p>
+    96→
+    97→      {/* ===== 5. SUBSCRIPTION PLANS & BILLING ===== */}
+    98→      <h2>5. Subscription Plans &amp; Billing</h2>
+    99→      <p>
+   100→        Superboard offers multiple subscription tiers, including a Free tier, Pro Tutor ($10/month),
+   101→        Agency Standard ($39/month plus per-hour billing), and Agency Premium ($79/month plus
+   102→        per-hour billing). All prices are exclusive of applicable taxes unless stated otherwise.
+   103→        By selecting a paid plan, you authorize us to charge the applicable subscription fee to
+   104→        your payment method on a recurring monthly basis via Stripe, our payment processor.
+   105→      </p>
+   106→
+   107→      <h3>5.1 Per-Hour Metered Billing (Agency Plans)</h3>
+   108→      <p>
+   109→        Agency Standard and Agency Premium plans include metered per-hour billing for tutoring
+   110→        sessions conducted by sub-tutors. Usage is measured in clock hours rounded to the nearest
+   111→        minute and reported at the end of each billing cycle. Metered charges appear as line items
+   112→        on your monthly Stripe invoice. You can monitor real-time usage from your Agency Admin
+   113→        Dashboard. The Agency Owner acknowledges and agrees that they are solely responsible for
+   114→        all metered charges incurred by sub-tutors operating under their agency account.
+   115→      </p>
+   116→
+   117→      <h3>5.2 Payment Method</h3>
+   118→      <p>
+   119→        Payments are processed through Stripe, Inc. Accepted payment methods include credit cards,
+   120→        debit cards, and other methods made available through Stripe in your region. By providing
+   121→        your payment information, you agree to Stripe&apos;s own terms of service. We do not store
+   122→        your full card details on our servers. All payment-related disputes are governed by
+   123→        Stripe&apos;s terms and applicable payment network rules.
+   124→      </p>
+   125→
+   126→      <h3>5.3 Subscription Changes</h3>
+   127→      <p>
+   128→        You may upgrade or downgrade your plan at any time from the Billing section of your
+   129→        dashboard. Upgrades take effect immediately, and prorated charges will apply. Downgrades
+   130→        take effect at the end of the current billing cycle. You may cancel your subscription at
+   131→        any time; your access continues until the end of the paid period. See
+   132→        our <a href="/refund">Refund &amp; Cancellation Policy</a> for details on refunds.
+   133→      </p>
+   134→
+   135→      <h3>5.4 Taxes</h3>
+   136→      <p>
+   137→        For users located in India, GST (Goods and Services Tax) will be charged at the applicable
+   138→        rate as per Indian tax law. For international users (exports of services), charges are
+   139→        exclusive of GST under the LUT (Letter of Undertaking) mechanism. You are responsible for
+   140→        any local taxes or duties that may apply in your jurisdiction.
+   141→      </p>
+   142→
+   143→      {/* ===== 6. USER CONTENT & RESPONSIBILITY ===== */}
+   144→      <h2>6. User Content &amp; User Responsibility</h2>
+   145→      <p>
+   146→        <strong>The User, Agency Owner, and Sub-Tutors bear sole and exclusive responsibility for
+   147→        all User Content created, shared, transmitted, or displayed during tutoring sessions.</strong>{' '}
+   148→        This includes, but is not limited to, educational materials, verbal instructions, written
+   149→        text, drawings, images, video, audio recordings, and any other content shared during
+   150→        sessions.
+   151→      </p>
+   152→      <p>
+   153→        Superboard does not review, verify, endorse, or take responsibility for the accuracy,
+   154→        completeness, legality, or appropriateness of any User Content. The Service is a tool for
+   155→        conducting sessions; the content and conduct of those sessions are entirely within the
+   156→        control and responsibility of the User or Agency Owner.
+   157→      </p>
+   158→      <p>
+   159→        By using the Service, you represent and warrant that:
+   160→      </p>
+   161→      <ul>
+   162→        <li>
+   163→          You have all necessary rights, licenses, and permissions to share any content you upload
+   164→          or transmit through the Service.
+   165→        </li>
+   166→        <li>
+   167→          Your User Content does not and will not infringe upon or violate the intellectual
+   168→          property rights, privacy rights, or any other rights of any third party.
+   169→        </li>
+   170→        <li>
+   171→          Your use of the Service complies with all applicable local, state, national, and
+   172→          international laws and regulations.
+   173→        </li>
+   174→        <li>
+   175→          If you are an Agency Owner, you have obtained all necessary consents (including parental
+   176→          consent for minors) required by applicable law for registering student information and
+   177→          conducting sessions with students.
+   178→        </li>
+   179→      </ul>
+   180→
+   181→      {/* ===== 7. ACCEPTABLE USE ===== */}
+   182→      <h2>7. Acceptable Use Policy</h2>
+   183→      <p>
+   184→        You agree not to use the Service for any purpose that is unlawful, harmful, or that could
+   185→        damage, disable, or impair the Service. Specifically, you agree not to:
+   186→      </p>
+   187→      <ul>
+   188→        <li>
+   189→          Use the Service to transmit, store, or share content that is illegal, harmful, threatening,
+   190→          abusive, defamatory, vulgar, obscene, pornographic, or otherwise objectionable.
+   191→        </li>
+   192→        <li>
+   193→          Use the Service to harass, bully, exploit, or harm minors or any other person.
+   194→        </li>
+   195→        <li>
+   196→          Share or transmit content that infringes upon any third party&apos;s intellectual property
+   197→          rights, including copyrighted materials (text, images, music, video) without proper
+   198→          authorization.
+   199→        </li>
+   200→        <li>
+   201→          Attempt to gain unauthorized access to any portion of the Service, other accounts, computer
+   202→          systems, or networks connected to the Service.
+   203→        </li>
+   204→        <li>
+   205→          Interfere with or disrupt the integrity or performance of the Service, including through
+   206→          the use of automated scripts, bots, or scraping tools.
+   207→        </li>
+   208→        <li>
+   209→          Resell, sublicense, or redistribute the Service or access to it without our prior written
+   210→          consent.
+   211→        </li>
+   212→        <li>
+   213→          Use the Service to compete directly with Superboard or to build a similar product.
+   214→        </li>
+   215→        <li>
+   216→          Share your account credentials with unauthorized third parties.
+   217→        </li>
+   218→        <li>
+   219→          Record, screenshot, or redistribute session content without the express consent of all
+   220→          participants.
+   221→        </li>
+   222→        <li>
+   223→          Use the Service to transmit malware, ransomware, or any malicious code.
+   224→        </li>
+   225→      </ul>
+   226→
+   227→      {/* ===== 8. NO EDUCATIONAL CONTENT WARRANTY ===== */}
+   228→      <h2>8. Educational Content Disclaimer</h2>
+   229→      <p>
+   230→        Superboard is a technology platform and does not provide, endorse, guarantee, or verify
+   231→        any educational content, curriculum, or teaching methodology shared through the Service.
+   232→        We make no representations regarding the accuracy, quality, completeness, or suitability
+   233→        of any educational material created or shared by Users. Parents, guardians, and students
+   234→        are advised that the quality of tutoring depends entirely on the individual tutor or agency
+   235→        and not on Superboard.
+   236→      </p>
+   237→      <p>
+   238→        <strong>Superboard is not an educational institution, accrediting body, or employer of
+   239→        tutors.</strong> We do not conduct background checks on Users or Sub-Tutors. Agency Owners
+   240→        are solely responsible for vetting their Sub-Tutors.
+   241→      </p>
+   242→
+   243→      {/* ===== 9. AGENCY & SUB-TUTOR PROVISIONS ===== */}
+   244→      <h2>9. Agency &amp; Sub-Tutor Provisions</h2>
+   245→      <p>
+   246→        Agency plan subscribers may invite sub-tutors and register students through the Agency
+   247→        Admin Dashboard. The Agency Owner is responsible for ensuring that all sub-tutors comply
+   248→        with these Terms. The Agency Owner acknowledges and agrees that:
+   249→      </p>
+   250→      <ul>
+   251→        <li>
+   252→          They are the primary payer for all charges, including metered per-hour usage incurred by
+   253→          sub-tutors under their agency account.
+   254→        </li>
+   255→        <li>
+   256→          They are responsible for the conduct of all sub-tutors operating under their agency
+   257→          account, and any violation of these Terms by a sub-tutor shall be deemed a violation by
+   258→          the Agency Owner.
+   259→        </li>
+   260→        <li>
+   261→          Student information (names and email addresses) collected through the student registration
+   262→          feature must be obtained with the student&apos;s or their guardian&apos;s consent. The Agency
+   263→          Owner is responsible for complying with all applicable data protection laws regarding
+   264→          student data.
+   265→        </li>
+   266→        <li>
+   267→          They are responsible for ensuring that sub-tutors have appropriate qualifications and
+   268→          conduct sessions in accordance with applicable laws.
+   269→        </li>
+   270→      </ul>
+   271→
+   272→      {/* ===== 10. STUDENT ACCESS ===== */}
+   273→      <h2>10. Student Access</h2>
+   274→      <p>
+   275→        Students may access tutoring sessions through invitation links shared by their tutor or
+   276→        agency. Students are not required to create a full account. Student access is limited to
+   277→        joining assigned rooms and participating in live sessions. Students must not record,
+   278→        screenshot, or redistribute session content without the tutor&apos;s permission. Superboard is
+   279→        not a party to any contractual relationship between tutors/agencies and students.
+   280→      </p>
+   281→
+   282→      {/* ===== 11. INTELLECTUAL PROPERTY ===== */}
+   283→      <h2>11. Intellectual Property</h2>
+   284→      <p>
+   285→        The Service, including its software, design, logos, trademarks, and original content
+   286→        (excluding User Content), remain the exclusive property of Superboard and its licensors.
+   287→        The Service is protected by copyright, trademark, and other laws of India and international
+   288→        conventions.
+   289→      </p>
+   290→      <p>
+   291→        You retain all rights to the User Content you create using the Service. However, by using
+   292→        the Service, you grant us a limited, non-exclusive, worldwide, royalty-free license to
+   293→        store, transmit, cache, and display your content solely for the purpose of providing the
+   294→        Service to you and your session participants. This license terminates upon deletion of the
+   295→        relevant content or your account.
+   296→      </p>
+   297→
+   298→      {/* ===== 12. INTERMEDIARY SAFE HARBOR ===== */}
+   299→      <h2>12. Intermediary Safe Harbor &amp; Content Moderation</h2>
+   300→      <p>
+   301→        Superboard operates as an intermediary under Section 79 of the Information Technology Act,
+   302→        2000 (India), and corresponding safe harbor provisions in other applicable jurisdictions.
+   303→        We do not exercise editorial control over User Content and are not liable for User Content
+   304→        transmitted, stored, or hosted through the Service.
+   305→      </p>
+   306→      <p>
+   307→        However, we reserve the right (but are not obligated) to remove, disable access to, or
+   308→        moderate User Content that we become aware of and that, in our sole discretion, violates
+   309→        these Terms, applicable law, or the rights of any third party. We may also suspend or
+   310→        terminate accounts that repeatedly or egregiously violate these Terms.
+   311→      </p>
+   312→      <p>
+   313→        We comply with valid court orders, government directives, and takedown requests received
+   314→        through our designated grievance officer as required under the IT (Intermediary Guidelines
+   315→        and Digital Media Ethics Code) Rules, 2021.
+   316→      </p>
+   317→
+   318→      {/* ===== 13. INTELLECTUAL PROPERTY INFRINGEMENT (DMCA-STYLE) ===== */}
+   319→      <h2>13. Intellectual Property Infringement Complaints</h2>
+   320→      <p>
+   321→        If you believe that your copyrighted work has been copied or used in a way that
+   322→        constitutes copyright infringement through the Service, please notify us at{' '}
+   323→        <a href="mailto:legal@superboard.live">legal@superboard.live</a> with the following
+   324→        information:
+   325→      </p>
+   326→      <ol>
+   327→        <li>
+   328→          A description of the copyrighted work that you claim has been infringed.
+   329→        </li>
+   330→        <li>
+   331→          A description of where the allegedly infringing material is located on the Service
+   332→          (e.g., room ID, URL, or description).
+   333→        </li>
+   334→        <li>
+   335→          Your contact information (name, email address, and physical address).
+   336→        </li>
+   337→        <li>
+   338→          A statement that you have a good faith belief that the use is not authorized by the
+   339→          copyright owner, its agent, or the law.
+   340→        </li>
+   341→        <li>
+   342→          A statement, under penalty of perjury, that the information in your notice is accurate
+   343→          and that you are the copyright owner or authorized to act on behalf of the owner.
+   344→        </li>
+   345→        <li>
+   346→          Your physical or electronic signature.
+   347→        </li>
+   348→      </ol>
+   349→      <p>
+   350→        We will take appropriate action upon receiving a valid infringement notice, which may
+   351→        include removing or disabling access to the allegedly infringing material. Repeat
+   352→        infringers will have their accounts terminated.
+   353→      </p>
+   354→
+   355→      {/* ===== 14. SERVICE AVAILABILITY ===== */}
+   356→      <h2>14. Service Availability &amp; Disclaimer of Warranties</h2>
+   357→      <p>
+   358→        The Service is provided on an <strong>&quot;as is&quot; and &quot;as available&quot; basis</strong> without
+   359→        warranties of any kind, whether express, implied, or statutory, including but not limited
+   360→        to implied warranties of merchantability, fitness for a particular purpose, and
+   361→        non-infringement.
+   362→      </p>
+   363→      <p>
+   364→        We do not warrant that the Service will be available at all times, uninterrupted, timely,
+   365→        secure, or error-free. We reserve the right to modify, suspend, or discontinue the Service
+   366→        (or any part thereof) at any time, with reasonable notice when possible.{' '}
+   367→        <strong>We do not provide any service level agreement (SLA) or guaranteed uptime.</strong>{' '}
+   368→        Any credits or accommodations for service interruptions will be provided at our sole
+   369→        discretion.
+   370→      </p>
+   371→      <p>
+   372→        You understand and agree that your use of the Service is at your sole risk.
+   373→      </p>
+   374→
+   375→      {/* ===== 15. LIMITATION OF LIABILITY ===== */}
+   376→      <h2>15. Limitation of Liability</h2>
+   377→      <p>
+   378→        <strong>To the fullest extent permitted by applicable law:</strong>
+   379→      </p>
+   380→      <ul>
+   381→        <li>
+   382→          Superboard shall not be liable for any indirect, incidental, special, consequential, or
+   383→          punitive damages, including but not limited to loss of profits, data, goodwill, or other
+   384→          intangible losses, resulting from (a) your use or inability to use the Service; (b) any
+   385→          User Content or conduct of any User, Sub-Tutor, Agency Owner, or Student; (c) any
+   386→          unauthorized access to or alteration of your data; or (d) any other matter relating to
+   387→          the Service.
+   388→        </li>
+   389→        <li>
+   390→          Superboard shall not be liable for any claims arising from the educational content,
+   391→          teaching quality, qualifications of tutors, or outcomes of tutoring sessions conducted
+   392→          through the Service. These matters are solely the responsibility of the Users, Agency
+   393→          Owners, and Sub-Tutors.
+   394→        </li>
+   395→        <li>
+   396→          Superboard shall not be liable for any failure or delay in performing its obligations
+   397→          due to circumstances beyond its reasonable control, including acts of God, natural
+   398→          disasters, war, terrorism, riots, pandemics, government actions, or failures of
+   399→          third-party infrastructure (including internet service providers, cloud providers, or
+   400→          payment processors).
+   401→        </li>
+   402→        <li>
+   403→          Our total aggregate liability to you for any and all claims arising from or related to
+   404→          the Service shall not exceed the total amount you paid us in the twelve (12) months
+   405→          preceding the event giving rise to the claim, or $100 (USD), whichever is greater.
+   406→        </li>
+   407→      </ul>
+   408→
+   409→      {/* ===== 16. INDEMNIFICATION ===== */}
+   410→      <h2>16. Indemnification</h2>
+   411→      <p>
+   412→        You agree to indemnify, defend, and hold harmless Superboard, its proprietor, affiliates,
+   413→        officers, directors, employees, agents, and service providers from and against any and all
+   414→        claims, liabilities, damages, losses, costs, and expenses (including reasonable legal fees)
+   415→        arising out of or in any way connected with:
+   416→      </p>
+   417→      <ul>
+   418→        <li>Your use of the Service or your User Content.</li>
+   419→        <li>Your violation of these Terms or any applicable law or regulation.</li>
+   420→        <li>
+   421→          Any claim that your User Content or use of the Service infringes upon or violates any
+   422→          third party&apos;s intellectual property rights, privacy rights, or any other rights.
+   423→        </li>
+   424→        <li>
+   425→          Any harm, injury, or damage caused to any person (including minors) resulting from your
+   426→          sessions or User Content.
+   427→        </li>
+   428→        <li>
+   429→          For Agency Owners: any actions or omissions of Sub-Tutors operating under the agency
+   430→          account.
+   431→        </li>
+   432→        <li>
+   433→          Any claims related to the educational content, teaching quality, or outcomes of sessions
+   434→          conducted by you or your Sub-Tutors.
+   435→        </li>
+   436→      </ul>
+   437→
+   438→      {/* ===== 17. TERMINATION ===== */}
+   439→      <h2>17. Termination</h2>
+   440→      <p>
+   441→        We reserve the right to suspend or terminate your account at any time, with or without
+   442→        cause, and with or without notice. We may terminate accounts that violate these Terms,
+   443→        engage in abusive behavior, or are involved in fraudulent activity. Upon termination,
+   444→        your right to use the Service ceases immediately. Provisions of these Terms that by their
+   445→        nature should survive termination (including Sections 6, 11, 15, 16, and 18) will remain
+   446→        in effect.
+   447→      </p>
+   448→
+   449→      {/* ===== 18. GOVERNING LAW & DISPUTE RESOLUTION ===== */}
+   450→      <h2>18. Governing Law &amp; Dispute Resolution</h2>
+   451→      <p>
+   452→        These Terms shall be governed by and construed in accordance with the laws of India,
+   453→        without regard to its conflict of law provisions.
+   454→      </p>
+   455→      <h3>18.1 Arbitration</h3>
+   456→      <p>
+   457→        Any dispute, controversy, or claim arising out of or in connection with these Terms, or
+   458→        the breach thereof, shall be settled by arbitration administered by a sole arbitrator
+   459→        appointed in accordance with the Arbitration and Conciliation Act, 1996 (India). The
+   460→        seat of arbitration shall be in India, and the language of arbitration shall be English.
+   461→        The arbitrator&apos;s decision shall be final and binding.
+   462→      </p>
+   463→      <h3>18.2 Exception</h3>
+   464→      <p>
+   465→        Notwithstanding the above, we may seek injunctive or equitable relief in any court of
+   466→        competent jurisdiction in India to protect our intellectual property or prevent
+   467→        irreparable harm.
+   468→      </p>
+   469→
+   470→      {/* ===== 19. SEVERABILITY ===== */}
+   471→      <h2>19. Severability</h2>
+   472→      <p>
+   473→        If any provision of these Terms is held to be invalid, illegal, or unenforceable by a
+   474→        court of competent jurisdiction or arbitrator, such provision shall be modified to the
+   475→        minimum extent necessary to make it valid and enforceable, or if modification is not
+   476→        possible, shall be severed from these Terms. The remaining provisions shall continue in
+   477→        full force and effect.
+   478→      </p>
+   479→
+   480→      {/* ===== 20. WAIVER ===== */}
+   481→      <h2>20. Waiver</h2>
+   482→      <p>
+   483→        Our failure to enforce any right or provision of these Terms shall not constitute a waiver
+   484→        of that right or provision. Any waiver of any provision of these Terms will be effective
+   485→        only if in writing and signed by us.
+   486→      </p>
+   487→
+   488→      {/* ===== 21. ASSIGNMENT ===== */}
+   489→      <h2>21. Assignment</h2>
+   490→      <p>
+   491→        You may not assign or transfer these Terms or your rights under these Terms, in whole or
+   492→        in part, without our prior written consent. We may assign our rights and obligations under
+   493→        these Terms without your consent in connection with a merger, acquisition, or sale of
+   494→        assets.
+   495→      </p>
+   496→
+   497→      {/* ===== 22. CHANGES TO TERMS ===== */}
+   498→      <h2>22. Changes to Terms</h2>
+   499→      <p>
+   500→        We reserve the right to modify these Terms at any time. We will notify you of material
+   501→        changes by posting the revised Terms on this page and updating the &quot;Last updated&quot;
+   502→        date. For material changes, we will also send an email notification to registered users
+   503→        at least 7 days before the changes take effect. Your continued use of the Service after
+   504→        the revised Terms become effective constitutes your acceptance of the changes. We encourage
+   505→        you to review these Terms periodically.
+   506→      </p>
+   507→
+   508→      {/* ===== 23. ENTIRE AGREEMENT ===== */}
+   509→      <h2>23. Entire Agreement</h2>
+   510→      <p>
+   511→        These Terms, together with the <a href="/privacy">Privacy Policy</a>,{' '}
+   512→        <a href="/refund">Refund &amp; Cancellation Policy</a>, and{' '}
+   513→        <a href="/cookies">Cookie Policy</a>, constitute the entire agreement between you and
+   514→        Superboard regarding the use of the Service, and supersede any prior agreements or
+   515→        understandings.
+   516→      </p>
+   517→
+   518→      {/* ===== 24. CONTACT ===== */}
+   519→      <h2>24. Contact &amp; Grievance Officer</h2>
+   520→      <p>
+   521→        For questions about these Terms, or to report violations, contact us
+   522→        at <a href="/contact">our Contact page</a> or email{' '}
+   523→        <a href="mailto:legal@superboard.live">legal@superboard.live</a>.
+   524→      </p>
+   525→      <p>
+   526→        Under the IT (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, our
+   527→        designated Grievance Officer is contactable at{' '}
+   528→        <a href="mailto:grievance@superboard.live">grievance@superboard.live</a>. Grievances will
+   529→        be acknowledged as soon as possible and resolved within 30 days.
+   530→      </p>
+   531→    </LegalPageLayout>
+   532→  );
+   533→}
+   534→
