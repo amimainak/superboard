@@ -62,64 +62,89 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
     ydocRef.current = ydoc;
 
     // Get Hocuspocus server URL from env or derive from current origin
-    const wsUrl = process.env.NEXT_PUBLIC_HOCUSPOCUS_URL || 
-      (typeof window !== 'undefined' 
+    const wsUrl = process.env.NEXT_PUBLIC_HOCUSPOCUS_URL ||
+      (typeof window !== 'undefined'
         ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/hocuspocus`
         : '');
 
-    // Create Hocuspocus WebSocket provider
-    // HocuspocusProvider options
-    const providerOptions: Record<string, unknown> = {
-      url: wsUrl,
-      name: `room-${roomId}`,
-      document: ydoc,
-    };
-
-    const provider = new HocuspocusProvider(providerOptions as ConstructorParameters<typeof HocuspocusProvider>[0]);
-
-    providerRef.current = provider;
-
-    // Connection state events
-    provider.on('status', (event: { status: string }) => {
-      setIsConnected(event.status === 'connected');
-      if (event.status === 'connected' || event.status === 'disconnected') {
-        setIsSyncing(false);
+    // SECURITY FIX (RT-C01): Wire auth token and user context into the
+    // Hocuspocus WebSocket connection for server-side JWT verification.
+    // We use an IIFE to handle async Supabase session retrieval inside useEffect.
+    (async () => {
+      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      let sessionToken: string | undefined;
+      try {
+        if (supabaseUrl && supabaseAnonKey) {
+          const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey);
+          const { data: { session } } = await supabase.auth.getSession();
+          sessionToken = session?.access_token || undefined;
+        }
+      } catch {
+        // Session unavailable — connection will fail auth on server side
       }
-    });
 
-    provider.on('sync', (event: boolean) => {
-      setIsSyncing(!event);
-    });
-
-    // Awareness change — broadcast local state and notify parent
-    provider.on('awareness-change', () => {
-      if (provider.awareness) {
-        const states = provider.awareness.getStates();
-        onAwarenessChange?.(states as unknown as Map<number, Record<string, unknown>>);
-      }
-    });
-
-    // Document change — notify parent for auto-save triggers
-    ydoc.on('update', () => {
-      onChange?.(ydoc);
-    });
-
-    // Set initial local awareness state
-    if (provider.awareness) {
-      provider.awareness.setLocalState({
-        user: {
-          id: userId,
-          name: userName,
-          color: userColor,
+      const providerOptions: Record<string, unknown> = {
+        url: wsUrl,
+        name: `room-${roomId}`,
+        document: ydoc,
+        token: sessionToken,
+        parameters: {
+          token: sessionToken,
+          userId,
           role: userRole,
         },
+      };
+
+      const provider = new HocuspocusProvider(providerOptions as ConstructorParameters<typeof HocuspocusProvider>[0]);
+
+      providerRef.current = provider;
+
+      // Connection state events
+      provider.on('status', (event: { status: string }) => {
+        setIsConnected(event.status === 'connected');
+        if (event.status === 'connected' || event.status === 'disconnected') {
+          setIsSyncing(false);
+        }
       });
-    }
+
+      provider.on('sync', (event: boolean) => {
+        setIsSyncing(!event);
+      });
+
+      // Awareness change — broadcast local state and notify parent
+      provider.on('awareness-change', () => {
+        if (provider.awareness) {
+          const states = provider.awareness.getStates();
+          onAwarenessChange?.(states as unknown as Map<number, Record<string, unknown>>);
+        }
+      });
+
+      // Document change — notify parent for auto-save triggers
+      ydoc.on('update', () => {
+        onChange?.(ydoc);
+      });
+
+      // Set initial local awareness state
+      if (provider.awareness) {
+        provider.awareness.setLocalState({
+          user: {
+            id: userId,
+            name: userName,
+            color: userColor,
+            role: userRole,
+          },
+        });
+      }
+    })();
 
     // Cleanup on unmount
     return () => {
-      provider.destroy();
-      ydoc.destroy();
+      const provider = providerRef.current;
+      if (provider) provider.destroy();
+      const ydoc = ydocRef.current;
+      if (ydoc) ydoc.destroy();
       ydocRef.current = null;
       providerRef.current = null;
       setIsConnected(false);

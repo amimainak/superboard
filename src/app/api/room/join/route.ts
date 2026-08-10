@@ -9,9 +9,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX (API-C01): Require authentication for room join.
+    // Previously unauthenticated — anyone could probe active rooms and enumerate students.
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
     const body = await request.json();
     const { roomId, studentEmail } = body;
 
@@ -84,13 +90,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Set startedAt on first participant join if not already set
-    if (!room.startedAt) {
-      await db.room.update({
-        where: { id: roomId },
-        data: { startedAt: new Date() },
-      });
-    }
+    // SECURITY FIX (API-M01): Atomic startedAt set using updateMany to prevent race condition
+    await db.room.updateMany({
+      where: { id: roomId, startedAt: null },
+      data: { startedAt: new Date() },
+    });
 
     // Use student name as the studentIdentity for the unique constraint
     const studentIdentity = student.id; // Use Student.id for reliable uniqueness

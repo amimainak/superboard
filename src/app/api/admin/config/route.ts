@@ -42,6 +42,11 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { maintenanceMode, announcementText } = body;
 
+    // SECURITY FIX (API-M04): Validate announcementText length
+    if (typeof announcementText === 'string' && announcementText.length > 5000) {
+      return NextResponse.json({ error: 'Announcement text too long (max 5000 chars)' }, { status: 400 });
+    }
+
     const updateData: any = {};
     if (maintenanceMode !== undefined) updateData.maintenanceMode = maintenanceMode;
     if (announcementText !== undefined) updateData.announcementText = announcementText || null;

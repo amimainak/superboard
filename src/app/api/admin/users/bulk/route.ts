@@ -25,6 +25,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'changeTier' && tier) {
+      // SECURITY FIX (API-H02): Validate tier value before bulk update
+      const VALID_TIERS = ['FREE', 'PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'] as const;
+      if (!VALID_TIERS.includes(tier as any)) {
+        return NextResponse.json({ error: 'Invalid tier value' }, { status: 400 });
+      }
       const result = await db.user.updateMany({
         where: { id: { in: userIds } },
         data: { tier },

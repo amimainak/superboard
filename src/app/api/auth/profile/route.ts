@@ -9,6 +9,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { isAgencyTier } from '@/types';
+import { z } from 'zod';
+
+// SECURITY FIX (API-M09): Zod schema validation for profile PATCH
+const updateProfileSchema = z.object({
+  brandingColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid hex color').max(7).optional().nullable(),
+  brandingLogoUrl: z.string().url('Invalid URL format').max(500).optional().nullable(),
+  name: z.string().max(200, 'Name too long (max 200 characters)').optional(),
+});
 
 export async function GET(request: NextRequest) {
   try {
@@ -126,7 +134,18 @@ export async function PATCH(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const { brandingColor, brandingLogoUrl, name } = body;
+
+    // SECURITY FIX (API-M09): Validate PATCH body with Zod schema
+    const parsed = updateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((i) => ({
+        field: i.path.join('.'),
+        message: i.message || 'Validation error',
+      }));
+      return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 });
+    }
+
+    const { brandingColor, brandingLogoUrl, name } = parsed.data;
 
     // Build update payload with only provided fields
     const updateData: Record<string, string | null> = {};

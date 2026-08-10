@@ -14,6 +14,7 @@
 
 import { Server } from '@hocuspocus/server';
 import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 import { onLoadDocument, onStoreDocument } from './persistence';
 import http from 'http';
@@ -21,6 +22,9 @@ import http from 'http';
 const PORT = parseInt(process.env.HOCUSPOCUS_PORT || '3001', 10);
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// SECURITY FIX (RT-C02): Prisma client for room membership verification
+const db = new PrismaClient();
 
 // Validate required environment variables
 if (!process.env.DATABASE_URL) {
@@ -39,8 +43,30 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const connectionAttempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_CONNECTIONS_PER_MINUTE = 30;
 
+// SECURITY FIX (RT-H01): Per-connection message rate limiting
+const messageCounts = new Map<string, { count: number; resetAt: number }>();
+const MAX_MESSAGES_PER_SECOND = 100;
+const MAX_DOCUMENT_SIZE = 10_000_000; // 10MB
+
 const server = Server.configure({
   port: PORT,
+  maxDocumentSize: MAX_DOCUMENT_SIZE,
+
+  // SECURITY FIX (RT-H01): Per-connection message rate limiting
+  async onBeforeHandleMessage({ context, connectionId }) {
+    const now = Date.now();
+    const entry = messageCounts.get(connectionId);
+    if (entry && now - entry.resetAt < 1000 && entry.count >= MAX_MESSAGES_PER_SECOND) {
+      console.warn(`[Hocuspocus] Rate limited connection ${connectionId}: ${entry.count} msgs/sec`);
+      return false; // Reject: rate exceeded
+    }
+    if (!entry || now - entry.resetAt >= 1000) {
+      messageCounts.set(connectionId, { count: 1, resetAt: now });
+    } else {
+      entry.count++;
+    }
+    return true;
+  },
 
   // Rate limiting on connections
   async onConnect({ documentName, context, connection }) {
@@ -95,31 +121,38 @@ const server = Server.configure({
       throw new Error('Token verification failed');
     }
 
-    // SECURITY: Verify room access — check that the room exists and is active
-    // NOTE: For production, uncomment the database check below and add a db import.
-    // This is left as a TODO because the Hocuspocus server runs as a mini-service
-    // that may not have direct Prisma access. Alternatives:
-    //   1. Import db from shared package
-    //   2. Call an internal API endpoint to verify room access
-    //   3. Pass room membership info in the JWT claims
-    //
-    // const room = await db.room.findUnique({ where: { id: roomId } });
-    // if (!room || !room.isActive) {
-    //   throw new Error('Room not found or inactive');
-    // }
-    //
-    // // Verify the user is either:
-    // //   - The room tutor (always has access)
-    // //   - A registered participant in the room
-    // //   - Has a valid share link token
-    // if (room.tutorId !== userId) {
-    //   const participant = await db.roomParticipant.findUnique({
-    //     where: { roomId_studentIdentity: { roomId, studentIdentity: userId } },
-    //   });
-    //   if (!participant) {
-    //     throw new Error('Access denied — you are not a participant in this room');
-    //   }
-    // }
+    // SECURITY FIX (RT-C02): Verify room access — check that the room exists,
+    // is active, and the user is either the tutor or a registered participant.
+    try {
+      const room = await db.room.findUnique({
+        where: { id: roomId },
+        select: { id: true, isActive: true, tutorId: true },
+      });
+      if (!room || !room.isActive) {
+        throw new Error('Room not found or inactive');
+      }
+
+      // Verify the user is either:
+      //   - The room tutor (always has access)
+      //   - A registered participant in the room
+      if (room.tutorId !== userId) {
+        const participant = await db.roomParticipant.findUnique({
+          where: { roomId_studentIdentity: { roomId, studentIdentity: userId } },
+        });
+        if (!participant) {
+          // Also check if user is agency owner of the tutor
+          const tutor = await db.user.findUnique({
+            where: { id: room.tutorId },
+            select: { parentAgencyId: true },
+          });
+          if (!tutor || tutor.parentAgencyId !== userId) {
+            throw new Error('Access denied — you are not a participant in this room');
+          }
+        }
+      }
+    } catch (accessErr) {
+      throw new Error(`Room access check failed: ${accessErr instanceof Error ? accessErr.message : 'Unknown error'}`);
+    }
 
     console.log(`[Hocuspocus] Authenticated connection to room: ${roomId} (userId: ${userId})`);
 

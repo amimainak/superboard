@@ -11,9 +11,33 @@ import { db } from '@/lib/db';
 
 type RouteContext = { params: Promise<{ token: string }> };
 
+// SECURITY FIX (API-C02/FE-M03): Brute-force protection for parent portal tokens
+const parentTokenAttempts = new Map<string, { count: number; lockoutUntil: number }>();
+const MAX_PARENT_TOKEN_ATTEMPTS = 5;
+const PARENT_TOKEN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const { token } = await context.params;
+
+    // SECURITY FIX (API-C02/FE-M03): Rate limit parent portal token lookups
+    if (token) {
+      const now = Date.now();
+      const entry = parentTokenAttempts.get(token);
+      if (entry && now < entry.lockoutUntil) {
+        return NextResponse.json(
+          { error: 'Too many failed attempts. Please try again later.' },
+          { status: 429 }
+        );
+      }
+      if (entry && entry.count >= MAX_PARENT_TOKEN_ATTEMPTS) {
+        parentTokenAttempts.set(token, { count: entry.count, lockoutUntil: now + PARENT_TOKEN_LOCKOUT_MS });
+        return NextResponse.json(
+          { error: 'Too many failed attempts. Please try again later.' },
+          { status: 429 }
+        );
+      }
+    }
 
     // Find the student by parent access token
     const student = await db.student.findUnique({
@@ -26,6 +50,17 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     });
 
     if (!student) {
+      // SECURITY: Track failed token attempt
+      const now = Date.now();
+      const entry = parentTokenAttempts.get(token);
+      if (entry) {
+        entry.count++;
+        if (entry.count >= MAX_PARENT_TOKEN_ATTEMPTS) {
+          entry.lockoutUntil = now + PARENT_TOKEN_LOCKOUT_MS;
+        }
+      } else {
+        parentTokenAttempts.set(token, { count: 1, lockoutUntil: 0 });
+      }
       return NextResponse.json({ error: 'Invalid or expired access token' }, { status: 404 });
     }
 

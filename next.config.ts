@@ -74,6 +74,11 @@ const nextConfig: NextConfig = {
             key: 'Cross-Origin-Resource-Policy',
             value: 'same-origin',
           },
+          // SECURITY FIX: Remove X-Powered-By header to avoid server fingerprinting
+          {
+            key: 'X-Powered-By',
+            value: '',
+          },
         ],
       },
       {

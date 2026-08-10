@@ -15,8 +15,9 @@ export async function GET(request: NextRequest) {
   if (adminCheck instanceof NextResponse) return adminCheck;
 
   const { searchParams } = new URL(request.url);
+  const MAX_LIMIT = 100;
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), MAX_LIMIT);
   const status = searchParams.get('status') || '';
 
   const where: any = {};
@@ -58,6 +59,22 @@ export async function PATCH(request: NextRequest) {
 
     if (!subscriptionId) {
       return NextResponse.json({ error: 'subscriptionId is required.' }, { status: 400 });
+    }
+
+    // SECURITY FIX (API-H08): Validate input fields
+    if (status !== undefined) {
+      const VALID_STATUSES = ['ACTIVE', 'PAST_DUE', 'CANCELLED', 'PAUSED', 'TRIALING'] as const;
+      if (!VALID_STATUSES.includes(status as any)) {
+        return NextResponse.json({ error: 'Invalid subscription status value' }, { status: 400 });
+      }
+    }
+    if (cancelAtPeriodEnd !== undefined && typeof cancelAtPeriodEnd !== 'boolean') {
+      return NextResponse.json({ error: 'cancelAtPeriodEnd must be a boolean' }, { status: 400 });
+    }
+    if (extendDays !== undefined) {
+      if (typeof extendDays !== 'number' || extendDays < 1 || extendDays > 730) {
+        return NextResponse.json({ error: 'extendDays must be a number between 1 and 730' }, { status: 400 });
+      }
     }
 
     const updateData: any = {};

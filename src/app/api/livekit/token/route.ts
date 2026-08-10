@@ -66,6 +66,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // SECURITY FIX (RT-C03): Fail loudly when LiveKit is not configured
+    if (!LIVEKIT_API_KEY || LIVEKIT_API_KEY.startsWith('TODO_') || !LIVEKIT_API_SECRET || !LIVEKIT_URL) {
+      return NextResponse.json(
+        { error: 'LiveKit not configured', message: 'Video conferencing is not available. Contact support.' },
+        { status: 503 }
+      );
+    }
+
+    // SECURITY FIX (RT-C04): Server-side tutor verification
+    // Do NOT trust client-supplied isTutor — look up from database
+    const isActuallyTutor = room.tutorId === auth.userId;
+
     // Generate real LiveKit token using server SDK
     let token: string;
     try {
@@ -77,15 +89,17 @@ export async function POST(request: NextRequest) {
       at.addGrant({
         roomJoin: true,
         room: roomId,
-        canPublish: isTutor !== false,
+        canPublish: isActuallyTutor,
         canSubscribe: true,
         canPublishData: true,
       });
       token = await at.toJwt();
     } catch (err) {
       console.error('[LiveKit Token] Failed to generate real token:', err);
-      // Fall back to placeholder if SDK fails (dev mode)
-      token = generatePlaceholderToken(userId, userName, roomId);
+      return NextResponse.json(
+        { error: 'Failed to generate video token' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -100,17 +114,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Placeholder token generator.
- * Used when LIVEKIT_API_KEY is not configured (dev mode).
- */
-function generatePlaceholderToken(userId: string, userName: string, roomId: string): string {
-  if (!LIVEKIT_API_KEY || LIVEKIT_API_KEY.startsWith('TODO_')) {
-    return `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${Buffer.from(JSON.stringify({ sub: userId, name: userName, room: roomId, iss: LIVEKIT_API_KEY, nbf: Math.floor(Date.now() / 1000), exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64')}.mock_signature`;
-  }
-
-  console.warn('[LiveKit] Using placeholder token. Configure LIVEKIT_API_KEY in .env.local');
-  return `mock_token_${roomId}_${userId}`;
 }

@@ -23,6 +23,25 @@ export async function PATCH(
     const body = await request.json();
     const { tier, name, isAdmin, status, gracePeriodDays } = body;
 
+    const VALID_TIERS = ['FREE', 'PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'] as const;
+    const VALID_STATUSES = ['ACTIVE', 'SUSPENDED'] as const;
+
+    // SECURITY FIX (API-H01): Validate input fields to prevent mass assignment
+    if (tier !== undefined && !VALID_TIERS.includes(tier as any)) {
+      return NextResponse.json({ error: 'Invalid tier value' }, { status: 400 });
+    }
+    if (status !== undefined && !VALID_STATUSES.includes(status as any)) {
+      return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
+    }
+    if (isAdmin !== undefined && typeof isAdmin !== 'boolean') {
+      return NextResponse.json({ error: 'isAdmin must be a boolean' }, { status: 400 });
+    }
+    if (gracePeriodDays !== undefined) {
+      if (typeof gracePeriodDays !== 'number' || gracePeriodDays < 1 || gracePeriodDays > 365) {
+        return NextResponse.json({ error: 'gracePeriodDays must be a number between 1 and 365' }, { status: 400 });
+      }
+    }
+
     const updateData: any = {};
     if (tier) updateData.tier = tier;
     if (name !== undefined) updateData.name = name;

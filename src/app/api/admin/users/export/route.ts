@@ -14,6 +14,8 @@ export async function GET(request: NextRequest) {
   if (adminCheck instanceof NextResponse) return adminCheck;
 
   const { searchParams } = new URL(request.url);
+  const MAX_LIMIT = 100;
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), MAX_LIMIT);
   const tier = searchParams.get('tier') || '';
   const status = searchParams.get('status') || '';
 
@@ -32,8 +34,6 @@ export async function GET(request: NextRequest) {
         tier: true,
         status: true,
         isAdmin: true,
-        stripeCustomerId: true,
-        parentAgencyId: true,
         createdAt: true,
         _count: { select: { rooms: true, templates: true, subTutors: true } },
       },

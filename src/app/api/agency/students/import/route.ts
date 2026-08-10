@@ -43,6 +43,12 @@ export async function POST(request: NextRequest) {
 
     // Parse CSV: each line is "email,name"
     const lines = csv.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+
+    // SECURITY FIX (API-M08): Limit import size to prevent abuse
+    if (lines.length > 500) {
+      return NextResponse.json({ error: 'Maximum 500 rows per import' }, { status: 400 });
+    }
+
     const results = { imported: 0, reactivated: 0, failed: 0, errors: [] as string[] };
 
     for (let i = 0; i < lines.length; i++) {

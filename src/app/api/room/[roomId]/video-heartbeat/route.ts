@@ -57,6 +57,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Room not found or inactive' }, { status: 404 });
     }
 
+    // SECURITY FIX (API-H06): Verify caller is room tutor or participant
+    if (room.tutorId !== auth.userId) {
+      const isParticipant = await db.roomParticipant.findUnique({
+        where: { roomId_studentIdentity: { roomId, studentIdentity: auth.userId } },
+      });
+      if (!isParticipant) {
+        return NextResponse.json({ error: 'Forbidden — you are not in this room' }, { status: 403 });
+      }
+    }
+
     // Check video limit against the tutor's account
     const tier = room.tutor.tier as Tier;
     const videoCheck = await checkVideoLimit(room.tutorId, tier);

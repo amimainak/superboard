@@ -48,9 +48,18 @@ export async function POST(request: NextRequest) {
         fingerprintHash,
         id: { not: userId },
       },
+      select: { id: true, updatedAt: true },
     });
 
     if (existingUser) {
+      // SECURITY FIX (API-M03): Only downgrade if the other user's fingerprint was set
+      // more than 1 minute ago, preventing race condition DoS attacks
+      const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+      if (existingUser.updatedAt && existingUser.updatedAt > oneMinuteAgo) {
+        // Too recent — skip downgrade to prevent race condition
+        return NextResponse.json({ fraudDetected: false });
+      }
+
       // FRAUD DETECTED: Downgrade this user to restricted tier
       await db.user.update({
         where: { id: userId },

@@ -53,7 +53,13 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const isOwner = note.tutorId === auth.userId;
     const isAgencyOwner = user.parentAgencyId === null &&
       (user.tier === 'AGENCY' || user.tier === 'AGENCY_STANDARD' || user.tier === 'AGENCY_PREMIUM');
-    const isSubTutor = user.parentAgencyId === note.room.tutorId;
+    // SECURITY FIX (API-M06): Fix sub-tutor access check — verify the room's tutor
+    // is a sub-tutor under the same agency as the caller
+    const tutorAgency = await db.user.findUnique({
+      where: { id: note.room.tutorId },
+      select: { parentAgencyId: true },
+    });
+    const isSubTutor = tutorAgency?.parentAgencyId === auth.userId;
 
     if (!isOwner && !isAgencyOwner && !isSubTutor) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });

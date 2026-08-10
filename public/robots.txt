@@ -12,3 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# SECURITY: Disallow access to sensitive/internal routes
+Disallow: /api/
+Disallow: /room/
+Disallow: /invite/
+Disallow: /dashboard
+Disallow: /parent/

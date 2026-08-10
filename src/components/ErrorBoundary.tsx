@@ -61,16 +61,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               An unexpected error occurred. This has been logged for review.
               Please try again or refresh the page.
             </p>
-            {this.state.error && (
-              <details className="text-left">
-                <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
-                  Technical details
-                </summary>
-                <pre className="mt-2 text-xs text-gray-400 bg-gray-50 rounded-lg p-3 overflow-auto max-h-40">
-                  {this.state.error.message}
-                </pre>
-              </details>
-            )}
             <Button
               onClick={this.handleReset}
               className="rounded-xl"

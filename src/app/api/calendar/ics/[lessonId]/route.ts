@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 function formatICSDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, '').replace(/\.[0-9]{3}/, '');
@@ -26,6 +27,11 @@ type RouteContext = { params: Promise<{ lessonId: string }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
+    // SECURITY FIX (API-C03): Require authentication for calendar ICS.
+    // Previously leaked student/tutor emails to anyone with a lesson UUID.
+    const auth = await requireAuth(_request);
+    if (auth instanceof NextResponse) return auth;
+
     const { lessonId } = await context.params;
 
     const lesson = await db.scheduledLesson.findUnique({
@@ -37,6 +43,29 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     if (!lesson) {
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
+    }
+
+    // SECURITY: Verify caller is the tutor or a registered participant
+    if (lesson.tutorId !== auth.userId) {
+      // Check if the caller's email matches the student email
+      const callerUser = await db.user.findUnique({
+        where: { id: auth.userId },
+        select: { email: true },
+      });
+      if (!callerUser || callerUser.email !== lesson.studentEmail) {
+        // Also check agency access
+        const caller = await db.user.findUnique({
+          where: { id: auth.userId },
+          select: { tier: true, parentAgencyId: true },
+        });
+        const isAgency = caller && (
+          ['AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(caller.tier || '')
+        );
+        const isSubTutorOfAgency = caller?.parentAgencyId === lesson.tutorId;
+        if (!isAgency || !isSubTutorOfAgency) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+      }
     }
 
     // Calculate end time

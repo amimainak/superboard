@@ -7,6 +7,7 @@
 
 import { Room as LiveKitRoom, RoomEvent, Track, RemoteParticipant, RemoteTrackPublication } from 'livekit-client';
 
+// NOTE: LIVEKIT_URL is needed client-side for LiveKit Room.connect() — this is expected.
 const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
 
 /**

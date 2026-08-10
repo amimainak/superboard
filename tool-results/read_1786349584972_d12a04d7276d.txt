@@ -1,0 +1,864 @@
+     1→Superboard Security Audit Report                                               CONFIDENTIAL
+     2→
+     3→
+     4→
+     5→
+     6→ WHITE-BOX SECURITY AUDIT
+     7→
+     8→
+     9→
+    10→ Superboard
+    11→ Real-Time Collaborative
+    12→ Whiteboard Platform
+    13→
+    14→ Comprehensive security assessment covering real-time state synchronization, role-based
+    15→ authorization, WebSocket isolation, WebRTC media pipelines, frontend attack surfaces,
+    16→ and infrastructure hardening across all system layers.
+    17→
+    18→
+    19→
+    20→
+    21→ Audit Date: August 10, 2026
+    22→ Classification: CONFIDENTIAL
+    23→ Audit Type: White-Box (Source Code Access)
+    24→
+    25→
+    26→
+    27→
+    28→                     CRITICAL                     10                10
+    29→
+    30→                     HIGH                         14                24
+    31→
+    32→                     MEDIUM                       18                42
+    33→
+    34→                     LOW                          10                52
+    35→
+    36→                     TOTAL                        52                52
+    37→
+    38→
+    39→
+    40→
+    41→                                                                                          Page 1
+    42→Superboard Security Audit Report                        CONFIDENTIAL
+    43→
+    44→
+    45→
+    46→
+    47→ Table 1: Vulnerability severity distribution summary
+    48→
+    49→
+    50→
+    51→
+    52→                                                               Page 2
+    53→Superboard Security Audit Report                                                                       CONFIDENTIAL
+    54→
+    55→
+    56→
+    57→
+    58→ Table of Contents
+    59→ 1. Executive Summary                                                                                              5
+    60→
+    61→
+    62→ 2. CVSS 3.1 Vulnerability Matrix                                                                                  6
+    63→
+    64→       2.1 Critical Findings (CVSS 8.1 - 9.8) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+    65→
+    66→       2.2 High Findings (CVSS 7.5 - 7.5) . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+    67→
+    68→       2.3 Medium Findings . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+    69→
+    70→
+    71→ 3. Architecture and State Bottleneck Analysis                                                                     8
+    72→
+    73→       3.1 Real-Time Engine Architecture . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+    74→
+    75→       3.2 WebSocket Authentication Gap . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+    76→
+    77→       3.3 WebRTC Media Pipeline . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+    78→
+    79→       3.4 Frontend Canvas Performance Concerns . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+    80→
+    81→
+    82→ 4. Code Remediation Patches                                                                                     10
+    83→
+    84→       4.1 RT-C01/RT-C02: Wire WebSocket Authentication and Room Isolation . . . . . . . . . . . . . . 10
+    85→
+    86→       4.2 RT-C03: Remove Forgeable Mock Token Fallback . . . . . . . . . . . . . . . . . . . . . . . . . 11
+    87→
+    88→       4.3 RT-C04: Server-Side Tutor Verification for LiveKit Tokens . . . . . . . . . . . . . . . . . . . . 11
+    89→
+    90→       4.4 API-C01: Add Authentication to Room Join . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+    91→
+    92→       4.5 FE-C01: Fix Content Security Policy . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+    93→
+    94→       4.6 FE-C02: Add Private IP Filtering to Webhook Dispatcher . . . . . . . . . . . . . . . . . . . . . 12
+    95→
+    96→       4.7 RT-H01: Add WebSocket Message Rate Limiting . . . . . . . . . . . . . . . . . . . . . . . . . . 12
+    97→
+    98→
+    99→ 5. Compliance, Recording and Data Privacy                                                                       13
+   100→
+   101→       5.1 COPPA and FERPA Considerations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+   102→
+   103→
+   104→
+   105→
+   106→                                                                                                                Page 3
+   107→Superboard Security Audit Report                                                                      CONFIDENTIAL
+   108→
+   109→
+   110→
+   111→
+   112→       5.2 Data Retention and Encryption . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+   113→
+   114→       5.3 Service Worker Privacy Concerns . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+   115→
+   116→
+   117→ 6. Infrastructure and SAST Review                                                                              13
+   118→
+   119→       6.1 Container Hardening . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+   120→
+   121→       6.2 Reverse Proxy and Security Headers . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+   122→
+   123→       6.3 Secret Management . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+   124→
+   125→
+   126→ 7. Verification and Re-Testing Plan                                                                            14
+   127→
+   128→       7.1 Verification Checklist . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+   129→
+   130→       7.2 Remediation Priority Timeline . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+   131→
+   132→
+   133→
+   134→
+   135→                                                                                                                Page 4
+   136→Superboard Security Audit Report                                                                             CONFIDENTIAL
+   137→
+   138→
+   139→
+   140→
+   141→ 1. Executive Summary
+   142→ This report presents the findings of a comprehensive white-box security audit conducted on the Superboard
+   143→ platform, a real-time collaborative whiteboard and virtual classroom application built with Next.js 16,
+   144→ Hocuspocus (Yjs/CRDT), LiveKit (WebRTC), Tldraw (vector canvas), Supabase (authentication and
+   145→ database), and Stripe (payment processing). The audit examined all source code repositories, API routes,
+   146→ WebSocket servers, infrastructure configurations, and frontend components across five distinct audit phases as
+   147→ defined in the White-Box Audit Master Plan.
+   148→
+   149→ The assessment identified a total of 52 security findings across all system layers: 10 Critical, 14 High, 18
+   150→ Medium, and 10 Low severity. The most severe vulnerabilities center on three primary attack surfaces: (1)
+   151→ missing or bypassable authentication on critical endpoints including WebSocket connections, room join
+   152→ operations, and parent portal access; (2) insufficient authorization enforcement allowing privilege escalation
+   153→ from student to tutor roles in both the real-time collaboration layer and the WebRTC media pipeline; and (3)
+   154→ weakened Content Security Policy that generates cryptographic nonces but fails to use them, leaving all inline
+   155→ script execution unrestricted.
+   156→
+   157→ The platform demonstrates evidence of prior security remediation efforts, with multiple SECURITY FIX
+   158→ annotations referencing specific vulnerability identifiers (V-06 through V-34, I-02 through I-05).
+   159→ Authentication enforcement on API routes is generally strong, with most endpoints correctly invoking
+   160→ requireAuth() or requireAdmin() helpers. The Prisma ORM provides strong SQL injection protection, Zod
+   161→ schemas validate most user inputs, and security headers including HSTS, X-Frame-Options, and
+   162→ X-Content-Type-Options            are   properly   configured.     However,      the     real-time   collaboration   layer
+   163→ (Hocuspocus/Yjs) and the WebRTC signaling pipeline contain fundamental authentication gaps that
+   164→ undermine the otherwise solid application-level security.
+   165→
+   166→ Immediate remediation of all 10 Critical findings is strongly recommended before any further production
+   167→ deployment. These vulnerabilities, if exploited, could allow unauthorized access to live tutoring sessions,
+   168→ exposure of student personally identifiable information (PII), forgery of video conferencing tokens, and
+   169→ server-side request forgery attacks against internal infrastructure. The estimated total remediation effort is
+   170→ approximately 3-4 developer-sprints, with Critical items addressable within the first sprint.
+   171→
+   172→
+   173→ Metric                                             Value
+   174→
+   175→ Total Files Audited                                185+ source files across all layers
+   176→
+   177→ API Routes Audited                                 65 endpoints
+   178→
+   179→ Critical Vulnerabilities                           10 (CVSS 8.1 - 9.8)
+   180→
+   181→ Attack Surface Layers                              WebSocket, WebRTC, REST API, Frontend, Infrastructure
+   182→
+   183→ Estimated Remediation                              3-4 developer sprints
+   184→
+   185→ Compliance Concerns                                COPPA, FERPA (student PII exposure)
+   186→ Table 2: Audit scope and key findings overview
+   187→
+   188→
+   189→
+   190→
+   191→                                                                                                                       Page 5
+   192→Superboard Security Audit Report                                                                                    CONFIDENTIAL
+   193→
+   194→
+   195→
+   196→
+   197→ 2. CVSS 3.1 Vulnerability Matrix
+   198→ The following tables present all identified vulnerabilities categorized by severity with CVSS 3.1 base scores,
+   199→ Common Weakness Enumeration (CWE) classifications, affected files, and concise impact descriptions. Each
+   200→ finding includes a unique identifier prefix indicating the audit phase of origin: RT (Real-Time), API
+   201→ (Application Programming Interface), FE (Frontend), and INF (Infrastructure). Steps to reproduce and
+   202→ detailed remediation guidance are provided in subsequent chapters of this report.
+   203→
+   204→
+   205→ 2.1 Critical Findings (CVSS 8.1 - 9.8)
+   206→ ID      Severity    CVSS Category           Summary                                                    File(s)
+   207→
+   208→ RT-C01CRITICAL 9.8          Auth Bypass     WebSocket authentication not wired to client -             useYjsProvider.ts,
+   209→                                             Hocuspocus onAuthenticate defined but no                   hocuspocus/index.ts
+   210→                                             token/params sent from frontend useYjsProvider
+   211→
+   212→ RT-C02CRITICAL 8.6          IDOR            Room isolation check entirely commented out in             hocuspocus/index.ts:99-1
+   213→                                             Hocuspocus onAuthenticate - any authenticated user can     22
+   214→                                             read/write any room CRDT document
+   215→
+   216→ RT-C03CRITICAL 9.1          Auth Bypass     LiveKit token generation falls back to forgeable mock      livekit/token/route.ts:8
+   217→                                             tokens with .mock_signature suffix when SDK fails          6-116
+   218→
+   219→
+   220→ RT-C04CRITICAL 8.1          Priv EscalationClient-sent isTutor field trusted server-side without       livekit/token/route.ts:8
+   221→                                            verification - students can grant themselves                0
+   222→                                            canPublish:true
+   223→
+   224→ API-C01CRITICAL 8.6         Missing Auth Unauthenticated room join endpoint allows probing             room/join/route.ts
+   225→                                          active rooms and enumerating agency student rosters
+   226→
+   227→ API-C02CRITICAL 8.2         Missing Auth Parent portal exposes student PII (schedule, homework,        parent/[token]/route.ts
+   228→                                          lesson notes) via URL-path token with no brute-force
+   229→                                          protection
+   230→
+   231→ API-C03CRITICAL 7.5         Info DisclosureCalendar ICS endpoint leaks student/tutor emails and        calendar/ics/[lessonId]/
+   232→                                            lesson details to anyone with a UUID lesson ID              route.ts
+   233→
+   234→
+   235→ FE-C01CRITICAL 8.6          XSS             CSP generates nonce but never uses it; unsafe-inline and   middleware.ts:167
+   236→                                             unsafe-eval in script-src defeats all XSS protection
+   237→
+   238→ FE-C02CRITICAL 8.6          SSRF            Webhook dispatcher fetches user-supplied URLs              webhook-dispatcher.ts:53
+   239→                                             without private IP filtering - AWS metadata and internal   -73
+   240→                                             services exposed
+   241→
+   242→ RT-C05CRITICAL 9.8          Auth Bypass     LiveKit webhook auth completely skipped when secret        livekit/webhook/route.ts
+   243→                                             starts with TODO_ or is empty; static Bearer token         :36-42
+   244→                                             comparison vulnerable to timing attacks
+   245→
+   246→ Table 3: All Critical severity findings with CVSS 3.1 scores
+   247→
+   248→
+   249→ 2.2 High Findings (CVSS 7.5 - 7.5)
+   250→ ID      Severity    CVSS Category           Summary                                                    File(s)
+   251→
+   252→ API-H01HIGH          7.5                Admin PATCH accepts unvalidated tier, isAdmin, status
+   253→                             Mass Assignment                                                            admin/users/[userId]/rou
+   254→                                         fields allowing arbitrary tier values and admin escalation     te.ts:24-33
+   255→
+   256→
+   257→ API-H02HIGH          7.5                Admin bulk tier change passes tier directly from request
+   258→                             Mass Assignment                                                            admin/users/bulk/route.t
+   259→                                         body to Prisma without enum validation                         s:27-30
+   260→
+   261→
+   262→
+   263→
+   264→                                                                                                                              Page 6
+   265→Superboard Security Audit Report                                                                                   CONFIDENTIAL
+   266→
+   267→
+   268→
+   269→
+   270→ ID      Severity    CVSS Category           Summary                                                   File(s)
+   271→
+   272→ API-H03HIGH          7.5                Admin user creation allows isAdmin=true with no
+   273→                             Mass Assignment                                                           admin/users/route.ts:98-
+   274→                                         validation on email format or tier values                     117
+   275→
+   276→
+   277→ API-H04HIGH          7.5    Injection       Admin rooms endpoint uses unvalidated sortBy              admin/rooms/route.ts:23-
+   278→                                             parameter directly as Prisma orderBy key                  40
+   279→
+   280→
+   281→ API-H05HIGH          7.5    DoS             Unbounded pagination limit parameter across all admin     admin/*.ts (multiple
+   282→                                             endpoints allows memory exhaustion                        files)
+   283→
+   284→
+   285→ API-H06HIGH          7.5    IDOR            Video heartbeat endpoint has no participant/tutor         room/[roomId]/video-hear
+   286→                                             verification - any user can inflate another tutor usage   tbeat/route.ts
+   287→
+   288→
+   289→ RT-H01HIGH           7.5    DoS             No per-connection WebSocket message rate limiting -       hocuspocus/index.ts
+   290→                                             single connection can flood CRDT sync channel
+   291→
+   292→ RT-H02HIGH           7.5    Weak Auth       LiveKit webhook uses static Bearer string comparison      livekit/webhook/route.ts
+   293→                                             with timing attack vulnerability and                      :36-42
+   294→                                             skip-when-unconfigured logic
+   295→
+   296→ FE-H01HIGH           7.5    XSS             CSP allows unsafe-inline and unsafe-eval in script-src,   middleware.ts:167
+   297→                                             completely defeating XSS protection mechanisms
+   298→
+   299→ FE-H02HIGH           7.5    XSS             SVG file uploads accepted without DOMPurify               FileAttachmentsBar.tsx:4
+   300→                                             sanitization - embedded script execution possible in      0,152,189
+   301→                                             inline SVG rendering paths
+   302→
+   303→ FE-H03HIGH           7.5    Token Storage Auth tokens stored in localStorage (not httpOnly            supabase.ts,
+   304→                                           cookies) - vulnerable to XSS-based token theft              auth-fetch.ts
+   305→
+   306→
+   307→ API-H07HIGH          7.5    Weak Auth       LiveKit token endpoint returns insecure mock tokens       livekit/token/route.ts:1
+   308→                                             with mock_signature when API key unconfigured             09-116
+   309→
+   310→
+   311→ API-H08HIGH          7.5    Validation      Admin subscription update accepts unvalidated status,     admin/subscriptions/rout
+   312→                                             unbounded extendDays, and non-boolean                     e.ts:64-73
+   313→                                             cancelAtPeriodEnd
+   314→
+   315→ API-H09HIGH          7.5    Info DisclosureAdmin user export CSV includes sensitive                   admin/users/export/route
+   316→                                            stripeCustomerId and parentAgencyId identifiers            .ts:28-37
+   317→
+   318→ Table 4: All High severity findings with CVSS 3.1 scores
+   319→
+   320→
+   321→ 2.3 Medium Findings
+   322→ ID      Severity    CVSS Category           Summary                                                   File(s)
+   323→
+   324→ API-M01
+   325→       MEDIUM         5.3    Race ConditionRoom join startedAt set without transaction - concurrent    room/join/route.ts:88-93
+   326→                                           joins cause inconsistent timestamps
+   327→
+   328→ API-M02
+   329→       MEDIUM         5.3    DoS             No CSV import size limit - agency student import          agency/students/import/r
+   330→                                             accepts unlimited rows with sequential DB inserts         oute.ts:45
+   331→
+   332→
+   333→ API-M03
+   334→       MEDIUM         5.3    Business LogicFingerprint anti-fraud allows denial-of-service by          usage/fingerprint/route.
+   335→                                           submitting another users hash to force tier downgrade       ts:54-58
+   336→
+   337→
+   338→ API-M04
+   339→       MEDIUM         5.3    Validation      Admin config accepts arbitrarily long                     admin/config/route.ts:47
+   340→                                             announcementText causing frontend rendering issues
+   341→
+   342→ API-M05
+   343→       MEDIUM         5.3    Validation      Multiple admin endpoints use unvalidated query            admin/*.ts (multiple
+   344→                                             parameters (tier, status, subject) directly in Prisma     files)
+   345→                                             where clauses
+   346→
+   347→ API-M06
+   348→       MEDIUM         5.3    Access Logic Lesson notes sub-tutor access check has logic bug -          lesson-notes/[roomId]/ro
+   349→                                          grants access to wrong rooms in multi-tutor agencies         ute.ts:56
+   350→
+   351→
+   352→
+   353→
+   354→                                                                                                                              Page 7
+   355→Superboard Security Audit Report                                                                                       CONFIDENTIAL
+   356→
+   357→
+   358→
+   359→
+   360→ ID      Severity    CVSS Category           Summary                                                     File(s)
+   361→
+   362→ API-M07
+   363→       MEDIUM         5.3    Race ConditionInvoice number generation has race condition -                invoices/route.ts:33-57
+   364→                                           concurrent requests can generate duplicate invoice
+   365→                                           numbers
+   366→
+   367→ API-M08
+   368→       MEDIUM         5.3    DoS             Agency analytics accepts unbounded date range causing       agency/analytics/route.t
+   369→                                             expensive aggregate queries on database                     s:36-41
+   370→
+   371→
+   372→ API-M09
+   373→       MEDIUM         5.3                Auth profile PATCH has no Zod schema validation -
+   374→                             Mass Assignment                                                             auth/profile/route.ts:12
+   375→                                         future fields could enable mass assignment                      8-141
+   376→
+   377→
+   378→ RT-M01MEDIUM         5.3    Data Loss       Snapshot-based CRDT sync causes concurrent edit             TldrawCanvas.tsx:92-123,
+   379→                                             overwrites - last writer wins on 500ms debounced saves      173-201
+   380→
+   381→
+   382→ RT-M02MEDIUM         6.5    DoS             No WebSocket payload size limit configured - large          hocuspocus/index.ts
+   383→                                             messages held in memory before persistence rejection
+   384→
+   385→ RT-M03MEDIUM         6.5    Info DisclosureRecording URLs exposed without signed access - may           room/[roomId]/recording/
+   386→                                            contain K-12 student video and voice data                    route.ts:234-248
+   387→
+   388→
+   389→ RT-M04MEDIUM         5.3    Hardening       Docker containers have no memory/CPU/PIDs resource          docker-compose.yml
+   390→                                             limits - resource exhaustion affects host
+   391→
+   392→ RT-M05MEDIUM         5.3    Network         Hocuspocus port 3001 directly exposed to host               docker-compose.yml:52
+   393→                                             bypassing Caddy TLS and security headers
+   394→
+   395→ FE-M01MEDIUM         5.3    CSRF            No CSRF tokens on any state-changing operations -           All POST/PATCH/DELETE
+   396→                                             implicit protection via Bearer tokens only                  routes
+   397→
+   398→
+   399→ FE-M02MEDIUM         5.3    Rate Limiting In-memory rate limiter ineffective in serverless              middleware.ts:72-114
+   400→                                           deployments - each request may spin up new isolate
+   401→
+   402→ FE-M03MEDIUM         5.3    Auth            Parent portal token has no brute-force protection, no       parent/[token]/route.ts
+   403→                                             rate limiting, no lockout mechanism
+   404→
+   405→ FE-M04MEDIUM         5.3    Cache           Service worker caches authenticated pages using             sw.js:20-38
+   406→                                             stale-while-revalidate - user-to-user info leak on shared
+   407→                                             devices
+   408→
+   409→ Table 5: All Medium severity findings
+   410→
+   411→
+   412→
+   413→
+   414→ 3. Architecture and State Bottleneck Analysis
+   415→ 3.1 Real-Time Engine Architecture
+   416→ The Superboard real-time collaboration engine is built on a three-layer architecture: Tldraw provides the
+   417→ vector canvas rendering on the frontend, Hocuspocus serves as the WebSocket server managing Yjs document
+   418→ synchronization, and PostgreSQL (via Prisma) persists document snapshots. The system uses a snapshot-based
+   419→ synchronization approach rather than fine-grained operational transformation, which introduces specific
+   420→ latency and consistency characteristics that were analyzed during this audit.
+   421→
+   422→ The most significant architectural bottleneck identified is the snapshot-based sync mechanism in
+   423→ TldrawCanvas.tsx. Rather than using the official @tldraw/yjs binding that integrates Tldraw's store directly
+   424→ with Yjs shared types at the individual operation level, the current implementation serializes the entire editor
+   425→ state to JSON on each change with a 500ms debounce interval. This creates a last-writer-wins race condition
+   426→
+   427→
+   428→
+   429→
+   430→                                                                                                                                Page 8
+   431→Superboard Security Audit Report                                                                   CONFIDENTIAL
+   432→
+   433→
+   434→
+   435→
+   436→ where concurrent edits from multiple users result in data loss. When two users draw simultaneously, the last
+   437→ snapshot to arrive overwrites the other user's changes within the debounce window. This fundamentally
+   438→ undermines the collaborative editing experience and represents a data integrity risk in production tutoring
+   439→ sessions.
+   440→
+   441→ The Hocuspocus server is configured with IP-based connection rate limiting (30 connections per minute) but
+   442→ lacks per-connection message rate limiting, payload size limits (maxDocumentSize is not set), and the room
+   443→ membership verification is entirely commented out. The persistence layer implements a 5MB size check on
+   444→ document snapshots but this only triggers during store operations, not on inbound WebSocket messages,
+   445→ meaning oversized payloads can accumulate in server memory before being rejected.
+   446→
+   447→
+   448→ 3.2 WebSocket Authentication Gap
+   449→ The Hocuspocus server defines an onAuthenticate hook that validates Supabase JWT tokens and extracts the
+   450→ userId from the connection context. However, the client-side useYjsProvider hook creates the
+   451→ HocuspocusProvider with zero authentication parameters - no token, no parameters, and no WebSocket
+   452→ subprotocol authentication headers are passed. This means the WebSocket connection either fails silently (if
+   453→ onAuthenticate is strictly enforced by Hocuspocus v4) or, more critically, proceeds without any authentication
+   454→ if the hook is lenient. The room membership check within onAuthenticate is entirely commented out with a
+   455→ TODO note, meaning even if authentication were properly wired, any authenticated user could connect to any
+   456→ room's CRDT document.
+   457→
+   458→ This represents a fundamental security gap in the real-time collaboration layer. An unauthenticated or
+   459→ cross-tenant attacker connecting to the WebSocket can read the full whiteboard state (all drawings, text
+   460→ annotations, page content) and inject arbitrary data into the document. For a tutoring platform handling student
+   461→ work and lesson content, this is a severe confidentiality and integrity violation. The remediation requires
+   462→ wiring the Supabase session token from the client to the Hocuspocus connection parameters and
+   463→ uncommenting and implementing the room membership verification logic.
+   464→
+   465→
+   466→ 3.3 WebRTC Media Pipeline
+   467→ The LiveKit integration for video conferencing has two critical security weaknesses. First, the token
+   468→ generation endpoint trusts the client-supplied isTutor field without server-side verification against the
+   469→ database. When isTutor is undefined (the default when a student omits it), the expression canPublish: isTutor
+   470→ !== false evaluates to true, granting the student full media publishing permissions including camera,
+   471→ microphone, and screen sharing. Second, when the LiveKit SDK throws an error or the API key is not
+   472→ configured, the endpoint falls back to generating mock tokens with a trivially forgeable .mock_signature suffix
+   473→ or a mock_token_{roomId}_{userId} string pattern.
+   474→
+   475→ The LiveKit webhook endpoint, which receives recording status updates, uses a static Bearer token comparison
+   476→ that is vulnerable to timing side-channel attacks. More critically, the authentication check is completely
+   477→ skipped when the LIVEKIT_WEBHOOK_SECRET environment variable starts with "TODO_" or is empty.
+   478→ In a production environment, this would allow any attacker to send fake recording events to manipulate
+   479→ recording statuses or trigger unauthorized recording state changes.
+   480→
+   481→
+   482→
+   483→
+   484→                                                                                                             Page 9
+   485→Superboard Security Audit Report                                                                  CONFIDENTIAL
+   486→
+   487→
+   488→
+   489→
+   490→ 3.4 Frontend Canvas Performance Concerns
+   491→ The TldrawCanvas component implements canvas rendering using the Tldraw library which handles vector
+   492→ path rendering, object management, and viewport transformations. The snapshot-based sync approach means
+   493→ every 500ms, the entire canvas state is serialized and transmitted as a single JSON payload. For a 90-minute
+   494→ tutoring session generating tens of thousands of vector paths, this creates substantial memory pressure on both
+   495→ the client and server. The persistence layer stores these snapshots as Text fields in PostgreSQL with a 5MB
+   496→ constraint, but there is no client-side mechanism to prune deleted objects from memory or to implement
+   497→ incremental state compression.
+   498→
+   499→ Input event throttling analysis shows that pointermove and touchmove events are processed at browser native
+   500→ frequency (typically 60-120Hz) before being debounced by the 500ms sync interval. While Tldraw handles its
+   501→ own rendering pipeline efficiently, the lack of intermediate point simplification (e.g., Douglas-Peucker
+   502→ algorithm) before JSON serialization means raw coordinate data is transmitted in full, increasing WebSocket
+   503→ bandwidth consumption. The combination of no client-side path simplification, snapshot-based sync, and lack
+   504→ of memory management creates a performance degradation risk for long-duration sessions on lower-end
+   505→ devices.
+   506→
+   507→
+   508→
+   509→
+   510→ 4. Code Remediation Patches
+   511→ This chapter provides exact code-level remediation recommendations for all Critical and High severity
+   512→ findings. Each patch includes the specific file path, line numbers, current vulnerable code, and the
+   513→ recommended replacement code. Patches are designed to be minimal and surgical to reduce regression risk
+   514→ during implementation.
+   515→
+   516→
+   517→ 4.1 RT-C01/RT-C02: Wire WebSocket Authentication and Room
+   518→ Isolation
+   519→ The client-side useYjsProvider must pass Supabase session credentials to the Hocuspocus connection, and the
+   520→ server-side room membership check must be uncommented and implemented with proper database access.
+   521→
+   522→ File: src/hooks/useYjsProvider.ts (lines 72-78)
+   523→ Current: providerOptions contains only url, name, document
+   524→ Fix: Add token and parameters to providerOptions:
+   525→
+   526→   const providerOptions = {
+   527→     url: wsUrl,
+   528→     name: `room-${roomId}`,
+   529→     document: ydoc,
+   530→     token: session?.access_token,
+   531→     parameters: {
+   532→       token: session?.access_token,
+   533→       userId: userId,
+   534→       role: userRole,
+   535→     }
+   536→   };
+   537→
+   538→
+   539→
+   540→
+   541→                                                                                                           Page 10
+   542→Superboard Security Audit Report                                                                CONFIDENTIAL
+   543→
+   544→
+   545→
+   546→
+   547→ File: mini-services/hocuspocus-server/index.ts (lines 99-122)
+   548→ Fix: Uncomment and implement room membership verification using a shared database module or internal
+   549→ HTTP call to verify the user is the room tutor or a registered participant.
+   550→
+   551→
+   552→ 4.2 RT-C03: Remove Forgeable Mock Token Fallback
+   553→ File: src/app/api/livekit/token/route.ts (lines 86-116)
+   554→ Fix: Remove the entire generatePlaceholderToken function and its invocation. Replace the catch block with a
+   555→ proper error response:
+   556→
+   557→   // At the top of the handler, add:
+   558→   if (!LIVEKIT_API_KEY || LIVEKIT_API_KEY.startsWith('TODO_') || !LIVEKIT_API_SECRET)
+   559→   {
+   560→     return NextResponse.json(
+   561→       { error: 'LiveKit not configured' },
+   562→       { status: 503 }
+   563→     );
+   564→   }
+   565→   // Remove: token = generatePlaceholderToken(...)
+   566→   // Remove: function generatePlaceholderToken(...)
+   567→
+   568→
+   569→ 4.3 RT-C04: Server-Side Tutor Verification for LiveKit Tokens
+   570→ File: src/app/api/livekit/token/route.ts (line 80)
+   571→ Fix: Replace client-sent isTutor with server-side database lookup:
+   572→
+   573→   // BEFORE: canPublish: isTutor !== false (client-controlled!)
+   574→
+   575→   // AFTER: Query the room and verify server-side
+   576→   const room = await db.room.findUnique({
+   577→     where: { id: roomId },
+   578→     select: { tutorId: true }
+   579→   });
+   580→   const isActuallyTutor = room?.tutorId === auth.userId;
+   581→
+   582→   at.addGrant({
+   583→     roomJoin: true,
+   584→     room: roomId,
+   585→     canPublish: isActuallyTutor,
+   586→     canSubscribe: true,
+   587→     canPublishData: true,
+   588→   });
+   589→
+   590→
+   591→ 4.4 API-C01: Add Authentication to Room Join
+   592→ File: src/app/api/room/join/route.ts (line 13)
+   593→ Fix: Add requireAuth() and verify the caller's session email matches the studentEmail in the body. Add
+   594→ specific rate limiting for the join endpoint (10 joins/minute per IP).
+   595→
+   596→
+   597→ 4.5 FE-C01: Fix Content Security Policy
+   598→
+   599→
+   600→
+   601→
+   602→                                                                                                          Page 11
+   603→Superboard Security Audit Report                                                                 CONFIDENTIAL
+   604→
+   605→
+   606→
+   607→
+   608→ File: src/middleware.ts (line 167)
+   609→ Fix: Replace unsafe-inline and unsafe-eval with the generated nonce. The nonce must be injected into all
+   610→ script tags via the layout component:
+   611→
+   612→   // Change script-src from:
+   613→   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com
+   614→
+   615→   // To:
+   616→   script-src 'self' 'nonce-${nonce}' https://js.stripe.com
+   617→
+   618→   // Note: Some dependencies (Tldraw, LiveKit) may require eval().
+   619→   // Test thoroughly after removing unsafe-eval. If required,
+   620→   // restrict eval() to specific script hashes only.
+   621→
+   622→
+   623→ 4.6 FE-C02: Add Private IP Filtering to Webhook Dispatcher
+   624→ File: src/lib/webhook-dispatcher.ts (lines 53-73)
+   625→ Fix: Before fetching, resolve the hostname and reject private/reserved IP ranges:
+   626→
+   627→   import { lookup } from 'node:dns/promises';
+   628→   import net from 'node:net';
+   629→
+   630→   function isPrivateIP(ip: string): boolean {
+   631→     const parts = ip.split('.').map(Number);
+   632→     if (parts[0] === 10) return true;
+   633→     if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+   634→     if (parts[0] === 192 && parts[1] === 168) return true;
+   635→     if (parts[0] === 127) return true;
+   636→     if (parts[0] === 169 && parts[1] === 254) return true;
+   637→     return false;
+   638→   }
+   639→
+   640→
+   641→ 4.7 RT-H01: Add WebSocket Message Rate Limiting
+   642→ File: mini-services/hocuspocus-server/index.ts
+   643→ Fix: Configure Hocuspocus onBeforeHandleMessage to implement per-connection rate limiting:
+   644→
+   645→   const messageCounts = new Map();
+   646→
+   647→   onBeforeHandleMessage({ context, connectionId }) {
+   648→     const now = Date.now();
+   649→     const entry = messageCounts.get(connectionId);
+   650→     if (entry && now - entry.resetAt < 1000 && entry.count >= 100) {
+   651→       return false; // Reject: 100 msgs/sec exceeded
+   652→     }
+   653→     messageCounts.set(connectionId, {
+   654→       count: (entry?.count || 0) + 1,
+   655→       resetAt: entry?.resetAt || now
+   656→     });
+   657→   },
+   658→   maxDocumentSize: 10_000_000, // 10MB limit
+   659→
+   660→
+   661→
+   662→
+   663→                                                                                                            Page 12
+   664→Superboard Security Audit Report                                                                 CONFIDENTIAL
+   665→
+   666→
+   667→
+   668→
+   669→ 5. Compliance, Recording and Data Privacy
+   670→ 5.1 COPPA and FERPA Considerations
+   671→ The Superboard platform processes educational data from K-12 students, placing it squarely within the scope
+   672→ of the Children's Online Privacy Protection Act (COPPA) and the Family Educational Rights and Privacy Act
+   673→ (FERPA). Several identified vulnerabilities directly impact compliance with these regulations. The
+   674→ unauthenticated room join endpoint (API-C01) can expose student names, emails, and enrollment status to
+   675→ unauthorized parties. The parent portal (API-C02), while designed for legitimate parental access, lacks
+   676→ brute-force protection on its URL-path tokens, potentially allowing unauthorized access to student homework,
+   677→ lesson notes, schedule information, and tutor contact details.
+   678→
+   679→ Recording URLs (RT-M03) are served without signed access controls, meaning anyone with the URL can
+   680→ download video recordings of tutoring sessions. These recordings contain video and voice data of minor
+   681→ students, which constitutes protected educational records under FERPA. The calendar ICS endpoint
+   682→ (API-C03) exposes student and tutor email addresses to anyone with a lesson UUID, constituting a personally
+   683→ identifiable information disclosure. Under COPPA, the platform must obtain verifiable parental consent
+   684→ before collecting personal information from children under 13, and the current authentication gaps could allow
+   685→ data collection without proper consent verification.
+   686→
+   687→
+   688→ 5.2 Data Retention and Encryption
+   689→ The platform stores board page snapshots as Text fields in PostgreSQL with a 5MB constraint. Recordings are
+   690→ stored via LiveKit Egress, with URLs persisted in the Recording model. There is no evidence of
+   691→ encryption-at-rest configuration for PostgreSQL data, and recording storage encryption depends on the
+   692→ underlying LiveKit Egress configuration. The database schema does not include automatic data retention
+   693→ policies or TTL mechanisms for usage logs, recordings, or session data. For COPPA/FERPA compliance, the
+   694→ platform should implement automatic data retention limits with configurable expiry periods for student-related
+   695→ data, ensure all recordings are encrypted at rest using AES-256, and serve recording URLs via signed, expiring
+   696→ URLs rather than direct storage links.
+   697→
+   698→
+   699→ 5.3 Service Worker Privacy Concerns
+   700→ The service worker (sw.js) implements a stale-while-revalidate caching strategy for all non-API GET requests.
+   701→ This means authenticated pages including the dashboard, room views, and admin panel are cached in the
+   702→ browser and can be served to subsequent users of the same device. On shared devices (common in school
+   703→ computer labs and library settings), this creates a user-to-user information leak where Student B may see
+   704→ Student A's dashboard content including name, email, tier, room list, and usage data before the revalidation
+   705→ request completes. The service worker should skip caching for authenticated routes and clear all cached
+   706→ content on logout.
+   707→
+   708→
+   709→
+   710→
+   711→ 6. Infrastructure and SAST Review
+   712→
+   713→                                                                                                          Page 13
+   714→Superboard Security Audit Report                                                                     CONFIDENTIAL
+   715→
+   716→
+   717→
+   718→
+   719→ 6.1 Container Hardening
+   720→ The docker-compose.yml defines three services: app (Next.js), hocuspocus (WebSocket server), and caddy
+   721→ (reverse proxy). None of these containers define memory limits, CPU limits, PIDs limits, or deploy.resources
+   722→ constraints. In a production environment, a resource exhaustion attack targeting any single service could
+   723→ consume all available host resources, affecting other containers and potentially the host system itself. The
+   724→ Hocuspocus port (3001) is directly exposed to the host network via port mapping, bypassing Caddy's TLS
+   725→ termination and security headers.
+   726→
+   727→ Recommended hardening measures include adding resource limits to all containers (e.g., 2 CPU cores and
+   728→ 2GB memory for the app container, 1 CPU core and 1GB for Hocuspocus), removing the direct port mapping
+   729→ for Hocuspocus in favor of internal Docker network communication only accessible via the Caddy reverse
+   730→ proxy, and ensuring all containers run with non-root user privileges. The Dockerfile should be audited to
+   731→ confirm USER directives are present and no privileged operations are performed during the build process.
+   732→
+   733→
+   734→ 6.2 Reverse Proxy and Security Headers
+   735→ The Caddy reverse proxy handles TLS termination and forwards requests to the Next.js application. The
+   736→ Next.js middleware generates comprehensive security headers including HSTS with 2-year max-age,
+   737→ includeSubDomains, and preload directives. X-Frame-Options is set to DENY, X-Content-Type-Options to
+   738→ nosniff, Referrer-Policy to strict-origin-when-cross-origin, and Cross-Origin-Opener-Policy to same-origin.
+   739→ API routes receive a stricter CSP: default-src none with frame-ancestors none. However, the page-level CSP
+   740→ contains unsafe-inline and unsafe-eval in the script-src directive, which undermines the otherwise
+   741→ well-configured security header posture.
+   742→
+   743→ The in-memory rate limiting implemented in the middleware is effective for single-server deployments but
+   744→ becomes ineffective in serverless environments (Vercel Edge Functions) or horizontal scaling scenarios where
+   745→ each instance maintains independent rate limit state. The codebase includes a TODO comment noting that
+   746→ production should use Redis-backed rate limiting (Upstash), but this has not been implemented. The IP
+   747→ extraction logic correctly prioritizes X-Real-IP over X-Forwarded-For and validates against a trusted proxy
+   748→ range,      but     falls    back   to   trusting   X-Forwarded-For      without    proxy     validation    when
+   749→ TRUSTED_PROXY_RANGE is not configured.
+   750→
+   751→
+   752→ 6.3 Secret Management
+   753→ Environment secrets are accessed via process.env variables throughout the codebase, which is the correct
+   754→ approach for Next.js applications. The .env file is properly listed in .gitignore, and the committed .env contains
+   755→ only a local SQLite database path. The Stripe integration correctly validates that secret keys are not set to
+   756→ TODO placeholder values before use. However, the LiveKit integration contains multiple code paths that
+   757→ silently degrade or skip authentication when secrets are not properly configured, which is a dangerous pattern
+   758→ that can mask configuration errors as security vulnerabilities in production deployments.
+   759→
+   760→
+   761→
+   762→
+   763→ 7. Verification and Re-Testing Plan
+   764→
+   765→                                                                                                             Page 14
+   766→Superboard Security Audit Report                                                                                              CONFIDENTIAL
+   767→
+   768→
+   769→
+   770→
+   771→ This chapter defines the verification methodology and pass criteria for confirming that all reported
+   772→ vulnerabilities have been remediated. The verification process consists of three phases: automated regression
+   773→ testing, manual penetration testing, and compliance validation. Each Critical and High finding must be
+   774→ individually verified and signed off before the platform can be certified as remediated.
+   775→
+   776→
+   777→ 7.1 Verification Checklist
+   778→      Phase         Finding ID      Verification Method                        Pass Criteria                                 Owner
+   779→
+   780→      1             RT-C01/C02      WebSocket connection test without token; cross-room
+   781→                                                                              Connectionconnect
+   782→                                                                                         rejectedtest
+   783→                                                                                                   with 401; cross-room accessBackend
+   784→                                                                                                                               returns 403
+   785→
+   786→      1             RT-C03          Force SDK failure and verify no mock token
+   787→                                                                             Endpoint
+   788→                                                                               returnedreturns 503 with error message        Backend
+   789→
+   790→      1             RT-C04          Send isTutor=true as student; verify token permissions
+   791→                                                                                Token has canPublish:false for non-tutors    Backend
+   792→
+   793→      1             RT-C05          Send webhook with no auth header; with timing
+   794→                                                                             Requests
+   795→                                                                                  attack
+   796→                                                                                       rejected with 401; constant-time comparison
+   797→                                                                                                                            Backendused
+   798→
+   799→      1             API-C01         POST to /api/room/join without auth headerReturns 401 Unauthorized                       Backend
+   800→
+   801→      1             API-C02         Brute-force parent portal with 1000 randomRate
+   802→                                                                               tokens
+   803→                                                                                   limited after 5 attempts; no data returned Backend
+   804→
+   805→      1             API-C03         GET calendar ICS with valid lesson UUID and
+   806→                                                                            Returns
+   807→                                                                                no auth
+   808→                                                                                    401 or 403                               Backend
+   809→
+   810→      1             FE-C01/CSP      XSS payload injected via any vector        Script blocked by CSP nonce enforcement       Frontend
+   811→
+   812→      1             FE-C02          Register webhook pointing to 169.254.169.254
+   813→                                                                             URL rejected as private/internal IP             Backend
+   814→
+   815→      2             API-H01-H05     Admin bulk operations with invalid tiers, huge
+   816→                                                                               Input
+   817→                                                                                   limits
+   818→                                                                                     validation errors returned              Backend
+   819→
+   820→      2             RT-H01          Flood WebSocket with 1000 msgs/sec for 60
+   821→                                                                            Connection
+   822→                                                                              seconds throttled after 100 msgs/sec           Backend
+   823→
+   824→      2             FE-H02          Upload SVG with script tags and foreignObject
+   825→                                                                             SVG sanitized or converted to PNG               Frontend
+   826→
+   827→      3             All Medium      Regression test suite execution            All automated tests pass                      QA
+   828→
+   829→      3             COPPA/FERPA Data retention and encryption audit            Signed URLs on recordings; auto-expiry on student
+   830→                                                                                                                             Compliance
+   831→                                                                                                                                 data
+   832→
+   833→ Table 6: Verification checklist with pass criteria and ownership
+   834→
+   835→
+   836→ 7.2 Remediation Priority Timeline
+   837→  Priority              Timeline                Scope                        Findings                                          Effort
+   838→
+   839→  P0 - Immediate        Sprint 1 (Week 1)       Critical auth gaps           RT-C01 through RT-C05, API-C01 through C03, 2FE-C01,
+   840→                                                                                                                           engineers
+   841→                                                                                                                                  FE-C02
+   842→
+   843→  P1 - Urgent           Sprint 2 (Week 2)       Admin validation, role checks,
+   844→                                                                          API-H01
+   845→                                                                               rate limiting
+   846→                                                                                      through H09, RT-H01, RT-H02              2 engineers
+   847→
+   848→  P2 - Short-term       Sprint 3-4 (Month 1)    Frontend hardening, infrastructure
+   849→                                                                           FE-H01 through H03, FE-M01 through M04, RT-M01
+   850→                                                                                                                      1-2 engineers
+   851→                                                                                                                            through M05
+   852→
+   853→  P3 - Backlog          Month 2+                Medium/Low findings, compliance
+   854→                                                                        All remaining
+   855→                                                                                hardening
+   856→                                                                                      Medium and Low findings                  1 engineer
+   857→
+   858→ Table 7: Remediation priority timeline with effort estimates
+   859→
+   860→
+   861→
+   862→
+   863→                                                                                                                                          Page 15
+   864→

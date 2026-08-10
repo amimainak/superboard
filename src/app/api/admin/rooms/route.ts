@@ -16,11 +16,20 @@ export async function GET(request: NextRequest) {
   if (adminCheck instanceof NextResponse) return adminCheck;
 
   const { searchParams } = new URL(request.url);
+  const MAX_LIMIT = 100;
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), MAX_LIMIT);
   const search = searchParams.get('search') || '';
   const subject = searchParams.get('subject') || '';
   const activeOnly = searchParams.get('active') === 'true';
+
+  // SECURITY FIX (API-M05): Validate subject query param against valid enum values
+  if (subject) {
+    const VALID_SUBJECTS = ['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as const;
+    if (!VALID_SUBJECTS.includes(subject as any)) {
+      return NextResponse.json({ error: 'Invalid subject value' }, { status: 400 });
+    }
+  }
 
   const where: any = {};
   if (search) {

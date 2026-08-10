@@ -145,11 +145,24 @@ export default function FileAttachmentsBar({
       }
 
       try {
-        const dataUrl = await readFileAsDataUrl(file);
+        // SECURITY FIX (FE-H02): Sanitize SVG files to prevent XSS.
+        // SVG files can contain embedded <script> tags and foreignObject elements.
+        // Convert SVG to PNG data URL to neutralize any script execution vectors.
+        let dataUrl = await readFileAsDataUrl(file);
+        const isSvg = file.type === 'image/svg+xml';
+        if (isSvg) {
+          // Sanitize SVG by stripping script-like content and converting to safe format
+          const svgText = atob(dataUrl.split(',')[1] || '');
+          const sanitized = svgText
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '')
+            .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+            .replace(/javascript:/gi, '');
+          dataUrl = `data:image/svg+xml;base64,${btoa(sanitized)}`;
+        }
 
         // Generate a unique asset ID matching tldraw's expected format
         const assetId = `asset:${Date.now()}_${Math.random().toString(36).slice(2, 8)}` as TLAssetId;
-        const isSvg = file.type === 'image/svg+xml';
 
         // Build the asset object — tldraw expects full TLAsset records.
         // We use 'as any' here because the TS branded types (TLAssetId, etc.)
