@@ -5,16 +5,78 @@
 // DELETE: Stop an active recording.
 // GET:  List recordings for a room.
 // REQUIRES auth. Only the room tutor can start/stop recordings.
+//
+// SECURITY FIX (RT-M03): Recording URLs are now served as
+// signed, expiring URLs instead of direct storage links.
+// Uses HMAC-SHA256 signature with configurable expiry (default 1h).
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRecordingLimit, incrementRecordings } from '@/lib/usage';
+import crypto from 'crypto';
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || '';
 const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || '';
 const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
+
+// SECURITY FIX (RT-M03): Signing secret for recording URL tokens
+const RECORDING_SIGN_SECRET = process.env.RECORDING_URL_SIGN_SECRET || crypto.randomBytes(32).toString('hex');
+const RECORDING_URL_EXPIRY_MS = parseInt(process.env.RECORDING_URL_EXPIRY_MS || '3600000', 10); // 1 hour default
+
+/**
+ * SECURITY FIX (RT-M03): Generate a signed, expiring URL for a recording.
+ * Format: {baseUrl}/api/room/{roomId}/recording/{recordingId}/download?token={signature}&expires={timestamp}
+ * The signature covers: recordingId + expires + roomId + secret
+ * This prevents unauthorized access to recordings containing student video/voice data (FERPA/COPPA).
+ */
+function signRecordingUrl(recordingId: string, roomId: string): string {
+  const expires = Date.now() + RECORDING_URL_EXPIRY_MS;
+  const payload = `${recordingId}:${roomId}:${expires}`;
+
+  const signature = crypto
+    .createHmac('sha256', RECORDING_SIGN_SECRET)
+    .update(payload)
+    .digest('base64url');
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+  return `${baseUrl}/api/room/${roomId}/recording/${recordingId}/download?token=${signature}&expires=${expires}`;
+}
+
+/**
+ * Verify a signed recording URL token.
+ * Returns true if the signature is valid and the token has not expired.
+ */
+export function verifyRecordingToken(
+  recordingId: string,
+  roomId: string,
+  token: string,
+  expires: string
+): boolean {
+  // Check expiry first (fast path)
+  const expiresNum = parseInt(expires, 10);
+  if (isNaN(expiresNum) || Date.now() > expiresNum) {
+    return false;
+  }
+
+  // Verify HMAC signature
+  const payload = `${recordingId}:${roomId}:${expiresNum}`;
+  const expected = crypto
+    .createHmac('sha256', RECORDING_SIGN_SECRET)
+    .update(payload)
+    .digest('base64url');
+
+  // Constant-time comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(token, 'base64url'),
+      Buffer.from(expected, 'base64url')
+    );
+  } catch {
+    return false;
+  }
+}
 
 // POST: Start Recording
 export async function POST(
@@ -245,7 +307,21 @@ export async function GET(
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ recordings });
+    // SECURITY FIX (RT-M03): Replace direct URLs with signed, expiring URLs
+    // Recordings contain student video/voice data (FERPA/COPPA protected).
+    // Direct URLs would allow anyone with the link to download indefinitely.
+    const recordingsWithSignedUrls = recordings.map((rec) => {
+      if (rec.url && rec.status === 'STOPPED') {
+        return {
+          ...rec,
+          url: signRecordingUrl(rec.id, roomId),
+          urlExpiresAt: new Date(Date.now() + RECORDING_URL_EXPIRY_MS).toISOString(),
+        };
+      }
+      return { ...rec, url: null, urlExpiresAt: null };
+    });
+
+    return NextResponse.json({ recordings: recordingsWithSignedUrls });
   } catch (error) {
     console.error('[Recording List] Error:', error);
     return NextResponse.json(

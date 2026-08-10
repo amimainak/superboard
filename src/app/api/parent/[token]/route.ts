@@ -4,39 +4,33 @@
 // GET:  Returns student info, upcoming schedule, progress stats,
 //       pending homework, and recent lesson notes for the parent.
 //       No auth required — uses the parentAccessToken from Student.
+//
+// SECURITY FIX (API-C02/FE-M03): Brute-force protection using
+// shared rate-limit module (Upstash Redis or in-memory fallback).
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { checkRateLimit, extractClientIP } from '@/lib/rate-limit';
 
 type RouteContext = { params: Promise<{ token: string }> };
 
-// SECURITY FIX (API-C02/FE-M03): Brute-force protection for parent portal tokens
-const parentTokenAttempts = new Map<string, { count: number; lockoutUntil: number }>();
-const MAX_PARENT_TOKEN_ATTEMPTS = 5;
-const PARENT_TOKEN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
-
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { token } = await context.params;
 
     // SECURITY FIX (API-C02/FE-M03): Rate limit parent portal token lookups
-    if (token) {
-      const now = Date.now();
-      const entry = parentTokenAttempts.get(token);
-      if (entry && now < entry.lockoutUntil) {
-        return NextResponse.json(
-          { error: 'Too many failed attempts. Please try again later.' },
-          { status: 429 }
-        );
-      }
-      if (entry && entry.count >= MAX_PARENT_TOKEN_ATTEMPTS) {
-        parentTokenAttempts.set(token, { count: entry.count, lockoutUntil: now + PARENT_TOKEN_LOCKOUT_MS });
-        return NextResponse.json(
-          { error: 'Too many failed attempts. Please try again later.' },
-          { status: 429 }
-        );
-      }
+    // Uses shared rate-limit module with Upstash Redis for serverless compatibility
+    const rlResult = await checkRateLimit(request, 'parentPortal', {
+      max: 5,
+      windowMs: 15 * 60 * 1000, // 5 attempts per 15 minutes
+    });
+
+    if (!rlResult.allowed) {
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': '900' } }
+      );
     }
 
     // Find the student by parent access token
@@ -50,17 +44,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     });
 
     if (!student) {
-      // SECURITY: Track failed token attempt
-      const now = Date.now();
-      const entry = parentTokenAttempts.get(token);
-      if (entry) {
-        entry.count++;
-        if (entry.count >= MAX_PARENT_TOKEN_ATTEMPTS) {
-          entry.lockoutUntil = now + PARENT_TOKEN_LOCKOUT_MS;
-        }
-      } else {
-        parentTokenAttempts.set(token, { count: 1, lockoutUntil: 0 });
-      }
       return NextResponse.json({ error: 'Invalid or expired access token' }, { status: 404 });
     }
 
