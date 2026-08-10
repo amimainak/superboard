@@ -1,6 +1,11 @@
 // ============================================================
 // Service Worker — Caching Strategy
 // ============================================================
+// NOTE: This is a placeholder service worker with basic cache-first
+// strategy for static assets. It should be enhanced for production use
+// with proper versioning, stale-while-revalidate for HTML, and
+// workbox integration for optimal caching.
+// ============================================================
 // SECURITY FIX (FE-M04): Skip caching for all authenticated
 // routes and API endpoints. Only cache static assets.
 // Clears all cached content on logout message from client.
@@ -10,7 +15,14 @@
 // ============================================================
 
 const CACHE_NAME = 'superboard-v1';
+// Core app shell assets to pre-cache on install
 const STATIC_ASSETS = ['/', '/manifest.json', '/offline.html'];
+
+// File extensions to cache on fetch (CSS, JS, fonts, images)
+const CACHEABLE_EXTENSIONS = [
+  '.css', '.js', '.woff', '.woff2', '.ttf', '.otf', '.eot',
+  '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.avif',
+];
 
 // Authenticated route patterns that must NEVER be cached
 const AUTH_ROUTE_PATTERNS = [
@@ -32,6 +44,16 @@ const AUTH_ROUTE_PATTERNS = [
 // Skip caching for authenticated routes
 function isAuthRoute(url: string): boolean {
   return AUTH_ROUTE_PATTERNS.some(pattern => url.includes(pattern));
+}
+
+// Check if a request URL points to a cacheable static asset
+function isCacheableAsset(url: string): boolean {
+  try {
+    const pathname = new URL(url).pathname;
+    return CACHEABLE_EXTENSIONS.some(ext => pathname.endsWith(ext));
+  } catch {
+    return false;
+  }
 }
 
 self.addEventListener('install', (event) => {
@@ -79,7 +101,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets only
+  // Cache-first for static assets (pre-cached + cacheable extensions)
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request).then((response) => {

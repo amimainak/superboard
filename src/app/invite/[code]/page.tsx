@@ -12,7 +12,7 @@ import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Clock, Check, AlertCircle, LogIn, ArrowRight } from 'lucide-react';
+import { Users, Clock, Check, AlertCircle, LogIn, ArrowRight, Building2, Loader2 } from 'lucide-react';
 
 type InviteState =
   | { status: 'loading' }
@@ -41,6 +41,7 @@ export default function InvitePage({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [acceptError, setAcceptError] = useState('');
+  const [logoError, setLogoError] = useState(false);
 
   // Resolve params
   useEffect(() => {
@@ -133,7 +134,7 @@ export default function InvitePage({
   if (invite.status === 'loading' || !code) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center" aria-label="Loading invite...">
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" aria-hidden="true" />
       </div>
     );
   }
@@ -225,15 +226,16 @@ export default function InvitePage({
               background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
             }}
           >
-            {invite.agencyBrandingLogo ? (
+            {invite.agencyBrandingLogo && !logoError ? (
               <img
                 src={invite.agencyBrandingLogo}
                 alt={invite.agencyName}
                 className="w-16 h-16 rounded-2xl mx-auto mb-4 bg-white/20 p-1.5 object-contain"
+                onError={() => setLogoError(true)}
               />
             ) : (
               <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-white" />
+                {logoError ? <Building2 className="w-8 h-8 text-white" /> : <Users className="w-8 h-8 text-white" />}
               </div>
             )}
             <h1 className="text-xl font-bold text-white">{invite.agencyName}</h1>
@@ -309,10 +311,11 @@ export default function InvitePage({
                   className="w-full h-12 rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px]"
                   onClick={handleAccept}
                   disabled={accepting}
+                  aria-busy={accepting}
                 >
                   {accepting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
                       Accepting...
                     </>
                   ) : (

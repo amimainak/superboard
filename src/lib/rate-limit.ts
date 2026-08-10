@@ -203,9 +203,12 @@ export async function checkRateLimit(
   const ip = extractClientIP(request);
 
   // SECURITY: Apply conservative default for unidentifiable clients
+  // Previously allowed unlimited requests when IP was 'unknown'.
+  // Now applies a strict 10/min default to prevent bypass via misconfigured proxies.
   if (ip === 'unknown') {
     const config = customConfig || RATE_LIMITS[category || 'default'] || RATE_LIMITS.default;
-    return { allowed: true, remaining: Math.max(0, config.max - 1), resetAt: Date.now() + config.windowMs, limit: config.max };
+    const strictConfig = { max: Math.min(config.max, 10), windowMs: config.windowMs };
+    return memoryRateLimit('rl:unknown:' + (category || 'default'), strictConfig);
   }
 
   const key = `rl:${ip}:${category || 'default'}`;

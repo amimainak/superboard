@@ -139,6 +139,7 @@ export default function StudentDashboard({
   // ---- Quick join state ----
   const [joinInput, setJoinInput] = useState('');
   const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   // ---- Recent lessons state ----
   const [lessons, setLessons] = useState<RecentLesson[]>([]);
@@ -193,17 +194,15 @@ export default function StudentDashboard({
     const roomId = extractRoomId(joinInput);
 
     if (!roomId) {
-      toast({
-        title: 'Invalid link or room code',
-        description: 'Please paste a lesson link (e.g. superboard.live/room/abc123) or a room code.',
-        variant: 'destructive',
-      });
+      setJoinError('Please enter a valid room ID or URL');
       return;
     }
+    setJoinError(null);
 
     setJoining(true);
     try {
       // Verify the room exists before navigating
+      setJoinError(null);
       const res = await authFetch(`/api/room?roomId=${encodeURIComponent(roomId)}`);
       if (!res.ok) {
         if (res.status === 410) {
@@ -345,7 +344,7 @@ export default function StudentDashboard({
               <div className="flex-1 relative">
                 <Input
                   value={joinInput}
-                  onChange={(e) => setJoinInput(e.target.value)}
+                  onChange={(e) => { setJoinInput(e.target.value); setJoinError(null); }}
                   onKeyDown={handleJoinKeyDown}
                   placeholder="e.g. https://superboard.live/room/abc123"
                   className="h-11 rounded-xl border-gray-200 text-sm pr-10 placeholder:text-gray-400 focus:ring-emerald-500/20 focus:border-emerald-500"
@@ -368,6 +367,12 @@ export default function StudentDashboard({
                 Join Lesson
               </Button>
             </div>
+            {joinError && (
+              <p className="text-xs text-red-500 mt-2 flex items-center gap-1.5" role="alert">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                {joinError}
+              </p>
+            )}
           </CardContent>
         </Card>
 

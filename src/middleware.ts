@@ -23,6 +23,19 @@ async function generateNonce(): Promise<string> {
   return btoa(String.fromCharCode(...array));
 }
 
+// Edge-compatible timing-safe comparison (no Node.js Buffer/crypto.timingSafeEqual)
+function timingSafeEqualEdge(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  const encoder = new TextEncoder();
+  const aBytes = encoder.encode(a);
+  const bBytes = encoder.encode(b);
+  let result = 0;
+  for (let i = 0; i < aBytes.length; i++) {
+    result |= aBytes[i] ^ bBytes[i];
+  }
+  return result === 0;
+}
+
 // ---- CSRF Token Generation (FE-M01) ----
 // Generates a random CSRF token and sets it as a double-submit cookie.
 // The same token is exposed via X-CSRF-Token header for frontend to include
@@ -82,7 +95,10 @@ export async function middleware(request: NextRequest) {
         if (!csrfCookie || !csrfHeader) {
           return NextResponse.json({ error: 'CSRF token missing' }, { status: 403 });
         }
-        if (csrfCookie !== csrfHeader) {
+        // SECURITY FIX: Use timing-safe comparison to prevent timing side-channel attacks
+        // (same pattern as LiveKit webhook handler)
+        if (csrfCookie.length !== csrfHeader.length ||
+            !timingSafeEqualEdge(csrfCookie, csrfHeader)) {
           return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
         }
       }

@@ -111,6 +111,7 @@ export default function ParentPortalPage({ params }: { params: Promise<{ token: 
   const [data, setData] = useState<ParentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     params.then((p) => {
@@ -202,11 +203,12 @@ export default function ParentPortalPage({ params }: { params: Promise<{ token: 
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {data.agencyLogo ? (
+              {data.agencyLogo && !logoError ? (
                 <img
                   src={data.agencyLogo}
                   alt={data.agencyName}
                   className="w-8 h-8 rounded-lg object-cover"
+                  onError={() => setLogoError(true)}
                 />
               ) : (
                 <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">

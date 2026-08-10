@@ -8,10 +8,11 @@ import { authFetch } from '@/lib/auth-fetch';
 import { subjectMeta } from '@/lib/subject-meta';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { BookOpen, Users, Clock, TrendingUp } from 'lucide-react';
+import { BookOpen, Users, Clock, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface AnalyticsData {
   totalRooms: number;
@@ -40,16 +41,28 @@ const subjectColors: Record<string, string> = {
 export function AnalyticsPanel({ userId }: { userId: string }) {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAnalytics = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await authFetch('/api/analytics');
+      if (!res.ok) throw new Error('Failed to fetch analytics');
+      const d = await res.json();
+      setData(d);
+    } catch (err: any) {
+      console.warn('[AnalyticsPanel] Failed to load analytics:', err);
+      setError(err?.message || 'Failed to load analytics');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
-    setLoading(true);
-    authFetch('/api/analytics')
-      .then((res) => res.json())
-      .then((d) => setData(d))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [userId]);
+    fetchAnalytics();
+  }, [userId, fetchAnalytics]);
 
   // Loading state
   if (loading) {
@@ -57,6 +70,35 @@ export function AnalyticsPanel({ userId }: { userId: string }) {
       <Card className="rounded-2xl border-0 shadow-sm">
         <CardContent className="flex items-center justify-center py-16">
           <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Card className="rounded-2xl border-0 shadow-sm">
+        <CardHeader>
+          <CardTitle>Analytics</CardTitle>
+          <CardDescription>Your teaching activity at a glance.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-10">
+            <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-7 h-7 text-rose-400" />
+            </div>
+            <h3 className="text-sm font-semibold text-gray-900">Something went wrong</h3>
+            <p className="text-sm text-muted-foreground mt-1 mb-4">{error}</p>
+            <Button
+              variant="outline"
+              className="rounded-xl text-xs gap-1.5"
+              onClick={fetchAnalytics}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Try Again
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

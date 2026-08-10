@@ -32,10 +32,21 @@ import {
   Crown,
   Shield,
   Check,
-  Download,
+  Copy,
   AlertTriangle,
   Clock,
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { StudentManagementPanel } from './StudentManagementPanel';
 
 function getMaxSubTutors(tier: Tier): number {
@@ -158,7 +169,15 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
     }).catch(() => { /* clipboard may be blocked */ });
   };
 
-  if (loading) return <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" /><span className="ml-3 text-sm text-muted-foreground">Loading...</span></div>;
+  if (loading) return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3"><Skeleton className="h-6 w-32 rounded-full" /><Skeleton className="h-4 w-40" /></div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+      </div>
+      <Skeleton className="h-10 w-full rounded-xl" />
+    </div>
+  );
 
   const totalVideo = subTutors.reduce((sum, t) => sum + t.videoMinutesUsed, 0);
   const totalCredits = subTutors.reduce((sum, t) => sum + t.aiCreditsUsed, 0);
@@ -186,7 +205,7 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover">
           <p className="text-3xl font-bold">
             {subTutors.length}
@@ -280,7 +299,7 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
                           <div className="flex items-center gap-2">
                             <code className="flex-1 text-xs bg-muted rounded-lg px-3 py-2 truncate block">{window.location.origin}/invite/{inviteSuccess.code}</code>
                             <Button size="sm" variant="outline" className="flex-shrink-0 text-xs" onClick={() => copyInviteLink(inviteSuccess.code)}>
-                              {inviteLinkCopied ? <Check className="w-3 h-3" /> : <Download className="w-3 h-3" />}
+                              {inviteLinkCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                               {inviteLinkCopied ? 'Copied' : 'Copy'}
                             </Button>
                           </div>
@@ -362,15 +381,7 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
                         <td className="px-4 py-3 text-right font-medium">{tutor.aiCreditsUsed}</td>
                         <td className="px-4 py-3 text-right text-muted-foreground">{tutor.joinedAt ? new Date(tutor.joinedAt).toLocaleDateString() : '\u2014'}</td>
                         <td className="px-4 py-3 text-right">
-                          {removeConfirmId === tutor.id ? (
-                            <div className="flex items-center gap-1 justify-end">
-                              <span className="text-xs text-red-500 mr-1">Sure?</span>
-                              <Button size="sm" variant="destructive" className="h-7 text-xs px-2" disabled={removing} onClick={() => handleRemoveTutor(tutor.id)}>{removing ? '...' : 'Yes'}</Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => setRemoveConfirmId(null)}>No</Button>
-                            </div>
-                          ) : (
-                            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-red-600" onClick={() => setRemoveConfirmId(tutor.id)}>Remove</Button>
-                          )}
+                          <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-red-600" onClick={() => setRemoveConfirmId(tutor.id)}>Remove</Button>
                         </td>
                       </tr>
                     ))}
@@ -387,6 +398,27 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
         </TabsContent>
       </Tabs>
 
+      {/* Remove Tutor Confirmation Dialog */}
+      <AlertDialog open={!!removeConfirmId} onOpenChange={(open) => { if (!open) setRemoveConfirmId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this tutor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will revoke their access to your agency. They will lose access to all shared resources.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removing}>Keep</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={removing}
+              onClick={() => { if (removeConfirmId) handleRemoveTutor(removeConfirmId); }}
+            >
+              {removing ? 'Removing...' : 'Remove Tutor'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

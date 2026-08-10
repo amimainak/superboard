@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Plus, Clock, Video, Users, X, Edit2, Play, CheckCircle, Loader2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -341,7 +342,7 @@ export function SchedulePanel({ userId }: Props) {
   ) => (
     <div className="space-y-4 pt-2">
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Title</label>
+        <Label className="text-gray-700 mb-1 block">Title</Label>
         <Input
           placeholder="e.g. Algebra Review"
           value={f.title}
@@ -350,7 +351,7 @@ export function SchedulePanel({ userId }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Subject</label>
+        <Label className="text-gray-700 mb-1 block">Subject</Label>
         <Select value={f.subject} onValueChange={(v) => setF((p) => ({ ...p, subject: v }))}>
           <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -361,7 +362,7 @@ export function SchedulePanel({ userId }: Props) {
         </Select>
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Student Email <span className="text-muted-foreground font-normal">(optional)</span></label>
+        <Label className="text-gray-700 mb-1 block">Student Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
         <Input
           type="email"
           placeholder="student@example.com"
@@ -371,7 +372,7 @@ export function SchedulePanel({ userId }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Date & Time</label>
+        <Label className="text-gray-700 mb-1 block">Date & Time</Label>
         <Input
           type="datetime-local"
           value={f.scheduledAt}
@@ -380,7 +381,7 @@ export function SchedulePanel({ userId }: Props) {
         />
       </div>
       <div>
-        <label className="text-sm font-medium text-gray-700 mb-1 block">Duration</label>
+        <Label className="text-gray-700 mb-1 block">Duration</Label>
         <Select value={String(f.durationMinutes)} onValueChange={(v) => setF((p) => ({ ...p, durationMinutes: Number(v) }))}>
           <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>

@@ -102,6 +102,8 @@ function formatNumber(n: number) {
 
 function getDateRange(period: string) {
   const now = new Date();
+  if (isNaN(now.getTime())) return { from: '', to: '' };
+
   let from: Date;
 
   if (period === 'week') {
@@ -116,6 +118,8 @@ function getDateRange(period: string) {
   } else {
     from = new Date(now.getFullYear(), now.getMonth(), 1);
   }
+
+  if (isNaN(from.getTime())) return { from: '', to: '' };
 
   return {
     from: from.toISOString(),

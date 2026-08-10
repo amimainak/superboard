@@ -41,7 +41,7 @@ export default function Dashboard() {
 
     // Register service worker for caching strategy
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/sw.js').catch((err) => { console.warn('[SW Register]', err); });
     }
 
     let mounted = true;
@@ -70,7 +70,7 @@ export default function Dashboard() {
                   name: user.user_metadata?.full_name || user.user_metadata?.name || null,
                 }),
               });
-            } catch { /* silent — profile may already exist */ }
+            } catch (err) { console.warn('[Auth Register]', err); }
           }
           // Check admin status
           try {
@@ -82,8 +82,8 @@ export default function Dashboard() {
                 setIsAdmin(true);
               }
             }
-          } catch { /* ignore admin check failure */ }
-        } catch { /* ignore */ }
+          } catch (err) { console.warn('[Admin Check]', err); }
+        } catch (err) { console.warn('[Auth Profile]', err); }
       }
       setAuthLoading(false);
       setTierLoading(false);
@@ -111,8 +111,8 @@ export default function Dashboard() {
                 setIsAdmin(true);
               }
             }
-          } catch { /* ignore */ }
-        } catch { /* ignore */ }
+          } catch (err) { console.warn('[Admin Check]', err); }
+        } catch (err) { console.warn('[Auth Profile]', err); }
       }
       setAuthLoading(false);
       setTierLoading(false);

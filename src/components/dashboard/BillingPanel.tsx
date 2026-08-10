@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import type { Tier } from '@/types';
 import { isAgencyTier } from '@/types';
 import { PRICING } from '@/types';
@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save } from 'lucide-react';
+import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save, Loader2 } from 'lucide-react';
 
 function getTierLabel(tier: Tier): string {
   if (tier === 'AGENCY_STANDARD') return 'Agency Standard';
@@ -39,13 +39,36 @@ function getTierDescription(tier: Tier): string {
   return 'Free tier — Limited features';
 }
 
+const HEX_COLOR_REGEX = /^#[0-9a-fA-F]{6}$/;
+
 export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor }: { tier: Tier; brandColor: string; setBrandColor: (c: string) => void; onSaveBrandColor?: () => Promise<void> }) {
   const tierLabel = getTierLabel(tier);
   const tierColor = getTierColor(tier);
   const tierDesc = getTierDescription(tier);
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
+  const [colorError, setColorError] = useState<string | null>(null);
 
-  const handleUpgrade = (plan: string) => {
-    window.open(`/api/stripe/checkout?plan=${plan}`, '_self');
+  const handleUpgrade = async (plan: string) => {
+    setUpgradingPlan(plan);
+    try {
+      window.open(`/api/stripe/checkout?plan=${plan}`, '_self');
+    } catch {
+      setUpgradingPlan(null);
+    }
+  };
+
+  const handleColorChange = (value: string) => {
+    if (value === '') {
+      setColorError(null);
+      setBrandColor(value);
+      return;
+    }
+    if (!HEX_COLOR_REGEX.test(value)) {
+      setColorError('Invalid hex color. Use format: #RRGGBB');
+    } else {
+      setColorError(null);
+    }
+    setBrandColor(value);
   };
 
   return (
@@ -90,7 +113,7 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
                           <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-emerald-600" /></div>{f}</li>
                         ))}
                       </ul>
-                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20" onClick={() => handleUpgrade('pro')}>Upgrade to Pro</Button>
+                      <Button className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md shadow-emerald-500/20" onClick={() => handleUpgrade('pro')} disabled={!!upgradingPlan}>{upgradingPlan === 'pro' ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Redirecting…</> : 'Upgrade to Pro'}</Button>
                     </CardContent>
                   </Card>
                 )}
@@ -109,7 +132,7 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
                           <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-amber-600" /></div>{f}</li>
                         ))}
                       </ul>
-                      <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-md shadow-amber-500/20" onClick={() => handleUpgrade('agency-standard')}>Get Agency Standard</Button>
+                      <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-md shadow-amber-500/20" onClick={() => handleUpgrade('agency-standard')} disabled={!!upgradingPlan}>{upgradingPlan === 'agency-standard' ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Redirecting…</> : 'Get Agency Standard'}</Button>
                     </CardContent>
                   </Card>
                 )}
@@ -128,7 +151,7 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
                           <li key={f} className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0"><Check className="w-2.5 h-2.5 text-purple-600" /></div>{f}</li>
                         ))}
                       </ul>
-                      <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md shadow-purple-500/20" onClick={() => handleUpgrade('agency-premium')}>Get Agency Premium</Button>
+                      <Button className="w-full rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold shadow-md shadow-purple-500/20" onClick={() => handleUpgrade('agency-premium')} disabled={!!upgradingPlan}>{upgradingPlan === 'agency-premium' ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Redirecting…</> : 'Get Agency Premium'}</Button>
                     </CardContent>
                   </Card>
                 )}
@@ -149,7 +172,7 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
                     <p className="font-semibold text-purple-900">Need unlimited sub-tutors or lower hourly rates?</p>
                     <p className="text-sm text-purple-700">Upgrade to Agency Premium for unlimited sub-tutors and $2/hr instead of $3/hr. The crossover point is just 40 hours/month.</p>
                   </div>
-                  <Button className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold flex-shrink-0" onClick={() => handleUpgrade('agency-premium')}>Upgrade</Button>
+                  <Button className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold flex-shrink-0" onClick={() => handleUpgrade('agency-premium')} disabled={!!upgradingPlan}>{upgradingPlan === 'agency-premium' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Upgrade'}</Button>
                 </div>
               </div>
             </div>
@@ -167,9 +190,12 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
                   <Label>Brand Color</Label>
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-lg border shadow-sm flex-shrink-0" style={{ backgroundColor: brandColor || '#000' }} />
-                    <Input value={brandColor || ''} onChange={(e) => setBrandColor(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+                    <div className="flex-1 space-y-1">
+                      <Input value={brandColor || ''} onChange={(e) => handleColorChange(e.target.value)} placeholder="#FF5733" className="flex-1 rounded-xl" />
+                      {colorError && <p className="text-xs text-destructive">{colorError}</p>}
+                    </div>
                     {onSaveBrandColor && (
-                      <Button size="sm" variant="outline" className="rounded-xl text-xs gap-1 flex-shrink-0" onClick={onSaveBrandColor}>
+                      <Button size="sm" variant="outline" className="rounded-xl text-xs gap-1 flex-shrink-0" onClick={onSaveBrandColor} disabled={!!colorError}>
                         <Save className="w-3 h-3" />Save
                       </Button>
                     )}

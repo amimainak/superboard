@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface PageSidebarProps {
   currentPage: number;
@@ -54,15 +55,26 @@ export default function PageSidebar({
                 {i + 1}
               </Button>
               {totalPages > 1 && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="w-6 h-6"
-                  onClick={() => onDeletePage(i)}
-                  disabled={totalPages <= 1}
-                >
-                  <Trash2 className="w-3 h-3 text-destructive" />
-                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-6 h-6"
+                        onClick={() => onDeletePage(i)}
+                        disabled={i === currentPage || totalPages <= 1}
+                      >
+                        <Trash2 className={`w-3 h-3 ${i === currentPage ? 'text-muted-foreground' : 'text-destructive'}`} />
+                      </Button>
+                    </TooltipTrigger>
+                    {i === currentPage && (
+                      <TooltipContent side="right" className="text-xs">
+                        Cannot delete the current page
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           ))}

@@ -35,21 +35,12 @@ type Props = {
   tier: Tier;
 };
 
-interface RoomRow {
-  id: string;
-  subject: string;
-  isActive: boolean;
-  brandingLogo: string | null;
-  brandingColor: string | null;
-  createdAt: string;
-  endedAt: string | null;
-  durationMinutes: number | null;
-}
+// No longer needed — batch endpoint returns all data in one call
 
 interface RecordingInfo {
   id: string;
   roomId: string;
-  url: string;
+  url: string | null;
   status: string;
   duration: number;       // seconds
   startedAt: string | null;
@@ -135,40 +126,24 @@ export function RecordingsPanel({ userId, tier }: Props) {
       setLoading(true);
       setError(null);
 
-      // 1. Fetch all rooms for this tutor
-      const roomsRes = await authFetch(`/api/room/list?tutorId=${userId}`);
-      if (!roomsRes.ok) throw new Error('Failed to fetch rooms');
-      const roomsData = await roomsRes.json();
-      const rooms: RoomRow[] = roomsData.rooms ?? [];
+      // Single batch endpoint — no N+1
+      const res = await authFetch('/api/recordings');
+      if (!res.ok) throw new Error('Failed to fetch recordings');
+      const data = await res.json();
+      const recs: RecordingWithRoom[] = (data.recordings ?? []).map((rec: any) => ({
+        id: rec.id,
+        roomId: rec.roomId,
+        url: rec.url,
+        status: rec.status,
+        duration: rec.duration,
+        startedAt: rec.startedAt,
+        endedAt: rec.endedAt,
+        createdAt: rec.createdAt,
+        roomSubject: rec.roomSubject,
+        roomCreatedAt: rec.roomCreatedAt,
+      }));
 
-      // 2. For ended rooms, fetch recordings in parallel
-      const endedRooms = rooms.filter((r) => !r.isActive);
-      const recordingPromises = endedRooms.map(async (room) => {
-        try {
-          const recRes = await authFetch(`/api/room/${room.id}/recording`);
-          if (!recRes.ok) return [];
-          const recData = await recRes.json();
-          const recs: RecordingInfo[] = recData.recordings ?? [];
-          // Attach room metadata
-          return recs.map((rec) => ({
-            ...rec,
-            roomSubject: room.subject,
-            roomCreatedAt: room.createdAt,
-          })) as RecordingWithRoom[];
-        } catch {
-          return [] as RecordingWithRoom[];
-        }
-      });
-
-      const results = await Promise.all(recordingPromises);
-      const allRecordings = results.flat();
-
-      // 3. Sort by most recent first
-      allRecordings.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      setRecordings(allRecordings);
+      setRecordings(recs);
     } catch (err: any) {
       setError(err?.message || 'Failed to load recordings');
     } finally {
@@ -390,7 +365,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
                             title="Download recording"
                             asChild
                           >
-                            <a href={rec.url} download target="_blank" rel="noopener noreferrer">
+                            <a href={rec.url ?? ''} download target="_blank" rel="noopener noreferrer">
                               <Download className="w-3.5 h-3.5" />
                             </a>
                           </Button>
