@@ -80,14 +80,15 @@ export async function GET(request: NextRequest) {
     const suspendedUsers = (usersByStatus as any[]).find(s => s.status === 'SUSPENDED')?._count?.status || 0;
     const bannedUsers = (usersByStatus as any[]).find(s => s.status === 'BANNED')?._count?.status || 0;
 
-    // Daily signups over last 14 days
+    // Daily signups over last 14 days — use raw SQL to group by DATE (not millisecond precision)
     const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
-    const dailySignups = await db.user.groupBy({
-      by: ['createdAt'],
-      where: { createdAt: { gte: fourteenDaysAgo } },
-      _count: { createdAt: true },
-      orderBy: { createdAt: 'asc' },
-    });
+    const dailySignups = await db.$queryRaw<{ date: string; count: bigint }[]>`
+      SELECT DATE("createdAt") as date, COUNT(*)::bigint as count
+      FROM "User"
+      WHERE "createdAt" >= ${fourteenDaysAgo.toISOString()}
+      GROUP BY DATE("createdAt")
+      ORDER BY date DESC
+    `;
 
     // Rooms by subject
     const roomsBySubject = await db.room.groupBy({
@@ -124,7 +125,7 @@ export async function GET(request: NextRequest) {
         videoMinutesTotal: totalUsageThisPeriod._sum.videoMinutesUsed || 0,
         recordingsTotal: totalUsageThisPeriod._sum.recordingsUsed || 0,
       },
-      dailySignups,
+      dailySignups: dailySignups.map((d) => ({ date: d.date, count: Number(d.count) })),
     });
   } catch (error: any) {
     console.error('[Admin Stats GET]', error);

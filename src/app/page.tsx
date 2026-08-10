@@ -39,6 +39,11 @@ export default function Dashboard() {
     // Initialize auth fetch token caching
     initAuthFetch();
 
+    // Register service worker for caching strategy
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
     let mounted = true;
 
     // Listen for auth state changes FIRST to catch any race conditions

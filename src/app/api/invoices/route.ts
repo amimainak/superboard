@@ -31,29 +31,19 @@ const createInvoiceSchema = z.object({
  * Finds the highest NNN for the current year and increments.
  */
 async function generateInvoiceNumber(agencyId: string): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
-
-  // Find the highest existing invoice number for this year (scoped to agency)
-  const lastInvoice = await db.invoice.findFirst({
-    where: {
-      agencyId,
-      invoiceNumber: { startsWith: prefix },
-    },
-    orderBy: { invoiceNumber: 'desc' },
-    select: { invoiceNumber: true },
-  });
-
-  let nextNum = 1;
-  if (lastInvoice) {
-    const numPart = lastInvoice.invoiceNumber.replace(prefix, '');
-    const parsed = parseInt(numPart, 10);
-    if (!isNaN(parsed)) {
-      nextNum = parsed + 1;
+  return await db.$transaction(async (tx) => {
+    const lastInvoice = await tx.invoice.findFirst({
+      where: { agencyId },
+      orderBy: { createdAt: 'desc' },
+    });
+    let nextNum = 1;
+    if (lastInvoice && lastInvoice.invoiceNumber) {
+      const match = lastInvoice.invoiceNumber.match(/INV-(\d{4})-(\d+)$/);
+      if (match) nextNum = parseInt(match[2], 10) + 1;
     }
-  }
-
-  return `${prefix}${String(nextNum).padStart(3, '0')}`;
+    const year = new Date().getFullYear();
+    return `INV-${year}-${String(nextNum).padStart(3, '0')}`;
+  });
 }
 
 export async function GET(request: NextRequest) {

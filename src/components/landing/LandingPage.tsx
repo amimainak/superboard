@@ -48,6 +48,8 @@ import {
   Download,
   MousePointerClick,
   Mail,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 // Inline Google "G" SVG — avoids adding a dependency
@@ -80,6 +82,8 @@ function LandingPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   // Read showAuth URL param from invite redirects
@@ -762,7 +766,17 @@ function LandingPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
-                  <Input id="login-password" type="password" placeholder="Your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="rounded-xl" required />
+                  <div className="relative">
+                    <Input id="login-password" type={showLoginPassword ? 'text' : 'password'} placeholder="Your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="rounded-xl pr-10" required />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
                 <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Sign In</Button>
@@ -806,7 +820,17 @@ function LandingPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password" className="text-sm font-medium">Password</Label>
-                  <Input id="register-password" type="password" placeholder="Create a strong password" value={registerPassword} onChange={(e) => { setRegisterPassword(e.target.value); setPasswordStrength(evaluatePasswordStrength(e.target.value)); }} className="rounded-xl" required />
+                  <div className="relative">
+                    <Input id="register-password" type={showRegisterPassword ? 'text' : 'password'} placeholder="Create a strong password" value={registerPassword} onChange={(e) => { setRegisterPassword(e.target.value); setPasswordStrength(evaluatePasswordStrength(e.target.value)); }} className="rounded-xl pr-10" required />
+                    <button
+                      type="button"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                      aria-label={showRegisterPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                   {registerPassword && (
                     <div className="space-y-1">
                       <div className="flex gap-1">

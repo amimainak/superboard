@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/store/app-store';
 import { useYjsProvider } from '@/hooks/useYjsProvider';
 import { authFetch } from '@/lib/auth-fetch';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import type { Editor } from 'tldraw';
 
@@ -34,6 +34,7 @@ const SessionTimer = dynamic(() => import('@/components/canvas/SessionTimer'), {
 const LivePollPanel = dynamic(() => import('@/components/canvas/LivePollPanel'), { ssr: false });
 
 export default function Whiteboard() {
+  const { toast } = useToast();
   const router = useRouter();
   const { room, setRoom, setCurrentPage, setTotalPages, tier } = useAppStore();
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;

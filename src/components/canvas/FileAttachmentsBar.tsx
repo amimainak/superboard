@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useCallback, useRef } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 import type { Editor, TLAsset, TLAssetId, TLShape } from 'tldraw';
@@ -89,6 +89,7 @@ export default function FileAttachmentsBar({
 }: FileAttachmentsBarProps) {
   const isActive = useAppStore((s) => s.room.isActive);
   const openPaywall = useAppStore((s) => s.openPaywall);
+  const { toast } = useToast();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [savingTemplate, setSavingTemplate] = useState(false);

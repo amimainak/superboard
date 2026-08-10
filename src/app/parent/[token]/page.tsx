@@ -142,7 +142,7 @@ export default function ParentPortalPage({ params }: { params: Promise<{ token: 
   // ---- Loading ----
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-gray-50 flex flex-col" aria-live="polite" aria-label="Loading portal...">
         <header className="bg-white border-b">
           <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gray-200 animate-pulse" />
@@ -172,7 +172,7 @@ export default function ParentPortalPage({ params }: { params: Promise<{ token: 
           </div>
         </header>
         <main className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-sm mx-auto px-4">
+          <div className="text-center max-w-sm mx-auto px-4" role="alert">
             <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-8 h-8 text-red-400" />
             </div>
@@ -219,7 +219,7 @@ export default function ParentPortalPage({ params }: { params: Promise<{ token: 
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center" aria-label={data.studentName}>
                 <User className="w-4 h-4 text-emerald-600" />
               </div>
               <div className="text-right hidden sm:block">

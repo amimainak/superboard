@@ -78,13 +78,12 @@ export async function middleware(request: NextRequest) {
       // Skip CSRF check for webhook callbacks (they use Bearer/HMAC auth instead)
       const isWebhook = pathname.includes('webhook') || pathname.includes('stripe');
 
-      if (!isWebhook && csrfCookie && csrfHeader) {
-        // Constant-time comparison to prevent timing attacks
+      if (!isWebhook) {
+        if (!csrfCookie || !csrfHeader) {
+          return NextResponse.json({ error: 'CSRF token missing' }, { status: 403 });
+        }
         if (csrfCookie !== csrfHeader) {
-          return NextResponse.json(
-            { error: 'CSRF validation failed' },
-            { status: 403 }
-          );
+          return NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 });
         }
       }
     }

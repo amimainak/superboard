@@ -9,6 +9,16 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { Clock, Plus, LogOut } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // ------------------------------------------------------------------
 // Helpers
@@ -37,6 +47,7 @@ export default function SessionTimer({ isTutor, onEndLesson, onExtend }: Props) 
   const [seconds, setSeconds] = useState(0);
   const [pulseWarning, setPulseWarning] = useState(false);
   const [extending, setExtending] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pulseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevSecondsRef = useRef(0);
@@ -118,7 +129,7 @@ export default function SessionTimer({ isTutor, onEndLesson, onExtend }: Props) 
             </button>
             <button
               type="button"
-              onClick={onEndLesson}
+              onClick={() => setShowEndConfirm(true)}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                 pulseWarning
                   ? 'bg-white/20 text-white hover:bg-white/30'
@@ -131,6 +142,30 @@ export default function SessionTimer({ isTutor, onEndLesson, onExtend }: Props) 
           </div>
         )}
       </div>
+
+      {/* End Lesson Confirmation Dialog */}
+      <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
+        <AlertDialogContent className="rounded-2xl sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>End this lesson?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will end the session for all participants. The whiteboard and recording (if any) will be saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
+              onClick={() => {
+                setShowEndConfirm(false);
+                onEndLesson?.();
+              }}
+            >
+              End Lesson
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

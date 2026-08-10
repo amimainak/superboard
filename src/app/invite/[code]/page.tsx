@@ -132,7 +132,7 @@ export default function InvitePage({
   // ---- Loading state ----
   if (invite.status === 'loading' || !code) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" aria-label="Loading invite...">
         <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -323,7 +323,7 @@ export default function InvitePage({
                   )}
                 </Button>
                 {acceptError && (
-                  <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 text-center">{acceptError}</p>
+                  <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2 text-center" role="alert">{acceptError}</p>
                 )}
               </div>
             )}

@@ -17,11 +17,17 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
   const search = searchParams.get('search') || '';
   const tier = searchParams.get('tier') || '';
   const sortBy = searchParams.get('sortBy') || 'createdAt';
   const sortOrder = searchParams.get('sortOrder') || 'desc';
+
+  // SECURITY: Validate sortBy against allowlist to prevent injection
+  const VALID_SORT_FIELDS = ['createdAt', 'email', 'name', 'tier', 'status'];
+  if (sortBy && !VALID_SORT_FIELDS.includes(sortBy)) {
+    return NextResponse.json({ error: 'Invalid sortBy field', details: { allowed: VALID_SORT_FIELDS } }, { status: 400 });
+  }
 
   // Build where clause
   const where: any = {};
@@ -97,6 +103,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email, name, tier, isAdmin: makeAdmin } = body;
+
+    const VALID_TIERS = ['FREE', 'PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'];
+    if (tier && !VALID_TIERS.includes(tier)) {
+      return NextResponse.json({ error: 'Invalid tier value', details: { allowed: VALID_TIERS } }, { status: 400 });
+    }
+    if (typeof makeAdmin !== 'undefined' && typeof makeAdmin !== 'boolean') {
+      return NextResponse.json({ error: 'isAdmin must be a boolean' }, { status: 400 });
+    }
 
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });

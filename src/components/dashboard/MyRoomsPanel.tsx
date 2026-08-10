@@ -11,6 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   BookOpen,
   Copy,
   LogOut,
@@ -41,6 +51,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
   const [rooms, setRooms] = useState<RoomRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [endingId, setEndingId] = useState<string | null>(null);
+  const [confirmEndId, setConfirmEndId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchRooms = useCallback(async () => {
@@ -129,6 +140,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
   }
 
   return (
+    <>
     <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -225,7 +237,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
                         className="h-8 w-8 p-0 rounded-lg hover:bg-rose-50 hover:text-rose-600"
                         title="End lesson"
                         disabled={endingId === room.id}
-                        onClick={() => handleEndRoom(room.id)}
+                        onClick={() => setConfirmEndId(room.id)}
                       >
                         {endingId === room.id ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -242,5 +254,32 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
         )}
       </CardContent>
     </Card>
+
+      {/* End Room Confirmation Dialog */}
+      <AlertDialog open={!!confirmEndId} onOpenChange={(open) => { if (!open) setConfirmEndId(null); }}>
+        <AlertDialogContent className="rounded-2xl sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>End this lesson?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the lesson as ended. The room link will no longer be active for participants.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => setConfirmEndId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
+              onClick={() => {
+                if (confirmEndId) {
+                  handleEndRoom(confirmEndId);
+                  setConfirmEndId(null);
+                }
+              }}
+            >
+              End Lesson
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

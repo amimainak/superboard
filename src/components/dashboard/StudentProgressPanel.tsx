@@ -25,7 +25,7 @@ import {
   CheckCircle,
   BookOpen,
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // ------------------------------------------------------------------
 // Types
@@ -187,6 +187,7 @@ type Props = {
 };
 
 export function StudentProgressPanel({ studentId, studentName, onBack }: Props) {
+  const { toast } = useToast();
   const [raw, setRaw] = useState<ProgressApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
 

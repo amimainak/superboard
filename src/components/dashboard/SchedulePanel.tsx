@@ -12,6 +12,16 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Plus, Clock, Video, Users, X, Edit2, Play, CheckCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -113,6 +123,7 @@ export function SchedulePanel({ userId }: Props) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<CreateForm>(EMPTY_FORM);
   const [actionLoading, setActionLoading] = useState<string | null>(null); // lesson id
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
   // ---- Fetch ----
   const fetchLessons = useCallback(async () => {
@@ -311,7 +322,7 @@ export function SchedulePanel({ userId }: Props) {
               className="h-8 w-8 p-0 rounded-lg hover:bg-rose-50 hover:text-rose-600"
               title="Cancel"
               disabled={actionLoading === lesson.id}
-              onClick={() => handleCancel(lesson.id)}
+              onClick={() => setConfirmCancelId(lesson.id)}
             >
               <X className="w-3.5 h-3.5" />
             </Button>
@@ -514,6 +525,32 @@ export function SchedulePanel({ userId }: Props) {
           </Tabs>
         )}
       </CardContent>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={!!confirmCancelId} onOpenChange={(open) => { if (!open) setConfirmCancelId(null); }}>
+        <AlertDialogContent className="rounded-2xl sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this lesson?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark the scheduled lesson as cancelled. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => setConfirmCancelId(null)}>Keep It</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
+              onClick={() => {
+                if (confirmCancelId) {
+                  handleCancel(confirmCancelId);
+                  setConfirmCancelId(null);
+                }
+              }}
+            >
+              Cancel Lesson
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { validateInput, registerWebhookSchema } from '@/lib/validations';
 import crypto from 'crypto';
 
@@ -66,6 +67,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // --- Rate limit check ---
+    const rateLimitResult = await checkRateLimit(request, 'webhook');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)) } });
+    }
+
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;
 

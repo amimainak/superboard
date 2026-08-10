@@ -139,15 +139,16 @@ export default function ContactPage() {
           </tr>
           <tr>
             <td>Proprietor</td>
-            <td>[Your Full Legal Name]</td>
+            {/* TODO: Update with real business details before launch */}
+            <td>[Pending — Update before launch]</td>
           </tr>
           <tr>
             <td>GSTIN</td>
-            <td>[To be updated after GST registration]</td>
+            <td>[Pending — Update before launch]</td>
           </tr>
           <tr>
             <td>Registered Address</td>
-            <td>[Your Complete Address, City, State, PIN Code, India]</td>
+            <td>[Pending — Update before launch]</td>
           </tr>
           <tr>
             <td>Platform</td>

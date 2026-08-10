@@ -18,8 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, LayoutTemplate, Play } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier }) {
+  const router = useRouter();
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
@@ -80,7 +82,7 @@ export function TemplatesPanel({ userId, tier }: { userId: string; tier: Tier })
                     <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm`}><meta.icon className="w-4 h-4 text-white" /></div>
                     <div><p className="text-sm font-medium">{t.name}</p><p className="text-xs text-muted-foreground">{t.subject} &middot; {new Date(t.createdAt).toLocaleDateString()}</p></div>
                   </div>
-                  <Button variant="ghost" size="sm" disabled className="rounded-lg opacity-0 group-hover:opacity-100"><Play className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="sm" className="rounded-lg opacity-0 group-hover:opacity-100" onClick={() => router.push(`/?subject=${t.subject}`)} title="Create lesson with this subject"><Play className="w-4 h-4" /></Button>
                 </div>
               );
             })}

@@ -11,10 +11,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { registerSchema, validateInput } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Rate limit check ---
+    const rateLimitResult = await checkRateLimit(request, 'auth');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)) } });
+    }
+
     // --- Auth check: verify caller matches the registered user ---
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;

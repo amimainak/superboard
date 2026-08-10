@@ -104,7 +104,13 @@ export async function PATCH(request: NextRequest) {
 
     const updateData: any = {};
     if (isActive !== undefined) updateData.isActive = isActive;
-    if (subject) updateData.subject = subject;
+    if (subject) {
+      const VALID_SUBJECTS = ['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'];
+      if (!VALID_SUBJECTS.includes(subject)) {
+        return NextResponse.json({ error: 'Invalid subject value', details: { allowed: VALID_SUBJECTS } }, { status: 400 });
+      }
+      updateData.subject = subject;
+    }
 
     const room = await db.room.update({
       where: { id: roomId },

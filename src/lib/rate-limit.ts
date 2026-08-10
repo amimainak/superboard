@@ -202,9 +202,10 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const ip = extractClientIP(request);
 
-  // SECURITY: Never rate limit 'unknown' IPs — could cause collateral blocking
+  // SECURITY: Apply conservative default for unidentifiable clients
   if (ip === 'unknown') {
-    return { allowed: true, remaining: 999, resetAt: 0, limit: 999 };
+    const config = customConfig || RATE_LIMITS[category || 'default'] || RATE_LIMITS.default;
+    return { allowed: true, remaining: Math.max(0, config.max - 1), resetAt: Date.now() + config.windowMs, limit: config.max };
   }
 
   const key = `rl:${ip}:${category || 'default'}`;

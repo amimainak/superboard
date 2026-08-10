@@ -10,7 +10,7 @@
 
 import React, { useState } from 'react';
 import { Calendar, Download, Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // ------------------------------------------------------------------
 // Types
@@ -85,6 +85,7 @@ function generateICSContent(lesson: Lesson): string {
 // Component
 // ------------------------------------------------------------------
 export function CalendarSync({ lesson }: Props) {
+  const { toast } = useToast();
   const [downloading, setDownloading] = useState(false);
 
   // ---- Google Calendar ----

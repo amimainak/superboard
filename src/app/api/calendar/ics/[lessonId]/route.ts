@@ -58,11 +58,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
           where: { id: auth.userId },
           select: { tier: true, parentAgencyId: true },
         });
-        const isAgency = caller && (
-          ['AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(caller.tier || '')
-        );
-        const isSubTutorOfAgency = caller?.parentAgencyId === lesson.tutorId;
-        if (!isAgency || !isSubTutorOfAgency) {
+        const isAgencyOwner = caller && ['AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(caller.tier || '');
+        const isAgencySubTutor = caller?.parentAgencyId && caller.parentAgencyId === lesson.tutorId;
+        if (!isAgencyOwner && !isAgencySubTutor && lesson.tutorId !== auth.userId) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
       }

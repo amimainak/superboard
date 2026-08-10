@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRecordingLimit, incrementRecordings } from '@/lib/usage';
+import { checkRateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
 const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY || '';
@@ -22,7 +23,10 @@ const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || '';
 const LIVEKIT_URL = process.env.LIVEKIT_URL || '';
 
 // SECURITY FIX (RT-M03): Signing secret for recording URL tokens
-const RECORDING_SIGN_SECRET = process.env.RECORDING_URL_SIGN_SECRET || crypto.randomBytes(32).toString('hex');
+const RECORDING_SIGN_SECRET = process.env.RECORDING_URL_SIGN_SECRET;
+if (!RECORDING_SIGN_SECRET) {
+  console.error('[Recording] FATAL: RECORDING_URL_SIGN_SECRET environment variable is not set. Recording download links will not work. Set this variable to a persistent random string (e.g., generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))")');
+}
 const RECORDING_URL_EXPIRY_MS = parseInt(process.env.RECORDING_URL_EXPIRY_MS || '3600000', 10); // 1 hour default
 
 /**
@@ -32,6 +36,7 @@ const RECORDING_URL_EXPIRY_MS = parseInt(process.env.RECORDING_URL_EXPIRY_MS || 
  * This prevents unauthorized access to recordings containing student video/voice data (FERPA/COPPA).
  */
 function signRecordingUrl(recordingId: string, roomId: string): string {
+  if (!RECORDING_SIGN_SECRET) return '';
   const expires = Date.now() + RECORDING_URL_EXPIRY_MS;
   const payload = `${recordingId}:${roomId}:${expires}`;
 
@@ -54,6 +59,8 @@ export function verifyRecordingToken(
   token: string,
   expires: string
 ): boolean {
+  if (!RECORDING_SIGN_SECRET) return false;
+
   // Check expiry first (fast path)
   const expiresNum = parseInt(expires, 10);
   if (isNaN(expiresNum) || Date.now() > expiresNum) {
@@ -84,6 +91,12 @@ export async function POST(
   { params }: { params: Promise<{ roomId: string }> }
 ) {
   try {
+    // --- Rate limit check ---
+    const rateLimitResult = await checkRateLimit(request, 'livekit');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)) } });
+    }
+
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;
 

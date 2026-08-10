@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
 import { aiActionSchema, validateInput } from '@/lib/validations';
 import type { Tier, AIAction } from '@/types';
@@ -19,6 +20,12 @@ import { TEXT_AI_ACTIONS, CREDIT_COSTS, ENHANCED_ACTION_SET } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Rate limit check ---
+    const rateLimitResult = await checkRateLimit(request, 'ai');
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)) } });
+    }
+
     // --- Auth check: verify caller matches the userId ---
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;

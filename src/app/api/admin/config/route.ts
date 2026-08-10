@@ -42,6 +42,11 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { maintenanceMode, announcementText } = body;
 
+    // SECURITY: Validate maintenanceMode is boolean
+    if (maintenanceMode !== undefined && typeof maintenanceMode !== 'boolean') {
+      return NextResponse.json({ error: 'maintenanceMode must be a boolean' }, { status: 400 });
+    }
+
     // SECURITY FIX (API-M04): Validate announcementText length
     if (typeof announcementText === 'string' && announcementText.length > 5000) {
       return NextResponse.json({ error: 'Announcement text too long (max 5000 chars)' }, { status: 400 });

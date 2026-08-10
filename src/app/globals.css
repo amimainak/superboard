@@ -461,3 +461,183 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================
+ * DARK MODE OVERRIDES — Pragmatic CSS-level fix
+ * Maps hardcoded light-mode Tailwind classes to dark values
+ * when .dark class is on the html element.
+ * Components should ideally use semantic tokens (bg-card,
+ * text-foreground, etc.) but this provides instant dark mode
+ * support without modifying every component file.
+ * Uses oklch to match the existing .dark theme block.
+ * ============================================================ */
+
+/* --- Backgrounds --- */
+.dark .bg-white {
+  background-color: oklch(0.19 0.02 166) !important;
+}
+.dark .bg-gray-50 {
+  background-color: oklch(0.205 0.005 166) !important;
+}
+.dark .bg-gray-100 {
+  background-color: oklch(0.19 0.005 166) !important;
+}
+.dark .bg-gray-200 {
+  background-color: oklch(0.25 0.01 166) !important;
+}
+
+/* Semi-transparent white backgrounds */
+.dark .bg-white\/80,
+.dark .bg-white\/70,
+.dark .bg-white\/60 {
+  background-color: oklch(0.19 0.02 166 / 0.8) !important;
+}
+
+/* --- Text colors --- */
+.dark .text-gray-900 {
+  color: oklch(0.965 0.008 166) !important;
+}
+.dark .text-gray-800 {
+  color: oklch(0.92 0.006 166) !important;
+}
+.dark .text-gray-700 {
+  color: oklch(0.87 0.005 166) !important;
+}
+.dark .text-gray-600 {
+  color: oklch(0.80 0.005 166) !important;
+}
+.dark .text-gray-500 {
+  color: oklch(0.70 0.005 166) !important;
+}
+.dark .text-gray-400 {
+  color: oklch(0.60 0.004 166) !important;
+}
+
+/* --- Borders --- */
+.dark .border-gray-200 {
+  border-color: oklch(1 0 0 / 10%) !important;
+}
+.dark .border-gray-300 {
+  border-color: oklch(1 0 0 / 18%) !important;
+}
+.dark .border-gray-100 {
+  border-color: oklch(1 0 0 / 6%) !important;
+}
+
+/* --- Dividers --- */
+.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: oklch(1 0 0 / 10%) !important;
+}
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: oklch(1 0 0 / 6%) !important;
+}
+
+/* --- Shadows (softer in dark mode) --- */
+.dark .shadow-sm {
+  --tw-shadow-color: oklch(0 0 0 / 0.25) !important;
+}
+.dark .shadow {
+  --tw-shadow-color: oklch(0 0 0 / 0.3) !important;
+}
+
+/* --- Form inputs --- */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="url"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark input[type="tel"],
+.dark textarea,
+.dark select {
+  background-color: oklch(0.17 0.015 166) !important;
+  border-color: oklch(1 0 0 / 15%) !important;
+  color: oklch(0.965 0.008 166) !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: oklch(0.55 0.005 166) !important;
+}
+
+/* --- Hover states --- */
+.dark .hover\:bg-gray-50:hover {
+  background-color: oklch(0.25 0.01 166) !important;
+}
+.dark .hover\:bg-gray-100:hover {
+  background-color: oklch(0.25 0.01 166) !important;
+}
+.dark .hover\:bg-white:hover {
+  background-color: oklch(0.25 0.015 166) !important;
+}
+
+/* --- Ring / focus ring --- */
+.dark .ring-gray-200 {
+  --tw-ring-color: oklch(1 0 0 / 10%) !important;
+}
+.dark .ring-gray-300 {
+  --tw-ring-color: oklch(1 0 0 / 18%) !important;
+}
+
+/* --- Scrollbar (dark) --- */
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.005 166) !important;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.005 166) !important;
+}
+
+/* --- Project-specific utility classes --- */
+.dark .glass-card {
+  background: oklch(0.19 0.02 166) !important;
+  border-color: oklch(1 0 0 / 10%) !important;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.3), 0 1px 2px oklch(0 0 0 / 0.2) !important;
+}
+.dark .glass-card:hover {
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.4) !important;
+}
+
+.dark .gradient-hero {
+  background: linear-gradient(135deg, oklch(0.19 0.03 166) 0%, oklch(0.20 0.025 166) 50%, oklch(0.20 0.015 250) 100%) !important;
+}
+
+.dark .pip-panel {
+  background: oklch(0.19 0.02 166 / 0.95) !important;
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.4) !important;
+}
+
+.dark .toolbar-brand-accent {
+  background: oklch(0.718 0.194 166.913) !important;
+}
+
+/* --- Whiteboard canvas stays light in dark mode --- */
+.dark .canvas-container,
+.dark canvas {
+  background-color: #ffffff !important;
+}
+
+/* --- Custom design-system gradients in dark mode --- */
+.dark .stat-gradient-sparkles {
+  background: linear-gradient(135deg, oklch(0.633 0.2 166.9) 0%, oklch(0.549 0.186 172.471) 100%) !important;
+}
+.dark .stat-gradient-video {
+  background: linear-gradient(135deg, oklch(0.656 0.168 196.832) 0%, oklch(0.576 0.152 196.832) 100%) !important;
+}
+.dark .stat-gradient-recordings {
+  background: linear-gradient(135deg, oklch(0.715 0.158 219.474) 0%, oklch(0.6 0.14 219.474) 100%) !important;
+}
+
+/* --- Card hover lift in dark mode --- */
+.dark .card-hover:hover {
+  box-shadow: 0 12px 40px oklch(0 0 0 / 0.35) !important;
+}
+
+/* --- KaTeX in dark mode --- */
+.dark .katex-display,
+.dark .katex {
+  color: oklch(0.965 0.008 166) !important;
+}
+.dark .katex-error {
+  color: oklch(0.8 0.15 25) !important;
+  background-color: oklch(0.25 0.08 25) !important;
+  border-color: oklch(0.45 0.12 25) !important;
+}

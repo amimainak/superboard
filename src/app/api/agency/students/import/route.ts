@@ -9,10 +9,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 import { isAgencyTier } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Rate limit check (strict: 5 imports per minute) ---
+    const rateLimitResult = await checkRateLimit(request, 'default', { max: 5, windowMs: 60_000 });
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429, headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetAt - Date.now()) / 1000)) } });
+    }
+
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;
 
@@ -51,51 +58,64 @@ export async function POST(request: NextRequest) {
 
     const results = { imported: 0, reactivated: 0, failed: 0, errors: [] as string[] };
 
-    for (let i = 0; i < lines.length; i++) {
-      const parts = lines[i].split(',').map((p: string) => p.trim());
-      if (parts.length < 2) {
-        results.failed++;
-        results.errors.push(`Line ${i + 1}: Invalid format (expected email,name)`);
-        continue;
-      }
+    // PERF FIX: Chunked parallel processing instead of sequential N+1 queries
+    const CHUNK_SIZE = 10;
+    const lineMeta = lines.map((line, i) => ({ line, index: i }));
 
-      const email = parts[0].toLowerCase();
-      const name = parts.slice(1).join(',').trim(); // In case name contains commas
-
-      if (!email || !name) {
-        results.failed++;
-        results.errors.push(`Line ${i + 1}: Email and name are required`);
-        continue;
-      }
-
-      try {
-        // Check existing
-        const existing = await db.student.findUnique({
-          where: { agencyId_email: { agencyId, email } },
-        });
-
-        if (existing) {
-          if (existing.isActive) {
-            results.failed++;
-            results.errors.push(`Line ${i + 1}: ${email} already exists`);
-            continue;
+    for (let i = 0; i < lineMeta.length; i += CHUNK_SIZE) {
+      const chunk = lineMeta.slice(i, i + CHUNK_SIZE);
+      const chunkResults = await Promise.all(
+        chunk.map(async ({ line, index }) => {
+          const parts = line.split(',').map((p: string) => p.trim());
+          if (parts.length < 2) {
+            return { outcome: 'failed', error: `Line ${index + 1}: Invalid format (expected email,name)` };
           }
 
-          // Reactivate
-          await db.student.update({
-            where: { id: existing.id },
-            data: { name, isActive: true, deactivatedAt: null },
-          });
+          const email = parts[0].toLowerCase();
+          const name = parts.slice(1).join(',').trim(); // In case name contains commas
+
+          if (!email || !name) {
+            return { outcome: 'failed', error: `Line ${index + 1}: Email and name are required` };
+          }
+
+          try {
+            // Check existing
+            const existing = await db.student.findUnique({
+              where: { agencyId_email: { agencyId, email } },
+            });
+
+            if (existing) {
+              if (existing.isActive) {
+                return { outcome: 'failed', error: `Line ${index + 1}: ${email} already exists` };
+              }
+
+              // Reactivate
+              await db.student.update({
+                where: { id: existing.id },
+                data: { name, isActive: true, deactivatedAt: null },
+              });
+              return { outcome: 'reactivated' };
+            } else {
+              await db.student.create({
+                data: { agencyId, email, name, isActive: true },
+              });
+              return { outcome: 'imported' };
+            }
+          } catch {
+            return { outcome: 'failed', error: `Line ${index + 1}: Database error for ${email}` };
+          }
+        })
+      );
+
+      for (const r of chunkResults) {
+        if (r.outcome === 'failed' && r.error) {
+          results.failed++;
+          results.errors.push(r.error);
+        } else if (r.outcome === 'reactivated') {
           results.reactivated++;
-        } else {
-          await db.student.create({
-            data: { agencyId, email, name, isActive: true },
-          });
+        } else if (r.outcome === 'imported') {
           results.imported++;
         }
-      } catch {
-        results.failed++;
-        results.errors.push(`Line ${i + 1}: Database error for ${email}`);
       }
     }
 

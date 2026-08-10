@@ -25,7 +25,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 // ------------------------------------------------------------------
 // Types
@@ -58,6 +58,7 @@ type Props = {
 };
 
 export default function LivePollPanel({ ydoc, isTutor }: Props) {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [poll, setPoll] = useState<PollData | null>(null);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
