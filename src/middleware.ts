@@ -94,7 +94,7 @@ export async function middleware(request: NextRequest) {
     response.cookies.set('csrf-token', csrfToken, {
       httpOnly: false, // Frontend needs to read this for the header
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax', // 'lax' (not 'strict') required for OAuth redirects
       path: '/',
       maxAge: 3600, // 1 hour
     });
@@ -117,7 +117,8 @@ export async function middleware(request: NextRequest) {
 
   // SECURITY FIX (FE-C01): Use nonce in CSP instead of unsafe-inline/unsafe-eval
   // The nonce is generated above and passed via X-Nonce header for use in <script> tags
-  const cspDirectives = `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://js.stripe.com; style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.superboard.app https://superboard.app https://lh3.googleusercontent.com; connect-src 'self' wss://*.livekit.io https://*.supabase.co https://api.stripe.com https://api.mathpix.com https://api.anthropic.com${hocuspocusCspEntry}; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; frame-ancestors 'self'; upgrade-insecure-requests`;
+  // NOTE: Google OAuth requires accounts.google.com and *.googleapis.com in form-action and connect-src
+  const cspDirectives = `default-src 'self'; script-src 'self' 'nonce-${nonce}' https://js.stripe.com; style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.superboard.app https://superboard.app https://lh3.googleusercontent.com; connect-src 'self' wss://*.livekit.io https://*.supabase.co https://api.stripe.com https://api.mathpix.com https://api.anthropic.com https://accounts.google.com https://*.googleapis.com${hocuspocusCspEntry}; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://accounts.google.com https://*.googleapis.com; frame-ancestors 'self'; upgrade-insecure-requests`;
 
   // ---- Custom domain routing ----
   if (MAIN_DOMAIN && hostnameWithoutPort !== MAIN_DOMAIN && hostnameWithoutPort !== 'localhost') {
@@ -129,10 +130,12 @@ export async function middleware(request: NextRequest) {
     response.headers.set('X-Nonce', nonce);
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
     // SECURITY FIX (FE-M01): Set CSRF cookie on page responses
+    // NOTE: sameSite 'lax' (not 'strict') is required for OAuth redirects —
+    // Google redirects back with a GET, and 'strict' would block the cookie.
     response.cookies.set('csrf-token', csrfToken, {
       httpOnly: false,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       path: '/',
       maxAge: 3600,
     });
@@ -146,13 +149,14 @@ export async function middleware(request: NextRequest) {
   // Security headers (supplementary to next.config.ts static headers)
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
   // SECURITY FIX (FE-M01): Set CSRF cookie on page responses
-  response.cookies.set('csrf-token', csrfToken, {
-    httpOnly: false,
-    secure: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 3600,
-  });
+    // NOTE: sameSite 'lax' (not 'strict') is required for OAuth redirects
+    response.cookies.set('csrf-token', csrfToken, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 3600,
+    });
   response.headers.set('X-CSRF-Token', csrfToken);
   return response;
 }
