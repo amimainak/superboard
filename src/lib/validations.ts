@@ -126,7 +126,18 @@ export const getInviteByCodeSchema = z.object({
 
 export const aiActionSchema = z.object({
   userId: uuidSchema,
-  action: z.enum(["QUIZ", "WORKSHEET", "SUMMARY", "GRAMMAR", "OUTLINE", "PLOT_GRAPH", "PERFECT_SHAPE", "HANDWRITING_TO_MATH", "DIAGRAM_GENERATOR", "CHEMICAL_BALANCER", "LAB_SUMMARY", "VOCAB_QUIZ", "PHONICS_HELPER", "TIMELINE_GENERATOR", "CONCEPT_SUMMARIZER"] as [AIAction, ...AIAction[]]),
+  action: z.enum([
+    // Original 14
+    "QUIZ", "WORKSHEET", "SUMMARY", "GRAMMAR", "OUTLINE", "PLOT_GRAPH",
+    "PERFECT_SHAPE", "HANDWRITING_TO_MATH", "DIAGRAM_GENERATOR",
+    "CHEMICAL_BALANCER", "LAB_SUMMARY", "VOCAB_QUIZ", "PHONICS_HELPER",
+    "TIMELINE_GENERATOR", "CONCEPT_SUMMARIZER",
+    // Enhanced 10
+    "LESSON_PLAN", "DIFFERENTIATED_INSTRUCTION", "FORMATIVE_ASSESSMENT",
+    "RUBRIC_GENERATOR", "STUDENT_FEEDBACK", "CONCEPT_EXPLAINER",
+    "STEP_BY_STEP_SOLVER", "FLASHCARD_GENERATOR", "WORD_PROBLEM_BUILDER",
+    "ANNOTATION_HELPER",
+  ] as [AIAction, ...AIAction[]]),
   prompt: z.string().min(1, 'Prompt is required').max(50_000, 'Prompt too long (max 50,000 characters)'),
   // SECURITY FIX (V-14): Reduced base64 image limit from 20MB to 5MB
   imageBase64: z.string().max(5_000_000, 'Image too large (max ~5MB)').optional(),

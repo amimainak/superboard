@@ -1,26 +1,15 @@
 /**
  * AI Enhancement Utilities — Phase 6B
- * Extended AI capabilities for the tutoring platform.
+ * Prompt templates for enhanced AI actions.
+ * Action types and routing are defined in src/types/index.ts.
+ *
+ * Enhanced actions are Pro-only and cost 3-5 credits each.
  */
 
-// Additional AI actions
-export const ENHANCED_AI_ACTIONS = {
-  LESSON_PLAN: 'LESSON_PLAN',
-  DIFFERENTIATED_INSTRUCTION: 'DIFFERENTIATED_INSTRUCTION',
-  FORMATIVE_ASSESSMENT: 'FORMATIVE_ASSESSMENT',
-  RUBRIC_GENERATOR: 'RUBRIC_GENERATOR',
-  STUDENT_FEEDBACK: 'STUDENT_FEEDBACK',
-  CONCEPT_EXPLAINER: 'CONCEPT_EXPLAINER',
-  STEP_BY_STEP_SOLVER: 'STEP_BY_STEP_SOLVER',
-  FLASHCARD_GENERATOR: 'FLASHCARD_GENERATOR',
-  WORD_PROBLEM_BUILDER: 'WORD_PROBLEM_BUILDER',
-  ANNOTATION_HELPER: 'ANNOTATION_HELPER',
-} as const;
-
-export type EnhancedAIAction = typeof ENHANCED_AI_ACTIONS[keyof typeof ENHANCED_AI_ACTIONS];
+import type { AIAction, Subject } from '@/types';
 
 // Prompt templates for each enhanced AI action
-export const AI_PROMPT_TEMPLATES: Record<EnhancedAIAction, (context: string) => string> = {
+export const AI_PROMPT_TEMPLATES: Record<string, (context: string) => string> = {
   LESSON_PLAN: (context) =>
     `Create a detailed lesson plan for: ${context}. Include:
 - Learning objectives (aligned to K-12 standards)
@@ -95,7 +84,7 @@ Include:
 - Real-world scenarios relevant to students' lives
 - Clear, age-appropriate language
 - Multiple choice answers (A-D)
-- Difficulty progression (easy → challenging)
+- Difficulty progression (easy to challenging)
 - Answer key with step-by-step solutions`,
 
   ANNOTATION_HELPER: (context) =>
@@ -110,8 +99,8 @@ Include:
 /**
  * Build a system prompt for enhanced AI actions.
  */
-export function buildEnhancedSystemPrompt(action: EnhancedAIAction): string {
-  const prompts: Record<EnhancedAIAction, string> = {
+export function buildEnhancedSystemPrompt(action: string): string {
+  const prompts: Record<string, string> = {
     LESSON_PLAN: 'You are an expert K-12 curriculum designer. Create comprehensive, standards-aligned lesson plans.',
     DIFFERENTIATED_INSTRUCTION: 'You are a special education and gifted education specialist. Design activities that meet diverse learning needs.',
     FORMATIVE_ASSESSMENT: 'You are an assessment design expert. Create valid, reliable formative assessments aligned to learning objectives.',
@@ -125,3 +114,36 @@ export function buildEnhancedSystemPrompt(action: EnhancedAIAction): string {
   };
   return prompts[action] || 'You are a helpful K-12 tutoring assistant.';
 }
+
+/**
+ * Map enhanced actions to their primary subject for toolbar grouping.
+ * Some actions are cross-subject and appear in multiple toolkits.
+ */
+export const ENHANCED_ACTION_SUBJECTS: Record<string, { primary: Subject; secondary?: Subject[] }> = {
+  LESSON_PLAN: { primary: 'GENERAL', secondary: ['MATH', 'SCIENCE', 'LANGUAGE'] },
+  DIFFERENTIATED_INSTRUCTION: { primary: 'GENERAL', secondary: ['MATH', 'SCIENCE', 'LANGUAGE'] },
+  FORMATIVE_ASSESSMENT: { primary: 'GENERAL', secondary: ['MATH', 'SCIENCE', 'LANGUAGE'] },
+  RUBRIC_GENERATOR: { primary: 'LANGUAGE', secondary: ['GENERAL'] },
+  STUDENT_FEEDBACK: { primary: 'GENERAL', secondary: ['MATH', 'SCIENCE', 'LANGUAGE'] },
+  CONCEPT_EXPLAINER: { primary: 'GENERAL', secondary: ['MATH', 'SCIENCE'] },
+  STEP_BY_STEP_SOLVER: { primary: 'MATH', secondary: ['SCIENCE'] },
+  FLASHCARD_GENERATOR: { primary: 'LANGUAGE', secondary: ['SCIENCE', 'GENERAL'] },
+  WORD_PROBLEM_BUILDER: { primary: 'MATH', secondary: ['SCIENCE'] },
+  ANNOTATION_HELPER: { primary: 'LANGUAGE', secondary: ['GENERAL'] },
+};
+
+/**
+ * Human-readable labels for enhanced actions.
+ */
+export const ENHANCED_ACTION_LABELS: Record<string, { label: string; description: string }> = {
+  LESSON_PLAN: { label: 'Lesson Plan', description: 'Create standards-aligned lesson plans' },
+  DIFFERENTIATED_INSTRUCTION: { label: 'Differentiated Instruction', description: '3-tier activities for diverse learners' },
+  FORMATIVE_ASSESSMENT: { label: 'Formative Assessment', description: 'MCQ, short answer, and extended response' },
+  RUBRIC_GENERATOR: { label: 'Rubric Generator', description: '4-level grading rubrics with criteria' },
+  STUDENT_FEEDBACK: { label: 'Student Feedback', description: 'Constructive, encouraging feedback' },
+  CONCEPT_EXPLAINER: { label: 'Concept Explainer', description: 'Student-friendly explanations with analogies' },
+  STEP_BY_STEP_SOLVER: { label: 'Step-by-Step Solver', description: 'Show every step with verification' },
+  FLASHCARD_GENERATOR: { label: 'Flashcard Generator', description: '10 study flashcards with difficulty levels' },
+  WORD_PROBLEM_BUILDER: { label: 'Word Problem Builder', description: '5 word problems with answer keys' },
+  ANNOTATION_HELPER: { label: 'Annotation Helper', description: 'Annotate text with vocabulary and questions' },
+};

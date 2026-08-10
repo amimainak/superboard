@@ -15,7 +15,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import type { Subject } from '@/types';
-import { Pen, MousePointer2, Eraser, Hand, Type, Square, Circle, Minus, ArrowUpRight, Sparkles, Brain, BookOpen, FlaskConical, Languages, PenTool, MoreHorizontal, Shapes } from 'lucide-react';
+import { Pen, MousePointer2, Eraser, Hand, Type, Square, Circle, Minus, ArrowUpRight, Sparkles, Brain, BookOpen, FlaskConical, Languages, PenTool, MoreHorizontal, Shapes, GraduationCap, Target, ClipboardCheck, BookMarked, Layers, HelpCircle, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -35,33 +35,41 @@ interface ToolbarProps {
 }
 
 // AI feature definitions per subject (Blueprint §4.2)
-const SUBJECT_AI_TOOLS: Record<Subject, { id: string; icon: React.ElementType; label: string; action: string }[]> = {
+const SUBJECT_AI_TOOLS: Record<Subject, { id: string; icon: React.ElementType; label: string; action: string; creditCost: number; proOnly?: boolean }[]> = {
   MATH: [
-    { id: 'handwriting-to-math', icon: PenTool, label: 'Handwriting to Math', action: 'HANDWRITING_TO_MATH' },
-    { id: 'shape-perfect', icon: Brain, label: 'Shape Perfect', action: 'PERFECT_SHAPE' },
-    { id: 'plot-graph', icon: FlaskConical, label: 'AI Graph Plotter', action: 'PLOT_GRAPH' },
-    { id: 'quiz', icon: BookOpen, label: 'Math Quiz', action: 'QUIZ' },
-    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+    { id: 'handwriting-to-math', icon: PenTool, label: 'Handwriting to Math', action: 'HANDWRITING_TO_MATH', creditCost: 3 },
+    { id: 'shape-perfect', icon: Brain, label: 'Shape Perfect', action: 'PERFECT_SHAPE', creditCost: 2 },
+    { id: 'plot-graph', icon: FlaskConical, label: 'Smart Graph Plotter', action: 'PLOT_GRAPH', creditCost: 3 },
+    { id: 'quiz', icon: BookOpen, label: 'Math Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'step-solver', icon: HelpCircle, label: 'Step-by-Step Solver', action: 'STEP_BY_STEP_SOLVER', creditCost: 3, proOnly: true },
   ],
   SCIENCE: [
-    { id: 'diagram-gen', icon: Brain, label: 'Diagram Generator', action: 'DIAGRAM_GENERATOR' },
-    { id: 'chem-balance', icon: FlaskConical, label: 'Equation Balancer', action: 'CHEMICAL_BALANCER' },
-    { id: 'lab-summary', icon: BookOpen, label: 'Lab Summary', action: 'LAB_SUMMARY' },
-    { id: 'quiz', icon: BookOpen, label: 'Science Quiz', action: 'QUIZ' },
-    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+    { id: 'diagram-gen', icon: Brain, label: 'Diagram Generator', action: 'DIAGRAM_GENERATOR', creditCost: 3 },
+    { id: 'chem-balance', icon: FlaskConical, label: 'Equation Balancer', action: 'CHEMICAL_BALANCER', creditCost: 1 },
+    { id: 'lab-summary', icon: BookOpen, label: 'Lab Summary', action: 'LAB_SUMMARY', creditCost: 1 },
+    { id: 'quiz', icon: BookOpen, label: 'Science Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'word-problems', icon: Target, label: 'Word Problems', action: 'WORD_PROBLEM_BUILDER', creditCost: 5, proOnly: true },
+    { id: 'formative-assess', icon: ClipboardCheck, label: 'Formative Assessment', action: 'FORMATIVE_ASSESSMENT', creditCost: 5, proOnly: true },
   ],
   LANGUAGE: [
-    { id: 'grammar', icon: PenTool, label: 'Grammar Highlight', action: 'GRAMMAR' },
-    { id: 'vocab-quiz', icon: BookOpen, label: 'Vocab Quiz', action: 'VOCAB_QUIZ' },
-    { id: 'essay-outline', icon: Brain, label: 'Essay Outliner', action: 'OUTLINE' },
-    { id: 'phonics', icon: Languages, label: 'Phonics Helper', action: 'PHONICS_HELPER' },
-    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+    { id: 'grammar', icon: PenTool, label: 'Grammar Highlight', action: 'GRAMMAR', creditCost: 1 },
+    { id: 'vocab-quiz', icon: BookOpen, label: 'Vocab Quiz', action: 'VOCAB_QUIZ', creditCost: 1 },
+    { id: 'essay-outline', icon: Brain, label: 'Essay Outliner', action: 'OUTLINE', creditCost: 1 },
+    { id: 'phonics', icon: Languages, label: 'Phonics Helper', action: 'PHONICS_HELPER', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'flashcards', icon: Layers, label: 'Flashcards', action: 'FLASHCARD_GENERATOR', creditCost: 3, proOnly: true },
+    { id: 'rubric', icon: BookMarked, label: 'Rubric Generator', action: 'RUBRIC_GENERATOR', creditCost: 5, proOnly: true },
   ],
   GENERAL: [
-    { id: 'timeline', icon: BookOpen, label: 'Timeline Generator', action: 'TIMELINE_GENERATOR' },
-    { id: 'summarizer', icon: Brain, label: 'Concept Summarizer', action: 'CONCEPT_SUMMARIZER' },
-    { id: 'quiz', icon: BookOpen, label: 'Quiz', action: 'QUIZ' },
-    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET' },
+    { id: 'timeline', icon: BookOpen, label: 'Timeline Generator', action: 'TIMELINE_GENERATOR', creditCost: 1 },
+    { id: 'summarizer', icon: Brain, label: 'Concept Summarizer', action: 'CONCEPT_SUMMARIZER', creditCost: 1 },
+    { id: 'quiz', icon: BookOpen, label: 'Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'lesson-plan', icon: GraduationCap, label: 'Lesson Plan', action: 'LESSON_PLAN', creditCost: 5, proOnly: true },
+    { id: 'feedback', icon: MessageSquare, label: 'Student Feedback', action: 'STUDENT_FEEDBACK', creditCost: 3, proOnly: true },
+    { id: 'differentiated', icon: Star, label: 'Differentiated Instruction', action: 'DIFFERENTIATED_INSTRUCTION', creditCost: 5, proOnly: true },
   ],
 };
 

@@ -4,7 +4,8 @@
 // Routes AI requests to the correct Claude model:
 // - Text tasks → Claude 3 Haiku (cost savings)
 // - Vision tasks → Claude 3.5 Sonnet (high accuracy)
-// Deducts AI credits only when real AI is used.
+// Deducts AI credits based on CREDIT_COSTS map (variable pricing).
+// Enhanced actions (lesson plans, rubrics, etc.) are Pro+ only.
 // Requires auth — JWT must match the userId in the body.
 // ============================================================
 
@@ -14,7 +15,7 @@ import { requireAuth } from '@/lib/auth';
 import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
 import { aiActionSchema, validateInput } from '@/lib/validations';
 import type { Tier, AIAction } from '@/types';
-import { TEXT_AI_ACTIONS } from '@/types';
+import { TEXT_AI_ACTIONS, CREDIT_COSTS, ENHANCED_ACTION_SET } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -43,15 +44,30 @@ export async function POST(request: NextRequest) {
 
     const tier = user.tier as Tier;
 
-    // 2. Check feature access
+    // 2. Check basic feature access (aiTools flag)
     if (!hasFeature(tier, 'aiTools')) {
       return NextResponse.json(
-        { error: 'FEATURE_LOCKED', message: 'AI tools require Pro or Agency tier' },
+        { error: 'FEATURE_LOCKED', message: 'Smart tools require Pro or Agency tier' },
         { status: 403 }
       );
     }
 
-    // 3. Check AI credits (only for real API calls)
+    // 3. Block enhanced actions for FREE tier (they get the 14 original actions only)
+    if (tier === 'FREE' && ENHANCED_ACTION_SET.has(action as AIAction)) {
+      return NextResponse.json(
+        {
+          error: 'UPGRADE_REQUIRED',
+          message: 'This advanced feature requires Pro. Upgrade to unlock lesson plans, rubrics, flashcards, and more.',
+          feature: action,
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4. Get credit cost for this action
+    const creditCost = CREDIT_COSTS[action as AIAction] ?? 1;
+
+    // 5. Check AI credits (only for real API calls)
     const apiKey = process.env.ANTHROPIC_API_KEY || '';
     const isRealApiAvailable = !!apiKey && !apiKey.startsWith('TODO_');
 
@@ -61,20 +77,39 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: 'LIMIT_REACHED',
-            message: 'AI credits exhausted for this period.',
+            message: 'Smart credits exhausted for this period. Upgrade for more credits.',
             creditsUsed: creditCheck.creditsUsed,
             creditsLimit: creditCheck.creditsLimit,
+            creditCost,
+          },
+          { status: 403 }
+        );
+      }
+
+      // Check if user has enough credits for THIS specific action
+      const remaining = creditCheck.creditsLimit === Infinity
+        ? Infinity
+        : creditCheck.creditsLimit - creditCheck.creditsUsed;
+      if (remaining !== Infinity && remaining < creditCost) {
+        return NextResponse.json(
+          {
+            error: 'INSUFFICIENT_CREDITS',
+            message: `This action costs ${creditCost} credit${creditCost > 1 ? 's' : ''}. You have ${remaining} remaining. Upgrade for more credits.`,
+            creditsUsed: creditCheck.creditsUsed,
+            creditsLimit: creditCheck.creditsLimit,
+            creditCost,
+            remaining,
           },
           { status: 403 }
         );
       }
     }
 
-    // 4. MANDATORY ROUTING LOGIC FOR COST
+    // 6. MANDATORY ROUTING LOGIC FOR COST
     const isTextAction = TEXT_AI_ACTIONS.includes(action as AIAction);
     const targetModel = isTextAction ? 'claude-3-haiku-20240307' : 'claude-3-5-sonnet-20241022';
 
-    // 5. Call Anthropic API
+    // 7. Call Anthropic API
     let result: string;
 
     if (!isRealApiAvailable) {
@@ -93,9 +128,9 @@ export async function POST(request: NextRequest) {
       result = generatePlaceholderResponse(action, prompt);
     }
 
-    // 6. Only deduct credits for REAL API calls, not placeholders
+    // 8. Deduct credits based on variable cost (only for real API calls)
     if (isRealApiAvailable) {
-      await incrementAICredits(userId, tier);
+      await incrementAICredits(userId, tier, creditCost);
     }
 
     const creditCheck = isRealApiAvailable
@@ -108,6 +143,7 @@ export async function POST(request: NextRequest) {
       action,
       result,
       isPlaceholder: !isRealApiAvailable,
+      creditCost,
       creditsRemaining: creditCheck
         ? creditCheck.creditsLimit === Infinity
           ? Infinity

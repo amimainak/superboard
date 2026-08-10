@@ -18,7 +18,7 @@ const FEATURES: {
 }[] = [
   { icon: PenTool, title: 'Infinite Whiteboard', description: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', color: 'from-emerald-500 to-teal-500', tier: 'free', tierLabel: 'Free' },
   { icon: Video, title: 'Live Video Calling', description: 'Built-in face-to-face video with your students. No separate app needed — everything happens on the same screen.', color: 'from-blue-500 to-cyan-500', tier: 'free', tierLabel: 'Free · Limited' },
-  { icon: Sparkles, title: 'Smart Content Tools', description: 'Generate quizzes, plot graphs, balance equations, and create worksheets right from your board.', color: 'from-purple-500 to-indigo-500', tier: 'pro', tierLabel: 'Pro' },
+  { icon: Sparkles, title: 'Smart Content Tools', description: 'Generate quizzes, plot graphs, balance equations, and create worksheets right from your board. Free users get 10 credits/week.', color: 'from-purple-500 to-indigo-500', tier: 'free', tierLabel: 'Free (limited)' },
   { icon: Brain, title: 'Handwriting Recognition', description: 'Convert handwritten math into digital equations and diagrams automatically.', color: 'from-cyan-500 to-blue-500', tier: 'pro', tierLabel: 'Pro' },
   { icon: Download, title: 'Export & Templates', description: 'Save boards as reusable templates, export branded PDFs, and share PNGs with students.', color: 'from-orange-500 to-red-500', tier: 'pro', tierLabel: 'Pro' },
   { icon: Clock, title: 'Session Recording', description: 'Record lessons for students to review later. Great for absent students or exam revision.', color: 'from-teal-500 to-emerald-500', tier: 'pro', tierLabel: 'Pro · Limited' },

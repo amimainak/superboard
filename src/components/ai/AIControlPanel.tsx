@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { useAppStore } from '@/store/app-store';
+import { CREDIT_COSTS } from '@/types';
 import {
   Sheet,
   SheetContent,
@@ -41,6 +42,14 @@ import {
   Clock,
   Lightbulb,
   Shapes,
+  GraduationCap,
+  MessageSquare,
+  Target,
+  ClipboardCheck,
+  BookMarked,
+  Layers,
+  Star,
+  HelpCircle,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -51,6 +60,8 @@ interface AIFeatureDef {
   label: string;
   description: string;
   icon: LucideIcon;
+  creditCost: number;
+  proOnly?: boolean;
 }
 
 interface SubjectGroup {
@@ -71,32 +82,45 @@ const SUBJECT_FEATURES: SubjectGroup[] = [
       {
         id: 'QUIZ',
         label: 'Quiz Generator',
-        description: 'Generate interactive quizzes from any math topic',
+        description: 'Generate interactive quizzes (1 credit)',
         icon: Sparkles,
+        creditCost: 1,
       },
       {
         id: 'WORKSHEET',
         label: 'Worksheet Generator',
-        description: 'Create printable math worksheets with problems',
+        description: 'Create printable worksheets (2 credits)',
         icon: FileSpreadsheet,
+        creditCost: 2,
       },
       {
         id: 'HANDWRITING_TO_MATH',
-        label: 'Handwriting → LaTeX',
-        description: 'Convert handwritten equations to clean LaTeX',
+        label: 'Handwriting to LaTeX',
+        description: 'Convert handwritten equations (3 credits)',
         icon: PenTool,
+        creditCost: 3,
       },
       {
         id: 'PLOT_GRAPH',
         label: 'Smart Graph Plotter',
-        description: 'Plot functions from equations',
+        description: 'Plot functions from equations (3 credits)',
         icon: LineChart,
+        creditCost: 3,
       },
       {
         id: 'PERFECT_SHAPE',
         label: 'Shape Perfection',
-        description: 'Perfect hand-drawn geometric shapes',
+        description: 'Perfect hand-drawn shapes (2 credits)',
         icon: Shapes,
+        creditCost: 2,
+      },
+      {
+        id: 'STEP_BY_STEP_SOLVER',
+        label: 'Step-by-Step Solver',
+        description: 'Solve problems with full working (3 credits)',
+        icon: HelpCircle,
+        creditCost: 3,
+        proOnly: true,
       },
     ],
   },
@@ -108,20 +132,39 @@ const SUBJECT_FEATURES: SubjectGroup[] = [
       {
         id: 'DIAGRAM_GENERATOR',
         label: 'Diagram Generator',
-        description: 'Generate scientific diagrams from descriptions',
+        description: 'Generate scientific diagrams (3 credits)',
         icon: Atom,
+        creditCost: 3,
       },
       {
         id: 'CHEMICAL_BALANCER',
         label: 'Chemical Equation Balancer',
-        description: 'Balance chemical equations automatically',
+        description: 'Balance chemical equations (1 credit)',
         icon: TestTube,
+        creditCost: 1,
       },
       {
         id: 'LAB_SUMMARY',
         label: 'Lab Report Summary',
-        description: 'Summarize lab notes and observations',
+        description: 'Summarize lab notes (1 credit)',
         icon: FileText,
+        creditCost: 1,
+      },
+      {
+        id: 'WORD_PROBLEM_BUILDER',
+        label: 'Word Problem Builder',
+        description: 'Create science word problems (5 credits)',
+        icon: Target,
+        creditCost: 5,
+        proOnly: true,
+      },
+      {
+        id: 'FORMATIVE_ASSESSMENT',
+        label: 'Formative Assessment',
+        description: 'Create MCQ + short answer tests (5 credits)',
+        icon: ClipboardCheck,
+        creditCost: 5,
+        proOnly: true,
       },
     ],
   },
@@ -133,20 +176,39 @@ const SUBJECT_FEATURES: SubjectGroup[] = [
       {
         id: 'GRAMMAR',
         label: 'Grammar Checker',
-        description: 'Check and correct grammar on the whiteboard',
+        description: 'Check and correct grammar (1 credit)',
         icon: SpellCheck,
+        creditCost: 1,
       },
       {
         id: 'VOCAB_QUIZ',
         label: 'Vocabulary Quiz',
-        description: 'Generate vocabulary quizzes from context',
+        description: 'Generate vocabulary quizzes (1 credit)',
         icon: Type,
+        creditCost: 1,
       },
       {
         id: 'PHONICS_HELPER',
         label: 'Phonics Helper',
-        description: 'Interactive phonics and pronunciation aid',
+        description: 'Interactive phonics aid (1 credit)',
         icon: Volume2,
+        creditCost: 1,
+      },
+      {
+        id: 'FLASHCARD_GENERATOR',
+        label: 'Flashcard Generator',
+        description: 'Create 10 study flashcards (3 credits)',
+        icon: Layers,
+        creditCost: 3,
+        proOnly: true,
+      },
+      {
+        id: 'RUBRIC_GENERATOR',
+        label: 'Rubric Generator',
+        description: 'Create 4-level grading rubrics (5 credits)',
+        icon: BookMarked,
+        creditCost: 5,
+        proOnly: true,
       },
     ],
   },
@@ -158,20 +220,47 @@ const SUBJECT_FEATURES: SubjectGroup[] = [
       {
         id: 'SUMMARY',
         label: 'Concept Summarizer',
-        description: 'Summarize whiteboard content into key points',
+        description: 'Summarize board content (1 credit)',
         icon: Lightbulb,
+        creditCost: 1,
       },
       {
         id: 'OUTLINE',
         label: 'Outline Generator',
-        description: 'Create structured outlines from notes',
+        description: 'Create structured outlines (1 credit)',
         icon: List,
+        creditCost: 1,
       },
       {
         id: 'TIMELINE_GENERATOR',
         label: 'Timeline Generator',
-        description: 'Generate visual timelines from events',
+        description: 'Generate visual timelines (1 credit)',
         icon: Clock,
+        creditCost: 1,
+      },
+      {
+        id: 'LESSON_PLAN',
+        label: 'Lesson Plan',
+        description: 'Standards-aligned lesson plans (5 credits)',
+        icon: GraduationCap,
+        creditCost: 5,
+        proOnly: true,
+      },
+      {
+        id: 'STUDENT_FEEDBACK',
+        label: 'Student Feedback',
+        description: 'Constructive feedback writing (3 credits)',
+        icon: MessageSquare,
+        creditCost: 3,
+        proOnly: true,
+      },
+      {
+        id: 'DIFFERENTIATED_INSTRUCTION',
+        label: 'Differentiated Instruction',
+        description: '3-tier activities (5 credits)',
+        icon: Star,
+        creditCost: 5,
+        proOnly: true,
       },
     ],
   },
@@ -182,6 +271,7 @@ const SUBJECT_FEATURES: SubjectGroup[] = [
 // ============================================================
 
 export default function AIControlPanel() {
+  const tier = useAppStore((s) => s.tier);
   const aiPanelOpen = useAppStore((s) => s.aiPanelOpen);
   const toggleAIPanel = useAppStore((s) => s.toggleAIPanel);
   const aiFeaturesEnabled = useAppStore((s) => s.aiFeaturesEnabled);
@@ -252,12 +342,19 @@ export default function AIControlPanel() {
                         <div className="flex items-center gap-3 min-w-0">
                           <FeatureIcon className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="min-w-0">
-                            <Label
-                              htmlFor={`toggle-${feature.id}`}
-                              className="text-sm font-medium cursor-pointer truncate block"
-                            >
-                              {feature.label}
-                            </Label>
+                            <div className="flex items-center gap-1.5">
+                              <Label
+                                htmlFor={`toggle-${feature.id}`}
+                                className="text-sm font-medium cursor-pointer truncate block"
+                              >
+                                {feature.label}
+                              </Label>
+                              {feature.proOnly && (
+                                <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
+                                  Pro
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-muted-foreground leading-tight truncate">
                               {feature.description}
                             </p>

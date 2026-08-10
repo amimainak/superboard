@@ -115,13 +115,14 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
 }
 
 /**
- * Increment AI credit usage by 1.
+ * Increment AI credit usage by a variable amount.
+ * Uses CREDIT_COSTS map — different actions cost different credits.
  */
-export async function incrementAICredits(userId: string, tier: Tier) {
+export async function incrementAICredits(userId: string, tier: Tier, cost: number = 1) {
   const usageLog = await getCurrentUsageLog(userId, tier);
   return db.usageLog.update({
     where: { id: usageLog.id },
-    data: { aiCreditsUsed: { increment: 1 } },
+    data: { aiCreditsUsed: { increment: cost } },
   });
 }
 

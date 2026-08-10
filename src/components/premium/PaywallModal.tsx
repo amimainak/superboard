@@ -25,19 +25,20 @@ import { cn } from '@/lib/utils';
 
 // ---------- Feature comparison rows ----------
 const FEATURES: { label: string; free: boolean; pro: boolean; agencyStandard: boolean; agencyPremium: boolean }[] = [
-  { label: 'AI Smart Tools', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Smart tools (quiz, graph, shapes)', free: true, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Advanced tools (lesson plans, rubrics)', free: false, pro: true, agencyStandard: true, agencyPremium: true },
   { label: 'Save & load boards', free: false, pro: true, agencyStandard: true, agencyPremium: true },
   { label: 'Upload images', free: false, pro: true, agencyStandard: true, agencyPremium: true },
   { label: 'Download as PDF', free: false, pro: true, agencyStandard: true, agencyPremium: true },
-  { label: 'GeoGebra integration', free: false, pro: true, agencyStandard: true, agencyPremium: true },
-  { label: 'Mathpix handwriting', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Graphing & geometry tools', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: 'Handwriting recognition', free: false, pro: true, agencyStandard: true, agencyPremium: true },
   { label: 'Lesson recordings', free: false, pro: true, agencyStandard: true, agencyPremium: true },
+  { label: '500 smart credits/month', free: false, pro: true, agencyStandard: true, agencyPremium: true },
   { label: 'White-label branding', free: false, pro: false, agencyStandard: true, agencyPremium: true },
   { label: 'Admin dashboard', free: false, pro: false, agencyStandard: true, agencyPremium: true },
   { label: 'Up to 5 sub-tutors', free: false, pro: false, agencyStandard: true, agencyPremium: true },
   { label: 'Unlimited sub-tutors', free: false, pro: false, agencyStandard: false, agencyPremium: true },
   { label: 'Priority support', free: false, pro: false, agencyStandard: false, agencyPremium: true },
-  { label: 'Advanced analytics', free: false, pro: false, agencyStandard: false, agencyPremium: false },
 ];
 
 function CheckIcon({ on }: { on: boolean }) {
@@ -69,8 +70,12 @@ export default function PaywallModal() {
             Upgrade required
           </DialogTitle>
           <DialogDescription>
-            <span className="font-semibold text-foreground">{paywallFeature}</span> is a premium
-            feature. Upgrade your plan to unlock it.
+            <span className="font-semibold text-foreground">{paywallFeature || 'This feature'}</span> requires an upgrade.
+            {(paywallFeature?.includes('credit') || paywallFeature?.includes('Smart')) ? (
+              <span className="text-muted-foreground"> Pro gives you 500 credits/month with access to all advanced tools.</span>
+            ) : (
+              <span className="text-muted-foreground"> Upgrade your plan to unlock this feature.</span>
+            )}
           </DialogDescription>
         </DialogHeader>
 

@@ -12,6 +12,7 @@ export function isAgencyTier(tier: Tier): boolean {
 export type Subject = 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL';
 
 export type AIAction =
+  // Original 14 actions
   | 'QUIZ'
   | 'WORKSHEET'
   | 'SUMMARY'
@@ -26,10 +27,22 @@ export type AIAction =
   | 'VOCAB_QUIZ'
   | 'PHONICS_HELPER'
   | 'TIMELINE_GENERATOR'
-  | 'CONCEPT_SUMMARIZER';
+  | 'CONCEPT_SUMMARIZER'
+  // Enhanced actions (wired from ai-enhancements.ts)
+  | 'LESSON_PLAN'
+  | 'DIFFERENTIATED_INSTRUCTION'
+  | 'FORMATIVE_ASSESSMENT'
+  | 'RUBRIC_GENERATOR'
+  | 'STUDENT_FEEDBACK'
+  | 'CONCEPT_EXPLAINER'
+  | 'STEP_BY_STEP_SOLVER'
+  | 'FLASHCARD_GENERATOR'
+  | 'WORD_PROBLEM_BUILDER'
+  | 'ANNOTATION_HELPER';
 
-// Text-only actions → routed to Claude 3 Haiku
+// Text-only actions → routed to Claude 3 Haiku (cheap, fast)
 export const TEXT_AI_ACTIONS: AIAction[] = [
+  // Original
   'QUIZ',
   'WORKSHEET',
   'SUMMARY',
@@ -41,15 +54,95 @@ export const TEXT_AI_ACTIONS: AIAction[] = [
   'CONCEPT_SUMMARIZER',
   'CHEMICAL_BALANCER',
   'LAB_SUMMARY',
+  // Enhanced
+  'LESSON_PLAN',
+  'DIFFERENTIATED_INSTRUCTION',
+  'FORMATIVE_ASSESSMENT',
+  'RUBRIC_GENERATOR',
+  'STUDENT_FEEDBACK',
+  'CONCEPT_EXPLAINER',
+  'STEP_BY_STEP_SOLVER',
+  'FLASHCARD_GENERATOR',
+  'WORD_PROBLEM_BUILDER',
+  'ANNOTATION_HELPER',
 ];
 
-// Vision actions → routed to Claude 3.5 Sonnet
+// Vision actions → routed to Claude 3.5 Sonnet (expensive, accurate)
 export const VISION_AI_ACTIONS: AIAction[] = [
   'PLOT_GRAPH',
   'PERFECT_SHAPE',
   'HANDWRITING_TO_MATH',
   'DIAGRAM_GENERATOR',
 ];
+
+// ---- Variable Credit Costs per Action ----
+// Text (Haiku) actions are cheap → 1-2 credits
+// Vision (Sonnet) actions are expensive → 2-3 credits
+// Enhanced (Pro-only) actions are premium → 5 credits
+
+export const CREDIT_COSTS: Record<AIAction, number> = {
+  // Original — cheap wow features (give to free users)
+  QUIZ: 1,
+  WORKSHEET: 2,
+  SUMMARY: 1,
+  GRAMMAR: 1,
+  OUTLINE: 1,
+  VOCAB_QUIZ: 1,
+  PHONICS_HELPER: 1,
+  TIMELINE_GENERATOR: 1,
+  CONCEPT_SUMMARIZER: 1,
+  CHEMICAL_BALANCER: 1,
+  LAB_SUMMARY: 1,
+  // Vision — higher cost, still available to free
+  PLOT_GRAPH: 3,
+  PERFECT_SHAPE: 2,
+  HANDWRITING_TO_MATH: 3,
+  DIAGRAM_GENERATOR: 3,
+  // Enhanced — Pro-only, premium pricing
+  LESSON_PLAN: 5,
+  DIFFERENTIATED_INSTRUCTION: 5,
+  FORMATIVE_ASSESSMENT: 5,
+  RUBRIC_GENERATOR: 5,
+  STUDENT_FEEDBACK: 3,
+  CONCEPT_EXPLAINER: 3,
+  STEP_BY_STEP_SOLVER: 3,
+  FLASHCARD_GENERATOR: 3,
+  WORD_PROBLEM_BUILDER: 5,
+  ANNOTATION_HELPER: 3,
+};
+
+// Enhanced actions are Pro+ only (not available on free tier)
+export const ENHANCED_ACTION_SET: ReadonlySet<AIAction> = new Set([
+  'LESSON_PLAN',
+  'DIFFERENTIATED_INSTRUCTION',
+  'FORMATIVE_ASSESSMENT',
+  'RUBRIC_GENERATOR',
+  'STUDENT_FEEDBACK',
+  'CONCEPT_EXPLAINER',
+  'STEP_BY_STEP_SOLVER',
+  'FLASHCARD_GENERATOR',
+  'WORD_PROBLEM_BUILDER',
+  'ANNOTATION_HELPER',
+]);
+
+// Actions available on the free tier (original 14 only, no enhanced)
+export const FREE_TIER_ACTIONS: ReadonlySet<AIAction> = new Set([
+  'QUIZ',
+  'WORKSHEET',
+  'SUMMARY',
+  'GRAMMAR',
+  'OUTLINE',
+  'PLOT_GRAPH',
+  'PERFECT_SHAPE',
+  'HANDWRITING_TO_MATH',
+  'DIAGRAM_GENERATOR',
+  'CHEMICAL_BALANCER',
+  'LAB_SUMMARY',
+  'VOCAB_QUIZ',
+  'PHONICS_HELPER',
+  'TIMELINE_GENERATOR',
+  'CONCEPT_SUMMARIZER',
+]);
 
 export interface RoomData {
   id: string;
@@ -102,10 +195,10 @@ export interface BrandingConfig {
 // ============================================================
 // Pricing & Tier Configuration
 // ============================================================
-// FREE:             $0/mo  — Conversion funnel (1 room, 25 AI credits/week)
+// FREE:             $0/mo  — Conversion funnel (1 room, 10 smart credits/week, AI enabled)
 // PRO:              $10/mo ($96/yr) — Freelance tutors (unlimited rooms, 500 credits/mo)
-// AGENCY_STANDARD:  $39/mo + $3.00/hr — Small agencies (up to 5 sub-tutors)
-// AGENCY_PREMIUM:   $79/mo + $2.00/hr — Large agencies (unlimited sub-tutors)
+// AGENCY_STANDARD:  $39/mo + $3.00/hr — Small agencies (up to 5 sub-tutors, 5000 credits/mo)
+// AGENCY_PREMIUM:   $79/mo + $2.00/hr — Large agencies (unlimited sub-tutors, 5000 credits/mo)
 // ============================================================
 
 export const PRICING = {
@@ -136,7 +229,7 @@ export const TIER_LIMITS = {
     maxActiveRooms: 1,
     maxSubTutors: 0,
     videoMinutesPerWeek: 120,
-    aiCreditsPerWeek: 25,
+    aiCreditsPerWeek: 10,
     recordingsPerMonth: 0,
     features: {
       uploads: false,
@@ -146,7 +239,7 @@ export const TIER_LIMITS = {
       geogebra: false,
       shapePerfect: false,
       mathpix: false,
-      aiTools: false,
+      aiTools: true,  // UNLOCKED: Give free users a taste of AI to drive conversion
       recordings: false,
       whiteLabel: false,
       adminDashboard: false,

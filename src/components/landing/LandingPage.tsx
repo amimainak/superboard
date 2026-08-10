@@ -496,6 +496,8 @@ function LandingPage() {
                 {[
                   '1 active room',
                   '120 min video calling/week',
+                  '10 smart credits/week',
+                  'Smart tools (quiz, graph, shapes)',
                   'Basic whiteboard & drawing',
                   'Share room link with students',
                 ].map((f) => (
@@ -504,7 +506,7 @@ function LandingPage() {
               </ul>
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <p className="text-xs text-gray-400 leading-relaxed">
-                  Smart tools, save/load, templates, PDF export, and recordings require Pro or above.
+                  Save/load, templates, PDF export, recordings, and advanced tools (lesson plans, rubrics, flashcards) require Pro.
                 </p>
               </div>
             </div>
@@ -606,7 +608,8 @@ function LandingPage() {
                   { feature: 'Active rooms', free: '1', pro: 'Unlimited', agency: 'Unlimited' },
                   { feature: 'Video calling', free: '120 min/wk', pro: 'Unlimited', agency: 'Unlimited' },
                   { feature: 'Whiteboard & drawing', free: true, pro: true, agency: true },
-                  { feature: 'Smart subject tools', free: false, pro: true, agency: true },
+                  { feature: 'Smart tools (quiz, graph)', free: '10 credits/wk', pro: '500/mo', agency: '5,000/mo' },
+                  { feature: 'Advanced tools (plans, rubrics)', free: false, pro: true, agency: true },
                   { feature: 'Save & load boards', free: false, pro: true, agency: true },
                   { feature: 'Templates', free: false, pro: true, agency: true },
                   { feature: 'PDF export', free: false, pro: true, agency: true },
@@ -634,7 +637,7 @@ function LandingPage() {
             </table>
           </div>
           <p className="text-xs text-gray-400 text-center mt-4">
-            Smart subject tools include quiz generation, graphing, equation solving, grammar checks, and more.
+            Smart tools include quiz generation, graphing, equation balancing, grammar checks, and shape perfection. Advanced tools include lesson plans, rubrics, flashcards, differentiated instruction, and more.
           </p>
         </div>
       </section>
