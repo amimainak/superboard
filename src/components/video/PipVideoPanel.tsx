@@ -4,13 +4,17 @@
 // Native floating panel inside the whiteboard UI (position: fixed).
 // Contains LiveKit video grid with tutor + student webcams,
 // mute/deafen controls, and recording button.
-// Uses placeholder divs for actual video until LiveKit credentials are wired.
+//
+// Uses useLiveKitRoom hook for real LiveKit connection management.
+// Shows credit warnings at 80% and hard block at 100%.
 // ============================================================
 
 'use client';
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { useLiveKitRoom } from '@/hooks/useLiveKitRoom';
+import { useCredits } from '@/hooks/useCredits';
 import RecordButton from './RecordButton';
 import {
   Mic,
@@ -18,13 +22,13 @@ import {
   Headphones,
   HeadphoneOff,
   Minimize2,
-  Maximize2,
   PhoneOff,
   GripHorizontal,
   Video,
   VideoOff,
   User,
   MonitorSpeaker,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -48,26 +52,7 @@ const DEFAULT_WIDTH = typeof window !== 'undefined' ? Math.min(360, window.inner
 const DEFAULT_HEIGHT = typeof window !== 'undefined' ? Math.min(300, window.innerHeight * 0.4) : 300;
 const MIN_WIDTH = 200;
 const MIN_HEIGHT = 180;
-const HEADER_HEIGHT = 40;
-const CONTROLS_HEIGHT = 52;
 const EDGE_SNAP = 16;
-
-// ---- Placeholder Participant Type (mirrors LiveKit useParticipants) ----
-
-interface PlaceholderParticipant {
-  identity: string;
-  name: string;
-  isTutor: boolean;
-  isMuted: boolean;
-  isDeafened: boolean;
-  isCameraOn: boolean;
-  isSpeaking: boolean;
-}
-
-// TODO: Replace with real LiveKit `useParticipants()` data once connected
-const PLACEHOLDER_PARTICIPANTS: PlaceholderParticipant[] = [
-  // Populated dynamically when LiveKit is connected
-];
 
 // ============================================================
 // Main Component
@@ -75,9 +60,32 @@ const PLACEHOLDER_PARTICIPANTS: PlaceholderParticipant[] = [
 
 export default function PipVideoPanel() {
   const roomActive = useAppStore((s) => s.room.isActive);
-  const isRecording = useAppStore((s) => s.room.isRecording);
   const isTutor = useAppStore((s) => s.room.isTutor);
   const roomId = useAppStore((s) => s.room.roomId);
+  const userId = useAppStore((s) => s.room.userId);
+
+  // LiveKit connection
+  const {
+    connectionState,
+    participants,
+    localParticipant,
+    error: lkError,
+    isMuted,
+    isCameraOff,
+    isDeafened,
+    toggleMic,
+    toggleCamera,
+    toggleDeafen,
+    disconnect,
+  } = useLiveKitRoom();
+
+  // Credit tracking
+  const {
+    videoMinutesUsed,
+    videoMinutesLimit,
+    videoMinutesExhausted,
+    refresh: refreshCredits,
+  } = useCredits(isTutor ? userId : undefined);
 
   // ---- Panel state ----
   const [position, setPosition] = useState<PanelPosition>(() => ({
@@ -91,18 +99,51 @@ export default function PipVideoPanel() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-
-  // ---- In-call state (separate from room active so panel doesn't disappear) ----
   const [inCall, setInCall] = useState(true);
 
-  // ---- Local media state (placeholder) ----
-  const [isMuted, setIsMuted] = useState(false);
-  const [isDeafened, setIsDeafened] = useState(false);
-  const [isCameraOff, setIsCameraOff] = useState(false);
+  // ---- Video limit warning ----
+  const isApproachingLimit = videoMinutesLimit !== Infinity &&
+    videoMinutesUsed >= videoMinutesLimit * 0.8 &&
+    !videoMinutesExhausted;
 
-  // ---- Drag refs ----
-  const dragOffset = useRef({ x: 0, y: 0 });
-  const panelRef = useRef<HTMLDivElement>(null);
+  // Track element refs for video rendering
+  const videoElsRef = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const audioElsRef = useRef<Map<string, HTMLAudioElement>>(new Map());
+
+  // ---- Attach video tracks to DOM elements ----
+  useEffect(() => {
+    participants.forEach((p) => {
+      if (p.cameraTrack && p.cameraTrack.track) {
+        const track = p.cameraTrack.track;
+        let videoEl = videoElsRef.current.get(p.identity);
+        if (!videoEl) {
+          videoEl = document.createElement('video');
+          videoEl.autoplay = true;
+          videoEl.playsInline = true;
+          videoEl.muted = true;
+          videoEl.className = 'w-full h-full object-cover';
+          videoElsRef.current.set(p.identity, videoEl);
+        }
+        track.attach(videoEl);
+      }
+    });
+
+    // Clean up detached tracks
+    videoElsRef.current.forEach((videoEl, identity) => {
+      const participant = participants.find((p) => p.identity === identity);
+      if (!participant?.cameraTrack?.track) {
+        if (videoEl.srcObject) {
+          videoEl.srcObject = null;
+        }
+      }
+    });
+
+    return () => {
+      videoElsRef.current.forEach((videoEl) => {
+        try { videoEl.srcObject = null; } catch {}
+      });
+    };
+  }, [participants]);
 
   // ---- Snap to corners on mount / resize ----
   useEffect(() => {
@@ -117,6 +158,9 @@ export default function PipVideoPanel() {
   }, [size.width, size.height, isMinimized]);
 
   // ---- Drag handlers ----
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const panelRef = useRef<HTMLDivElement>(null);
+
   const handleDragStart = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       if (isResizing) return;
@@ -161,7 +205,6 @@ export default function PipVideoPanel() {
 
     const handleDragEnd = () => {
       setIsDragging(false);
-      // Snap to nearest edge
       setPosition((prev) => snapToEdge(prev, isMinimized ? MINIMIZED_SIZE : size.width, isMinimized ? MINIMIZED_SIZE : size.height));
     };
 
@@ -221,11 +264,13 @@ export default function PipVideoPanel() {
   // ---- Don't render if room is not active or call has ended ----
   if (!roomActive || !inCall) return null;
 
-  // ---- Minimized view: small circle with last speaker avatar ----
+  // ---- Get last speaker for minimized view ----
+  const lastSpeaker = participants.find((p) => p.isSpeaking) || participants[0];
+  const totalParticipants = participants.length + (localParticipant ? 1 : 0);
+
+  // ---- Minimized view ----
   if (isMinimized) {
-    const lastSpeaker = PLACEHOLDER_PARTICIPANTS.find((p) => p.isSpeaking) || PLACEHOLDER_PARTICIPANTS[0];
-    if (!lastSpeaker) {
-      // No participants yet — show a generic camera icon
+    if (!lastSpeaker && !localParticipant) {
       return (
         <div
           ref={panelRef}
@@ -259,14 +304,24 @@ export default function PipVideoPanel() {
           aria-label="Expand video panel"
         >
           <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-500/80">
-            <Video className="w-5 h-5 text-white" />
+            {connectionState === 'connected' ? (
+              <Video className="w-5 h-5 text-white" />
+            ) : connectionState === 'connecting' ? (
+              <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <VideoOff className="w-5 h-5 text-white/60" />
+            )}
           </div>
-          {isRecording && (
+          {useAppStore.getState().room.isRecording && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-black/80" />
           )}
         </div>
       );
     }
+
+    const displayName = lastSpeaker?.name || localParticipant?.name || '...';
+    const isLocal = !lastSpeaker;
+
     return (
       <div
         ref={panelRef}
@@ -299,26 +354,19 @@ export default function PipVideoPanel() {
         title="Click to expand video panel"
         aria-label="Expand video panel"
       >
-        {/* Speaker avatar */}
         <div className="relative">
           <div
             className={cn(
               'w-10 h-10 rounded-full flex items-center justify-center',
-              lastSpeaker.isTutor ? 'bg-blue-500/80' : 'bg-emerald-500/80'
+              isLocal ? 'bg-blue-500/80' : 'bg-emerald-500/80'
             )}
           >
-            {lastSpeaker.isCameraOn ? (
-              <User className="w-5 h-5 text-white" />
-            ) : (
-              <VideoOff className="w-5 h-5 text-white/60" />
-            )}
+            <User className="w-5 h-5 text-white" />
           </div>
-          {/* Speaking indicator */}
-          {lastSpeaker.isSpeaking && (
+          {lastSpeaker?.isSpeaking && (
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-black/80" />
           )}
-          {/* Recording indicator */}
-          {isRecording && (
+          {useAppStore.getState().room.isRecording && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse border border-black/80" />
           )}
         </div>
@@ -327,6 +375,8 @@ export default function PipVideoPanel() {
   }
 
   // ---- Full panel view ----
+  const gridCols = totalParticipants <= 1 ? 'grid-cols-1' : totalParticipants === 2 ? 'grid-cols-2' : 'grid-cols-2';
+
   return (
     <div
       ref={panelRef}
@@ -351,7 +401,7 @@ export default function PipVideoPanel() {
       {/* ---- Header (drag handle) ---- */}
       <div
         className="flex items-center justify-between px-3 h-[40px] shrink-0 bg-white/5 border-b border-white/5"
-        aria-label="Video panel - drag handle. Use arrow keys to move."
+        aria-label="Video panel - drag handle"
         tabIndex={0}
         role="toolbar"
         onKeyDown={(e) => {
@@ -372,11 +422,26 @@ export default function PipVideoPanel() {
       >
         <div className="flex items-center gap-1.5 text-white/70 text-xs font-medium">
           <GripHorizontal className="w-3.5 h-3.5" />
-          <span>Video Call</span>
-          {isRecording && (
+          <span>
+            {connectionState === 'connected' ? 'Video Call' :
+             connectionState === 'connecting' ? 'Connecting...' :
+             connectionState === 'reconnecting' ? 'Reconnecting...' :
+             connectionState === 'failed' ? 'Connection Failed' : 'Video Off'}
+          </span>
+          {/* Video limit warning */}
+          {isApproachingLimit && (
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+          )}
+          {useAppStore.getState().room.isRecording && (
             <span className="flex items-center gap-1 ml-1 text-red-400 text-[10px] font-semibold animate-pulse">
               <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
               REC
+            </span>
+          )}
+          {/* Video minutes for free tier */}
+          {videoMinutesLimit !== Infinity && (
+            <span className="text-[10px] text-white/40 ml-1">
+              {videoMinutesUsed}/{videoMinutesLimit}m
             </span>
           )}
         </div>
@@ -396,35 +461,118 @@ export default function PipVideoPanel() {
         </div>
       </div>
 
+      {/* ---- Video limit warning banner ---- */}
+      {isApproachingLimit && (
+        <div className="px-3 py-1.5 bg-amber-500/20 border-b border-amber-500/30 flex items-center gap-2 text-amber-300 text-[11px]">
+          <AlertTriangle className="w-3 h-3 shrink-0" />
+          <span>{videoMinutesLimit - videoMinutesUsed} minutes of video remaining this period</span>
+        </div>
+      )}
+      {videoMinutesExhausted && videoMinutesLimit !== Infinity && (
+        <div className="px-3 py-1.5 bg-red-500/20 border-b border-red-500/30 flex items-center gap-2 text-red-300 text-[11px]">
+          <AlertTriangle className="w-3 h-3 shrink-0" />
+          <span>Video limit reached. Upgrade to continue using video.</span>
+          <Button
+            size="sm"
+            variant="outline"
+            className="ml-auto h-5 px-2 text-[10px] border-red-400/50 text-red-300 hover:bg-red-500/30"
+            onClick={() => useAppStore.getState().openPaywall('Video minutes exhausted')}
+          >
+            Upgrade
+          </Button>
+        </div>
+      )}
+
+      {/* ---- Connection error banner ---- */}
+      {lkError && connectionState === 'failed' && (
+        <div className="px-3 py-1.5 bg-red-500/20 border-b border-red-500/30 text-red-300 text-[11px]">
+          {lkError}
+        </div>
+      )}
+
       {/* ---- Video Grid Area ---- */}
       <div className="flex-1 relative overflow-hidden">
-        {/*
-          =====================================================
-          TODO: Replace placeholder grid with LiveKit components:
-          =====================================================
-          import { useTracks, VideoTrack, AudioTrack, useConnectionState, useParticipants, RoomAudioRenderer } from '@livekit/components-react';
-          import { Track } from 'livekit-client';
+        {/* Connecting overlay */}
+        {connectionState === 'connecting' || connectionState === 'reconnecting' ? (
+          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 z-10">
+            <div className="w-10 h-10 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+            <span className="text-xs text-white/50">
+              {connectionState === 'connecting' ? 'Joining video...' : 'Reconnecting...'}
+            </span>
+          </div>
+        ) : connectionState === 'disconnected' || connectionState === 'failed' ? (
+          <div className="h-full flex flex-col items-center justify-center gap-3 text-white/30">
+            <Video className="w-12 h-12" />
+            <span className="text-xs">
+              {connectionState === 'failed' ? 'Video connection failed' : 'Video disconnected'}
+            </span>
+            {connectionState === 'failed' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 text-xs border-white/20 text-white/60 hover:bg-white/10"
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
+            )}
+          </div>
+        ) : participants.length === 0 && !localParticipant ? (
+          <div className="h-full flex flex-col items-center justify-center gap-3 text-white/30">
+            <Video className="w-12 h-12" />
+            <span className="text-xs">Waiting for participants...</span>
+            <span className="text-[10px] text-white/20">Video call is active</span>
+          </div>
+        ) : (
+          <div className={cn('grid h-full gap-0.5 p-0.5', gridCols)}>
+            {/* Local participant */}
+            {localParticipant && (
+              <div
+                className={cn(
+                  'relative rounded-lg overflow-hidden flex flex-col items-center justify-center',
+                  'bg-gradient-to-b from-slate-800/60 to-slate-900/80'
+                )}
+              >
+                <div className="flex-1 w-full flex items-center justify-center relative">
+                  {isCameraOff ? (
+                    <div className="flex flex-col items-center gap-2 text-white/20">
+                      <VideoOff className="w-10 h-10" />
+                      <span className="text-[10px]">Camera Off</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-white/30">
+                      <User className="w-10 h-10" />
+                      <span className="text-[10px]">You</span>
+                    </div>
+                  )}
 
-          const connectionState = useConnectionState();
-          const participants = useParticipants();
-          const tracks = useTracks(
-            [Track.Source.Camera, Track.Source.Microphone],
-            { onlySubscribed: false }
-          );
+                  {/* Name tag */}
+                  <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1.5">
+                    <span
+                      className={cn(
+                        'text-[10px] font-medium text-white/90 px-1.5 py-0.5 rounded',
+                        'bg-black/60 backdrop-blur-sm'
+                      )}
+                    >
+                      {localParticipant.name}
+                      <span className="ml-1 text-blue-400">&#9733;</span>
+                    </span>
+                  </div>
 
-          // Render tracks using <VideoTrack> and <AudioTrack>
-          // Add <RoomAudioRenderer /> for audio playback
-          =====================================================
-        */}
-        <div className="grid grid-cols-2 h-full gap-0.5 p-0.5">
-          {PLACEHOLDER_PARTICIPANTS.length === 0 ? (
-            <div className="col-span-2 h-full flex flex-col items-center justify-center gap-3 text-white/30">
-              <Video className="w-12 h-12" />
-              <span className="text-xs">Video call ready</span>
-              <span className="text-[10px] text-white/20">Participants will appear here</span>
-            </div>
-          ) : (
-            PLACEHOLDER_PARTICIPANTS.map((participant) => (
+                  {/* Mute indicator */}
+                  {isMuted && (
+                    <div className="absolute top-1.5 right-1.5">
+                      <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
+                        <MicOff className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Remote participants */}
+            {participants.map((participant) => (
               <div
                 key={participant.identity}
                 className={cn(
@@ -433,13 +581,9 @@ export default function PipVideoPanel() {
                   participant.isSpeaking && 'ring-2 ring-green-400/60'
                 )}
               >
-                {/* Video placeholder area */}
                 <div className="flex-1 w-full flex items-center justify-center relative">
                   {participant.isCameraOn ? (
                     <div className="flex flex-col items-center gap-2 text-white/30">
-                      {/*
-                        TODO: Replace with <VideoTrack track={...} />
-                      */}
                       <Video className="w-10 h-10" />
                       <span className="text-[10px]">Camera Active</span>
                     </div>
@@ -459,9 +603,6 @@ export default function PipVideoPanel() {
                       )}
                     >
                       {participant.name}
-                      {participant.isTutor && (
-                        <span className="ml-1 text-blue-400">&#9733;</span>
-                      )}
                     </span>
                   </div>
 
@@ -480,20 +621,9 @@ export default function PipVideoPanel() {
                   )}
                 </div>
               </div>
-            ))
-          )}
-        </div>
-
-        {/* Connection state overlay (placeholder) */}
-        {/*
-          TODO: Show connection state overlay:
-          const connectionState = useConnectionState();
-          {connectionState !== 'connected' && (
-            <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
-              <p className="text-white/60 text-sm">Connecting...</p>
-            </div>
-          )}
-        */}
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ---- Controls Bar ---- */}
@@ -506,10 +636,8 @@ export default function PipVideoPanel() {
             'h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10',
             isCameraOff && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
           )}
-          onClick={() => {
-            setIsCameraOff(!isCameraOff);
-            // TODO: room.localParticipant.setCameraEnabled(!isCameraOff);
-          }}
+          onClick={toggleCamera}
+          disabled={connectionState !== 'connected'}
           aria-label={isCameraOff ? 'Turn camera on' : 'Turn camera off'}
         >
           {isCameraOff ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />}
@@ -523,10 +651,8 @@ export default function PipVideoPanel() {
             'h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10',
             isMuted && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
           )}
-          onClick={() => {
-            setIsMuted(!isMuted);
-            // TODO: room.localParticipant.setMicrophoneEnabled(!isMuted);
-          }}
+          onClick={toggleMic}
+          disabled={connectionState !== 'connected'}
           aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
         >
           {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -540,9 +666,7 @@ export default function PipVideoPanel() {
             'h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10',
             isDeafened && 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300'
           )}
-          onClick={() => {
-            setIsDeafened(!isDeafened);
-          }}
+          onClick={toggleDeafen}
           aria-label={isDeafened ? 'Undeafen audio' : 'Deafen audio'}
         >
           {isDeafened ? <HeadphoneOff className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
@@ -553,9 +677,6 @@ export default function PipVideoPanel() {
           variant="ghost"
           size="icon"
           className="h-10 w-10 rounded-full text-white/70 hover:text-white hover:bg-white/10"
-          onClick={() => {
-            // TODO: Toggle speaker output
-          }}
           aria-label="Toggle speaker output"
         >
           <MonitorSpeaker className="w-4 h-4" />
@@ -569,8 +690,8 @@ export default function PipVideoPanel() {
           variant="ghost"
           size="icon"
           className="h-10 w-10 rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20"
-          onClick={() => {
-            // TODO: Leave room / end call
+          onClick={async () => {
+            await disconnect();
             setInCall(false);
           }}
           aria-label="Leave call"
@@ -588,7 +709,7 @@ export default function PipVideoPanel() {
           'opacity-30 hover:opacity-60 transition-opacity'
         )}
         role="separator"
-        aria-label="Resize video panel. Use Shift+Arrow keys to resize."
+        aria-label="Resize video panel"
         tabIndex={0}
         onKeyDown={(e) => {
           if (!e.shiftKey) return;
@@ -629,9 +750,11 @@ function snapToEdge(
   const centerX = pos.x + width / 2;
   const centerY = pos.y + height / 2;
 
-  // Determine nearest corner
   const snapX = centerX < vw / 2 ? EDGE_SNAP : vw - width - EDGE_SNAP;
   const snapY = centerY < vh / 2 ? EDGE_SNAP : vh - height - EDGE_SNAP;
 
   return { x: snapX, y: snapY };
 }
+
+// Import Track for cleanup
+import { Track } from 'livekit-client';

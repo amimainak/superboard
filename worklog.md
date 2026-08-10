@@ -127,3 +127,27 @@ Stage Summary:
 - **Build: ✅ Passes with 0 TypeScript errors**
 - **Deployed: https://my-project-alpha-sooty-87.vercel.app**
 - **Git: commit a870e39 on main**
+
+---
+
+Task ID: livekit-video-credits
+Agent: Main Agent
+Task: Wire up real LiveKit video with credit system, video heartbeat tracking, and self-hosted video messaging
+
+Work Log:
+- Created `useLiveKitRoom` hook: manages full LiveKit room lifecycle (connect/disconnect, token fetch, participant tracking, mic/camera/deafen toggles, event handlers for TrackSubscribed/Unsubscribed/ParticipantConnected/Disconnected/ActiveSpeakersChanged)
+- Created `/api/room/[roomId]/video-heartbeat` route: receives 60s heartbeats from active video sessions, increments videoMinutesUsed against tutor's UsageLog, returns 403 VIDEO_LIMIT_REACHED when quota exceeded
+- Rewrote `PipVideoPanel`: replaced all placeholder participant data with real LiveKit connection state, added video limit warning banners (amber at 80%, red at 100% with upgrade button), connecting/reconnecting spinners, connection state display, video minutes counter in header
+- Updated `LandingPage.tsx`: changed "Unlimited video" to "Unlimited video calling" in Pro pricing card, added "Video calling powered by LiveKit (self-hosted, no per-minute API fees)" to feature comparison footnote
+- Updated `FAQSection.tsx`: added LiveKit self-hosted mention and "no per-minute video API fees" to video calling FAQ answer
+- Fixed TypeScript errors: `track` → `Track` reference, ternary chain for connectionState, `name || ''` fallback for LiveKit participant names (string | undefined)
+- Clean build with 0 errors
+
+Stage Summary:
+- **useLiveKitRoom hook**: Full LiveKit lifecycle management with auto-connect on room active, auto-disconnect on room close, 60s heartbeat for video minute tracking, graceful error handling
+- **Video Heartbeat API**: Server-side video minute tracking with limit enforcement, returns `approachingLimit: true` at 80% for client-side warnings
+- **PipVideoPanel**: Real connection states (connecting/connected/reconnecting/failed), credit-aware UI with warning banners, real participant tracking from LiveKit events
+- **Self-hosted video messaging**: Landing page and FAQ now clearly state video is self-hosted via LiveKit with no per-minute API fees
+- **Files created**: useLiveKitRoom.ts, video-heartbeat/route.ts
+- **Files modified**: PipVideoPanel.tsx (rewrite), LandingPage.tsx, FAQSection.tsx
+- **Build: ✅ Passes with 0 TypeScript errors**

@@ -537,7 +537,7 @@ function LandingPage() {
                 Start Free, Upgrade Later
               </Button>
               <ul className="mt-6 space-y-3">
-                {['Unlimited rooms', '500 smart credits/month', 'Unlimited video', 'Save/Load boards', 'Templates', 'PDF export', 'Graphing & geometry tools', '2 recordings/month'].map((f) => (
+                {['Unlimited rooms', '500 smart credits/month', 'Unlimited video calling', 'Save/Load boards', 'Templates', 'PDF export', 'Graphing & geometry tools', '2 recordings/month'].map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
                 ))}
               </ul>
@@ -637,7 +637,7 @@ function LandingPage() {
             </table>
           </div>
           <p className="text-xs text-gray-400 text-center mt-4">
-            Smart tools include quiz generation, graphing, equation balancing, grammar checks, and shape perfection. Advanced tools include lesson plans, rubrics, flashcards, differentiated instruction, and more.
+            Smart tools include quiz generation, graphing, equation balancing, grammar checks, and shape perfection. Advanced tools include lesson plans, rubrics, flashcards, differentiated instruction, and more. Video calling powered by LiveKit (self-hosted, no per-minute API fees).
           </p>
         </div>
       </section>

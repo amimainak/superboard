@@ -132,7 +132,7 @@ const faqItems: FAQItem[] = [
     icon: Video,
     question: 'How does the video calling work — do my students need a separate app?',
     answer:
-      'No separate app needed. Video and voice calling are built directly into the lesson room. When you start a lesson, you can turn on your camera and microphone with one click. Your student sees and hears you right next to the whiteboard — no switching between tabs, no meeting links, no PIN codes. The video panel can be moved, resized, or minimized so it never covers your lesson content. If your student doesn\'t have a camera, they can still participate via voice and the whiteboard.',
+      'No separate app needed. Video and voice calling are built directly into the lesson room using LiveKit (self-hosted, open-source). When you start a lesson, you can turn on your camera and microphone with one click. Your student sees and hears you right next to the whiteboard — no switching between tabs, no meeting links, no PIN codes. The video panel can be moved, resized, or minimized so it never covers your lesson content. If your student doesn\'t have a camera, they can still participate via voice and the whiteboard. There are no per-minute video API fees — you only pay for server hosting.',
     image: '/faq-images/video-tutoring.webp',
     imageAlt: 'Video call alongside the whiteboard — everything in one place',
   },
