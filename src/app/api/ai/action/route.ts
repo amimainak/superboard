@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
+import { checkAICreditLimit, incrementAICredits, hasFeature, isOverAIBudget } from '@/lib/usage';
 import { aiActionSchema, validateInput } from '@/lib/validations';
 import type { Tier, AIAction } from '@/types';
 import { TEXT_AI_ACTIONS, VISION_AI_ACTIONS, CREDIT_COSTS, ENHANCED_ACTION_SET } from '@/types';
@@ -148,11 +148,8 @@ export async function POST(request: NextRequest) {
     if (isRealApiAvailable) {
       await incrementAICredits(userId, tier, creditCost, costCents);
 
-      // Check soft throttle: Pro users exceeding $3.00/month AI cost
-      const postCheck = await checkAICreditLimit(userId, tier);
-      if (tier === 'PRO' && postCheck.aiCostCents > 300) {
-        softThrottle = true;
-      }
+      // Check soft throttle: Pro users exceeding $3/mo, Agency sub-tutors exceeding $15/mo
+      softThrottle = await isOverAIBudget(userId, tier);
     }
 
     const creditCheck = isRealApiAvailable

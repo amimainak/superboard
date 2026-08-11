@@ -106,6 +106,41 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
     limit = 'aiCreditsPerMonth' in config ? config.aiCreditsPerMonth : Infinity;
   }
 
+  // Agency shared credit cap: for sub-tutors, check aggregate usage
+  // across all sub-tutors under the same agency owner
+  if (isAgencyTier(effectiveTier)) {
+    const agencyOwner = await db.user.findUnique({
+      where: { id: userId },
+      select: { parentAgencyId: true },
+    });
+    const agencyId = agencyOwner?.parentAgencyId || userId;
+
+    if (agencyId !== userId) {
+      // This is a sub-tutor — check agency-wide aggregate AI usage
+      const agencyOwnerLog = await getCurrentUsageLog(agencyId, effectiveTier);
+      const subTutors = await db.user.findMany({
+        where: { parentAgencyId: agencyId },
+        select: { id: true },
+      });
+      const subTutorIds = subTutors.map((t) => t.id);
+      const subTutorLogs = await db.usageLog.findMany({
+        where: { userId: { in: subTutorIds } },
+      });
+      const aggregateUsed = agencyOwnerLog.aiCreditsUsed
+        + subTutorLogs.reduce((sum, log) => sum + log.aiCreditsUsed, 0);
+      const aggregateCost = agencyOwnerLog.aiCostCents
+        + subTutorLogs.reduce((sum, log) => sum + (log.aiCostCents || 0), 0);
+
+      return {
+        allowed: limit === Infinity || aggregateUsed < limit,
+        creditsUsed: aggregateUsed,
+        creditsLimit: limit,
+        aiCostCents: aggregateCost,
+        isAgencyShared: true,
+      };
+    }
+  }
+
   return {
     allowed: limit === Infinity || usageLog.aiCreditsUsed < limit,
     creditsUsed: usageLog.aiCreditsUsed,
@@ -120,13 +155,38 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
  */
 export async function incrementAICredits(userId: string, tier: Tier, cost: number = 1, costCents: number = 0) {
   const usageLog = await getCurrentUsageLog(userId, tier);
-  return db.usageLog.update({
+  const result = await db.usageLog.update({
     where: { id: usageLog.id },
     data: {
       aiCreditsUsed: { increment: cost },
       ...(costCents > 0 ? { aiCostCents: { increment: costCents } } : {}),
     },
   });
+
+  // Also track monthly AI spend on the user record for soft throttle
+  if (costCents > 0) {
+    await db.user.update({
+      where: { id: userId },
+      data: { monthlyAiBudgetCents: { increment: costCents } },
+    }).catch(() => {});
+  }
+
+  return result;
+}
+
+// Check if user is over their AI cost budget (for soft throttle)
+export async function isOverAIBudget(userId: string, tier: Tier): Promise<boolean> {
+  if (tier === 'FREE') return false;
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { monthlyAiBudgetCents: true },
+  });
+  if (!user) return false;
+  // Pro: $3/month budget (300 cents) before soft throttle
+  if (tier === 'PRO') return user.monthlyAiBudgetCents > 300;
+  // Agency: $15/month budget (1500 cents) per sub-tutor before soft throttle
+  if (isAgencyTier(tier)) return user.monthlyAiBudgetCents > 1500;
+  return false;
 }
 
 /**

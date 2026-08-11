@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Tier } from '@/types';
 import { isAgencyTier } from '@/types';
-import { PRICING } from '@/types';
+import { PRICING, CREDIT_PACKS } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { authFetch } from '@/lib/auth-fetch';
-import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save, Loader2, Gift, Copy } from 'lucide-react';
+import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save, Loader2, Gift, Copy, Package, Clock, DollarSign } from 'lucide-react';
 
 function getTierLabel(tier: Tier): string {
   if (tier === 'AGENCY_STANDARD') return 'Agency Standard';
@@ -302,6 +302,14 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
           </>
         )}
 
+        {/* Credit Packs — for agency tiers */}
+        {isAgencyTier(tier) && (
+          <>
+            <Separator />
+            <CreditPackSection agencyId={undefined} />
+          </>
+        )}
+
         {/* Legal Notice */}
         <Separator />
         <p className="text-xs text-muted-foreground leading-relaxed text-center">
@@ -313,5 +321,121 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
         </p>
       </CardContent>
     </Card>
+  );
+}
+
+// ------------------------------------------------------------------
+// Credit Pack Section — Prepaid Hourly Packs for Agencies
+// ------------------------------------------------------------------
+
+function CreditPackSection({ agencyId }: { agencyId: string | undefined }) {
+  const [packs, setPacks] = useState<Array<{ id: string; hoursPurchased: number; hoursRemaining: number; pricePaidCents: number; status: string; createdAt: string }>>([]);
+  const [totalHoursRemaining, setTotalHoursRemaining] = useState(0);
+  const [purchasing, setPurchasing] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await authFetch('/api/agency/credit-packs');
+        if (res.ok) {
+          const data = await res.json();
+          setPacks(data.packs || []);
+          setTotalHoursRemaining(data.totalHoursRemaining || 0);
+        }
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const handlePurchase = async (hours: number) => {
+    setPurchasing(hours);
+    try {
+      const res = await authFetch('/api/agency/credit-packs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hours }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Refresh packs
+        const refreshRes = await authFetch('/api/agency/credit-packs');
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          setPacks(refreshData.packs || []);
+          setTotalHoursRemaining(refreshData.totalHoursRemaining || 0);
+        }
+      }
+    } catch { /* ignore */ }
+    setPurchasing(null);
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-semibold flex items-center gap-2"><Package className="w-4 h-4 text-amber-500" />Prepaid Credit Packs</h3>
+      <p className="text-sm text-muted-foreground">Buy prepaid hours at a discounted rate to manage costs. Hours are deducted as lessons run.</p>
+
+      {/* Balance summary */}
+      {!loading && (
+        <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 p-4">
+          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-amber-900">Available Prepaid Hours</p>
+            <p className="text-lg font-bold text-amber-700">{totalHoursRemaining.toFixed(1)} hours remaining</p>
+          </div>
+        </div>
+      )}
+
+      {/* Pack purchase options */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {CREDIT_PACKS.map((pack) => (
+          <div key={pack.hours} className="rounded-xl border border-gray-200 p-4 hover:border-amber-300 transition-colors">
+            <div className="flex items-start justify-between mb-2">
+              <div>
+                <p className="font-semibold text-sm">{pack.label}</p>
+                <p className="text-xs text-muted-foreground">{pack.rateLabel} — save on hourly rate</p>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 text-[10px] rounded-full font-medium">${(pack.priceCents / 100).toFixed(0)}</Badge>
+            </div>
+            <Button
+              size="sm"
+              className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs"
+              onClick={() => handlePurchase(pack.hours)}
+              disabled={!!purchasing}
+            >
+              {purchasing === pack.hours ? <><Loader2 className="w-3 h-3 animate-spin mr-1.5" />Processing…</> : <><DollarSign className="w-3 h-3 mr-1" />Buy {pack.label}</>}
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Recent packs */}
+      {packs.length > 0 && (
+        <div className="rounded-xl border border-gray-100 overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 border-b">
+              <tr>
+                <th className="text-left px-4 py-2 font-medium text-xs">Purchased</th>
+                <th className="text-right px-4 py-2 font-medium text-xs">Hours</th>
+                <th className="text-right px-4 py-2 font-medium text-xs">Remaining</th>
+                <th className="text-right px-4 py-2 font-medium text-xs">Paid</th>
+              </tr>
+            </thead>
+            <tbody>
+              {packs.slice(0, 5).map((pack) => (
+                <tr key={pack.id} className="border-b last:border-0">
+                  <td className="px-4 py-2 text-xs text-muted-foreground">{new Date(pack.createdAt).toLocaleDateString()}</td>
+                  <td className="px-4 py-2 text-xs text-right">{pack.hoursPurchased}</td>
+                  <td className="px-4 py-2 text-xs text-right font-medium">{pack.hoursRemaining.toFixed(1)}</td>
+                  <td className="px-4 py-2 text-xs text-right">${(pack.pricePaidCents / 100).toFixed(0)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
