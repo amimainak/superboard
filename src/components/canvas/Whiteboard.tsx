@@ -1,7 +1,7 @@
 // ============================================================
 // Whiteboard — Main Canvas Component
 // ============================================================
-// Integrates Tldraw with Yjs for real-time collaboration sync.
+// Integrates Fabric.js canvas with Yjs for real-time collaboration sync.
 // Lazy loads GeoGebra, KaTeX, and AI components (Performance Mandate).
 // Initial load must be < 1.5 seconds.
 // ============================================================
@@ -16,7 +16,6 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
-import type { Editor } from 'tldraw';
 import type { Canvas as FabricCanvasType } from 'fabric';
 
 // Lazy load heavy components (Performance Mandate)
@@ -44,7 +43,7 @@ export default function Whiteboard() {
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<Editor | FabricCanvasType | null>(null);
+  const editorRef = useRef<FabricCanvasType | null>(null);
   const [activeTool, setActiveTool] = useState('draw');
   const [showWaitingRoom, setShowWaitingRoom] = useState(isTutor ? false : true);
   const [showNameModal, setShowNameModal] = useState(false);
@@ -274,7 +273,9 @@ export default function Whiteboard() {
               pageIndex={currentPageIndex}
               isTutor={isTutor}
               readOnly={!isTutor && focusMode}
+              activeTool={activeTool}
               onCanvasReady={handleEditorReady}
+              awareness={awareness}
             />
 
             {/* Floating PiP Video Panel — ALWAYS VISIBLE */}
@@ -314,11 +315,11 @@ function ToolbarWrapper({
   activeTool,
   onToolChange,
 }: {
-  editorRef: React.RefObject<Editor | FabricCanvasType | null>;
+  editorRef: React.RefObject<FabricCanvasType | null>;
   activeTool: string;
   onToolChange: (tool: string) => void;
 }) {
-  const [editor, setEditor] = useState<Editor | FabricCanvasType | null>(null);
+  const [editor, setEditor] = useState<FabricCanvasType | null>(null);
 
   useEffect(() => {
     if (editorRef.current) {

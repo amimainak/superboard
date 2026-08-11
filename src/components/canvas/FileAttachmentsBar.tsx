@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
-import type { Editor, TLAsset, TLAssetId, TLShape } from 'tldraw';
+// Fabric.js canvas type used throughout
 import { Canvas as FabricCanvasType, FabricImage } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,7 +44,7 @@ const ACCEPTED_FILE_TYPES = `${ACCEPTED_IMAGE_TYPES},application/pdf`;
 interface FileAttachmentsBarProps {
   roomId: string;
   isTutor: boolean;
-  editorRef: React.RefObject<Editor | FabricCanvasType | null>;
+  editorRef: React.RefObject<FabricCanvasType | null>;
   tier: Tier;
 }
 
