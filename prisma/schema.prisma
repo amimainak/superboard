@@ -594,3 +594,45 @@ model Invoice {
   @@index([studentId, status])
   @@index([dueDate])
 }
+
+// ============================================================
+// QuestionBank — Cloud Question Bank (Sprint 1)
+// ============================================================
+// Pre-built, standards-tagged questions organized by subject,
+// grade band, curriculum framework, and difficulty.
+// Each question includes LaTeX stem, optional SVG diagram paths,
+// solution tree, and taxonomy tags.
+// ============================================================
+
+model QuestionItem {
+  id              String   @id @default(uuid())
+  // Organization
+  subject         String   // MATH, SCIENCE, LANGUAGE, etc.
+  gradeBand       String   // K-2, 3-5, 6-8, 9-12
+  topic           String   // e.g., "Quadratic Equations", "Forces & Motion"
+  difficulty      Int      // 1-5 scale (1=easiest, 5=hardest)
+  // Curriculum alignment
+  curriculum      String?  // CCSS, NGSS, IB, AQA, etc.
+  standardCode    String?  // e.g., "CCSS.MATH.CONTENT.HSA.REI.B.4"
+  // Content
+  stem            String   @db.Text  // Question text (may contain LaTeX)
+  stemLatex       String?  @db.Text  // Raw LaTeX for rendering
+  diagramSvg      String?  @db.Text  // SVG path data for diagrams
+  answerKey       String   @db.Text  // Correct answer(s)
+  solutionSteps   String?  @db.Text  // Step-by-step solution (JSON array)
+  distractors     String?  @db.Text  // Wrong answer options (JSON array for MCQs)
+  questionType    String   @default("open") // open, mcq, true-false, multi-select
+  // Metadata
+  tags            String?  @db.Text  // Comma-separated tags for search
+  estimatedTimeSec Int?    // Estimated time to solve (seconds)
+  creatorId       String?  // User who created (null for system questions)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([subject, gradeBand])
+  @@index([curriculum, standardCode])
+  @@index([topic])
+  @@index([difficulty])
+  @@index([creatorId])
+}

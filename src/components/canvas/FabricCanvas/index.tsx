@@ -64,6 +64,12 @@ export interface FabricCanvasProps {
   activeTool?: string;
   onCanvasReady?: (canvas: FabricCanvas) => void;
   awareness?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  // Sprint 1: Viewport sync (student side — received from tutor)
+  appliedViewport?: { x: number; y: number; zoom: number } | null;
+  // Sprint 1: Focus mode flag (tutor broadcasts viewport when true)
+  focusMode?: boolean;
+  // Sprint 1: Scratchpad mode — uses separate Yjs map key
+  isScratchpad?: boolean;
 }
 
 // ---- Perfect-Freehand → Fabric.js Path ----
@@ -125,6 +131,9 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
       activeTool,
       onCanvasReady,
       awareness,
+      appliedViewport,
+      focusMode,
+      isScratchpad,
     },
     ref
   ) {
@@ -193,7 +202,8 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
     const sync = useYjsCanvasSync({
       ydoc,
       fcanvasRef,
-      pageIndex,
+      pageIndex: isScratchpad ? -1 : pageIndex,
+      mapKeyPrefix: isScratchpad ? 'scratchpad-shapes' : 'page-shapes',
       onRemoteChange: () => {},
     });
 
@@ -360,6 +370,75 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
         awareness.off('change', handleAwarenessChange);
       };
     }, [awareness, isReady]);
+
+    // ============================================================
+    // Sprint 1: Viewport Broadcast (Tutor Side — Focus Mode)
+    // Broadcasts viewport (x, y, zoom) via awareness when focus mode is on.
+    // ============================================================
+    useEffect(() => {
+      const fc = fcanvasRef.current;
+      if (!fc || !awareness || !isTutor || !focusMode) return;
+
+      let lastKey = '';
+      let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+      const broadcastCurrentViewport = () => {
+        const vpt = fc.viewportTransform;
+        if (!vpt) return;
+        const zoom = parseFloat((vpt[0] || 1).toFixed(2));
+        const x = Math.round(vpt[4] || 0);
+        const y = Math.round(vpt[5] || 0);
+        const key = `${x},${y},${zoom}`;
+
+        if (key !== lastKey) {
+          lastKey = key;
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            awareness.setLocalStateField('viewport', { x, y, zoom });
+          }, 60);
+        }
+      };
+
+      // Broadcast on zoom (wheel) and pan (after:render when panning)
+      const handleAfterRender = () => {
+        if (isPanning) broadcastCurrentViewport();
+      };
+
+      const handleZoom = () => {
+        broadcastCurrentViewport();
+      };
+
+      fc.on('after:render', handleAfterRender);
+      fc.on('mouse:wheel', handleZoom);
+
+      // Initial broadcast
+      broadcastCurrentViewport();
+
+      return () => {
+        fc.off('after:render', handleAfterRender);
+        fc.off('mouse:wheel', handleZoom);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        // Clear viewport when focus mode changes or component unmounts
+        awareness.setLocalStateField('viewport', null);
+      };
+    }, [awareness, isTutor, focusMode, isReady, isPanning]);
+
+    // ============================================================
+    // Sprint 1: Viewport Receive (Student Side — Focus Mode)
+    // Applies viewport broadcasted by tutor.
+    // ============================================================
+    useEffect(() => {
+      const fc = fcanvasRef.current;
+      if (!fc || !appliedViewport || isTutor) return;
+
+      const vpt = [...(fc.viewportTransform || [1, 0, 0, 1, 0, 0])];
+      vpt[0] = appliedViewport.zoom;
+      vpt[3] = appliedViewport.zoom;
+      vpt[4] = appliedViewport.x;
+      vpt[5] = appliedViewport.y;
+      fc.setViewportTransform(vpt as any);
+      requestRenderThrottled();
+    }, [appliedViewport, isTutor, isReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ============================================================
     // Canvas Interaction — Pan, Zoom, Draw, Erase, Text, Shapes

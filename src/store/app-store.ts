@@ -25,7 +25,13 @@ export interface RoomState {
   totalPages: number;
   focusMode: boolean;
   isRecording: boolean;
+  // Sprint 1: Session controls
+  penFreeze: boolean;
+  scratchpadOpen: boolean;
 }
+
+export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
+export type AccessibilityMode = 'normal' | 'dyslexia' | 'high-contrast' | 'large-text';
 
 export interface AppState {
   // Room
@@ -53,6 +59,9 @@ export interface AppState {
   // Premium modals
   paywallOpen: boolean;
   paywallFeature: string | null;
+  // Sprint 1: Accessibility & color-blind modes
+  accessibilityMode: AccessibilityMode;
+  colorBlindMode: ColorBlindMode;
 }
 
 interface AppActions {
@@ -65,6 +74,9 @@ interface AppActions {
   setTotalPages: (count: number) => void;
   toggleFocusMode: () => void;
   setRecording: (recording: boolean) => void;
+  // Sprint 1: Session controls
+  togglePenFreeze: () => void;
+  toggleScratchpad: () => void;
   // Branding
   setBranding: (branding: BrandingConfig) => void;
   // Tier & usage (display sync from server)
@@ -88,6 +100,9 @@ interface AppActions {
   // Paywall
   openPaywall: (feature: string) => void;
   closePaywall: () => void;
+  // Sprint 1: Accessibility
+  setAccessibilityMode: (mode: AccessibilityMode) => void;
+  setColorBlindMode: (mode: ColorBlindMode) => void;
 }
 
 const initialRoomState: RoomState = {
@@ -109,6 +124,8 @@ const initialRoomState: RoomState = {
   totalPages: 1,
   focusMode: false,
   isRecording: false,
+  penFreeze: false,
+  scratchpadOpen: false,
 };
 
 export const useAppStore = create<AppState & AppActions>((set) => ({
@@ -130,6 +147,9 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   videoApproachingLimit: false,
   paywallOpen: false,
   paywallFeature: null,
+  // Sprint 1: Accessibility
+  accessibilityMode: 'normal' as AccessibilityMode,
+  colorBlindMode: 'none' as ColorBlindMode,
 
   // Room actions
   setRoom: (roomPatch) =>
@@ -170,6 +190,14 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
     set((state) => ({
       room: { ...state.room, isRecording: recording },
     })),
+  togglePenFreeze: () =>
+    set((state) => ({
+      room: { ...state.room, penFreeze: !state.room.penFreeze },
+    })),
+  toggleScratchpad: () =>
+    set((state) => ({
+      room: { ...state.room, scratchpadOpen: !state.room.scratchpadOpen },
+    })),
 
   // Branding
   setBranding: (branding) =>
@@ -199,4 +227,8 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   // Paywall
   openPaywall: (feature) => set({ paywallOpen: true, paywallFeature: feature }),
   closePaywall: () => set({ paywallOpen: false, paywallFeature: null }),
+
+  // Sprint 1: Accessibility
+  setAccessibilityMode: (mode) => set({ accessibilityMode: mode }),
+  setColorBlindMode: (mode) => set({ colorBlindMode: mode }),
 }));

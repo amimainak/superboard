@@ -16,8 +16,9 @@ import type { FabricCanvas } from './hooks';
 
 const SYNC_DEBOUNCE_MS = 200;
 
-function pageShapesKey(pageIndex: number): string {
-  return `page-shapes-${pageIndex}`;
+function pageShapesKey(pageIndex: number, prefix?: string): string {
+  const pfx = prefix || 'page-shapes';
+  return `${pfx}-${pageIndex}`;
 }
 
 interface ObjectRecord {
@@ -29,9 +30,10 @@ export function useYjsCanvasSync(options: {
   ydoc: Y.Doc | null;
   fcanvasRef: React.MutableRefObject<FabricCanvas | null>;
   pageIndex: number;
+  mapKeyPrefix?: string;
   onRemoteChange?: () => void;
 }) {
-  const { ydoc, fcanvasRef, pageIndex, onRemoteChange } = options;
+  const { ydoc, fcanvasRef, pageIndex, mapKeyPrefix, onRemoteChange } = options;
 
   const pendingWritesRef = useRef<Map<string, string>>(new Map());
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -69,7 +71,7 @@ export function useYjsCanvasSync(options: {
     const writes = new Map(pendingWritesRef.current);
     pendingWritesRef.current.clear();
 
-    const key = pageShapesKey(pageIndex);
+    const key = pageShapesKey(pageIndex, mapKeyPrefix);
     const shapesMap = ydoc.getMap<string>(key);
 
     ydoc.transact(() => {
@@ -84,7 +86,7 @@ export function useYjsCanvasSync(options: {
         localDirtyRef.current.delete(objId);
       });
     });
-  }, [ydoc, pageIndex]);
+  }, [ydoc, pageIndex, mapKeyPrefix]);
 
   const scheduleWrite = useCallback(
     (objId: string, json: string) => {
@@ -102,7 +104,7 @@ export function useYjsCanvasSync(options: {
   const scheduleRemove = useCallback(
     (objId: string) => {
       if (!ydoc) return;
-      const key = pageShapesKey(pageIndex);
+      const key = pageShapesKey(pageIndex, mapKeyPrefix);
       const shapesMap = ydoc.getMap<string>(key);
 
       ydoc.transact(() => {
@@ -113,14 +115,14 @@ export function useYjsCanvasSync(options: {
       pendingWritesRef.current.delete(objId);
       versionRef.current.delete(objId);
     },
-    [ydoc, pageIndex]
+    [ydoc, pageIndex, mapKeyPrefix]
   );
 
   const loadInitialState = useCallback(
     (fc: FabricCanvas) => {
       if (!ydoc) return;
 
-      const key = pageShapesKey(pageIndex);
+      const key = pageShapesKey(pageIndex, mapKeyPrefix);
       const shapesMap = ydoc.getMap<string>(key);
 
       fc.clear();
@@ -147,13 +149,13 @@ export function useYjsCanvasSync(options: {
         console.info(`[YjsCanvasSync] Loaded ${promises.length} objects from Yjs page ${pageIndex}`);
       });
     },
-    [ydoc, pageIndex, deserializeObject]
+    [ydoc, pageIndex, mapKeyPrefix, deserializeObject]
   );
 
   const setupRemoteObserver = useCallback(() => {
     if (!ydoc) return;
 
-    const key = pageShapesKey(pageIndex);
+    const key = pageShapesKey(pageIndex, mapKeyPrefix);
     const shapesMap = ydoc.getMap<string>(key);
 
     const observer = (event: Y.YMapEvent<string>) => {
@@ -209,7 +211,7 @@ export function useYjsCanvasSync(options: {
 
     shapesMap.observe(observer);
     unobserveRef.current = () => shapesMap.unobserve(observer);
-  }, [ydoc, pageIndex, fcanvasRef, deserializeObject, onRemoteChange]);
+  }, [ydoc, pageIndex, mapKeyPrefix, fcanvasRef, deserializeObject, onRemoteChange]);
 
   const wireCanvasEvents = useCallback(
     (fc: FabricCanvas) => {

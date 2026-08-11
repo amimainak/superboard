@@ -15,7 +15,7 @@ import { useYjsProvider } from '@/hooks/useYjsProvider';
 import { authFetch } from '@/lib/auth-fetch';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, Lock, NotebookPen } from 'lucide-react';
 import type { Canvas as FabricCanvasType } from 'fabric';
 
 // Lazy load heavy components (Performance Mandate)
@@ -33,6 +33,7 @@ const NameEntryModal = dynamic(() => import('@/components/student/NameEntryModal
 const FileAttachmentsBar = dynamic(() => import('@/components/canvas/FileAttachmentsBar'), { ssr: false });
 const PresenceIndicator = dynamic(() => import('@/components/canvas/PresenceIndicator'), { ssr: false });
 const SessionTimer = dynamic(() => import('@/components/canvas/SessionTimer'), { ssr: false });
+const SessionControls = dynamic(() => import('@/components/canvas/SessionControls'), { ssr: false });
 const LivePollPanel = dynamic(() => import('@/components/canvas/LivePollPanel'), { ssr: false });
 const VideoLimitBanner = dynamic(() => import('@/components/video/VideoLimitBanner'), { ssr: false });
 
@@ -40,11 +41,12 @@ export default function Whiteboard() {
   const { toast } = useToast();
   const router = useRouter();
   const { room, setRoom, setCurrentPage, setTotalPages, tier } = useAppStore();
-  const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
+  const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode, penFreeze, scratchpadOpen } = room;
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<FabricCanvasType | null>(null);
   const [activeTool, setActiveTool] = useState('draw');
+  const [appliedViewport, setAppliedViewport] = useState<{ x: number; y: number; zoom: number } | null>(null);
   const [showWaitingRoom, setShowWaitingRoom] = useState(isTutor ? false : true);
   const [showNameModal, setShowNameModal] = useState(false);
   const [tutorPresent, setTutorPresent] = useState(isTutor);
@@ -77,6 +79,19 @@ export default function Whiteboard() {
       const statesArr = Array.from(states.values()) as Array<{ user?: { role: string } }>;
       const hasTutor = statesArr.some((s) => s.user?.role === 'tutor');
       setTutorPresent(hasTutor);
+
+      // Sprint 1: Student receives tutor viewport during focus mode
+      if (!isTutor && focusMode) {
+        for (const [, state] of states) {
+          const s = state as Record<string, unknown>;
+          const user = s.user as { role?: string } | undefined;
+          const viewport = s.viewport as { x: number; y: number; zoom: number } | null | undefined;
+          if (user?.role === 'tutor' && viewport) {
+            setAppliedViewport(viewport);
+            break;
+          }
+        }
+      }
     },
   });
 
@@ -185,6 +200,20 @@ export default function Whiteboard() {
     editorRef.current = canvas;
   }, []);
 
+  // ============================================================
+  // Focus Mode — receive viewport from tutor (student side)
+  // ============================================================
+  const handleViewportReceived = useCallback((viewport: { x: number; y: number; zoom: number }) => {
+    setAppliedViewport(viewport);
+  }, []);
+
+  // Clear applied viewport when focus mode turns off
+  useEffect(() => {
+    if (!focusMode) {
+      setAppliedViewport(null);
+    }
+  }, [focusMode]);
+
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
       {/* Connection Status Indicator */}
@@ -212,6 +241,9 @@ export default function Whiteboard() {
       {isTutor && !showWaitingRoom && (
         <SessionTimer isTutor={isTutor} onEndLesson={handleEndLesson} />
       )}
+
+      {/* Session Controls (tutor only: Focus, Freeze, Scratchpad, Accessibility) */}
+      {!showWaitingRoom && <SessionControls isTutor={isTutor} />}
 
       {/* Branded Header */}
       <BrandedHeader onEndLesson={isTutor ? handleEndLesson : undefined} />
@@ -270,13 +302,40 @@ export default function Whiteboard() {
             {/* Fabric.js Canvas with Yjs Sync */}
             <FabricCanvas
               ydoc={ydoc}
-              pageIndex={currentPageIndex}
+              pageIndex={scratchpadOpen ? -1 : currentPageIndex}
               isTutor={isTutor}
-              readOnly={!isTutor && focusMode}
+              readOnly={(!isTutor && focusMode) || (!isTutor && penFreeze)}
               activeTool={activeTool}
               onCanvasReady={handleEditorReady}
               awareness={awareness}
+              appliedViewport={appliedViewport}
+              focusMode={focusMode}
+              isScratchpad={scratchpadOpen}
             />
+
+            {/* Sprint 1: Scratchpad indicator banner */}
+            {scratchpadOpen && isTutor && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 rounded-full bg-violet-600/90 text-white text-xs font-medium shadow-lg backdrop-blur-sm flex items-center gap-1.5">
+                <NotebookPen className="w-3.5 h-3.5" />
+                Private Scratchpad — students cannot see this
+              </div>
+            )}
+
+            {/* Sprint 1: Focus mode indicator (student) */}
+            {!isTutor && focusMode && (
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 rounded-full bg-emerald-600/90 text-white text-xs font-medium shadow-lg backdrop-blur-sm flex items-center gap-1.5">
+                <Eye className="w-3.5 h-3.5" />
+                Following tutor&apos;s view
+              </div>
+            )}
+
+            {/* Sprint 1: Pen freeze indicator (student) */}
+            {!isTutor && penFreeze && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 px-4 py-1.5 rounded-full bg-amber-600/90 text-white text-xs font-medium shadow-lg backdrop-blur-sm flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5" />
+                Drawing paused by tutor
+              </div>
+            )}
 
             {/* Floating PiP Video Panel — ALWAYS VISIBLE */}
             <PipVideoPanel />
