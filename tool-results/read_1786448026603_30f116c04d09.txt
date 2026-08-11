@@ -1,0 +1,576 @@
+     1→    30→// tldraw v5 requires a production license; without one the editor unmounts
+     2→    31→// after 5 seconds. This MutationObserver detects the license gate div and
+     3→    32→// re-mounts the editor by forcing a React re-render cycle.
+     4→    33→// TODO: Remove this when a proper tldraw license is obtained.
+     5→    34→
+     6→    35→// ---- Types ----
+     7→    36→
+     8→    37→/** Shape of the RecordsDiff changes as delivered by store.listen in tldraw v5. */
+     9→    38→interface RecordsDiffLike {
+    10→    39→        added: Record<string, Record<string, unknown>>;
+    11→    40→        updated: Record<string, [from: Record<string, unknown>, to: Record<string, unknown>]>;
+    12→    41→        removed: Record<string, Record<string, unknown>>;
+    13→    42→}
+    14→    43→
+    15→    44→/** Shape of the history entry passed to store.listen callbacks in tldraw v5. */
+    16→    45→interface HistoryEntryLike {
+    17→    46→        changes: RecordsDiffLike;
+    18→    47→        source: 'user' | 'remote';
+    19→    48→}
+    20→    49→
+    21→    50→export interface TldrawCanvasProps {
+    22→    51→        /** Yjs document (from useYjsProvider) */
+    23→    52→        ydoc: import('yjs').Doc | null;
+    24→    53→        /** Called when the editor mounts — provides the Editor ref */
+    25→    54→        onEditorReady?: (editor: Editor) => void;
+    26→    55→        /** Called when editor store changes (for external sync triggers) */
+    27→    56→        onStoreChange?: () => void;
+    28→    57→        /** Current page index (for multi-page support) */
+    29→    58→        pageIndex: number;
+    30→    59→        /** Whether the user is a tutor (controls UI permissions) */
+    31→    60→        isTutor: boolean;
+    32→    61→        /** Whether the canvas is read-only (e.g., student in focus mode) */
+    33→    62→        readOnly?: boolean;
+    34→    63→}
+    35→    64→
+    36→    65→// ---- Constants ----
+    37→    66→
+    38→    67→/** Debounce Yjs writes to batch rapid edits into one transaction. */
+    39→    68→const SYNC_DEBOUNCE_MS = 200;
+    40→    69→
+    41→    70→/** Key of the legacy Y.Map that stored full page snapshots as JSON blobs. */
+    42→    71→const YJS_LEGACY_MAP_KEY = 'page-snapshot';
+    43→    72→
+    44→    73→/**
+    45→    74→ * Prefix for per-page Y.Maps that store individual records.
+    46→    75→ * E.g. pageIndex=3 → ydoc.getMap('page-shapes-3')
+    47→    76→ */
+    48→    77→const YJS_SHAPES_MAP_PREFIX = 'page-shapes-';
+    49→    78→
+    50→    79→/**
+    51→    80→ * Transaction origin symbol used to tag our own local writes.
+    52→    81→ * The Yjs observer checks this to skip re-applying our own changes.
+    53→    82→ */
+    54→    83→const LOCAL_SYNC_ORIGIN = Symbol('tldraw-local-sync');
+    55→    84→
+    56→    85→// ============================================================
+    57→    86→// Component
+    58→    87→// ============================================================
+    59→    88→
+    60→    89→export default function TldrawCanvas({
+    61→    90→        ydoc,
+    62→    91→        onEditorReady,
+    63→    92→        onStoreChange,
+    64→    93→        pageIndex,
+    65→    94→        isTutor,
+    66→    95→        readOnly = false,
+    67→    96→}: TldrawCanvasProps) {
+    68→    97→        // ---- Core state & refs ----
+    69→    98→        const editorRef = useRef<Editor | null>(null);
+    70→    99→        const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    71→   100→        const [isReady, setIsReady] = useState(false);
+    72→   101→        const [isLoadingSnapshot, setIsLoadingSnapshot] = useState(true);
+    73→   102→        // License gate workaround — toggling this key forces React to re-mount Tldraw
+    74→   103→        const [tldrawKey, setTldrawKey] = useState(0);
+    75→   104→
+    76→   105→        /**
+    77→   106→         * Mirror of isReady as a ref so that closures inside setTimeout/
+    78→   107→         * store listeners always see the current value without being
+    79→   108→         * captured at creation time.
+    80→   109→         */
+    81→   110→        const isReadyRef = useRef(false);
+    82→   111→
+    83→   112→        // ---- Incremental sync refs (stable across renders) ----
+    84→   113→
+    85→   114→        /** Records that changed locally and are awaiting debounce flush to Yjs. */
+    86→   115→        const pendingWritesRef = useRef<Map<string, Record<string, unknown>>>(new Map());
+    87→   116→
+    88→   117→        /** Record IDs that were deleted locally and are awaiting debounce flush. */
+    89→   118→        const pendingDeletesRef = useRef<Set<string>>(new Set());
+    90→   119→
+    91→   120→        /**
+    92→   121→         * Record IDs with unsynced local changes.
+    93→   122→         * Remote updates for these IDs are skipped to prevent overwriting
+    94→   123→         * concurrent local edits (last-local-writer-wins).  IDs are removed
+    95→   124→         * after the corresponding write/delete is flushed to Yjs.
+    96→   125→         */
+    97→   126→        const localDirtyRef = useRef<Set<string>>(new Set());
+    98→   127→
+    99→   128→        /** Monotonically increasing version counter for local edits. */
+   100→   129→        const localChangeVersionRef = useRef(0);
+   101→   130→
+   102→   131→        /** Per-record version: the localChangeVersion at which it was last edited locally. */
+   103→   132→        const recordVersionsRef = useRef<Map<string, number>>(new Map());
+   104→   133→
+   105→   134→        /** True while the initial snapshot is being loaded (suppresses sync-to-Yjs). */
+   106→   135→        const isInitialLoadRef = useRef(false);
+   107→   136→
+   108→   137→        /** Set of page indices that have already been migrated from legacy format. */
+   109→   138→        const migratedPagesRef = useRef<Set<number>>(new Set());
+   110→   139→
+   111→   140→        /** Cleanup function for the tldraw store listener. */
+   112→   141→        const unlistenStoreRef = useRef<(() => void) | null>(null);
+   113→   142→
+   114→   143→        /** Cleanup function for the Yjs shapes-map observer. */
+   115→   144→        const unobserveYjsRef = useRef<(() => void) | null>(null);
+   116→   145→
+   117→   146→        /**
+   118→   147→         * Ref to the Y.Map currently being used for this page's shapes.
+   119→   148→         * Updated explicitly on page switch so we can flush the OLD map
+   120→   149→         * before swapping to the new one.
+   121→   150→         */
+   122→   151→        const shapesMapRef = useRef<YMap<string> | null>(null);
+   123→   152→
+   124→   153→        /** Track the previous page index to detect page switches. */
+   125→   154→        const prevPageIndexRef = useRef(pageIndex);
+   126→   155→
+   127→   156→        /** Keep callback refs up-to-date without re-registering listeners. */
+   128→   157→        const onStoreChangeRef = useRef(onStoreChange);
+   129→   158→        onStoreChangeRef.current = onStoreChange;
+   130→   159→
+   131→   160→        // ----------------------------------------------------------------
+   132→   161→        // Core: process a RecordsDiff into pending writes/deletes & schedule sync
+   133→   162→        // ----------------------------------------------------------------
+   134→   163→
+   135→   164→        const processLocalDiff = useCallback((entry: HistoryEntryLike) => {
+   136→   165→                if (isInitialLoadRef.current) return;
+   137→   166→                if (!isReadyRef.current) return;
+   138→   167→
+   139→   168→                const { changes } = entry;
+   140→   169→
+   141→   170→                // Increment the global local version counter.
+   142→   171→                localChangeVersionRef.current++;
+   143→   172→                const version = localChangeVersionRef.current;
+   144→   173→
+   145→   174→                // Collect added records.
+   146→   175→                for (const [id, record] of Object.entries(changes.added)) {
+   147→   176→                        pendingWritesRef.current.set(id, record);
+   148→   177→                        pendingDeletesRef.current.delete(id);
+   149→   178→                        localDirtyRef.current.add(id);
+   150→   179→                        recordVersionsRef.current.set(id, version);
+   151→   180→                }
+   152→   181→
+   153→   182→                // Collect updated records (use the "to" value — index 1).
+   154→   183→                for (const [id, pair] of Object.entries(changes.updated)) {
+   155→   184→                        pendingWritesRef.current.set(id, pair[1]);
+   156→   185→                        pendingDeletesRef.current.delete(id);
+   157→   186→                        localDirtyRef.current.add(id);
+   158→   187→                        recordVersionsRef.current.set(id, version);
+   159→   188→                }
+   160→   189→
+   161→   190→                // Collect removed records.
+   162→   191→                for (const id of Object.keys(changes.removed)) {
+   163→   192→                        pendingDeletesRef.current.add(id);
+   164→   193→                        pendingWritesRef.current.delete(id);
+   165→   194→                        localDirtyRef.current.add(id);
+   166→   195→                        recordVersionsRef.current.set(id, version);
+   167→   196→                }
+   168→   197→
+   169→   198→                scheduleSyncRef.current();
+   170→   199→        }, []);
+   171→   200→
+   172→   201→        // ---- Ref-stable scheduleSync (never recreated) ----
+   173→   202→        const scheduleSyncRef = useRef<() => void>(() => {});
+   174→   203→
+   175→   204→        // ---- Ref-stable flushPendingToYjs (never recreated) ----
+   176→   205→        const flushPendingRef = useRef<() => void>(() => {});
+   177→   206→
+   178→   207→        // ----------------------------------------------------------------
+   179→   208→        // Flush pending changes to the current shapes Y.Map
+   180→   209→        // ----------------------------------------------------------------
+   181→   210→
+   182→   211→        const buildFlush = useCallback(() => {
+   183→   212→                return () => {
+   184→   213→                        const map = shapesMapRef.current;
+   185→   214→                        if (!map || !ydoc) return;
+   186→   215→
+   187→   216→                        // Nothing to flush?
+   188→   217→                        if (pendingWritesRef.current.size === 0 && pendingDeletesRef.current.size === 0) return;
+   189→   218→
+   190→   219→                        // Snapshot the pending state so new changes accumulate independently.
+   191→   220→                        const writes = new Map(pendingWritesRef.current);
+   192→   221→                        const deletes = new Set(pendingDeletesRef.current);
+   193→   222→                        pendingWritesRef.current = new Map();
+   194→   223→                        pendingDeletesRef.current = new Set();
+   195→   224→
+   196→   225→                        // Check total serialized size (5 MB limit matches DB constraint).
+   197→   226→                        let totalSize = 0;
+   198→   227→                        for (const record of writes.values()) {
+   199→   228→                                totalSize += JSON.stringify(record).length;
+   200→   229→                        }
+   201→   230→                        if (totalSize > 5_000_000) {
+   202→   231→                                console.warn(
+   203→   232→                                        `[TldrawCanvas] Pending sync too large (${(totalSize / 1_000_000).toFixed(1)}MB) — skipping`
+   204→   233→                                );
+   205→   234→                                return;
+   206→   235→                        }
+   207→   236→
+   208→   237→                        // Batch all writes/deletes into a single Yjs transaction tagged
+   209→   238→                        // with our origin so the observer can skip re-applying them.
+   210→   239→                        ydoc.transact(() => {
+   211→   240→                                for (const [id, record] of writes) {
+   212→   241→                                        map.set(id, JSON.stringify(record));
+   213→   242→                                }
+   214→   243→                                for (const id of deletes) {
+   215→   244→                                        map.delete(id);
+   216→   245→                                }
+   217→   246→                        }, LOCAL_SYNC_ORIGIN);
+   218→   247→
+   219→   248→                        // Clear dirty flags for the records we just synced.
+   220→   249→                        for (const id of writes.keys()) {
+   221→   250→                                localDirtyRef.current.delete(id);
+   222→   251→                        }
+   223→   252→                        for (const id of deletes) {
+   224→   253→                                localDirtyRef.current.delete(id);
+   225→   254→                        }
+   226→   255→
+   227→   256→                        onStoreChangeRef.current?.();
+   228→   257→                };
+   229→   258→        }, [ydoc]);
+   230→   259→
+   231→   260→        // Keep flushPendingRef up-to-date.
+   232→   261→        flushPendingRef.current = buildFlush();
+   233→   262→
+   234→   263→        // ----------------------------------------------------------------
+   235→   264→        // Schedule a debounced flush
+   236→   265→        // ----------------------------------------------------------------
+   237→   266→
+   238→   267→        const buildScheduleSync = useCallback(() => {
+   239→   268→                return () => {
+   240→   269→                        if (debounceTimerRef.current) {
+   241→   270→                                clearTimeout(debounceTimerRef.current);
+   242→   271→                        }
+   243→   272→                        debounceTimerRef.current = setTimeout(() => {
+   244→   273→                                flushPendingRef.current();
+   245→   274→                        }, SYNC_DEBOUNCE_MS);
+   246→   275→                };
+   247→   276→        }, []);
+   248→   277→
+   249→   278→        // Keep scheduleSyncRef up-to-date.
+   250→   279→        scheduleSyncRef.current = buildScheduleSync();
+   251→   280→
+   252→   281→        // ----------------------------------------------------------------
+   253→   282→        // Load initial state from Yjs into the editor
+   254→   283→        // ----------------------------------------------------------------
+   255→   284→
+   256→   285→        const loadInitialState = useCallback(() => {
+   257→   286→                const editor = editorRef.current;
+   258→   287→                if (!editor) return;
+   259→   288→
+   260→   289→                // If no Yjs document (e.g. Hocuspocus unavailable), start fresh
+   261→   290→                if (!ydoc) {
+   262→   291→                        isInitialLoadRef.current = false;
+   263→   292→                        setIsLoadingSnapshot(false);
+   264→   293→                        console.log('[TldrawCanvas] No Yjs document — starting in standalone mode');
+   265→   294→                        return;
+   266→   295→                }
+   267→   296→
+   268→   297→                isInitialLoadRef.current = true;
+   269→   298→
+   270→   299→                const shapesMap = ydoc.getMap<string>(`${YJS_SHAPES_MAP_PREFIX}${pageIndex}`);
+   271→   300→                shapesMapRef.current = shapesMap;
+   272→   301→
+   273→   302→                // --- Try legacy full-snapshot format first ---
+   274→   303→                const legacyMap = ydoc.getMap<string>(YJS_LEGACY_MAP_KEY);
+   275→   304→                const legacyKey = `page-${pageIndex}`;
+   276→   305→                const legacyJson = legacyMap.get(legacyKey);
+   277→   306→
+   278→   307→                if (legacyJson && !migratedPagesRef.current.has(pageIndex)) {
+   279→   308→                        try {
+   280→   309→                                const storeSnapshot = JSON.parse(legacyJson) as TLStoreSnapshot;
+   281→   310→
+   282→   311→                                // editor.loadSnapshot accepts Partial<TLEditorSnapshot> | TLStoreSnapshot
+   283→   312→                                editor.loadSnapshot({ document: storeSnapshot });
+   284→   313→                                console.log(`[TldrawCanvas] Loaded legacy snapshot for page ${pageIndex}`);
+   285→   314→
+   286→   315→                                // Migrate the legacy snapshot into per-record Y.Map entries.
+   287→   316→                                // TLStoreSnapshot has { store: Record<string, TLRecord>, schema: ... }
+   288→   317→                                const records = (storeSnapshot as any).store;
+   289→   318→                                if (records) {
+   290→   319→                                        ydoc.transact(() => {
+   291→   320→                                                for (const [id, record] of Object.entries(records)) {
+   292→   321→                                                        shapesMap.set(id, JSON.stringify(record));
+   293→   322→                                                }
+   294→   323→                                        }, LOCAL_SYNC_ORIGIN);
+   295→   324→                                        console.log(
+   296→   325→                                                `[TldrawCanvas] Migrated ${Object.keys(records).length} records to per-record format for page ${pageIndex}`
+   297→   326→                                        );
+   298→   327→                                }
+   299→   328→
+   300→   329→                                migratedPagesRef.current.add(pageIndex);
+   301→   330→                        } catch (err) {
+   302→   331→                                console.error(
+   303→   332→                                        `[TldrawCanvas] Failed to load/parse legacy snapshot for page ${pageIndex}:`,
+   304→   333→                                        err
+   305→   334→                                );
+   306→   335→                        }
+   307→   336→                } else {
+   308→   337→                        // --- Load from per-record format ---
+   309→   338→                        const recordsToLoad: Record<string, unknown>[] = [];
+   310→   339→                        shapesMap.forEach((json, id) => {
+   311→   340→                                try {
+   312→   341→                                        recordsToLoad.push(JSON.parse(json));
+   313→   342→                                } catch (err) {
+   314→   343→                                        console.error(`[TldrawCanvas] Failed to parse record ${id}:`, err);
+   315→   344→                                }
+   316→   345→                        });
+   317→   346→
+   318→   347→                        if (recordsToLoad.length > 0) {
+   319→   348→                                // Use mergeRemoteChanges so these are tagged source='remote'
+   320→   349→                                // and won't trigger our local-sync listener.
+   321→   350→                                editor.store.mergeRemoteChanges(() => {
+   322→   351→                                        editor.store.put(recordsToLoad as any);
+   323→   352→                                });
+   324→   353→                                console.log(
+   325→   354→                                        `[TldrawCanvas] Loaded ${recordsToLoad.length} records from per-record format for page ${pageIndex}`
+   326→   355→                                );
+   327→   356→                        } else if (!legacyJson) {
+   328→   357→                                console.log(`[TldrawCanvas] No saved data for page ${pageIndex} — starting fresh`);
+   329→   358→                        }
+   330→   359→                }
+   331→   360→
+   332→   361→                isInitialLoadRef.current = false;
+   333→   362→                setIsLoadingSnapshot(false);
+   334→   363→        }, [ydoc, pageIndex]);
+   335→   364→
+   336→   365→        // ----------------------------------------------------------------
+   337→   366→        // Set up the Yjs remote-change observer for the shapes map
+   338→   367→        // ----------------------------------------------------------------
+   339→   368→
+   340→   369→        const setupRemoteObserver = useCallback(() => {
+   341→   370→                const shapesMap = shapesMapRef.current;
+   342→   371→                if (!shapesMap) return () => {};
+   343→   372→
+   344→   373→                const observer = (event: any, transaction: any) => {
+   345→   374→                        // Skip our own local writes (tagged with LOCAL_SYNC_ORIGIN).
+   346→   375→                        if (transaction.origin === LOCAL_SYNC_ORIGIN) return;
+   347→   376→
+   348→   377→                        const editor = editorRef.current;
+   349→   378→                        if (!editor) return;
+   350→   379→                        if (isInitialLoadRef.current) return;
+   351→   380→
+   352→   381→                        const toPut: Record<string, unknown>[] = [];
+   353→   382→                        const toRemove: string[] = [];
+   354→   383→
+   355→   384→                        // Determine which keys changed.
+   356→   385→                        // YMapEvent extends YEvent which has `changes.keys` (Map<string, {action, oldValue}>).
+   357→   386→                        // It also has `keysChanged` (Set<string>) which is a simpler set of changed keys.
+   358→   387→                        const changedKeys: Set<string> | undefined = event.keysChanged;
+   359→   388→                        if (!changedKeys) return;
+   360→   389→
+   361→   390→                        for (const id of changedKeys) {
+   362→   391→                                // Skip records with pending local changes — our local edit wins.
+   363→   392→                                if (localDirtyRef.current.has(id)) {
+   364→   393→                                        continue;
+   365→   394→                                }
+   366→   395→
+   367→   396→                                // Check if the key still exists in the map (add/update) or was deleted.
+   368→   397→                                if (shapesMap.has(id)) {
+   369→   398→                                        try {
+   370→   399→                                                toPut.push(JSON.parse(shapesMap.get(id)!));
+   371→   400→                                        } catch (err) {
+   372→   401→                                                console.error(`[TldrawCanvas] Failed to parse remote record ${id}:`, err);
+   373→   402→                                        }
+   374→   403→                                } else {
+   375→   404→                                        toRemove.push(id);
+   376→   405→                                }
+   377→   406→                        }
+   378→   407→
+   379→   408→                        if (toPut.length > 0 || toRemove.length > 0) {
+   380→   409→                                editor.store.mergeRemoteChanges(() => {
+   381→   410→                                        if (toPut.length > 0) {
+   382→   411→                                                editor.store.put(toPut as any);
+   383→   412→                                        }
+   384→   413→                                        if (toRemove.length > 0) {
+   385→   414→                                                editor.store.remove(toRemove as any);
+   386→   415→                                        }
+   387→   416→                                });
+   388→   417→                                console.log(
+   389→   418→                                        `[TldrawCanvas] Applied remote changes for page ${pageIndex}: ${toPut.length} puts, ${toRemove.length} removes`
+   390→   419→                                );
+   391→   420→                        }
+   392→   421→                };
+   393→   422→
+   394→   423→                shapesMap.observe(observer);
+   395→   424→                return () => {
+   396→   425→                        shapesMap.unobserve(observer);
+   397→   426→                };
+   398→   427→        }, [pageIndex]);
+   399→   428→
+   400→   429→        // ----------------------------------------------------------------
+   401→   430→        // Register the store listener with { source: 'user', scope: 'document' }
+   402→   431→        // so it only fires for local user edits (not for remote-applied changes).
+   403→   432→        // ----------------------------------------------------------------
+   404→   433→
+   405→   434→        const registerStoreListener = useCallback(() => {
+   406→   435→                const editor = editorRef.current;
+   407→   436→                if (!editor) return;
+   408→   437→
+   409→   438→                // Clean up previous listener if any.
+   410→   439→                unlistenStoreRef.current?.();
+   411→   440→
+   412→   441→                unlistenStoreRef.current = (editor.store as any).listen(
+   413→   442→                        (entry: HistoryEntryLike) => {
+   414→   443→                                processLocalDiff(entry);
+   415→   444→                        },
+   416→   445→                        { source: 'user', scope: 'document' } as any
+   417→   446→                );
+   418→   447→        }, [processLocalDiff]);
+   419→   448→
+   420→   449→        // ----------------------------------------------------------------
+   421→   450→        // Handle editor mount (called once by Tldraw)
+   422→   451→        // ----------------------------------------------------------------
+   423→   452→
+   424→   453→        const handleMount = useCallback(
+   425→   454→                (editor: Editor) => {
+   426→   455→                        editorRef.current = editor;
+   427→   456→                        prevPageIndexRef.current = pageIndex;
+   428→   457→
+   429→   458→                        // Notify parent with the editor ref.
+   430→   459→                        onEditorReady?.(editor);
+   431→   460→
+   432→   461→                        // Short delay lets the editor finish its internal initialization
+   433→   462→                        // before we start loading external data.
+   434→   463→                        setTimeout(() => {
+   435→   464→                                // 1. Load initial state (legacy snapshot or per-record format).
+   436→   465→                                loadInitialState();
+   437→   466→
+   438→   467→                                // 2. Register the store listener for user-initiated changes.
+   439→   468→                                registerStoreListener();
+   440→   469→
+   441→   470→                                // 3. Set up the Yjs remote observer.
+   442→   471→                                unobserveYjsRef.current = setupRemoteObserver();
+   443→   472→
+   444→   473→                                // 4. Mark as ready — enables the store listener's isReadyRef check.
+   445→   474→                                isReadyRef.current = true;
+   446→   475→                                setIsReady(true);
+   447→   476→                        }, 100);
+   448→   477→                },
+   449→   478→                [onEditorReady, pageIndex, loadInitialState, registerStoreListener, setupRemoteObserver]
+   450→   479→        );
+   451→   480→
+   452→   481→        // ----------------------------------------------------------------
+   453→   482→        // Handle page changes: flush old page, load new page
+   454→   483→        // ----------------------------------------------------------------
+   455→   484→
+   456→   485→        useEffect(() => {
+   457→   486→                if (!editorRef.current || !ydoc) return;
+   458→   487→                if (prevPageIndexRef.current === pageIndex) return;
+   459→   488→
+   460→   489→                // 1. Cancel any pending debounce.
+   461→   490→                if (debounceTimerRef.current) {
+   462→   491→                        clearTimeout(debounceTimerRef.current);
+   463→   492→                        debounceTimerRef.current = null;
+   464→   493→                }
+   465→   494→
+   466→   495→                // 2. Mark as not-ready to suppress store listener during transition.
+   467→   496→                isReadyRef.current = false;
+   468→   497→
+   469→   498→                // 3. Flush pending changes for the OLD page (shapesMapRef still points to old map).
+   470→   499→                flushPendingRef.current();
+   471→   500→
+   472→   501→                // 4. Clean up old Yjs observer.
+   473→   502→                unobserveYjsRef.current?.();
+   474→   503→                unobserveYjsRef.current = null;
+   475→   504→
+   476→   505→                // 5. Reset all pending/dirty state for the new page.
+   477→   506→                pendingWritesRef.current = new Map();
+   478→   507→                pendingDeletesRef.current = new Set();
+   479→   508→                localDirtyRef.current = new Set();
+   480→   509→
+   481→   510→                // 6. Update page tracking.
+   482→   511→                prevPageIndexRef.current = pageIndex;
+   483→   512→
+   484→   513→                // 7. Load the new page's state.
+   485→   514→                setIsLoadingSnapshot(true);
+   486→   515→                loadInitialState();
+   487→   516→
+   488→   517→                // 8. Set up new Yjs observer for the new page's map.
+   489→   518→                unobserveYjsRef.current = setupRemoteObserver();
+   490→   519→
+   491→   520→                // 9. Re-enable the store listener.
+   492→   521→                //    (registerStoreListener is idempotent — it cleans up the old one first.)
+   493→   522→                registerStoreListener();
+   494→   523→
+   495→   524→                // 10. Mark as ready again.
+   496→   525→                isReadyRef.current = true;
+   497→   526→                setIsReady(true);
+   498→   527→        }, [pageIndex, ydoc, loadInitialState, setupRemoteObserver, registerStoreListener]);
+   499→   528→
+   500→   529→        // ----------------------------------------------------------------
+   501→   530→        // License Gate Mitigation: Detect when tldraw unmounts due to
+   502→   531→        // missing production license and force re-mount.
+   503→   532→        // ----------------------------------------------------------------
+   504→   533→        const containerRef = useRef<HTMLDivElement>(null);
+   505→   534→        useEffect(() => {
+   506→   535→                const container = containerRef.current;
+   507→   536→                if (!container) return;
+   508→   537→
+   509→   538→                const observer = new MutationObserver(() => {
+   510→   539→                        // Check if the license-gate div has appeared (Tldraw unmounted itself)
+   511→   540→                        if (container.querySelector('[data-testid="tl-license-expired"]')) {
+   512→   541→                                // Force re-mount by incrementing key
+   513→   542→                                setTldrawKey((k) => k + 1);
+   514→   543→                                console.warn(
+   515→   544→                                        '[TldrawCanvas] tldraw license gate detected — re-mounting editor. ' +
+   516→   545→                                        'Obtain a production license from sales@tldraw.com to remove this workaround.'
+   517→   546→                                );
+   518→   547→                        }
+   519→   548→                });
+   520→   549→
+   521→   550→                observer.observe(container, { childList: true, subtree: true });
+   522→   551→                return () => observer.disconnect();
+   523→   552→        }, []);
+   524→   553→
+   525→   554→        // ----------------------------------------------------------------
+   526→   555→        // Cleanup on unmount
+   527→   556→        // ----------------------------------------------------------------
+   528→   557→
+   529→   558→        useEffect(() => {
+   530→   559→                return () => {
+   531→   560→                        // Cancel pending debounce.
+   532→   561→                        if (debounceTimerRef.current) {
+   533→   562→                                clearTimeout(debounceTimerRef.current);
+   534→   563→                                debounceTimerRef.current = null;
+   535→   564→                        }
+   536→   565→
+   537→   566→                        // Flush any remaining pending changes immediately.
+   538→   567→                        flushPendingRef.current();
+   539→   568→
+   540→   569→                        // Clean up listeners.
+   541→   570→                        unlistenStoreRef.current?.();
+   542→   571→                        unobserveYjsRef.current?.();
+   543→   572→
+   544→   573→                        editorRef.current = null;
+   545→   574→                };
+   546→   575→        }, []); // eslint-disable-line react-hooks/exhaustive-deps
+   547→   576→
+   548→   577→        // ----------------------------------------------------------------
+   549→   578→        // Render
+   550→   579→        // ----------------------------------------------------------------
+   551→   580→
+   552→   581→        return (
+   553→   582→                <div className="w-full h-full relative" ref={containerRef}>
+   554→   583→                        {/* Loading overlay while snapshot is being loaded */}
+   555→   584→                        {isLoadingSnapshot && (
+   556→   585→                                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm transition-opacity">
+   557→   586→                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+   558→   587→                                                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+   559→   588→                                                <span>Loading canvas...</span>
+   560→   589→                                        </div>
+   561→   590→                                </div>
+   562→   591→                        )}
+   563→   592→
+   564→   593→                        {/* Tldraw Editor — key forces re-mount on license gate detection */}
+   565→   594→                        <Tldraw
+   566→   595→                                key={tldrawKey}
+   567→   596→                                onMount={handleMount}
+   568→   597→                                options={{
+   569→   598→                                        maxPages: 50,
+   570→   599→                                        maxShapesPerPage: 500,
+   571→   600→                                }}
+   572→   601→                        />
+   573→   602→                </div>
+   574→   603→        );
+   575→   604→}
+   576→   605→
