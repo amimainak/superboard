@@ -1,0 +1,955 @@
+     1→    50→
+     2→    51→interface RemoteCursor {
+     3→    52→  id: string;
+     4→    53→  name: string;
+     5→    54→  color: string;
+     6→    55→  x: number;
+     7→    56→  y: number;
+     8→    57→}
+     9→    58→
+    10→    59→export interface FabricCanvasProps {
+    11→    60→  ydoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    12→    61→  pageIndex: number;
+    13→    62→  isTutor: boolean;
+    14→    63→  readOnly: boolean;
+    15→    64→  activeTool?: string;
+    16→    65→  onCanvasReady?: (canvas: FabricCanvas) => void;
+    17→    66→  awareness?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    18→    67→}
+    19→    68→
+    20→    69→// ---- Perfect-Freehand → Fabric.js Path ----
+    21→    70→
+    22→    71→function createFreehandPath(
+    23→    72→  points: FreehandPoint[],
+    24→    73→  strokeColor: string,
+    25→    74→  strokeWidth: number
+    26→    75→): Path | null {
+    27→    76→  if (points.length < 2) return null;
+    28→    77→
+    29→    78→  const outline = getStroke(points, {
+    30→    79→    size: strokeWidth * 3,
+    31→    80→    thinning: 0.5,
+    32→    81→    smoothing: 0.6,
+    33→    82→    streamline: 0.5,
+    34→    83→    simulatePressure: true,
+    35→    84→  });
+    36→    85→
+    37→    86→  if (outline.length < 2) return null;
+    38→    87→
+    39→    88→  // Build SVG path string from the outline points
+    40→    89→  let d = `M ${outline[0][0].toFixed(1)} ${outline[0][1].toFixed(1)}`;
+    41→    90→  for (let i = 1; i < outline.length; i++) {
+    42→    91→    d += ` L ${outline[i][0].toFixed(1)} ${outline[i][1].toFixed(1)}`;
+    43→    92→  }
+    44→    93→  d += ' Z';
+    45→    94→
+    46→    95→  try {
+    47→    96→    const path = new Path(d, {
+    48→    97→      fill: strokeColor,
+    49→    98→      stroke: strokeColor,
+    50→    99→      strokeWidth: 0.5,
+    51→   100→      strokeLineCap: 'round',
+    52→   101→      strokeLineJoin: 'round',
+    53→   102→    } as any);
+    54→   103→    return path;
+    55→   104→  } catch {
+    56→   105→    return null;
+    57→   106→  }
+    58→   107→}
+    59→   108→
+    60→   109→// ---- Canvas ID for uniqueness ----
+    61→   110→let canvasInstanceId = 0;
+    62→   111→function getNextCanvasId() {
+    63→   112→  canvasInstanceId++;
+    64→   113→  return `fabric-whiteboard-${canvasInstanceId}`;
+    65→   114→}
+    66→   115→
+    67→   116→// ---- Main Component ----
+    68→   117→
+    69→   118→const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
+    70→   119→  function FabricCanvasInner(
+    71→   120→    {
+    72→   121→      ydoc,
+    73→   122→      pageIndex,
+    74→   123→      isTutor,
+    75→   124→      readOnly,
+    76→   125→      activeTool,
+    77→   126→      onCanvasReady,
+    78→   127→      awareness,
+    79→   128→    },
+    80→   129→    ref
+    81→   130→  ) {
+    82→   131→    const containerRef = useRef<HTMLDivElement>(null);
+    83→   132→    const fcanvasRef = useRef<FabricCanvas | null>(null);
+    84→   133→    const [isReady, setIsReady] = useState(false);
+    85→   134→    const [isPanning, setIsPanning] = useState(false);
+    86→   135→    const canvasIdRef = useRef(getNextCanvasId());
+    87→   136→
+    88→   137→    // Drawing state for shapes
+    89→   138→    const isDrawingRef = useRef(false);
+    90→   139→    const startPointRef = useRef<Point | null>(null);
+    91→   140→    const tempShapeRef = useRef<FabricObject | null>(null);
+    92→   141→
+    93→   142→    // Freehand points buffer for perfect-freehand
+    94→   143→    const freehandPointsRef = useRef<FreehandPoint[]>([]);
+    95→   144→    const freehandTempPathRef = useRef<Path | null>(null);
+    96→   145→
+    97→   146→    // Touch state for pinch-to-zoom
+    98→   147→    const touchStateRef = useRef<{
+    99→   148→      isPinching: boolean;
+   100→   149→      lastDist: number;
+   101→   150→      lastCenter: { x: number; y: number };
+   102→   151→      touchCount: number;
+   103→   152→    }>({ isPinching: false, lastDist: 0, lastCenter: { x: 0, y: 0 }, touchCount: 0 });
+   104→   153→
+   105→   154→    // Remote cursors state
+   106→   155→    const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([]);
+   107→   156→    const cursorOverlayRef = useRef<HTMLDivElement>(null);
+   108→   157→
+   109→   158→    // Render throttle
+   110→   159→    const renderQueuedRef = useRef(false);
+   111→   160→    const requestRenderThrottled = useCallback(() => {
+   112→   161→      if (renderQueuedRef.current) return;
+   113→   162→      renderQueuedRef.current = true;
+   114→   163→      requestAnimationFrame(() => {
+   115→   164→        fcanvasRef.current?.requestRenderAll();
+   116→   165→        renderQueuedRef.current = false;
+   117→   166→      });
+   118→   167→    }, []);
+   119→   168→
+   120→   169→    // ---- Expose canvas ref via forwardRef ----
+   121→   170→    useImperativeHandle(ref, () => fcanvasRef.current!, []);
+   122→   171→
+   123→   172→    // ---- Hooks ----
+   124→   173→    const tools = useCanvasTools(fcanvasRef);
+   125→   174→    const history = useCanvasHistory(fcanvasRef);
+   126→   175→
+   127→   176→    // Register canvas ref for keyboard shortcuts
+   128→   177→    useEffect(() => {
+   129→   178→      setKeyboardCanvasRef(fcanvasRef);
+   130→   179→      return () => setKeyboardCanvasRef({ current: null } as React.MutableRefObject<FabricCanvas | null>);
+   131→   180→    }, []);
+   132→   181→
+   133→   182→    // ============================================================
+   134→   183→    // Sync external tool changes (from toolbar) to canvas
+   135→   184→    // ============================================================
+   136→   185→    const prevActiveToolRef = useRef(activeTool);
+   137→   186→    useEffect(() => {
+   138→   187→      if (activeTool && activeTool !== prevActiveToolRef.current) {
+   139→   188→        prevActiveToolRef.current = activeTool;
+   140→   189→        tools.setTool(activeTool as CanvasTool);
+   141→   190→      }
+   142→   191→    }, [activeTool, tools]);
+   143→   192→
+   144→   193→    const sync = useYjsCanvasSync({
+   145→   194→      ydoc,
+   146→   195→      fcanvasRef,
+   147→   196→      pageIndex,
+   148→   197→      onRemoteChange: () => {},
+   149→   198→    });
+   150→   199→
+   151→   200→    // ============================================================
+   152→   201→    // Canvas Initialization
+   153→   202→    // ============================================================
+   154→   203→    useEffect(() => {
+   155→   204→      const container = containerRef.current;
+   156→   205→      if (!container) return;
+   157→   206→
+   158→   207→      const canvasId = canvasIdRef.current;
+   159→   208→      const fc = new Canvas(canvasId, {
+   160→   209→        width: container.clientWidth,
+   161→   210→        height: container.clientHeight,
+   162→   211→        backgroundColor: '#ffffff',
+   163→   212→        selection: false,
+   164→   213→        preserveObjectStacking: true,
+   165→   214→        stopContextMenu: true,
+   166→   215→        fireRightClick: true,
+   167→   216→        fireMiddleClick: true,
+   168→   217→        enableRetinaScaling: true,
+   169→   218→        renderOnAddRemove: false, // Performance: batch renders
+   170→   219→      });
+   171→   220→
+   172→   221→      // Configure PencilBrush for freehand (fallback / raw path mode)
+   173→   222→      const brush = new PencilBrush(fc);
+   174→   223→      brush.color = tools.strokeColor;
+   175→   224→      brush.width = tools.strokeWidth;
+   176→   225→      brush.decimate = 2; // Reduce point density for performance
+   177→   226→      fc.freeDrawingBrush = brush;
+   178→   227→      fc.isDrawingMode = false;
+   179→   228→
+   180→   229→      fcanvasRef.current = fc;
+   181→   230→      setIsReady(true);
+   182→   231→
+   183→   232→      sync.loadInitialState(fc);
+   184→   233→      sync.wireCanvasEvents(fc);
+   185→   234→      sync.setupRemoteObserver();
+   186→   235→      onCanvasReady?.(fc);
+   187→   236→
+   188→   237→      // Initial render
+   189→   238→      fc.requestRenderAll();
+   190→   239→
+   191→   240→      return () => {
+   192→   241→        sync.flushPending();
+   193→   242→        fc.dispose();
+   194→   243→        fcanvasRef.current = null;
+   195→   244→        setIsReady(false);
+   196→   245→      };
+   197→   246→      // eslint-disable-next-line react-hooks/exhaustive-deps
+   198→   247→    }, []);
+   199→   248→
+   200→   249→    // ============================================================
+   201→   250→    // Resize Handler (performance: debounced)
+   202→   251→    // ============================================================
+   203→   252→    useEffect(() => {
+   204→   253→      const container = containerRef.current;
+   205→   254→      const fc = fcanvasRef.current;
+   206→   255→      if (!container || !fc) return;
+   207→   256→
+   208→   257→      let rafId: number;
+   209→   258→      const observer = new ResizeObserver(() => {
+   210→   259→        if (rafId) cancelAnimationFrame(rafId);
+   211→   260→        rafId = requestAnimationFrame(() => {
+   212→   261→          fc.setDimensions({
+   213→   262→            width: container.clientWidth,
+   214→   263→            height: container.clientHeight,
+   215→   264→          });
+   216→   265→          fc.requestRenderAll();
+   217→   266→        });
+   218→   267→      });
+   219→   268→
+   220→   269→      observer.observe(container);
+   221→   270→      return () => {
+   222→   271→        observer.disconnect();
+   223→   272→        if (rafId) cancelAnimationFrame(rafId);
+   224→   273→      };
+   225→   274→    }, [isReady]);
+   226→   275→
+   227→   276→    // ============================================================
+   228→   277→    // Page Change — reload from Yjs
+   229→   278→    // ============================================================
+   230→   279→    const prevPageIndexRef = useRef(pageIndex);
+   231→   280→    useEffect(() => {
+   232→   281→      if (pageIndex !== prevPageIndexRef.current) {
+   233→   282→        const fc = fcanvasRef.current;
+   234→   283→        if (fc && ydoc) {
+   235→   284→          sync.flushPending();
+   236→   285→          history.clearHistory();
+   237→   286→          sync.loadInitialState(fc);
+   238→   287→        }
+   239→   288→        prevPageIndexRef.current = pageIndex;
+   240→   289→      }
+   241→   290→    }, [pageIndex, ydoc, sync, history]);
+   242→   291→
+   243→   292→    // ============================================================
+   244→   293→    // Read-only mode
+   245→   294→    // ============================================================
+   246→   295→    useEffect(() => {
+   247→   296→      const fc = fcanvasRef.current;
+   248→   297→      if (!fc) return;
+   249→   298→
+   250→   299→      if (readOnly) {
+   251→   300→        fc.selection = false;
+   252→   301→        fc.isDrawingMode = false;
+   253→   302→        fc.forEachObject((obj: FabricObject) => {
+   254→   303→          obj.selectable = false;
+   255→   304→          obj.evented = false;
+   256→   305→        });
+   257→   306→      } else {
+   258→   307→        tools.setTool(tools.tool);
+   259→   308→      }
+   260→   309→      fc.requestRenderAll();
+   261→   310→    }, [readOnly, tools]);
+   262→   311→
+   263→   312→    // ============================================================
+   264→   313→    // Awareness Cursor Tracking — broadcast local cursor, render remote
+   265→   314→    // ============================================================
+   266→   315→    useEffect(() => {
+   267→   316→      if (!awareness || !fcanvasRef.current) return;
+   268→   317→
+   269→   318→      const fc = fcanvasRef.current;
+   270→   319→      const localUserId = awareness.clientId;
+   271→   320→
+   272→   321→      // Broadcast cursor position on mouse move
+   273→   322→      const handleMouseMoveAwareness = (opt: any) => {
+   274→   323→        const e = opt.e as MouseEvent;
+   275→   324→        const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   276→   325→        awareness.setLocalStateField('cursor', {
+   277→   326→          x: pointer.x,
+   278→   327→          y: pointer.y,
+   279→   328→        });
+   280→   329→      };
+   281→   330→
+   282→   331→      fc.on('mouse:move', handleMouseMoveAwareness);
+   283→   332→
+   284→   333→      // Observe remote awareness states for cursors
+   285→   334→      const handleAwarenessChange = () => {
+   286→   335→        const states = awareness.getStates() as Map<number, any>;
+   287→   336→        const cursors: RemoteCursor[] = [];
+   288→   337→
+   289→   338→        states.forEach((state: any, clientId: number) => {
+   290→   339→          if (clientId === localUserId) return; // Skip own cursor
+   291→   340→          const cursor = state?.cursor;
+   292→   341→          const user = state?.user;
+   293→   342→          if (cursor && user) {
+   294→   343→            cursors.push({
+   295→   344→              id: String(clientId),
+   296→   345→              name: user.name || 'Anonymous',
+   297→   346→              color: user.color || '#6366f1',
+   298→   347→              x: cursor.x,
+   299→   348→              y: cursor.y,
+   300→   349→            });
+   301→   350→          }
+   302→   351→        });
+   303→   352→
+   304→   353→        setRemoteCursors(cursors);
+   305→   354→      };
+   306→   355→
+   307→   356→      awareness.on('change', handleAwarenessChange);
+   308→   357→
+   309→   358→      return () => {
+   310→   359→        fc.off('mouse:move', handleMouseMoveAwareness);
+   311→   360→        awareness.off('change', handleAwarenessChange);
+   312→   361→      };
+   313→   362→    }, [awareness, isReady]);
+   314→   363→
+   315→   364→    // ============================================================
+   316→   365→    // Canvas Interaction — Pan, Zoom, Draw, Erase, Text, Shapes
+   317→   366→    // ============================================================
+   318→   367→    useEffect(() => {
+   319→   368→      const fc = fcanvasRef.current;
+   320→   369→      if (!fc || readOnly) return;
+   321→   370→
+   322→   371→      // ---- Zoom (mouse wheel) ----
+   323→   372→      const handleWheel = (opt: any) => {
+   324→   373→        const e = opt.e as WheelEvent;
+   325→   374→        e.preventDefault();
+   326→   375→        e.stopPropagation();
+   327→   376→
+   328→   377→        const delta = e.deltaY;
+   329→   378→        let zoom = fc.getZoom();
+   330→   379→        zoom *= 0.999 ** delta;
+   331→   380→        zoom = Math.min(Math.max(0.1, zoom), 10);
+   332→   381→        fc.zoomToPoint(new FabricPoint(e.offsetX, e.offsetY), zoom);
+   333→   382→        requestRenderThrottled();
+   334→   383→      };
+   335→   384→      fc.on('mouse:wheel', handleWheel);
+   336→   385→
+   337→   386→      // ---- Mouse interactions ----
+   338→   387→      let panningActive = false;
+   339→   388→      let lastPosX = 0;
+   340→   389→      let lastPosY = 0;
+   341→   390→      let beforeState = '';
+   342→   391→
+   343→   392→      // ---- Mouse Down ----
+   344→   393→      const handleMouseDown = (opt: any) => {
+   345→   394→        const e = opt.e as MouseEvent;
+   346→   395→
+   347→   396→        // Hand tool: left click pans
+   348→   397→        if (tools.tool === 'hand' && e.button === 0) {
+   349→   398→          panningActive = true;
+   350→   399→          setIsPanning(true);
+   351→   400→          lastPosX = e.clientX;
+   352→   401→          lastPosY = e.clientY;
+   353→   402→          (fc as any).defaultCursor = 'grabbing';
+   354→   403→          return;
+   355→   404→        }
+   356→   405→
+   357→   406→        // Middle click pans
+   358→   407→        if (e.button === 1) {
+   359→   408→          panningActive = true;
+   360→   409→          setIsPanning(true);
+   361→   410→          lastPosX = e.clientX;
+   362→   411→          lastPosY = e.clientY;
+   363→   412→          return;
+   364→   413→        }
+   365→   414→
+   366→   415→        // Eraser: click to delete
+   367→   416→        if (tools.tool === 'eraser' && e.button === 0) {
+   368→   417→          const target = opt.target as FabricObject | undefined;
+   369→   418→          if (target) {
+   370→   419→            beforeState = fc.toJSON().toString();
+   371→   420→            fc.remove(target);
+   372→   421→            fc.renderAll();
+   373→   422→            history.pushState('erase', beforeState, fc.toJSON().toString());
+   374→   423→          }
+   375→   424→          return;
+   376→   425→        }
+   377→   426→
+   378→   427→        // Text: click empty space to place IText
+   379→   428→        if (tools.tool === 'text' && e.button === 0 && !opt.target) {
+   380→   429→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   381→   430→          beforeState = fc.toJSON().toString();
+   382→   431→
+   383→   432→          const text = new IText('Type here', {
+   384→   433→            left: pointer.x,
+   385→   434→            top: pointer.y,
+   386→   435→            fontSize: tools.fontSize,
+   387→   436→            fill: tools.strokeColor,
+   388→   437→            fontFamily: 'Inter, system-ui, sans-serif',
+   389→   438→            selectable: true,
+   390→   439→            evented: true,
+   391→   440→          } as any);
+   392→   441→          (text as any).name = `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+   393→   442→
+   394→   443→          fc.add(text);
+   395→   444→          fc.setActiveObject(text);
+   396→   445→          text.enterEditing();
+   397→   446→          text.selectAll();
+   398→   447→          fc.renderAll();
+   399→   448→
+   400→   449→          history.pushState('add-text', beforeState, fc.toJSON().toString());
+   401→   450→          return;
+   402→   451→        }
+   403→   452→
+   404→   453→        // Freehand (draw tool): start collecting points for perfect-freehand
+   405→   454→        if (tools.tool === 'draw' && e.button === 0 && !opt.target) {
+   406→   455→          // We use Fabric's built-in freeDrawingMode but with perfect-freehand
+   407→   456→          // post-processing. The PencilBrush collects points; on path:created
+   408→   457→          // we replace it with a smooth perfect-freehand path.
+   409→   458→          // But for real-time preview, we track raw points ourselves.
+   410→   459→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   411→   460→          freehandPointsRef.current = [{ x: pointer.x, y: pointer.y, pressure: 0.5 }];
+   412→   461→          isDrawingRef.current = true;
+   413→   462→          beforeState = fc.toJSON().toString();
+   414→   463→          return;
+   415→   464→        }
+   416→   465→
+   417→   466→        // Shape tools: start drawing
+   418→   467→        if (['rectangle', 'ellipse', 'line', 'arrow'].includes(tools.tool) && e.button === 0 && !opt.target) {
+   419→   468→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   420→   469→          isDrawingRef.current = true;
+   421→   470→          startPointRef.current = pointer;
+   422→   471→          beforeState = fc.toJSON().toString();
+   423→   472→
+   424→   473→          const objName = `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+   425→   474→          let shape: FabricObject;
+   426→   475→
+   427→   476→          switch (tools.tool) {
+   428→   477→            case 'rectangle':
+   429→   478→              shape = new Rect({
+   430→   479→                left: pointer.x,
+   431→   480→                top: pointer.y,
+   432→   481→                width: 1,
+   433→   482→                height: 1,
+   434→   483→                fill: tools.fillColor === 'transparent' ? 'transparent' : tools.fillColor,
+   435→   484→                stroke: tools.strokeColor,
+   436→   485→                strokeWidth: tools.strokeWidth,
+   437→   486→                selectable: false,
+   438→   487→                evented: false,
+   439→   488→              } as any);
+   440→   489→              break;
+   441→   490→
+   442→   491→            case 'ellipse':
+   443→   492→              shape = new Ellipse({
+   444→   493→                left: pointer.x,
+   445→   494→                top: pointer.y,
+   446→   495→                rx: 1,
+   447→   496→                ry: 1,
+   448→   497→                fill: tools.fillColor === 'transparent' ? 'transparent' : tools.fillColor,
+   449→   498→                stroke: tools.strokeColor,
+   450→   499→                strokeWidth: tools.strokeWidth,
+   451→   500→                selectable: false,
+   452→   501→                evented: false,
+   453→   502→              } as any);
+   454→   503→              break;
+   455→   504→
+   456→   505→            case 'line':
+   457→   506→              shape = new Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+   458→   507→                stroke: tools.strokeColor,
+   459→   508→                strokeWidth: tools.strokeWidth,
+   460→   509→                selectable: false,
+   461→   510→                evented: false,
+   462→   511→              } as any);
+   463→   512→              break;
+   464→   513→
+   465→   514→            case 'arrow': {
+   466→   515→              const line = new Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+   467→   516→                stroke: tools.strokeColor,
+   468→   517→                strokeWidth: tools.strokeWidth,
+   469→   518→                selectable: false,
+   470→   519→                evented: false,
+   471→   520→              } as any);
+   472→   521→              const headSize = Math.max(10, tools.strokeWidth * 4);
+   473→   522→              const arrowhead = new Triangle({
+   474→   523→                left: pointer.x,
+   475→   524→                top: pointer.y,
+   476→   525→                width: headSize,
+   477→   526→                height: headSize,
+   478→   527→                fill: tools.strokeColor,
+   479→   528→                angle: 90,
+   480→   529→                originX: 'center',
+   481→   530→                originY: 'center',
+   482→   531→                selectable: false,
+   483→   532→                evented: false,
+   484→   533→              } as any);
+   485→   534→              shape = new Group([line, arrowhead], {
+   486→   535→                selectable: false,
+   487→   536→                evented: false,
+   488→   537→              } as any);
+   489→   538→              break;
+   490→   539→            }
+   491→   540→
+   492→   541→            default:
+   493→   542→              return;
+   494→   543→          }
+   495→   544→
+   496→   545→          (shape as any).name = objName;
+   497→   546→          fc.add(shape);
+   498→   547→          tempShapeRef.current = shape;
+   499→   548→          requestRenderThrottled();
+   500→   549→          return;
+   501→   550→        }
+   502→   551→      };
+   503→   552→
+   504→   553→      // ---- Mouse Move ----
+   505→   554→      const handleMouseMove = (opt: any) => {
+   506→   555→        const e = opt.e as MouseEvent;
+   507→   556→
+   508→   557→        // Panning
+   509→   558→        if (panningActive) {
+   510→   559→          const vpt = fc.viewportTransform!;
+   511→   560→          vpt[4] += e.clientX - lastPosX;
+   512→   561→          vpt[5] += e.clientY - lastPosY;
+   513→   562→          lastPosX = e.clientX;
+   514→   563→          lastPosY = e.clientY;
+   515→   564→          requestRenderThrottled();
+   516→   565→          return;
+   517→   566→        }
+   518→   567→
+   519→   568→        // Freehand drawing — collect points
+   520→   569→        if (isDrawingRef.current && tools.tool === 'draw') {
+   521→   570→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   522→   571→          freehandPointsRef.current.push({
+   523→   572→            x: pointer.x,
+   524→   573→            y: pointer.y,
+   525→   574→            pressure: 0.5,
+   526→   575→          });
+   527→   576→
+   528→   577→          // Real-time preview with perfect-freehand
+   529→   578→          if (freehandTempPathRef.current) {
+   530→   579→            fc.remove(freehandTempPathRef.current);
+   531→   580→          }
+   532→   581→
+   533→   582→          const previewPath = createFreehandPath(
+   534→   583→            freehandPointsRef.current,
+   535→   584→            tools.strokeColor,
+   536→   585→            tools.strokeWidth
+   537→   586→          );
+   538→   587→          if (previewPath) {
+   539→   588→            (previewPath as any).name = '__freehand_temp__';
+   540→   589→            freehandTempPathRef.current = previewPath;
+   541→   590→            fc.add(previewPath);
+   542→   591→          }
+   543→   592→
+   544→   593→          requestRenderThrottled();
+   545→   594→          return;
+   546→   595→        }
+   547→   596→
+   548→   597→        // Shape drawing
+   549→   598→        if (isDrawingRef.current && tempShapeRef.current && startPointRef.current) {
+   550→   599→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   551→   600→          const start = startPointRef.current;
+   552→   601→          const t = tempShapeRef.current;
+   553→   602→
+   554→   603→          if (t instanceof Rect) {
+   555→   604→            const left = Math.min(start.x, pointer.x);
+   556→   605→            const top = Math.min(start.y, pointer.y);
+   557→   606→            t.set({
+   558→   607→              left,
+   559→   608→              top,
+   560→   609→              width: Math.abs(pointer.x - start.x),
+   561→   610→              height: Math.abs(pointer.y - start.y),
+   562→   611→            });
+   563→   612→          } else if (t instanceof Ellipse) {
+   564→   613→            const left = Math.min(start.x, pointer.x);
+   565→   614→            const top = Math.min(start.y, pointer.y);
+   566→   615→            const rx = Math.max(1, Math.abs(pointer.x - start.x) / 2);
+   567→   616→            const ry = Math.max(1, Math.abs(pointer.y - start.y) / 2);
+   568→   617→            t.set({ left: left + rx, top: top + ry, rx, ry });
+   569→   618→          } else if (t instanceof Line) {
+   570→   619→            t.set({ x2: pointer.x, y2: pointer.y });
+   571→   620→          } else if (t instanceof Group) {
+   572→   621→            const objs = t.getObjects();
+   573→   622→            const line = objs[0] as Line;
+   574→   623→            const head = objs[1] as Triangle;
+   575→   624→            if (line && head) {
+   576→   625→              line.set({ x2: pointer.x - start.x, y2: pointer.y - start.y });
+   577→   626→              head.set({
+   578→   627→                left: pointer.x - start.x,
+   579→   628→                top: pointer.y - start.y,
+   580→   629→                angle:
+   581→   630→                  Math.atan2(pointer.y - start.y, pointer.x - start.x) *
+   582→   631→                    (180 / Math.PI) +
+   583→   632→                  90,
+   584→   633→              });
+   585→   634→            }
+   586→   635→            t.setCoords();
+   587→   636→          }
+   588→   637→
+   589→   638→          requestRenderThrottled();
+   590→   639→        }
+   591→   640→      };
+   592→   641→
+   593→   642→      // ---- Mouse Up ----
+   594→   643→      const handleMouseUp = () => {
+   595→   644→        // Stop panning
+   596→   645→        if (panningActive) {
+   597→   646→          panningActive = false;
+   598→   647→          setIsPanning(false);
+   599→   648→          (fc as any).defaultCursor =
+   600→   649→            tools.tool === 'hand' ? 'grab' : 'default';
+   601→   650→          return;
+   602→   651→        }
+   603→   652→
+   604→   653→        // Finalize freehand
+   605→   654→        if (isDrawingRef.current && tools.tool === 'draw') {
+   606→   655→          isDrawingRef.current = false;
+   607→   656→
+   608→   657→          // Remove preview path
+   609→   658→          if (freehandTempPathRef.current) {
+   610→   659→            fc.remove(freehandTempPathRef.current);
+   611→   660→            freehandTempPathRef.current = null;
+   612→   661→          }
+   613→   662→
+   614→   663→          // Create final perfect-freehand path
+   615→   664→          const points = freehandPointsRef.current;
+   616→   665→          if (points.length >= 2) {
+   617→   666→            const finalPath = createFreehandPath(
+   618→   667→              points,
+   619→   668→              tools.strokeColor,
+   620→   669→              tools.strokeWidth
+   621→   670→            );
+   622→   671→            if (finalPath) {
+   623→   672→              (finalPath as any).name = `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+   624→   673→              fc.add(finalPath);
+   625→   674→            }
+   626→   675→          }
+   627→   676→
+   628→   677→          freehandPointsRef.current = [];
+   629→   678→          history.pushState('draw', beforeState, fc.toJSON().toString());
+   630→   679→          fc.renderAll();
+   631→   680→          return;
+   632→   681→        }
+   633→   682→
+   634→   683→        // Finalize shape
+   635→   684→        if (isDrawingRef.current && tempShapeRef.current) {
+   636→   685→          tempShapeRef.current.set({
+   637→   686→            selectable: true,
+   638→   687→            evented: true,
+   639→   688→          });
+   640→   689→
+   641→   690→          history.pushState(
+   642→   691→            `draw-${tools.tool}`,
+   643→   692→            beforeState,
+   644→   693→            fc.toJSON().toString()
+   645→   694→          );
+   646→   695→          tempShapeRef.current = null;
+   647→   696→          isDrawingRef.current = false;
+   648→   697→          startPointRef.current = null;
+   649→   698→          fc.renderAll();
+   650→   699→        }
+   651→   700→      };
+   652→   701→
+   653→   702→      fc.on('mouse:down', handleMouseDown);
+   654→   703→      fc.on('mouse:move', handleMouseMove);
+   655→   704→      fc.on('mouse:up', handleMouseUp);
+   656→   705→
+   657→   706→      // Track undo state: capture before-state when user starts modifying
+   658→   707→      const undoBeforeRef = useRef('');
+   659→   708→      const captureBefore = () => {
+   660→   709→        undoBeforeRef.current = fc.toJSON().toString();
+   661→   710→      };
+   662→   711→      fc.on('object:moving', captureBefore);
+   663→   712→      fc.on('object:scaling', captureBefore);
+   664→   713→      fc.on('object:rotating', captureBefore);
+   665→   714→      fc.on('object:modified', () => {
+   666→   715→        if (undoBeforeRef.current) {
+   667→   716→          history.pushState(
+   668→   717→            'modify',
+   669→   718→            undoBeforeRef.current,
+   670→   719→            fc.toJSON().toString()
+   671→   720→          );
+   672→   721→          undoBeforeRef.current = '';
+   673→   722→        }
+   674→   723→      });
+   675→   724→
+   676→   725→      // Filter out temp freehand paths from sync
+   677→   726→      const origBeforeAdd = fc.on;
+   678→   727→      fc.on('object:added', ((e: any) => {
+   679→   728→        const obj = e.target as FabricObject;
+   680→   729→        const name = (obj as any).name;
+   681→   730→        if (name === '__freehand_temp__') {
+   682→   731→          // Don't sync temp paths
+   683→   732→          return;
+   684→   733→        }
+   685→   734→      }) as any);
+   686→   735→
+   687→   736→      return () => {
+   688→   737→        fc.off('mouse:wheel', handleWheel);
+   689→   738→        fc.off('mouse:down', handleMouseDown);
+   690→   739→        fc.off('mouse:move', handleMouseMove);
+   691→   740→        fc.off('mouse:up', handleMouseUp);
+   692→   741→      };
+   693→   742→    }, [isReady, tools.tool, tools.strokeColor, tools.strokeWidth, tools.fillColor, tools.fontSize, readOnly, history, requestRenderThrottled]);
+   694→   743→
+   695→   744→    // ============================================================
+   696→   745→    // Touch: Pinch-to-zoom via native DOM events on container
+   697→   746→    // ============================================================
+   698→   747→    useEffect(() => {
+   699→   748→      const container = containerRef.current;
+   700→   749→      const fc = fcanvasRef.current;
+   701→   750→      if (!container || !fc) return;
+   702→   751→
+   703→   752→      const domTouchStart = (e: TouchEvent) => {
+   704→   753→        const touches = e.touches;
+   705→   754→        if (touches.length === 2) {
+   706→   755→          e.preventDefault();
+   707→   756→          e.stopPropagation();
+   708→   757→
+   709→   758→          const dx = touches[0].clientX - touches[1].clientX;
+   710→   759→          const dy = touches[0].clientY - touches[1].clientY;
+   711→   760→          const dist = Math.sqrt(dx * dx + dy * dy);
+   712→   761→          const centerX = (touches[0].clientX + touches[1].clientX) / 2;
+   713→   762→          const centerY = (touches[0].clientY + touches[1].clientY) / 2;
+   714→   763→
+   715→   764→          touchStateRef.current = {
+   716→   765→            isPinching: true,
+   717→   766→            lastDist: dist,
+   718→   767→            lastCenter: { x: centerX, y: centerY },
+   719→   768→            touchCount: 2,
+   720→   769→          };
+   721→   770→
+   722→   771→          // Cancel any active drawing
+   723→   772→          isDrawingRef.current = false;
+   724→   773→          tempShapeRef.current = null;
+   725→   774→          freehandPointsRef.current = [];
+   726→   775→          if (freehandTempPathRef.current) {
+   727→   776→            fc.remove(freehandTempPathRef.current);
+   728→   777→            freehandTempPathRef.current = null;
+   729→   778→          }
+   730→   779→        }
+   731→   780→      };
+   732→   781→
+   733→   782→      const domTouchMove = (e: TouchEvent) => {
+   734→   783→        const touches = e.touches;
+   735→   784→        if (touches.length === 2 && touchStateRef.current.isPinching) {
+   736→   785→          e.preventDefault();
+   737→   786→          e.stopPropagation();
+   738→   787→
+   739→   788→          const dx = touches[0].clientX - touches[1].clientX;
+   740→   789→          const dy = touches[0].clientY - touches[1].clientY;
+   741→   790→          const dist = Math.sqrt(dx * dx + dy * dy);
+   742→   791→          const centerX = (touches[0].clientX + touches[1].clientX) / 2;
+   743→   792→          const centerY = (touches[0].clientY + touches[1].clientY) / 2;
+   744→   793→
+   745→   794→          const prev = touchStateRef.current;
+   746→   795→
+   747→   796→          // Zoom
+   748→   797→          const scale = dist / Math.max(prev.lastDist, 1);
+   749→   798→          let zoom = fc.getZoom() * scale;
+   750→   799→          zoom = Math.min(Math.max(0.1, zoom), 10);
+   751→   800→
+   752→   801→          // Pan
+   753→   802→          const vpt = fc.viewportTransform!;
+   754→   803→          vpt[4] += centerX - prev.lastCenter.x;
+   755→   804→          vpt[5] += centerY - prev.lastCenter.y;
+   756→   805→
+   757→   806→          // Apply zoom to center of pinch
+   758→   807→          fc.zoomToPoint(new FabricPoint(centerX, centerY), zoom);
+   759→   808→
+   760→   809→          touchStateRef.current = {
+   761→   810→            isPinching: true,
+   762→   811→            lastDist: dist,
+   763→   812→            lastCenter: { x: centerX, y: centerY },
+   764→   813→            touchCount: 2,
+   765→   814→          };
+   766→   815→
+   767→   816→          requestRenderThrottled();
+   768→   817→        }
+   769→   818→      };
+   770→   819→
+   771→   820→      const domTouchEnd = (e: TouchEvent) => {
+   772→   821→        if (e.touches.length < 2) {
+   773→   822→          touchStateRef.current.isPinching = false;
+   774→   823→          touchStateRef.current.touchCount = e.touches.length;
+   775→   824→        }
+   776→   825→      };
+   777→   826→
+   778→   827→      container.addEventListener('touchstart', domTouchStart, { passive: false });
+   779→   828→      container.addEventListener('touchmove', domTouchMove, { passive: false });
+   780→   829→      container.addEventListener('touchend', domTouchEnd, { passive: false });
+   781→   830→
+   782→   831→      return () => {
+   783→   832→        container.removeEventListener('touchstart', domTouchStart);
+   784→   833→        container.removeEventListener('touchmove', domTouchMove);
+   785→   834→        container.removeEventListener('touchend', domTouchEnd);
+   786→   835→      };
+   787→   836→    }, [isReady, requestRenderThrottled]);
+   788→   837→
+   789→   838→    // ============================================================
+   790→   839→    // Keyboard Shortcuts (Phase 4: extended)
+   791→   840→    // ============================================================
+   792→   841→    useKeyboardShortcuts({
+   793→   842→      onUndo: history.undo,
+   794→   843→      onRedo: history.redo,
+   795→   844→      onDelete: () => {
+   796→   845→        const fc = fcanvasRef.current;
+   797→   846→        if (!fc || readOnly) return;
+   798→   847→        const active = fc.getActiveObject();
+   799→   848→        if (active) {
+   800→   849→          const before = fc.toJSON().toString();
+   801→   850→          fc.remove(active);
+   802→   851→          fc.renderAll();
+   803→   852→          history.pushState('delete', before, fc.toJSON().toString());
+   804→   853→          fc.discardActiveObject();
+   805→   854→        }
+   806→   855→      },
+   807→   856→      onEscape: () => {
+   808→   857→        const fc = fcanvasRef.current;
+   809→   858→        if (fc) {
+   810→   859→          fc.discardActiveObject();
+   811→   860→          fc.requestRenderAll();
+   812→   861→        }
+   813→   862→      },
+   814→   863→      onToolChange: (tool: CanvasTool) => {
+   815→   864→        tools.setTool(tool);
+   816→   865→      },
+   817→   866→      onZoomToFit: () => {
+   818→   867→        const fc = fcanvasRef.current;
+   819→   868→        if (!fc || fc.getObjects().length === 0) return;
+   820→   869→        // Calculate bounding rect of all objects
+   821→   870→        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+   822→   871→        fc.getObjects().forEach((obj: FabricObject) => {
+   823→   872→          const bound = obj.getBoundingRect();
+   824→   873→          minX = Math.min(minX, bound.left);
+   825→   874→          minY = Math.min(minY, bound.top);
+   826→   875→          maxX = Math.max(maxX, bound.left + bound.width);
+   827→   876→          maxY = Math.max(maxY, bound.top + bound.height);
+   828→   877→        });
+   829→   878→
+   830→   879→        const padding = 60;
+   831→   880→        const contentWidth = maxX - minX + padding * 2;
+   832→   881→        const contentHeight = maxY - minY + padding * 2;
+   833→   882→        const scaleX = fc.getWidth() / contentWidth;
+   834→   883→        const scaleY = fc.getHeight() / contentHeight;
+   835→   884→        const zoom = Math.min(scaleX, scaleY, 2); // Cap at 2x
+   836→   885→
+   837→   886→        fc.setViewportTransform([1, 0, 0, 1, 0, 0]);
+   838→   887→        const centerX = (minX + maxX) / 2;
+   839→   888→        const centerY = (minY + maxY) / 2;
+   840→   889→        const vptCenterX = fc.getWidth() / 2;
+   841→   890→        const vptCenterY = fc.getHeight() / 2;
+   842→   891→
+   843→   892→        fc.zoomToPoint(
+   844→   893→          new FabricPoint(vptCenterX, vptCenterY),
+   845→   894→          zoom
+   846→   895→        );
+   847→   896→
+   848→   897→        // Pan to center content
+   849→   898→        const vpt = fc.viewportTransform!;
+   850→   899→        vpt[4] = vptCenterX - centerX * zoom;
+   851→   900→        vpt[5] = vptCenterY - centerY * zoom;
+   852→   901→
+   853→   902→        fc.requestRenderAll();
+   854→   903→      },
+   855→   904→      disabled: readOnly,
+   856→   905→      readOnly,
+   857→   906→    });
+   858→   907→
+   859→   908→    // ============================================================
+   860→   909→    // Compute viewport transform for remote cursor rendering
+   861→   910→    // ============================================================
+   862→   911→    const vpt = fcanvasRef.current?.viewportTransform;
+   863→   912→
+   864→   913→    // ============================================================
+   865→   914→    // Render
+   866→   915→    // ============================================================
+   867→   916→    return (
+   868→   917→      <div
+   869→   918→        ref={containerRef}
+   870→   919→        className="w-full h-full relative"
+   871→   920→        style={{
+   872→   921→          cursor: isPanning
+   873→   922→            ? 'grabbing'
+   874→   923→            : tools.tool === 'hand'
+   875→   924→              ? 'grab'
+   876→   925→              : tools.tool === 'eraser'
+   877→   926→                ? 'crosshair'
+   878→   927→                : tools.tool === 'text'
+   879→   928→                  ? 'text'
+   880→   929→                  : tools.tool === 'draw'
+   881→   930→                    ? 'crosshair'
+   882→   931→                    : 'default',
+   883→   932→          touchAction: 'none', // Prevent browser touch defaults for pinch-zoom
+   884→   933→        }}
+   885→   934→      >
+   886→   935→        {!isReady && (
+   887→   936→          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+   888→   937→            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+   889→   938→              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+   890→   939→              <span>Loading canvas...</span>
+   891→   940→            </div>
+   892→   941→          </div>
+   893→   942→        )}
+   894→   943→        <canvas id={canvasIdRef.current} />
+   895→   944→
+   896→   945→        {/* Remote Cursors Overlay */}
+   897→   946→        {remoteCursors.length > 0 && vpt && (
+   898→   947→          <div
+   899→   948→            ref={cursorOverlayRef}
+   900→   949→            className="absolute inset-0 pointer-events-none z-20 overflow-hidden"
+   901→   950→            style={{ touchAction: 'none' }}
+   902→   951→          >
+   903→   952→            {remoteCursors.map((cursor) => (
+   904→   953→              <div
+   905→   954→                key={cursor.id}
+   906→   955→                className="absolute transition-transform duration-75 ease-out"
+   907→   956→                style={{
+   908→   957→                  left: cursor.x * vpt[0] + vpt[4],
+   909→   958→                  top: cursor.y * vpt[3] + vpt[5],
+   910→   959→                  transform: 'translate(-2px, -2px)',
+   911→   960→                }}
+   912→   961→              >
+   913→   962→                {/* Cursor dot */}
+   914→   963→                <svg
+   915→   964→                  width="12"
+   916→   965→                  height="18"
+   917→   966→                  viewBox="0 0 12 18"
+   918→   967→                  fill="none"
+   919→   968→                  className="drop-shadow-sm"
+   920→   969→                >
+   921→   970→                  <path
+   922→   971→                    d="M1 1L6 16L7.5 10.5L12 9L1 1Z"
+   923→   972→                    fill={cursor.color}
+   924→   973→                    stroke="white"
+   925→   974→                    strokeWidth="1.5"
+   926→   975→                    strokeLinejoin="round"
+   927→   976→                  />
+   928→   977→                </svg>
+   929→   978→                {/* Name label */}
+   930→   979→                <div
+   931→   980→                  className="absolute left-3 top-3 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap shadow-sm"
+   932→   981→                  style={{
+   933→   982→                    backgroundColor: cursor.color,
+   934→   983→                    color: 'white',
+   935→   984→                  }}
+   936→   985→                >
+   937→   986→                  {cursor.name}
+   938→   987→                </div>
+   939→   988→              </div>
+   940→   989→            ))}
+   941→   990→          </div>
+   942→   991→        )}
+   943→   992→
+   944→   993→        {/* Zoom indicator */}
+   945→   994→        <div className="absolute bottom-2 right-2 z-20 px-2 py-0.5 rounded-md bg-black/50 text-white text-[10px] font-mono">
+   946→   995→          {Math.round((fcanvasRef.current?.getZoom() || 1) * 100)}%
+   947→   996→        </div>
+   948→   997→      </div>
+   949→   998→    );
+   950→   999→  }
+   951→  1000→);
+   952→  1001→
+   953→  1002→FabricCanvasComponent.displayName = 'FabricCanvas';
+   954→  1003→export default FabricCanvasComponent;
+   955→  1004→
