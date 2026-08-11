@@ -641,3 +641,99 @@
   background-color: oklch(0.25 0.08 25) !important;
   border-color: oklch(0.45 0.12 25) !important;
 }
+
+/* ============================================================
+ * ACCESSIBILITY MODES (Sprint 1)
+ * Activated via data-accessibility attribute on <html>.
+ * Set by useAccessibility hook when tutor changes mode.
+ * ============================================================ */
+
+/* Dyslexia-friendly font stack — uses system fallbacks if OpenDyslexic unavailable */
+[data-accessibility="dyslexia"] {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', 'Verdana', sans-serif !important;
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.1em !important;
+  line-height: 1.8 !important;
+}
+[data-accessibility="dyslexia"] .canvas-container fabric-textbox,
+[data-accessibility="dyslexia"] .canvas-container fabric-itext {
+  /* Fabric.js text objects use their own font — handled in canvas */
+}
+
+/* High Contrast Mode */
+[data-accessibility="high-contrast"] {
+  --background: #000000 !important;
+  --foreground: #ffffff !important;
+  --card: #1a1a1a !important;
+  --card-foreground: #ffffff !important;
+  --border: #ffffff !important;
+  --input: #ffffff !important;
+  --muted: #333333 !important;
+  --muted-foreground: #cccccc !important;
+  --primary: #ffff00 !important;
+  --primary-foreground: #000000 !important;
+  --accent: #00ffff !important;
+  --destructive: #ff4444 !important;
+}
+
+[data-accessibility="high-contrast"] .bg-white {
+  background-color: #000000 !important;
+}
+[data-accessibility="high-contrast"] .text-gray-900,
+[data-accessibility="high-contrast"] .text-gray-800,
+[data-accessibility="high-contrast"] .text-gray-700 {
+  color: #ffffff !important;
+}
+[data-accessibility="high-contrast"] .border-gray-200,
+[data-accessibility="high-contrast"] .border-gray-300 {
+  border-color: #ffffff !important;
+}
+
+/* Large Text Mode */
+[data-accessibility="large-text"] {
+  font-size: 125% !important;
+}
+[data-accessibility="large-text"] p,
+[data-accessibility="large-text"] span,
+[data-accessibility="large-text"] li {
+  font-size: 120% !important;
+}
+[data-accessibility="large-text"] h1 { font-size: 2.5rem !important; }
+[data-accessibility="large-text"] h2 { font-size: 2rem !important; }
+[data-accessibility="large-text"] h3 { font-size: 1.75rem !important; }
+
+/* ============================================================
+ * COLOR-BLIND PALETTES (Sprint 1)
+ * Activated via data-colorblind attribute on <html>.
+ * Remaps chart and UI color variables for accessibility.
+ * ============================================================ */
+
+/* Protanopia (red-blind) — replace reds/oranges with blues */
+[data-colorblind="protanopia"] {
+  --chart-1: #0066cc !important;
+  --chart-2: #00cc66 !important;
+  --chart-3: #ffcc00 !important;
+  --chart-4: #9933ff !important;
+  --chart-5: #00cccc !important;
+  --destructive: #9900cc !important;
+}
+
+/* Deuteranopia (green-blind) — replace greens with blues/purples */
+[data-colorblind="deuteranopia"] {
+  --chart-1: #0066cc !important;
+  --chart-2: #cc6600 !important;
+  --chart-3: #ffcc00 !important;
+  --chart-4: #9933ff !important;
+  --chart-5: #00cccc !important;
+  --primary: #2563eb !important;
+  --ring: #2563eb !important;
+}
+
+/* Tritanopia (blue-blind) — replace blues with reds/greens */
+[data-colorblind="tritanopia"] {
+  --chart-1: #cc0000 !important;
+  --chart-2: #009900 !important;
+  --chart-3: #ff9900 !important;
+  --chart-4: #993399 !important;
+  --chart-5: #cccc00 !important;
+}

@@ -1,0 +1,230 @@
+{
+  "bySubject": {
+    "MATH": {
+      "K-2": {
+        "topics": [
+          "Addition within 10",
+          "Addition within 20",
+          "Counting",
+          "Geometry \u2014 Shapes",
+          "Place Value",
+          "Subtraction within 10",
+          "Subtraction within 20",
+          "Word Problems"
+        ],
+        "count": 17800,
+        "difficulties": [
+          1,
+          2
+        ]
+      },
+      "3-5": {
+        "topics": [
+          "Area",
+          "Decimals \u2014 Addition",
+          "Division",
+          "Fractions \u2014 Addition",
+          "Fractions \u2014 Identify",
+          "Multi-digit Multiplication",
+          "Multiplication",
+          "Perimeter",
+          "Rounding"
+        ],
+        "count": 17000,
+        "difficulties": [
+          2,
+          3,
+          4
+        ]
+      },
+      "6-8": {
+        "topics": [
+          "Area of Circles",
+          "Exponents",
+          "Integer Operations",
+          "Linear Equations",
+          "Order of Operations",
+          "Percentages",
+          "Probability",
+          "Pythagorean Theorem",
+          "Ratios & Proportions",
+          "Statistics \u2014 Mean"
+        ],
+        "count": 13800,
+        "difficulties": [
+          3,
+          4
+        ]
+      },
+      "9-12": {
+        "topics": [
+          "ACT \u2014 Coordinate Geometry",
+          "ACT \u2014 Plane Geometry",
+          "ACT \u2014 Pre-Algebra",
+          "ACT \u2014 Trigonometry",
+          "AP Calculus AB \u2014 Derivatives",
+          "Exponential Functions",
+          "Logarithms",
+          "Normal Distribution",
+          "Polynomial Operations",
+          "Quadratic Equations",
+          "SAT \u2014 Data Interpretation",
+          "SAT \u2014 Linear Equations",
+          "SAT \u2014 Rate Problems",
+          "Sequences \u2014 Arithmetic",
+          "Systems of Equations",
+          "Trigonometry"
+        ],
+        "count": 19700,
+        "difficulties": [
+          3,
+          4,
+          5
+        ]
+      }
+    },
+    "SCIENCE": {
+      "6-8": {
+        "topics": [
+          "Cell Biology",
+          "Forces & Motion",
+          "Newton's Laws",
+          "Plate Tectonics"
+        ],
+        "count": 3000,
+        "difficulties": [
+          3
+        ]
+      },
+      "9-12": {
+        "topics": [
+          "ACT \u2014 Data Interpretation",
+          "AP Biology \u2014 Cell Respiration",
+          "AP Chemistry \u2014 Gas Laws",
+          "Balancing Equations",
+          "Genetics",
+          "Kinematics",
+          "Periodic Table"
+        ],
+        "count": 5000,
+        "difficulties": [
+          3,
+          4,
+          5
+        ]
+      },
+      "3-5": {
+        "topics": [
+          "True/False \u2014 astronomy",
+          "True/False \u2014 biology",
+          "True/False \u2014 chemistry",
+          "True/False \u2014 earth-science",
+          "True/False \u2014 physics"
+        ],
+        "count": 1400,
+        "difficulties": [
+          2
+        ]
+      }
+    },
+    "LANGUAGE": {
+      "3-5": {
+        "topics": [
+          "Parts of Speech",
+          "Reading Comprehension",
+          "Spelling",
+          "Subject-Verb Agreement"
+        ],
+        "count": 3300,
+        "difficulties": [
+          2,
+          3
+        ]
+      },
+      "6-8": {
+        "topics": [
+          "Figurative Language",
+          "Vocabulary \u2014 Context Clues"
+        ],
+        "count": 1500,
+        "difficulties": [
+          3
+        ]
+      },
+      "9-12": {
+        "topics": [
+          "ACT \u2014 English Grammar",
+          "ACT \u2014 Reading",
+          "AP English \u2014 Rhetorical Analysis",
+          "SAT \u2014 Grammar",
+          "SAT \u2014 Reading Comprehension"
+        ],
+        "count": 2400,
+        "difficulties": [
+          3,
+          4,
+          5
+        ]
+      }
+    },
+    "SOCIAL_STUDIES": {
+      "9-12": {
+        "topics": [
+          "AP US History",
+          "Economics \u2014 Supply & Demand"
+        ],
+        "count": 1300,
+        "difficulties": [
+          3,
+          4,
+          5
+        ]
+      },
+      "6-8": {
+        "topics": [
+          "US Government",
+          "US History \u2014 Key Events"
+        ],
+        "count": 1800,
+        "difficulties": [
+          3
+        ]
+      },
+      "3-5": {
+        "topics": [
+          "True/False \u2014 geography",
+          "World Geography \u2014 Continents"
+        ],
+        "count": 1600,
+        "difficulties": [
+          1,
+          2
+        ]
+      }
+    }
+  },
+  "byTestPrep": {
+    "SAT": {
+      "math": 0,
+      "reading": 500,
+      "writing": 500,
+      "total": 6000
+    },
+    "ACT": {
+      "math": 0,
+      "english": 500,
+      "reading": 500,
+      "science": 0,
+      "total": 6800
+    },
+    "AP": {
+      "calculus_ab": 800,
+      "biology": 300,
+      "chemistry": 800,
+      "us_history": 500,
+      "english": 400,
+      "total": 2800
+    }
+  },
+  "totalQuestions": 89600
+}

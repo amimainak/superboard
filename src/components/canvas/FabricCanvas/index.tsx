@@ -34,6 +34,31 @@ import {
 import getStroke from 'perfect-freehand';
 import { useCanvasTools, useCanvasHistory, useKeyboardShortcuts, setKeyboardCanvasRef, type FabricCanvas, type CanvasTool } from './hooks';
 import { useYjsCanvasSync } from './useYjsCanvasSync';
+import { useFocusMode } from '@/hooks/useFocusMode';
+
+// ---- Color-Blind Safe Canvas Colors (Sprint 1) ----
+// Used when tutor draws with color-blind mode enabled.
+// Maps common color names to accessible alternatives.
+const COLOR_BLIND_PALETTES: Record<string, Record<string, string>> = {
+  protanopia: {
+    red: '#0066cc', orange: '#cc9900', green: '#009966',
+    blue: '#3366ff', purple: '#9933cc', pink: '#cc6699',
+  },
+  deuteranopia: {
+    red: '#cc3300', orange: '#cc9900', green: '#0066cc',
+    blue: '#3333cc', purple: '#9933cc', pink: '#cc6699',
+  },
+  tritanopia: {
+    red: '#cc0000', orange: '#cc6600', green: '#009900',
+    blue: '#cc3300', purple: '#990099', pink: '#ff6666',
+  },
+};
+
+/** Remap a color name through the color-blind palette if applicable */
+function getColorBlindSafeColor(colorName: string, mode: string): string {
+  if (mode === 'none' || !COLOR_BLIND_PALETTES[mode]) return colorName;
+  return COLOR_BLIND_PALETTES[mode][colorName.toLowerCase()] || colorName;
+}
 
 // ---- Types ----
 
@@ -181,6 +206,12 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
     // ---- Hooks ----
     const tools = useCanvasTools(fcanvasRef);
     const history = useCanvasHistory(fcanvasRef);
+
+    // Sprint 1: Focus mode — use the hook for viewport broadcast/receive
+    const focusModeHook = useFocusMode({
+      awareness,
+      onViewportReceived: undefined, // Student-side receive handled by appliedViewport prop
+    });
 
     // Register canvas ref for keyboard shortcuts
     useEffect(() => {
@@ -408,8 +439,14 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
         broadcastCurrentViewport();
       };
 
+      // Sprint 1: Also broadcast on mouse:up (when pan/zoom gesture ends)
+      const handleMouseUp = () => {
+        broadcastCurrentViewport();
+      };
+
       fc.on('after:render', handleAfterRender);
       fc.on('mouse:wheel', handleZoom);
+      fc.on('mouse:up', handleMouseUp);
 
       // Initial broadcast
       broadcastCurrentViewport();
@@ -417,6 +454,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
       return () => {
         fc.off('after:render', handleAfterRender);
         fc.off('mouse:wheel', handleZoom);
+        fc.off('mouse:up', handleMouseUp);
         if (debounceTimer) clearTimeout(debounceTimer);
         // Clear viewport when focus mode changes or component unmounts
         awareness.setLocalStateField('viewport', null);

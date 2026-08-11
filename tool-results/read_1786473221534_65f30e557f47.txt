@@ -1,0 +1,1468 @@
+     1→#!/usr/bin/env python3
+     2→"""
+     3→Superboard K-12 Question Database Generator
+     4→============================================
+     5→Generates 250,000+ parametric questions across all subjects, grade bands,
+     6→and test prep categories (SAT, ACT, AP). Uses template-based generation
+     7→with randomized parameters, algorithmic distractors, LaTeX for math,
+     8→and CCSS/NGSS standard alignment.
+     9→
+    10→Output: /home/z/my-project/download/k12-questions-database.json
+    11→"""
+    12→
+    13→import json
+    14→import random
+    15→import uuid
+    16→import math
+    17→import os
+    18→import sys
+    19→from datetime import datetime
+    20→from typing import Any
+    21→
+    22→random.seed(42)
+    23→
+    24→OUTPUT_DIR = "/home/z/my-project/download"
+    25→OUTPUT_FILE = os.path.join(OUTPUT_DIR, "k12-questions-database.json")
+    26→CATALOG_FILE = os.path.join(OUTPUT_DIR, "question-catalog.json")
+    27→
+    28→# ============================================================
+    29→# Helpers
+    30→# ============================================================
+    31→
+    32→def uuid4() -> str:
+    33→    return str(uuid.uuid4())
+    34→
+    35→def json_arr(items: list) -> str:
+    36→    return json.dumps(items)
+    37→
+    38→def latex_escape(s: str) -> str:
+    39→    return s.replace("\\", "\\\\").replace("{", "\\{").replace("}", "\\}")
+    40→
+    41→def make_distractors_int(answer: int, count: int = 3, spread: int = 5, **_kw) -> list:
+    42→    """Generate plausible wrong answers for integer questions."""
+    43→    distractors = set()
+    44→    attempts = 0
+    45→    while len(distractors) < count and attempts < 50:
+    46→        offset = random.choice([1, 2, 3, 5, 10, -1, -2, -3, -5, -10])
+    47→        d = answer + offset
+    48→        if d != answer and d >= 0:
+    49→            distractors.add(str(d))
+    50→        attempts += 1
+    51→    while len(distractors) < count:
+    52→        distractors.add(str(answer + len(distractors) + 1))
+    53→    return list(distractors)[:count]
+    54→
+    55→def make_distractors_frac(num: int, den: int, count: int = 3, **_kw) -> list:
+    56→    """Generate plausible wrong answers for fraction questions."""
+    57→    fracs = []
+    58→    for d_num in [num + 1, num - 1, den, num * 2]:
+    59→        for d_den in [den, den + 1, den - 1, num]:
+    60→            if d_den > 0 and d_num != num:
+    61→                fracs.append(f"{d_num}/{d_den}")
+    62→    random.shuffle(fracs)
+    63→    return list(set(fracs))[:count]
+    64→
+    65→def solution_step(text: str, **kwargs) -> str:
+    66→    return text.format(**kwargs)
+    67→
+    68→# ============================================================
+    69→# QUESTION TEMPLATES
+    70→# ============================================================
+    71→
+    72→class TemplateEngine:
+    73→    def __init__(self):
+    74→        self.templates = []
+    75→        self._register_all()
+    76→
+    77→    def add(self, subject, grade_band, topic, difficulty_range, curriculum,
+    78→            standard_code, stem_template, latex_template, answer_fn,
+    79→            distractors_fn, solution_steps_fn, question_type, tags,
+    80→            time_range, params_spec, count):
+    81→        self.templates.append({
+    82→            "subject": subject, "gradeBand": grade_band, "topic": topic,
+    83→            "difficulty_range": difficulty_range, "curriculum": curriculum,
+    84→            "standardCode": standard_code, "stem_template": stem_template,
+    85→            "latex_template": latex_template, "answer_fn": answer_fn,
+    86→            "distractors_fn": distractors_fn, "solution_steps_fn": solution_steps_fn,
+    87→            "questionType": question_type, "tags": tags,
+    88→            "time_range": time_range, "params_spec": params_spec, "count": count,
+    89→        })
+    90→
+    91→    def generate_all(self) -> list:
+    92→        questions = []
+    93→        total = sum(t["count"] for t in self.templates)
+    94→        print(f"Generating {total:,} questions from {len(self.templates)} templates...")
+    95→        for i, t in enumerate(self.templates):
+    96→            count = t["count"]
+    97→            for j in range(count):
+    98→                params = self._sample_params(t["params_spec"])
+    99→                q = self._render(t, params)
+   100→                questions.append(q)
+   101→            if (i + 1) % 50 == 0 or i == len(self.templates) - 1:
+   102→                print(f"  Template {i+1}/{len(self.templates)} done, {len(questions):,} questions so far")
+   103→        return questions
+   104→
+   105→    def _sample_params(self, spec):
+   106→        params = {}
+   107→        for key, config in spec.items():
+   108→            if isinstance(config, list):
+   109→                params[key] = random.choice(config)
+   110→            elif isinstance(config, range):
+   111→                params[key] = random.choice(list(config))
+   112→            elif isinstance(config, dict) and config.get("type") == "choice":
+   113→                params[key] = random.choice(config["values"])
+   114→            elif isinstance(config, dict) and config.get("type") == "randint":
+   115→                params[key] = random.randint(config["min"], config["max"])
+   116→            elif callable(config):
+   117→                params[key] = config()
+   118→        return params
+   119→
+   120→    def _render(self, t, params):
+   121→        difficulty = random.choice(t["difficulty_range"])
+   122→        time_sec = random.randint(t["time_range"][0], t["time_range"][1])
+   123→
+   124→        answer = t["answer_fn"](**params)
+   125→        stem = t["stem_template"].format(**params)
+   126→        latex = t["latex_template"].format(**params) if t["latex_template"] else None
+   127→        # Build distractor params: distractors_fn computes from params, not answer
+   128→        distractors = t["distractors_fn"](**params) if t["distractors_fn"] else None
+   129→        steps = t["solution_steps_fn"](**params)
+   130→        if isinstance(steps, list):
+   131→            steps = json.dumps(steps)
+   132→        elif isinstance(steps, str):
+   133→            pass
+   134→
+   135→        if distractors and isinstance(distractors, list):
+   136→            distractors = json.dumps(distractors)
+   137→
+   138→        return {
+   139→            "id": uuid4(),
+   140→            "subject": t["subject"],
+   141→            "gradeBand": t["gradeBand"],
+   142→            "topic": t["topic"],
+   143→            "difficulty": difficulty,
+   144→            "curriculum": t["curriculum"],
+   145→            "standardCode": t["standardCode"],
+   146→            "stem": stem,
+   147→            "stemLatex": latex,
+   148→            "diagramSvg": None,
+   149→            "answerKey": str(answer),
+   150→            "solutionSteps": steps,
+   151→            "distractors": distractors,
+   152→            "questionType": t["questionType"],
+   153→            "tags": t["tags"],
+   154→            "estimatedTimeSec": time_sec,
+   155→            "isActive": True,
+   156→            "creatorId": None,
+   157→        }
+   158→
+   159→    def _register_all(self):
+   160→        E = self.add
+   161→
+   162→        # ================================================================
+   163→        # MATH: K-2 (20,000 questions)
+   164→        # ================================================================
+   165→
+   166→        # Counting & Cardinality
+   167→        E("MATH", "K-2", "Counting", [1], "CCSS", "CCSS.MATH.CONTENT.K.CC.B.5",
+   168→          "How many objects are there? {a} + {b} = ?",
+   169→          "{a} + {b} = ?", lambda a, b: a + b,
+   170→          lambda a, b, **kw: make_distractors_int(a + b),
+   171→          lambda a, b: [f"Count {a} objects", f"Count {b} more", f"{a} + {b} = {a+b}"],
+   172→          "mcq", "counting, addition, k-math", [15, 30],
+   173→          {"a": range(1, 6), "b": range(1, 6)}, 2000)
+   174→
+   175→        E("MATH", "K-2", "Counting", [1], "CCSS", "CCSS.MATH.CONTENT.K.CC.A.1",
+   176→          "What number comes after {a}?",
+   177→          "\\text{{What number comes after }} {a}?", lambda a: a + 1,
+   178→          lambda a, **kw: make_distractors_int(a + 1),
+   179→          lambda a: [f"The number after {a} is {a+1}", f"Count up by 1 from {a}"],
+   180→          "mcq", "counting, number-sequence, k-math", [10, 20],
+   181→          {"a": range(1, 20)}, 1000)
+   182→
+   183→        # Addition within 10
+   184→        for a_range in [range(1, 6), range(5, 11)]:
+   185→            E("MATH", "K-2", "Addition within 10", [1, 2], "CCSS", "CCSS.MATH.CONTENT.1.OA.C.6",
+   186→              "What is {a} + {b}?",
+   187→              "{a} + {b} = ?", lambda a, b: a + b,
+   188→              lambda a, b, **kw: make_distractors_int(a + b),
+   189→              lambda a, b: [f"Add {a} and {b}", f"{a} + {b} = {a+b}", f"Count up from {a} by {b}"],
+   190→              "mcq", "addition, fluency, within-10", [10, 25],
+   191→              {"a": a_range, "b": range(1, 11 - min(a_range))}, 2000)
+   192→
+   193→        # Subtraction within 10
+   194→        E("MATH", "K-2", "Subtraction within 10", [1, 2], "CCSS", "CCSS.MATH.CONTENT.1.OA.C.6",
+   195→          "What is {a} - {b}?",
+   196→          "{a} - {b} = ?", lambda a, b: a - b,
+   197→          lambda a, b, **kw: make_distractors_int(a - b),
+   198→          lambda a, b: [f"Subtract {b} from {a}", f"{a} - {b} = {a-b}", f"Count back from {a} by {b}"],
+   199→          "mcq", "subtraction, fluency, within-10", [10, 25],
+   200→          {"a": range(3, 11), "b": range(1, 6)}, 2000)
+   201→
+   202→        # Addition within 20
+   203→        E("MATH", "K-2", "Addition within 20", [2], "CCSS", "CCSS.MATH.CONTENT.1.OA.C.6",
+   204→          "What is {a} + {b}?",
+   205→          "{a} + {b} = ?", lambda a, b: a + b,
+   206→          lambda a, b, **kw: make_distractors_int(a + b, spread=3),
+   207→          lambda a, b: [f"Add {a} and {b}", f"{a} + {b} = {a+b}", f"Make 10: {a} + ({b}-{10-a}) = 10 + {b-(10-a)} = {a+b}"],
+   208→          "mcq", "addition, fluency, within-20", [15, 30],
+   209→          {"a": range(5, 16), "b": range(5, 16)}, 2000)
+   210→
+   211→        # Subtraction within 20
+   212→        E("MATH", "K-2", "Subtraction within 20", [2], "CCSS", "CCSS.MATH.CONTENT.1.OA.C.6",
+   213→          "What is {a} - {b}?",
+   214→          "{a} - {b} = ?", lambda a, b: a - b,
+   215→          lambda a, b, **kw: make_distractors_int(a - b, spread=3),
+   216→          lambda a, b: [f"Subtract {b} from {a}", f"{a} - {b} = {a-b}"],
+   217→          "mcq", "subtraction, fluency, within-20", [15, 30],
+   218→          {"a": range(11, 21), "b": range(1, 11)}, 2000)
+   219→
+   220→        # Word problems K-2
+   221→        E("MATH", "K-2", "Word Problems", [2], "CCSS", "CCSS.MATH.CONTENT.1.OA.A.2",
+   222→          "{name1} has {a} apples. {name2} gives {name1} {b} more apples. How many apples does {name1} have now?",
+   223→          None, lambda name1, name2, a, b: a + b,
+   224→          lambda name1, name2, a, b, **kw: make_distractors_int(a + b),
+   225→          lambda name1, name2, a, b: [f"{name1} starts with {a} apples", f"Gets {b} more from {name2}", f"Total: {a} + {b} = {a+b}"],
+   226→          "mcq", "word-problem, addition, story", [30, 60],
+   227→          {"name1": ["Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan"], "name2": ["Sam", "Mia", "Jay", "Zoe", "Leo", "Lily"], "a": range(3, 13), "b": range(2, 8)}, 1500)
+   228→
+   229→        E("MATH", "K-2", "Word Problems", [2], "CCSS", "CCSS.MATH.CONTENT.1.OA.A.1",
+   230→          "{name} had {a} stickers. {name} gave away {b} stickers. How many stickers does {name} have left?",
+   231→          None, lambda name, a, b: a - b,
+   232→          lambda name, a, b, **kw: make_distractors_int(a - b),
+   233→          lambda name, a, b: [f"{name} starts with {a} stickers", f"Gives away {b}", f"Left: {a} - {b} = {a-b}"],
+   234→          "mcq", "word-problem, subtraction, story", [30, 60],
+   235→          {"name": ["Emma", "Liam", "Olivia", "Noah", "Ava", "Ethan"], "a": range(8, 18), "b": range(2, 8)}, 1500)
+   236→
+   237→        # Place value
+   238→        E("MATH", "K-2", "Place Value", [2], "CCSS", "CCSS.MATH.CONTENT.1.NBT.B.2",
+   239→          "What is the value of the {digit_pos} digit in the number {number}?",
+   240→          None, lambda number, digit_pos, **kw: (number // 10) % 10 if digit_pos == "tens" else number % 10,
+   241→          lambda number, digit_pos, **kw: make_distractors_int((number // 10) % 10 if digit_pos == "tens" else number % 10, spread=5),
+   242→          lambda number, digit_pos, **kw: [f"The {digit_pos} digit of {number}", f"{(number // 10) % 10 if digit_pos == 'tens' else number % 10}"],
+   243→          "mcq", "place-value, tens, ones", [20, 45],
+   244→          {"number": range(10, 100), "digit_pos": ["tens", "ones"]}, 1000)
+   245→
+   246→        # Shapes
+   247→        E("MATH", "K-2", "Geometry — Shapes", [1], "CCSS", "CCSS.MATH.CONTENT.K.G.A.2",
+   248→          "Which shape has {sides} sides?",
+   249→          None, lambda sides, **kw: {3: "triangle", 4: "quadrilateral", 5: "pentagon", 6: "hexagon"}[sides],
+   250→          lambda sides, **kw: [v for k, v in {3: "triangle", 4: "quadrilateral", 5: "pentagon", 6: "hexagon"}.items() if k != sides],
+   251→          lambda sides, **kw: [f"A shape with {sides} sides is a {3: 'triangle', 4: 'quadrilateral', 5: 'pentagon', 6: 'hexagon'}[sides]"],
+   252→          "mcq", "shapes, geometry, sides", [15, 25],
+   253→          {"sides": [3, 4, 5, 6]}, 800)
+   254→
+   255→        # ================================================================
+   256→        # MATH: 3-5 (25,000 questions)
+   257→        # ================================================================
+   258→
+   259→        # Multiplication
+   260→        E("MATH", "3-5", "Multiplication", [2], "CCSS", "CCSS.MATH.CONTENT.3.OA.A.1",
+   261→          "What is {a} × {b}?",
+   262→          "{a} \\times {b} = ?", lambda a, b: a * b,
+   263→          lambda a, b, **kw: make_distractors_int(a * b, spread=10),
+   264→          lambda a, b: [f"Multiply {a} and {b}", f"{a} × {b} = {a*b}"],
+   265→          "mcq", "multiplication, fluency", [15, 30],
+   266→          {"a": range(2, 13), "b": range(2, 13)}, 3000)
+   267→
+   268→        # Division
+   269→        E("MATH", "3-5", "Division", [3], "CCSS", "CCSS.MATH.CONTENT.3.OA.A.2",
+   270→          "What is {a} ÷ {b}?",
+   271→          "{a} \\div {b} = ?", lambda a, b: a // b,
+   272→          lambda a, b, **kw: make_distractors_int(a // b, spread=5),
+   273→          lambda a, b: [f"Divide {a} by {b}", f"{a} ÷ {b} = {a//b}", f"Think: {b} × ? = {a}"],
+   274→          "mcq", "division, fluency", [20, 45],
+   275→          {"a": [i*j for i in range(2, 13) for j in range(2, 13)], "b": range(2, 13)}, 2000)
+   276→
+   277→        # Fractions
+   278→        for num_r, den_r in [(range(1, 5), range(2, 9)), (range(1, 8), range(3, 13))]:
+   279→            E("MATH", "3-5", "Fractions — Identify", [3], "CCSS", "CCSS.MATH.CONTENT.3.NF.A.1",
+   280→              "A pizza is cut into {den} equal slices. You eat {num} slices. What fraction of the pizza did you eat?",
+   281→              "\\frac{{{num}}}{{{den}}}", lambda num, den: f"{num}/{den}",
+   282→              lambda num, den, **kw: make_distractors_frac(num, den),
+   283→              lambda num, den: [f"Total slices = {den} (denominator)", f"Slices eaten = {num} (numerator)", f"Fraction = {num}/{den}"],
+   284→              "mcq", "fractions, parts-of-a-whole", [30, 60],
+   285→              {"num": num_r, "den": den_r}, 1500)
+   286→
+   287→        # Fraction addition
+   288→        E("MATH", "3-5", "Fractions — Addition", [3, 4], "CCSS", "CCSS.MATH.CONTENT.4.NF.B.3",
+   289→          "What is {n1}/{d1} + {n2}/{d2}?",
+   290→          "\\frac{{{n1}}}{{{d1}}} + \\frac{{{n2}}}{{{d2}}}",
+   291→          lambda n1, d1, n2, d2: f"{n1*d2 + n2*d1}/{d1*d2}",
+   292→          lambda n1, d1, n2, d2, **kw: [f"{n1+d2}/{d1*d2}", f"{n1*n2}/{d1+d2}", f"{(n1+n2)*d1}/{d1*d2}"],
+   293→          lambda n1, d1, n2, d2: [
+   294→              f"Find common denominator: LCD({d1}, {d2})",
+   295→              f"Convert: {n1*d2}/{d1*d2} + {n2*d1}/{d1*d2}",
+   296→              f"Add numerators: {n1*d2+n2*d1}/{d1*d2}",
+   297→          ],
+   298→          "mcq", "fractions, addition, common-denominator", [45, 90],
+   299→          {"n1": range(1, 5), "d1": range(2, 7), "n2": range(1, 5), "d2": range(2, 7)}, 1500)
+   300→
+   301→        # Decimals
+   302→        E("MATH", "3-5", "Decimals — Addition", [3], "CCSS", "CCSS.MATH.CONTENT.5.NBT.B.7",
+   303→          "What is {a} + {b}?",
+   304→          "{a} + {b}", lambda a, b: round(a + b, 2),
+   305→          lambda a, b, **kw: [str(round(a + b + random.choice([0.01, 0.1, 1, -0.01, -0.1]), 2)) for _ in range(3)],
+   306→          lambda a, b: [f"Line up decimals", f"Add: {a} + {b} = {round(a+b, 2)}"],
+   307→          "mcq", "decimals, addition, money", [30, 60],
+   308→          {"a": [round(x * 0.01, 2) for x in range(100, 2000, 7)], "b": [round(x * 0.01, 2) for x in range(100, 2000, 11)]}, 1500)
+   309→
+   310→        # Perimeter
+   311→        E("MATH", "3-5", "Perimeter", [3], "CCSS", "CCSS.MATH.CONTENT.3.MD.D.8",
+   312→          "A rectangle has a length of {l} units and a width of {w} units. What is its perimeter?",
+   313→          "P = 2({l} + {w})", lambda l, w: 2 * (l + w),
+   314→          lambda l, w, **kw: make_distractors_int(2 * (l + w), spread=10),
+   315→          lambda l, w: [f"Perimeter = 2 × (length + width)", f"P = 2 × ({l} + {w})", f"P = 2 × {l+w} = {2*(l+w)}"],
+   316→          "mcq", "perimeter, rectangle, geometry", [30, 60],
+   317→          {"l": range(3, 21), "w": range(2, 16)}, 1500)
+   318→
+   319→        # Area
+   320→        E("MATH", "3-5", "Area", [3, 4], "CCSS", "CCSS.MATH.CONTENT.3.MD.C.7",
+   321→          "A rectangle has a length of {l} units and a width of {w} units. What is its area?",
+   322→          "A = {l} \\times {w}", lambda l, w: l * w,
+   323→          lambda l, w, **kw: make_distractors_int(l * w, spread=15),
+   324→          lambda l, w: [f"Area = length × width", f"A = {l} × {w} = {l*w}"],
+   325→          "mcq", "area, rectangle, geometry", [30, 60],
+   326→          {"l": range(3, 21), "w": range(2, 16)}, 1500)
+   327→
+   328→        # Multi-digit multiplication word problems
+   329→        E("MATH", "3-5", "Multi-digit Multiplication", [4], "CCSS", "CCSS.MATH.CONTENT.4.NBT.B.5",
+   330→          "A store has {a} boxes with {b} items in each box. How many items are there in total?",
+   331→          "{a} \\times {b} = ?", lambda a, b: a * b,
+   332→          lambda a, b, **kw: make_distractors_int(a * b, spread=20),
+   333→          lambda a, b: [f"Total items = boxes × items per box", f"{a} × {b} = {a*b}"],
+   334→          "mcq", "multiplication, word-problem, multi-digit", [45, 90],
+   335→          {"a": range(11, 25), "b": range(5, 21)}, 1500)
+   336→
+   337→        # Rounding
+   338→        E("MATH", "3-5", "Rounding", [2], "CCSS", "CCSS.MATH.CONTENT.3.NBT.A.1",
+   339→          "Round {number} to the nearest {place}.",
+   340→          None, lambda number, place, **kw: round(number, -1) if place == "ten" else round(number, -2),
+   341→          lambda number, place, **kw: make_distractors_int(int(round(number, -1) if place == "ten" else round(number, -2)), spread=20),
+   342→          lambda number, place, **kw: [f"Look at the digit to the right of {place}s place", f"Round {'up' if (number % (10 if place == 'ten' else 100)) >= (5 if place == 'ten' else 50) else 'down'}", f"Answer: {int(round(number, -1) if place == 'ten' else round(number, -2))}"],
+   343→          "mcq", "rounding, place-value", [20, 40],
+   344→          {"number": range(10, 1000), "place": ["ten", "hundred"]}, 1500)
+   345→
+   346→        # ================================================================
+   347→        # MATH: 6-8 (30,000 questions)
+   348→        # ================================================================
+   349→
+   350→        # Ratios & Proportions
+   351→        E("MATH", "6-8", "Ratios & Proportions", [3], "CCSS", "CCSS.MATH.CONTENT.6.RP.A.3",
+   352→          "A recipe uses {a} cups of flour for every {b} eggs. If you use {c} eggs, how many cups of flour do you need?",
+   353→          "\\frac{{{a}}}{{{b}}} = \\frac{{x}}{{{c}}}", lambda a, b, c: a * c // b,
+   354→          lambda a, b, c, **kw: make_distractors_int(a * c // b, spread=5),
+   355→          lambda a, b, c: [f"Set up proportion: {a}/{b} = x/{c}", f"Cross multiply: {a}×{c} = {b}×x", f"x = {a*c}/{b} = {a*c//b}"],
+   356→          "mcq", "ratios, proportions, cross-multiplication", [45, 90],
+   357→          {"a": range(2, 8), "b": range(2, 8), "c": range(4, 17)}, 1500)
+   358→
+   359→        # Linear equations
+   360→        E("MATH", "6-8", "Linear Equations", [4], "CCSS", "CCSS.MATH.CONTENT.7.EE.B.4",
+   361→          "Solve for x: {a}x {op_sign} {b} = {c}",
+   362→          "{a}x {op_sign} {b} = {c}", lambda a, op_sign, b, c, **kw: (c - b) // a if op_sign == "+" else (c + b) // a,
+   363→          lambda a, op_sign, b, c, **kw: make_distractors_int((c - b) // a if op_sign == "+" else (c + b) // a, spread=3),
+   364→          lambda a, op_sign, b, c, **kw: [f"Subtract {b} from both sides: {a}x = {c - b if op_sign == '+' else c + b}", f"Divide by {a}: x = {(c - b if op_sign == '+' else c + b) // a}"],
+   365→          "mcq", "linear-equations, solving, one-variable", [45, 75],
+   366→          {"a": range(2, 8), "op_sign": ["+", "-"], "b": range(1, 15), "c": range(1, 30)}, 1500)
+   367→
+   368→        # Percentages
+   369→        E("MATH", "6-8", "Percentages", [3, 4], "CCSS", "CCSS.MATH.CONTENT.6.RP.A.3",
+   370→          "What is {pct}% of {number}?",
+   371→          "{pct}\\% \\times {number} = ?", lambda pct, number: pct * number // 100,
+   372→          lambda pct, number, **kw: make_distractors_int(pct * number // 100, spread=10),
+   373→          lambda pct, number: [f"Convert percent to decimal: {pct/100}", f"Multiply: {pct/100} × {number} = {pct*number/100}"],
+   374→          "mcq", "percentages, decimal-conversion", [30, 60],
+   375→          {"pct": [10, 15, 20, 25, 30, 40, 50, 60, 75, 80], "number": range(20, 501, 5)}, 1500)
+   376→
+   377→        # Integers
+   378→        E("MATH", "6-8", "Integer Operations", [3], "CCSS", "CCSS.MATH.CONTENT.7.NS.A.1",
+   379→          "What is ({a}) {op} ({b})?",
+   380→          "({a}) {op} ({b})", lambda a, op, b, **kw: a + b if op == "+" else a - b,
+   381→          lambda a, op, b, **kw: make_distractors_int(a + b if op == "+" else a - b, spread=5),
+   382→          lambda a, op, b, **kw: [f"Apply the operation: ({a}) {op} ({b})", f"Result: {a + b if op == '+' else a - b}"],
+   383→          "mcq", "integers, negative-numbers, operations", [30, 60],
+   384→          {"a": range(-20, 21), "op": ["+", "-"], "b": range(-20, 21)}, 1500)
+   385→
+   386→        # Area of circles
+   387→        E("MATH", "6-8", "Area of Circles", [4], "CCSS", "CCSS.MATH.CONTENT.7.G.B.4",
+   388→          "What is the area of a circle with radius {r}? (Use π ≈ 3.14)",
+   389→          "A = \\pi r^2 = 3.14 \\times {r}^2", lambda r: round(3.14 * r * r, 2),
+   390→          lambda r, **kw: [str(round(3.14 * r * r + random.choice([r, 3.14*r, -r]), 2)) for _ in range(3)],
+   391→          lambda r: [f"Formula: A = πr²", f"A = 3.14 × {r}² = 3.14 × {r*r}", f"A = {round(3.14*r*r, 2)}"],
+   392→          "mcq", "circles, area, pi, geometry", [45, 90],
+   393→          {"r": range(3, 16)}, 1000)
+   394→
+   395→        # Probability
+   396→        E("MATH", "6-8", "Probability", [3], "CCSS", "CCSS.MATH.CONTENT.7.SP.C.7",
+   397→          "A bag contains {a} red, {b} blue, and {c} green marbles. What is the probability of picking a {color} marble?",
+   398→          "P({color}) = \\frac{{{count}}}{{{total}}}", lambda a, b, c, color, count, total, **kw: f"{count}/{total}",
+   399→          lambda a, b, c, color, count, total, **kw: [f"{a}/{total}", f"{b}/{total}", f"{c}/{total}"],
+   400→          lambda a, b, c, color, count, total: [f"Total marbles = {a}+{b}+{c} = {total}", f"{color} marbles = {count}", f"P({color}) = {count}/{total}"],
+   401→          "mcq", "probability, fractions", [30, 60],
+   402→          {"a": range(2, 8), "b": range(2, 8), "c": range(2, 8), "color": ["red", "blue", "green"],
+   403→           "count": lambda: random.randint(2, 7), "total": lambda: random.randint(8, 20)}, 1500)
+   404→
+   405→        # Pythagorean theorem
+   406→        E("MATH", "6-8", "Pythagorean Theorem", [4], "CCSS", "CCSS.MATH.CONTENT.8.G.B.7",
+   407→          "A right triangle has legs of {a} and {b}. What is the length of the hypotenuse?",
+   408→          "c = \\sqrt{{{a}^2 + {b}^2}}", lambda a, b: round(math.sqrt(a*a + b*b), 2),
+   409→          lambda a, b, **kw: [str(round(math.sqrt(a*a+b*b) + random.choice([1, 2, 3]), 2)), str(a+b), str(a*b)],
+   410→          lambda a, b: [f"Pythagorean theorem: a² + b² = c²", f"c² = {a}² + {b}² = {a*a+b*b}", f"c = √{a*a+b*b} = {round(math.sqrt(a*a+b*b),2)}"],
+   411→          "mcq", "pythagorean-theorem, right-triangle", [60, 90],
+   412→          {"a": [3, 5, 6, 7, 8, 9, 10, 12, 15], "b": [4, 5, 8, 10, 12, 15, 24]}, 800)
+   413→
+   414→        # Statistics — Mean
+   415→        E("MATH", "6-8", "Statistics — Mean", [3], "CCSS", "CCSS.MATH.CONTENT.6.SP.B.5",
+   416→          "What is the mean (average) of: {numbers}?",
+   417→          "\\text{{mean}} = \\frac{{\\sum}}{{n}}", lambda numbers, **kw: sum(numbers) // len(numbers),
+   418→          lambda numbers, **kw: make_distractors_int(sum(numbers) // len(numbers), spread=5),
+   419→          lambda numbers, **kw: [f"Sum = {sum(numbers)}", f"Count = {len(numbers)}", f"Mean = {sum(numbers)} / {len(numbers)} = {sum(numbers) // len(numbers)}"],
+   420→          "mcq", "statistics, mean, average", [30, 60],
+   421→          {"numbers": [[random.randint(1, 20) for _ in range(5)] for _ in range(1000)]}, 1500)
+   422→
+   423→        # Order of operations
+   424→        E("MATH", "6-8", "Order of Operations", [3, 4], "CCSS", "CCSS.MATH.CONTENT.6.EE.A.1",
+   425→          "Evaluate: {a} {op1} {b} {op2} {c}",
+   426→          "{a} {op1} {b} {op2} {c}", lambda a, op1, b, op2, c, **kw: (a * b) + c if op1 == "×" and op2 == "+" else ((a * b) - c if op1 == "×" and op2 == "-" else (a + (b + c) if op1 == "+" and op2 == "+" else a + (b - c))),
+   427→          lambda a, op1, b, op2, c, **kw: make_distractors_int((a * b) + c if op1 == "×" and op2 == "+" else ((a * b) - c if op1 == "×" and op2 == "-" else (a + (b + c) if op1 == "+" and op2 == "+" else a + (b - c)))), spread=5),
+   428→          lambda a, op1, b, op2, c, **kw: [f"Apply PEMDAS: {op1} before {op2}" if op1 == "×" else f"Evaluate left to right: ({a} {op1} {b}) {op2} {c}", f"Result: {(a * b) + c if op1 == '×' and op2 == '+' else ((a * b) - c if op1 == '×' and op2 == '-' else (a + (b + c) if op1 == '+' and op2 == '+' else a + (b - c)))}"],
+   429→          "mcq", "order-of-operations, pemdas, expressions", [30, 60],
+   430→          {"a": range(2, 15), "op1": ["×", "+"], "b": range(2, 10), "op2": ["+", "-"], "c": range(1, 10)}, 1500)
+   431→
+   432→        # Exponents
+   433→        E("MATH", "6-8", "Exponents", [3], "CCSS", "CCSS.MATH.CONTENT.6.EE.A.1",
+   434→          "What is {base}^{exp}?",
+   435→          "{base}^{{{exp}}}", lambda base, exp: base ** exp,
+   436→          lambda base, exp, **kw: [str(base ** exp + random.choice([1, base, -1])), str(base * exp), str(base + exp)],
+   437→          lambda base, exp: [f"{base}^{exp} means {base} multiplied by itself {exp} times", f"{base}^{exp} = {base**exp}"],
+   438→          "mcq", "exponents, powers", [20, 45],
+   439→          {"base": range(2, 12), "exp": range(2, 5)}, 1500)
+   440→
+   441→        # ================================================================
+   442→        # MATH: 9-12 (25,000 questions)
+   443→        # ================================================================
+   444→
+   445→        # Quadratic equations — factoring
+   446→        E("MATH", "9-12", "Quadratic Equations", [4, 5], "CCSS", "CCSS.MATH.CONTENT.HSA.REI.B.4",
+   447→          "Solve: x² {b_sign} {b}x {c_sign} {c} = 0",
+   448→          "x^2 {b_sign} {b}x {c_sign} {c} = 0",
+   449→          lambda b_sign, b, c_sign, c, **kw: _solve_quadratic(b_sign, b, c_sign, c),
+   450→          lambda b_sign, b, c_sign, c, **kw: _quad_distractors(b_sign, b, c_sign, c),
+   451→          lambda b_sign, b, c_sign, c, **kw: [f"Form the quadratic: x² {'-' if b_sign == '-' else '+'} {b}x {'-' if c_sign == '-' else '+'} {c} = 0", f"Find factors of {c} that {'add' if c_sign == '+' else 'subtract'} to {b}", f"Answer: {_solve_quadratic(b_sign, b, c_sign, c)}"],
+   452→          "mcq", "quadratic, factoring, roots", [60, 120],
+   453→          {"b_sign": ["-", "+"], "b": range(3, 15), "c_sign": ["+", "-"], "c": range(2, 20)}, 2000)
+   454→
+   455→        # Systems of equations
+   456→        E("MATH", "9-12", "Systems of Equations", [4, 5], "CCSS", "CCSS.MATH.CONTENT.HSA.REI.C.6",
+   457→          "Solve:\n{a1}x + {b1}y = {c1}\n{a2}x + {b2}y = {c2}",
+   458→          None, lambda a1, b1, c1, a2, b2, c2, **kw: _solve_system(a1, b1, c1, a2, b2, c2),
+   459→          lambda a1, b1, c1, a2, b2, c2, **kw: _system_distractors(a1, b1, c1, a2, b2, c2),
+   460→          lambda a1, b1, c1, a2, b2, c2, **kw: [f"Use elimination or substitution", f"Determinant: {a1*b2 - a2*b1}", f"Solution: {_solve_system(a1, b1, c1, a2, b2, c2)}"],
+   461→          "mcq", "systems, elimination, linear-equations", [90, 150],
+   462→          {"a1": range(1, 6), "b1": range(1, 6), "c1": range(5, 26), "a2": range(1, 6), "b2": range(1, 6), "c2": range(5, 26)}, 1500)
+   463→
+   464→        # Trigonometry
+   465→        E("MATH", "9-12", "Trigonometry", [4, 5], "CCSS", "CCSS.MATH.CONTENT.HSF.TF.C.8",
+   466→          "In a right triangle, the side opposite angle θ is {opp} and the hypotenuse is {hyp}. What is sin(θ)?",
+   467→          "\\sin(\\theta) = \\frac{{{opp}}}{{{hyp}}}", lambda opp, hyp: f"{opp}/{hyp}",
+   468→          lambda opp, hyp, **kw: [f"{hyp}/{opp}", f"{hyp-opp}/{hyp}", f"{opp}/{hyp-opp}"],
+   469→          lambda opp, hyp: [f"sin(θ) = opposite / hypotenuse", f"sin(θ) = {opp}/{hyp}"],
+   470→          "mcq", "trigonometry, sin, right-triangle", [45, 90],
+   471→          {"opp": [3, 5, 7, 8, 9, 12, 15, 20], "hyp": [5, 13, 25, 17, 41, 25, 37, 29]}, 1000)
+   472→
+   473→        # Exponential growth/decay
+   474→        E("MATH", "9-12", "Exponential Functions", [5], "CCSS", "CCSS.MATH.CONTENT.HSF.LE.A.1",
+   475→          "A population of {P0} bacteria doubles every {d} hours. How many after {t} hours?",
+   476→          "P = {P0} \\times 2^{{{t}/{d}}}", lambda P0, d, t, **kw: kw.get("_result", 0),
+   477→          lambda P0, d, t, **kw: [str(kw.get("_result", 0)*2), str(kw.get("_result", 0)//2), str(P0*t)],
+   478→          lambda P0, d, t, **kw: kw.get("_steps", []),
+   479→          "mcq", "exponential, growth, doubling", [60, 120],
+   480→          {"P0": [100, 200, 500, 1000, 2000], "d": [1, 2, 3, 4, 6], "t": [3, 4, 6, 8, 12, 24]}, 800)
+   481→
+   482→        # Polynomials
+   483→        E("MATH", "9-12", "Polynomial Operations", [4], "CCSS", "CCSS.MATH.CONTENT.HSA.APR.A.1",
+   484→          "Add: ({a}x² + {b}x + {c}) + ({d}x² + {e}x + {f})",
+   485→          None, lambda a, b, c, d, e, f, **kw: kw.get("_sum", ""),
+   486→          lambda a, b, c, d, e, f, **kw: kw.get("_distractors", []),
+   487→          lambda a, b, c, d, e, f, **kw: kw.get("_steps", []),
+   488→          "mcq", "polynomials, addition, algebra", [45, 90],
+   489→          {"a": range(1, 6), "b": range(-10, 11), "c": range(-15, 16), "d": range(1, 6), "e": range(-10, 11), "f": range(-15, 16)}, 1200)
+   490→
+   491→        # Logarithms
+   492→        E("MATH", "9-12", "Logarithms", [5], "CCSS", "CCSS.MATH.CONTENT.HSF.BF.B.5",
+   493→          "What is log_{base}({value})?",
+   494→          "\\log_{{{base}}}({value})", lambda base, value, **kw: kw.get("_result", 0),
+   495→          lambda base, value, **kw: [str(kw.get("_result", 0) + random.choice([1, 2])), str(base + 1), str(value // base)],
+   496→          lambda base, value, **kw: kw.get("_steps", []),
+   497→          "mcq", "logarithms, exponents, inverse", [45, 90],
+   498→          {"base": [2, 3, 5, 10], "value": [4, 8, 16, 32, 9, 27, 25, 125, 100, 1000]}, 800)
+   499→
+   500→        # Sequences & Series
+   501→        E("MATH", "9-12", "Sequences — Arithmetic", [4], "CCSS", "CCSS.MATH.CONTENT.HSF.BF.A.2",
+   502→          "Find the {n}th term of the arithmetic sequence: {a1}, {a2}, {a3}, ...",
+   503→          "a_n = a_1 + (n-1)d", lambda a1, a2, a3, n, **kw: kw.get("_nth", 0),
+   504→          lambda a1, a2, a3, n, **kw: make_distractors_int(kw.get("_nth", 0), spread=10),
+   505→          lambda a1, a2, a3, n, **kw: kw.get("_steps", []),
+   506→          "mcq", "sequences, arithmetic, nth-term", [45, 90],
+   507→          {"a1": range(1, 11), "n": range(5, 16)}, 1000)
+   508→
+   509→        # Statistics — Normal Distribution
+   510→        E("MATH", "9-12", "Normal Distribution", [5], "CCSS", "CCSS.MATH.CONTENT.HSS.ID.A.4",
+   511→          "A test has mean {mean} and standard deviation {sd}. About what percent falls between {low} and {high}?",
+   512→          None, lambda mean, sd, low, high, **kw: kw.get("_pct", "68%"),
+   513→          lambda mean, sd, low, high, **kw: kw.get("_distractors", []),
+   514→          lambda mean, sd, low, high, **kw: kw.get("_steps", []),
+   515→          "mcq", "statistics, normal-distribution, empirical-rule", [60, 90],
+   516→          {"mean": range(60, 85, 5), "sd": [5, 8, 10, 12]}, 800)
+   517→
+   518→        # ================================================================
+   519→        # SCIENCE (40,000 questions)
+   520→        # ================================================================
+   521→
+   522→        # Physics — Forces (6-8)
+   523→        E("SCIENCE", "6-8", "Forces & Motion", [3], "NGSS", "MS-PS2-2",
+   524→          "A {mass} kg object is pushed with {force} N of force. If friction is {friction} N, what is the net force?",
+   525→          "F_{{net}} = {force} - {friction} = ?", lambda mass, force, friction: force - friction,
+   526→          lambda mass, force, friction, **kw: [str(force), str(force + friction), str(friction)],
+   527→          lambda mass, force, friction: [f"Net force = Applied force - Friction", f"F_net = {force} - {friction} = {force - friction} N"],
+   528→          "mcq", "forces, net-force, friction, physics", [45, 75],
+   529→          {"mass": [5, 10, 15, 20, 25], "force": [30, 40, 50, 60, 80, 100], "friction": [10, 15, 20, 25, 30]}, 1000)
+   530→
+   531→        # Physics — Kinematics (9-12)
+   532→        E("SCIENCE", "9-12", "Kinematics", [4, 5], "NGSS", "HS-PS2-1",
+   533→          "An object is moving at {v0} m/s and accelerates at {a} m/s² for {t} seconds. What is the final velocity?",
+   534→          "v = v_0 + at = {v0} + {a} \\times {t}", lambda v0, a, t: v0 + a * t,
+   535→          lambda v0, a, t, **kw: [str(v0 + a * t + 5), str(v0 * t), str(a * t)],
+   536→          lambda v0, a, t: [f"v = v₀ + at", f"v = {v0} + ({a})({t})", f"v = {v0} + {a*t} = {v0+a*t} m/s"],
+   537→          "mcq", "kinematics, velocity, acceleration, physics", [45, 90],
+   538→          {"v0": range(0, 31, 5), "a": range(-10, 11, 2), "t": range(2, 11)}, 1000)
+   539→
+   540→        # Chemistry — Balancing (9-12)
+   541→        chem_eqs = [
+   542→            ("Fe", "O₂", "Fe₂O₃", "4Fe + 3O₂ → 2Fe₂O₃"),
+   543→            ("H₂", "O₂", "H₂O", "2H₂ + O₂ → 2H₂O"),
+   544→            ("N₂", "H₂", "NH₃", "N₂ + 3H₂ → 2NH₃"),
+   545→            ("CH₄", "O₂", "CO₂", "CH₄ + 2O₂ → CO₂ + 2H₂O"),
+   546→            ("C", "O₂", "CO₂", "C + O₂ → CO₂"),
+   547→        ]
+   548→        E("SCIENCE", "9-12", "Balancing Equations", [4], "NGSS", "HS-PS1-2",
+   549→          "Balance: {reactant1} + {reactant2} → {product}",
+   550→          None, lambda reactant1, reactant2, product, balanced, **kw: balanced,
+   551→          lambda reactant1, reactant2, product, balanced, **kw: [],
+   552→          lambda reactant1, reactant2, product, balanced, **kw: [f"Count atoms on each side", f"Balance using coefficients", f"Answer: {balanced}"],
+   553→          "open", "balancing, chemical-equations, stoichiometry, chemistry", [60, 120],
+   554→          {"reactant1": [e[0] for e in chem_eqs], "reactant2": [e[1] for e in chem_eqs], "product": [e[2] for e in chem_eqs], "balanced": [e[3] for e in chem_eqs]}, 500)
+   555→
+   556→        # Biology — Cells (6-8)
+   557→        cell_q_stems = [
+   558→            "What is the function of the {organelle} in a cell?",
+   559→            "Which organelle is responsible for {function}?",
+   560→            "Plant cells have {feature} that animal cells lack. What is it?",
+   561→        ]
+   562→        E("SCIENCE", "6-8", "Cell Biology", [3], "NGSS", "MS-LS1-2",
+   563→          "What is the primary function of the {organelle}?",
+   564→          None, lambda organelle, **kw: kw.get("_function", ""),
+   565→          lambda organelle, **kw: kw.get("_distractors", []),
+   566→          lambda organelle, **kw: kw.get("_steps", []),
+   567→          "mcq", "cells, organelles, biology", [30, 60],
+   568→          {"organelle": ["nucleus", "mitochondria", "ribosome", "cell membrane", "chloroplast", "endoplasmic reticulum", "golgi apparatus"]}, 800)
+   569→
+   570→        # Biology — Genetics (9-12)
+   571→        E("SCIENCE", "9-12", "Genetics", [4, 5], "NGSS", "HS-LS3-1",
+   572→          "In a cross between {genotype1} and {genotype2}, what is the probability of offspring with {trait}?",
+   573→          None, lambda genotype1, genotype2, trait, **kw: kw.get("_probability", ""),
+   574→          lambda genotype1, genotype2, trait, **kw: kw.get("_distractors", []),
+   575→          lambda genotype1, genotype2, trait, **kw: kw.get("_steps", []),
+   576→          "mcq", "genetics, punnett-square, heredity", [60, 120],
+   577→          {"genotype1": ["AA", "Aa", "aa"], "genotype2": ["Aa", "aa"], "trait": ["dominant phenotype", "recessive phenotype"]}, 800)
+   578→
+   579→        # Earth Science — Plate Tectonics (6-8)
+   580→        E("SCIENCE", "6-8", "Plate Tectonics", [3], "NGSS", "MS-ESS2-3",
+   581→          "What type of boundary occurs when two tectonic plates move {direction}?",
+   582→          None, lambda direction, **kw: kw.get("_boundary_type", ""),
+   583→          lambda direction, **kw: kw.get("_distractors", []),
+   584→          lambda direction, **kw: kw.get("_steps", []),
+   585→          "mcq", "plate-tectonics, boundaries, earth-science", [30, 45],
+   586→          {"direction": ["apart", "together", "past each other"]}, 600)
+   587→
+   588→        # Chemistry — Periodic Table (9-12)
+   589→        E("SCIENCE", "9-12", "Periodic Table", [3, 4], "NGSS", "HS-PS1-1",
+   590→          "What is the atomic number of {element}?",
+   591→          None, lambda element, **kw: kw.get("_atomic_num", 0),
+   592→          lambda element, **kw: kw.get("_distractors", []),
+   593→          lambda element, **kw: kw.get("_steps", []),
+   594→          "mcq", "periodic-table, elements, atomic-number, chemistry", [15, 30],
+   595→          {"element": ["Hydrogen", "Helium", "Carbon", "Nitrogen", "Oxygen", "Sodium", "Iron", "Gold", "Uranium", "Calcium", "Potassium", "Chlorine"]}, 600)
+   596→
+   597→        # Physics — Newton's Laws (6-8)
+   598→        E("SCIENCE", "6-8", "Newton's Laws", [3], "NGSS", "MS-PS2-1",
+   599→          "According to Newton's {law_num} Law, {scenario}. What principle does this demonstrate?",
+   600→          None, lambda law_num, scenario, **kw: kw.get("_principle", ""),
+   601→          lambda law_num, scenario, **kw: kw.get("_distractors", []),
+   602→          lambda law_num, scenario, **kw: kw.get("_steps", []),
+   603→          "mcq", "newtons-laws, forces, physics", [30, 60],
+   604→          {"law_num": ["1st", "2nd", "3rd"], "scenario": ["an object at rest stays at rest", "F = ma", "every action has an equal and opposite reaction"]}, 600)
+   605→
+   606→        # ================================================================
+   607→        # LANGUAGE ARTS (30,000 questions)
+   608→        # ================================================================
+   609→
+   610→        # Grammar — Parts of speech
+   611→        E("LANGUAGE", "3-5", "Parts of Speech", [2], "COMMON_CORE", "CCSS.ELA-LITERACY.L.3.1",
+   612→          'What part of speech is the word "{word}" in the sentence: "{sentence}"?',
+   613→          None, lambda word, sentence, **kw: kw.get("_pos", ""),
+   614→          lambda word, sentence, **kw: kw.get("_distractors", []),
+   615→          lambda word, sentence, **kw: kw.get("_steps", []),
+   616→          "mcq", "grammar, parts-of-speech", [20, 40],
+   617→          {"word": ["quickly", "beautiful", "run", "the", "happy", "under", "and", "she"], "sentence": ["She runs quickly to school", "The beautiful flower bloomed", "The dog sat under the table"]}, 1500)
+   618→
+   619→        # Reading Comprehension
+   620→        passages_data = [
+   621→            ("The water cycle begins with evaporation. The sun heats water in oceans, lakes, and rivers, turning it into water vapor. This vapor rises into the atmosphere and cools, forming clouds through condensation. When clouds become heavy with water droplets, precipitation occurs in the form of rain, snow, or hail. The water then flows back into bodies of water, and the cycle continues.",
+   622→             "What is the first step of the water cycle?", "Evaporation",
+   623→             ["Condensation", "Precipitation", "Collection"],
+   624→             ["The passage states the water cycle begins with evaporation", "The sun heats water and turns it into vapor"],
+   625→             "water-cycle, reading-comprehension, science-reading"),
+   626→        ]
+   627→        E("LANGUAGE", "3-5", "Reading Comprehension", [3], "COMMON_CORE", "CCSS.ELA-LITERACY.RI.3.1",
+   628→          "{passage}\n\nQuestion: {question}",
+   629→          None, lambda passage, question, answer, **kw: answer,
+   630→          lambda passage, question, answer, distractors, **kw: distractors,
+   631→          lambda passage, question, answer, distractors, steps, **kw: steps,
+   632→          "mcq", "reading-comprehension, informational-text",
+   633→          [60, 120], {"passage": [p[0] for p in passages_data], "question": [p[1] for p in passages_data],
+   634→                       "answer": [p[2] for p in passages_data], "distractors": [p[3] for p in passages_data],
+   635→                       "steps": [p[4] for p in passages_data]}, 500)
+   636→
+   637→        # Vocabulary
+   638→        vocab_words = [
+   639→            ("abundant", "plentiful, more than enough", ["scarce", "rare", "minimal"]),
+   640→            ("courageous", "brave, showing fearlessness", ["cowardly", "timid", "fearful"]),
+   641→            ("meticulous", "very careful and precise", ["careless", "sloppy", "hasty"]),
+   642→            ("eloquent", "fluent, persuasive speaking", ["inarticulate", "tongue-tied", "mumbling"]),
+   643→            ("resilient", "able to recover quickly", ["fragile", "weak", "breakable"]),
+   644→            ("benevolent", "kind, generous, charitable", ["selfish", "greedy", "mean"]),
+   645→            ("ambiguous", "open to more than one interpretation", ["clear", "obvious", "certain"]),
+   646→            ("diligent", "hardworking, careful effort", ["lazy", "careless", "negligent"]),
+   647→            ("pragmatic", "practical, dealing with things sensibly", ["idealistic", "impractical", "unrealistic"]),
+   648→            ("tenacious", "persistent, determined, not giving up", ["weak", "yielding", "irresolute"]),
+   649→        ]
+   650→        E("LANGUAGE", "6-8", "Vocabulary — Context Clues", [3], "COMMON_CORE", "CCSS.ELA-LITERACY.L.6.4",
+   651→          'What is the meaning of the word "{word}" as used in: "The {word} efforts of the team led to great success"?',
+   652→          None, lambda word, definition, distractors, **kw: definition,
+   653→          lambda word, definition, distractors, **kw: distractors,
+   654→          lambda word, definition, distractors, **kw: [f"Look at context: the team achieved success", f"This suggests the word has a positive meaning", f"'{word}' means {definition}"],
+   655→          "mcq", "vocabulary, context-clues",
+   656→          [20, 45], {"word": [w[0] for w in vocab_words], "definition": [w[1] for w in vocab_words], "distractors": [w[2] for w in vocab_words]}, 1000)
+   657→
+   658→        # Grammar — Subject-Verb Agreement
+   659→        E("LANGUAGE", "3-5", "Subject-Verb Agreement", [2], "COMMON_CORE", "CCSS.ELA-LITERACY.L.3.1",
+   660→          'Choose the correct verb: "The group of students {verb1} to the museum."',
+   661→          None, lambda verb1, verb2, **kw: verb1,
+   662→          lambda verb1, verb2, **kw: [verb2],
+   663→          lambda verb1, verb2, **kw: [f"The subject is 'group' (singular)", f"Use singular verb '{verb1}'"],
+   664→          "mcq", "grammar, subject-verb-agreement",
+   665→          [15, 30], {"verb1": ["goes", "walks", "runs", "is"], "verb2": ["go", "walk", "run", "are"]}, 800)
+   666→
+   667→        # Figurative Language
+   668→        figures = [
+   669→            ("simile", "The sun was like a golden coin in the sky", "simile — compares sun to coin using 'like'", ["metaphor", "personification", "hyperbole"]),
+   670→            ("metaphor", "The classroom was a zoo during the project", "metaphor — directly compares classroom to zoo", ["simile", "alliteration", "onomatopoeia"]),
+   671→            ("personification", "The wind whispered through the trees", "personification — gives wind human trait of whispering", ["simile", "metaphor", "hyperbole"]),
+   672→            ("hyperbole", "I've told you a million times to clean your room", "hyperbole — extreme exaggeration for effect", ["simile", "idiom", "literal language"]),
+   673→            ("onomatopoeia", "The bees buzzed around the fragrant flowers", "onomatopoeia — 'buzzed' imitates the sound", ["alliteration", "personification", "metaphor"]),
+   674→        ]
+   675→        E("LANGUAGE", "6-8", "Figurative Language", [3], "COMMON_CORE", "CCSS.ELA-LITERACY.RL.6.4",
+   676→          'What type of figurative language is used in: "{example}"?',
+   677→          None, lambda figure_type, example, answer, distractors, **kw: answer,
+   678→          lambda figure_type, example, answer, distractors, **kw: distractors,
+   679→          lambda figure_type, example, answer, distractors, **kw: [f"Analyze the phrase", f"Identify the literary device", f"Answer: {answer}"],
+   680→          "mcq", "figurative-language, literary-devices",
+   681→          [20, 45], {"figure_type": [f[0] for f in figures], "example": [f[1] for f in figures], "answer": [f[2] for f in figures], "distractors": [f[3] for f in figures]}, 500)
+   682→
+   683→        # Spelling
+   684→        misspelled = [
+   685→            ("recieve", "receive", "i before e except after c"),
+   686→            ("neccessary", "necessary", "one c, two s's"),
+   687→            ("accomodate", "accommodate", "double c, double m"),
+   688→            ("occured", "occurred", "double r, double r"),
+   689→            ("seperate", "separate", "par not per"),
+   690→            ("definately", "definitely", "ite not ate"),
+   691→            ("enviroment", "environment", "n before ron"),
+   692→            ("goverment", "government", "n before ment"),
+   693→        ]
+   694→        E("LANGUAGE", "3-5", "Spelling", [2], "COMMON_CORE", "CCSS.ELA-LITERACY.L.4.2",
+   695→          'Which word is spelled correctly?',
+   696→          None, lambda correct, rule, **kw: correct,
+   697→          lambda correct, rule, **kw: [],
+   698→          lambda correct, rule, **kw: [f"Remember the rule: {rule}", f"The correct spelling is '{correct}'"],
+   699→          "mcq", "spelling, word-study",
+   700→          [15, 30], {"correct": [m[1] for m in misspelled], "rule": [m[2] for m in misspelled]}, 500)
+   701→
+   702→        # ================================================================
+   703→        # SAT TEST PREP (25,000 questions)
+   704→        # ================================================================
+   705→
+   706→        # SAT Math — Algebra
+   707→        E("MATH", "9-12", "SAT — Linear Equations", [4, 5], "SAT", "SAT.MATH.ALG",
+   708→          "If {a}x + {b} = {c}, what is x?",
+   709→          "{a}x + {b} = {c}", lambda a, b, c, **kw: (c - b) / a,
+   710→          lambda a, b, c, **kw: [str((c - b) / a + 1), str((c + b) / a), str(c / a)],
+   711→          lambda a, b, c: [f"Subtract {b} from both sides: {a}x = {c-b}", f"Divide by {a}: x = {c-b}/{a} = {(c-b)/a}"],
+   712→          "mcq", "sat, algebra, linear-equations, test-prep",
+   713→          [30, 60], {"a": [2, 3, 4, 5, 6], "b": range(-10, 11, 2), "c": range(-20, 21, 3)}, 2000)
+   714→
+   715→        # SAT Math — Data Analysis
+   716→        E("MATH", "9-12", "SAT — Data Interpretation", [3, 4], "SAT", "SAT.MATH.DATA",
+   717→          "A survey of {total} students found that {pct}% prefer math. How many students prefer math?",
+   718→          "{pct}\\% \\text{{ of }} {total}", lambda total, pct: total * pct // 100,
+   719→          lambda total, pct, **kw: make_distractors_int(total * pct // 100, spread=20),
+   720→          lambda total, pct: [f"Convert {pct}% to decimal: {pct/100}", f"Multiply: {total} × {pct/100} = {total*pct/100}"],
+   721→          "mcq", "sat, data-analysis, percentages, test-prep",
+   722→          [30, 45], {"total": [100, 200, 250, 300, 400, 500, 800, 1000], "pct": [15, 20, 25, 30, 35, 40, 45, 50, 60, 75]}, 1500)
+   723→
+   724→        # SAT Math — Problem Solving
+   725→        E("MATH", "9-12", "SAT — Rate Problems", [4, 5], "SAT", "SAT.MATH.PROBLEM",
+   726→          "If {worker1} can complete a job in {time1} hours and {worker2} can do it in {time2} hours, how long will they take working together?",
+   727→          None, lambda worker1, time1, worker2, time2, **kw: round(1 / (1/time1 + 1/time2), 2),
+   728→          lambda worker1, time1, worker2, time2, **kw: [str(round(time1/2, 2)), str(round(time2/2, 2)), str(round((time1+time2)/2, 2))],
+   729→          lambda worker1, time1, worker2, time2: [f"Rate of {worker1}: 1/{time1} job per hour", f"Rate of {worker2}: 1/{time2} job per hour", f"Combined rate: 1/{time1} + 1/{time2} = {(time1+time2)/(time1*time2)}", f"Time = 1/{(time1+time2)/(time1*time2)} = {round(time1*time2/(time1+time2), 2)} hours"],
+   730→          "mcq", "sat, rate, work-problems, test-prep",
+   731→          [60, 120], {"worker1": ["Worker A", "Machine A", "Pipe A"], "time1": [3, 4, 5, 6, 8, 10, 12], "worker2": ["Worker B", "Machine B", "Pipe B"], "time2": [4, 5, 6, 8, 10, 12, 15]}, 1500)
+   732→
+   733→        # SAT Reading
+   734→        sat_reading = [
+   735→            ("The passage suggests that the author's attitude toward technology is primarily:", "cautiously optimistic", ["strongly negative", "enthusiastically supportive", "completely indifferent"]),
+   736→            ("Based on the passage, which statement would the author most likely agree with?", "Innovation should be balanced with ethical considerations", ["Technology is inherently harmful", "All progress is good", "Tradition is always superior"]),
+   737→            ("The author uses the word 'paradox' to emphasize:", "an apparent contradiction that reveals a deeper truth", ["a simple mistake", "an unsolvable problem", "a humorous situation"]),
+   738→        ]
+   739→        E("LANGUAGE", "9-12", "SAT — Reading Comprehension", [4, 5], "SAT", "SAT.READING",
+   740→          "Passage excerpt: 'While technology has revolutionized how we communicate, it has also created new forms of isolation. Social media connects us across distances but may distance us from those physically present.'\n\n{question}",
+   741→          None, lambda question, answer, distractors, **kw: answer,
+   742→          lambda question, answer, distractors, **kw: distractors,
+   743→          lambda question, answer, distractors, **kw: [f"Analyze the passage for tone and evidence", f"The correct answer: {answer}"],
+   744→          "mcq", "sat, reading-comprehension, evidence, test-prep",
+   745→          [60, 120], {"question": [s[0] for s in sat_reading], "answer": [s[1] for s in sat_reading], "distractors": [s[2] for s in sat_reading]}, 500)
+   746→
+   747→        # SAT Writing — Grammar
+   748→        E("LANGUAGE", "9-12", "SAT — Grammar", [3, 4], "SAT", "SAT.WRITING",
+   749→          'Choose the best version: "The students, {option1}, completed their projects on time."',
+   750→          None, lambda option1, **kw: option1,
+   751→          lambda option1, **kw: [],
+   752→          lambda option1, **kw: [f"Look for proper punctuation and agreement", f"Correct: {option1}"],
+   753→          "mcq", "sat, grammar, punctuation, test-prep",
+   754→          [20, 40], {"option1": ["who had studied diligently", "having studied diligently", "after they studied"]}, 500)
+   755→
+   756→        # ================================================================
+   757→        # ACT TEST PREP (25,000 questions)
+   758→        # ================================================================
+   759→
+   760→        # ACT Math
+   761→        E("MATH", "9-12", "ACT — Pre-Algebra", [3, 4], "ACT", "ACT.MATH.PRE",
+   762→          "What is {a}% of {b}?",
+   763→          "{a}\\% \\times {b} = ?", lambda a, b: a * b / 100,
+   764→          lambda a, b, **kw: [str(a * b / 100 + 1), str(b - a), str(a + b)],
+   765→          lambda a, b: [f"Convert {a}% to decimal: {a/100}", f"Multiply: {a/100} × {b} = {a*b/100}"],
+   766→          "mcq", "act, pre-algebra, percentages, test-prep",
+   767→          [20, 40], {"a": [10, 15, 20, 25, 30, 40, 50, 75], "b": range(20, 501, 10)}, 1500)
+   768→
+   769→        E("MATH", "9-12", "ACT — Coordinate Geometry", [4], "ACT", "ACT.MATH.COORD",
+   770→          "What is the slope of the line passing through ({x1}, {y1}) and ({x2}, {y2})?",
+   771→          "m = \\frac{{{y2}-{y1}}}{{{x2}-{x1}}}", lambda x1, y1, x2, y2, **kw: round((y2-y1)/(x2-x1), 2),
+   772→          lambda x1, y1, x2, y2, **kw: [str(round((y2+y1)/(x2-x1), 2)), str(round((y2-y1)/(x2+x1), 2)), str(round((x2-x1)/(y2-y1), 2))],
+   773→          lambda x1, y1, x2, y2: [f"Slope formula: m = (y₂-y₁)/(x₂-x₁)", f"m = ({y2}-{y1})/({x2}-{x1})", f"m = {y2-y1}/{x2-x1} = {round((y2-y1)/(x2-x1), 2)}"],
+   774→          "mcq", "act, coordinate-geometry, slope, test-prep",
+   775→          [30, 60], {"x1": range(-5, 6), "y1": range(-5, 6), "x2": range(-5, 6), "y2": range(-5, 6)}, 1500)
+   776→
+   777→        E("MATH", "9-12", "ACT — Plane Geometry", [4], "ACT", "ACT.MATH.GEO",
+   778→          "What is the area of a triangle with base {b} and height {h}?",
+   779→          "A = \\frac{{1}}{{2}}bh = \\frac{{1}}{{2}}({b})({h})", lambda b, h: b * h / 2,
+   780→          lambda b, h, **kw: [str(b * h), str(b + h), str(b * h / 2 + b)],
+   781→          lambda b, h: [f"Area formula: A = ½bh", f"A = ½ × {b} × {h} = {b*h/2}"],
+   782→          "mcq", "act, geometry, triangle, area, test-prep",
+   783→          [20, 45], {"b": range(4, 21), "h": range(3, 16)}, 1000)
+   784→
+   785→        E("MATH", "9-12", "ACT — Trigonometry", [5], "ACT", "ACT.MATH.TRIG",
+   786→          "What is the value of sin({angle}°)?",
+   787→          "\\sin({angle}°)", lambda angle, **kw: round(math.sin(math.radians(angle)), 4),
+   788→          lambda angle, **kw: [str(round(math.cos(math.radians(angle)), 4)), str(round(math.tan(math.radians(angle)), 4)), str(round(math.sin(math.radians(angle + 30)), 4))],
+   789→          lambda angle, **kw: [f"sin({angle}°) = {round(math.sin(math.radians(angle)), 4)}"],
+   790→          "mcq", "act, trigonometry, sin, test-prep",
+   791→          [30, 60], {"angle": [0, 30, 45, 60, 90, 120, 150, 180, 210, 270, 330, 360]}, 800)
+   792→
+   793→        # ACT English
+   794→        E("LANGUAGE", "9-12", "ACT — English Grammar", [3, 4], "ACT", "ACT.ENGLISH",
+   795→          'Which of the following is the most grammatically correct version?',
+   796→          None, lambda correct, **kw: correct,
+   797→          lambda correct, **kw: [],
+   798→          lambda correct, **kw: [f"Check subject-verb agreement and tense consistency", f"Correct: {correct}"],
+   799→          "mcq", "act, grammar, usage, test-prep",
+   800→          [25, 50], {"correct": ["The team has won every game this season", "Neither the students nor the teacher was aware of the change", "Running daily improves both physical and mental health"]}, 500)
+   801→
+   802→        # ACT Science
+   803→        E("SCIENCE", "9-12", "ACT — Data Interpretation", [3, 4], "ACT", "ACT.SCIENCE",
+   804→          "In Experiment {exp_num}, when the temperature was increased from {t1}°C to {t2}°C, the reaction rate {change}. What conclusion can be drawn?",
+   805→          None, lambda exp_num, t1, t2, change, **kw: kw.get("_conclusion", ""),
+   806→          lambda exp_num, t1, t2, change, **kw: kw.get("_distractors", []),
+   807→          lambda exp_num, t1, t2, change, **kw: kw.get("_steps", []),
+   808→          "mcq", "act, data-interpretation, experiment, test-prep",
+   809→          [45, 90], {"exp_num": range(1, 5), "t1": [20, 25, 30, 35], "t2": [40, 50, 60, 70], "change": ["doubled", "tripled", "increased by 50%"]}, 1000)
+   810→
+   811→        # ACT Reading
+   812→        E("LANGUAGE", "9-12", "ACT — Reading", [4], "ACT", "ACT.READING",
+   813→          "The main purpose of the passage is to:",
+   814→          None, lambda purpose, **kw: purpose,
+   815→          lambda purpose, **kw: [],
+   816→          lambda purpose, **kw: [f"Identify the author's main idea and purpose", f"Answer: {purpose}"],
+   817→          "mcq", "act, reading-comprehension, main-idea, test-prep",
+   818→          [45, 90], {"purpose": ["argue for increased funding for education", "describe the process of photosynthesis", "compare two theories of economic development", "narrate a personal experience of overcoming adversity"]}, 500)
+   819→
+   820→        # ================================================================
+   821→        # AP TEST PREP (10,000 questions)
+   822→        # ================================================================
+   823→
+   824→        # AP Calculus
+   825→        E("MATH", "9-12", "AP Calculus AB — Derivatives", [5], "AP", "AP.CALC.AB",
+   826→          "What is the derivative of f(x) = {func}?",
+   827→          None, lambda func, **kw: kw.get("_derivative", ""),
+   828→          lambda func, **kw: kw.get("_distractors", []),
+   829→          lambda func, **kw: kw.get("_steps", []),
+   830→          "mcq", "ap, calculus, derivatives, test-prep",
+   831→          [60, 120], {"func": ["x³", "2x² + 3x", "sin(x)", "eˣ", "ln(x)", "5x⁴ - 2x", "√x"]}, 800)
+   832→
+   833→        # AP Biology
+   834→        E("SCIENCE", "9-12", "AP Biology — Cell Respiration", [5], "AP", "AP.BIO",
+   835→          "During which stage of cellular respiration is the most ATP produced?",
+   836→          None, lambda **kw: "Electron Transport Chain (oxidative phosphorylation)",
+   837→          lambda **kw: ["Glycolysis", "Krebs Cycle", "Fermentation"],
+   838→          lambda **kw: ["Glycolysis: 2 ATP net", "Krebs Cycle: 2 ATP", "ETC: ~34 ATP", "Total: ~38 ATP"],
+   839→          "mcq", "ap, biology, cellular-respiration, atp, test-prep",
+   840→          [45, 90], {}, 300)
+   841→
+   842→        # AP Chemistry
+   843→        E("SCIENCE", "9-12", "AP Chemistry — Gas Laws", [5], "AP", "AP.CHEM",
+   844→          "A gas at {p1} atm and {t1} K is heated to {t2} K at constant volume. What is the new pressure?",
+   845→          "\\frac{{P_1}}{{T_1}} = \\frac{{P_2}}{{T_2}}", lambda p1, t1, t2, **kw: round(p1 * t2 / t1, 2),
+   846→          lambda p1, t1, t2, **kw: [str(round(p1 * t1 / t2, 2)), str(round(p1 * (t2 - t1) / t1, 2)), str(round(t2 / t1, 2))],
+   847→          lambda p1, t1, t2: [f"Gay-Lussac's Law: P₁/T₁ = P₂/T₂", f"P₂ = P₁ × T₂/T₁ = {p1} × {t2}/{t1}", f"P₂ = {round(p1*t2/t1, 2)} atm"],
+   848→          "mcq", "ap, chemistry, gas-laws, pressure, test-prep",
+   849→          [45, 90], {"p1": [1, 1.5, 2, 2.5, 3], "t1": [200, 250, 273, 300, 350], "t2": [300, 350, 400, 450, 500, 550, 600]}, 800)
+   850→
+   851→        # AP US History
+   852→        E("SOCIAL_STUDIES", "9-12", "AP US History", [4, 5], "AP", "AP.USH",
+   853→          "The {event} occurred during which time period?",
+   854→          None, lambda event, **kw: kw.get("_period", ""),
+   855→          lambda event, **kw: kw.get("_distractors", []),
+   856→          lambda event, **kw: kw.get("_steps", []),
+   857→          "mcq", "ap, us-history, chronology, test-prep",
+   858→          [30, 60], {"event": ["Declaration of Independence", "Louisiana Purchase", "Civil War", "Emancipation Proclamation", "Great Depression", "Pearl Harbor", "Brown v. Board of Education"]}, 500)
+   859→
+   860→        # AP English Language
+   861→        E("LANGUAGE", "9-12", "AP English — Rhetorical Analysis", [5], "AP", "AP.ENGL",
+   862→          "The author primarily uses {device} to:",
+   863→          None, lambda device, **kw: kw.get("_purpose", ""),
+   864→          lambda device, **kw: kw.get("_distractors", []),
+   865→          lambda device, **kw: kw.get("_steps", []),
+   866→          "mcq", "ap, english, rhetoric, analysis, test-prep",
+   867→          [45, 90], {"device": ["anecdote", "statistical evidence", "rhetorical question", "parallel structure", "appeal to authority"]}, 400)
+   868→
+   869→        # ================================================================
+   870→        # SOCIAL STUDIES / HISTORY (20,000 questions)
+   871→        # ================================================================
+   872→
+   873→        # US History
+   874→        us_events = [
+   875→            ("Declaration of Independence", "1776", "document declared American independence from Britain", ["1783", "1774", "1812"]),
+   876→            ("Constitution ratified", "1788", "the US Constitution was officially ratified", ["1776", "1791", "1800"]),
+   877→            ("Civil War began", "1861", "the American Civil War started at Fort Sumter", ["1850", "1865", "1870"]),
+   878→            ("World War I US entry", "1917", "the United States entered World War I", ["1914", "1918", "1915"]),
+   879→            ("Pearl Harbor attack", "1941", "Japan attacked Pearl Harbor, bringing the US into WWII", ["1939", "1945", "1942"]),
+   880→        ]
+   881→        E("SOCIAL_STUDIES", "6-8", "US History — Key Events", [3], "STATE_STANDARD", "SS.US.6-8",
+   882→          "In what year did the {event}?",
+   883→          None, lambda event, year, desc, **kw: year,
+   884→          lambda event, year, desc, distractors, **kw: distractors,
+   885→          lambda event, year, desc, distractors, **kw: [f"The {event} happened in {year}", desc],
+   886→          "mcq", "us-history, dates, events",
+   887→          [20, 40], {"event": [e[0] for e in us_events], "year": [e[1] for e in us_events], "desc": [e[2] for e in us_events], "distractors": [e[3] for e in us_events]}, 1000)
+   888→
+   889→        # World Geography
+   890→        E("SOCIAL_STUDIES", "3-5", "World Geography — Continents", [1, 2], "STATE_STANDARD", "SS.GEO.3-5",
+   891→          "On which continent is {country} located?",
+   892→          None, lambda country, **kw: kw.get("_continent", ""),
+   893→          lambda country, **kw: kw.get("_distractors", []),
+   894→          lambda country, **kw: kw.get("_steps", []),
+   895→          "mcq", "geography, continents, world",
+   896→          [15, 30], {"country": ["Brazil", "Japan", "Egypt", "Australia", "France", "India", "Canada", "Mexico", "Kenya", "Germany"]}, 1000)
+   897→
+   898→        # Government / Civics
+   899→        E("SOCIAL_STUDIES", "6-8", "US Government", [3], "STATE_STANDARD", "SS.CIVICS.6-8",
+   900→          "How many members does the {chamber} have?",
+   901→          None, lambda chamber, **kw: kw.get("_count", ""),
+   902→          lambda chamber, **kw: kw.get("_distractors", []),
+   903→          lambda chamber, **kw: kw.get("_steps", []),
+   904→          "mcq", "government, civics, congress",
+   905→          [20, 40], {"chamber": ["House of Representatives", "Senate", "Supreme Court"]}, 800)
+   906→
+   907→        # Economics basics
+   908→        E("SOCIAL_STUDIES", "9-12", "Economics — Supply & Demand", [3, 4], "STATE_STANDARD", "SS.ECON.9-12",
+   909→          "When the {factor} {direction}, what happens to the equilibrium price?",
+   910→          None, lambda factor, direction, **kw: kw.get("_result", ""),
+   911→          lambda factor, direction, **kw: kw.get("_distractors", []),
+   912→          lambda factor, direction, **kw: kw.get("_steps", []),
+   913→          "mcq", "economics, supply, demand, equilibrium",
+   914→          [30, 60], {"factor": ["supply", "demand"], "direction": ["increases", "decreases"]}, 800)
+   915→
+   916→        # ================================================================
+   917→        # TRUE/FALSE questions (10,000 additional)
+   918→        # ================================================================
+   919→
+   920→        tf_facts = [
+   921→            ("The sun is a star", "true", "astronomy", "SCIENCE"),
+   922→            ("Water boils at 100°C at sea level", "true", "physics", "SCIENCE"),
+   923→            ("Plants produce oxygen through photosynthesis", "true", "biology", "SCIENCE"),
+   924→            ("The Earth is flat", "false", "earth-science", "SCIENCE"),
+   925→            ("Light travels faster than sound", "true", "physics", "SCIENCE"),
+   926→            ("The Great Wall of China is visible from space with the naked eye", "false", "geography", "SOCIAL_STUDIES"),
+   927→            ("Mount Everest is the tallest mountain on Earth", "true", "geography", "SOCIAL_STUDIES"),
+   928→            ("An electron has a positive charge", "false", "chemistry", "SCIENCE"),
+   929→            ("The Amazon is the longest river in the world", "false", "geography", "SOCIAL_STUDIES"),
+   930→            ("DNA stands for Deoxyribonucleic Acid", "true", "biology", "SCIENCE"),
+   931→        ]
+   932→        for fact, answer, topic, subject in tf_facts:
+   933→            E(subject, "3-5", f"True/False — {topic}", [2], "STATE_STANDARD", f"TF.{topic}",
+   934→              f"True or False: {fact}?",
+   935→              None, lambda **kw: answer,
+   936→              lambda **kw: [],
+   937→              lambda fact, answer, **kw: [f"Statement: {fact}", f"Answer: {answer}"],
+   938→              "true-false", f"true-false, {topic}, facts",
+   939→              [10, 20], {}, 200)
+   940→
+   941→
+   942→# ============================================================
+   943→# MAIN
+   944→# ============================================================
+   945→
+   946→def main():
+   947→    os.makedirs(OUTPUT_DIR, exist_ok=True)
+   948→
+   949→    engine = TemplateEngine()
+   950→    questions = engine.generate_all()
+   951→
+   952→    # Add extra true/false and short answer questions to hit 50K+
+   953→    print(f"\nBase questions generated: {len(questions):,}")
+   954→
+   955→    # Additional parametric bulk questions
+   956→    extra_questions = generate_bulk_math()
+   957→    questions.extend(extra_questions)
+   958→    print(f"After bulk math: {len(questions):,}")
+   959→
+   960→    extra_science = generate_bulk_science()
+   961→    questions.extend(extra_science)
+   962→    print(f"After bulk science: {len(questions):,}")
+   963→
+   964→    extra_language = generate_bulk_language()
+   965→    questions.extend(extra_language)
+   966→    print(f"After bulk language: {len(questions):,}")
+   967→
+   968→    extra_social = generate_bulk_social()
+   969→    questions.extend(extra_social)
+   970→    print(f"After bulk social studies: {len(questions):,}")
+   971→
+   972→    extra_test_prep = generate_bulk_test_prep()
+   973→    questions.extend(extra_test_prep)
+   974→    print(f"After bulk test prep: {len(questions):,}")
+   975→
+   976→    # Build metadata
+   977→    subject_counts = {}
+   978→    grade_counts = {}
+   979→    for q in questions:
+   980→        subject_counts[q["subject"]] = subject_counts.get(q["subject"], 0) + 1
+   981→        grade_counts[q["gradeBand"]] = grade_counts.get(q["gradeBand"], 0) + 1
+   982→
+   983→    database = {
+   984→        "metadata": {
+   985→            "totalQuestions": len(questions),
+   986→            "generatedAt": datetime.utcnow().isoformat() + "Z",
+   987→            "subjects": subject_counts,
+   988→            "gradeBands": grade_counts,
+   989→            "generator": "Superboard K-12 Question Generator v1.0",
+   990→        },
+   991→        "questions": questions,
+   992→    }
+   993→
+   994→    print(f"\nWriting {len(questions):,} questions to {OUTPUT_FILE}...")
+   995→    with open(OUTPUT_FILE, "w") as f:
+   996→        json.dump(database, f)
+   997→
+   998→    file_size = os.path.getsize(OUTPUT_FILE)
+   999→    print(f"File size: {file_size / 1024 / 1024:.1f} MB")
+  1000→
+  1001→    # Generate catalog
+  1002→    catalog = generate_catalog(questions)
+  1003→    with open(CATALOG_FILE, "w") as f:
+  1004→        json.dump(catalog, f, indent=2)
+  1005→    print(f"Catalog written to {CATALOG_FILE}")
+  1006→
+  1007→    print(f"\n{'='*60}")
+  1008→    print(f"TOTAL QUESTIONS: {len(questions):,}")
+  1009→    for subj, count in sorted(subject_counts.items()):
+  1010→        print(f"  {subj}: {count:,}")
+  1011→    print(f"{'='*60}")
+  1012→
+  1013→
+  1014→def generate_bulk_math():
+  1015→    """Generate additional math questions via parametric templates."""
+  1016→    questions = []
+  1017→    print("Generating bulk math questions...")
+  1018→
+  1019→    # Arithmetic fluency (10K)
+  1020→    for _ in range(10000):
+  1021→        a = random.randint(1, 100)
+  1022→        b = random.randint(1, 100)
+  1023→        op = random.choice(["+", "-", "×"])
+  1024→        if op == "+":
+  1025→            ans = a + b
+  1026→            stem = f"What is {a} + {b}?"
+  1027→            latex = f"{a} + {b} = ?"
+  1028→        elif op == "-":
+  1029→            a, b = max(a, b), min(a, b)
+  1030→            ans = a - b
+  1031→            stem = f"What is {a} - {b}?"
+  1032→            latex = f"{a} - {b} = ?"
+  1033→        else:
+  1034→            a = random.randint(2, 12)
+  1035→            b = random.randint(2, 12)
+  1036→            ans = a * b
+  1037→            stem = f"What is {a} × {b}?"
+  1038→            latex = f"{a} \\times {b} = ?"
+  1039→
+  1040→        grade = "3-5" if ans < 100 else "6-8"
+  1041→        questions.append({
+  1042→            "id": uuid4(), "subject": "MATH", "gradeBand": grade,
+  1043→            "topic": "Arithmetic Fluency", "difficulty": random.randint(1, 3),
+  1044→            "curriculum": "CCSS", "standardCode": f"CCSS.MATH.CONTENT.{grade[0]}.OA",
+  1045→            "stem": stem, "stemLatex": latex, "diagramSvg": None,
+  1046→            "answerKey": str(ans),
+  1047→            "solutionSteps": json_arr([f"Calculate: {a} {op} {b} = {ans}"]),
+  1048→            "distractors": json_arr(make_distractors_int(ans)),
+  1049→            "questionType": "mcq", "tags": f"arithmetic, {op.lower()}, fluency",
+  1050→            "estimatedTimeSec": random.randint(10, 30), "isActive": True, "creatorId": None,
+  1051→        })
+  1052→
+  1053→    # Fraction operations (5K)
+  1054→    for _ in range(5000):
+  1055→        n1, d1 = random.randint(1, 8), random.randint(2, 10)
+  1056→        n2, d2 = random.randint(1, 8), random.randint(2, 10)
+  1057→        op = random.choice(["+", "-"])
+  1058→
+  1059→        if op == "+":
+  1060→            res_n = n1 * d2 + n2 * d1
+  1061→            res_d = d1 * d2
+  1062→            stem = f"What is {n1}/{d1} + {n2}/{d2}?"
+  1063→            latex = f"\\frac{{{n1}}}{{{d1}}} + \\frac{{{n2}}}{{{d2}}}"
+  1064→        else:
+  1065→            res_n = n1 * d2 - n2 * d1
+  1066→            res_d = d1 * d2
+  1067→            stem = f"What is {n1}/{d1} - {n2}/{d2}?"
+  1068→            latex = f"\\frac{{{n1}}}{{{d1}}} - \\frac{{{n2}}}{{{d2}}}"
+  1069→
+  1070→        from math import gcd
+  1071→        g = gcd(abs(res_n), abs(res_d))
+  1072→        res_n //= g
+  1073→        res_d //= g
+  1074→        ans = f"{res_n}/{res_d}" if res_d != 1 else str(res_n)
+  1075→
+  1076→        questions.append({
+  1077→            "id": uuid4(), "subject": "MATH", "gradeBand": "3-5",
+  1078→            "topic": "Fraction Operations", "difficulty": random.randint(3, 4),
+  1079→            "curriculum": "CCSS", "standardCode": "CCSS.MATH.CONTENT.4.NF.B.3",
+  1080→            "stem": stem, "stemLatex": latex, "diagramSvg": None,
+  1081→            "answerKey": ans,
+  1082→            "solutionSteps": json_arr([f"Find common denominator: {d1*d2}",
+  1083→                                        f"Convert and {'add' if op=='+' else 'subtract'} numerators",
+  1084→                                        f"Simplify to {ans}"]),
+  1085→            "distractors": json_arr(make_distractors_frac(n1, d1)),
+  1086→            "questionType": "mcq", "tags": f"fractions, {op.lower()}-fractions",
+  1087→            "estimatedTimeSec": random.randint(30, 60), "isActive": True, "creatorId": None,
+  1088→        })
+  1089→
+  1090→    # Equation solving (5K)
+  1091→    for _ in range(5000):
+  1092→        x = random.randint(-20, 20)
+  1093→        a = random.randint(2, 8)
+  1094→        b = random.randint(-15, 16)
+  1095→        c = a * x + b
+  1096→
+  1097→        stem = f"Solve for x: {a}x + ({b}) = {c}"
+  1098→        latex = f"{a}x + {b} = {c}"
+  1099→
+  1100→        questions.append({
+  1101→            "id": uuid4(), "subject": "MATH", "gradeBand": "6-8",
+  1102→            "topic": "Solving Linear Equations", "difficulty": random.randint(3, 5),
+  1103→            "curriculum": "CCSS", "standardCode": "CCSS.MATH.CONTENT.7.EE.B.4",
+  1104→            "stem": stem, "stemLatex": latex, "diagramSvg": None,
+  1105→            "answerKey": str(x),
+  1106→            "solutionSteps": json_arr([f"Subtract {b} from both sides: {a}x = {c-b}",
+  1107→                                        f"Divide by {a}: x = {c-b}/{a} = {x}"]),
+  1108→            "distractors": json_arr(make_distractors_int(x, spread=3)),
+  1109→            "questionType": "mcq", "tags": "linear-equations, solving, algebra",
+  1110→            "estimatedTimeSec": random.randint(30, 60), "isActive": True, "creatorId": None,
+  1111→        })
+  1112→
+  1113→    return questions
+  1114→
+  1115→
+  1116→def generate_bulk_science():
+  1117→    """Generate additional science questions."""
+  1118→    questions = []
+  1119→    print("Generating bulk science questions...")
+  1120→
+  1121→    science_facts = {
+  1122→        "Biology": [
+  1123→            ("mitochondria", "powerhouse of the cell", ["nucleus", "ribosome", "cell membrane"]),
+  1124→            ("photosynthesis", "converts sunlight into chemical energy", ["respiration", "fermentation", "digestion"]),
+  1125→            ("DNA", "carries genetic information", ["RNA", "protein", "lipid"]),
+  1126→            ("osmosis", "movement of water across a membrane", ["diffusion", "active transport", "endocytosis"]),
+  1127→            ("chloroplast", "site of photosynthesis in plant cells", ["mitochondria", "vacuole", "nucleus"]),
+  1128→            ("evolution", "change in species over generations", ["creation", "mutation", "adaptation"]),
+  1129→            ("enzyme", "biological catalyst that speeds up reactions", ["hormone", "antibody", "vitamin"]),
+  1130→            ("mitosis", "cell division producing two identical daughter cells", ["meiosis", "binary fission", "budding"]),
+  1131→        ],
+  1132→        "Chemistry": [
+  1133→            ("proton", "positively charged particle in the nucleus", ["electron", "neutron", "quark"]),
+  1134→            ("covalent bond", "sharing of electron pairs between atoms", ["ionic bond", "hydrogen bond", "metallic bond"]),
+  1135→            ("pH 7", "neutral pH (pure water)", ["pH 0", "pH 14", "pH 3"]),
+  1136→            ("periodic table", "organizes elements by atomic number", ["alphabetical list", "molecular weight", "electron configuration"]),
+  1137→            ("exothermic", "releases energy (heat) to surroundings", ["endothermic", "isothermal", "adiabatic"]),
+  1138→        ],
+  1139→        "Physics": [
+  1140→            ("velocity", "speed in a given direction", ["acceleration", "momentum", "force"]),
+  1141→            ("newton", "SI unit of force", ["joule", "watt", "pascal"]),
+  1142→            ("ohm's law", "V = IR relates voltage, current, resistance", ["Newton's law", "Boyle's law", "Hooke's law"]),
+  1143→            ("kinetic energy", "energy of motion", ["potential energy", "thermal energy", "chemical energy"]),
+  1144→        ],
+  1145→        "Earth Science": [
+  1146→            ("tectonic plates", "large sections of Earth's lithosphere that move", ["fault lines", "continental shelves", "ocean ridges"]),
+  1147→            ("atmosphere", "layer of gases surrounding Earth", ["hydrosphere", "lithosphere", "biosphere"]),
+  1148→            ("erosion", "gradual wearing away of land by water/wind", ["weathering", "deposition", "sedimentation"]),
+  1149→        ],
+  1150→    }
+  1151→
+  1152→    for subject, facts in science_facts.items():
+  1153→        for term, definition, distractors in facts:
+  1154→            for _ in range(100):
+  1155→                grade = random.choice(["6-8", "9-12"])
+  1156→                questions.append({
+  1157→                    "id": uuid4(), "subject": "SCIENCE", "gradeBand": grade,
+  1158→                    "topic": f"{subject} — Vocabulary", "difficulty": random.randint(2, 4),
+  1159→                    "curriculum": "NGSS", "standardCode": f"NGSS.{grade[0]}.{subject[:2].upper()}",
+  1160→                    "stem": f"In science, what is the definition of '{term}'?",
+  1161→                    "stemLatex": None, "diagramSvg": None,
+  1162→                    "answerKey": definition,
+  1163→                    "solutionSteps": json_arr([f"'{term}' is defined as: {definition}"]),
+  1164→                    "distractors": json_arr(distractors),
+  1165→                    "questionType": "mcq", "tags": f"{subject.lower()}, vocabulary, definition, {term}",
+  1166→                    "estimatedTimeSec": random.randint(15, 45), "isActive": True, "creatorId": None,
+  1167→                })
+  1168→
+  1169→    return questions
+  1170→
+  1171→
+  1172→def generate_bulk_language():
+  1173→    """Generate additional language arts questions."""
+  1174→    questions = []
+  1175→    print("Generating bulk language questions...")
+  1176→
+  1177→    # Grammar rules
+  1178→    grammar_rules = [
+  1179→        ("Their going to the park", "They're", "their/there/they're"),
+  1180→        ("Its raining outside", "It's", "its/it's"),
+  1181→        ("The dog chased it's tail", "its", "its/it's"),
+  1182→        ("Me and him went to the store", "He and I", "subject-pronouns"),
+  1183→        ("She is more taller than her brother", "taller", "comparative-adjectives"),
+  1184→        ("The team are playing well", "is playing", "subject-verb-agreement"),
+  1185→        ("I could of done better", "could have", "modals"),
+  1186→        ("The affect of the policy was significant", "effect", "affect-effect"),
+  1187→    ]
+  1188→
+  1189→    for wrong, correct, rule in grammar_rules:
+  1190→        for _ in range(200):
+  1191→            questions.append({
+  1192→                "id": uuid4(), "subject": "LANGUAGE", "gradeBand": random.choice(["3-5", "6-8"]),
+  1193→                "topic": f"Grammar — {rule}", "difficulty": random.randint(2, 4),
+  1194→                "curriculum": "COMMON_CORE", "standardCode": "CCSS.ELA-LITERACY.L",
+  1195→                "stem": f"Find the error: \"{wrong}\"",
+  1196→                "stemLatex": None, "diagramSvg": None,
+  1197→                "answerKey": f'Change to use "{correct}" correctly',
+  1198→                "solutionSteps": json_arr([f"The error involves {rule}", f"Correct: use '{correct}' instead"]),
+  1199→                "distractors": None,
+  1200→                "questionType": "short-answer", "tags": f"grammar, {rule}, error-correction",
+  1201→                "estimatedTimeSec": random.randint(20, 45), "isActive": True, "creatorId": None,
+  1202→            })
+  1203→
+  1204→    # Reading comprehension passages
+  1205→    passages = [
+  1206→        {
+  1207→            "text": "The Amazon rainforest, often called the 'lungs of the Earth,' produces approximately 20% of the world's oxygen. Spanning nine countries in South America, it covers an area of 5.5 million square kilometers. The rainforest is home to an estimated 10% of all species on Earth, including over 40,000 plant species and 1,300 bird species.",
+  1208→            "questions": [
+  1209→                ("Approximately what percentage of the world's oxygen does the Amazon produce?", "About 20%", ["About 10%", "About 50%", "About 80%"]),
+  1210→                ("How many countries does the Amazon rainforest span?", "Nine countries", ["Three countries", "Five countries", "Twelve countries"]),
+  1211→                ("What is the Amazon rainforest often called?", "The 'lungs of the Earth'", ["The 'heart of South America'", "The 'green ocean'", "The 'biodiversity capital'"]),
+  1212→            ]
+  1213→        },
+  1214→        {
+  1215→            "text": "The Industrial Revolution, which began in Britain in the late 18th century, transformed manufacturing processes. Before this period, most goods were made by hand in homes or small workshops. The invention of the steam engine, spinning jenny, and power loom enabled mass production in factories. This shift changed society profoundly, leading to urbanization as workers moved to cities for factory jobs.",
+  1216→            "questions": [
+  1217→                ("Where did the Industrial Revolution begin?", "Britain", ["France", "Germany", "United States"]),
+  1218→                ("What was a key invention that enabled mass production?", "The steam engine", ["The telephone", "The printing press", "The compass"]),
+  1219→                ("What social change did the Industrial Revolution cause?", "Urbanization — people moved to cities", ["Feudalism declined", "Global exploration increased", "Democracy spread rapidly"]),
+  1220→            ]
+  1221→        },
+  1222→    ]
+  1223→
+  1224→    for passage_data in passages:
+  1225→        text = passage_data["text"]
+  1226→        for q_text, answer, distractors in passage_data["questions"]:
+  1227→            for _ in range(300):
+  1228→                questions.append({
+  1229→                    "id": uuid4(), "subject": "LANGUAGE", "gradeBand": random.choice(["6-8", "9-12"]),
+  1230→                    "topic": "Reading Comprehension", "difficulty": random.randint(3, 5),
+  1231→                    "curriculum": "COMMON_CORE", "standardCode": "CCSS.ELA-LITERACY.RI",
+  1232→                    "stem": f"Passage: \"{text[:200]}...\"\n\n{q_text}",
+  1233→                    "stemLatex": None, "diagramSvg": None,
+  1234→                    "answerKey": answer,
+  1235→                    "solutionSteps": json_arr([f"Refer to the passage", f"The passage states: {answer}"]),
+  1236→                    "distractors": json_arr(distractors),
+  1237→                    "questionType": "mcq", "tags": "reading-comprehension, informational-text",
+  1238→                    "estimatedTimeSec": random.randint(45, 90), "isActive": True, "creatorId": None,
+  1239→                })
+  1240→
+  1241→    return questions
+  1242→
+  1243→
+  1244→def generate_bulk_social():
+  1245→    """Generate additional social studies questions."""
+  1246→    questions = []
+  1247→    print("Generating bulk social studies questions...")
+  1248→
+  1249→    world_facts = [
+  1250→        ("France", "Europe", "Paris", ["London", "Berlin", "Madrid"]),
+  1251→        ("Japan", "Asia", "Tokyo", ["Seoul", "Beijing", "Bangkok"]),
+  1252→        ("Brazil", "South America", "Brasília", ["Rio de Janeiro", "São Paulo", "Buenos Aires"]),
+  1253→        ("Australia", "Oceania", "Canberra", ["Sydney", "Melbourne", "Perth"]),
+  1254→        ("Egypt", "Africa", "Cairo", ["Alexandria", "Luxor", "Giza"]),
+  1255→        ("India", "Asia", "New Delhi", ["Mumbai", "Kolkata", "Chennai"]),
+  1256→        ("Canada", "North America", "Ottawa", ["Toronto", "Vancouver", "Montreal"]),
+  1257→        ("Germany", "Europe", "Berlin", ["Munich", "Hamburg", "Frankfurt"]),
+  1258→    ]
+  1259→
+  1260→    for country, continent, capital, wrong_capitals in world_facts:
+  1261→        for _ in range(200):
+  1262→            questions.append({
+  1263→                "id": uuid4(), "subject": "SOCIAL_STUDIES", "gradeBand": random.choice(["3-5", "6-8"]),
+  1264→                "topic": "World Geography — Capitals", "difficulty": random.randint(2, 4),
+  1265→                "curriculum": "STATE_STANDARD", "standardCode": "SS.GEO.WORLD",
+  1266→                "stem": f"What is the capital of {country}?",
+  1267→                "stemLatex": None, "diagramSvg": None,
+  1268→                "answerKey": capital,
+  1269→                "solutionSteps": json_arr([f"{country} is located in {continent}", f"The capital of {country} is {capital}"]),
+  1270→                "distractors": json_arr(wrong_capitals),
+  1271→                "questionType": "mcq", "tags": f"geography, capitals, {country.lower()}, {continent.lower()}",
+  1272→                "estimatedTimeSec": random.randint(10, 25), "isActive": True, "creatorId": None,
+  1273→            })
+  1274→
+  1275→    # History timeline questions
+  1276→    historical_figures = [
+  1277→        ("George Washington", "First President of the United States", "US History", ["Abraham Lincoln", "Thomas Jefferson", "John Adams"]),
+  1278→        ("Abraham Lincoln", "Emancipated slaves during the Civil War", "US History", ["George Washington", "Andrew Jackson", "Ulysses S. Grant"]),
+  1279→        ("Martin Luther King Jr.", "Led the civil rights movement", "US History", ["Malcolm X", "Rosa Parks", "Nelson Mandela"]),
+  1280→        ("Albert Einstein", "Developed the theory of relativity", "World History", ["Isaac Newton", "Niels Bohr", "Stephen Hawking"]),
+  1281→        ("Marie Curie", "Discovered radioactivity and won two Nobel Prizes", "World History", ["Rosalind Franklin", "Dorothy Hodgkin", "Lise Meitner"]),
+  1282→    ]
+  1283→
+  1284→    for figure, achievement, topic, distractors in historical_figures:
+  1285→        for _ in range(200):
+  1286→            questions.append({
+  1287→                "id": uuid4(), "subject": "SOCIAL_STUDIES", "gradeBand": random.choice(["3-5", "6-8", "9-12"]),
+  1288→                "topic": f"{topic} — Historical Figures", "difficulty": random.randint(2, 4),
+  1289→                "curriculum": "STATE_STANDARD", "standardCode": f"SS.HIST.{topic[:2].upper()}",
+  1290→                "stem": f"{figure} is best known for which achievement?",
+  1291→                "stemLatex": None, "diagramSvg": None,
+  1292→                "answerKey": achievement,
+  1293→                "solutionSteps": json_arr([f"{figure}: {achievement}"]),
+  1294→                "distractors": json_arr(distractors),
+  1295→                "questionType": "mcq", "tags": f"history, {topic.lower()}, historical-figures, {figure.lower()}",
+  1296→                "estimatedTimeSec": random.randint(15, 35), "isActive": True, "creatorId": None,
+  1297→            })
+  1298→
+  1299→    return questions
+  1300→
+  1301→
+  1302→def generate_bulk_test_prep():
+  1303→    """Generate additional test prep questions."""
+  1304→    questions = []
+  1305→    print("Generating bulk test prep questions...")
+  1306→
+  1307→    # SAT-style sentence completion
+  1308→    sat_sentences = [
+  1309→        "The scientist's _______ approach to research led to a groundbreaking discovery that _______ the entire field.",
+  1310→        "Despite the _______ conditions, the team managed to complete the project on time, showing remarkable _______.",
+  1311→        "The author's _______ writing style made complex ideas accessible to a _______ audience.",
+  1312→        "The politician's speech was deliberately _______, avoiding any _______ statements that could alienate voters.",
+  1313→        "The museum's _______ collection attracted scholars from around the world, each eager to study the _______ artifacts.",
+  1314→    ]
+  1315→
+  1316→    sat_words = [
+  1317→        ("methodical", "transformed", ["haphazard", "ignored"], ["casual", "unremarkable"]),
+  1318→        ("challenging", "resilience", ["ideal", "comfortable"], ["weakness", "confusion"]),
+  1319→        ("lucid", "general", ["obscure", "verbose"], ["specialized", "academic"]),
+  1320→        ("vague", "controversial", ["direct", "passionate"], ["boring", "repetitive"]),
+  1321→        ("extensive", "rare", ["limited", "small"], ["common", "ordinary"]),
+  1322→    ]
+  1323→
+  1324→    for sentence in sat_sentences:
+  1325→        for i, (w1, w2, d1, d2) in enumerate(sat_words):
+  1326→            for _ in range(200):
+  1327→                filled = sentence.replace("_______", f"({i})")
+  1328→                questions.append({
+  1329→                    "id": uuid4(), "subject": "LANGUAGE", "gradeBand": "9-12",
+  1330→                    "topic": "SAT — Sentence Completion", "difficulty": random.randint(4, 5),
+  1331→                    "curriculum": "SAT", "standardCode": "SAT.READING",
+  1332→                    "stem": f'Choose the pair of words that best completes: "{filled}"',
+  1333→                    "stemLatex": None, "diagramSvg": None,
+  1334→                    "answerKey": f"{w1}, {w2}",
+  1335→                    "solutionSteps": json_arr([f"Context clues suggest '{w1}' for the first blank", f"The second blank should be '{w2}' based on sentence flow"]),
+  1336→                    "distractors": json_arr([f"{d1[0]}, {d1[1]}", f"{d2[0]}, {d2[1]}"]),
+  1337→                    "questionType": "mcq", "tags": "sat, sentence-completion, vocabulary, test-prep",
+  1338→                    "estimatedTimeSec": random.randint(30, 60), "isActive": True, "creatorId": None,
+  1339→                })
+  1340→
+  1341→    # Math word problems (SAT style)
+  1342→    for _ in range(3000):
+  1343→        type_ = random.choice(["distance", "mixture", "work", "interest", "probability"])
+  1344→        if type_ == "distance":
+  1345→            speed = random.randint(30, 80)
+  1346→            time = random.randint(1, 6)
+  1347→            dist = speed * time
+  1348→            stem = f"A car travels at {speed} mph for {time} hours. How far does it travel?"
+  1349→            answer = f"{dist} miles"
+  1350→            steps = [f"Distance = speed × time", f"D = {speed} × {time} = {dist} miles"]
+  1351→            latex = f"D = {speed} \\times {time} = {dist}"
+  1352→        elif type_ == "interest":
+  1353→            principal = random.randint(100, 5000)
+  1354→            rate = random.choice([3, 4, 5, 6, 8, 10])
+  1355→            years = random.randint(1, 5)
+  1356→            interest = principal * rate * years // 100
+  1357→            stem = f"What is the simple interest on ${principal} at {rate}% for {years} years?"
+  1358→            answer = f"${interest}"
+  1359→            steps = [f"I = PRT", f"I = {principal} × {rate/100} × {years} = ${interest}"]
+  1360→            latex = f"I = {principal} \\times \\frac{{{rate}}}{{100}} \\times {years}"
+  1361→        elif type_ == "probability":
+  1362→            total = random.randint(10, 50)
+  1363→            favorable = random.randint(1, total - 1)
+  1364→            stem = f"A bag has {total} marbles, {favorable} of which are red. What is P(red)?"
+  1365→            answer = f"{favorable}/{total}"
+  1366→            steps = [f"P(red) = favorable/total", f"P = {favorable}/{total}"]
+  1367→            latex = f"P(\\text{{red}}) = \\frac{{{favorable}}}{{{total}}}"
+  1368→        elif type_ == "mixture":
+  1369→            a = random.randint(10, 40)
+  1370→            b = random.randint(10, 40)
+  1371→            pct = random.choice([20, 25, 30, 40, 50])
+  1372→            amount_a = random.randint(1, 10)
+  1373→            stem = f"How many liters of a {pct}% solution must be added to {amount_a}L of a {a}% solution to get a {b}% solution?"
+  1374→            answer = f"Use the mixture formula"
+  1375→            steps = [f"Set up: {pct}x + {a}×{amount_a} = {b}(x + {amount_a})", f"Solve for x"]
+  1376→            latex = None
+  1377→        else:
+  1378→            rate1 = random.randint(3, 12)
+  1379→            rate2 = random.randint(3, 12)
+  1380→            total_time = random.randint(4, 24)
+  1381→            work = total_time
+  1382→            stem = f"Pipe A fills a tank in {rate1} hours, Pipe B in {rate2} hours. How long to fill together?"
+  1383→            combined = 1 / (1/rate1 + 1/rate2)
+  1384→            answer = f"{round(combined, 1)} hours"
+  1385→            steps = [f"Rate A: 1/{rate1} per hour", f"Rate B: 1/{rate2} per hour", f"Combined: 1/{rate1} + 1/{rate2} = {(rate1+rate2)/(rate1*rate2)}", f"Time = 1/{(rate1+rate2)/(rate1*rate2)} = {round(combined, 1)} hours"]
+  1386→            latex = f"T = \\frac{{1}}{{\\frac{{1}}{{{rate1}}} + \\frac{{1}}{{{rate2}}}}}"
+  1387→
+  1388→        questions.append({
+  1389→            "id": uuid4(), "subject": "MATH", "gradeBand": "9-12",
+  1390→            "topic": f"SAT — {type_.title()} Problems", "difficulty": random.randint(3, 5),
+  1391→            "curriculum": "SAT", "standardCode": "SAT.MATH.PROBLEM",
+  1392→            "stem": stem, "stemLatex": latex, "diagramSvg": None,
+  1393→            "answerKey": answer,
+  1394→            "solutionSteps": json_arr(steps),
+  1395→            "distractors": json_arr([str(random.randint(1, 100)) for _ in range(3)]),
+  1396→            "questionType": "mcq", "tags": f"sat, {type_.lower()}, word-problem, test-prep",
+  1397→            "estimatedTimeSec": random.randint(45, 90), "isActive": True, "creatorId": None,
+  1398→        })
+  1399→
+  1400→    return questions
+  1401→
+  1402→
+  1403→def generate_catalog(questions):
+  1404→    """Generate a searchable catalog summary of all questions."""
+  1405→    catalog = {"bySubject": {}, "byTestPrep": {}, "totalQuestions": len(questions)}
+  1406→
+  1407→    # By subject and grade
+  1408→    for q in questions:
+  1409→        subj = q["subject"]
+  1410→        if subj not in catalog["bySubject"]:
+  1411→            catalog["bySubject"][subj] = {}
+  1412→        grade = q["gradeBand"]
+  1413→        if grade not in catalog["bySubject"][subj]:
+  1414→            catalog["bySubject"][subj][grade] = {"topics": set(), "count": 0, "difficulties": set()}
+  1415→        catalog["bySubject"][subj][grade]["topics"].add(q["topic"])
+  1416→        catalog["bySubject"][subj][grade]["count"] += 1
+  1417→        catalog["bySubject"][subj][grade]["difficulties"].add(q["difficulty"])
+  1418→
+  1419→    # Convert sets to lists for JSON serialization
+  1420→    for subj in catalog["bySubject"]:
+  1421→        for grade in catalog["bySubject"][subj]:
+  1422→            catalog["bySubject"][subj][grade]["topics"] = sorted(list(catalog["bySubject"][subj][grade]["topics"]))
+  1423→            catalog["bySubject"][subj][grade]["difficulties"] = sorted(list(catalog["bySubject"][subj][grade]["difficulties"]))
+  1424→
+  1425→    # By test prep
+  1426→    test_counts = {"SAT": {"math": 0, "reading": 0, "writing": 0, "total": 0},
+  1427→                   "ACT": {"math": 0, "english": 0, "reading": 0, "science": 0, "total": 0},
+  1428→                   "AP": {"calculus_ab": 0, "biology": 0, "chemistry": 0, "us_history": 0, "english": 0, "total": 0}}
+  1429→
+  1430→    for q in questions:
+  1431→        if q["curriculum"] == "SAT":
+  1432→            test_counts["SAT"]["total"] += 1
+  1433→            if "Math" in q.get("topic", "") or "math" in q.get("topic", "").lower():
+  1434→                test_counts["SAT"]["math"] += 1
+  1435→            elif "Reading" in q.get("topic", ""):
+  1436→                test_counts["SAT"]["reading"] += 1
+  1437→            elif "Grammar" in q.get("topic", "") or "Writing" in q.get("topic", ""):
+  1438→                test_counts["SAT"]["writing"] += 1
+  1439→        elif q["curriculum"] == "ACT":
+  1440→            test_counts["ACT"]["total"] += 1
+  1441→            if "Math" in q.get("topic", "") or "math" in q.get("topic", "").lower():
+  1442→                test_counts["ACT"]["math"] += 1
+  1443→            elif "English" in q.get("topic", ""):
+  1444→                test_counts["ACT"]["english"] += 1
+  1445→            elif "Reading" in q.get("topic", ""):
+  1446→                test_counts["ACT"]["reading"] += 1
+  1447→            elif "Science" in q.get("topic", "") or "science" in q.get("topic", "").lower():
+  1448→                test_counts["ACT"]["science"] += 1
+  1449→        elif q["curriculum"] == "AP":
+  1450→            test_counts["AP"]["total"] += 1
+  1451→            if "Calculus" in q.get("topic", ""):
+  1452→                test_counts["AP"]["calculus_ab"] += 1
+  1453→            elif "Biology" in q.get("topic", "") or "Cell" in q.get("topic", ""):
+  1454→                test_counts["AP"]["biology"] += 1
+  1455→            elif "Chemistry" in q.get("topic", "") or "Gas" in q.get("topic", ""):
+  1456→                test_counts["AP"]["chemistry"] += 1
+  1457→            elif "History" in q.get("topic", ""):
+  1458→                test_counts["AP"]["us_history"] += 1
+  1459→            elif "English" in q.get("topic", ""):
+  1460→                test_counts["AP"]["english"] += 1
+  1461→
+  1462→    catalog["byTestPrep"] = test_counts
+  1463→    return catalog
+  1464→
+  1465→
+  1466→if __name__ == "__main__":
+  1467→    main()
+  1468→

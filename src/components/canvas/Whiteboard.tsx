@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import { Loader2, Eye, Lock, NotebookPen } from 'lucide-react';
 import type { Canvas as FabricCanvasType } from 'fabric';
+import { useAccessibility } from '@/hooks/useAccessibility';
 
 // Lazy load heavy components (Performance Mandate)
 const Toolbar = dynamic(() => import('@/components/canvas/Toolbar'), { ssr: false });
@@ -42,6 +43,13 @@ export default function Whiteboard() {
   const router = useRouter();
   const { room, setRoom, setCurrentPage, setTotalPages, tier } = useAppStore();
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode, penFreeze, scratchpadOpen } = room;
+
+  // Sprint 1: Track remote penFreeze/scratchpad from tutor (for students)
+  const [remotePenFreeze, setRemotePenFreeze] = useState(false);
+  const [remoteScratchpadOpen, setRemoteScratchpadOpen] = useState(false);
+
+  // Sprint 1: Apply accessibility & color-blind CSS attributes
+  useAccessibility();
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<FabricCanvasType | null>(null);
@@ -80,15 +88,37 @@ export default function Whiteboard() {
       const hasTutor = statesArr.some((s) => s.user?.role === 'tutor');
       setTutorPresent(hasTutor);
 
-      // Sprint 1: Student receives tutor viewport during focus mode
-      if (!isTutor && focusMode) {
+      // Sprint 1: Student receives tutor state via awareness
+      if (!isTutor) {
         for (const [, state] of states) {
           const s = state as Record<string, unknown>;
           const user = s.user as { role?: string } | undefined;
+          if (user?.role !== 'tutor') continue;
+
+          // Viewport during focus mode
           const viewport = s.viewport as { x: number; y: number; zoom: number } | null | undefined;
-          if (user?.role === 'tutor' && viewport) {
+          if (focusMode && viewport) {
             setAppliedViewport(viewport);
-            break;
+            break; // Only need one tutor's viewport
+          }
+
+          // Sprint 1: Pen-freeze from tutor
+          const tutorPenFreeze = s.penFreeze as boolean | undefined;
+          if (tutorPenFreeze !== undefined) {
+            setRemotePenFreeze(tutorPenFreeze);
+            // Sync to local store so other components (e.g. readOnly) react
+            if (tutorPenFreeze !== penFreeze) {
+              setRoom({ penFreeze: tutorPenFreeze });
+            }
+          }
+
+          // Sprint 1: Scratchpad state from tutor
+          const tutorScratchpad = s.scratchpadOpen as boolean | undefined;
+          if (tutorScratchpad !== undefined) {
+            setRemoteScratchpadOpen(tutorScratchpad);
+            if (tutorScratchpad !== scratchpadOpen) {
+              setRoom({ scratchpadOpen: tutorScratchpad });
+            }
           }
         }
       }
@@ -213,6 +243,19 @@ export default function Whiteboard() {
       setAppliedViewport(null);
     }
   }, [focusMode]);
+
+  // ============================================================
+  // Sprint 1: Broadcast pen-freeze & scratchpad via awareness (tutor side)
+  // ============================================================
+  useEffect(() => {
+    if (!awareness || !isTutor) return;
+    awareness.setLocalStateField('penFreeze', penFreeze);
+  }, [awareness, isTutor, penFreeze]);
+
+  useEffect(() => {
+    if (!awareness || !isTutor) return;
+    awareness.setLocalStateField('scratchpadOpen', scratchpadOpen);
+  }, [awareness, isTutor, scratchpadOpen]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
