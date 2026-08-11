@@ -17,11 +17,13 @@ import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import { Loader2 } from 'lucide-react';
 import type { Editor } from 'tldraw';
+import type { Canvas as FabricCanvasType } from 'fabric';
 
 // Lazy load heavy components (Performance Mandate)
 const Toolbar = dynamic(() => import('@/components/canvas/Toolbar'), { ssr: false });
 const PageSidebar = dynamic(() => import('@/components/canvas/PageSidebar'), { ssr: false });
-const TldrawCanvas = dynamic(() => import('@/components/canvas/TldrawCanvas'), { ssr: false });
+// TldrawCanvas kept as fallback; FabricCanvas is primary
+const FabricCanvas = dynamic(() => import('@/components/canvas/FabricCanvas'), { ssr: false });
 const PipVideoPanel = dynamic(() => import('@/components/video/PipVideoPanel'), { ssr: false });
 const AIControlPanel = dynamic(() => import('@/components/ai/AIControlPanel'), { ssr: false });
 const BrandedHeader = dynamic(() => import('@/components/branding/BrandedHeader'), { ssr: false });
@@ -42,7 +44,7 @@ export default function Whiteboard() {
   const { roomId, subject, isTutor, currentPageIndex, totalPages, branding, focusMode } = room;
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<Editor | null>(null);
+  const editorRef = useRef<Editor | FabricCanvasType | null>(null);
   const [activeTool, setActiveTool] = useState('draw');
   const [showWaitingRoom, setShowWaitingRoom] = useState(isTutor ? false : true);
   const [showNameModal, setShowNameModal] = useState(false);
@@ -145,32 +147,12 @@ export default function Whiteboard() {
   );
 
   // ============================================================
-  // Tool changes — wire to Tldraw editor
+  // Tool changes — propagate to canvas
   // ============================================================
-  // Map our tool IDs to Tldraw tool IDs
-  const TOOL_MAP: Record<string, string> = {
-    select: 'select',
-    hand: 'hand',
-    draw: 'draw',
-    eraser: 'eraser',
-    text: 'text',
-    rectangle: 'geo',
-    ellipse: 'geo',
-    line: 'draw',
-    arrow: 'arrow',
-  };
-
   const handleToolChange = useCallback((tool: string) => {
     setActiveTool(tool);
-    const editor = editorRef.current;
-    if (editor) {
-      const tldrawTool = TOOL_MAP[tool] || tool;
-      try {
-        editor.setCurrentTool(tldrawTool);
-      } catch {
-        // Tool may not be available — ignore gracefully
-      }
-    }
+    // FabricCanvas handles tool switching internally via its own useCanvasTools hook.
+    // The editorRef is available for FileAttachmentsBar export/upload operations.
   }, []);
 
   // ============================================================
@@ -199,18 +181,10 @@ export default function Whiteboard() {
     }
   }, [roomId, endingLesson, router]);
 
-  // Called by TldrawCanvas when the editor mounts
-  const handleEditorReady = useCallback((editor: Editor) => {
-    editorRef.current = editor;
-
-    // Apply the current active tool
-    const tldrawTool = TOOL_MAP[activeTool] || activeTool;
-    try {
-      editor.setCurrentTool(tldrawTool);
-    } catch {
-      // Ignore if tool not available yet
-    }
-  }, [activeTool]);
+  // Called by FabricCanvas when the canvas mounts
+  const handleEditorReady = useCallback((canvas: FabricCanvasType) => {
+    editorRef.current = canvas;
+  }, []);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
@@ -294,13 +268,13 @@ export default function Whiteboard() {
             className="flex-1 relative overflow-hidden"
             id="whiteboard-canvas"
           >
-            {/* Tldraw Canvas with Yjs Sync */}
-            <TldrawCanvas
+            {/* Fabric.js Canvas with Yjs Sync */}
+            <FabricCanvas
               ydoc={ydoc}
-              onEditorReady={handleEditorReady}
               pageIndex={currentPageIndex}
               isTutor={isTutor}
               readOnly={!isTutor && focusMode}
+              onCanvasReady={handleEditorReady}
             />
 
             {/* Floating PiP Video Panel — ALWAYS VISIBLE */}
@@ -340,11 +314,11 @@ function ToolbarWrapper({
   activeTool,
   onToolChange,
 }: {
-  editorRef: React.RefObject<Editor | null>;
+  editorRef: React.RefObject<Editor | FabricCanvasType | null>;
   activeTool: string;
   onToolChange: (tool: string) => void;
 }) {
-  const [editor, setEditor] = useState<Editor | null>(null);
+  const [editor, setEditor] = useState<Editor | FabricCanvasType | null>(null);
 
   useEffect(() => {
     if (editorRef.current) {

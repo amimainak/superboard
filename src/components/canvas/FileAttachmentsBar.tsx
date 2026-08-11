@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { authFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 import type { Editor, TLAsset, TLAssetId, TLShape } from 'tldraw';
+import { Canvas as FabricCanvasType, FabricImage } from 'fabric';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,7 +44,7 @@ const ACCEPTED_FILE_TYPES = `${ACCEPTED_IMAGE_TYPES},application/pdf`;
 interface FileAttachmentsBarProps {
   roomId: string;
   isTutor: boolean;
-  editorRef: React.RefObject<Editor | null>;
+  editorRef: React.RefObject<Editor | FabricCanvasType | null>;
   tier: Tier;
 }
 
@@ -133,8 +134,8 @@ export default function FileAttachmentsBar({
         return;
       }
 
-      // Image files — add to tldraw canvas
-      const editor = editorRef.current;
+      // Image files — add to Fabric.js canvas
+      const editor = editorRef.current as FabricCanvasType | null;
       if (!editor) {
         toast({
           title: 'Canvas not ready',
@@ -162,45 +163,21 @@ export default function FileAttachmentsBar({
           dataUrl = `data:image/svg+xml;base64,${btoa(sanitized)}`;
         }
 
-        // Generate a unique asset ID matching tldraw's expected format
-        const assetId = `asset:${Date.now()}_${Math.random().toString(36).slice(2, 8)}` as TLAssetId;
-
-        // Build the asset object — tldraw expects full TLAsset records.
-        // We use 'as any' here because the TS branded types (TLAssetId, etc.)
-        // cannot be satisfied at runtime without tldraw's own ID generators.
-        const asset = {
-          id: assetId,
-          type: 'image' as const,
-          meta: {},
-          props: {
-            src: dataUrl,
-            w: 0,
-            h: 0,
-            name: file.name,
-            mimeType: file.type,
-            isAnimated: false,
-          },
-        } as unknown as TLAsset;
-
-        editor.createAssets([asset]);
-
-        // Create an image shape centered on the current viewport
-        const { x, y } = editor.getViewportScreenCenter();
-        const screenPoint = editor.screenToPage({ x, y });
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        editor.createShapes([{
-          type: 'image',
-          x: screenPoint.x,
-          y: screenPoint.y,
-          props: {
-            assetId: assetId as any,
-            w: 400,
-            h: 300,
-          },
-        }] as any);
-
-        // If SVG, tldraw will resolve it — nothing extra needed.
+        // Create Fabric.js image object centered on viewport
+        FabricImage.fromURL(dataUrl).then((img: any) => {
+          // Scale to reasonable size
+          const maxDim = 400;
+          const scale = Math.min(maxDim / img.width, maxDim / img.height, 1);
+          img.set({
+            left: editor.width! / 2 - (img.width * scale) / 2,
+            top: editor.height! / 2 - (img.height * scale) / 2,
+            scaleX: scale,
+            scaleY: scale,
+            name: `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          });
+          editor.add(img);
+          editor.renderAll();
+        });
 
         toast({
           title: 'Image added',
@@ -224,8 +201,8 @@ export default function FileAttachmentsBar({
   // Export PNG handler
   // ----------------------------------------------------------
   const handleExportPng = useCallback(async () => {
-    const editor = editorRef.current;
-    if (!editor) {
+    const fc = editorRef.current as FabricCanvasType | null;
+    if (!fc) {
       toast({
         title: 'Canvas not ready',
         description: 'Please wait for the whiteboard to finish loading.',
@@ -235,10 +212,7 @@ export default function FileAttachmentsBar({
     }
 
     try {
-      // Get all shapes on the current page
-      const shapes = editor.getCurrentPageShapes();
-
-      if (shapes.length === 0) {
+      if (fc.getObjects().length === 0) {
         toast({
           title: 'Canvas is empty',
           description: 'There are no shapes to export.',
@@ -247,23 +221,14 @@ export default function FileAttachmentsBar({
         return;
       }
 
-      const result = await editor.toImage(shapes as TLShape[], {
-        format: 'png',
-        scale: 2,
-        padding: 'auto',
-        background: true,
-      });
+      fc.discardActiveObject();
+      fc.renderAll();
 
-      if (!result) {
-        toast({
-          title: 'Export failed',
-          description: 'Could not generate the PNG.',
-          variant: 'destructive',
-        });
-        return;
-      }
+      const dataUrl = fc.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
 
-      triggerDownload(result.blob, `whiteboard-${roomId}-${Date.now()}.png`);
+      triggerDownload(blob, `whiteboard-${roomId}-${Date.now()}.png`);
       toast({ title: 'PNG exported', description: 'Your whiteboard has been downloaded.' });
     } catch {
       toast({
@@ -297,8 +262,8 @@ export default function FileAttachmentsBar({
       return;
     }
 
-    const editor = editorRef.current;
-    if (!editor) {
+    const fc = editorRef.current as FabricCanvasType | null;
+    if (!fc) {
       toast({
         title: 'Canvas not ready',
         description: 'Please wait for the whiteboard to finish loading.',
@@ -309,7 +274,7 @@ export default function FileAttachmentsBar({
 
     setSavingTemplate(true);
     try {
-      const snapshot = editor.getSnapshot();
+      const snapshot = fc.toJSON();
       const res = await authFetch('/api/room/templates', {
         method: 'POST',
         body: JSON.stringify({
