@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as Y from 'yjs';
+import type { Awareness } from 'y-protocols/awareness';
 import { HocuspocusProvider } from '@hocuspocus/provider';
 
 export interface UseYjsProviderOptions {
@@ -33,7 +34,7 @@ export interface UseYjsProviderReturn {
   provider: HocuspocusProvider | null;
   isConnected: boolean;
   isSyncing: boolean;
-  awareness: HocuspocusProvider | null;
+  awareness: Awareness | null;
   /** Local awareness state setter */
   setLocalState: (state: Record<string, unknown>) => void;
 }
@@ -165,7 +166,7 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
     provider: providerRef.current,
     isConnected,
     isSyncing,
-    awareness: providerRef.current ?? null,
+    awareness: providerRef.current?.awareness ?? null,
     setLocalState,
   };
 }
