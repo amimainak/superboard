@@ -81,7 +81,6 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
         : '');
 
     // Track retry attempts for graceful degradation
-    let retryCount = 0;
     let hasGivenUp = false;
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -113,9 +112,10 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
           userId,
           role: userRole,
         },
-        // Disable Hocuspocus's built-in reconnect for graceful degradation
-        // — we manage retries ourselves
+        // Disable auto-connect; we trigger connection manually
         connect: false,
+        // Use long backoff to reduce noise when Hocuspocus is unavailable
+        maxBackoffTime: RETRY_BASE_DELAY_MS * 8,
       };
 
       const provider = new HocuspocusProvider(providerOptions as ConstructorParameters<typeof HocuspocusProvider>[0]);
@@ -125,12 +125,27 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
       // Connection state events
       provider.on('status', (event: { status: string }) => {
         if (event.status === 'connected') {
-          retryCount = 0; // Reset on successful connection
+          hasGivenUp = false; // Reset on successful connection
           setIsConnected(true);
           setIsSyncing(false);
         } else if (event.status === 'disconnected') {
           setIsConnected(false);
           setIsSyncing(false);
+
+          // If this is the first disconnect, Hocuspocus server is likely
+          // unavailable. Stop reconnecting to prevent NetworkError spam.
+          if (!hasGivenUp) {
+            hasGivenUp = true;
+            console.info(
+              '[useYjsProvider] Hocuspocus server unavailable — operating in standalone mode. ' +
+              'Real-time collaboration features will activate when the server is configured.'
+            );
+            try {
+              provider.disconnect();
+            } catch {
+              // Already disconnected
+            }
+          }
         }
       });
 
