@@ -114,7 +114,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
   // Loading skeleton
   if (loading) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-emerald-500" />
@@ -124,7 +124,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 animate-pulse">
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 animate-pulse">
                 <div className="w-9 h-9 rounded-lg bg-gray-200" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-24" />
@@ -141,7 +141,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
 
   return (
     <>
-    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-bold flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-emerald-500" />
@@ -159,7 +159,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
             <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
               <BookX className="w-7 h-7 text-emerald-400" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">Welcome to Superboard!</h3>
+            <h3 className="text-sm font-semibold text-card-foreground">Welcome to Superboard!</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first lesson to get started.</p>
             <Button
               onClick={onCreateLesson}
@@ -177,7 +177,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
               return (
                 <div
                   key={room.id}
-                  className="group flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/50 hover:border-emerald-200/60 transition-all"
+                  className="group flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-emerald-50/50 hover:border-emerald-200/60 transition-all"
                 >
                   {/* Subject icon */}
                   <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm shrink-0`}>
@@ -187,7 +187,7 @@ export function MyRoomsPanel({ userId, onCreateLesson }: Props) {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900 truncate">
+                      <span className="text-sm font-medium text-card-foreground truncate">
                         {meta.label} Lesson
                       </span>
                       {room.isActive ? (

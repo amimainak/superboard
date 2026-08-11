@@ -339,7 +339,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
   // ---- Loading ----
   if (loading) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-emerald-500" />
@@ -349,7 +349,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 animate-pulse">
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 animate-pulse">
                 <div className="w-9 h-9 rounded-lg bg-gray-200" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-40" />
@@ -509,7 +509,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
 
   // ---- Render ----
   return (
-    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -544,7 +544,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
               </DialogHeader>
               <div className="space-y-4 pt-2">
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Title</Label>
+                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Title</Label>
                   <Input
                     placeholder="e.g. Chapter 5 Practice Problems"
                     value={createForm.title}
@@ -553,7 +553,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Description</Label>
+                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Description</Label>
                   <Textarea
                     placeholder="Instructions or details..."
                     value={createForm.description}
@@ -562,7 +562,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Student Email</Label>
+                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Student Email</Label>
                   <Input
                     type="email"
                     placeholder="student@example.com"
@@ -572,7 +572,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
                   />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Subject</Label>
+                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Subject</Label>
                   <Select value={createForm.subject} onValueChange={(v) => setCreateForm((p) => ({ ...p, subject: v }))}>
                     <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -583,7 +583,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium text-gray-700 mb-1 block">Due Date</Label>
+                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Due Date</Label>
                   <Input
                     type="date"
                     value={createForm.dueDate}
@@ -611,7 +611,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
             <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
               <FileText className="w-7 h-7 text-emerald-400" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">No homework assigned</h3>
+            <h3 className="text-sm font-semibold text-card-foreground">No homework assigned</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first homework assignment.</p>
             <Button
               onClick={() => setCreateOpen(true)}
@@ -681,13 +681,13 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             {gradingItem?.description && (
-              <div className="rounded-xl bg-gray-50 p-3">
+              <div className="rounded-xl bg-muted/50 p-3">
                 <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
                 <p className="text-sm">{gradingItem.description}</p>
               </div>
             )}
             <div>
-              <Label className="text-sm font-medium text-gray-700 mb-1 block">Grade</Label>
+              <Label className="text-sm font-medium text-muted-foreground mb-1 block">Grade</Label>
               <Input
                 placeholder="e.g. A, 95%, 8/10"
                 value={gradeForm.grade}
@@ -697,7 +697,7 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
               />
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700 mb-1 block">Feedback</Label>
+              <Label className="text-sm font-medium text-muted-foreground mb-1 block">Feedback</Label>
               <Textarea
                 placeholder="Your feedback for the student..."
                 value={gradeForm.tutorFeedback}

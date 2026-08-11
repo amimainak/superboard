@@ -5,8 +5,9 @@ import { Star, Users, BookOpen, Shield, Check } from 'lucide-react';
 
 /**
  * Social Proof — HONEST version
- * No fabricated stats. Only real capabilities and genuine-sounding testimonials.
+ * No inflated stats. Only real capabilities.
  * Stats reflect platform capabilities, not inflated user counts.
+ * NOTE: Testimonials below are SAMPLE/PLACEHOLDER data — replace with real user feedback.
  */
 const CAPABILITIES = [
   { icon: Shield, value: 'E2E Encrypted', label: 'All lessons are encrypted end-to-end' },
@@ -15,6 +16,7 @@ const CAPABILITIES = [
   { icon: Check, value: 'Works Everywhere', label: 'Browser-based — tablets, laptops, phones' },
 ];
 
+// SAMPLE / PLACEHOLDER testimonials — replace with real user feedback when available
 const TESTIMONIALS = [
   {
     name: 'Sarah C.',
@@ -70,7 +72,7 @@ export function SocialProofSection() {
         {/* Testimonials — with tier context so users know which plan each person uses */}
         <div className="text-center mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">What tutors are saying</h3>
-          <p className="text-sm text-gray-500">Real feedback from tutors at different plan levels.</p>
+          <p className="text-sm text-gray-500">Sample feedback — real reviews coming soon.</p>
         </div>
         <div className="grid md:grid-cols-2 gap-6">
           {TESTIMONIALS.map((t) => (

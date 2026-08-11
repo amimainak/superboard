@@ -148,6 +148,9 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
     try {
       setLoading(true);
       const { from, to } = getDateRange(period);
+      if (!from || !to || isNaN(new Date(from).getTime()) || isNaN(new Date(to).getTime())) {
+        throw new Error('Invalid date range. Please try a different period.');
+      }
       const params = new URLSearchParams({ from, to });
       const res = await authFetch(`/api/agency/analytics?${params}`);
       if (!res.ok) throw new Error('Failed to fetch');
@@ -196,10 +199,11 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
             .sort((a, b) => b.overdueCount - a.overdueCount)
         );
       }
-    } catch {
-      // silent
+    } catch (err: any) {
+      console.warn('[AgencyAnalytics] Failed to load student data:', err);
+      toast({ title: 'Could not load student data', description: err?.message || 'Student engagement data is unavailable.', variant: 'destructive' });
     }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -209,7 +213,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
   // ---- Loading ----
   if (loading || !data) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-emerald-500" />
@@ -219,7 +223,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="p-4 rounded-xl bg-gray-50 animate-pulse">
+              <div key={i} className="p-4 rounded-xl bg-muted/50 animate-pulse">
                 <div className="h-3 bg-gray-200 rounded w-16 mb-2" />
                 <div className="h-6 bg-gray-200 rounded w-12" />
               </div>
@@ -227,7 +231,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
           </div>
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-10 bg-gray-50 rounded animate-pulse" />
+              <div key={i} className="h-10 bg-muted/50 rounded animate-pulse" />
             ))}
           </div>
         </CardContent>
@@ -253,7 +257,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
 
   // ---- Render ----
   return (
-    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -273,7 +277,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   period === p.value
                     ? 'gradient-primary border-0 text-white shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-white/80'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-card/80'
                 }`}
               >
                 {p.label}
@@ -356,7 +360,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
             <div className="space-y-4 max-h-[340px] overflow-y-auto pr-1">
               {/* Top Students */}
               <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5" />
                   Top Students by Lessons
                 </h4>
@@ -365,7 +369,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
                 ) : (
                   <div className="space-y-1.5">
                     {topStudents.map((s, i) => (
-                      <div key={s.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                      <div key={s.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
                         <span className="text-xs font-bold text-muted-foreground w-5 text-center">{i + 1}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{s.name}</p>
@@ -382,7 +386,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
 
               {/* Overdue Homework */}
               <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Students with Overdue Homework
                 </h4>
@@ -415,7 +419,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
             <div className="space-y-6">
               {/* Subject Breakdown Bar Chart */}
               <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5" />
                   Lessons by Subject
                 </h4>
@@ -451,7 +455,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
 
               {/* Homework Status Bar Chart */}
               <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Homework Status Breakdown
                 </h4>
@@ -493,7 +497,7 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
 
               {/* Revenue summary row */}
               <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-1.5">
                   <DollarSign className="w-3.5 h-3.5" />
                   Revenue Summary
                 </h4>

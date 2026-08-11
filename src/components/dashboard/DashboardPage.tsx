@@ -207,7 +207,7 @@ function SettingsPanel({
   return (
     <div className="space-y-6">
       {/* Account Information */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
@@ -219,7 +219,7 @@ function SettingsPanel({
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Email</Label>
-            <div className="h-11 rounded-xl bg-gray-50 border border-gray-200 px-3 flex items-center text-sm text-gray-600">{user.email || ''}</div>
+            <div className="h-11 rounded-xl bg-muted/50 border border-border px-3 flex items-center text-sm text-muted-foreground">{user.email || ''}</div>
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium">Current Plan</Label>
@@ -232,7 +232,7 @@ function SettingsPanel({
       </Card>
 
       {/* Preferences */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Palette className="w-5 h-5 text-emerald-500" />
@@ -500,14 +500,14 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
           className={`
             fixed lg:sticky top-0 left-0 z-50 lg:z-30
             h-screen flex flex-col
-            bg-white border-r border-gray-200
+            bg-card border-r border-border
             transition-all duration-300 ease-in-out
             ${sidebarCollapsed ? 'w-[68px]' : 'w-64'}
             ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
         >
           {/* Sidebar Header / Logo */}
-          <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100 shrink-0">
+          <div className="flex items-center justify-between px-4 h-16 border-b border-border/50 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20 shrink-0">
                 <GraduationCap className="w-5 h-5 text-white" />
@@ -556,7 +556,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                             ${sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'}
                             ${isActive
                               ? 'bg-emerald-50 text-emerald-700 shadow-sm'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                             }
                           `}
                         >
@@ -591,7 +591,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                     w-full flex items-center gap-2.5 rounded-xl text-sm font-medium
                     transition-all duration-150
                     ${sidebarCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'}
-                    text-gray-600 hover:bg-gray-50 hover:text-gray-900
+                    text-muted-foreground hover:bg-muted/50 hover:text-foreground
                   `}
                 >
                   <LayoutTemplate className="w-4.5 h-4.5 shrink-0 text-gray-400" />
@@ -609,18 +609,18 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
           </div>
 
           {/* Sidebar Footer — Collapse toggle + User info */}
-          <div className="border-t border-gray-100 px-3 py-3 shrink-0">
+          <div className="border-t border-border/50 px-3 py-3 shrink-0">
             {/* Collapse toggle (desktop only) */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="hidden lg:flex w-full items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:bg-gray-50 hover:text-gray-600 transition-colors mb-2"
+              className="hidden lg:flex w-full items-center justify-center gap-1.5 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:bg-muted/50 hover:text-muted-foreground transition-colors mb-2"
             >
               {sidebarCollapsed ? <PanelLeft className="w-3.5 h-3.5" /> : <PanelLeftClose className="w-3.5 h-3.5" />}
               {!sidebarCollapsed && <span>Collapse</span>}
             </button>
 
             {/* User email + tier */}
-            <div className={`flex items-center gap-2.5 rounded-xl px-2 py-2 bg-gray-50 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            <div className={`flex items-center gap-2.5 rounded-xl px-2 py-2 bg-muted/50 ${sidebarCollapsed ? 'justify-center' : ''}`}>
               <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {(userName || user.email || '?').charAt(0).toUpperCase()}
               </div>
@@ -639,7 +639,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             ============================================================ */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Top Bar */}
-          <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
+          <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border/60">
             <div className="flex items-center justify-between px-4 sm:px-6 h-14">
               <div className="flex items-center gap-3">
                 {/* Mobile menu toggle */}
@@ -653,7 +653,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                   <PanelLeft className="w-4 h-4" />
                 </Button>
                 {/* View title */}
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold text-foreground">
                   {navGroups.flatMap(g => g.items).find(i => i.id === activeView)?.label || 'Dashboard'}
                 </h2>
               </div>
@@ -698,7 +698,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                 <div className="rounded-2xl gradient-hero p-5 sm:p-7 animate-fade-in-up">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
                         Welcome back! {userName || user.user_metadata?.name || user.email?.split('@')[0]}
                       </h2>
                       <p className="text-gray-600 mt-1.5 max-w-xl text-sm sm:text-base">
@@ -751,7 +751,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
 
                   {/* Quick Start */}
                   <div className="lg:w-64 flex-shrink-0 animate-fade-in-up-delay-2">
-                    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow">
+                    <Card className="rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-shadow">
                       <CardHeader className="pb-3">
                         <CardTitle className="text-sm font-semibold flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500" />Quick Start</CardTitle>
                       </CardHeader>
@@ -784,7 +784,7 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                             <GraduationCap className="w-5 h-5 text-emerald-600" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">Student View</p>
+                            <p className="text-sm font-medium text-card-foreground">Student View</p>
                             <p className="text-xs text-muted-foreground">Switch to a simplified view for joining lessons</p>
                           </div>
                         </div>
@@ -832,14 +832,14 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                 </div>
                 {isAgencyTier(tier) ? (
                 <Tabs defaultValue="boards" className="w-full">
-                  <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
-                    <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                  <TabsList className="bg-muted rounded-xl p-1 h-auto">
+                    <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <BookOpen className="w-4 h-4" />Saved Boards
                     </TabsTrigger>
-                    <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                    <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <LayoutTemplate className="w-4 h-4" />Templates
                     </TabsTrigger>
-                    <TabsTrigger value="library" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                    <TabsTrigger value="library" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <FolderOpen className="w-4 h-4" />Shared Library
                     </TabsTrigger>
                   </TabsList>
@@ -855,11 +855,11 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                 </Tabs>
                 ) : (
                 <Tabs defaultValue="boards" className="w-full">
-                  <TabsList className="bg-gray-100 rounded-xl p-1 h-auto">
-                    <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                  <TabsList className="bg-muted rounded-xl p-1 h-auto">
+                    <TabsTrigger value="boards" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <BookOpen className="w-4 h-4" />Saved Boards
                     </TabsTrigger>
-                    <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                    <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <LayoutTemplate className="w-4 h-4" />Templates
                     </TabsTrigger>
                   </TabsList>

@@ -234,7 +234,7 @@ export default function ParentPortalPage({ params }: { params: Promise<{ token: 
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6" aria-live="polite">
         <Tabs defaultValue="schedule" className="w-full">
           <TabsList className="w-full grid grid-cols-4 rounded-xl mb-6">
             <TabsTrigger value="schedule" className="rounded-lg text-xs font-medium">Schedule</TabsTrigger>

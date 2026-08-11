@@ -44,6 +44,7 @@ export interface AppState {
   recordingsLimit: number;
   // AI Panel
   aiPanelOpen: boolean;
+  selectedAiAction: string | null;
   aiFeaturesEnabled: Record<string, boolean>;
   // Premium modals
   paywallOpen: boolean;
@@ -75,6 +76,7 @@ interface AppActions {
   }) => void;
   // AI
   toggleAIPanel: () => void;
+  setSelectedAiAction: (action: string | null) => void;
   toggleAIFeature: (feature: string, enabled: boolean) => void;
   // Paywall
   openPaywall: (feature: string) => void;
@@ -114,6 +116,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   recordingsUsed: 0,
   recordingsLimit: 0,
   aiPanelOpen: false,
+  selectedAiAction: null,
   aiFeaturesEnabled: {},
   paywallOpen: false,
   paywallFeature: null,
@@ -171,6 +174,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
 
   // AI
   toggleAIPanel: () => set((state) => ({ aiPanelOpen: !state.aiPanelOpen })),
+  setSelectedAiAction: (action) => set({ selectedAiAction: action }),
   toggleAIFeature: (feature, enabled) =>
     set((state) => ({
       aiFeaturesEnabled: { ...state.aiFeaturesEnabled, [feature]: enabled },

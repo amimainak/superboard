@@ -14,6 +14,7 @@ import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
 import type { User } from '@supabase/supabase-js';
 import { GraduationCap } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 const LandingPage = dynamic(() => import('@/components/landing/LandingPage'), { ssr: true });
 const AuthenticatedDashboard = dynamic(() => import('@/components/dashboard/DashboardPage').then(m => ({ default: m.AuthenticatedDashboard })), { ssr: false });
@@ -24,6 +25,7 @@ const AdminPanel = dynamic(() => import('@/components/admin/AdminPanel'), { ssr:
 // ============================================================
 export default function Dashboard() {
   const { setTier, setIsAdmin } = useAppStore();
+  const { toast } = useToast();
 
   const [user, setUser] = useState<User | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -83,7 +85,10 @@ export default function Dashboard() {
               }
             }
           } catch (err) { console.warn('[Admin Check]', err); }
-        } catch (err) { console.warn('[Auth Profile]', err); }
+        } catch (err) {
+          console.warn('[Auth Profile]', err);
+          toast({ title: 'Could not load profile', description: 'Some settings may not be available.', variant: 'destructive' });
+        }
       }
       setAuthLoading(false);
       setTierLoading(false);
@@ -112,7 +117,10 @@ export default function Dashboard() {
               }
             }
           } catch (err) { console.warn('[Admin Check]', err); }
-        } catch (err) { console.warn('[Auth Profile]', err); }
+        } catch (err) {
+          console.warn('[Auth Profile]', err);
+          toast({ title: 'Could not load profile', description: 'Some settings may not be available.', variant: 'destructive' });
+        }
       }
       setAuthLoading(false);
       setTierLoading(false);

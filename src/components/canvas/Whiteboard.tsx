@@ -15,6 +15,7 @@ import { useYjsProvider } from '@/hooks/useYjsProvider';
 import { authFetch } from '@/lib/auth-fetch';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
+import { Loader2 } from 'lucide-react';
 import type { Editor } from 'tldraw';
 
 // Lazy load heavy components (Performance Mandate)
@@ -260,7 +261,16 @@ export default function Whiteboard() {
 
       {/* Main Canvas Area */}
       {!showWaitingRoom && (
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden relative">
+          {/* Yjs Connection Loading Overlay */}
+          {!isYjsConnected && (
+            <div className="absolute inset-0 z-30 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" aria-hidden="true" />
+                <p className="text-sm text-muted-foreground font-medium" aria-live="polite">Connecting...</p>
+              </div>
+            </div>
+          )}
           {/* Page Sidebar (Tutor Only) */}
           <PageSidebar
             currentPage={currentPageIndex}

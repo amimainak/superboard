@@ -88,7 +88,7 @@ export function AnalyticsPanel({ userId }: { userId: string }) {
             <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-7 h-7 text-rose-400" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">Something went wrong</h3>
+            <h3 className="text-sm font-semibold text-card-foreground">Something went wrong</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">{error}</p>
             <Button
               variant="outline"

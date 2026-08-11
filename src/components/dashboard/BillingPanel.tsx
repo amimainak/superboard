@@ -72,7 +72,7 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
   };
 
   return (
-    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader>
         <CardTitle className="text-xl">Billing &amp; Subscription</CardTitle>
         <CardDescription>Manage your subscription and payment methods.</CardDescription>

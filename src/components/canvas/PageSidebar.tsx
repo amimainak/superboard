@@ -6,13 +6,23 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '@/store/app-store';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface PageSidebarProps {
   currentPage: number;
@@ -30,6 +40,7 @@ export default function PageSidebar({
   onDeletePage,
 }: PageSidebarProps) {
   const isTutor = useAppStore((s) => s.room.isTutor);
+  const [confirmDeleteIdx, setConfirmDeleteIdx] = useState<number | null>(null);
 
   if (!isTutor) {
     // Students don't see the page sidebar
@@ -62,7 +73,10 @@ export default function PageSidebar({
                         variant="ghost"
                         size="icon"
                         className="w-6 h-6"
-                        onClick={() => onDeletePage(i)}
+                        onClick={() => {
+                          if (i === currentPage || totalPages <= 1) return;
+                          setConfirmDeleteIdx(i);
+                        }}
                         disabled={i === currentPage || totalPages <= 1}
                       >
                         <Trash2 className={`w-3 h-3 ${i === currentPage ? 'text-muted-foreground' : 'text-destructive'}`} />
@@ -91,6 +105,32 @@ export default function PageSidebar({
       >
         <Plus className="w-4 h-4" />
       </Button>
+
+      {/* Delete Page Confirmation Dialog */}
+      <AlertDialog open={confirmDeleteIdx !== null} onOpenChange={(open) => { if (!open) setConfirmDeleteIdx(null); }}>
+        <AlertDialogContent className="rounded-2xl sm:max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete page {confirmDeleteIdx !== null ? confirmDeleteIdx + 1 : ''}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this page and all its content. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl" onClick={() => setConfirmDeleteIdx(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
+              onClick={() => {
+                if (confirmDeleteIdx !== null) {
+                  onDeletePage(confirmDeleteIdx);
+                  setConfirmDeleteIdx(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

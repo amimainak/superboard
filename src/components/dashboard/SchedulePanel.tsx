@@ -258,7 +258,7 @@ export function SchedulePanel({ userId }: Props) {
     return (
       <div
         key={lesson.id}
-        className="group flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/50 hover:border-emerald-200/60 transition-all"
+        className="group flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-emerald-50/50 hover:border-emerald-200/60 transition-all"
       >
         {/* Subject icon */}
         <div className={`w-9 h-9 rounded-lg ${meta.gradient} flex items-center justify-center shadow-sm shrink-0`}>
@@ -268,7 +268,7 @@ export function SchedulePanel({ userId }: Props) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-900 truncate">
+            <span className="text-sm font-medium text-card-foreground truncate">
               {lesson.title}
             </span>
             {statusBadge(lesson.status)}
@@ -342,7 +342,7 @@ export function SchedulePanel({ userId }: Props) {
   ) => (
     <div className="space-y-4 pt-2">
       <div>
-        <Label className="text-gray-700 mb-1 block">Title</Label>
+        <Label className="text-muted-foreground mb-1 block">Title</Label>
         <Input
           placeholder="e.g. Algebra Review"
           value={f.title}
@@ -351,7 +351,7 @@ export function SchedulePanel({ userId }: Props) {
         />
       </div>
       <div>
-        <Label className="text-gray-700 mb-1 block">Subject</Label>
+        <Label className="text-muted-foreground mb-1 block">Subject</Label>
         <Select value={f.subject} onValueChange={(v) => setF((p) => ({ ...p, subject: v }))}>
           <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -362,7 +362,7 @@ export function SchedulePanel({ userId }: Props) {
         </Select>
       </div>
       <div>
-        <Label className="text-gray-700 mb-1 block">Student Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Label className="text-muted-foreground mb-1 block">Student Email <span className="text-muted-foreground font-normal">(optional)</span></Label>
         <Input
           type="email"
           placeholder="student@example.com"
@@ -372,7 +372,7 @@ export function SchedulePanel({ userId }: Props) {
         />
       </div>
       <div>
-        <Label className="text-gray-700 mb-1 block">Date & Time</Label>
+        <Label className="text-muted-foreground mb-1 block">Date & Time</Label>
         <Input
           type="datetime-local"
           value={f.scheduledAt}
@@ -381,7 +381,7 @@ export function SchedulePanel({ userId }: Props) {
         />
       </div>
       <div>
-        <Label className="text-gray-700 mb-1 block">Duration</Label>
+        <Label className="text-muted-foreground mb-1 block">Duration</Label>
         <Select value={String(f.durationMinutes)} onValueChange={(v) => setF((p) => ({ ...p, durationMinutes: Number(v) }))}>
           <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -405,7 +405,7 @@ export function SchedulePanel({ userId }: Props) {
   // ---- Loading State ----
   if (loading) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Calendar className="w-5 h-5 text-emerald-500" />
@@ -415,7 +415,7 @@ export function SchedulePanel({ userId }: Props) {
         <CardContent>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 animate-pulse">
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 animate-pulse">
                 <div className="w-9 h-9 rounded-lg bg-gray-200" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-32" />
@@ -431,7 +431,7 @@ export function SchedulePanel({ userId }: Props) {
 
   // ---- Main Render ----
   return (
-    <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -475,7 +475,7 @@ export function SchedulePanel({ userId }: Props) {
             <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-7 h-7 text-emerald-400" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">No lessons scheduled</h3>
+            <h3 className="text-sm font-semibold text-card-foreground">No lessons scheduled</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">Plan your upcoming tutoring sessions here.</p>
             <Button
               onClick={() => setDialogOpen(true)}

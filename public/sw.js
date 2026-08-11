@@ -42,12 +42,12 @@ const AUTH_ROUTE_PATTERNS = [
 ];
 
 // Skip caching for authenticated routes
-function isAuthRoute(url: string): boolean {
+function isAuthRoute(url) {
   return AUTH_ROUTE_PATTERNS.some(pattern => url.includes(pattern));
 }
 
 // Check if a request URL points to a cacheable static asset
-function isCacheableAsset(url: string): boolean {
+function isCacheableAsset(url) {
   try {
     const pathname = new URL(url).pathname;
     return CACHEABLE_EXTENSIONS.some(ext => pathname.endsWith(ext));

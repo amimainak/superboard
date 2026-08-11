@@ -142,7 +142,7 @@ export default function InvitePage({
   // ---- Error states ----
   if (invite.status === 'not_found') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6" role="alert">
         <div className="text-center space-y-6 max-w-md mx-auto">
           <div className="w-20 h-20 rounded-2xl bg-red-50 flex items-center justify-center mx-auto">
             <AlertCircle className="w-10 h-10 text-red-500" />
@@ -159,7 +159,7 @@ export default function InvitePage({
 
   if (invite.status === 'expired') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6" role="alert">
         <div className="text-center space-y-6 max-w-md mx-auto">
           <div className="w-20 h-20 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto">
             <Clock className="w-10 h-10 text-amber-500" />
@@ -176,7 +176,7 @@ export default function InvitePage({
 
   if (invite.status === 'already_used') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6" role="alert">
         <div className="text-center space-y-6 max-w-md mx-auto">
           <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
             <Check className="w-10 h-10 text-emerald-500" />
@@ -193,7 +193,7 @@ export default function InvitePage({
 
   if (invite.status === 'error') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6" role="alert">
         <div className="text-center space-y-6 max-w-md mx-auto">
           <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto">
             <AlertCircle className="w-10 h-10 text-gray-400" />
@@ -225,6 +225,7 @@ export default function InvitePage({
             style={{
               background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
             }}
+            aria-live="polite"
           >
             {invite.agencyBrandingLogo && !logoError ? (
               <img
@@ -276,8 +277,9 @@ export default function InvitePage({
                   onClick={() => {
                     window.location.href = `/?showAuth=login`;
                   }}
+                  aria-label="Sign in to accept invite"
                 >
-                  <LogIn className="w-4 h-4 mr-2" />
+                  <LogIn className="w-4 h-4 mr-2" aria-hidden="true" />
                   Sign in to accept
                 </Button>
                 <p className="text-xs text-center text-gray-400">
@@ -301,6 +303,7 @@ export default function InvitePage({
                   onClick={() => {
                     window.location.href = `/?showAuth=login`;
                   }}
+                  aria-label="Sign in with a different account"
                 >
                   Sign in with a different account
                 </Button>
@@ -320,7 +323,7 @@ export default function InvitePage({
                     </>
                   ) : (
                     <>
-                      <Check className="w-4 h-4 mr-2" />
+                      <Check className="w-4 h-4 mr-2" aria-hidden="true" />
                       Accept Invite
                     </>
                   )}
@@ -333,8 +336,8 @@ export default function InvitePage({
 
             {/* Footer link */}
             <div className="pt-2">
-              <a href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1">
-                <ArrowRight className="w-3.5 h-3.5 rotate-180" />
+              <a href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1" aria-label="Return to Superboard homepage">
+                <ArrowRight className="w-3.5 h-3.5 rotate-180" aria-hidden="true" />
                 Back to Superboard
               </a>
             </div>

@@ -235,6 +235,7 @@ function MobileToolbar({
                         className="w-10 h-10 rounded-xl text-primary"
                         onClick={() => {
                           const store = useAppStore.getState();
+                          store.setSelectedAiAction(tool.action);
                           if (!store.aiPanelOpen) store.toggleAIPanel();
                           setMobileExpanded(false);
                         }}
@@ -427,8 +428,10 @@ function SubjectAIToolkitLoader({
               onClick={() => {
                 // Open AI panel with this action pre-selected
                 const store = useAppStore.getState();
+                store.setSelectedAiAction(tool.action);
                 if (!store.aiPanelOpen) store.toggleAIPanel();
               }}
+              aria-label={tool.label}
             >
               <tool.icon className="w-4 h-4" />
             </Button>

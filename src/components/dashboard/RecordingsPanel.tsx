@@ -162,7 +162,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
   // ---- Paywall: no recordings feature ----
   if (!hasRecordingsFeature) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Video className="w-5 h-5 text-emerald-500" />
@@ -171,10 +171,10 @@ export function RecordingsPanel({ userId, tier }: Props) {
         </CardHeader>
         <CardContent>
           <div className="text-center py-10">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <VideoOff className="w-7 h-7 text-gray-400" />
+            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-4">
+              <VideoOff className="w-7 h-7 text-muted-foreground" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">Recordings Unavailable</h3>
+            <h3 className="text-sm font-semibold text-card-foreground">Recordings Unavailable</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">
               Upgrade to Pro or Agency to access lesson recordings.
             </p>
@@ -197,7 +197,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
   // ---- Loading skeleton ----
   if (loading) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Video className="w-5 h-5 text-emerald-500" />
@@ -210,7 +210,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 animate-pulse"
+                className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 animate-pulse"
               >
                 <div className="w-9 h-9 rounded-lg bg-gray-200" />\n                <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-32" />\n                  <div className="h-3 bg-gray-200 rounded w-24" />\n                </div>
@@ -226,7 +226,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
   // ---- Error state ----
   if (error) {
     return (
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Video className="w-5 h-5 text-emerald-500" />
@@ -238,7 +238,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
             <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="w-7 h-7 text-rose-400" />
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">Something went wrong</h3>
+            <h3 className="text-sm font-semibold text-card-foreground">Something went wrong</h3>
             <p className="text-sm text-muted-foreground mt-1 mb-4">{error}</p>
             <Button
               variant="outline"
@@ -280,7 +280,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
   return (
     <>
       {VideoPlayerOverlay}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Video className="w-5 h-5 text-emerald-500" />
@@ -299,7 +299,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
               <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
                 <Video className="w-7 h-7 text-emerald-400" />
               </div>
-              <h3 className="text-sm font-semibold text-gray-900">No recordings yet</h3>
+              <h3 className="text-sm font-semibold text-card-foreground">No recordings yet</h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Recordings from your ended lessons will appear here.
               </p>
@@ -315,7 +315,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
                 return (
                   <div
                     key={rec.id}
-                    className="group flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-emerald-50/50 hover:border-emerald-200/60 transition-all"
+                    className="group flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-emerald-50/50 hover:border-emerald-200/60 transition-all"
                   >
                     {/* Subject icon */}
                     <div
@@ -327,7 +327,7 @@ export function RecordingsPanel({ userId, tier }: Props) {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900 truncate">
+                        <span className="text-sm font-medium text-card-foreground truncate">
                           {meta.label} Lesson
                         </span>
                         {statusBadge(rec.status)}
