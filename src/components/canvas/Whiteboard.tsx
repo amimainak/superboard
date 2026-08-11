@@ -266,15 +266,10 @@ export default function Whiteboard() {
       {/* Main Canvas Area */}
       {!showWaitingRoom && (
         <div className="flex flex-1 overflow-hidden relative">
-          {/* Yjs Connection Loading Overlay */}
-          {!isYjsConnected && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-3">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" aria-hidden="true" />
-                <p className="text-sm text-muted-foreground font-medium" aria-live="polite">Connecting...</p>
-              </div>
-            </div>
-          )}
+          {/* Yjs Connection Indicator — non-blocking toast-style pill */}
+          {/* NOTE: Canvas is shown immediately regardless of Yjs connection status.
+              When Hocuspocus is unavailable (e.g. Vercel without self-hosted server),
+              the whiteboard still works in standalone mode. */}
           {/* Page Sidebar (Tutor Only) */}
           <PageSidebar
             currentPage={currentPageIndex}

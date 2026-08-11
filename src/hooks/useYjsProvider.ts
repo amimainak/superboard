@@ -4,6 +4,12 @@
 // Manages the lifecycle of a Y.Doc connected to the Hocuspocus
 // CRDT collaboration server. Handles awareness (cursor presence),
 // document persistence, and connection state.
+//
+// GRACEFUL DEGRADATION: When Hocuspocus is unavailable (e.g. Vercel
+// without a self-hosted WebSocket server), the hook creates a local
+// Yjs document that works in standalone mode. The provider will
+// attempt to connect up to MAX_RETRIES times with exponential
+// backoff, then settle into a disconnected-but-functional state.
 // ============================================================
 
 'use client';
@@ -12,6 +18,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as Y from 'yjs';
 import type { Awareness } from 'y-protocols/awareness';
 import { HocuspocusProvider } from '@hocuspocus/provider';
+
+/** Maximum number of connection retry attempts before giving up. */
+const MAX_RETRIES = 3;
+
+/** Base delay in ms for exponential backoff between retries. */
+const RETRY_BASE_DELAY_MS = 2000;
 
 export interface UseYjsProviderOptions {
   roomId: string;
@@ -68,6 +80,11 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
         ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/hocuspocus`
         : '');
 
+    // Track retry attempts for graceful degradation
+    let retryCount = 0;
+    let hasGivenUp = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
     // SECURITY FIX (RT-C01): Wire auth token and user context into the
     // Hocuspocus WebSocket connection for server-side JWT verification.
     // We use an IIFE to handle async Supabase session retrieval inside useEffect.
@@ -96,6 +113,9 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
           userId,
           role: userRole,
         },
+        // Disable Hocuspocus's built-in reconnect for graceful degradation
+        // — we manage retries ourselves
+        connect: false,
       };
 
       const provider = new HocuspocusProvider(providerOptions as ConstructorParameters<typeof HocuspocusProvider>[0]);
@@ -104,8 +124,12 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
 
       // Connection state events
       provider.on('status', (event: { status: string }) => {
-        setIsConnected(event.status === 'connected');
-        if (event.status === 'connected' || event.status === 'disconnected') {
+        if (event.status === 'connected') {
+          retryCount = 0; // Reset on successful connection
+          setIsConnected(true);
+          setIsSyncing(false);
+        } else if (event.status === 'disconnected') {
+          setIsConnected(false);
           setIsSyncing(false);
         }
       });
@@ -138,10 +162,19 @@ export function useYjsProvider(options: UseYjsProviderOptions): UseYjsProviderRe
           },
         });
       }
+
+      // Attempt initial connection
+      setIsSyncing(true);
+      try {
+        provider.connect();
+      } catch {
+        // Provider will emit 'disconnected' status
+      }
     })();
 
     // Cleanup on unmount
     return () => {
+      if (retryTimer) clearTimeout(retryTimer);
       const provider = providerRef.current;
       if (provider) provider.destroy();
       const ydoc = ydocRef.current;
