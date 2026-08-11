@@ -42,6 +42,9 @@ model User {
   referralCode       String?         @unique // This user's unique referral code
   referredByCode     String?         // Who referred this user
   referralCount       Int             @default(0) // How many users this user has referred
+  referralRewardClaimed Boolean      @default(false) // Whether the referral reward was claimed
+  // AI Budget Tracking
+  monthlyAiBudgetCents Int           @default(0) // Monthly AI spend tracking (cents)
   // Agency Features
   customDomain      String?         @unique
   brandingLogoUrl   String?
@@ -68,6 +71,7 @@ model User {
   homeworksTutor    Homework[]       @relation("TutorHomeworks")
   resourceLibrary   ResourceLibrary[] @relation("AgencyResources")
   invoices          Invoice[]        @relation("AgencyInvoices")
+  creditPacks       CreditPack[]
 }
 
 // Lesson scheduling status
@@ -145,6 +149,7 @@ model UsageLog {
   periodStartDate  DateTime // Monday for Free tier, Billing Day for Pro/Agency
   videoMinutesUsed Int      @default(0)
   aiCreditsUsed    Int      @default(0)
+  aiCostCents      Int      @default(0) // Actual AI spend in cents this period
   recordingsUsed   Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -193,6 +198,11 @@ enum Subject {
   SCIENCE
   LANGUAGE
   GENERAL
+  MUSIC
+  CODING
+  TEST_PREP
+  ART
+  ESL
 }
 
 model BoardPage {
@@ -417,6 +427,35 @@ model PlatformConfig {
   maintenanceMode   Boolean  @default(false)
   announcementText String? @db.Text
   updatedAt         DateTime @updatedAt
+}
+
+// ============================================================
+// CreditPack — Prepaid Hourly Credit Packs for Agencies
+// ============================================================
+// Agencies can buy prepaid hourly packs to smooth cash flow.
+// Each pack has a fixed number of hours at a discounted rate.
+// Hours are decremented as lessons run (via metered billing).
+// ============================================================
+
+model CreditPack {
+  id              String    @id @default(uuid())
+  agencyId        String
+  agency          User      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  hoursPurchased  Float     // Number of hours in this pack (e.g., 20)
+  hoursRemaining  Float     @default(0) // Remaining unused hours
+  pricePaidCents  Int       // What the agency paid (e.g., 5000 = $50)
+  stripePaymentIntentId String? @unique // Stripe Payment Intent ID
+  status          CreditPackStatus @default(ACTIVE)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([agencyId, status])
+}
+
+enum CreditPackStatus {
+  ACTIVE
+  EXHAUSTED
+  EXPIRED
 }
 
 // ============================================================

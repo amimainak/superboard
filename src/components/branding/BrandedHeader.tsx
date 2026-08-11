@@ -12,6 +12,11 @@ const SUBJECT_LABELS: Record<Subject, string> = {
   SCIENCE: 'Science',
   LANGUAGE: 'Language Arts',
   GENERAL: 'General',
+  MUSIC: 'Music',
+  CODING: 'Coding',
+  TEST_PREP: 'Test Prep',
+  ART: 'Art',
+  ESL: 'ESL',
 };
 
 type Props = {

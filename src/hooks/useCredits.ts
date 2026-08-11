@@ -16,6 +16,7 @@ import type { Tier } from '@/types';
 interface UsageData {
   aiCreditsUsed: number;
   aiCreditsLimit: number;
+  aiCostCents: number;
   videoMinutesUsed: number;
   videoMinutesLimit: number;
   recordingsUsed: number;
@@ -23,7 +24,7 @@ interface UsageData {
 }
 
 export function useCredits(userId?: string | null) {
-  const { tier, setUsage, aiCreditsUsed, aiCreditsLimit, videoMinutesUsed, videoMinutesLimit, recordingsUsed, recordingsLimit } =
+  const { tier, setUsage, aiCreditsUsed, aiCreditsLimit, aiCostCents, videoMinutesUsed, videoMinutesLimit, recordingsUsed, recordingsLimit, videoLimited, videoApproachingLimit } =
     useAppStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,8 +65,12 @@ export function useCredits(userId?: string | null) {
     tier,
     aiCreditsUsed,
     aiCreditsLimit,
+    aiCostCents,
+    aiThrottled: tier === 'PRO' && aiCostCents > 300,
     videoMinutesUsed,
     videoMinutesLimit,
+    videoLimited,
+    videoApproachingLimit,
     recordingsUsed,
     recordingsLimit,
     loading,

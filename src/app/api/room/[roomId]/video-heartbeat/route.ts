@@ -6,10 +6,12 @@
 // Called every 60 seconds by the client while video is active.
 //
 // POST body: { seconds: number } — seconds elapsed since last heartbeat
-// Response: { ok: true, videoMinutesUsed: number, videoMinutesLimit: number }
+// Response: { ok: true, seconds, minutesUsed, minutesLimit, approachingLimit, videoLimited }
 //
-// If the user has exceeded their video limit, returns 403 with
-// VIDEO_LIMIT_REACHED to signal the client to show the paywall.
+// Soft-stop behavior:
+//   - At 80% usage: approachingLimit = true (frontend shows amber warning)
+//   - At 100%: videoLimited = true, minutes stop incrementing, whiteboard/AI keep working
+//   - Always returns 200 — never hard-cuts with 403 during an active session
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -71,17 +73,20 @@ export async function POST(request: NextRequest) {
     const tier = room.tutor.tier as Tier;
     const videoCheck = await checkVideoLimit(room.tutorId, tier);
 
-    // If limit already exceeded, block
-    if (!videoCheck.allowed && videoCheck.minutesUsed >= videoCheck.minutesLimit) {
-      return NextResponse.json(
-        {
-          error: 'VIDEO_LIMIT_REACHED',
-          message: 'Video limit reached. Upgrade to continue.',
-          videoMinutesUsed: videoCheck.minutesUsed,
-          videoMinutesLimit: videoCheck.minutesLimit,
-        },
-        { status: 403 }
-      );
+    const isLimited = !videoCheck.allowed && videoCheck.minutesUsed >= videoCheck.minutesLimit;
+    const isApproaching = videoCheck.minutesLimit !== Infinity &&
+      videoCheck.minutesUsed >= videoCheck.minutesLimit * 0.8;
+
+    // If limit already reached, don't increment — return soft-stop response
+    if (isLimited) {
+      return NextResponse.json({
+        ok: true,
+        seconds,
+        minutesUsed: Math.ceil(videoCheck.minutesUsed),
+        minutesLimit: videoCheck.minutesLimit,
+        approachingLimit: true,
+        videoLimited: true,
+      });
     }
 
     // Increment video minutes (tutor's usage log)
@@ -89,6 +94,10 @@ export async function POST(request: NextRequest) {
 
     // Get updated usage for response
     const updatedCheck = await checkVideoLimit(room.tutorId, tier);
+    const updatedUsed = Math.ceil(updatedCheck.minutesUsed);
+    const updatedApproaching = updatedCheck.minutesLimit !== Infinity &&
+      updatedUsed >= updatedCheck.minutesLimit * 0.8;
+    const updatedLimited = !updatedCheck.allowed && updatedUsed >= updatedCheck.minutesLimit;
 
     // Update room duration tracking
     if (room.startedAt) {
@@ -101,10 +110,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      videoMinutesUsed: Math.ceil(updatedCheck.minutesUsed),
-      videoMinutesLimit: updatedCheck.minutesLimit,
-      approachingLimit: updatedCheck.minutesLimit !== Infinity &&
-        updatedCheck.minutesUsed >= updatedCheck.minutesLimit * 0.8,
+      seconds,
+      minutesUsed: updatedUsed,
+      minutesLimit: updatedCheck.minutesLimit,
+      approachingLimit: updatedApproaching,
+      videoLimited: updatedLimited,
     });
   } catch (error) {
     console.error('[Video Heartbeat] Error:', error);

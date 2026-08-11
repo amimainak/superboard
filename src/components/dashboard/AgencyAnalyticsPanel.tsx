@@ -22,6 +22,7 @@ import {
   UserCheck,
   BookOpen,
 } from 'lucide-react';
+import type { Tier } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 // ------------------------------------------------------------------
@@ -128,11 +129,20 @@ function getDateRange(period: string) {
 }
 
 // ------------------------------------------------------------------
+// Helpers
+// ------------------------------------------------------------------
+// Inline to avoid importing from @/lib/usage (which pulls in Prisma, server-only)
+function getEstimatedAgencyCost(totalHours: number, tier: string): number {
+  const rate = tier === 'AGENCY_PREMIUM' ? 2 : 3;
+  return totalHours * rate;
+}
+
+// ------------------------------------------------------------------
 // Component
 // ------------------------------------------------------------------
-type Props = { userId: string };
+type Props = { userId: string; userTier?: Tier };
 
-export function AgencyAnalyticsPanel({ userId }: Props) {
+export function AgencyAnalyticsPanel({ userId, userTier }: Props) {
   const { toast } = useToast();
 
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -288,6 +298,35 @@ export function AgencyAnalyticsPanel({ userId }: Props) {
       </CardHeader>
 
       <CardContent>
+        {/* Usage Alert Banner */}
+        {(() => {
+          const totalHours = data.overview.totalLessonHours;
+          if (totalHours > 40) {
+            const est = getEstimatedAgencyCost(totalHours, userTier || 'AGENCY_STANDARD');
+            return (
+              <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 p-4 mb-6">
+                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-red-900">High usage: {totalHours} hours this month (~${est} estimated)</p>
+                  <p className="text-xs text-red-700 mt-1">Your next invoice will include these hours.</p>
+                </div>
+              </div>
+            );
+          }
+          if (totalHours > 20) {
+            const est = getEstimatedAgencyCost(totalHours, userTier || 'AGENCY_STANDARD');
+            return (
+              <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+                <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-amber-900">You&apos;ve used {totalHours} hours this month (~${est} estimated). Consider buying prepaid hours to manage costs.</p>
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
+
         {/* Agency Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           {statCards.map((stat) => (

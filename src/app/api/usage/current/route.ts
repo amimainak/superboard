@@ -24,11 +24,9 @@ function getAICreditsLimit(tier: Tier): number {
   if (tier === 'FREE') {
     return TIER_LIMITS.FREE.aiCreditsPerWeek;
   }
-  if (tier === 'PRO') {
-    return TIER_LIMITS.PRO.aiCreditsPerMonth;
-  }
-  // AGENCY — unlimited
-  return Infinity;
+  const effectiveTier = tier === 'AGENCY' ? 'AGENCY_STANDARD' : tier;
+  const config = TIER_LIMITS[effectiveTier as keyof typeof TIER_LIMITS];
+  return 'aiCreditsPerMonth' in config ? config.aiCreditsPerMonth : Infinity;
 }
 
 export async function GET(request: NextRequest) {
@@ -74,6 +72,7 @@ export async function GET(request: NextRequest) {
         tier,
         aiCreditsUsed: usageLog.aiCreditsUsed,
         aiCreditsLimit: getAICreditsLimit(tier),
+        aiCostCents: (usageLog as any).aiCostCents ?? 0,
         videoMinutesUsed: usageLog.videoMinutesUsed,
         videoMinutesLimit: tierConfig.videoMinutesPerWeek,
         recordingsUsed: usageLog.recordingsUsed,
@@ -96,6 +95,7 @@ export async function GET(request: NextRequest) {
       tier,
       aiCreditsUsed: usageLog.aiCreditsUsed,
       aiCreditsLimit: getAICreditsLimit(tier),
+      aiCostCents: (usageLog as any).aiCostCents ?? 0,
       videoMinutesUsed: usageLog.videoMinutesUsed,
       videoMinutesLimit: tierConfig.videoMinutesPerWeek,
       recordingsUsed: usageLog.recordingsUsed,

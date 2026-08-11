@@ -10,7 +10,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { authFetch } from '@/lib/auth-fetch';
 import type { SubTutorRow, InviteRow, Tier } from '@/types';
-import { isAgencyTier, PRICING } from '@/types';
+import { isAgencyTier, PRICING, CREDIT_PACKS } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -35,6 +36,9 @@ import {
   Copy,
   AlertTriangle,
   Clock,
+  DollarSign,
+  ShoppingBag,
+  Gift,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -63,11 +67,17 @@ function getTierLabel(tier: Tier): string {
 }
 
 export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: string; userTier: Tier }) {
+  const { toast } = useToast();
   const [subTutors, setSubTutors] = useState<SubTutorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [invites, setInvites] = useState<InviteRow[]>([]);
   const [invitesLoading, setInvitesLoading] = useState(true);
   const [lessonHours, setLessonHours] = useState<{ totalHours: number; totalMinutes: number; completedRooms: number; activeRooms: number } | null>(null);
+
+  // Credit pack state
+  const [totalHoursRemaining, setTotalHoursRemaining] = useState<number>(0);
+  const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+  const [buying, setBuying] = useState(false);
 
   const maxSubTutors = getMaxSubTutors(userTier);
   const atLimit = maxSubTutors !== Infinity && subTutors.length >= maxSubTutors;
@@ -107,11 +117,41 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
     }).catch(() => {});
   }, []);
 
+  const loadCreditPacks = useCallback(() => {
+    authFetch('/api/agency/credit-packs').then((res) => res.json()).then((data) => {
+      setTotalHoursRemaining(data.totalHoursRemaining || 0);
+    }).catch(() => {});
+  }, []);
+
+  const handleBuyHours = async (hours: number) => {
+    setBuying(true);
+    try {
+      const res = await authFetch('/api/agency/credit-packs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hours }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast({ title: 'Failed to purchase', description: data.error || 'Could not create credit pack.', variant: 'destructive' });
+        return;
+      }
+      toast({ title: 'Credit pack created!', description: `${hours} prepaid hours added to your account.` });
+      setBuyDialogOpen(false);
+      loadCreditPacks();
+    } catch {
+      toast({ title: 'Network error', description: 'Could not reach the server.', variant: 'destructive' });
+    } finally {
+      setBuying(false);
+    }
+  };
+
   useEffect(() => {
     loadSubTutors();
     loadInvites();
     loadLessonHours();
-  }, [loadSubTutors, loadInvites, loadLessonHours]);
+    loadCreditPacks();
+  }, [loadSubTutors, loadInvites, loadLessonHours, loadCreditPacks]);
 
   const handleSendInvite = async () => {
     const email = inviteEmail.trim().toLowerCase();
@@ -195,17 +235,11 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
             {userTier === 'AGENCY_PREMIUM' ? <Shield className="w-3 h-3 mr-1" /> : <Crown className="w-3 h-3 mr-1" />}
             {getTierLabel(userTier)}
           </Badge>
-          {lessonHours && (
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {lessonHours.totalHours} hrs this month (~${estimatedCost})
-            </span>
-          )}
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="rounded-2xl stat-gradient-sparkles p-5 text-white shadow-lg shadow-emerald-500/15 card-hover">
           <p className="text-3xl font-bold">
             {subTutors.length}
@@ -216,8 +250,11 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
           <p className="text-sm text-white/80 mt-1">Sub-Tutors</p>
         </div>
         <div className="rounded-2xl stat-gradient-video p-5 text-white shadow-lg shadow-sky-500/15 card-hover">
-          <p className="text-3xl font-bold">{lessonHours?.totalHours || 0}</p>
+          <p className="text-3xl font-bold">{lessonHours?.totalHours || 0}<span className="text-base font-normal"> hrs</span></p>
           <p className="text-sm text-white/80 mt-1">Lesson Hours</p>
+          {lessonHours && lessonHours.totalHours > 0 && (
+            <p className="text-xs text-white/60 mt-0.5">(~${estimatedCost})</p>
+          )}
         </div>
         <div className="rounded-2xl stat-gradient-recordings p-5 text-white shadow-lg shadow-emerald-500/15 card-hover">
           <p className="text-3xl font-bold">{totalRooms}</p>
@@ -227,7 +264,61 @@ export function AgencyAdminPanel({ agencyUserId, userTier }: { agencyUserId: str
           <p className="text-3xl font-bold">${estimatedCost}</p>
           <p className="text-sm text-white/80 mt-1">Est. Hourly Cost</p>
         </div>
+        {/* Prepaid Hours Card */}
+        <div className="rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-5 text-white shadow-lg shadow-purple-500/15 card-hover relative overflow-hidden">
+          <div className="absolute top-2 right-2">
+            <Gift className="w-5 h-5 text-white/20" />
+          </div>
+          <p className="text-3xl font-bold">{totalHoursRemaining}<span className="text-base font-normal"> hrs</span></p>
+          <p className="text-sm text-white/80 mt-1">Prepaid Hours</p>
+          <Button
+            size="sm"
+            className="mt-2 rounded-lg bg-white/20 hover:bg-white/30 border-0 text-white text-xs font-medium h-7 px-3"
+            onClick={() => setBuyDialogOpen(true)}
+          >
+            <ShoppingBag className="w-3 h-3 mr-1" />
+            Buy Hours
+          </Button>
+        </div>
       </div>
+
+      {/* Buy Hours Dialog */}
+      <Dialog open={buyDialogOpen} onOpenChange={setBuyDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg flex items-center gap-2">
+              <Gift className="w-5 h-5 text-violet-500" />
+              Buy Prepaid Hours
+            </DialogTitle>
+            <DialogDescription>
+              Save on hourly costs with prepaid credit packs. Hours are applied to your agency account immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            {CREDIT_PACKS.map((pack) => (
+              <button
+                key={pack.hours}
+                type="button"
+                disabled={buying}
+                onClick={() => handleBuyHours(pack.hours)}
+                className="w-full flex items-center justify-between rounded-xl border-2 border-border hover:border-violet-400 hover:bg-violet-50/50 p-4 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div>
+                  <p className="font-semibold text-sm">{pack.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{pack.rateLabel}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-lg">${pack.priceCents / 100}</p>
+                  <p className="text-[10px] text-muted-foreground">one-time</p>
+                </div>
+              </button>
+            ))}
+            <p className="text-[11px] text-muted-foreground text-center mt-2">
+              Payment integration coming soon. Packs are created immediately for testing.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Upsell Warning — Standard tier at sub-tutor limit */}
       {userTier === 'AGENCY_STANDARD' && atLimit && (

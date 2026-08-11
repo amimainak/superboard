@@ -1,0 +1,739 @@
+   148→    if (score <= 4) return { score, label: 'Good', color: 'bg-emerald-400' };
+   149→    return { score, label: 'Strong', color: 'bg-emerald-600' };
+   150→  };
+   151→
+   152→  const handleRegister = useCallback(async (e: React.FormEvent) => {
+   153→    e.preventDefault();
+   154→    setAuthError('');
+   155→    setAuthMessage('');
+   156→    try {
+   157→      const supabase = createClient();
+   158→      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+   159→      const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
+   160→      if (error) { setAuthError(error.message); return; }
+   161→      if (data.user && data.session) {
+   162→        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail, name: registerName }) }); } catch { /* */ }
+   163→      } else {
+   164→        setAuthMessage('Check your email...');
+   165→        setShowVerification(true);
+   166→        setShowAuth(null);
+   167→      }
+   168→      setRegisterEmail(''); setRegisterPassword(''); setRegisterName('');
+   169→    } catch { setAuthError('Network error'); }
+   170→  }, [registerEmail, registerPassword, registerName]);
+   171→
+   172→  const handleGoogleAuth = useCallback(async () => {
+   173→    setAuthError('');
+   174→    try {
+   175→      const supabase = createClient();
+   176→      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
+   177→      // Build redirect URL — preserve invite code if present, drop auth params
+   178→      const params = new URLSearchParams(window.location.search);
+   179→      params.delete('showAuth');
+   180→      const qs = params.toString();
+   181→      const redirectTo = window.location.origin + (qs ? `?${qs}` : '');
+   182→      const { error } = await supabase.auth.signInWithOAuth({
+   183→        provider: 'google',
+   184→        options: {
+   185→          redirectTo,
+   186→        },
+   187→      });
+   188→      if (error) { setAuthError(error.message); }
+   189→    } catch { setAuthError('Failed to connect to Google.'); }
+   190→  }, []);
+   191→
+   192→  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); };
+   193→
+   194→  return (
+   195→    <main className="min-h-screen bg-white">
+   196→      {/* ===== NAVBAR ===== */}
+   197→      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+   198→        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   199→          <div className="flex items-center gap-3">
+   200→            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   201→              <GraduationCap className="w-5 h-5 text-white" />
+   202→            </div>
+   203→            <span className="text-lg font-bold tracking-tight text-gray-900">Superboard</span>
+   204→          </div>
+   205→          <div className="hidden md:flex items-center gap-8">
+   206→            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+   207→            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
+   208→            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+   209→          </div>
+   210→          <div className="flex items-center gap-3">
+   211→            <Button variant="ghost" className="text-sm font-medium text-gray-700 hover:text-gray-900 hidden sm:inline-flex" onClick={() => setShowAuth('login')}>
+   212→              Sign In
+   213→            </Button>
+   214→            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
+   215→              Get Started Free
+   216→            </Button>
+   217→            {/* Mobile hamburger */}
+   218→            <button
+   219→              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+   220→              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+   221→              aria-label="Toggle navigation menu"
+   222→            >
+   223→              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   224→                {mobileMenuOpen
+   225→                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+   226→                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+   227→              </svg>
+   228→            </button>
+   229→          </div>
+   230→        </div>
+   231→        {/* Mobile dropdown menu */}
+   232→        {mobileMenuOpen && (
+   233→          <div ref={mobileMenuRef} className="md:hidden border-t border-gray-200 bg-white px-6 py-4 space-y-3 animate-fade-in-up">
+   234→            <a href="#features" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
+   235→            <a href="#how-it-works" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
+   236→            <a href="#pricing" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+   237→            <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+   238→              <Button variant="ghost" className="text-sm font-medium text-gray-700 justify-start" onClick={() => { setShowAuth('login'); setMobileMenuOpen(false); }}>Sign In</Button>
+   239→              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm" onClick={() => { setShowAuth('register'); setMobileMenuOpen(false); }}>Get Started Free</Button>
+   240→            </div>
+   241→          </div>
+   242→        )}
+   243→      </nav>
+   244→
+   245→      {/* ===== HERO SECTION ===== */}
+   246→      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-white">
+   247→        {/* Subtle grid — no blur blobs */}
+   248→        <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.6px, transparent 0.6px)', backgroundSize: '24px 24px' }} />
+   249→
+   250→        <div className="max-w-7xl mx-auto px-6 relative z-10">
+   251→          <div className="grid md:grid-cols-2 gap-12 items-center">
+   252→            {/* Left: Copy */}
+   253→            <div className="max-w-xl">
+   254→              {/* Badge */}
+   255→              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
+   256→                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+   257→                <span className="text-xs font-semibold text-emerald-700">Smart Tutoring Platform</span>
+   258→              </div>
+   259→
+   260→              <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
+   261→                Turn Every Lesson Into an{' '}
+   262→                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+   263→                  Interactive Experience
+   264→                </span>
+   265→              </h1>
+   266→
+   267→              <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
+   268→                The interactive whiteboard built for K-12 tutors. Draw, graph, use subject tools, and video-call your students — all on one infinite canvas. No student sign-up required.
+   269→              </p>
+   270→
+   271→              <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
+   272→                <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-6 h-12" onClick={() => setShowAuth('register')}>
+   273→                  Start Teaching Free — No Credit Card <ArrowRight className="w-4 h-4 ml-1.5" />
+   274→                </Button>
+   275→                <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+   276→                  <ClipboardList className="w-4 h-4 mr-1.5" /> See Plans
+   277→                </Button>
+   278→              </div>
+   279→
+   280→              {/* Trust signals */}
+   281→              <div className="mt-10 flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up-delay-3">
+   282→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up needed</span>
+   283→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free plan available</span>
+   284→                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Upgrade anytime</span>
+   285→              </div>
+   286→            </div>
+   287→
+   288→            {/* Right: Hero Illustration */}
+   289→            <div className="hidden md:flex justify-center animate-fade-in-up-delay-1">
+   290→              <div className="relative w-full max-w-lg">
+   291→                {/* Canvas card */}
+   292→                <div className="rounded-2xl border border-gray-200 bg-white shadow-xl p-4 relative z-10">
+   293→                  {/* Mini toolbar */}
+   294→                  <div className="flex items-center gap-2 mb-4 px-1">
+   295→                    {[
+   296→                      { icon: PenTool, color: 'text-emerald-600 bg-emerald-50' },
+   297→                      { icon: Calculator, color: 'text-blue-600 bg-blue-50' },
+   298→                      { icon: FlaskConical, color: 'text-purple-600 bg-purple-50' },
+   299→                      { icon: Brain, color: 'text-amber-600 bg-amber-50' },
+   300→                    ].map(({ icon: Icon, color }) => (
+   301→                      <div key={color} className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center`}>
+   302→                        <Icon className="w-4 h-4" />
+   303→                      </div>
+   304→                    ))}
+   305→                    <div className="flex-1" />
+   306→                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><Video className="w-4 h-4" /></div>
+   307→                  </div>
+   308→                  {/* Mini canvas area */}
+   309→                  <div className="rounded-xl bg-gradient-to-br from-gray-50 to-white h-52 relative overflow-hidden">
+   310→                    {/* Fake grid */}
+   311→                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #000 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
+   312→                    {/* Fake math content */}
+   313→                    <div className="absolute top-4 left-4">
+   314→                      <div className="text-sm font-medium text-gray-700">f(x) = 2x + 3</div>
+   315→                      <div className="mt-2 text-xs text-gray-400">slope = 2, y-intercept = 3</div>
+   316→                    </div>
+   317→                    {/* Fake graph */}
+   318→                    <svg className="absolute bottom-4 right-4" width="140" height="100" viewBox="0 0 140 100">
+   319→                      <line x1="10" y1="90" x2="130" y2="10" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" />
+   320→                      <line x1="10" y1="90" x2="130" y2="90" stroke="#d1d5db" strokeWidth="1" />
+   321→                      <line x1="10" y1="90" x2="10" y2="10" stroke="#d1d5db" strokeWidth="1" />
+   322→                      <circle cx="70" cy="50" r="4" fill="#059669" />
+   323→                      <text x="75" y="54" fontSize="10" fill="#059669" fontWeight="bold">x=35</text>
+   324→                    </svg>
+   325→                    {/* Cursor dot */}
+   326→                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400/40 animate-pulse" />
+   327→                  </div>
+   328→                </div>
+   329→                {/* Decorative cards behind */}
+   330→                <div className="absolute -top-3 -right-3 w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 -z-10 rotate-6 opacity-60" />
+   331→                <div className="absolute -bottom-3 -left-3 w-20 h-20 rounded-xl bg-gradient-to-br from-sky-100 to-blue-50 -z-10 -rotate-6 opacity-60" />
+   332→              </div>
+   333→            </div>
+   334→          </div>
+   335→        </div>
+   336→      </section>
+   337→
+   338→      {/* ===== FEATURES ===== */}
+   339→      <section id="features" className="py-20 md:py-28 bg-white">
+   340→        <div className="max-w-7xl mx-auto px-6">
+   341→          <div className="text-center max-w-2xl mx-auto mb-16">
+   342→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 mb-4">
+   343→              <Zap className="w-3.5 h-3.5 text-sky-500" />
+   344→              <span className="text-xs font-semibold text-sky-700">Powerful Features</span>
+   345→            </div>
+   346→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   347→              Everything You Need,{' '}
+   348→              <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">Nothing You Don&apos;t</span>
+   349→            </h2>
+   350→          </div>
+   351→
+   352→          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+   353→            {[
+   354→              { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-500 to-teal-500' },
+   355→              { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-sky-500 to-blue-500' },
+   356→              { icon: Brain, title: 'Smart Subject Tools', desc: 'Plot graphs, balance equations, generate quizzes, and use subject-specific tools — available on the Pro plan.', gradient: 'from-purple-500 to-violet-500' },
+   357→              { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-amber-500 to-orange-500' },
+   358→              { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-rose-500 to-pink-500' },
+   359→              { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-indigo-500 to-blue-500' },
+   360→            ].map((item) => (
+   361→              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+   362→                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+   363→                  <item.icon className="w-5 h-5 text-white" />
+   364→                </div>
+   365→                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   366→                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+   367→              </div>
+   368→            ))}
+   369→          </div>
+   370→        </div>
+   371→      </section>
+   372→
+   373→      {/* ===== TRUST SIGNALS ===== */}
+   374→      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
+   375→        <div className="max-w-7xl mx-auto px-6">
+   376→          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
+   377→            {[
+   378→              { icon: Check, text: 'No student sign-up required' },
+   379→              { icon: Shield, text: 'End-to-end encrypted' },
+   380→              { icon: Globe, text: 'Works on any device' },
+   381→              { icon: Zap, text: 'Free plan — no credit card' },
+   382→            ].map((item) => (
+   383→              <div key={item.text} className="flex flex-col items-center gap-3">
+   384→                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+   385→                  <item.icon className="w-6 h-6 text-emerald-600" />
+   386→                </div>
+   387→                <p className="text-sm text-gray-600 font-medium">{item.text}</p>
+   388→              </div>
+   389→            ))}
+   390→          </div>
+   391→        </div>
+   392→      </section>
+   393→
+   394→      {/* ===== HOW IT WORKS ===== */}
+   395→      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/80">
+   396→        <div className="max-w-7xl mx-auto px-6">
+   397→          <div className="text-center max-w-2xl mx-auto mb-16">
+   398→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
+   399→              <MousePointerClick className="w-3.5 h-3.5 text-emerald-500" />
+   400→              <span className="text-xs font-semibold text-emerald-700">Simple Setup</span>
+   401→            </div>
+   402→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   403→              Start teaching in{' '}
+   404→              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">under 60 seconds</span>
+   405→            </h2>
+   406→          </div>
+   407→
+   408→          <div className="grid md:grid-cols-3 gap-8">
+   409→            {[
+   410→              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — they join without creating an account.', icon: Plus },
+   411→              { step: '02', title: 'Teach on the Board', desc: 'Draw, write, use subject tools, and video-call your student. Everything happens on one infinite canvas.', icon: Monitor },
+   412→              { step: '03', title: 'Upgrade When Ready', desc: 'The free plan gives you a room with video calling. Upgrade to Pro to save boards, export PDFs, use smart tools, and record lessons.', icon: Download },
+   413→            ].map((item) => (
+   414→              <div key={item.step} className="relative text-center group">
+   415→                {/* Step number */}
+   416→                <div className="absolute -top-3 -left-2 text-5xl md:text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+   417→                <div className="relative z-10">
+   418→                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+   419→                    <item.icon className="w-7 h-7 text-white" />
+   420→                  </div>
+   421→                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   422→                  <p className="text-sm text-gray-600 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+   423→                </div>
+   424→              </div>
+   425→            ))}
+   426→          </div>
+   427→        </div>
+   428→      </section>
+   429→
+   430→      {/* ===== PERFECT FOR EVERY TUTOR ===== */}
+   431→      <section className="py-20 md:py-28 bg-white">
+   432→        <div className="max-w-7xl mx-auto px-6">
+   433→          <div className="text-center max-w-2xl mx-auto mb-16">
+   434→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   435→              Perfect for <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">Every Tutor</span>
+   436→            </h2>
+   437→          </div>
+   438→
+   439→          <div className="grid md:grid-cols-3 gap-6">
+   440→            {[
+   441→              { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-500 to-teal-500' },
+   442→              { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-orange-500' },
+   443→              { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-sky-500 to-cyan-500' },
+   444→            ].map((item) => (
+   445→              <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+   446→                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+   447→                  <item.icon className="w-5 h-5 text-white" />
+   448→                </div>
+   449→                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   450→                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+   451→              </div>
+   452→            ))}
+   453→          </div>
+   454→        </div>
+   455→      </section>
+   456→
+   457→      {/* ===== PRICING ===== */}
+   458→      <section id="pricing" className="py-20 md:py-28 bg-gray-50/80">
+   459→        <div className="max-w-7xl mx-auto px-6">
+   460→          <div className="text-center max-w-2xl mx-auto mb-16">
+   461→            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 mb-4">
+   462→              <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+   463→              <span className="text-xs font-semibold text-amber-700">Simple Pricing</span>
+   464→            </div>
+   465→            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   466→              Plans That <span className="bg-gradient-to-r from-emerald-500 to-amber-500 bg-clip-text text-transparent">Grow With You</span>
+   467→            </h2>
+   468→          </div>
+   469→
+   470→          {/* Billing Toggle */}
+   471→          <div className="flex items-center justify-center gap-3 mb-10">
+   472→            <span className={`text-sm font-medium ${!isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>Monthly</span>
+   473→            <button
+   474→              onClick={() => setIsAnnual(!isAnnual)}
+   475→              className={`relative w-12 h-6 rounded-full transition-colors ${isAnnual ? 'bg-emerald-500' : 'bg-gray-300'}`}
+   476→              aria-label="Toggle annual pricing"
+   477→            >
+   478→              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isAnnual ? 'translate-x-6' : ''}`} />
+   479→            </button>
+   480→            <span className={`text-sm font-medium ${isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
+   481→              Annual <span className="text-emerald-600 font-semibold">Save 20%</span>
+   482→            </span>
+   483→          </div>
+   484→
+   485→          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+   486→            {/* Free */}
+   487→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+   488→              <div className="mb-6">
+   489→                <h3 className="text-lg font-semibold text-gray-900">Free</h3>
+   490→                <p className="text-sm text-gray-500 mt-1">Try it out with the basics</p>
+   491→              </div>
+   492→              <div className="mb-6">
+   493→                <span className="text-4xl font-extrabold text-gray-900">$0</span>
+   494→                <span className="text-gray-500 text-sm">/month</span>
+   495→              </div>
+   496→              <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
+   497→                Get Started
+   498→              </Button>
+   499→              <ul className="mt-6 space-y-3">
+   500→                {[
+   501→                  '1 active room',
+   502→                  '120 min video calling/week',
+   503→                  '10 smart credits/week',
+   504→                  'Smart tools (quiz, graph, shapes)',
+   505→                  'Basic whiteboard & drawing',
+   506→                  'Share room link with students',
+   507→                ].map((f) => (
+   508→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   509→                ))}
+   510→              </ul>
+   511→              <div className="mt-4 pt-4 border-t border-gray-100">
+   512→                <p className="text-xs text-gray-400 leading-relaxed">
+   513→                  Save/load, templates, PDF export, recordings, and advanced tools (lesson plans, rubrics, flashcards) require Pro.
+   514→                </p>
+   515→              </div>
+   516→            </div>
+   517→
+   518→            {/* Pro */}
+   519→            <div className="rounded-2xl border-2 border-emerald-500 bg-white p-6 shadow-lg shadow-emerald-500/10 relative">
+   520→              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full gradient-primary text-white text-xs font-semibold">Most Popular</div>
+   521→              <div className="mb-6">
+   522→                <h3 className="text-lg font-semibold text-gray-900">Pro Tutor</h3>
+   523→                <p className="text-sm text-gray-500 mt-1">For serious educators</p>
+   524→              </div>
+   525→              <div className="mb-6">
+   526→                {isAnnual ? (
+   527→                  <>
+   528→                    <span className="text-4xl font-extrabold text-gray-900">$96</span>
+   529→                    <span className="text-gray-500 text-sm">/year</span>
+   530→                    <p className="text-xs text-emerald-600 mt-1">Save 20% vs monthly</p>
+   531→                  </>
+   532→                ) : (
+   533→                  <>
+   534→                    <span className="text-4xl font-extrabold text-gray-900">$10</span>
+   535→                    <span className="text-gray-500 text-sm">/month</span>
+   536→                    <p className="text-xs text-emerald-600 mt-1">Or $96/year (save 20%)</p>
+   537→                  </>
+   538→                )}
+   539→              </div>
+   540→              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+   541→                Start Free, Upgrade Later
+   542→              </Button>
+   543→              <ul className="mt-6 space-y-3">
+   544→                {['Unlimited rooms', '500 smart credits/month', 'Unlimited video calling', 'Save/Load boards', 'Templates', 'PDF export', 'Graphing & geometry tools', '2 recordings/month'].map((f) => (
+   545→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   546→                ))}
+   547→              </ul>
+   548→            </div>
+   549→
+   550→            {/* Agency Standard */}
+   551→            <div className="rounded-2xl border-2 border-amber-500 bg-white p-6 hover:shadow-lg transition-shadow relative">
+   552→              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-semibold">Best Value</div>
+   553→              <div className="mb-6">
+   554→                <h3 className="text-lg font-semibold text-gray-900">Agency Standard</h3>
+   555→                <p className="text-sm text-gray-500 mt-1">For growing centers</p>
+   556→              </div>
+   557→              <div className="mb-6">
+   558→                <span className="text-4xl font-extrabold text-gray-900">$39</span>
+   559→                <span className="text-gray-500 text-sm">/month + $3/hr</span>
+   560→                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
+   561→              </div>
+   562→              <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+   563→                Start Free, Upgrade Later
+   564→              </Button>
+   565→              <ul className="mt-6 space-y-3">
+   566→                {['Everything in Pro', '5,000 smart credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Up to 5 sub-tutors', 'Student roster', 'Per-hour billing'].map((f) => (
+   567→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-amber-500 flex-shrink-0" />{f}</li>
+   568→                ))}
+   569→              </ul>
+   570→            </div>
+   571→
+   572→            {/* Agency Premium */}
+   573→            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+   574→              <div className="mb-6">
+   575→                <h3 className="text-lg font-semibold text-gray-900">Agency Premium</h3>
+   576→                <p className="text-sm text-gray-500 mt-1">For established centers</p>
+   577→              </div>
+   578→              <div className="mb-6">
+   579→                <span className="text-4xl font-extrabold text-gray-900">$79</span>
+   580→                <span className="text-gray-500 text-sm">/month + $2/hr</span>
+   581→                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
+   582→              </div>
+   583→              <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
+   584→                Contact Sales
+   585→              </Button>
+   586→              <ul className="mt-6 space-y-3">
+   587→                {['Everything in Standard', 'Unlimited sub-tutors', '$2/hr volume discount', 'Priority support', 'Advanced analytics', 'Custom domain', 'Student roster', 'API access'].map((f) => (
+   588→                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   589→                ))}
+   590→              </ul>
+   591→            </div>
+   592→          </div>
+   593→        </div>
+   594→      </section>
+   595→
+   596→      {/* ===== FEATURE COMPARISON TABLE ===== */}
+   597→      <section className="py-12 px-6 bg-white border-t border-gray-100">
+   598→        <div className="max-w-5xl mx-auto">
+   599→          <h3 className="text-lg font-bold text-gray-900 text-center mb-6">Feature comparison</h3>
+   600→          <div className="overflow-x-auto">
+   601→            <table className="w-full text-sm">
+   602→              <thead>
+   603→                <tr className="border-b border-gray-200">
+   604→                  <th className="text-left py-3 px-4 font-medium text-gray-500">Feature</th>
+   605→                  <th className="text-center py-3 px-4 font-medium text-gray-500 w-24">Free</th>
+   606→                  <th className="text-center py-3 px-4 font-medium text-emerald-600 w-24">Pro</th>
+   607→                  <th className="text-center py-3 px-4 font-medium text-amber-600 w-24">Agency</th>
+   608→                </tr>
+   609→              </thead>
+   610→              <tbody className="divide-y divide-gray-100">
+   611→                {[
+   612→                  { feature: 'Active rooms', free: '1', pro: 'Unlimited', agency: 'Unlimited' },
+   613→                  { feature: 'Video calling', free: '120 min/wk', pro: 'Unlimited', agency: 'Unlimited' },
+   614→                  { feature: 'Whiteboard & drawing', free: true, pro: true, agency: true },
+   615→                  { feature: 'Smart tools (quiz, graph)', free: '10 credits/wk', pro: '500/mo', agency: '5,000/mo' },
+   616→                  { feature: 'Advanced tools (plans, rubrics)', free: false, pro: true, agency: true },
+   617→                  { feature: 'Save & load boards', free: false, pro: true, agency: true },
+   618→                  { feature: 'Templates', free: false, pro: true, agency: true },
+   619→                  { feature: 'PDF export', free: false, pro: true, agency: true },
+   620→                  { feature: 'Image uploads', free: false, pro: true, agency: true },
+   621→                  { feature: 'Recordings', free: false, pro: '2/mo', agency: 'Unlimited' },
+   622→                  { feature: 'Handwriting recognition', free: false, pro: true, agency: true },
+   623→                  { feature: 'White-label branding', free: false, pro: false, agency: true },
+   624→                  { feature: 'Admin dashboard', free: false, pro: false, agency: true },
+   625→                  { feature: 'Sub-tutor management', free: false, pro: false, agency: true },
+   626→                ].map((row) => (
+   627→                  <tr key={row.feature} className="hover:bg-gray-50/50">
+   628→                    <td className="py-2.5 px-4 text-gray-700">{row.feature}</td>
+   629→                    {([row.free, row.pro, row.agency] as (boolean | string)[]).map((val, i) => (
+   630→                      <td key={i} className="text-center py-2.5 px-4">
+   631→                        {typeof val === 'boolean' ? (
+   632→                          val ? <Check className="w-4 h-4 text-emerald-500 mx-auto" /> : <span className="text-gray-300">—</span>
+   633→                        ) : (
+   634→                          <span className="text-gray-600 text-xs">{val}</span>
+   635→                        )}
+   636→                      </td>
+   637→                    ))}
+   638→                  </tr>
+   639→                ))}
+   640→              </tbody>
+   641→            </table>
+   642→          </div>
+   643→          <p className="text-xs text-gray-400 text-center mt-4">
+   644→            Smart tools include quiz generation, graphing, equation balancing, grammar checks, and shape perfection. Advanced tools include lesson plans, rubrics, flashcards, differentiated instruction, and more. Video calling powered by LiveKit (self-hosted, no per-minute API fees).
+   645→          </p>
+   646→        </div>
+   647→      </section>
+   648→
+   649→      {/* ===== SOCIAL PROOF (moved before FAQ for stronger impact) ===== */}
+   650→      <SocialProofSection />
+   651→
+   652→      {/* ===== FEATURE SHOWCASE ===== */}
+   653→      <FeatureShowcase />
+   654→
+   655→      {/* ===== FAQ ===== */}
+   656→      <FAQSection />
+   657→
+   658→      {/* ===== FINAL CTA — honest, specific, creates urgency ===== */}
+   659→      <section className="py-20 md:py-28 bg-gradient-to-br from-emerald-50 via-white to-sky-50">
+   660→        <div className="max-w-3xl mx-auto px-6 text-center">
+   661→          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
+   662→            <Check className="w-3.5 h-3.5 text-emerald-500" />
+   663→            <span className="text-xs font-semibold text-emerald-700">No credit card required to start</span>
+   664→          </div>
+   665→          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
+   666→            Try the free plan today
+   667→          </h2>
+   668→          <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
+   669→            Create a room, share the link with your student, and start teaching on an interactive whiteboard with video calling. When you need more — save boards, export PDFs, or use smart tools — upgrade to Pro in one click.
+   670→          </p>
+   671→          <div className="flex flex-wrap items-center justify-center gap-4">
+   672→            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
+   673→              Start Teaching Free <ArrowRight className="w-4 h-4 ml-1.5" />
+   674→            </Button>
+   675→            <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+   676→              Compare Plans
+   677→            </Button>
+   678→          </div>
+   679→        </div>
+   680→      </section>
+   681→
+   682→      {/* ===== FOOTER ===== */}
+   683→      <footer className="bg-gray-50 border-t border-gray-100 py-10">
+   684→        <div className="max-w-7xl mx-auto px-6">
+   685→          {/* Top row: branding + nav */}
+   686→          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+   687→            <div className="flex items-center gap-2">
+   688→              <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+   689→                <GraduationCap className="w-4 h-4 text-white" />
+   690→              </div>
+   691→              <span className="text-sm font-semibold text-gray-900">Superboard</span>
+   692→            </div>
+   693→            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+   694→              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
+   695→              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
+   696→              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
+   697→              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
+   698→              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
+   699→              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
+   700→              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
+   701→            </div>
+   702→          </div>
+   703→          {/* Bottom row: copyright */}
+   704→          <div className="pt-6 border-t border-gray-100">
+   705→            <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Superboard. All rights reserved. Built for K-12 tutors.</p>
+   706→          </div>
+   707→        </div>
+   708→      </footer>
+   709→
+   710→      {/* ===== AUTH DIALOG ===== */}
+   711→      <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
+   712→        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+   713→          {showForgotPassword ? (
+   714→            <>
+   715→              <DialogTitle className="sr-only">Reset Password</DialogTitle>
+   716→              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   717→                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   718→                  <Shield className="w-7 h-7 text-emerald-600" />
+   719→                </div>
+   720→                <h2 className="text-xl font-bold text-white">Reset Password</h2>
+   721→                <p className="text-sm text-white/70 mt-1">We&apos;ll send you a reset link</p>
+   722→              </div>
+   723→              {forgotSuccess ? (
+   724→                <div className="px-6 pb-6 pt-6 space-y-4 text-center">
+   725→                  <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-4 py-3">Check your email for a reset link.</p>
+   726→                  <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+   727→                </div>
+   728→              ) : (
+   729→                <form onSubmit={handleForgotPassword} className="px-6 pb-6 pt-4 space-y-4">
+   730→                  <div className="space-y-2">
+   731→                    <Label htmlFor="forgot-email" className="text-sm font-medium">Email</Label>
+   732→                    <Input id="forgot-email" type="email" placeholder="you@example.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="rounded-xl" required />
+   733→                  </div>
+   734→                  {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   735→                  <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Send Reset Link</Button>
+   736→                  <p className="text-center">
+   737→                    <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+   738→                  </p>
+   739→                </form>
+   740→              )}
+   741→            </>
+   742→          ) : showAuth === 'login' ? (
+   743→            <>
+   744→              <DialogTitle className="sr-only">Sign In</DialogTitle>
+   745→              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   746→                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   747→                  <BookOpen className="w-7 h-7 text-emerald-600" />
+   748→                </div>
+   749→                <h2 className="text-xl font-bold text-white">Welcome Back</h2>
+   750→                <p className="text-sm text-white/70 mt-1">Sign in to continue teaching</p>
+   751→              </div>
+   752→              <form onSubmit={handleLogin} className="px-6 pb-6 pt-4 space-y-4">
+   753→                {/* Google OAuth */}
+   754→                <Button type="button" variant="outline" className="w-full rounded-xl font-medium text-sm h-11 gap-2 border-gray-200 hover:bg-gray-50" onClick={handleGoogleAuth}>
+   755→                  <GoogleIcon className="w-4 h-4" />
+   756→                  Continue with Google
+   757→                </Button>
+   758→                <div className="flex items-center gap-3">
+   759→                  <div className="flex-1 h-px bg-gray-200" />
+   760→                  <span className="text-xs text-gray-400 font-medium">or sign in with email</span>
+   761→                  <div className="flex-1 h-px bg-gray-200" />
+   762→                </div>
+   763→                <div className="space-y-2">
+   764→                  <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+   765→                  <Input id="login-email" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="rounded-xl" required />
+   766→                </div>
+   767→                <div className="space-y-2">
+   768→                  <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
+   769→                  <div className="relative">
+   770→                    <Input id="login-password" type={showLoginPassword ? 'text' : 'password'} placeholder="Your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="rounded-xl pr-10" required />
+   771→                    <button
+   772→                      type="button"
+   773→                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+   774→                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+   775→                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+   776→                    >
+   777→                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   778→                    </button>
+   779→                  </div>
+   780→                </div>
+   781→                {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   782→                <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Sign In</Button>
+   783→                <div className="text-center space-y-2">
+   784→                  <button type="button" className="text-xs text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(true); setForgotEmail(loginEmail); setAuthError(''); }}>Forgot password?</button>
+   785→                  <p className="text-sm text-muted-foreground">
+   786→                    Don&apos;t have an account?{' '}
+   787→                    <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('register')}>Sign up</button>
+   788→                  </p>
+   789→                </div>
+   790→              </form>
+   791→            </>
+   792→          ) : showAuth === 'register' ? (
+   793→            <>
+   794→              <DialogTitle className="sr-only">Create Account</DialogTitle>
+   795→              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   796→                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   797→                  <Sparkles className="w-7 h-7 text-emerald-600" />
+   798→                </div>
+   799→                <h2 className="text-xl font-bold text-white">Create Your Account</h2>
+   800→                <p className="text-sm text-white/70 mt-1">Start teaching in under a minute</p>
+   801→              </div>
+   802→              <form onSubmit={handleRegister} className="px-6 pb-6 pt-4 space-y-4">
+   803→                {/* Google OAuth */}
+   804→                <Button type="button" variant="outline" className="w-full rounded-xl font-medium text-sm h-11 gap-2 border-gray-200 hover:bg-gray-50" onClick={handleGoogleAuth}>
+   805→                  <GoogleIcon className="w-4 h-4" />
+   806→                  Sign up with Google
+   807→                </Button>
+   808→                <div className="flex items-center gap-3">
+   809→                  <div className="flex-1 h-px bg-gray-200" />
+   810→                  <span className="text-xs text-gray-400 font-medium">or register with email</span>
+   811→                  <div className="flex-1 h-px bg-gray-200" />
+   812→                </div>
+   813→                <div className="space-y-2">
+   814→                  <Label htmlFor="register-name" className="text-sm font-medium">Full Name</Label>
+   815→                  <Input id="register-name" type="text" placeholder="Your name" value={registerName} onChange={(e) => setRegisterName(e.target.value)} className="rounded-xl" />
+   816→                </div>
+   817→                <div className="space-y-2">
+   818→                  <Label htmlFor="register-email" className="text-sm font-medium">Email</Label>
+   819→                  <Input id="register-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="rounded-xl" required />
+   820→                </div>
+   821→                <div className="space-y-2">
+   822→                  <Label htmlFor="register-password" className="text-sm font-medium">Password</Label>
+   823→                  <div className="relative">
+   824→                    <Input id="register-password" type={showRegisterPassword ? 'text' : 'password'} placeholder="Create a strong password" value={registerPassword} onChange={(e) => { setRegisterPassword(e.target.value); setPasswordStrength(evaluatePasswordStrength(e.target.value)); }} className="rounded-xl pr-10" required />
+   825→                    <button
+   826→                      type="button"
+   827→                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+   828→                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+   829→                      aria-label={showRegisterPassword ? 'Hide password' : 'Show password'}
+   830→                    >
+   831→                      {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   832→                    </button>
+   833→                  </div>
+   834→                  {registerPassword && (
+   835→                    <div className="space-y-1">
+   836→                      <div className="flex gap-1">
+   837→                        {[1,2,3,4,5].map((i) => (
+   838→                          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'}`} />
+   839→                        ))}
+   840→                      </div>
+   841→                      <p className={`text-xs ${passwordStrength.score <= 1 ? 'text-red-500' : passwordStrength.score <= 3 ? 'text-amber-500' : 'text-emerald-600'}`}>
+   842→                        {passwordStrength.label}
+   843→                      </p>
+   844→                    </div>
+   845→                  )}
+   846→                </div>
+   847→                {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   848→                {authMessage && <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">{authMessage}</p>}
+   849→                <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Create Account</Button>
+   850→                <p className="text-center text-sm text-muted-foreground">
+   851→                  Already have an account?{' '}
+   852→                  <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('login')}>Sign in</button>
+   853→                </p>
+   854→              </form>
+   855→            </>
+   856→          ) : null}
+   857→        </DialogContent>
+   858→      </Dialog>
+   859→
+   860→      {/* ===== EMAIL VERIFICATION SCREEN ===== */}
+   861→      {showVerification && (
+   862→        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center px-6">
+   863→          <div className="max-w-md w-full text-center space-y-6">
+   864→            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
+   865→              <Mail className="w-10 h-10 text-white" />
+   866→            </div>
+   867→            <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
+   868→            <p className="text-gray-600 leading-relaxed">
+   869→              We&apos;ve sent a confirmation link to <strong>{registerEmail}</strong>. 
+   870→              Click the link to verify your account and start teaching.
+   871→            </p>
+   872→            <p className="text-sm text-gray-500">
+   873→              Didn&apos;t receive the email? Check your spam folder.
+   874→            </p>
+   875→            <Button variant="outline" className="rounded-xl" onClick={() => setShowVerification(false)}>
+   876→              Back to Sign In
+   877→            </Button>
+   878→          </div>
+   879→        </div>
+   880→      )}
+   881→    </main>
+   882→  );
+   883→}
+   884→
+   885→export default LandingPage;
+   886→

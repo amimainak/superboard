@@ -84,6 +84,36 @@ const SUBJECT_TOOLS: Record<Subject, string[]> = {
     'Quiz & worksheet generators',
     'Outline creator',
   ],
+  MUSIC: [
+    'AI quiz & worksheet generators',
+    'Concept summarizer',
+    'Free-form whiteboard',
+    'Lesson plan creator',
+  ],
+  CODING: [
+    'AI quiz & worksheet generators',
+    'Concept summarizer',
+    'Step-by-step solver',
+    'Free-form whiteboard',
+  ],
+  TEST_PREP: [
+    'AI quiz & worksheet generators',
+    'Flashcard generator',
+    'Formative assessments',
+    'Rubric generator',
+  ],
+  ART: [
+    'Diagram generator',
+    'AI concept summarizer',
+    'Free-form whiteboard',
+    'Lesson plan creator',
+  ],
+  ESL: [
+    'Phonics helper',
+    'Vocabulary quiz generator',
+    'Grammar checker',
+    'AI flashcard generator',
+  ],
 };
 
 // ----------------------------------------------------------------

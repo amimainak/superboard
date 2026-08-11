@@ -38,6 +38,7 @@ export interface AppState {
   // Usage — DISPLAY ONLY, not authoritative
   aiCreditsUsed: number;
   aiCreditsLimit: number;
+  aiCostCents: number;
   videoMinutesUsed: number;
   videoMinutesLimit: number;
   recordingsUsed: number;
@@ -46,6 +47,9 @@ export interface AppState {
   aiPanelOpen: boolean;
   selectedAiAction: string | null;
   aiFeaturesEnabled: Record<string, boolean>;
+  // Video limit (soft-stop, updated from heartbeat)
+  videoLimited: boolean;
+  videoApproachingLimit: boolean;
   // Premium modals
   paywallOpen: boolean;
   paywallFeature: string | null;
@@ -69,6 +73,7 @@ interface AppActions {
   setUsage: (usage: {
     aiCreditsUsed?: number;
     aiCreditsLimit?: number;
+    aiCostCents?: number;
     videoMinutesUsed?: number;
     videoMinutesLimit?: number;
     recordingsUsed?: number;
@@ -78,6 +83,8 @@ interface AppActions {
   toggleAIPanel: () => void;
   setSelectedAiAction: (action: string | null) => void;
   toggleAIFeature: (feature: string, enabled: boolean) => void;
+  // Video limit (soft-stop)
+  setVideoLimitState: (state: { videoLimited?: boolean; videoApproachingLimit?: boolean }) => void;
   // Paywall
   openPaywall: (feature: string) => void;
   closePaywall: () => void;
@@ -111,6 +118,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   isAdmin: false,
   aiCreditsUsed: 0,
   aiCreditsLimit: 25,
+  aiCostCents: 0,
   videoMinutesUsed: 0,
   videoMinutesLimit: 120,
   recordingsUsed: 0,
@@ -118,6 +126,8 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   aiPanelOpen: false,
   selectedAiAction: null,
   aiFeaturesEnabled: {},
+  videoLimited: false,
+  videoApproachingLimit: false,
   paywallOpen: false,
   paywallFeature: null,
 
@@ -179,6 +189,12 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
     set((state) => ({
       aiFeaturesEnabled: { ...state.aiFeaturesEnabled, [feature]: enabled },
     })),
+
+  // Video limit (soft-stop) — set from heartbeat response
+  setVideoLimitState: (state) => set((s) => ({
+    videoLimited: state.videoLimited ?? s.videoLimited,
+    videoApproachingLimit: state.videoApproachingLimit ?? s.videoApproachingLimit,
+  })),
 
   // Paywall
   openPaywall: (feature) => set({ paywallOpen: true, paywallFeature: feature }),

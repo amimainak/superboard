@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 
   // SECURITY FIX (API-M05): Validate subject query param against valid enum values
   if (subject) {
-    const VALID_SUBJECTS = ['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'] as const;
+    const VALID_SUBJECTS = ['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL', 'MUSIC', 'CODING', 'TEST_PREP', 'ART', 'ESL'] as const;
     if (!VALID_SUBJECTS.includes(subject as any)) {
       return NextResponse.json({ error: 'Invalid subject value' }, { status: 400 });
     }
@@ -105,7 +105,7 @@ export async function PATCH(request: NextRequest) {
     const updateData: any = {};
     if (isActive !== undefined) updateData.isActive = isActive;
     if (subject) {
-      const VALID_SUBJECTS = ['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL'];
+      const VALID_SUBJECTS = ['MATH', 'SCIENCE', 'LANGUAGE', 'GENERAL', 'MUSIC', 'CODING', 'TEST_PREP', 'ART', 'ESL'];
       if (!VALID_SUBJECTS.includes(subject)) {
         return NextResponse.json({ error: 'Invalid subject value', details: { allowed: VALID_SUBJECTS } }, { status: 400 });
       }

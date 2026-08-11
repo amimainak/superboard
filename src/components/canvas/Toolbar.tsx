@@ -71,6 +71,41 @@ const SUBJECT_AI_TOOLS: Record<Subject, { id: string; icon: React.ElementType; l
     { id: 'feedback', icon: MessageSquare, label: 'Student Feedback', action: 'STUDENT_FEEDBACK', creditCost: 3, proOnly: true },
     { id: 'differentiated', icon: Star, label: 'Differentiated Instruction', action: 'DIFFERENTIATED_INSTRUCTION', creditCost: 5, proOnly: true },
   ],
+  MUSIC: [
+    { id: 'quiz', icon: BookOpen, label: 'Music Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'summarizer', icon: Brain, label: 'Concept Summarizer', action: 'CONCEPT_SUMMARIZER', creditCost: 1 },
+    { id: 'lesson-plan', icon: GraduationCap, label: 'Lesson Plan', action: 'LESSON_PLAN', creditCost: 5, proOnly: true },
+    { id: 'flashcards', icon: Layers, label: 'Flashcards', action: 'FLASHCARD_GENERATOR', creditCost: 3, proOnly: true },
+  ],
+  CODING: [
+    { id: 'quiz', icon: BookOpen, label: 'Coding Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'summarizer', icon: Brain, label: 'Concept Explainer', action: 'CONCEPT_EXPLAINER', creditCost: 3 },
+    { id: 'step-solver', icon: HelpCircle, label: 'Step-by-Step Solver', action: 'STEP_BY_STEP_SOLVER', creditCost: 3, proOnly: true },
+    { id: 'lesson-plan', icon: GraduationCap, label: 'Lesson Plan', action: 'LESSON_PLAN', creditCost: 5, proOnly: true },
+  ],
+  TEST_PREP: [
+    { id: 'quiz', icon: BookOpen, label: 'Practice Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Practice Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'flashcards', icon: Layers, label: 'Flashcards', action: 'FLASHCARD_GENERATOR', creditCost: 3, proOnly: true },
+    { id: 'formative-assess', icon: ClipboardCheck, label: 'Formative Assessment', action: 'FORMATIVE_ASSESSMENT', creditCost: 5, proOnly: true },
+    { id: 'rubric', icon: BookMarked, label: 'Rubric Generator', action: 'RUBRIC_GENERATOR', creditCost: 5, proOnly: true },
+  ],
+  ART: [
+    { id: 'diagram-gen', icon: Brain, label: 'Diagram Generator', action: 'DIAGRAM_GENERATOR', creditCost: 3 },
+    { id: 'summarizer', icon: Brain, label: 'Concept Summarizer', action: 'CONCEPT_SUMMARIZER', creditCost: 1 },
+    { id: 'quiz', icon: BookOpen, label: 'Art Quiz', action: 'QUIZ', creditCost: 1 },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+    { id: 'lesson-plan', icon: GraduationCap, label: 'Lesson Plan', action: 'LESSON_PLAN', creditCost: 5, proOnly: true },
+  ],
+  ESL: [
+    { id: 'grammar', icon: PenTool, label: 'Grammar Highlight', action: 'GRAMMAR', creditCost: 1 },
+    { id: 'vocab-quiz', icon: BookOpen, label: 'Vocab Quiz', action: 'VOCAB_QUIZ', creditCost: 1 },
+    { id: 'phonics', icon: Languages, label: 'Phonics Helper', action: 'PHONICS_HELPER', creditCost: 1 },
+    { id: 'flashcards', icon: Layers, label: 'Flashcards', action: 'FLASHCARD_GENERATOR', creditCost: 3, proOnly: true },
+    { id: 'worksheet', icon: Sparkles, label: 'Worksheet', action: 'WORKSHEET', creditCost: 2 },
+  ],
 };
 
 export default function Toolbar({ editor, onToolChange, activeTool }: ToolbarProps) {

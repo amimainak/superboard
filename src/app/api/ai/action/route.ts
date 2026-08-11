@@ -16,7 +16,7 @@ import { checkRateLimit } from '@/lib/rate-limit';
 import { checkAICreditLimit, incrementAICredits, hasFeature } from '@/lib/usage';
 import { aiActionSchema, validateInput } from '@/lib/validations';
 import type { Tier, AIAction } from '@/types';
-import { TEXT_AI_ACTIONS, CREDIT_COSTS, ENHANCED_ACTION_SET } from '@/types';
+import { TEXT_AI_ACTIONS, VISION_AI_ACTIONS, CREDIT_COSTS, ENHANCED_ACTION_SET } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -114,7 +114,15 @@ export async function POST(request: NextRequest) {
 
     // 6. MANDATORY ROUTING LOGIC FOR COST
     const isTextAction = TEXT_AI_ACTIONS.includes(action as AIAction);
+    const isVisionAction = VISION_AI_ACTIONS.includes(action as AIAction);
     const targetModel = isTextAction ? 'claude-3-haiku-20240307' : 'claude-3-5-sonnet-20241022';
+
+    // Estimate AI cost in cents based on action type
+    // Text (Haiku): ~$0.0003 per credit → 0.03 cents per credit
+    // Vision (Sonnet): ~$0.015 per credit → 1.5 cents per credit
+    const costCents = isVisionAction
+      ? Math.ceil(creditCost * 1.5)
+      : Math.ceil(creditCost * 0.03);
 
     // 7. Call Anthropic API
     let result: string;
@@ -135,9 +143,16 @@ export async function POST(request: NextRequest) {
       result = generatePlaceholderResponse(action, prompt);
     }
 
-    // 8. Deduct credits based on variable cost (only for real API calls)
+    // 8. Deduct credits and track AI cost (only for real API calls)
+    let softThrottle = false;
     if (isRealApiAvailable) {
-      await incrementAICredits(userId, tier, creditCost);
+      await incrementAICredits(userId, tier, creditCost, costCents);
+
+      // Check soft throttle: Pro users exceeding $3.00/month AI cost
+      const postCheck = await checkAICreditLimit(userId, tier);
+      if (tier === 'PRO' && postCheck.aiCostCents > 300) {
+        softThrottle = true;
+      }
     }
 
     const creditCheck = isRealApiAvailable
@@ -156,6 +171,7 @@ export async function POST(request: NextRequest) {
           ? Infinity
           : creditCheck.creditsLimit - creditCheck.creditsUsed
         : null,
+      softThrottle,
     });
   } catch (error) {
     console.error('[AI Action] Error:', error);

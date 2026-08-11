@@ -3,7 +3,7 @@
 // ============================================================
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { Tier } from '@/types';
 import { isAgencyTier } from '@/types';
 import { PRICING } from '@/types';
@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save, Loader2 } from 'lucide-react';
+import { authFetch } from '@/lib/auth-fetch';
+import { Crown, Star, Zap, TrendingUp, Check, Palette, Building2, Shield, ExternalLink, Save, Loader2, Gift, Copy } from 'lucide-react';
 
 function getTierLabel(tier: Tier): string {
   if (tier === 'AGENCY_STANDARD') return 'Agency Standard';
@@ -47,6 +48,38 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
   const tierDesc = getTierDescription(tier);
   const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
   const [colorError, setColorError] = useState<string | null>(null);
+  const [referralData, setReferralData] = useState<{ referralCode: string; referralCount: number; rewardClaimed: boolean; referralLink: string } | null>(null);
+  const [claimingReward, setClaimingReward] = useState(false);
+  const [copiedReferral, setCopiedReferral] = useState(false);
+
+  // Fetch referral data on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await authFetch('/api/referral');
+        if (res.ok) {
+          const data = await res.json();
+          setReferralData(data);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  const handleCopyReferralLink = useCallback(() => {
+    if (!referralData?.referralLink) return;
+    navigator.clipboard.writeText(referralData.referralLink);
+    setCopiedReferral(true);
+    setTimeout(() => setCopiedReferral(false), 2000);
+  }, [referralData?.referralLink]);
+
+  const handleClaimReward = useCallback(async () => {
+    setClaimingReward(true);
+    try {
+      await authFetch('/api/referral/claim', { method: 'POST' });
+      setReferralData((prev) => prev ? { ...prev, rewardClaimed: true } : prev);
+    } catch { /* ignore */ }
+    setClaimingReward(false);
+  }, []);
 
   const handleUpgrade = async (plan: string) => {
     setUpgradingPlan(plan);
@@ -216,6 +249,59 @@ export function BillingPanel({ tier, brandColor, setBrandColor, onSaveBrandColor
             </div>
           </>
         )}
+        {/* Refer a Friend — for non-agency tiers */}
+        {!isAgencyTier(tier) && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2"><Gift className="w-4 h-4 text-emerald-500" />Refer a Friend</h3>
+              <div className="rounded-xl border border-emerald-200 p-4 bg-gradient-to-br from-emerald-50/80 to-sky-50/80 space-y-3">
+                <p className="text-sm text-muted-foreground">Give 1 month of Pro, get 1 month of Pro. When your referral upgrades, you both get a free month.</p>
+                {referralData ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        readOnly
+                        value={referralData.referralLink}
+                        className="flex-1 rounded-xl bg-white text-sm font-mono"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-xl gap-1.5 flex-shrink-0"
+                        onClick={handleCopyReferralLink}
+                      >
+                        {copiedReferral ? <><Check className="w-3.5 h-3.5 text-emerald-600" />Copied</> : <><Copy className="w-3.5 h-3.5" />Copy</>}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">You've referred {referralData.referralCount} tutor{referralData.referralCount !== 1 ? 's' : ''}</p>
+                    {referralData.rewardClaimed ? (
+                      <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
+                        <Check className="w-4 h-4" />
+                        Reward claimed — 1 free month of Pro
+                      </div>
+                    ) : referralData.referralCount >= 1 ? (
+                      <Button
+                        size="sm"
+                        className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                        onClick={handleClaimReward}
+                        disabled={claimingReward}
+                      >
+                        {claimingReward ? <><Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />Claiming…</> : 'Claim your free month of Pro'}
+                      </Button>
+                    ) : null}
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Loading referral info…
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Legal Notice */}
         <Separator />
         <p className="text-xs text-muted-foreground leading-relaxed text-center">

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch the user's current referral data
     const user = await db.user.findUnique({
       where: { id: auth.userId },
-      select: { referralCode: true, referralCount: true },
+      select: { referralCode: true, referralCount: true, referralRewardClaimed: true },
     });
 
     if (!user) {
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         referralCode: user.referralCode,
         referralCount: user.referralCount,
+        rewardClaimed: user.referralRewardClaimed,
         referralLink,
       });
     }
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
     const updated = await db.user.update({
       where: { id: auth.userId },
       data: { referralCode: code },
-      select: { referralCode: true, referralCount: true },
+      select: { referralCode: true, referralCount: true, referralRewardClaimed: true },
     });
 
     const referralLink = `${process.env.NEXT_PUBLIC_APP_URL || ''}/?ref=${updated.referralCode}`;
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       referralCode: updated.referralCode,
       referralCount: updated.referralCount,
+      rewardClaimed: updated.referralRewardClaimed,
       referralLink,
     });
   } catch (error) {

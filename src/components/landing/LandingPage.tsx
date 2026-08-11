@@ -86,7 +86,7 @@ function LandingPage() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Read showAuth URL param from invite redirects
+  // Read showAuth URL param from invite redirects + capture referral code
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('showAuth') === 'login') {
@@ -97,6 +97,16 @@ function LandingPage() {
     if (params.get('showAuth') === 'register') {
       setShowAuth('register');
       window.history.replaceState({}, '', '/');
+    }
+    // Capture referral code from URL and store in localStorage
+    const refCode = params.get('ref');
+    if (refCode) {
+      localStorage.setItem('sb_referral_code', refCode);
+      // Clean the URL
+      const cleanParams = new URLSearchParams(window.location.search);
+      cleanParams.delete('ref');
+      const qs = cleanParams.toString();
+      window.history.replaceState({}, '', qs ? `?${qs}` : '/');
     }
   }, []);
 
@@ -160,6 +170,12 @@ function LandingPage() {
       if (error) { setAuthError(error.message); return; }
       if (data.user && data.session) {
         try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail, name: registerName }) }); } catch { /* */ }
+        // Auto-apply referral code from localStorage
+        const savedRef = localStorage.getItem('sb_referral_code');
+        if (savedRef) {
+          try { await authFetch('/api/referral/apply', { method: 'POST', body: JSON.stringify({ referralCode: savedRef }) }); } catch { /* */ }
+          localStorage.removeItem('sb_referral_code');
+        }
       } else {
         setAuthMessage('Check your email...');
         setShowVerification(true);
@@ -258,14 +274,14 @@ function LandingPage() {
               </div>
 
               <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
-                Turn Every Lesson Into an{' '}
+                Run your entire tutoring business{' '}
                 <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
-                  Interactive Experience
+                  from one screen
                 </span>
               </h1>
 
               <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
-                The interactive whiteboard built for K-12 tutors. Draw, graph, use subject tools, and video-call your students — all on one infinite canvas. No student sign-up required.
+                Video calls, AI lesson tools, homework, parent updates, and invoicing — all in one place. No student signup required.
               </p>
 
               <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
@@ -400,16 +416,16 @@ function LandingPage() {
               <span className="text-xs font-semibold text-emerald-700">Simple Setup</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
-              Start teaching in{' '}
-              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">under 60 seconds</span>
+              Start tutoring in{' '}
+              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">minutes</span>
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: '01', title: 'Create a Room', desc: 'Pick a subject and click "Start Lesson." Share the room link with your student — they join without creating an account.', icon: Plus },
-              { step: '02', title: 'Teach on the Board', desc: 'Draw, write, use subject tools, and video-call your student. Everything happens on one infinite canvas.', icon: Monitor },
-              { step: '03', title: 'Upgrade When Ready', desc: 'The free plan gives you a room with video calling. Upgrade to Pro to save boards, export PDFs, use smart tools, and record lessons.', icon: Download },
+              { step: '01', title: 'Create a Lesson', desc: 'Pick a subject and click "Start Lesson." Your interactive whiteboard is ready in seconds.', icon: Plus },
+              { step: '02', title: 'Invite Your Student', desc: 'Share the room link — they join instantly with video, no account needed. Just click and teach.', icon: Users },
+              { step: '03', title: 'Upgrade When Ready', desc: 'Free gives you video calling and the whiteboard. Upgrade to Pro for AI tools, homework, parent updates, and invoicing.', icon: Download },
             ].map((item) => (
               <div key={item.step} className="relative text-center group">
                 {/* Step number */}

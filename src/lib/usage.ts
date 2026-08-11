@@ -100,17 +100,17 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
   let limit: number;
   if (effectiveTier === 'FREE') {
     limit = TIER_LIMITS.FREE.aiCreditsPerWeek;
-  } else if (effectiveTier === 'PRO') {
-    limit = TIER_LIMITS.PRO.aiCreditsPerMonth;
   } else {
-    // Any agency tier
-    limit = Infinity;
+    // PRO and all agency tiers use aiCreditsPerMonth (now capped, not infinite)
+    const config = TIER_LIMITS[effectiveTier as keyof typeof TIER_LIMITS];
+    limit = 'aiCreditsPerMonth' in config ? config.aiCreditsPerMonth : Infinity;
   }
 
   return {
     allowed: limit === Infinity || usageLog.aiCreditsUsed < limit,
     creditsUsed: usageLog.aiCreditsUsed,
     creditsLimit: limit,
+    aiCostCents: (usageLog as any).aiCostCents ?? 0,
   };
 }
 
@@ -118,11 +118,14 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
  * Increment AI credit usage by a variable amount.
  * Uses CREDIT_COSTS map — different actions cost different credits.
  */
-export async function incrementAICredits(userId: string, tier: Tier, cost: number = 1) {
+export async function incrementAICredits(userId: string, tier: Tier, cost: number = 1, costCents: number = 0) {
   const usageLog = await getCurrentUsageLog(userId, tier);
   return db.usageLog.update({
     where: { id: usageLog.id },
-    data: { aiCreditsUsed: { increment: cost } },
+    data: {
+      aiCreditsUsed: { increment: cost },
+      ...(costCents > 0 ? { aiCostCents: { increment: costCents } } : {}),
+    },
   });
 }
 
@@ -161,4 +164,13 @@ export async function incrementRecordings(userId: string, tier: Tier) {
     where: { id: usageLog.id },
     data: { recordingsUsed: { increment: 1 } },
   });
+}
+
+/**
+ * Estimate agency cost based on total hours and tier.
+ * AGENCY_PREMIUM rate: $2/hr, all others: $3/hr.
+ */
+export function getEstimatedAgencyCost(totalHours: number, tier: string): number {
+  const rate = tier === 'AGENCY_PREMIUM' ? 2 : 3;
+  return totalHours * rate;
 }

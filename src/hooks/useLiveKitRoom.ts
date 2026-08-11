@@ -322,10 +322,27 @@ export function useLiveKitRoom() {
       const currentRoomId = useAppStore.getState().room.roomId;
       if (!currentRoomId) return;
       try {
-        await authFetch(`/api/room/${currentRoomId}/video-heartbeat`, {
+        const res = await authFetch(`/api/room/${currentRoomId}/video-heartbeat`, {
           method: 'POST',
           body: JSON.stringify({ seconds: 60 }),
         });
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data) {
+            // Sync video limit state from heartbeat to store
+            useAppStore.getState().setVideoLimitState({
+              videoLimited: !!data.videoLimited,
+              videoApproachingLimit: !!data.approachingLimit,
+            });
+            // Also update usage numbers for the UsageBar / PipVideoPanel
+            if (typeof data.minutesUsed === 'number' && typeof data.minutesLimit === 'number') {
+              useAppStore.getState().setUsage({
+                videoMinutesUsed: data.minutesUsed,
+                videoMinutesLimit: data.minutesLimit,
+              });
+            }
+          }
+        }
       } catch {
         // Silent — don't interrupt the lesson
       }
@@ -346,6 +363,18 @@ export function useLiveKitRoom() {
           authFetch(`/api/room/${currentRoomId}/video-heartbeat`, {
             method: 'POST',
             body: JSON.stringify({ seconds: elapsed % 60 }),
+          }).then((res) => {
+            // Sync final state on disconnect
+            if (res.ok) {
+              res.json().then((data) => {
+                if (data) {
+                  useAppStore.getState().setVideoLimitState({
+                    videoLimited: !!data.videoLimited,
+                    videoApproachingLimit: !!data.approachingLimit,
+                  });
+                }
+              }).catch(() => {});
+            }
           }).catch(() => {});
         }
       }

@@ -33,6 +33,7 @@ const FileAttachmentsBar = dynamic(() => import('@/components/canvas/FileAttachm
 const PresenceIndicator = dynamic(() => import('@/components/canvas/PresenceIndicator'), { ssr: false });
 const SessionTimer = dynamic(() => import('@/components/canvas/SessionTimer'), { ssr: false });
 const LivePollPanel = dynamic(() => import('@/components/canvas/LivePollPanel'), { ssr: false });
+const VideoLimitBanner = dynamic(() => import('@/components/video/VideoLimitBanner'), { ssr: false });
 
 export default function Whiteboard() {
   const { toast } = useToast();
@@ -241,6 +242,9 @@ export default function Whiteboard() {
 
       {/* Branded Header */}
       <BrandedHeader onEndLesson={isTutor ? handleEndLesson : undefined} />
+
+      {/* Video Limit Banner (soft-stop) */}
+      {!showWaitingRoom && <VideoLimitBanner />}
 
       {/* Student Waiting Room (shown before tutor joins) */}
       {showWaitingRoom && (

@@ -9,7 +9,7 @@ export function isAgencyTier(tier: Tier): boolean {
   return tier === 'AGENCY' || tier === 'AGENCY_STANDARD' || tier === 'AGENCY_PREMIUM';
 }
 
-export type Subject = 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL';
+export type Subject = 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL' | 'MUSIC' | 'CODING' | 'TEST_PREP' | 'ART' | 'ESL';
 
 export type AIAction =
   // Original 14 actions
@@ -209,6 +209,11 @@ export const PRICING = {
   AGENCY_PREMIUM:  { monthly: 79, annual: 790, label: 'Agency Premium', perHour: 2.00, maxSubTutors: Infinity },
 } as const;
 
+export const CREDIT_PACKS = [
+  { hours: 20, priceCents: 5000, label: '20 Hours', rateLabel: '$2.50/hr', perHourCents: 250 },
+  { hours: 50, priceCents: 10000, label: '50 Hours', rateLabel: '$2.00/hr', perHourCents: 200 },
+] as const;
+
 // Tier limits configuration
 const AGENCY_FEATURES = {
   uploads: true,
@@ -285,7 +290,7 @@ export const TIER_LIMITS = {
     maxActiveRooms: Infinity,
     maxSubTutors: Infinity,
     videoMinutesPerWeek: Infinity,
-    aiCreditsPerMonth: 5000,
+    aiCreditsPerMonth: 10000,
     recordingsPerMonth: Infinity,
     features: AGENCY_FEATURES,
   },
