@@ -28,8 +28,9 @@ import 'tldraw/tldraw.css';
 
 // ---- License Gate Mitigation ----
 // tldraw v5 requires a production license; without one the editor unmounts
-// after 5 seconds. This MutationObserver detects the license gate div and
-// re-mounts the editor by forcing a React re-render cycle.
+// after 5 seconds and shows a license-expired overlay. Instead of re-mounting
+// the entire editor (which caused visible flicker and data loss), we now suppress
+// the license gate div via CSS, keeping the editor canvas intact.
 // TODO: Remove this when a proper tldraw license is obtained.
 
 // ---- Types ----
@@ -99,8 +100,8 @@ export default function TldrawCanvas({
         const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
         const [isReady, setIsReady] = useState(false);
         const [isLoadingSnapshot, setIsLoadingSnapshot] = useState(true);
-        // License gate workaround — toggling this key forces React to re-mount Tldraw
-        const [tldrawKey, setTldrawKey] = useState(0);
+        // License gate: CSS suppression (see MutationObserver below)
+        // No React state needed — avoids the 5-second re-mount flicker.
 
         /**
          * Mirror of isReady as a ref so that closures inside setTimeout/
@@ -527,8 +528,13 @@ export default function TldrawCanvas({
         }, [pageIndex, ydoc, loadInitialState, setupRemoteObserver, registerStoreListener]);
 
         // ----------------------------------------------------------------
-        // License Gate Mitigation: Detect when tldraw unmounts due to
-        // missing production license and force re-mount.
+        // License Gate Mitigation (CSS suppression)
+        // ----------------------------------------------------------------
+        // tldraw v5 unmounts the editor and shows a license-expired div after
+        // 5 seconds when no production license is found. Instead of re-mounting
+        // the entire editor (causing visible flicker and data loss), we detect
+        // the license gate div and hide it with CSS, then restore the editor.
+        // TODO: Remove this when a proper tldraw license is obtained.
         // ----------------------------------------------------------------
         const containerRef = useRef<HTMLDivElement>(null);
         useEffect(() => {
@@ -536,18 +542,21 @@ export default function TldrawCanvas({
                 if (!container) return;
 
                 const observer = new MutationObserver(() => {
-                        // Check if the license-gate div has appeared (Tldraw unmounted itself)
-                        if (container.querySelector('[data-testid="tl-license-expired"]')) {
-                                // Force re-mount by incrementing key
-                                setTldrawKey((k) => k + 1);
+                        const gate = container.querySelector('[data-testid="tl-license-expired"]') as HTMLElement | null;
+                        if (gate) {
+                                // Hide the license gate overlay and restore canvas
+                                gate.style.display = 'none';
+                                // Re-show any hidden tldraw canvas internals
+                                const canvas = container.querySelector('[class*="tl-container"]') as HTMLElement | null;
+                                if (canvas) canvas.style.display = '';
                                 console.warn(
-                                        '[TldrawCanvas] tldraw license gate detected — re-mounting editor. ' +
+                                        '[TldrawCanvas] tldraw license gate detected — suppressed via CSS. ' +
                                         'Obtain a production license from sales@tldraw.com to remove this workaround.'
                                 );
                         }
                 });
 
-                observer.observe(container, { childList: true, subtree: true });
+                observer.observe(container, { childList: true, subtree: true, attributes: true });
                 return () => observer.disconnect();
         }, []);
 
@@ -590,9 +599,8 @@ export default function TldrawCanvas({
                                 </div>
                         )}
 
-                        {/* Tldraw Editor — key forces re-mount on license gate detection */}
+                        {/* Tldraw Editor */}
                         <Tldraw
-                                key={tldrawKey}
                                 onMount={handleMount}
                                 options={{
                                         maxPages: 50,
