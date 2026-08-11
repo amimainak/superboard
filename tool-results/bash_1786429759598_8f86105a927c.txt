@@ -1,0 +1,901 @@
+     1	// ============================================================
+     2	// Landing Page — Marketing / Auth Gate
+     3	// ============================================================
+     4	'use client';
+     5	
+     6	import React, { useState, useCallback, useRef, useEffect } from 'react';
+     7	import { useAppStore } from '@/store/app-store';
+     8	import { createClient } from '@/lib/supabase';
+     9	import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
+    10	import type { Tier } from '@/types';
+    11	import { Button } from '@/components/ui/button';
+    12	import {
+    13	  Dialog,
+    14	  DialogContent,
+    15	  DialogDescription,
+    16	  DialogHeader,
+    17	  DialogTitle,
+    18	} from '@/components/ui/dialog';
+    19	import { Input } from '@/components/ui/input';
+    20	import { Label } from '@/components/ui/label';
+    21	import { SocialProofSection } from './SocialProofSection';
+    22	import { FeatureShowcase } from './FeatureShowcase';
+    23	import { FAQSection } from './FAQSection';
+    24	import {
+    25	  Plus,
+    26	  BookOpen,
+    27	  GraduationCap,
+    28	  Sparkles,
+    29	  ChevronRight,
+    30	  Video,
+    31	  FileText,
+    32	  Calculator,
+    33	  FlaskConical,
+    34	  Languages,
+    35	  ClipboardList,
+    36	  Zap,
+    37	  Shield,
+    38	  Clock,
+    39	  Globe,
+    40	  Users,
+    41	  School,
+    42	  TrendingUp,
+    43	  ArrowRight,
+    44	  Check,
+    45	  Monitor,
+    46	  Brain,
+    47	  PenTool,
+    48	  Download,
+    49	  MousePointerClick,
+    50	  Mail,
+    51	  Eye,
+    52	  EyeOff,
+    53	} from 'lucide-react';
+    54	
+    55	// Inline Google "G" SVG — avoids adding a dependency
+    56	function GoogleIcon({ className }: { className?: string }) {
+    57	  return (
+    58	    <svg className={className} viewBox="0 0 24 24">
+    59	      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+    60	      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+    61	      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+    62	      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    63	    </svg>
+    64	  );
+    65	}
+    66	
+    67	function LandingPage() {
+    68	  const { setTier } = useAppStore();
+    69	
+    70	  const [loginEmail, setLoginEmail] = useState('');
+    71	  const [loginPassword, setLoginPassword] = useState('');
+    72	  const [registerName, setRegisterName] = useState('');
+    73	  const [registerEmail, setRegisterEmail] = useState('');
+    74	  const [registerPassword, setRegisterPassword] = useState('');
+    75	  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: '', color: '' });
+    76	  const [showVerification, setShowVerification] = useState(false);
+    77	  const [authError, setAuthError] = useState('');
+    78	  const [authMessage, setAuthMessage] = useState('');
+    79	  const [showAuth, setShowAuth] = useState<'login' | 'register' | null>(null);
+    80	  const [isAnnual, setIsAnnual] = useState(false);
+    81	  const obileMenuOpen, setMobileMenuOpen] = useState(false);
+    82	  const [showForgotPassword, setShowForgotPassword] = useState(false);
+    83	  const [forgotEmail, setForgotEmail] = useState('');
+    84	  const [forgotSuccess, setForgotSuccess] = useState(false);
+    85	  const [showLoginPassword, setShowLoginPassword] = useState(false);
+    86	  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+    87	  const mobileMenuRef = useRef<HTMLDivElement>(null);
+    88	
+    89	  // Read showAuth URL param from invite redirects + capture referral code
+    90	  useEffect(() => {
+    91	    const params = new URLSearchParams(window.location.search);
+    92	    if (params.get('showAuth') === 'login') {
+    93	      setShowAuth('login');
+    94	      // Clean the URL without reloading
+    95	      window.history.replaceState({}, '', '/');
+    96	    }
+    97	    if (params.get('showAuth') === 'register') {
+    98	      setShowAuth('register');
+    99	      window.history.replaceState({}, '', '/');
+   100	    }
+   101	    // Capture referral code from URL and store in localStorage
+   102	    const refCode = params.get('ref');
+   103	    if (refCode) {
+   104	      localStorage.setItem('sb_referral_code', refCode);
+   105	      // Clean the URL
+   106	      const cleanParams = new URLSearchParams(window.location.search);
+   107	      cleanParams.delete('ref');
+   108	      const qs = cleanParams.toString();
+   109	      window.history.replaceState({}, '', qs ? `?${qs}` : '/');
+   110	    }
+   111	  }, []);
+   112	
+   113	  const handleForgotPassword = useCallback(async (e: React.FormEvent) => {
+   114	    e.preventDefault();
+   115	    setAuthError('');
+   116	    try {
+   117	      const supabase = createClient();
+   118	      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
+   119	      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
+   120	      if (error) throw error;
+   121	      setForgotSuccess(true);
+   122	    } catch (err: any) {
+   123	      setAuthError(err?.message || 'Failed to send reset email.');
+   124	    }
+   125	  }, [forgotEmail]);
+   126	
+   127	  const handleLogin = useCallback(async (e: React.FormEvent) => {
+   128	    e.preventDefault();
+   129	    setAuthError('');
+   130	    setAuthMessage('');
+   131	    try {
+   132	      const supabase = createClient();
+   133	      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+   134	      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+   135	      if (error) { setAuthError(error.message); return; }
+   136	      initAuthFetch();
+   137	      const { data: { user: u } } = await supabase.auth.getUser();
+   138	      if (u) {
+   139	        try {
+   140	          const tierRes = await authFetch(`/api/auth/profile?userId=${u.id}`);
+   141	          if (tierRes.ok) { const d = await tierRes.json(); if (d.tier) setTier(d.tier as Tier); }
+   142	        } catch { /* ignore */ }
+   143	      }
+   144	      setLoginEmail(''); setLoginPassword('');
+   145	      closeAuth();
+   146	    } catch { setAuthError('Network error'); }
+   147	  }, [loginEmail, loginPassword, setTier]);
+   148	
+   149	  const evaluatePasswordStrength = (password: string) => {
+   150	    let score = 0;
+   151	    if (password.length >= 6) score++;
+   152	    if (password.length >= 10) score++;
+   153	    if (/[A-Z]/.test(password)) score++;
+   154	    if (/[0-9]/.test(password)) score++;
+   155	    if (/[^A-Za-z0-9]/.test(password)) score++;
+   156	    if (score <= 1) return { score, label: 'Weak', color: 'bg-red-500' };
+   157	    if (score <= 3) return { score, label: 'Fair', color: 'bg-amber-500' };
+   158	    if (score <= 4) return { score, label: 'Good', color: 'bg-emerald-400' };
+   159	    return { score, label: 'Strong', color: 'bg-emerald-600' };
+   160	  };
+   161	
+   162	  const handleRegister = useCallback(async (e: React.FormEvent) => {
+   163	    e.preventDefault();
+   164	    setAuthError('');
+   165	    setAuthMessage('');
+   166	    try {
+   167	      const supabase = createClient();
+   168	      if (!supabase) { setAuthError('Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'); return; }
+   169	      const { data, error } = await supabase.auth.signUp({ email: registerEmail, password: registerPassword });
+   170	      if (error) { setAuthError(error.message); return; }
+   171	      if (data.user && data.session) {
+   172	        try { await authFetch('/api/auth/register', { method: 'POST', body: JSON.stringify({ id: data.user.id, email: registerEmail, name: registerName }) }); } catch { /* */ }
+   173	        // Auto-apply referral code from localStorage
+   174	        const savedRef = localStorage.getItem('sb_referral_code');
+   175	        if (savedRef) {
+   176	          try { await authFetch('/api/referral/apply', { method: 'POST', body: JSON.stringify({ referralCode: savedRef }) }); } catch { /* */ }
+   177	          localStorage.removeItem('sb_referral_code');
+   178	        }
+   179	      } else {
+   180	        setAuthMessage('Check your email...');
+   181	        setShowVerification(true);
+   182	        setShowAuth(null);
+   183	      }
+   184	      setRegisterEmail(''); setRegisterPassword(''); setRegisterName('');
+   185	    } catch { setAuthError('Network error'); }
+   186	  }, [registerEmail, registerPassword, registerName]);
+   187	
+   188	  const handleGoogleAuth = useCallback(async () => {
+   189	    setAuthError('');
+   190	    try {
+   191	      const supabase = createClient();
+   192	      if (!supabase) { setAuthError('Authentication is not configured.'); return; }
+   193	      // Build redirect URL — preserve invite code if present, drop auth params
+   194	      const params = new URLSearchParams(window.location.search);
+   195	      params.delete('showAuth');
+   196	      const qs = params.toString();
+   197	      const redirectTo = window.location.origin + (qs ? `?${qs}` : '');
+   198	      const { error } = await supabase.auth.signInWithOAuth({
+   199	        provider: 'google',
+   200	        options: {
+   201	          redirectTo,
+   202	        },
+   203	      });
+   204	      if (error) { setAuthError(error.message); }
+   205	    } catch { setAuthError('Failed to connect to Google.'); }
+   206	  }, []);
+   207	
+   208	  const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); };
+   209	
+   210	  return (
+   211	    <main className="min-h-screen bg-white">
+   212	      {/* ===== NAVBAR ===== */}
+   213	      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+   214	        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+   215	          <div className="flex items-center gap-3">
+   216	            <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
+   217	              <GraduationCap className="w-5 h-5 text-white" />
+   218	            </div>
+   219	            <span className="text-lg font-bold tracking-tight text-gray-900">Superboard</span>
+   220	          </div>
+   221	          <div className="hidden md:flex items-center gap-8">
+   222	            <a href="#features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+   223	            <a href="#how-it-works" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">How It Works</a>
+   224	            <a href="#pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+   225	          </div>
+   226	          <div className="flex items-center gap-3">
+   227	            <Button variant="ghost" className="text-sm font-medium text-gray-700 hover:text-gray-900 hidden sm:inline-flex" onClick={() => setShowAuth('login')}>
+   228	              Sign In
+   229	            </Button>
+   230	            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm px-5" onClick={() => setShowAuth('register')}>
+   231	              Get Started Free
+   232	            </Button>
+   233	            {/* Mobile hamburger */}
+   234	            <button
+   235	              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+   236	              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+   237	              aria-label="Toggle navigation menu"
+   238	            >
+   239	              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+   240	                {mobileMenuOpen
+   241	                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+   242	                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+   243	              </svg>
+   244	            </button>
+   245	          </div>
+   246	        </div>
+   247	        {/* Mobile dropdown menu */}
+   248	        {mobileMenuOpen && (
+   249	          <div ref={mobileMenuRef} className="md:hidden border-t border-gray-200 bg-white px-6 py-4 space-y-3 animate-fade-in-up">
+   250	            <a href="#features" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Features</a>
+   251	            <a href="#how-it-works" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>How It Works</a>
+   252	            <a href="#pricing" className="block text-sm text-gray-600 hover:text-gray-900 transition-colors" onClick={() => setMobileMenuOpen(false)}>Pricing</a>
+   253	            <div className="pt-2 border-t border-gray-100 flex flex-col gap-2">
+   254	              <Button variant="ghost" className="text-sm font-medium text-gray-700 justify-start" onClick={() => { setShowAuth('login'); setMobileMenuOpen(false); }}>Sign In</Button>
+   255	              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm" onClick={() => { setShowAuth('register'); setMobileMenuOpen(false); }}>Get Started Free</Button>
+   256	            </div>
+   257	          </div>
+   258	        )}
+   259	      </nav>
+   260	
+   261	      {/* ===== HERO SECTION ===== */}
+   262	      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-white">
+   263	        {/* Subtle grid — no blur blobs */}
+   264	        <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.6px, transparent 0.6px)', backgroundSize: '24px 24px' }} />
+   265	
+   266	        <div className="max-w-7xl mx-auto px-6 relative z-10">
+   267	          <div className="grid md:grid-cols-2 gap-12 items-center">
+   268	            {/* Left: Copy */}
+   269	            <div className="max-w-xl">
+   270	              {/* Badge */}
+   271	              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6 animate-fade-in-up">
+   272	                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+   273	                <span className="text-xs font-semibold text-emerald-700">Smart Tutoring Platform</span>
+   274	              </div>
+   275	
+   276	              <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
+   277	                Run your entire tutoring business{' '}
+   278	                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+   279	                  from one screen
+   280	                </span>
+   281	              </h1>
+   282	
+   283	              <p className="mt-6 text-lg text-gray-600 leading-relaxed animate-fade-in-up-delay-1">
+   284	                Video calls, AI lesson tools, homework, parent updates, and invoicing — all in one place. No student signup required.
+   285	              </p>
+   286	
+   287	              <div className="flex flex-wrap gap-3 mt-8 animate-fade-in-up-delay-2">
+   288	                <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-6 h-12" onClick={() => setShowAuth('register')}>
+   289	                  Start Teaching Free — No Credit Card <ArrowRight className="w-4 h-4 ml-1.5" />
+   290	                </Button>
+   291	                <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+   292	                  <ClipboardList className="w-4 h-4 mr-1.5" /> See Plans
+   293	                </Button>
+   294	              </div>
+   295	
+   296	              {/* Trust signals */}
+   297	              <div className="mt-10 flex flex-wrap gap-4 text-sm text-gray-500 animate-fade-in-up-delay-3">
+   298	                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> No student sign-up needed</span>
+   299	                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Free plan available</span>
+   300	                <span className="flex items-center gap-1.5"><Check className="w-3.5 h-3.5 text-emerald-500" /> Upgrade anytime</span>
+   301	              </div>
+   302	            </div>
+   303	
+   304	            {/* Right: Hero Illustration */}
+   305	            <div className="hidden md:flex justify-center animate-fade-in-up-delay-1">
+   306	              <div className="relative w-full max-w-lg">
+   307	                {/* Canvas card */}
+   308	                <div className="rounded-2xl border border-gray-200 bg-white shadow-xl p-4 relative z-10">
+   309	                  {/* Mini toolbar */}
+   310	                  <div className="flex items-center gap-2 mb-4 px-1">
+   311	                    {[
+   312	                      { icon: PenTool, color: 'text-emerald-600 bg-emerald-50' },
+   313	                      { icon: Calculator, color: 'text-blue-600 bg-blue-50' },
+   314	                      { icon: FlaskConical, color: 'text-purple-600 bg-purple-50' },
+   315	                      { icon: Brain, color: 'text-amber-600 bg-amber-50' },
+   316	                    ].map(({ icon: Icon, color }) => (
+   317	                      <div key={color} className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center`}>
+   318	                        <Icon className="w-4 h-4" />
+   319	                      </div>
+   320	                    ))}
+   321	                    <div className="flex-1" />
+   322	                    <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center"><Video className="w-4 h-4" /></div>
+   323	                  </div>
+   324	                  {/* Mini canvas area */}
+   325	                  <div className="rounded-xl bg-gradient-to-br from-gray-50 to-white h-52 relative overflow-hidden">
+   326	                    {/* Fake grid */}
+   327	                    <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #000 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
+   328	                    {/* Fake math content */}
+   329	                    <div className="absolute top-4 left-4">
+   330	                      <div className="text-sm font-medium text-gray-700">f(x) = 2x + 3</div>
+   331	                      <div className="mt-2 text-xs text-gray-400">slope = 2, y-intercept = 3</div>
+   332	                    </div>
+   333	                    {/* Fake graph */}
+   334	                    <svg className="absolute bottom-4 right-4" width="140" height="100" viewBox="0 0 140 100">
+   335	                      <line x1="10" y1="90" x2="130" y2="10" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" />
+   336	                      <line x1="10" y1="90" x2="130" y2="90" stroke="#d1d5db" strokeWidth="1" />
+   337	                      <line x1="10" y1="90" x2="10" y2="10" stroke="#d1d5db" strokeWidth="1" />
+   338	                      <circle cx="70" cy="50" r="4" fill="#059669" />
+   339	                      <text x="75" y="54" fontSize="10" fill="#059669" fontWeight="bold">x=35</text>
+   340	                    </svg>
+   341	                    {/* Cursor dot */}
+   342	                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-emerald-400/40 animate-pulse" />
+   343	                  </div>
+   344	                </div>
+   345	                {/* Decorative cards behind */}
+   346	                <div className="absolute -top-3 -right-3 w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 -z-10 rotate-6 opacity-60" />
+   347	                <div className="absolute -bottom-3 -left-3 w-20 h-20 rounded-xl bg-gradient-to-br from-sky-100 to-blue-50 -z-10 -rotate-6 opacity-60" />
+   348	              </div>
+   349	            </div>
+   350	          </div>
+   351	        </div>
+   352	      </section>
+   353	
+   354	      {/* ===== FEATURES ===== */}
+   355	      <section id="features" className="py-20 md:py-28 bg-white">
+   356	        <div className="max-w-7xl mx-auto px-6">
+   357	          <div className="text-center max-w-2xl mx-auto mb-16">
+   358	            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 mb-4">
+   359	              <Zap className="w-3.5 h-3.5 text-sky-500" />
+   360	              <span className="text-xs font-semibold text-sky-700">Powerful Features</span>
+   361	            </div>
+   362	            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   363	              Everything You Need,{' '}
+   364	              <span className="bg-gradient-to-r from-sky-500 to-emerald-500 bg-clip-text text-transparent">Nothing You Don&apos;t</span>
+   365	            </h2>
+   366	          </div>
+   367	
+   368	          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+   369	            {[
+   370	              { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-500 to-teal-500' },
+   371	              { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-sky-500 to-blue-500' },
+   372	              { icon: Brain, title: 'Smart Subject Tools', desc: 'Plot graphs, balance equations, generate quizzes, and use subject-specific tools — available on the Pro plan.', gradient: 'from-purple-500 to-violet-500' },
+   373	              { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-amber-500 to-orange-500' },
+   374	              { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-rose-500 to-pink-500' },
+   375	              { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-indigo-500 to-blue-500' },
+   376	            ].map((item) => (
+   377	              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+   378	                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+   379	                  <item.icon className="w-5 h-5 text-white" />
+   380	                </div>
+   381	                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   382	                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+   383	              </div>
+   384	            ))}
+   385	          </div>
+   386	        </div>
+   387	      </section>
+   388	
+   389	      {/* ===== TRUST SIGNALS ===== */}
+   390	      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
+   391	        <div className="max-w-7xl mx-auto px-6">
+   392	          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
+   393	            {[
+   394	              { icon: Check, text: 'No student sign-up required' },
+   395	              { icon: Shield, text: 'End-to-end encrypted' },
+   396	              { icon: Globe, text: 'Works on any device' },
+   397	              { icon: Zap, text: 'Free plan — no credit card' },
+   398	            ].map((item) => (
+   399	              <div key={item.text} className="flex flex-col items-center gap-3">
+   400	                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+   401	                  <item.icon className="w-6 h-6 text-emerald-600" />
+   402	                </div>
+   403	                <p className="text-sm text-gray-600 font-medium">{item.text}</p>
+   404	              </div>
+   405	            ))}
+   406	          </div>
+   407	        </div>
+   408	      </section>
+   409	
+   410	      {/* ===== HOW IT WORKS ===== */}
+   411	      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/80">
+   412	        <div className="max-w-7xl mx-auto px-6">
+   413	          <div className="text-center max-w-2xl mx-auto mb-16">
+   414	            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
+   415	              <MousePointerClick className="w-3.5 h-3.5 text-emerald-500" />
+   416	              <span className="text-xs font-semibold text-emerald-700">Simple Setup</span>
+   417	            </div>
+   418	            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   419	              Start tutoring in{' '}
+   420	              <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">minutes</span>
+   421	            </h2>
+   422	          </div>
+   423	
+   424	          <div className="grid md:grid-cols-3 gap-8">
+   425	            {[
+   426	              { step: '01', title: 'Create a Lesson', desc: 'Pick a subject and click "Start Lesson." Your interactive whiteboard is ready in seconds.', icon: Plus },
+   427	              { step: '02', title: 'Invite Your Student', desc: 'Share the room link — they join instantly with video, no account needed. Just click and teach.', icon: Users },
+   428	              { step: '03', title: 'Upgrade When Ready', desc: 'Free gives you video calling and the whiteboard. Upgrade to Pro for AI tools, homework, parent updates, and invoicing.', icon: Download },
+   429	            ].map((item) => (
+   430	              <div key={item.step} className="relative text-center group">
+   431	                {/* Step number */}
+   432	                <div className="absolute -top-3 -left-2 text-5xl md:text-7xl font-black text-gray-100 group-hover:text-emerald-100 transition-colors select-none">{item.step}</div>
+   433	                <div className="relative z-10">
+   434	                  <div className="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-shadow">
+   435	                    <item.icon className="w-7 h-7 text-white" />
+   436	                  </div>
+   437	                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   438	                  <p className="text-sm text-gray-600 leading-relaxed max-w-xs mx-auto">{item.desc}</p>
+   439	                </div>
+   440	              </div>
+   441	            ))}
+   442	          </div>
+   443	        </div>
+   444	      </section>
+   445	
+   446	      {/* ===== PERFECT FOR EVERY TUTOR ===== */}
+   447	      <section className="py-20 md:py-28 bg-white">
+   448	        <div className="max-w-7xl mx-auto px-6">
+   449	          <div className="text-center max-w-2xl mx-auto mb-16">
+   450	            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   451	              Perfect for <span className="bg-gradient-to-r from-emerald-500 to-sky-500 bg-clip-text text-transparent">Every Tutor</span>
+   452	            </h2>
+   453	          </div>
+   454	
+   455	          <div className="grid md:grid-cols-3 gap-6">
+   456	            {[
+   457	              { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-500 to-teal-500' },
+   458	              { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-orange-500' },
+   459	              { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-sky-500 to-cyan-500' },
+   460	            ].map((item) => (
+   461	              <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+   462	                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
+   463	                  <item.icon className="w-5 h-5 text-white" />
+   464	                </div>
+   465	                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+   466	                <p className="text-sm text-gray-600 leading-relaxed">{item.desc}</p>
+   467	              </div>
+   468	            ))}
+   469	          </div>
+   470	        </div>
+   471	      </section>
+   472	
+   473	      {/* ===== PRICING ===== */}
+   474	      <section id="pricing" className="py-20 md:py-28 bg-gray-50/80">
+   475	        <div className="max-w-7xl mx-auto px-6">
+   476	          <div className="text-center max-w-2xl mx-auto mb-16">
+   477	            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 mb-4">
+   478	              <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+   479	              <span className="text-xs font-semibold text-amber-700">Simple Pricing</span>
+   480	            </div>
+   481	            <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
+   482	              Plans That <span className="bg-gradient-to-r from-emerald-500 to-amber-500 bg-clip-text text-transparent">Grow With You</span>
+   483	            </h2>
+   484	          </div>
+   485	
+   486	          {/* Billing Toggle */}
+   487	          <div className="flex items-center justify-center gap-3 mb-10">
+   488	            <span className={`text-sm font-medium ${!isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>Monthly</span>
+   489	            <button
+   490	              onClick={() => setIsAnnual(!isAnnual)}
+   491	              className={`relative w-12 h-6 rounded-full transition-colors ${isAnnual ? 'bg-emerald-500' : 'bg-gray-300'}`}
+   492	              aria-label="Toggle annual pricing"
+   493	            >
+   494	              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isAnnual ? 'translate-x-6' : ''}`} />
+   495	            </button>
+   496	            <span className={`text-sm font-medium ${isAnnual ? 'text-gray-900' : 'text-gray-400'}`}>
+   497	              Annual <span className="text-emerald-600 font-semibold">Save 20%</span>
+   498	            </span>
+   499	          </div>
+   500	
+   501	          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 max-w-6xl mx-auto">
+   502	            {/* Free */}
+   503	            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+   504	              <div className="mb-6">
+   505	                <h3 className="text-lg font-semibold text-gray-900">Free</h3>
+   506	                <p className="text-sm text-gray-500 mt-1">Try it out with the basics</p>
+   507	              </div>
+   508	              <div className="mb-6">
+   509	                <span className="text-4xl font-extrabold text-gray-900">$0</span>
+   510	                <span className="text-gray-500 text-sm">/month</span>
+   511	              </div>
+   512	              <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
+   513	                Get Started
+   514	              </Button>
+   515	              <ul className="mt-6 space-y-3">
+   516	                {[
+   517	                  '1 active room',
+   518	                  '120 min video calling/week',
+   519	                  '10 smart credits/week',
+   520	                  'Smart tools (quiz, graph, shapes)',
+   521	                  'Basic whiteboard & drawing',
+   522	                  'Share room link with students',
+   523	                ].map((f) => (
+   524	                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   525	                ))}
+   526	              </ul>
+   527	              <div className="mt-4 pt-4 border-t border-gray-100">
+   528	                <p className="text-xs text-gray-400 leading-relaxed">
+   529	                  Save/load, templates, PDF export, recordings, and advanced tools (lesson plans, rubrics, flashcards) require Pro.
+   530	                </p>
+   531	              </div>
+   532	            </div>
+   533	
+   534	            {/* Pro */}
+   535	            <div className="rounded-2xl border-2 border-emerald-500 bg-white p-6 shadow-lg shadow-emerald-500/10 relative">
+   536	              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full gradient-primary text-white text-xs font-semibold">Most Popular</div>
+   537	              <div className="mb-6">
+   538	                <h3 className="text-lg font-semibold text-gray-900">Pro Tutor</h3>
+   539	                <p className="text-sm text-gray-500 mt-1">For serious educators</p>
+   540	              </div>
+   541	              <div className="mb-6">
+   542	                {isAnnual ? (
+   543	                  <>
+   544	                    <span className="text-4xl font-extrabold text-gray-900">$96</span>
+   545	                    <span className="text-gray-500 text-sm">/year</span>
+   546	                    <p className="text-xs text-emerald-600 mt-1">Save 20% vs monthly</p>
+   547	                  </>
+   548	                ) : (
+   549	                  <>
+   550	                    <span className="text-4xl font-extrabold text-gray-900">$10</span>
+   551	                    <span className="text-gray-500 text-sm">/month</span>
+   552	                    <p className="text-xs text-emerald-600 mt-1">Or $96/year (save 20%)</p>
+   553	                  </>
+   554	                )}
+   555	              </div>
+   556	              <Button className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+   557	                Start Free, Upgrade Later
+   558	              </Button>
+   559	              <ul className="mt-6 space-y-3">
+   560	                {['Unlimited rooms', '500 smart credits/month', 'Unlimited video calling', 'Save/Load boards', 'Templates', 'PDF export', 'Graphing & geometry tools', '2 recordings/month'].map((f) => (
+   561	                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   562	                ))}
+   563	              </ul>
+   564	            </div>
+   565	
+   566	            {/* Agency Standard */}
+   567	            <div className="rounded-2xl border-2 border-amber-500 bg-white p-6 hover:shadow-lg transition-shadow relative">
+   568	              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-amber-500 text-white text-xs font-semibold">Best Value</div>
+   569	              <div className="mb-6">
+   570	                <h3 className="text-lg font-semibold text-gray-900">Agency Standard</h3>
+   571	                <p className="text-sm text-gray-500 mt-1">For growing centers</p>
+   572	              </div>
+   573	              <div className="mb-6">
+   574	                <span className="text-4xl font-extrabold text-gray-900">$39</span>
+   575	                <span className="text-gray-500 text-sm">/month + $3/hr</span>
+   576	                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
+   577	              </div>
+   578	              <Button className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-lg shadow-amber-500/25 text-sm h-11" onClick={() => setShowAuth('register')}>
+   579	                Start Free, Upgrade Later
+   580	              </Button>
+   581	              <ul className="mt-6 space-y-3">
+   582	                {['Everything in Pro', '5,000 smart credits/month', 'Unlimited recordings', 'White-label branding', 'Admin dashboard', 'Up to 5 sub-tutors', 'Student roster', 'Per-hour billing'].map((f) => (
+   583	                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-amber-500 flex-shrink-0" />{f}</li>
+   584	                ))}
+   585	              </ul>
+   586	            </div>
+   587	
+   588	            {/* Agency Premium */}
+   589	            <div className="rounded-2xl border border-gray-200 bg-white p-6 hover:shadow-lg transition-shadow">
+   590	              <div className="mb-6">
+   591	                <h3 className="text-lg font-semibold text-gray-900">Agency Premium</h3>
+   592	                <p className="text-sm text-gray-500 mt-1">For established centers</p>
+   593	              </div>
+   594	              <div className="mb-6">
+   595	                <span className="text-4xl font-extrabold text-gray-900">$79</span>
+   596	                <span className="text-gray-500 text-sm">/month + $2/hr</span>
+   597	                {isAnnual && <p className="text-xs text-amber-600 mt-1">Contact for annual pricing</p>}
+   598	              </div>
+   599	              <Button className="w-full rounded-xl border-gray-200 font-semibold text-sm h-11" variant="outline" onClick={() => setShowAuth('register')}>
+   600	                Contact Sales
+   601	              </Button>
+   602	              <ul className="mt-6 space-y-3">
+   603	                {['Everything in Standard', 'Unlimited sub-tutors', '$2/hr volume discount', 'Priority support', 'Advanced analytics', 'Custom domain', 'Student roster', 'API access'].map((f) => (
+   604	                  <li key={f} className="flex items-center gap-2 text-sm text-gray-600"><Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />{f}</li>
+   605	                ))}
+   606	              </ul>
+   607	            </div>
+   608	          </div>
+   609	        </div>
+   610	      </section>
+   611	
+   612	      {/* ===== FEATURE COMPARISON TABLE ===== */}
+   613	      <section className="py-12 px-6 bg-white border-t border-gray-100">
+   614	        <div className="max-w-5xl mx-auto">
+   615	          <h3 className="text-lg font-bold text-gray-900 text-center mb-6">Feature comparison</h3>
+   616	          <div className="overflow-x-auto">
+   617	            <table className="w-full text-sm">
+   618	              <thead>
+   619	                <tr className="border-b border-gray-200">
+   620	                  <th className="text-left py-3 px-4 font-medium text-gray-500">Feature</th>
+   621	                  <th className="text-center py-3 px-4 font-medium text-gray-500 w-24">Free</th>
+   622	                  <th className="text-center py-3 px-4 font-medium text-emerald-600 w-24">Pro</th>
+   623	                  <th className="text-center py-3 px-4 font-medium text-amber-600 w-24">Agency</th>
+   624	                </tr>
+   625	              </thead>
+   626	              <tbody className="divide-y divide-gray-100">
+   627	                {[
+   628	                  { feature: 'Active rooms', free: '1', pro: 'Unlimited', agency: 'Unlimited' },
+   629	                  { feature: 'Video calling', free: '120 min/wk', pro: 'Unlimited', agency: 'Unlimited' },
+   630	                  { feature: 'Whiteboard & drawing', free: true, pro: true, agency: true },
+   631	                  { feature: 'Smart tools (quiz, graph)', free: '10 credits/wk', pro: '500/mo', agency: '5,000/mo' },
+   632	                  { feature: 'Advanced tools (plans, rubrics)', free: false, pro: true, agency: true },
+   633	                  { feature: 'Save & load boards', free: false, pro: true, agency: true },
+   634	                  { feature: 'Templates', free: false, pro: true, agency: true },
+   635	                  { feature: 'PDF export', free: false, pro: true, agency: true },
+   636	                  { feature: 'Image uploads', free: false, pro: true, agency: true },
+   637	                  { feature: 'Recordings', free: false, pro: '2/mo', agency: 'Unlimited' },
+   638	                  { feature: 'Handwriting recognition', free: false, pro: true, agency: true },
+   639	                  { feature: 'White-label branding', free: false, pro: false, agency: true },
+   640	                  { feature: 'Admin dashboard', free: false, pro: false, agency: true },
+   641	                  { feature: 'Sub-tutor management', free: false, pro: false, agency: true },
+   642	                ].map((row) => (
+   643	                  <tr key={row.feature} className="hover:bg-gray-50/50">
+   644	                    <td className="py-2.5 px-4 text-gray-700">{row.feature}</td>
+   645	                    {([row.free, row.pro, row.agency] as (boolean | string)[]).map((val, i) => (
+   646	                      <td key={i} className="text-center py-2.5 px-4">
+   647	                        {typeof val === 'boolean' ? (
+   648	                          val ? <Check className="w-4 h-4 text-emerald-500 mx-auto" /> : <span className="text-gray-300">—</span>
+   649	                        ) : (
+   650	                          <span className="text-gray-600 text-xs">{val}</span>
+   651	                        )}
+   652	                      </td>
+   653	                    ))}
+   654	                  </tr>
+   655	                ))}
+   656	              </tbody>
+   657	            </table>
+   658	          </div>
+   659	          <p className="text-xs text-gray-400 text-center mt-4">
+   660	            Smart tools include quiz generation, graphing, equation balancing, grammar checks, and shape perfection. Advanced tools include lesson plans, rubrics, flashcards, differentiated instruction, and more. Video calling powered by LiveKit (self-hosted, no per-minute API fees).
+   661	          </p>
+   662	        </div>
+   663	      </section>
+   664	
+   665	      {/* ===== SOCIAL PROOF (moved before FAQ for stronger impact) ===== */}
+   666	      <SocialProofSection />
+   667	
+   668	      {/* ===== FEATURE SHOWCASE ===== */}
+   669	      <FeatureShowcase />
+   670	
+   671	      {/* ===== FAQ ===== */}
+   672	      <FAQSection />
+   673	
+   674	      {/* ===== FINAL CTA — honest, specific, creates urgency ===== */}
+   675	      <section className="py-20 md:py-28 bg-gradient-to-br from-emerald-50 via-white to-sky-50">
+   676	        <div className="max-w-3xl mx-auto px-6 text-center">
+   677	          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
+   678	            <Check className="w-3.5 h-3.5 text-emerald-500" />
+   679	            <span className="text-xs font-semibold text-emerald-700">No credit card required to start</span>
+   680	          </div>
+   681	          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
+   682	            Try the free plan today
+   683	          </h2>
+   684	          <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
+   685	            Create a room, share the link with your student, and start teaching on an interactive whiteboard with video calling. When you need more — save boards, export PDFs, or use smart tools — upgrade to Pro in one click.
+   686	          </p>
+   687	          <div className="flex flex-wrap items-center justify-center gap-4">
+   688	            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
+   689	              Start Teaching Free <ArrowRight className="w-4 h-4 ml-1.5" />
+   690	            </Button>
+   691	            <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+   692	              Compare Plans
+   693	            </Button>
+   694	          </div>
+   695	        </div>
+   696	      </section>
+   697	
+   698	      {/* ===== FOOTER ===== */}
+   699	      <footer className="bg-gray-50 border-t border-gray-100 py-10">
+   700	        <div className="max-w-7xl mx-auto px-6">
+   701	          {/* Top row: branding + nav */}
+   702	          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+   703	            <div className="flex items-center gap-2">
+   704	              <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
+   705	                <GraduationCap className="w-4 h-4 text-white" />
+   706	              </div>
+   707	              <span className="text-sm font-semibold text-gray-900">Superboard</span>
+   708	            </div>
+   709	            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+   710	              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
+   711	              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
+   712	              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
+   713	              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
+   714	              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
+   715	              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
+   716	              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
+   717	            </div>
+   718	          </div>
+   719	          {/* Bottom row: copyright */}
+   720	          <div className="pt-6 border-t border-gray-100">
+   721	            <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Superboard. All rights reserved. Built for K-12 tutors.</p>
+   722	          </div>
+   723	        </div>
+   724	      </footer>
+   725	
+   726	      {/* ===== AUTH DIALOG ===== */}
+   727	      <Dialog open={showAuth !== null} onOpenChange={(open) => { if (!open) closeAuth(); }}>
+   728	        <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+   729	          {showForgotPassword ? (
+   730	            <>
+   731	              <DialogTitle className="sr-only">Reset Password</DialogTitle>
+   732	              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   733	                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   734	                  <Shield className="w-7 h-7 text-emerald-600" />
+   735	                </div>
+   736	                <h2 className="text-xl font-bold text-white">Reset Password</h2>
+   737	                <p className="text-sm text-white/70 mt-1">We&apos;ll send you a reset link</p>
+   738	              </div>
+   739	              {forgotSuccess ? (
+   740	                <div className="px-6 pb-6 pt-6 space-y-4 text-center">
+   741	                  <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-4 py-3">Check your email for a reset link.</p>
+   742	                  <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+   743	                </div>
+   744	              ) : (
+   745	                <form onSubmit={handleForgotPassword} className="px-6 pb-6 pt-4 space-y-4">
+   746	                  <div className="space-y-2">
+   747	                    <Label htmlFor="forgot-email" className="text-sm font-medium">Email</Label>
+   748	                    <Input id="forgot-email" type="email" placeholder="you@example.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="rounded-xl" required />
+   749	                  </div>
+   750	                  {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   751	                  <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Send Reset Link</Button>
+   752	                  <p className="text-center">
+   753	                    <button type="button" className="text-sm text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(false); setForgotEmail(''); setAuthError(''); }}>Back to Sign In</button>
+   754	                  </p>
+   755	                </form>
+   756	              )}
+   757	            </>
+   758	          ) : showAuth === 'login' ? (
+   759	            <>
+   760	              <DialogTitle className="sr-only">Sign In</DialogTitle>
+   761	              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   762	                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   763	                  <BookOpen className="w-7 h-7 text-emerald-600" />
+   764	                </div>
+   765	                <h2 className="text-xl font-bold text-white">Welcome Back</h2>
+   766	                <p className="text-sm text-white/70 mt-1">Sign in to continue teaching</p>
+   767	              </div>
+   768	              <form onSubmit={handleLogin} className="px-6 pb-6 pt-4 space-y-4">
+   769	                {/* Google OAuth */}
+   770	                <Button type="button" variant="outline" className="w-full rounded-xl font-medium text-sm h-11 gap-2 border-gray-200 hover:bg-gray-50" onClick={handleGoogleAuth}>
+   771	                  <GoogleIcon className="w-4 h-4" />
+   772	                  Continue with Google
+   773	                </Button>
+   774	                <div className="flex items-center gap-3">
+   775	                  <div className="flex-1 h-px bg-gray-200" />
+   776	                  <span className="text-xs text-gray-400 font-medium">or sign in with email</span>
+   777	                  <div className="flex-1 h-px bg-gray-200" />
+   778	                </div>
+   779	                <div className="space-y-2">
+   780	                  <Label htmlFor="login-email" className="text-sm font-medium">Email</Label>
+   781	                  <Input id="login-email" type="email" placeholder="you@example.com" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="rounded-xl" required />
+   782	                </div>
+   783	                <div className="space-y-2">
+   784	                  <Label htmlFor="login-password" className="text-sm font-medium">Password</Label>
+   785	                  <div className="relative">
+   786	                    <Input id="login-password" type={showLoginPassword ? 'text' : 'password'} placeholder="Your password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="rounded-xl pr-10" required />
+   787	                    <button
+   788	                      type="button"
+   789	                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+   790	                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+   791	                      aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+   792	                    >
+   793	                      {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   794	                    </button>
+   795	                  </div>
+   796	                </div>
+   797	                {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   798	                <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Sign In</Button>
+   799	                <div className="text-center space-y-2">
+   800	                  <button type="button" className="text-xs text-emerald-600 hover:underline" onClick={() => { setShowForgotPassword(true); setForgotEmail(loginEmail); setAuthError(''); }}>Forgot password?</button>
+   801	                  <p className="text-sm text-muted-foreground">
+   802	                    Don&apos;t have an account?{' '}
+   803	                    <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('register')}>Sign up</button>
+   804	                  </p>
+   805	                </div>
+   806	              </form>
+   807	            </>
+   808	          ) : showAuth === 'register' ? (
+   809	            <>
+   810	              <DialogTitle className="sr-only">Create Account</DialogTitle>
+   811	              <div className="gradient-primary px-6 pt-8 pb-6 text-center">
+   812	                <div className="w-14 h-14 rounded-2xl bg-white/90 flex items-center justify-center mx-auto mb-4">
+   813	                  <Sparkles className="w-7 h-7 text-emerald-600" />
+   814	                </div>
+   815	                <h2 className="text-xl font-bold text-white">Create Your Account</h2>
+   816	                <p className="text-sm text-white/70 mt-1">Start teaching in under a minute</p>
+   817	              </div>
+   818	              <form onSubmit={handleRegister} className="px-6 pb-6 pt-4 space-y-4">
+   819	                {/* Google OAuth */}
+   820	                <Button type="button" variant="outline" className="w-full rounded-xl font-medium text-sm h-11 gap-2 border-gray-200 hover:bg-gray-50" onClick={handleGoogleAuth}>
+   821	                  <GoogleIcon className="w-4 h-4" />
+   822	                  Sign up with Google
+   823	                </Button>
+   824	                <div className="flex items-center gap-3">
+   825	                  <div className="flex-1 h-px bg-gray-200" />
+   826	                  <span className="text-xs text-gray-400 font-medium">or register with email</span>
+   827	                  <div className="flex-1 h-px bg-gray-200" />
+   828	                </div>
+   829	                <div className="space-y-2">
+   830	                  <Label htmlFor="register-name" className="text-sm font-medium">Full Name</Label>
+   831	                  <Input id="register-name" type="text" placeholder="Your name" value={registerName} onChange={(e) => setRegisterName(e.target.value)} className="rounded-xl" />
+   832	                </div>
+   833	                <div className="space-y-2">
+   834	                  <Label htmlFor="register-email" className="text-sm font-medium">Email</Label>
+   835	                  <Input id="register-email" type="email" placeholder="you@example.com" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} className="rounded-xl" required />
+   836	                </div>
+   837	                <div className="space-y-2">
+   838	                  <Label htmlFor="register-password" className="text-sm font-medium">Password</Label>
+   839	                  <div className="relative">
+   840	                    <Input id="register-password" type={showRegisterPassword ? 'text' : 'password'} placeholder="Create a strong password" value={registerPassword} onChange={(e) => { setRegisterPassword(e.target.value); setPasswordStrength(evaluatePasswordStrength(e.target.value)); }} className="rounded-xl pr-10" required />
+   841	                    <button
+   842	                      type="button"
+   843	                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+   844	                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+   845	                      aria-label={showRegisterPassword ? 'Hide password' : 'Show password'}
+   846	                    >
+   847	                      {showRegisterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+   848	                    </button>
+   849	                  </div>
+   850	                  {registerPassword && (
+   851	                    <div className="space-y-1">
+   852	                      <div className="flex gap-1">
+   853	                        {[1,2,3,4,5].map((i) => (
+   854	                          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= passwordStrength.score ? passwordStrength.color : 'bg-gray-200'}`} />
+   855	                        ))}
+   856	                      </div>
+   857	                      <p className={`text-xs ${passwordStrength.score <= 1 ? 'text-red-500' : passwordStrength.score <= 3 ? 'text-amber-500' : 'text-emerald-600'}`}>
+   858	                        {passwordStrength.label}
+   859	                      </p>
+   860	                    </div>
+   861	                  )}
+   862	                </div>
+   863	                {authError && <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{authError}</p>}
+   864	                {authMessage && <p className="text-sm text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">{authMessage}</p>}
+   865	                <Button type="submit" className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all">Create Account</Button>
+   866	                <p className="text-center text-sm text-muted-foreground">
+   867	                  Already have an account?{' '}
+   868	                  <button type="button" className="text-emerald-600 font-medium hover:underline" onClick={() => setShowAuth('login')}>Sign in</button>
+   869	                </p>
+   870	              </form>
+   871	            </>
+   872	          ) : null}
+   873	        </DialogContent>
+   874	      </Dialog>
+   875	
+   876	      {/* ===== EMAIL VERIFICATION SCREEN ===== */}
+   877	      {showVerification && (
+   878	        <div className="fixed inset-0 z-50 bg-white flex items-center justify-center px-6">
+   879	          <div className="max-w-md w-full text-center space-y-6">
+   880	            <div className="w-20 h-20 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/25">
+   881	              <Mail className="w-10 h-10 text-white" />
+   882	            </div>
+   883	            <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
+   884	            <p className="text-gray-600 leading-relaxed">
+   885	              We&apos;ve sent a confirmation link to <strong>{registerEmail}</strong>. 
+   886	              Click the link to verify your account and start teaching.
+   887	            </p>
+   888	            <p className="text-sm text-gray-500">
+   889	              Didn&apos;t receive the email? Check your spam folder.
+   890	            </p>
+   891	            <Button variant="outline" className="rounded-xl" onClick={() => setShowVerification(false)}>
+   892	              Back to Sign In
+   893	            </Button>
+   894	          </div>
+   895	        </div>
+   896	      )}
+   897	    </main>
+   898	  );
+   899	}
+   900	
+   901	export default LandingPage;
