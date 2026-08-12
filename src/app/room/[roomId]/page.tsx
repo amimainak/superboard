@@ -12,7 +12,7 @@ import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { GraduationCap } from 'lucide-react';
 import type { RoomData, BrandingConfig } from '@/types';
 
@@ -160,8 +160,9 @@ export default function RoomPage({
   params: Promise<{ roomId: string }>;
 }) {
   // Use React.use() to unwrap the params Promise (Next.js 16 pattern)
-  // This avoids hydration mismatch from window.location access
-  const { roomId } = useRoomParams(params);
+  // This works synchronously in both server and client rendering,
+  // avoiding hydration mismatch from useEffect-based state.
+  const { roomId } = use(params);
 
   if (!roomId) {
     return (
