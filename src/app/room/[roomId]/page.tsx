@@ -12,7 +12,7 @@ import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { GraduationCap } from 'lucide-react';
 import type { RoomData, BrandingConfig } from '@/types';
 
@@ -159,10 +159,37 @@ export default function RoomPage({
 }: {
   params: Promise<{ roomId: string }>;
 }) {
-  // Use React.use() to unwrap the params Promise (Next.js 16 pattern)
-  // This works synchronously in both server and client rendering,
-  // avoiding hydration mismatch from useEffect-based state.
-  const { roomId } = use(params);
+  // Fully client-rendered to avoid hydration mismatches from server vs client
+  // rendering differences (dynamic imports, browser APIs, auth state).
+  return <ClientRoomLoader params={params} />;
+}
+
+// Client-side wrapper that loads params and renders the room content.
+// This avoids hydration mismatch because the entire subtree is rendered
+// only after mount (useEffect), so there's no server HTML to mismatch with.
+function ClientRoomLoader({ params }: { params: Promise<{ roomId: string }> }) {
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    params.then((p) => {
+      setRoomId(p.roomId || null);
+      setLoading(false);
+    });
+  }, [params]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
+            <GraduationCap className="w-9 h-9 text-white" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium">Loading your lesson...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!roomId) {
     return (
@@ -177,16 +204,5 @@ export default function RoomPage({
     );
   }
 
-  return <div suppressHydrationWarning><RoomPageContent roomId={roomId} /></div>;
-}
-
-// Safe hook to extract roomId from params without hydration issues
-function useRoomParams(params: Promise<{ roomId: string }>): { roomId: string | null } {
-  const [resolved, setResolved] = useState<{ roomId: string | null }>({ roomId: null });
-
-  useEffect(() => {
-    params.then((p) => setResolved({ roomId: p.roomId || null }));
-  }, [params]);
-
-  return resolved;
+  return <RoomPageContent roomId={roomId} />;
 }
