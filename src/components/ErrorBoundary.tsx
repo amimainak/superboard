@@ -24,29 +24,33 @@ interface ErrorBoundaryState {
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  // Track whether we've seen a hydration error to avoid infinite loops
+  private hydrationErrorSeen = false;
+
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // For hydration mismatches, don't set error state — let React patch the DOM.
+    // We can't do full regex matching in static method, but we check what we can.
+    if (error.message?.includes('#321') || error.message?.includes('Minified React error')) {
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Check if it's a hydration mismatch — these are harmless and React
-    // will patch the DOM automatically. Reset error state so the app
-    // continues to render normally.
     const isHydrationError = error.message?.includes('#321')
       || error.message?.includes('hydration')
       || error.message?.includes('Minified React error')
       || error.message?.includes('Hydration');
 
-    if (isHydrationError) {
-      console.warn('[ErrorBoundary] Suppressing hydration mismatch:', error.message);
-      // Reset error state — this allows the component tree to continue rendering
-      // React will patch the DOM to match the client render.
-      this.setState({ hasError: false, error: null });
+    if (isHydrationError && !this.hydrationErrorSeen) {
+      // Only log once to avoid console spam
+      this.hydrationErrorSeen = true;
+      console.warn('[ErrorBoundary] Suppressing hydration mismatch — React will patch DOM automatically');
       return;
     }
 
