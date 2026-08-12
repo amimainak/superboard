@@ -737,3 +737,24 @@
   --chart-4: #993399 !important;
   --chart-5: #cccc00 !important;
 }
+
+/* Color-blind simulation overlays for canvas and images */
+[data-colorblind="protanopia"] img,
+[data-colorblind="protanopia"] canvas {
+  filter: url(#protanopia-filter);
+}
+
+/* High contrast filter (additional enhancement) */
+[data-accessibility="high-contrast"] {
+  filter: contrast(1.5);
+}
+
+/* Ensure canvas containers override the contrast filter for drawing fidelity */
+[data-accessibility="high-contrast"] .canvas-container {
+  filter: none;
+}
+
+/* Large text mode — line-height for readability */
+[data-accessibility="large-text"] {
+  line-height: 1.6 !important;
+}

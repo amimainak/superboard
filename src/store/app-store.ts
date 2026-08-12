@@ -53,6 +53,8 @@ export interface AppState {
   aiPanelOpen: boolean;
   selectedAiAction: string | null;
   aiFeaturesEnabled: Record<string, boolean>;
+  // Manipulative Panel
+  manipulativePanelOpen: boolean;
   // Video limit (soft-stop, updated from heartbeat)
   videoLimited: boolean;
   videoApproachingLimit: boolean;
@@ -95,6 +97,9 @@ interface AppActions {
   toggleAIPanel: () => void;
   setSelectedAiAction: (action: string | null) => void;
   toggleAIFeature: (feature: string, enabled: boolean) => void;
+  // Manipulative Panel
+  toggleManipulativePanel: () => void;
+  setManipulativePanelOpen: (open: boolean) => void;
   // Video limit (soft-stop)
   setVideoLimitState: (state: { videoLimited?: boolean; videoApproachingLimit?: boolean }) => void;
   // Paywall
@@ -103,6 +108,9 @@ interface AppActions {
   // Sprint 1: Accessibility
   setAccessibilityMode: (mode: AccessibilityMode) => void;
   setColorBlindMode: (mode: ColorBlindMode) => void;
+  // Question Bank Panel
+  questionBankOpen: boolean;
+  setQuestionBankOpen: (open: boolean) => void;
 }
 
 const initialRoomState: RoomState = {
@@ -143,6 +151,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   aiPanelOpen: false,
   selectedAiAction: null,
   aiFeaturesEnabled: {},
+  manipulativePanelOpen: false,
   videoLimited: false,
   videoApproachingLimit: false,
   paywallOpen: false,
@@ -218,6 +227,10 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
       aiFeaturesEnabled: { ...state.aiFeaturesEnabled, [feature]: enabled },
     })),
 
+  // Manipulative Panel
+  toggleManipulativePanel: () => set((state) => ({ manipulativePanelOpen: !state.manipulativePanelOpen })),
+  setManipulativePanelOpen: (open) => set({ manipulativePanelOpen: open }),
+
   // Video limit (soft-stop) — set from heartbeat response
   setVideoLimitState: (state) => set((s) => ({
     videoLimited: state.videoLimited ?? s.videoLimited,
@@ -231,4 +244,7 @@ export const useAppStore = create<AppState & AppActions>((set) => ({
   // Sprint 1: Accessibility
   setAccessibilityMode: (mode) => set({ accessibilityMode: mode }),
   setColorBlindMode: (mode) => set({ colorBlindMode: mode }),
+  // Question Bank Panel
+  questionBankOpen: false,
+  setQuestionBankOpen: (open) => set({ questionBankOpen: open }),
 }));

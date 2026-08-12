@@ -35,6 +35,7 @@ import getStroke from 'perfect-freehand';
 import { useCanvasTools, useCanvasHistory, useKeyboardShortcuts, setKeyboardCanvasRef, type FabricCanvas, type CanvasTool } from './hooks';
 import { useYjsCanvasSync } from './useYjsCanvasSync';
 import { useFocusMode } from '@/hooks/useFocusMode';
+import { useAppStore, type ColorBlindMode } from '@/store/app-store';
 
 // ---- Color-Blind Safe Canvas Colors (Sprint 1) ----
 // Used when tutor draws with color-blind mode enabled.
@@ -208,6 +209,26 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
     const history = useCanvasHistory(fcanvasRef);
 
     // Sprint 1: Focus mode — use the hook for viewport broadcast/receive
+    // Sprint 1: Read color-blind mode from store for canvas stroke remapping
+    const colorBlindMode = useAppStore((s) => s.colorBlindMode);
+
+    /** Remap a hex color through color-blind palette using nearest-name matching */
+    const getRemappedColor = useCallback((hexColor: string): string => {
+      if (colorBlindMode === 'none') return hexColor;
+      // Quick name-based lookup for common colors
+      const nameMap: Record<string, string> = {
+        '#ef4444': 'red', '#f97316': 'orange', '#eab308': 'yellow',
+        '#22c55e': 'green', '#3b82f6': 'blue', '#8b5cf6': 'purple',
+        '#ec4899': 'pink', '#14b8a6': 'teal', '#dc2626': 'red',
+        '#ea580c': 'orange', '#ca8a04': 'yellow', '#16a34a': 'green',
+        '#2563eb': 'blue', '#7c3aed': 'purple', '#db2777': 'pink',
+        '#0d9488': 'teal', '#1a1a2e': 'blue', '#000000': 'red',
+      };
+      const name = nameMap[hexColor.toLowerCase()];
+      if (name) return getColorBlindSafeColor(name, colorBlindMode);
+      return hexColor;
+    }, [colorBlindMode]);
+
     const focusModeHook = useFocusMode({
       awareness,
       onViewportReceived: undefined, // Student-side receive handled by appliedViewport prop
@@ -550,7 +571,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
             left: pointer.x,
             top: pointer.y,
             fontSize: tools.fontSize,
-            fill: tools.strokeColor,
+            fill: getRemappedColor(tools.strokeColor),
             fontFamily: 'Inter, system-ui, sans-serif',
             selectable: true,
             evented: true,
@@ -597,8 +618,8 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
                 top: pointer.y,
                 width: 1,
                 height: 1,
-                fill: tools.fillColor === 'transparent' ? 'transparent' : tools.fillColor,
-                stroke: tools.strokeColor,
+                fill: tools.fillColor === 'transparent' ? 'transparent' : getRemappedColor(tools.fillColor),
+                stroke: getRemappedColor(tools.strokeColor),
                 strokeWidth: tools.strokeWidth,
                 selectable: false,
                 evented: false,
@@ -611,8 +632,8 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
                 top: pointer.y,
                 rx: 1,
                 ry: 1,
-                fill: tools.fillColor === 'transparent' ? 'transparent' : tools.fillColor,
-                stroke: tools.strokeColor,
+                fill: tools.fillColor === 'transparent' ? 'transparent' : getRemappedColor(tools.fillColor),
+                stroke: getRemappedColor(tools.strokeColor),
                 strokeWidth: tools.strokeWidth,
                 selectable: false,
                 evented: false,
@@ -621,7 +642,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
 
             case 'line':
               shape = new Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-                stroke: tools.strokeColor,
+                stroke: getRemappedColor(tools.strokeColor),
                 strokeWidth: tools.strokeWidth,
                 selectable: false,
                 evented: false,
@@ -630,7 +651,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
 
             case 'arrow': {
               const line = new Line([pointer.x, pointer.y, pointer.x, pointer.y], {
-                stroke: tools.strokeColor,
+                stroke: getRemappedColor(tools.strokeColor),
                 strokeWidth: tools.strokeWidth,
                 selectable: false,
                 evented: false,
@@ -641,7 +662,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
                 top: pointer.y,
                 width: headSize,
                 height: headSize,
-                fill: tools.strokeColor,
+                fill: getRemappedColor(tools.strokeColor),
                 angle: 90,
                 originX: 'center',
                 originY: 'center',
@@ -698,7 +719,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
 
           const previewPath = createFreehandPath(
             freehandPointsRef.current,
-            tools.strokeColor,
+            getRemappedColor(tools.strokeColor),
             tools.strokeWidth
           );
           if (previewPath) {
@@ -782,7 +803,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
           if (points.length >= 2) {
             const finalPath = createFreehandPath(
               points,
-              tools.strokeColor,
+              getRemappedColor(tools.strokeColor),
               tools.strokeWidth
             );
             if (finalPath) {
@@ -856,7 +877,7 @@ const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
         fc.off('mouse:move', handleMouseMove);
         fc.off('mouse:up', handleMouseUp);
       };
-    }, [isReady, tools.tool, tools.strokeColor, tools.strokeWidth, tools.fillColor, tools.fontSize, readOnly, history, requestRenderThrottled]);
+    }, [isReady, tools.tool, tools.strokeColor, tools.strokeWidth, tools.fillColor, tools.fontSize, readOnly, history, requestRenderThrottled, colorBlindMode, getRemappedColor]);
 
     // ============================================================
     // Touch: Pinch-to-zoom via native DOM events on container

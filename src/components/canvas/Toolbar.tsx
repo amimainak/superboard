@@ -12,8 +12,43 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAppStore } from '@/store/app-store';
+
+// Color-blind safe remapping for toolbar palette display
+const TOOLBAR_COLORS = [
+  { name: 'black', hex: '#1a1a2e' },
+  { name: 'red', hex: '#ef4444' },
+  { name: 'orange', hex: '#f97316' },
+  { name: 'yellow', hex: '#eab308' },
+  { name: 'green', hex: '#22c55e' },
+  { name: 'blue', hex: '#3b82f6' },
+  { name: 'purple', hex: '#8b5cf6' },
+  { name: 'pink', hex: '#ec4899' },
+];
+
+const COLOR_BLIND_PALETTES: Record<string, Record<string, string>> = {
+  protanopia: {
+    red: '#0066cc', orange: '#cc9900', green: '#009966',
+    blue: '#3366ff', purple: '#9933cc', pink: '#cc6699',
+    yellow: '#cc9900', black: '#000000',
+  },
+  deuteranopia: {
+    red: '#cc3300', orange: '#cc9900', green: '#0066cc',
+    blue: '#3333cc', purple: '#9933cc', pink: '#cc6699',
+    yellow: '#cc9900', black: '#000000',
+  },
+  tritanopia: {
+    red: '#cc0000', orange: '#cc6600', green: '#009900',
+    blue: '#cc3300', purple: '#990099', pink: '#ff6666',
+    yellow: '#cccc00', black: '#000000',
+  },
+};
+
+function getRemappedPaletteColor(name: string, mode: string, hex: string): string {
+  if (mode === 'none') return hex;
+  return COLOR_BLIND_PALETTES[mode]?.[name] || hex;
+}
 import type { Subject } from '@/types';
 import { Pen, MousePointer2, Eraser, Hand, Type, Square, Circle, Minus, ArrowUpRight, Sparkles, Brain, BookOpen, FlaskConical, Languages, PenTool, MoreHorizontal, Shapes, GraduationCap, Target, ClipboardCheck, BookMarked, Layers, HelpCircle, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -298,6 +333,32 @@ function DesktopToolbar({ editor, onToolChange, activeTool }: ToolbarProps) {
   const isTutor = useAppStore((s) => s.room.isTutor);
   const aiFeaturesEnabled = useAppStore((s) => s.aiFeaturesEnabled);
   const tier = useAppStore((s) => s.tier);
+  const colorBlindMode = useAppStore((s) => s.colorBlindMode);
+  const [activeColor, setActiveColor] = useState('#1a1a2e');
+
+  const displayColors = useMemo(() =>
+    TOOLBAR_COLORS.map((c) => ({
+      ...c,
+      displayHex: getRemappedPaletteColor(c.name, colorBlindMode, c.hex),
+    })),
+    [colorBlindMode]
+  );
+
+  const handleColorChange = (hex: string) => {
+    setActiveColor(hex);
+    // Dispatch a custom event so FabricCanvas hooks can pick it up
+    window.dispatchEvent(new CustomEvent('superboard:color-change', { detail: { strokeColor: hex } }));
+  };
+
+  // Listen for external color changes (e.g. from manipulative renderer)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { strokeColor?: string };
+      if (detail?.strokeColor) setActiveColor(detail.strokeColor);
+    };
+    window.addEventListener('superboard:color-change', handler);
+    return () => window.removeEventListener('superboard:color-change', handler);
+  }, []);
 
   const coreTools = [
     { id: 'select', icon: MousePointer2, label: 'Select' },
@@ -335,10 +396,62 @@ function DesktopToolbar({ editor, onToolChange, activeTool }: ToolbarProps) {
 
       <Separator className="my-1 w-8" />
 
+      {/* Color Palette — remapped for color-blind mode */}
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="grid grid-cols-2 gap-1">
+          {displayColors.map((c) => (
+            <button
+              key={c.hex}
+              className={`w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 ${activeColor === c.hex ? 'border-foreground scale-110' : 'border-transparent'}`}
+              style={{ backgroundColor: c.displayHex }}
+              onClick={() => handleColorChange(c.hex)}
+              aria-label={`Color: ${c.name}${colorBlindMode !== 'none' ? ` (remapped for ${colorBlindMode})` : ''}`}
+              title={c.name}
+            />
+          ))}
+        </div>
+      </div>
+
+      <Separator className="my-1 w-8" />
+
       {/* Column 2: Subject-Specific Shapes/Assets */}
       <div className="flex flex-col gap-1">
         <SubjectToolkitLoader subject={subject} editor={editor} />
       </div>
+
+      <Separator className="my-1 w-8" />
+
+      {/* Manipulatives Panel Button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-9 h-9 text-primary"
+            onClick={() => useAppStore.getState().toggleManipulativePanel()}
+            aria-label="Manipulatives library"
+          >
+            <Shapes className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">Manipulatives</TooltipContent>
+      </Tooltip>
+
+      {/* Question Bank Button (opens QuestionBankPanel via store) */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-9 h-9"
+            onClick={() => useAppStore.getState().setQuestionBankOpen(true)}
+            aria-label="Question bank"
+          >
+            <GraduationCap className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="right">Question Bank</TooltipContent>
+      </Tooltip>
 
       {/* Column 3: Subject AI Tools (Tutor only, Premium only) */}
       {isTutor && (

@@ -48,6 +48,22 @@ export function useCanvasTools(fcanvasRef: React.MutableRefObject<FabricCanvas |
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [fontSize, setFontSize] = useState(24);
 
+  // Sprint 1: Listen for color changes from Toolbar palette
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { strokeColor?: string };
+      if (detail?.strokeColor) {
+        setStrokeColor(detail.strokeColor);
+        const fc = fcanvasRef.current;
+        if (fc && fc.freeDrawingBrush) {
+          (fc.freeDrawingBrush as PencilBrush).color = detail.strokeColor;
+        }
+      }
+    };
+    window.addEventListener('superboard:color-change', handler);
+    return () => window.removeEventListener('superboard:color-change', handler);
+  }, [fcanvasRef]);
+
   const setTool = useCallback((newTool: CanvasTool | string) => {
     const validTool = newTool as CanvasTool;
     setToolState(validTool);

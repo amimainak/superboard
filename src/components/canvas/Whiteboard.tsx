@@ -16,7 +16,7 @@ import { authFetch } from '@/lib/auth-fetch';
 import { useToast } from '@/hooks/use-toast';
 import dynamic from 'next/dynamic';
 import { Loader2, Eye, Lock, NotebookPen } from 'lucide-react';
-import type { Canvas as FabricCanvasType } from 'fabric';
+import type { Canvas as FabricCanvasType, Object as FabricObject } from 'fabric';
 import { useAccessibility } from '@/hooks/useAccessibility';
 
 // Lazy load heavy components (Performance Mandate)
@@ -37,6 +37,10 @@ const SessionTimer = dynamic(() => import('@/components/canvas/SessionTimer'), {
 const SessionControls = dynamic(() => import('@/components/canvas/SessionControls'), { ssr: false });
 const LivePollPanel = dynamic(() => import('@/components/canvas/LivePollPanel'), { ssr: false });
 const VideoLimitBanner = dynamic(() => import('@/components/video/VideoLimitBanner'), { ssr: false });
+const NotesAutoGenerator = dynamic(() => import('@/components/canvas/NotesAutoGenerator'), { ssr: false });
+const ManipulativeCreator = dynamic(() => import('@/components/canvas/ManipulativeCreator'), { ssr: false });
+const ManipulativePanel = dynamic(() => import('@/components/canvas/ManipulativePanel'), { ssr: false });
+const QuestionBankPanel = dynamic(() => import('@/components/canvas/QuestionBankPanel'), { ssr: false });
 
 export default function Whiteboard() {
   const { toast } = useToast();
@@ -58,6 +62,11 @@ export default function Whiteboard() {
   const [showWaitingRoom, setShowWaitingRoom] = useState(isTutor ? false : true);
   const [showNameModal, setShowNameModal] = useState(false);
   const [tutorPresent, setTutorPresent] = useState(isTutor);
+  const questionBankOpen = useAppStore((s) => s.questionBankOpen);
+  const setQuestionBankOpen = useAppStore((s) => s.setQuestionBankOpen);
+
+  // Sprint 1: Change signal for auto-generated notes (bumps on canvas object add/remove)
+  const [notesSignal, setNotesSignal] = useState(0);
 
   // Sync waiting room with isTutor state changes
   useEffect(() => {
@@ -228,6 +237,9 @@ export default function Whiteboard() {
   // Called by FabricCanvas when the canvas mounts
   const handleEditorReady = useCallback((canvas: FabricCanvasType) => {
     editorRef.current = canvas;
+    // Listen for object:added / object:removed to trigger notes regeneration
+    canvas.on('object:added', () => setNotesSignal((s) => s + 1));
+    canvas.on('object:removed', () => setNotesSignal((s) => s + 1));
   }, []);
 
   // ============================================================
@@ -256,6 +268,31 @@ export default function Whiteboard() {
     if (!awareness || !isTutor) return;
     awareness.setLocalStateField('scratchpadOpen', scratchpadOpen);
   }, [awareness, isTutor, scratchpadOpen]);
+
+  // ============================================================
+  // Manipulative Panel — add objects to canvas
+  // ============================================================
+  const handleAddManipulative = useCallback(
+    (objects: FabricObject[]) => {
+      const fc = editorRef.current;
+      if (!fc) return;
+
+      const vpt = fc.viewportTransform || [1, 0, 0, 1, 0, 0];
+      const centerX = (fc.getWidth() / 2 - vpt[4]) / vpt[0];
+      const centerY = (fc.getHeight() / 2 - vpt[5]) / vpt[3];
+
+      for (const obj of objects) {
+        if (obj.left !== undefined) obj.left += centerX - 150;
+        if (obj.top !== undefined) obj.top += centerY - 100;
+        fc.add(obj);
+      }
+      fc.renderAll();
+    },
+    []
+  );
+
+  const manipulativePanelOpen = useAppStore((s) => s.manipulativePanelOpen);
+  const setManipulativePanelOpen = useAppStore((s) => s.setManipulativePanelOpen);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-background overflow-hidden">
@@ -328,12 +365,16 @@ export default function Whiteboard() {
           />
 
           {/* Toolbar */}
-          <div className="flex-shrink-0 flex items-start pt-4 pl-2" role="toolbar" aria-label="Whiteboard tools">
+          <div className="flex-shrink-0 flex flex-col items-start pt-4 pl-2 gap-2" role="toolbar" aria-label="Whiteboard tools">
             <ToolbarWrapper
               editorRef={editorRef}
               activeTool={activeTool}
               onToolChange={handleToolChange}
             />
+            {/* Sprint 1: Prompt-to-Manipulative (tutor only) */}
+            {isTutor && (
+              <ManipulativeCreator canvasRef={editorRef} />
+            )}
           </div>
 
           {/* Canvas Container — Tldraw Editor */}
@@ -382,15 +423,55 @@ export default function Whiteboard() {
 
             {/* Floating PiP Video Panel — ALWAYS VISIBLE */}
             <PipVideoPanel />
+
+            {/* Sprint 1: Auto-generated Lesson Notes (collapsible, right side) */}
+            <NotesAutoGenerator
+              canvasRef={editorRef}
+              onChangeSignal={notesSignal}
+            />
           </main>
 
           {/* AI Control Panel (Sheet, slides from right) */}
           <AIControlPanel />
 
+          {/* Manipulative Panel (Sheet, slides from right) */}
+          {isTutor && (
+            <ManipulativePanel
+              open={manipulativePanelOpen}
+              onOpenChange={setManipulativePanelOpen}
+              onAddManipulative={handleAddManipulative}
+            />
+          )}
+
           {/* Live Poll Panel */}
           {ydoc && (
             <LivePollPanel ydoc={ydoc} isTutor={isTutor} />
           )}
+
+          {/* Question Bank Panel */}
+          <QuestionBankPanel
+            open={questionBankOpen}
+            onOpenChange={setQuestionBankOpen}
+            onAddToCanvas={(text) => {
+              // Add question text to canvas as IText
+              import('fabric').then(({ IText }) => {
+                const fc = editorRef.current;
+                if (fc) {
+                  const textObj = new IText(text, {
+                    left: 100,
+                    top: 100,
+                    fontSize: 18,
+                    fontFamily: 'Inter',
+                    fill: '#1a1a2e',
+                    name: `question-${Date.now()}`,
+                  });
+                  fc.add(textObj);
+                  fc.requestRenderAll();
+                }
+              });
+            }}
+            isTutor={isTutor}
+          />
         </div>
       )}
 

@@ -604,6 +604,19 @@ model Invoice {
 // solution tree, and taxonomy tags.
 // ============================================================
 
+// Question type enum for structured question classification
+enum QuestionType {
+  OPEN
+  MCQ
+  TRUE_FALSE
+  MULTI_SELECT
+  FILL_IN_BLANK
+  SHORT_ANSWER
+  ESSAY
+  MATCHING
+  ORDERING
+}
+
 model QuestionItem {
   id              String   @id @default(uuid())
   // Organization
@@ -621,7 +634,12 @@ model QuestionItem {
   answerKey       String   @db.Text  // Correct answer(s)
   solutionSteps   String?  @db.Text  // Step-by-step solution (JSON array)
   distractors     String?  @db.Text  // Wrong answer options (JSON array for MCQs)
-  questionType    String   @default("open") // open, mcq, true-false, multi-select
+  questionType    QuestionType @default(OPEN) // Enum-based question types
+  // Test Prep & Curriculum Standard relations
+  testPrepCategoryId    String?
+  testPrepCategory      TestPrepCategory? @relation("TestPrepQuestions", fields: [testPrepCategoryId], references: [id])
+  curriculumStandardId   String?
+  curriculumStandard     CurriculumStandard? @relation("CurriculumStandardQuestions", fields: [curriculumStandardId], references: [id])
   // Metadata
   tags            String?  @db.Text  // Comma-separated tags for search
   estimatedTimeSec Int?    // Estimated time to solve (seconds)
@@ -635,4 +653,54 @@ model QuestionItem {
   @@index([topic])
   @@index([difficulty])
   @@index([creatorId])
+  @@index([testPrepCategoryId])
+  @@index([curriculumStandardId])
+}
+
+// ============================================================
+// TestPrepCategory — Standardized Test Categories (Sprint 2)
+// ============================================================
+// Groups questions by standardized test (SAT, ACT, AP, STAAR, etc.)
+// with subject and grade level for filtering.
+// ============================================================
+
+model TestPrepCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique  // "SAT Math", "ACT English", "STAAR Grade 5 Math", etc.
+  testType    String   // SAT, ACT, AP, STAAR, NYSESLAT, etc.
+  subject     String   // MATH, ENGLISH, SCIENCE, etc.
+  gradeLevel  String?  // Relevant grade level
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  questions   QuestionItem[] @relation("TestPrepQuestions")
+
+  @@index([testType])
+  @@index([subject])
+}
+
+// ============================================================
+// CurriculumStandard — Standards Framework Reference (Sprint 2)
+// ============================================================
+// Hierarchical curriculum standards (CCSS, NGSS, IB, AQA, etc.)
+// that questions can be aligned to. Supports parent-child
+// relationships for standard hierarchies.
+// ============================================================
+
+model CurriculumStandard {
+  id          String   @id @default(uuid())
+  code        String   @unique  // "CCSS.MATH.CONTENT.HSA.REI.B.4"
+  framework   String   // CCSS, NGSS, IB, AQA, etc.
+  subject     String
+  gradeBand   String
+  topic       String
+  description String?  @db.Text
+  parentCode  String?  // For hierarchical standards (references parent code, not ID)
+
+  questions   QuestionItem[] @relation("CurriculumStandardQuestions")
+
+  @@index([framework, subject])
+  @@index([gradeBand])
 }
