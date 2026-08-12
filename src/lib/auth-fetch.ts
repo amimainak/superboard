@@ -21,32 +21,47 @@ let _cachedToken: string | null = null;
 
 /**
  * Initialize the auth fetch helper by caching the current session token.
- * Call this after confirming the user is logged in (e.g., in onAuthStateChange).
- * The token is kept in memory and refreshed on each auth state change.
+ * Call this after confirming the user is logged in.
+ * Uses direct cookie reading (synchronous, no getSession() hang risk).
  */
 export function initAuthFetch(): void {
-  const supabase = createClient();
-  if (!supabase) return;
-
-  supabase.auth.getSession().then(({ data: { session } }: any) => {
-    _cachedToken = session?.access_token ?? null;
-  });
-
-  // Keep token fresh — update on any auth state change
-  supabase.auth.onAuthStateChange((_event: any, session: any) => {
-    _cachedToken = session?.access_token ?? null;
-  });
+  _cachedToken = getTokenFromCookie();
 }
 
 /**
  * Read the CSRF token from the double-submit cookie.
- * The cookie is set by middleware on every response.
- * SECURITY FIX (FE-M01): Extracts csrf-token cookie for double-submit pattern.
  */
 function getCSRFToken(): string {
   if (typeof document === 'undefined') return '';
   const match = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]*)/);
   return match ? decodeURIComponent(match[1]) : '';
+}
+
+/**
+ * Extract the Supabase access token directly from the auth cookie.
+ * This is synchronous and reliable — no dependency on getSession() which can hang.
+ * The cookie name pattern: sb-<project-ref>-auth-token
+ */
+export function getTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  try {
+    // Find the Supabase auth cookie (name: sb-<ref>-auth-token)
+    const match = document.cookie.match(/sb-[^-]+-auth-token=base64-([^;]+)/);
+    if (!match) return null;
+
+    const b64 = match[1];
+    // Handle URL-safe base64
+    const padded = b64 + '='.repeat((4 - b64.length % 4) % 4);
+    const raw = atob(padded);
+    // Decode percent-encoded bytes
+    const decoded = decodeURIComponent(
+      Array.from(raw, (c) => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join('')
+    );
+    const data = JSON.parse(decoded);
+    return data.access_token || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -63,18 +78,11 @@ export async function authFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  // If no cached token, try to get it from the session directly
+  // If no cached token, extract it directly from the Supabase auth cookie.
+  // This avoids calling supabase.auth.getSession() which can hang indefinitely
+  // in production with @supabase/ssr createBrowserClient.
   if (!_cachedToken) {
-    const supabase = createClient();
-    if (supabase) {
-      // Add timeout to prevent getSession from hanging indefinitely
-      const sessionPromise = supabase.auth.getSession();
-      const timeout = new Promise<{ data: { session: null } }>(r =>
-        setTimeout(() => r({ data: { session: null } }), 5000)
-      );
-      const result = await Promise.race([sessionPromise, timeout]);
-      _cachedToken = result.data.session?.access_token ?? null;
-    }
+    _cachedToken = getTokenFromCookie();
   }
 
   const headers = new Headers(options.headers || {});

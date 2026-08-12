@@ -10,7 +10,6 @@
 
 import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
-import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
@@ -30,32 +29,18 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
     async function loadRoom() {
       try {
-        // Ensure auth token is cached before making API calls
+        // Cache token from cookie synchronously (no getSession() hang)
         initAuthFetch();
-        // Small delay to allow initAuthFetch to populate _cachedToken
-        await new Promise(r => setTimeout(r, 200));
+        // Small delay to ensure cookie is readable
+        await new Promise(r => setTimeout(r, 100));
 
         // Fetch room data from API (auth required — uses authFetch for token)
         let response = await authFetch(`/api/room?roomId=${roomId}`);
 
-        // If auth failed (401), wait for session and retry once
-        if (response.status === 401) {
-          const supabase = createClient();
-          if (supabase) {
-            const sessionPromise = supabase.auth.getSession();
-            const timeout = new Promise<{ data: { session: null } }>(r =>
-              setTimeout(() => r({ data: { session: null } }), 5000)
-            );
-            const result = await Promise.race([sessionPromise, timeout]);
-            if (result.data.session?.access_token) {
-              response = await fetch(`/api/room?roomId=${roomId}`, {
-                headers: {
-                  'Authorization': `Bearer ${result.data.session.access_token}`,
-                  'Content-Type': 'application/json',
-                },
-              });
-            }
-          }
+        // If first attempt failed with 401, retry once after re-reading cookie
+        if (!response.ok && response.status === 401) {
+          await new Promise(r => setTimeout(r, 500));
+          response = await authFetch(`/api/room?roomId=${roomId}`);
         }
 
         if (!response.ok) {
@@ -74,22 +59,24 @@ function RoomPageContent({ roomId }: { roomId: string }) {
         let userId: string | null = null;
         let userName: string | null = null;
 
+        // Read token from cookie and decode JWT to get user ID
         try {
-          const supabase = createClient();
-          if (supabase) {
-            const sessionPromise = supabase.auth.getSession();
-            const timeout = new Promise<null>(r => setTimeout(() => r(null), 3000));
-            const sessionResult = await Promise.race([sessionPromise, timeout]);
-            if (sessionResult && sessionResult.data.session) {
-              userId = sessionResult.data.session.user.id;
-              userName = sessionResult.data.session.user.user_metadata?.name
-                || sessionResult.data.session.user.email
-                || null;
+          const { getTokenFromCookie } = await import('@/lib/auth-fetch');
+          // We need to decode the JWT ourselves to get the sub claim
+          const token = getTokenFromCookie();
+          if (token) {
+            // JWT has 3 parts separated by dots: header.payload.signature
+            const parts = token.split('.');
+            if (parts.length === 3) {
+              const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+              userId = payload.sub || null;
+              // userName from roomData (we don't have metadata in the JWT)
+              userName = null;
               tutorMatch = userId === roomData.tutorId;
             }
           }
         } catch {
-          // If getSession fails, treat as non-tutor
+          // If token decode fails, treat as non-tutor
         }
 
         // Set room state
