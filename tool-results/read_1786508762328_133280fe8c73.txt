@@ -1,0 +1,1348 @@
+     1→// ============================================================
+     2→// Question Bank Seed Generator — Massive K-12 Question Database
+     3→// ============================================================
+     4→// Generates thousands of questions across all subjects, grade bands,
+     5→// difficulty levels, and test prep categories for Supabase PostgreSQL.
+     6→//
+     7→// Usage: npx tsx scripts/seed-question-bank.ts
+     8→// Requires: DATABASE_URL env var pointing to Supabase PostgreSQL
+     9→// ============================================================
+    10→
+    11→import { PrismaClient, QuestionType } from '@prisma/client';
+    12→
+    13→const prisma = new PrismaClient();
+    14→
+    15→// ============================================================
+    16→// Types
+    17→// ============================================================
+    18→
+    19→interface SeedQuestion {
+    20→  subject: string;
+    21→  gradeBand: string;
+    22→  topic: string;
+    23→  difficulty: number;
+    24→  curriculum?: string;
+    25→  standardCode?: string;
+    26→  stem: string;
+    27→  answerKey: string;
+    28→  solutionSteps?: string;
+    29→  distractors?: string;
+    30→  questionType: QuestionType;
+    31→  tags: string;
+    32→  estimatedTimeSec?: number;
+    33→  testTypeName?: string;
+    34→}
+    35→
+    36→// ============================================================
+    37→// Utility Functions
+    38→// ============================================================
+    39→
+    40→function randInt(min: number, max: number): number {
+    41→  return Math.floor(Math.random() * (max - min + 1)) + min;
+    42→}
+    43→
+    44→function pick<T>(arr: T[]): T {
+    45→  return arr[Math.floor(Math.random() * arr.length)];
+    46→}
+    47→
+    48→function shuffle<T>(arr: T[]): T[] {
+    49→  const result = [...arr];
+    50→  for (let i = result.length - 1; i > 0; i--) {
+    51→    const j = Math.floor(Math.random() * (i + 1));
+    52→    [result[i], result[j]] = [result[j], result[i]];
+    53→  }
+    54→  return result;
+    55→}
+    56→
+    57→function makeDistractors(correct: string, wrongPool: string[], count: number = 3): string {
+    58→  const filtered = wrongPool.filter(w => w !== correct);
+    59→  return JSON.stringify(shuffle(filtered).slice(0, count));
+    60→}
+    61→
+    62→function makeSolutionSteps(steps: string[]): string {
+    63→  return JSON.stringify(steps);
+    64→}
+    65→
+    66→// ============================================================
+    67→// MATH QUESTION GENERATORS
+    68→// ============================================================
+    69→
+    70→function generateMathK2(): SeedQuestion[] {
+    71→  const questions: SeedQuestion[] = [];
+    72→  const topics = [
+    73→    { name: 'Counting', gen: genCounting },
+    74→    { name: 'Addition', gen: genAdditionK2 },
+    75→    { name: 'Subtraction', gen: genSubtractionK2 },
+    76→    { name: 'Shapes', gen: genShapesK2 },
+    77→    { name: 'Patterns', gen: genPatternsK2 },
+    78→    { name: 'Measurement', gen: genMeasurementK2 },
+    79→    { name: 'Comparing Numbers', gen: genComparingK2 },
+    80→    { name: 'Time', gen: genTimeK2 },
+    81→    { name: 'Money', gen: genMoneyK2 },
+    82→    { name: 'Place Value', gen: genPlaceValueK2 },
+    83→  ];
+    84→
+    85→  for (const topic of topics) {
+    86→    for (let i = 0; i < 50; i++) {
+    87→      questions.push(topic.gen());
+    88→    }
+    89→  }
+    90→  return questions;
+    91→}
+    92→
+    93→function genCounting(): SeedQuestion {
+    94→  const count = randInt(1, 20);
+    95→  const item = pick(['apples', 'stars', 'blocks', 'pencils', 'birds', 'cookies', 'flowers']);
+    96→  return {
+    97→    subject: 'MATH', gradeBand: 'K-2', topic: 'Counting',
+    98→    difficulty: count <= 5 ? 1 : count <= 10 ? 2 : 3,
+    99→    curriculum: 'CCSS', standardCode: `CCSS.MATH.CONTENT.K.CC.B.${count <= 5 ? '4' : '5'}`,
+   100→    stem: `How many ${item} are there? Count: ${'● '.repeat(count).trim()}`,
+   101→    answerKey: String(count),
+   102→    distractors: makeDistractors(String(count), Array.from({length: 20}, (_, i) => String(i + 1))),
+   103→    questionType: 'MCQ', tags: 'counting,early-math,visual', estimatedTimeSec: 30,
+   104→  };
+   105→}
+   106→
+   107→function genAdditionK2(): SeedQuestion {
+   108→  const a = randInt(0, 20);
+   109→  const b = randInt(0, 20);
+   110→  const sum = a + b;
+   111→  const item1 = pick(['cats', 'dogs', 'marbles', 'crayons', 'stickers']);
+   112→  const item2 = pick(['more', 'additional']);
+   113→  return {
+   114→    subject: 'MATH', gradeBand: 'K-2', topic: 'Addition',
+   115→    difficulty: sum <= 10 ? 1 : sum <= 15 ? 2 : 3,
+   116→    curriculum: 'CCSS', standardCode: sum <= 10 ? 'CCSS.MATH.CONTENT.K.OA.A.5' : 'CCSS.MATH.CONTENT.1.OA.C.6',
+   117→    stem: `Sam has ${a} ${item1}. Then Sam gets ${b} ${item2} ${item1}. How many ${item1} does Sam have now?`,
+   118→    answerKey: String(sum),
+   119→    solutionSteps: makeSolutionSteps([`${a} + ${b} = ?`, `Start with ${a}`, `Add ${b} more`, `${a} + ${b} = ${sum}`]),
+   120→    distractors: makeDistractors(String(sum), [String(a), String(b), String(a - b >= 0 ? a - b : 0), String(sum + 1), String(sum - 1 >= 0 ? sum - 1 : 0)]),
+   121→    questionType: 'MCQ', tags: 'addition,word-problem,operations', estimatedTimeSec: 60,
+   122→  };
+   123→}
+   124→
+   125→function genSubtractionK2(): SeedQuestion {
+   126→  const total = randInt(5, 20);
+   127→  const remove = randInt(1, total);
+   128→  const diff = total - remove;
+   129→  const item = pick(['cookies', 'balloons', 'toys', 'coins', 'candies']);
+   130→  return {
+   131→    subject: 'MATH', gradeBand: 'K-2', topic: 'Subtraction',
+   132→    difficulty: total <= 10 ? 1 : 2,
+   133→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.1.OA.A.1',
+   134→    stem: `Maria had ${total} ${item}. She gave away ${remove} ${item}. How many ${item} does Maria have left?`,
+   135→    answerKey: String(diff),
+   136→    solutionSteps: makeSolutionSteps([`${total} - ${remove} = ?`, `Start with ${total}`, `Take away ${remove}`, `${total} - ${remove} = ${diff}`]),
+   137→    distractors: makeDistractors(String(diff), [String(total), String(remove), String(total + remove), String(diff + 2)]),
+   138→    questionType: 'MCQ', tags: 'subtraction,word-problem,operations', estimatedTimeSec: 60,
+   139→  };
+   140→}
+   141→
+   142→function genShapesK2(): SeedQuestion {
+   143→  const shapes = ['circle', 'square', 'triangle', 'rectangle', 'hexagon', 'diamond', 'oval'];
+   144→  const shape = pick(shapes);
+   145→  const sides = { circle: 0, square: 4, triangle: 3, rectangle: 4, hexagon: 6, diamond: 4, oval: 0 };
+   146→  return {
+   147→    subject: 'MATH', gradeBand: 'K-2', topic: 'Shapes',
+   148→    difficulty: 1,
+   149→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.K.G.A.2',
+   150→    stem: `How many sides does a ${shape} have?`,
+   151→    answerKey: String(sides[shape as keyof typeof sides]),
+   152→    distractors: makeDistractors(String(sides[shape as keyof typeof sides]), ['0', '3', '4', '5', '6']),
+   153→    questionType: 'MCQ', tags: 'geometry,shapes,properties', estimatedTimeSec: 20,
+   154→  };
+   155→}
+   156→
+   157→function genPatternsK2(): SeedQuestion {
+   158→  const patterns = ['2, 4, 6, 8, ___', '1, 3, 5, 7, ___', '5, 10, 15, 20, ___', '3, 6, 9, 12, ___'];
+   159→  const answers = ['10', '9', '25', '15'];
+   160→  const rules = ['Add 2 each time', 'Add 2 each time (odd numbers)', 'Add 5 each time', 'Add 3 each time'];
+   161→  const idx = randInt(0, patterns.length - 1);
+   162→  return {
+   163→    subject: 'MATH', gradeBand: 'K-2', topic: 'Patterns',
+   164→    difficulty: 2,
+   165→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.1.OA.C.5',
+   166→    stem: `What number comes next in the pattern?\n${patterns[idx]}`,
+   167→    answerKey: answers[idx],
+   168→    solutionSteps: makeSolutionSteps([`Look at the pattern: ${patterns[idx]}`, `Each number goes up by ${rules[idx].match(/\d+/)?.[0]}`, rules[idx], `The next number is ${answers[idx]}`]),
+   169→    distractors: makeDistractors(answers[idx], ['11', '12', '14', '16', '18', '20', '21', '26', '30', '8', '13', '17']),
+   170→    questionType: 'MCQ', tags: 'patterns,sequences,number-sense', estimatedTimeSec: 45,
+   171→  };
+   172→}
+   173→
+   174→function genMeasurementK2(): SeedQuestion {
+   175→  const item = pick(['pencil', 'book', 'desk', 'eraser', 'ruler']);
+   176→  const unit = pick(['inches', 'centimeters']);
+   177→  const length = randInt(2, 12);
+   178→  return {
+   179→    subject: 'MATH', gradeBand: 'K-2', topic: 'Measurement',
+   180→    difficulty: 1,
+   181→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.1.MD.A.2',
+   182→    stem: `A ${item} is ${length} ${unit} long. What is its length?`,
+   183→    answerKey: `${length} ${unit}`,
+   184→    distractors: makeDistractors(`${length} ${unit}`, [`${length + 1} ${unit}`, `${length - 1} ${unit}`, `${length + 2} ${unit}`]),
+   185→    questionType: 'MCQ', tags: 'measurement,length,units', estimatedTimeSec: 30,
+   186→  };
+   187→}
+   188→
+   189→function genComparingK2(): SeedQuestion {
+   190→  const a = randInt(1, 50);
+   191→  const b = randInt(1, 50);
+   192→  const answer = a > b ? `${a} is greater than ${b}` : a < b ? `${b} is greater than ${a}` : 'They are equal';
+   193→  return {
+   194→    subject: 'MATH', gradeBand: 'K-2', topic: 'Comparing Numbers',
+   195→    difficulty: a < 20 && b < 20 ? 1 : 2,
+   196→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.1.NBT.B.3',
+   197→    stem: `Which number is greater: ${a} or ${b}?`,
+   198→    answerKey: answer,
+   199→    distractors: makeDistractors(answer, [`${a} is greater than ${b}`, `${b} is greater than ${a}`, 'They are equal']),
+   200→    questionType: 'MCQ', tags: 'comparing,numbers,greater-than', estimatedTimeSec: 30,
+   201→  };
+   202→}
+   203→
+   204→function genTimeK2(): SeedQuestion {
+   205→  const hours = randInt(1, 12);
+   206→  const mins = pick([0, 15, 30, 45]);
+   207→  const period = pick(['AM', 'PM']);
+   208→  const display = mins === 0 ? `${hours}:00` : `${hours}:${String(mins).padStart(2, '0')}`;
+   209→  return {
+   210→    subject: 'MATH', gradeBand: 'K-2', topic: 'Time',
+   211→    difficulty: mins === 0 ? 1 : 2,
+   212→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.1.MD.B.3',
+   213→    stem: `What time does the clock show? The short hand points to ${hours} and the long hand points to ${mins === 0 ? '12' : String(mins / 5 + 1)}.`,
+   214→    answerKey: `${display} ${period}`,
+   215→    distractors: makeDistractors(`${display} ${period}`, [`${hours + 1}:${String(mins).padStart(2, '0')} ${period}`, `${display} ${period === 'AM' ? 'PM' : 'AM'}`]),
+   216→    questionType: 'MCQ', tags: 'time,clocks,reading-time', estimatedTimeSec: 45,
+   217→  };
+   218→}
+   219→
+   220→function genMoneyK2(): SeedQuestion {
+   221→  const quarters = randInt(0, 3);
+   222→  const dimes = randInt(0, 3);
+   223→  const nickels = randInt(0, 3);
+   224→  const pennies = randInt(0, 4);
+   225→  const total = quarters * 25 + dimes * 10 + nickels * 5 + pennies;
+   226→  return {
+   227→    subject: 'MATH', gradeBand: 'K-2', topic: 'Money',
+   228→    difficulty: total <= 50 ? 1 : 2,
+   229→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.2.MD.C.8',
+   230→    stem: `You have ${quarters} quarter(s), ${dimes} dime(s), ${nickels} nickel(s), and ${pennies} penny/pennies. How much money do you have in total?`,
+   231→    answerKey: `$${(total / 100).toFixed(2)}`,
+   232→    solutionSteps: makeSolutionSteps([`${quarters} quarters = $${(quarters * 25 / 100).toFixed(2)}`, `${dimes} dimes = $${(dimes * 10 / 100).toFixed(2)}`, `${nickels} nickels = $${(nickels * 5 / 100).toFixed(2)}`, `${pennies} pennies = $${(pennies / 100).toFixed(2)}`, `Total = $${(total / 100).toFixed(2)}`]),
+   233→    distractors: makeDistractors(`$${(total / 100).toFixed(2)}`, [`$${((total + 5) / 100).toFixed(2)}`, `$${((total - 5) / 100).toFixed(2)}`, `$${((total + 10) / 100).toFixed(2)}`]),
+   234→    questionType: 'MCQ', tags: 'money,coins,counting', estimatedTimeSec: 60,
+   235→  };
+   236→}
+   237→
+   238→function genPlaceValueK2(): SeedQuestion {
+   239→  const num = randInt(10, 99);
+   240→  const tens = Math.floor(num / 10);
+   241→  const ones = num % 10;
+   242→  return {
+   243→    subject: 'MATH', gradeBand: 'K-2', topic: 'Place Value',
+   244→    difficulty: num < 30 ? 1 : 2,
+   245→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.1.NBT.B.2',
+   246→    stem: `What is the value of the tens digit in the number ${num}?`,
+   247→    answerKey: String(tens * 10),
+   248→    distractors: makeDistractors(String(tens * 10), [String(tens), String(ones), String(ones * 10), String(num)]),
+   249→    questionType: 'MCQ', tags: 'place-value,tens,ones', estimatedTimeSec: 30,
+   250→  };
+   251→}
+   252→
+   253→// ============================================================
+   254→// Math 3-5
+   255→// ============================================================
+   256→
+   257→function generateMath35(): SeedQuestion[] {
+   258→  const questions: SeedQuestion[] = [];
+   259→  const topics = [
+   260→    { name: 'Multiplication', gen: genMultiplication35 },
+   261→    { name: 'Division', gen: genDivision35 },
+   262→    { name: 'Fractions', gen: genFractions35 },
+   263→    { name: 'Decimals', gen: genDecimals35 },
+   264→    { name: 'Area and Perimeter', gen: genAreaPerimeter35 },
+   265→    { name: 'Word Problems', gen: genWordProblems35 },
+   266→    { name: 'Rounding', gen: genRounding35 },
+   267→    { name: 'Factors and Multiples', gen: genFactors35 },
+   268→  ];
+   269→
+   270→  for (const topic of topics) {
+   271→    for (let i = 0; i < 120; i++) {
+   272→      questions.push(topic.gen());
+   273→    }
+   274→  }
+   275→  return questions;
+   276→}
+   277→
+   278→function genMultiplication35(): SeedQuestion {
+   279→  const a = randInt(2, 12);
+   280→  const b = randInt(2, 12);
+   281→  const product = a * b;
+   282→  const items = pick(['bags of marbles (each has', 'boxes of crayons (each has', 'packs of cards (each has', 'rows of chairs (each row has')];
+   283→  return {
+   284→    subject: 'MATH', gradeBand: '3-5', topic: 'Multiplication',
+   285→    difficulty: a <= 5 && b <= 5 ? 2 : a <= 9 && b <= 9 ? 3 : 4,
+   286→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.3.OA.A.1',
+   287→    stem: `There are ${b} ${items} ${a} items). How many items in total?`,
+   288→    answerKey: String(product),
+   289→    solutionSteps: makeSolutionSteps([`We need to multiply: ${a} × ${b}`, `${a} groups of ${b}`, `${a} × ${b} = ${product}`]),
+   290→    distractors: makeDistractors(String(product), [String(a + b), String(a * b + a), String(a * b - a), String(Math.abs(a - b) * 10)]),
+   291→    questionType: 'MCQ', tags: 'multiplication,word-problem,times-tables', estimatedTimeSec: 60,
+   292→  };
+   293→}
+   294→
+   295→function genDivision35(): SeedQuestion {
+   296→  const b = randInt(2, 12);
+   297→  const quotient = randInt(2, 12);
+   298→  const a = b * quotient;
+   299→  return {
+   300→    subject: 'MATH', gradeBand: '3-5', topic: 'Division',
+   301→    difficulty: a <= 30 ? 2 : a <= 60 ? 3 : 4,
+   302→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.3.OA.A.2',
+   303→    stem: `${a} items are divided equally into ${b} groups. How many items are in each group?`,
+   304→    answerKey: String(quotient),
+   305→    solutionSteps: makeSolutionSteps([`Divide ${a} by ${b}`, `${a} ÷ ${b} = ?`, `${b} × ${quotient} = ${a}`, `So ${a} ÷ ${b} = ${quotient}`]),
+   306→    distractors: makeDistractors(String(quotient), [String(a), String(b), String(a + b), String(quotient + 1)]),
+   307→    questionType: 'MCQ', tags: 'division,sharing,word-problem', estimatedTimeSec: 60,
+   308→  };
+   309→}
+   310→
+   311→function genFractions35(): SeedQuestion {
+   312→  const denoms = [2, 3, 4, 5, 6, 8, 10, 12];
+   313→  const denom = pick(denoms);
+   314→  const num = randInt(1, denom - 1);
+   315→  const frac = `${num}/${denom}`;
+   316→  const scenarios = [
+   317→    { stem: `What fraction of the shape is shaded if ${num} out of ${denom} equal parts are colored?`, answer: frac },
+   318→    { stem: `Simplify or identify: what is ${num}/${denom} as a fraction of a whole?`, answer: frac },
+   319→    { stem: `If you eat ${num} out of ${denom} equal slices of pizza, what fraction did you eat?`, answer: frac },
+   320→  ];
+   321→  const s = pick(scenarios);
+   322→  return {
+   323→    subject: 'MATH', gradeBand: '3-5', topic: 'Fractions',
+   324→    difficulty: denom <= 4 ? 2 : denom <= 8 ? 3 : 4,
+   325→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.3.NF.A.1',
+   326→    stem: s.stem, answerKey: s.answer,
+   327→    distractors: makeDistractors(frac, [`${denom}/${num}`, `${num - 1}/${denom}`, `${num}/${denom + 1}`, `${num + 1}/${denom}`]),
+   328→    questionType: 'MCQ', tags: 'fractions,parts-of-a-whole,numerator-denominator', estimatedTimeSec: 45,
+   329→  };
+   330→}
+   331→
+   332→function genDecimals35(): SeedQuestion {
+   333→  const a = (randInt(10, 99) / 10);
+   334→  const b = (randInt(10, 99) / 10);
+   335→  const op = pick(['+', '-']);
+   336→  const result = op === '+' ? +(a + b).toFixed(1) : +(a - b).toFixed(1);
+   337→  return {
+   338→    subject: 'MATH', gradeBand: '3-5', topic: 'Decimals',
+   339→    difficulty: 3,
+   340→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.5.NBT.B.7',
+   341→    stem: `Calculate: ${a} ${op} ${b}`,
+   342→    answerKey: String(result),
+   343→    solutionSteps: makeSolutionSteps([`Line up the decimals: ${a} ${op} ${b}`, `Calculate: ${op === '+' ? a + b : a - b}`, `Result: ${result}`]),
+   344→    distractors: makeDistractors(String(result), [String(+(result + 0.1).toFixed(1)), String(+(result - 0.1).toFixed(1)), String(a + b + 0.2)]),
+   345→    questionType: 'MCQ', tags: 'decimals,addition-subtraction,decimal-operations', estimatedTimeSec: 60,
+   346→  };
+   347→}
+   348→
+   349→function genAreaPerimeter35(): SeedQuestion {
+   350→  const type = pick(['area', 'perimeter']);
+   351→  const l = randInt(3, 15);
+   352→  const w = randInt(3, 15);
+   353→  const answer = type === 'area' ? l * w : 2 * (l + w);
+   354→  return {
+   355→    subject: 'MATH', gradeBand: '3-5', topic: 'Area and Perimeter',
+   356→    difficulty: l * w <= 50 ? 2 : 3,
+   357→    curriculum: 'CCSS', standardCode: type === 'area' ? 'CCSS.MATH.CONTENT.3.MD.C.7' : 'CCSS.MATH.CONTENT.3.MD.D.8',
+   358→    stem: `A rectangle has a length of ${l} units and a width of ${w} units. What is the ${type}?`,
+   359→    answerKey: String(answer),
+   360→    solutionSteps: makeSolutionSteps([type === 'area' ? `${type} = length × width` : `${type} = 2 × (length + width)`, `${type === 'area' ? `${l} × ${w}` : `2 × (${l} + ${w})`}`, `= ${answer} square units`]),
+   361→    distractors: makeDistractors(String(answer), [String(l * w), String(2 * (l + w)), String(l + w), String(answer + l)]),
+   362→    questionType: 'MCQ', tags: `${type},geometry,rectangles`, estimatedTimeSec: 60,
+   363→  };
+   364→}
+   365→
+   366→function genWordProblems35(): SeedQuestion {
+   367→  const type = pick(['multi-step', 'comparison', 'extra-info']);
+   368→  if (type === 'multi-step') {
+   369→    const a = randInt(5, 20);
+   370→    const b = randInt(3, 10);
+   371→    const c = randInt(2, 8);
+   372→    const answer = a + b - c;
+   373→    return {
+   374→      subject: 'MATH', gradeBand: '3-5', topic: 'Word Problems',
+   375→      difficulty: 4,
+   376→      curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.4.OA.A.3',
+   377→      stem: `A store had ${a} notebooks. They received ${b} more notebooks, then sold ${c} notebooks. How many notebooks are left?`,
+   378→      answerKey: String(answer),
+   379→      solutionSteps: makeSolutionSteps([`Start: ${a} notebooks`, `Add ${b} more: ${a} + ${b} = ${a + b}`, `Subtract ${c} sold: ${a + b} - ${c} = ${answer}`]),
+   380→      distractors: makeDistractors(String(answer), [String(a + b), String(a - c), String(a + b + c)]),
+   381→      questionType: 'MCQ', tags: 'word-problem,multi-step,operations', estimatedTimeSec: 90,
+   382→    };
+   383→  } else if (type === 'comparison') {
+   384→    const a = randInt(10, 50);
+   385→    const b = randInt(10, 50);
+   386→    const diff = Math.abs(a - b);
+   387→    return {
+   388→      subject: 'MATH', gradeBand: '3-5', topic: 'Word Problems',
+   389→      difficulty: 3,
+   390→      curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.4.OA.A.2',
+   391→      stem: `Team A scored ${a} points. Team B scored ${b} points. How many more points did the winning team score?`,
+   392→      answerKey: String(diff),
+   393→      distractors: makeDistractors(String(diff), [String(a + b), String(a), String(b)]),
+   394→      questionType: 'MCQ', tags: 'word-problem,comparison,difference', estimatedTimeSec: 60,
+   395→    };
+   396→  }
+   397→  // extra-info
+   398→  const a = randInt(3, 12);
+   399→  const b = randInt(2, 8);
+   400→  const extra = randInt(10, 30);
+   401→  const answer = a * b;
+   402→  return {
+   403→    subject: 'MATH', gradeBand: '3-5', topic: 'Word Problems',
+   404→    difficulty: 4,
+   405→    stem: `Each box contains ${a} toy cars. There are ${b} boxes. The boxes cost $${extra} total. How many toy cars are there in all?`,
+   406→    answerKey: String(answer),
+   407→    solutionSteps: makeSolutionSteps([`Ignore the cost — we need total toy cars`, `Each box has ${a} cars`, `${b} boxes`, `${a} × ${b} = ${answer}`]),
+   408→    distractors: makeDistractors(String(answer), [String(extra), String(a + b), String(extra + a)]),
+   409→    questionType: 'MCQ', tags: 'word-problem,extra-information,multiplication', estimatedTimeSec: 90,
+   410→  };
+   411→}
+   412→
+   413→function genRounding35(): SeedQuestion {
+   414→  const num = randInt(10, 999);
+   415→  const place = pick(['nearest 10', 'nearest 100']);
+   416→  const rounded = place === 'nearest 10' ? Math.round(num / 10) * 10 : Math.round(num / 100) * 100;
+   417→  return {
+   418→    subject: 'MATH', gradeBand: '3-5', topic: 'Rounding',
+   419→    difficulty: num < 100 ? 2 : 3,
+   420→    curriculum: 'CCSS', standardCode: place === 'nearest 10' ? 'CCSS.MATH.CONTENT.3.NBT.A.1' : 'CCSS.MATH.CONTENT.4.NBT.A.3',
+   421→    stem: `Round ${num} to the ${place}.`,
+   422→    answerKey: String(rounded),
+   423→    solutionSteps: makeSolutionSteps([`Look at the digit ${place === 'nearest 10' ? 'to the right of the tens place' : 'to the right of the hundreds place'}`, `If it is 5 or more, round up`, `If less than 5, round down`, `${num} rounded to ${place} = ${rounded}`]),
+   424→    distractors: makeDistractors(String(rounded), [String(rounded + 10), String(rounded - 10), String(num)]),
+   425→    questionType: 'MCQ', tags: 'rounding,estimation,place-value', estimatedTimeSec: 45,
+   426→  };
+   427→}
+   428→
+   429→function genFactors35(): SeedQuestion {
+   430→  const num = pick([12, 16, 18, 20, 24, 28, 30, 36, 40, 48]);
+   431→  const factor = pick([2, 3, 4, 5, 6]);
+   432→  const isFactor = num % factor === 0;
+   433→  return {
+   434→    subject: 'MATH', gradeBand: '3-5', topic: 'Factors and Multiples',
+   435→    difficulty: 3,
+   436→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.4.OA.B.4',
+   437→    stem: `Is ${factor} a factor of ${num}?`,
+   438→    answerKey: isFactor ? 'Yes' : 'No',
+   439→    solutionSteps: makeSolutionSteps([`${num} ÷ ${factor} = ${num / factor}`, num % factor === 0 ? 'There is no remainder, so yes' : `There is a remainder of ${num % factor}, so no`]),
+   440→    distractors: makeDistractors(isFactor ? 'Yes' : 'No', ['Yes', 'No']),
+   441→    questionType: 'TRUE_FALSE', tags: 'factors,multiples,divisibility', estimatedTimeSec: 30,
+   442→  };
+   443→}
+   444→
+   445→// ============================================================
+   446→// Math 6-8
+   447→// ============================================================
+   448→
+   449→function generateMath68(): SeedQuestion[] {
+   450→  const questions: SeedQuestion[] = [];
+   451→  const topics = [
+   452→    { name: 'Ratios and Proportions', gen: genRatios68 },
+   453→    { name: 'Pre-Algebra', gen: genPreAlgebra68 },
+   454→    { name: 'Geometry', gen: genGeometry68 },
+   455→    { name: 'Statistics', gen: genStatistics68 },
+   456→    { name: 'Probability', gen: genProbability68 },
+   457→    { name: 'Integers', gen: genIntegers68 },
+   458→    { name: 'Percents', gen: genPercents68 },
+   459→    { name: 'Equations', gen: genEquations68 },
+   460→  ];
+   461→
+   462→  for (const topic of topics) {
+   463→    for (let i = 0; i < 120; i++) {
+   464→      questions.push(topic.gen());
+   465→    }
+   466→  }
+   467→  return questions;
+   468→}
+   469→
+   470→function genRatios68(): SeedQuestion {
+   471→  const a = randInt(2, 12);
+   472→  const b = randInt(2, 12);
+   473→  const scale = randInt(2, 5);
+   474→  const answer = a * scale;
+   475→  const scenarios = [
+   476→    `A recipe calls for ${a} cups of flour for every ${b} cups of sugar. If you use ${answer} cups of flour, how many cups of sugar do you need?`,
+   477→    `The ratio of boys to girls in a class is ${a}:${b}. If there are ${answer} boys, how many girls are there?`,
+   478→  ];
+   479→  return {
+   480→    subject: 'MATH', gradeBand: '6-8', topic: 'Ratios and Proportions',
+   481→    difficulty: 3,
+   482→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.6.RP.A.3',
+   483→    stem: pick(scenarios),
+   484→    answerKey: String(b * scale),
+   485→    solutionSteps: makeSolutionSteps([`Ratio is ${a}:${b}`, `Scale factor: ${answer} ÷ ${a} = ${scale}`, `Missing value: ${b} × ${scale} = ${b * scale}`]),
+   486→    distractors: makeDistractors(String(b * scale), [String(b), String(a * b), String(b * scale + b)]),
+   487→    questionType: 'MCQ', tags: 'ratios,proportions,scale', estimatedTimeSec: 90,
+   488→  };
+   489→}
+   490→
+   491→function genPreAlgebra68(): SeedQuestion {
+   492→  const x = randInt(-10, 10);
+   493→  const a = randInt(2, 8);
+   494→  const b = a * x;
+   495→  return {
+   496→    subject: 'MATH', gradeBand: '6-8', topic: 'Pre-Algebra',
+   497→    difficulty: Math.abs(x) <= 5 ? 3 : 4,
+   498→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.6.EE.B.5',
+   499→    stem: `Solve for x: ${a}x = ${b}`,
+   500→    answerKey: String(x),
+   501→    solutionSteps: makeSolutionSteps([`${a}x = ${b}`, `Divide both sides by ${a}`, `x = ${b} ÷ ${a}`, `x = ${x}`]),
+   502→    distractors: makeDistractors(String(x), [String(-x), String(x + 1), String(b)]),
+   503→    questionType: 'MCQ', tags: 'pre-algebra,solve-for-x,equations', estimatedTimeSec: 60,
+   504→  };
+   505→}
+   506→
+   507→function genGeometry68(): SeedQuestion {
+   508→  const type = pick(['triangle-angle-sum', 'circle-area', 'angle-types']);
+   509→  if (type === 'triangle-angle-sum') {
+   510→    const a = randInt(30, 120);
+   511→    const b = randInt(20, 150 - a);
+   512→    const c = 180 - a - b;
+   513→    return {
+   514→      subject: 'MATH', gradeBand: '6-8', topic: 'Geometry',
+   515→      difficulty: 3,
+   516→      curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.8.G.A.5',
+   517→      stem: `A triangle has angles measuring ${a}° and ${b}°. What is the measure of the third angle?`,
+   518→      answerKey: `${c}°`,
+   519→      solutionSteps: makeSolutionSteps(['Triangle angles sum to 180°', `${a} + ${b} + x = 180`, `x = 180 - ${a} - ${b}`, `x = ${c}°`]),
+   520→      distractors: makeDistractors(`${c}°`, [`${a + b}°`, `${180 - a}°`, `${180 - b}°`]),
+   521→      questionType: 'MCQ', tags: 'geometry,triangles,angle-sum', estimatedTimeSec: 60,
+   522→    };
+   523→  } else if (type === 'circle-area') {
+   524→    const r = randInt(2, 10);
+   525→    const area = Math.PI * r * r;
+   526→    return {
+   527→      subject: 'MATH', gradeBand: '6-8', topic: 'Geometry',
+   528→      difficulty: 3,
+   529→      curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.7.G.B.4',
+   530→      stem: `What is the area of a circle with radius ${r}? (Use π ≈ 3.14)`,
+   531→      answerKey: `${(3.14 * r * r).toFixed(2)}`,
+   532→      distractors: makeDistractors(`${(3.14 * r * r).toFixed(2)}`, [`${(2 * 3.14 * r).toFixed(2)}`, `${(3.14 * r * r * 2).toFixed(2)}`, String(r * r)]),
+   533→      questionType: 'MCQ', tags: 'geometry,circles,area', estimatedTimeSec: 60,
+   534→    };
+   535→  }
+   536→  const angle = randInt(10, 170);
+   537→  const types = angle < 90 ? 'acute' : angle === 90 ? 'right' : angle < 180 ? 'obtuse' : 'straight';
+   538→  return {
+   539→    subject: 'MATH', gradeBand: '6-8', topic: 'Geometry',
+   540→    difficulty: 2,
+   541→    stem: `An angle measures ${angle}°. What type of angle is this?`,
+   542→    answerKey: types,
+   543→    distractors: makeDistractors(types, ['acute', 'right', 'obtuse', 'straight', 'reflex']),
+   544→    questionType: 'MCQ', tags: 'geometry,angles,classification', estimatedTimeSec: 30,
+   545→  };
+   546→}
+   547→
+   548→function genStatistics68(): SeedQuestion {
+   549→  const nums = Array.from({ length: 6 }, () => randInt(1, 20));
+   550→  const mean = (nums.reduce((s, n) => s + n, 0) / nums.length).toFixed(1);
+   551→  const sorted = [...nums].sort((a, b) => a - b);
+   552→  const median = nums.length % 2 === 0 ? ((sorted[2] + sorted[3]) / 2).toFixed(1) : String(sorted[3]);
+   553→  return {
+   554→    subject: 'MATH', gradeBand: '6-8', topic: 'Statistics',
+   555→    difficulty: 3,
+   556→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.6.SP.B.5',
+   557→    stem: `Find the mean of this data set: {${nums.join(', ')}}`,
+   558→    answerKey: mean,
+   559→    solutionSteps: makeSolutionSteps([`Sum: ${nums.join(' + ')} = ${nums.reduce((s, n) => s + n, 0)}`, `Count: ${nums.length} values`, `Mean = ${nums.reduce((s, n) => s + n, 0)} ÷ ${nums.length} = ${mean}`]),
+   560→    distractors: makeDistractors(mean, [median, String(sorted[0]), String(sorted[sorted.length - 1])]),
+   561→    questionType: 'MCQ', tags: 'statistics,mean,average,data-analysis', estimatedTimeSec: 90,
+   562→  };
+   563→}
+   564→
+   565→function genProbability68(): SeedQuestion {
+   566→  const colors = ['red', 'blue', 'green', 'yellow'];
+   567→  const counts = [randInt(2, 8), randInt(2, 8), randInt(2, 8), randInt(2, 8)];
+   568→  const targetIdx = randInt(0, 3);
+   569→  const total = counts.reduce((s, c) => s + c, 0);
+   570→  const prob = counts[targetIdx] / total;
+   571→  return {
+   572→    subject: 'MATH', gradeBand: '6-8', topic: 'Probability',
+   573→    difficulty: 3,
+   574→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.7.SP.C.7',
+   575→    stem: `A bag contains ${colors.map((c, i) => `${counts[i]} ${c}`).join(', ')} marbles. What is the probability of drawing a ${colors[targetIdx]} marble?`,
+   576→    answerKey: `${counts[targetIdx]}/${total}`,
+   577→    distractors: makeDistractors(`${counts[targetIdx]}/${total}`, [`${total}/${counts[targetIdx]}`, `${counts[(targetIdx + 1) % 4]}/${total}`, '1/2']),
+   578→    questionType: 'MCQ', tags: 'probability,fractions,likelihood', estimatedTimeSec: 60,
+   579→  };
+   580→}
+   581→
+   582→function genIntegers68(): SeedQuestion {
+   583→  const a = randInt(-15, 15);
+   584→  const b = randInt(-15, 15);
+   585→  const op = pick(['+', '-']);
+   586→  const result = op === '+' ? a + b : a - b;
+   587→  return {
+   588→    subject: 'MATH', gradeBand: '6-8', topic: 'Integers',
+   589→    difficulty: Math.abs(a) <= 10 && Math.abs(b) <= 10 ? 2 : 3,
+   590→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.7.NS.A.1',
+   591→    stem: `Evaluate: (${a}) ${op} (${b})`,
+   592→    answerKey: String(result),
+   593→    solutionSteps: makeSolutionSteps([`(${a}) ${op} (${b})`, op === '+' ? `Same signs: add and keep the sign / Different signs: subtract and keep the sign of the larger` : `Change the sign of the second number and add`, `= ${result}`]),
+   594→    distractors: makeDistractors(String(result), [String(-result), String(Math.abs(a) + Math.abs(b)), String(result + 2)]),
+   595→    questionType: 'MCQ', tags: 'integers,negative-numbers,operations', estimatedTimeSec: 45,
+   596→  };
+   597→}
+   598→
+   599→function genPercents68(): SeedQuestion {
+   600→  const percent = pick([10, 20, 25, 30, 40, 50, 60, 75]);
+   601→  const whole = pick([20, 40, 50, 80, 100, 120, 200, 250, 500]);
+   602→  const part = whole * percent / 100;
+   603→  const scenarios = [
+   604→    `What is ${percent}% of ${whole}?`,
+   605→    `${percent}% of the students in a school of ${whole} students brought lunch from home. How many students brought lunch?`,
+   606→  ];
+   607→  return {
+   608→    subject: 'MATH', gradeBand: '6-8', topic: 'Percents',
+   609→    difficulty: percent % 25 === 0 ? 2 : 3,
+   610→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.6.RP.A.3',
+   611→    stem: pick(scenarios),
+   612→    answerKey: String(part),
+   613→    solutionSteps: makeSolutionSteps([`${percent}% of ${whole}`, `= ${percent}/100 × ${whole}`, `= ${part}`]),
+   614→    distractors: makeDistractors(String(part), [String(whole), String(whole - part), String(part / 2)]),
+   615→    questionType: 'MCQ', tags: 'percents,calculations,applications', estimatedTimeSec: 60,
+   616→  };
+   617→}
+   618→
+   619→function genEquations68(): SeedQuestion {
+   620→  const x = randInt(-10, 10);
+   621→  const a = randInt(2, 6);
+   622→  const b = randInt(-15, 15);
+   623→  const c = a * x + b;
+   624→  return {
+   625→    subject: 'MATH', gradeBand: '6-8', topic: 'Equations',
+   626→    difficulty: 3,
+   627→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.7.EE.B.4',
+   628→    stem: `Solve for x: ${a}x + ${b >= 0 ? b : `(${b})`} = ${c}`,
+   629→    answerKey: String(x),
+   630→    solutionSteps: makeSolutionSteps([`${a}x + ${b} = ${c}`, `Subtract ${b} from both sides: ${a}x = ${c - b}`, `Divide by ${a}: x = ${c - b} ÷ ${a}`, `x = ${x}`]),
+   631→    distractors: makeDistractors(String(x), [String(-x), String(x + 1), String((c + b) / a)]),
+   632→    questionType: 'MCQ', tags: 'equations,linear,solve-for-x', estimatedTimeSec: 90,
+   633→  };
+   634→}
+   635→
+   636→// ============================================================
+   637→// Math 9-12 (Algebra, Geometry, Trig, Pre-Calc)
+   638→// ============================================================
+   639→
+   640→function generateMath912(): SeedQuestion[] {
+   641→  const questions: SeedQuestion[] = [];
+   642→  const topics = [
+   643→    { name: 'Linear Equations', gen: genLinearEq912 },
+   644→    { name: 'Quadratic Equations', gen: genQuadratic912 },
+   645→    { name: 'Systems of Equations', gen: genSystems912 },
+   646→    { name: 'Functions', gen: genFunctions912 },
+   647→    { name: 'Trigonometry', gen: genTrig912 },
+   648→    { name: 'Polynomials', gen: genPolynomials912 },
+   649→    { name: 'Exponents', gen: genExponents912 },
+   650→    { name: 'Geometry Proofs', gen: genGeoProofs912 },
+   651→    { name: 'Sequences and Series', gen: genSequences912 },
+   652→    { name: 'Matrices', gen: genMatrices912 },
+   653→  ];
+   654→
+   655→  for (const topic of topics) {
+   656→    for (let i = 0; i < 150; i++) {
+   657→      questions.push(topic.gen());
+   658→    }
+   659→  }
+   660→  return questions;
+   661→}
+   662→
+   663→function genLinearEq912(): SeedQuestion {
+   664→  const m = randInt(-5, 5);
+   665→  const b = randInt(-10, 10);
+   666→  if (m === 0) return genLinearEq912(); // avoid horizontal
+   667→  const scenarios = [
+   668→    `What is the slope of the line y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}?`,
+   669→    `What is the y-intercept of the line y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}?`,
+   670→    `Find the x-intercept of the line y = ${m}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}.`,
+   671→  ];
+   672→  const idx = randInt(0, 2);
+   673→  const answers = [String(m), String(b), b !== 0 ? `${(-b / m).toFixed(2)}` : '0'];
+   674→  return {
+   675→    subject: 'MATH', gradeBand: '9-12', topic: 'Linear Equations',
+   676→    difficulty: 4,
+   677→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSA.SSE.A.1',
+   678→    stem: scenarios[idx], answerKey: answers[idx],
+   679→    distractors: makeDistractors(answers[idx], [String(m), String(b), String(-m), String(-b), '0']),
+   680→    questionType: 'MCQ', tags: 'linear-equations,slope,y-intercept,x-intercept', estimatedTimeSec: 60,
+   681→  };
+   682→}
+   683→
+   684→function genQuadratic912(): SeedQuestion {
+   685→  const a = pick([1, 1, 1, 2]);
+   686→  const bCoeff = randInt(-6, 6);
+   687→  const c = randInt(-8, 8);
+   688→  const discriminant = bCoeff * bCoeff - 4 * a * c;
+   689→  const roots = discriminant >= 0
+   690→    ? `(${(-bCoeff + Math.sqrt(discriminant)) / (2 * a)}), ${(-bCoeff - Math.sqrt(discriminant)) / (2 * a)}`
+   691→    : 'No real roots';
+   692→  return {
+   693→    subject: 'MATH', gradeBand: '9-12', topic: 'Quadratic Equations',
+   694→    difficulty: discriminant >= 0 && Math.sqrt(discriminant) % 1 === 0 ? 4 : 5,
+   695→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSA.REI.B.4',
+   696→    stem: `Find the roots of ${a === 1 ? '' : a + '}'}x² ${bCoeff >= 0 ? '+ ' + bCoeff : '- ' + Math.abs(bCoeff)}x ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)} = 0`,
+   697→    answerKey: roots,
+   698→    solutionSteps: makeSolutionSteps([
+   699→      `a=${a}, b=${bCoeff}, c=${c}`,
+   700→      `Discriminant = b²-4ac = ${bCoeff}²-4(${a})(${c}) = ${discriminant}`,
+   701→      discriminant >= 0 ? `x = (-b ± √D) / 2a` : 'Discriminant is negative, no real roots',
+   702→    ]),
+   703→    questionType: 'SHORT_ANSWER', tags: 'quadratic-equations,roots,discriminant', estimatedTimeSec: 120,
+   704→  };
+   705→}
+   706→
+   707→function genSystems912(): SeedQuestion {
+   708→  const x = randInt(-5, 5);
+   709→  const y = randInt(-5, 5);
+   710→  const a1 = randInt(1, 3); const b1 = randInt(1, 3);
+   711→  const a2 = randInt(1, 3); const b2 = randInt(1, 3);
+   712→  const c1 = a1 * x + b1 * y;
+   713→  const c2 = a2 * x + b2 * y;
+   714→  return {
+   715→    subject: 'MATH', gradeBand: '9-12', topic: 'Systems of Equations',
+   716→    difficulty: 5,
+   717→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSA.REI.C.6',
+   718→    stem: `Solve the system:\n${a1}x + ${b1}y = ${c1}\n${a2}x + ${b2}y = ${c2}`,
+   719→    answerKey: `x = ${x}, y = ${y}`,
+   720→    solutionSteps: makeSolutionSteps([`Use substitution or elimination`, `From eq 1: ${a1}x + ${b1}y = ${c1}`, `From eq 2: ${a2}x + ${b2}y = ${c2}`, `Solution: x = ${x}, y = ${y}`]),
+   721→    questionType: 'SHORT_ANSWER', tags: 'systems-of-equations,simultaneous,elimination', estimatedTimeSec: 180,
+   722→  };
+   723→}
+   724→
+   725→function genFunctions912(): SeedQuestion {
+   726→  const a = randInt(-3, 3);
+   727→  const k = randInt(-3, 3);
+   728→  if (a === 0 || k === 0) return genFunctions912();
+   729→  const x = randInt(1, 5);
+   730→  const fx = a * x + k;
+   731→  return {
+   732→    subject: 'MATH', gradeBand: '9-12', topic: 'Functions',
+   733→    difficulty: 3,
+   734→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSF.IF.A.1',
+   735→    stem: `Given f(x) = ${a}x ${k >= 0 ? '+ ' + k : '- ' + Math.abs(k)}, find f(${x}).`,
+   736→    answerKey: String(fx),
+   737→    solutionSteps: makeSolutionSteps([`f(x) = ${a}x ${k >= 0 ? '+ ' + k : '- ' + Math.abs(k)}`, `f(${x}) = ${a}(${x}) ${k >= 0 ? '+ ' + k : '- ' + Math.abs(k)}`, `f(${x}) = ${a * x} ${k >= 0 ? '+ ' + k : '- ' + Math.abs(k)}`, `f(${x}) = ${fx}`]),
+   738→    distractors: makeDistractors(String(fx), [String(a + k), String(a * x), String(k)]),
+   739→    questionType: 'MCQ', tags: 'functions,evaluation,f-of-x', estimatedTimeSec: 60,
+   740→  };
+   741→}
+   742→
+   743→function genTrig912(): SeedQuestion {
+   744→  const angle = pick([0, 30, 45, 60, 90]);
+   745→  const func = pick(['sin', 'cos', 'tan']);
+   746→  const values: Record<string, Record<number, string>> = {
+   747→    sin: { 0: '0', 30: '1/2', 45: '√2/2', 60: '√3/2', 90: '1' },
+   748→    cos: { 0: '1', 30: '√3/2', 45: '√2/2', 60: '1/2', 90: '0' },
+   749→    tan: { 0: '0', 30: '√3/3', 45: '1', 60: '√3', 90: 'undefined' },
+   750→  };
+   751→  return {
+   752→    subject: 'MATH', gradeBand: '9-12', topic: 'Trigonometry',
+   753→    difficulty: 4,
+   754→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSF.TF.A.3',
+   755→    stem: `What is ${func}(${angle}°)?`,
+   756→    answerKey: values[func][angle],
+   757→    distractors: makeDistractors(values[func][angle], ['0', '1', '1/2', '√2/2', '√3/2', '√3/3', '1/√3', '√3', 'undefined']),
+   758→    questionType: 'MCQ', tags: 'trigonometry,sin-cos-tan,special-angles', estimatedTimeSec: 30,
+   759→  };
+   760→}
+   761→
+   762→function genPolynomials912(): SeedQuestion {
+   763→  const a = randInt(1, 4);
+   764→  const b = randInt(-6, 6);
+   765→  const c = randInt(-6, 6);
+   766→  const x = randInt(-3, 3);
+   767→  const result = a * x * x + b * x + c;
+   768→  return {
+   769→    subject: 'MATH', gradeBand: '9-12', topic: 'Polynomials',
+   770→    difficulty: 4,
+   771→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSA.APR.A.1',
+   772→    stem: `Evaluate ${a}x² ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}x ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)} when x = ${x}.`,
+   773→    answerKey: String(result),
+   774→    solutionSteps: makeSolutionSteps([`Substitute x = ${x}`, `${a}(${x})² ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}(${x}) ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)}`, `= ${a * x * x} ${b * x >= 0 ? '+ ' + b * x : '- ' + Math.abs(b * x)} ${c >= 0 ? '+ ' + c : '- ' + Math.abs(c)}`, `= ${result}`]),
+   775→    distractors: makeDistractors(String(result), [String(a + b + c), String(x), String(result + 1)]),
+   776→    questionType: 'MCQ', tags: 'polynomials,evaluation,quadratic', estimatedTimeSec: 90,
+   777→  };
+   778→}
+   779→
+   780→function genExponents912(): SeedQuestion {
+   781→  const base = pick([2, 3, 4, 5, 10]);
+   782→  const exp = randInt(2, 5);
+   783→  const result = Math.pow(base, exp);
+   784→  const law = pick(['product', 'quotient', 'power']);
+   785→  if (law === 'product') {
+   786→    const exp2 = randInt(1, 4);
+   787→    return {
+   788→      subject: 'MATH', gradeBand: '9-12', topic: 'Exponents',
+   789→      difficulty: 3,
+   790→      curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSN.RN.A.2',
+   791→      stem: `Simplify: ${base}^${exp} × ${base}^${exp2}`,
+   792→      answerKey: `${base}^${exp + exp2} = ${result * Math.pow(base, exp2)}`,
+   793→      distractors: makeDistractors(`${base}^${exp + exp2}`, [`${base}^${exp * exp2}`, `${(base * base)}^${exp + exp2}`, `${base}^${exp - exp2}`]),
+   794→      questionType: 'MCQ', tags: 'exponents,power-rules,simplification', estimatedTimeSec: 60,
+   795→    };
+   796→  }
+   797→  return {
+   798→    subject: 'MATH', gradeBand: '9-12', topic: 'Exponents',
+   799→    difficulty: 3,
+   800→    stem: `Evaluate: ${base}^${exp}`,
+   801→    answerKey: String(result),
+   802→    solutionSteps: makeSolutionSteps([`${base}^${exp} = ${base} × ${base} × ... (${exp} times)`, `= ${result}`]),
+   803→    distractors: makeDistractors(String(result), [String(base * exp), String(base + exp), String(Math.pow(base, exp - 1))]),
+   804→    questionType: 'MCQ', tags: 'exponents,evaluation,powers', estimatedTimeSec: 45,
+   805→  };
+   806→}
+   807→
+   808→function genGeoProofs912(): SeedQuestion {
+   809→  const proofs = [
+   810→    { stem: 'Given: Two parallel lines cut by a transversal. Alternate interior angles are congruent. Prove: The lines are parallel.', answer: 'Converse of the Alternate Interior Angles Theorem', topic: 'Parallel Lines' },
+   811→    { stem: 'Given: Triangle ABC with AB = AC. Prove: Angle B = Angle C.', answer: 'Base Angles Theorem (isosceles triangle)', topic: 'Triangles' },
+   812→    { stem: 'Given: Quadrilateral ABCD with all sides equal and one right angle. Prove: ABCD is a square.', answer: 'If a rhombus has one right angle, all angles are right angles → square', topic: 'Quadrilaterals' },
+   813→  ];
+   814→  const p = pick(proofs);
+   815→  return {
+   816→    subject: 'MATH', gradeBand: '9-12', topic: 'Geometry Proofs',
+   817→    difficulty: 5,
+   818→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSG.CO.C.9',
+   819→    stem: `What theorem or postulate would you use to complete this proof?\n\n${p.stem}`,
+   820→    answerKey: p.answer,
+   821→    distractors: makeDistractors(p.answer, ['SSS Postulate', 'SAS Postulate', 'Corresponding Angles Postulate', 'Vertical Angles Theorem']),
+   822→    questionType: 'MCQ', tags: 'geometry,proofs,theorems', estimatedTimeSec: 180,
+   823→  };
+   824→}
+   825→
+   826→function genSequences912(): SeedQuestion {
+   827→  const a1 = randInt(1, 10);
+   828→  const d = randInt(1, 5);
+   829→  const n = randInt(5, 15);
+   830→  const an = a1 + (n - 1) * d;
+   831→  return {
+   832→    subject: 'MATH', gradeBand: '9-12', topic: 'Sequences and Series',
+   833→    difficulty: 4,
+   834→    curriculum: 'CCSS', standardCode: 'CCSS.MATH.CONTENT.HSF.BF.A.2',
+   835→    stem: `Find the ${n}th term of the arithmetic sequence: ${a1}, ${a1 + d}, ${a1 + 2 * d}, ...`,
+   836→    answerKey: String(an),
+   837→    solutionSteps: makeSolutionSteps([`First term a₁ = ${a1}`, `Common difference d = ${d}`, `Formula: aₙ = a₁ + (n-1)d`, `a${n} = ${a1} + (${n}-1)(${d})`, `a${n} = ${a1} + ${(n - 1) * d}`, `a${n} = ${an}`]),
+   838→    distractors: makeDistractors(String(an), [String(a1 + n * d), String(a1 * d), String(an + d)]),
+   839→    questionType: 'MCQ', tags: 'sequences,arithmetic,nth-term', estimatedTimeSec: 90,
+   840→  };
+   841→}
+   842→
+   843→function genMatrices912(): SeedQuestion {
+   844→  const a = randInt(-3, 3); const b = randInt(-3, 3);
+   845→  const c = randInt(-3, 3); const d = randInt(-3, 3);
+   846→  const det = a * d - b * c;
+   847→  return {
+   848→    subject: 'MATH', gradeBand: '9-12', topic: 'Matrices',
+   849→    difficulty: 4,
+   850→    stem: `Find the determinant of matrix:\n| ${a}  ${b} |\n| ${c}  ${d} |`,
+   851→    answerKey: String(det),
+   852→    solutionSteps: makeSolutionSteps([`det = ad - bc`, `= (${a})(${d}) - (${b})(${c})`, `= ${a * d} - ${b * c}`, `= ${det}`]),
+   853→    distractors: makeDistractors(String(det), [String(a * d + b * c), String(a + b + c + d), String(-det)]),
+   854→    questionType: 'MCQ', tags: 'matrices,determinant,2x2', estimatedTimeSec: 60,
+   855→  };
+   856→}
+   857→
+   858→// ============================================================
+   859→// Test Prep Questions (SAT, ACT, AP)
+   860→// ============================================================
+   861→
+   862→function generateTestPrep(): SeedQuestion[] {
+   863→  const questions: SeedQuestion[] = [];
+   864→
+   865→  // SAT Math
+   866→  for (let i = 0; i < 400; i++) questions.push(genSATMath());
+   867→  // SAT Reading
+   868→  for (let i = 0; i < 300; i++) questions.push(genSATReading());
+   869→  // SAT Writing
+   870→  for (let i = 0; i < 200; i++) questions.push(genSATWriting());
+   871→  // ACT Math
+   872→  for (let i = 0; i < 300; i++) questions.push(genACTMath());
+   873→  // ACT English
+   874→  for (let i = 0; i < 200; i++) questions.push(genACTEnglish());
+   875→  // ACT Reading
+   876→  for (let i = 0; i < 200; i++) questions.push(genACTReading());
+   877→  // ACT Science
+   878→  for (let i = 0; i < 200; i++) questions.push(genACTScience());
+   879→
+   880→  return questions;
+   881→}
+   882→
+   883→function genSATMath(): SeedQuestion {
+   884→  const gen = pick([genLinearEq912, genQuadratic912, genFunctions912, genExponents912, genTrig912, genStatistics68, genPercents68]);
+   885→  const q = gen();
+   886→  q.gradeBand = '9-12';
+   887→  q.testTypeName = 'SAT';
+   888→  q.tags = `${q.tags},sat-math,test-prep`;
+   889→  q.curriculum = 'SAT';
+   890→  q.difficulty = Math.min(q.difficulty + 1, 5);
+   891→  return q;
+   892→}
+   893→
+   894→function genSATReading(): SeedQuestion {
+   895→  const passages = [
+   896→    { topic: 'Science', passage: 'The discovery of penicillin by Alexander Fleming revolutionized medicine. Fleming noticed that a mold had contaminated one of his bacterial cultures and was killing the bacteria.', question: 'Based on the passage, what was the significance of the mold contaminating the culture?', answer: 'It led to the discovery of a bacteria-killing substance' },
+   897→    { topic: 'History', passage: 'The Renaissance was a period of cultural rebirth in Europe from the 14th to 17th century. It began in Italy and spread throughout Europe, marking a transition from the Medieval period.', question: 'Where did the Renaissance begin?', answer: 'Italy' },
+   898→    { topic: 'Literature', passage: 'In "The Great Gatsby," F. Scott Fitzgerald explores the American Dream through the eyes of Jay Gatsby, a wealthy man who throws extravagant parties to win back his lost love, Daisy Buchanan.', question: 'What is Gatsby\'s primary motivation for throwing parties?', answer: 'To win back Daisy Buchanan' },
+   899→  ];
+   900→  const p = pick(passages);
+   901→  return {
+   902→    subject: 'LANGUAGE', gradeBand: '9-12', topic: `SAT Reading - ${p.topic}`,
+   903→    difficulty: 4, curriculum: 'SAT', testTypeName: 'SAT',
+   904→    stem: `${p.passage}\n\n${p.question}`,
+   905→    answerKey: p.answer,
+   906→    distractors: makeDistractors(p.answer, ['To become famous', 'To make money', 'It was an accident', 'France', 'England', 'Germany', 'To impress his neighbors', 'To find new friends']),
+   907→    questionType: 'MCQ', tags: 'sat-reading,comprehension,test-prep,evidence-based', estimatedTimeSec: 90,
+   908→  };
+   909→}
+   910→
+   911→function genSATWriting(): SeedQuestion {
+   912→  const errors = [
+   913→    { sentence: 'The team of players <ERROR>is</ERROR> ready for the championship game.', corrections: ['are', 'were', 'has been'], answer: 'No error — "is" is correct', correct: true },
+   914→    { sentence: 'Neither the students nor the teacher <ERROR>were</ERROR> prepared for the fire drill.', corrections: ['was', 'is', 'are'], answer: 'was', correct: false },
+   915→    { sentence: 'Each of the cars <ERROR>have</ERROR> been washed and detailed.', corrections: ['has', 'had', 'having'], answer: 'has', correct: false },
+   916→  ];
+   917→  const e = pick(errors);
+   918→  return {
+   919→    subject: 'LANGUAGE', gradeBand: '9-12', topic: 'SAT Writing - Grammar',
+   920→    difficulty: 4, curriculum: 'SAT', testTypeName: 'SAT',
+   921→    stem: `Identify the error in the following sentence (or select "No error"):\n\n"${e.sentence.replace('<ERROR>', '').trim()}"`,
+   922→    answerKey: e.answer,
+   923→    distractors: e.corrections,
+   924→    questionType: 'MCQ', tags: 'sat-writing,grammar,subject-verb-agreement,test-prep', estimatedTimeSec: 45,
+   925→  };
+   926→}
+   927→
+   928→function genACTMath(): SeedQuestion {
+   929→  const gen = pick([genLinearEq912, genGeometry68, genTrig912, genProbability68, genPreAlgebra68, genPercents68]);
+   930→  const q = gen();
+   931→  q.gradeBand = '9-12';
+   932→  q.testTypeName = 'ACT';
+   933→  q.tags = `${q.tags},act-math,test-prep`;
+   934→  q.curriculum = 'ACT';
+   935→  q.difficulty = Math.min(q.difficulty + 1, 5);
+   936→  return q;
+   937→}
+   938→
+   939→function genACTEnglish(): SeedQuestion {
+   940→  const rules = [
+   941→    { sentence: 'The dog, <ERROR>which</ERROR> was barking loudly, woke up the neighbors.', options: ['who', 'that', 'whom'], answer: 'that', explanation: '"That" is preferred for animals' },
+   942→    { sentence: 'She runs <ERROR>more faster</ERROR> than anyone on the team.', options: ['more fast', 'fastest', 'faster'], answer: 'faster', explanation: 'Double comparative error' },
+   943→    { sentence: 'The affect <ERROR>of</ERROR> the medication was immediate.', options: ['effect', 'affects', 'effects'], answer: 'effect', explanation: '"Effect" is a noun meaning result' },
+   944→  ];
+   945→  const r = pick(rules);
+   946→  return {
+   947→    subject: 'LANGUAGE', gradeBand: '9-12', topic: 'ACT English - Usage',
+   948→    difficulty: 3, curriculum: 'ACT', testTypeName: 'ACT',
+   949→    stem: `Choose the best replacement for the underlined word/phrase:\n\n"${r.sentence.replace('<ERROR>', '___').trim()}"`,
+   950→    answerKey: r.answer,
+   951→    distractors: makeDistractors(r.answer, r.options),
+   952→    questionType: 'MCQ', tags: 'act-english,grammar,usage,test-prep', estimatedTimeSec: 45,
+   953→  };
+   954→}
+   955→
+   956→function genACTReading(): SeedQuestion {
+   957→  const passages = [
+   958→    { topic: 'Natural Science', passage: 'Photosynthesis is the process by which green plants convert sunlight into chemical energy. This process occurs primarily in the leaves, where chlorophyll captures light energy.', question: 'Where does photosynthesis primarily occur?', answer: 'In the leaves' },
+   959→    { topic: 'Social Science', passage: 'The Industrial Revolution transformed economies from agriculture-based to manufacturing-based systems. This shift began in England in the late 18th century.', question: 'Which country was the birthplace of the Industrial Revolution?', answer: 'England' },
+   960→  ];
+   961→  const p = pick(passages);
+   962→  return {
+   963→    subject: 'LANGUAGE', gradeBand: '9-12', topic: `ACT Reading - ${p.topic}`,
+   964→    difficulty: 3, curriculum: 'ACT', testTypeName: 'ACT',
+   965→    stem: `${p.passage}\n\n${p.question}`,
+   966→    answerKey: p.answer,
+   967→    distractors: makeDistractors(p.answer, ['In the roots', 'In the flowers', 'In the United States', 'In France', 'In the stem', 'In Germany']),
+   968→    questionType: 'MCQ', tags: 'act-reading,comprehension,test-prep', estimatedTimeSec: 90,
+   969→  };
+   970→}
+   971→
+   972→function genACTScience(): SeedQuestion {
+   973→  const scenarios = [
+   974→    { topic: 'Chemistry', passage: 'Experiment: A student mixed 50 mL of HCl with 50 mL of NaOH. The temperature of the solution increased from 22°C to 35°C.', question: 'What type of reaction occurred?', answer: 'Exothermic reaction' },
+   975→    { topic: 'Biology', passage: 'A study measured the growth rate of bacteria at different temperatures. At 25°C, the population doubled every 20 minutes. At 40°C, no growth was observed.', question: 'What can be concluded about bacteria growth at 40°C?', answer: 'The temperature is too high for growth (proteins may be denatured)' },
+   976→    { topic: 'Physics', passage: 'A ball was dropped from a height of 10 meters. It hit the ground after 1.43 seconds. A second ball was dropped from 20 meters.', question: 'Approximately how long will the second ball take to hit the ground?', answer: 'About 2.02 seconds' },
+   977→  ];
+   978→  const s = pick(scenarios);
+   979→  return {
+   980→    subject: 'SCIENCE', gradeBand: '9-12', topic: `ACT Science - ${s.topic}`,
+   981→    difficulty: 4, curriculum: 'ACT', testTypeName: 'ACT',
+   982→    stem: `${s.passage}\n\n${s.question}`,
+   983→    answerKey: s.answer,
+   984→    distractors: makeDistractors(s.answer, ['Endothermic reaction', 'No reaction', 'Optimal growth temperature', 'About 1.43 seconds', 'About 2.86 seconds', 'Neutralization']),
+   985→    questionType: 'MCQ', tags: 'act-science,data-interpretation,test-prep', estimatedTimeSec: 60,
+   986→  };
+   987→}
+   988→
+   989→// ============================================================
+   990→// Science Questions
+   991→// ============================================================
+   992→
+   993→function generateScience(): SeedQuestion[] {
+   994→  const questions: SeedQuestion[] = [];
+   995→
+   996→  for (let i = 0; i < 300; i++) questions.push(genScienceK2());
+   997→  for (let i = 0; i < 600; i++) questions.push(genScience35());
+   998→  for (let i = 0; i < 700; i++) questions.push(genScience68());
+   999→  for (let i = 0; i < 1400; i++) questions.push(genScience912());
+  1000→
+  1001→  return questions;
+  1002→}
+  1003→
+  1004→function genScienceK2(): SeedQuestion {
+  1005→  const topics = [
+  1006→    { topic: 'Living Things', q: pick(['Which of these is a living thing?', 'Which of these needs food and water to survive?']), options: ['Rock', 'Cloud', 'Tree', 'River'], answer: 'Tree', tags: 'living-things,biology' },
+  1007→    { topic: 'Five Senses', q: 'Which sense do you use to smell flowers?', options: ['Sight', 'Hearing', 'Smell', 'Touch'], answer: 'Smell', tags: 'five-senses,human-body' },
+  1008→    { topic: 'Weather', q: 'What do we call water that falls from clouds?', options: ['Evaporation', 'Precipitation', 'Condensation', 'Collection'], answer: 'Precipitation', tags: 'weather,water-cycle' },
+  1009→    { topic: 'Seasons', q: 'In which season do leaves change color and fall from trees?', options: ['Spring', 'Summer', 'Fall', 'Winter'], answer: 'Fall', tags: 'seasons,nature' },
+  1010→    { topic: 'Plants', q: 'What do plants need to make their own food?', options: ['Darkness', 'Sunlight', 'Sugar', 'Meat'], answer: 'Sunlight', tags: 'plants,photosynthesis' },
+  1011→  ];
+  1012→  const t = pick(topics);
+  1013→  return {
+  1014→    subject: 'SCIENCE', gradeBand: 'K-2', topic: t.topic,
+  1015→    difficulty: 1, curriculum: 'NGSS',
+  1016→    stem: t.q, answerKey: t.answer,
+  1017→    distractors: JSON.stringify(t.options.filter(o => o !== t.answer)),
+  1018→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 30,
+  1019→  };
+  1020→}
+  1021→
+  1022→function genScience35(): SeedQuestion {
+  1023→  const topics = [
+  1024→    { topic: 'Forces', q: 'What force pulls objects toward the Earth?', answer: 'Gravity', distractors: ['Friction', 'Magnetism', 'Electricity'], tags: 'forces,gravity,physics' },
+  1025→    { topic: 'Matter', q: 'What are the three states of matter?', answer: 'Solid, Liquid, Gas', distractors: ['Hard, Soft, Medium', 'Hot, Cold, Warm', 'Big, Small, Tiny'], tags: 'matter,states,chemistry' },
+  1026→    { topic: 'Ecosystems', q: 'What is a food chain?', answer: 'A sequence of organisms where each is food for the next', distractors: ['A chain made of food', 'A restaurant menu', 'A list of ingredients'], tags: 'ecosystems,food-chain,biology' },
+  1027→    { topic: 'Solar System', q: 'How many planets are in our solar system?', answer: '8', distractors: ['7', '9', '10'], tags: 'solar-system,planets,astronomy' },
+  1028→    { topic: 'Water Cycle', q: 'What is evaporation?', answer: 'Water turning from liquid to gas (vapor)', distractors: ['Water freezing', 'Water flowing', 'Rain falling'], tags: 'water-cycle,evaporation,earth-science' },
+  1029→    { topic: 'Energy', q: 'What form of energy does the Sun produce?', answer: 'Light and thermal energy', distractors: ['Only light energy', 'Only heat energy', 'Sound energy'], tags: 'energy,solar,physics' },
+  1030→  ];
+  1031→  const t = pick(topics);
+  1032→  return {
+  1033→    subject: 'SCIENCE', gradeBand: '3-5', topic: t.topic,
+  1034→    difficulty: randInt(2, 3), curriculum: 'NGSS',
+  1035→    stem: t.q, answerKey: t.answer,
+  1036→    distractors: JSON.stringify(t.distractors),
+  1037→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 45,
+  1038→  };
+  1039→}
+  1040→
+  1041→function genScience68(): SeedQuestion {
+  1042→  const topics = [
+  1043→    { topic: 'Cells', q: 'What is the basic unit of all living organisms?', answer: 'Cell', distractors: ['Atom', 'Organ', 'Molecule'], tags: 'cells,biology,structure' },
+  1044→    { topic: 'Genetics', q: 'What molecule carries genetic information?', answer: 'DNA', distractors: ['RNA', 'ATP', 'Protein'], tags: 'genetics,dna,heredity' },
+  1045→    { topic: 'Chemical Reactions', q: 'In a chemical reaction, what happens to atoms?', answer: 'They are rearranged to form new substances', distractors: ['They are destroyed', 'They are created', 'They stay the same'], tags: 'chemical-reactions,chemistry,conservation' },
+  1046→    { topic: 'Earth Science', q: 'What layer of the Earth do we live on?', answer: 'Crust', distractors: ['Mantle', 'Outer core', 'Inner core'], tags: 'earth-science,layers,geology' },
+  1047→    { topic: 'Photosynthesis', q: 'What gas do plants release during photosynthesis?', answer: 'Oxygen', distractors: ['Carbon dioxide', 'Nitrogen', 'Hydrogen'], tags: 'photosynthesis,plants,biology' },
+  1048→    { topic: 'Newton\'s Laws', q: 'Newton\'s Third Law states that for every action there is...', answer: 'An equal and opposite reaction', distractors: ['A greater reaction', 'No reaction', 'A smaller reaction'], tags: 'newtons-laws,physics,forces' },
+  1049→  ];
+  1050→  const t = pick(topics);
+  1051→  return {
+  1052→    subject: 'SCIENCE', gradeBand: '6-8', topic: t.topic,
+  1053→    difficulty: randInt(3, 4), curriculum: 'NGSS',
+  1054→    stem: t.q, answerKey: t.answer,
+  1055→    distractors: JSON.stringify(t.distractors),
+  1056→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 60,
+  1057→  };
+  1058→}
+  1059→
+  1060→function genScience912(): SeedQuestion {
+  1061→  const topics = [
+  1062→    { topic: 'Cell Division', q: 'What is mitosis?', answer: 'Cell division that produces two identical daughter cells', distractors: ['Cell death', 'Formation of gametes', 'Protein synthesis'], tags: 'cell-division,mitosis,biology' },
+  1063→    { topic: 'Chemical Bonding', q: 'What type of bond involves sharing of electrons?', answer: 'Covalent bond', distractors: ['Ionic bond', 'Metallic bond', 'Hydrogen bond'], tags: 'chemical-bonding,covalent,chemistry' },
+  1064→    { topic: 'Kinematics', q: 'What is the formula for velocity?', answer: 'v = d/t (displacement divided by time)', distractors: ['v = d × t', 'v = d + t', 'v = a × t'], tags: 'kinematics,velocity,physics' },
+  1065→    { topic: 'Thermodynamics', q: 'What is the first law of thermodynamics about?', answer: 'Conservation of energy', distractors: ['Entropy always increases', 'Absolute zero is unreachable', 'Heat flows from cold to hot'], tags: 'thermodynamics,energy,physics' },
+  1066→    { topic: 'Ecology', q: 'What is a keystone species?', answer: 'A species whose removal dramatically changes the ecosystem', distractors: ['The largest species', 'The most common species', 'A species at the top of the food chain'], tags: 'ecology,keystone-species,environmental-science' },
+  1067→    { topic: 'Organic Chemistry', q: 'What is a hydrocarbon?', answer: 'A compound made of only hydrogen and carbon atoms', distractors: ['A compound containing water', 'A compound with nitrogen', 'A compound with oxygen'], tags: 'organic-chemistry,hydrocarbons,chemistry' },
+  1068→  ];
+  1069→  const t = pick(topics);
+  1070→  return {
+  1071→    subject: 'SCIENCE', gradeBand: '9-12', topic: t.topic,
+  1072→    difficulty: randInt(4, 5), curriculum: pick(['NGSS', 'AP', 'IB']),
+  1073→    stem: t.q, answerKey: t.answer,
+  1074→    distractors: JSON.stringify(t.distractors),
+  1075→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 90,
+  1076→  };
+  1077→}
+  1078→
+  1079→// ============================================================
+  1080→// Language/ELA Questions
+  1081→// ============================================================
+  1082→
+  1083→function generateLanguage(): SeedQuestion[] {
+  1084→  const questions: SeedQuestion[] = [];
+  1085→  for (let i = 0; i < 500; i++) questions.push(genLanguageK2());
+  1086→  for (let i = 0; i < 800; i++) questions.push(genLanguage35());
+  1087→  for (let i = 0; i < 800; i++) questions.push(genLanguage68());
+  1088→  for (let i = 0; i < 900; i++) questions.push(genLanguage912());
+  1089→  return questions;
+  1090→}
+  1091→
+  1092→function genLanguageK2(): SeedQuestion {
+  1093→  const topics = [
+  1094→    { topic: 'Phonics', q: `Which word starts with the "ch" sound?`, options: ['Chair', 'Ship', 'Thin', 'Cat'], answer: 'Chair', tags: 'phonics,consonant-digraphs' },
+  1095→    { topic: 'Sight Words', q: `Which word is spelled correctly?`, options: ['teh', 'the', 'thi', 'tha'], answer: 'the', tags: 'sight-words,spelling' },
+  1096→    { topic: 'Grammar', q: 'Which word is a noun?', options: ['Run', 'Happy', 'Dog', 'Quickly'], answer: 'Dog', tags: 'grammar,parts-of-speech,nouns' },
+  1097→    { topic: 'Reading Comprehension', q: 'What is the main idea of a story?', options: ['The most important point the author wants to make', 'The longest paragraph', 'The first word', 'The title only'], answer: 'The most important point the author wants to make', tags: 'reading-comprehension,main-idea' },
+  1098→    { topic: 'Vocabulary', q: 'What does the word "enormous" mean?', options: ['Very big', 'Very small', 'Very fast', 'Very old'], answer: 'Very big', tags: 'vocabulary,adjectives,meaning' },
+  1099→  ];
+  1100→  const t = pick(topics);
+  1101→  return {
+  1102→    subject: 'LANGUAGE', gradeBand: 'K-2', topic: t.topic,
+  1103→    difficulty: 1, stem: t.q, answerKey: t.answer,
+  1104→    distractors: JSON.stringify(t.options.filter(o => o !== t.answer)),
+  1105→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 30,
+  1106→  };
+  1107→}
+  1108→
+  1109→function genLanguage35(): SeedQuestion {
+  1110→  const topics = [
+  1111→    { topic: 'Vocabulary', q: 'What is a synonym for "happy"?', answer: 'Joyful', distractors: ['Sad', 'Angry', 'Tired'], tags: 'vocabulary,synonyms' },
+  1112→    { topic: 'Grammar', q: 'What is the past tense of "run"?', answer: 'Ran', distractors: ['Runned', 'Running', 'Runed'], tags: 'grammar,verb-tenses,past-tense' },
+  1113→    { topic: 'Reading Comprehension', q: 'What is an inference?', answer: 'A conclusion based on evidence and reasoning', distractors: ['A fact stated directly in the text', 'The title of a story', 'A character\'s name'], tags: 'reading-comprehension,inference' },
+  1114→    { topic: 'Writing Mechanics', q: 'Which sentence is correctly punctuated?', answer: 'The dog, which is brown, barked loudly.', distractors: ['The dog which is brown barked loudly.', 'The dog, which is brown barked loudly.', 'The, dog which is brown, barked loudly.'], tags: 'writing,punctuation,commas' },
+  1115→  ];
+  1116→  const t = pick(topics);
+  1117→  return {
+  1118→    subject: 'LANGUAGE', gradeBand: '3-5', topic: t.topic,
+  1119→    difficulty: randInt(2, 3), stem: t.q, answerKey: t.answer,
+  1120→    distractors: JSON.stringify(t.distractors),
+  1121→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 45,
+  1122→  };
+  1123→}
+  1124→
+  1125→function genLanguage68(): SeedQuestion {
+  1126→  const topics = [
+  1127→    { topic: 'Literary Analysis', q: 'What is a metaphor?', answer: 'A comparison between two unlike things without using "like" or "as"', distractors: ['A comparison using "like" or "as"', 'An exaggeration', 'A sound word'], tags: 'literary-analysis,figurative-language,metaphor' },
+  1128→    { topic: 'Grammar', q: 'What is a dependent clause?', answer: 'A group of words with a subject and verb that cannot stand alone as a sentence', distractors: ['A complete sentence', 'A phrase without a verb', 'A list of items'], tags: 'grammar,clauses,sentence-structure' },
+  1129→    { topic: 'Vocabulary in Context', q: 'In the sentence "The austere room had bare walls and no furniture," what does "austere" most likely mean?', answer: 'Plain and without decoration', distractors: ['Colorful', 'Large', 'Crowded'], tags: 'vocabulary,context-clues,inference' },
+  1130→  ];
+  1131→  const t = pick(topics);
+  1132→  return {
+  1133→    subject: 'LANGUAGE', gradeBand: '6-8', topic: t.topic,
+  1134→    difficulty: randInt(3, 4), stem: t.q, answerKey: t.answer,
+  1135→    distractors: JSON.stringify(t.distractors),
+  1136→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 60,
+  1137→  };
+  1138→}
+  1139→
+  1140→function genLanguage912(): SeedQuestion {
+  1141→  const topics = [
+  1142→    { topic: 'Rhetorical Analysis', q: 'What is ethos in persuasive writing?', answer: 'An appeal to credibility and authority', distractors: ['An appeal to emotion', 'An appeal to logic', 'A type of figurative language'], tags: 'rhetorical-analysis,ethos,persuasion' },
+  1143→    { topic: 'Research Skills', q: 'What is a primary source?', answer: 'An original document or firsthand account from the time period', distractors: ['A textbook summary', 'An encyclopedia entry', 'A Wikipedia article'], tags: 'research,sources,citation' },
+  1144→    { topic: 'Advanced Grammar', q: 'What is the subjunctive mood used for?', answer: 'Expressing wishes, hypotheticals, or demands', distractors: ['Stating facts', 'Asking questions', 'Giving commands'], tags: 'grammar,subjunctive,verb-mood' },
+  1145→  ];
+  1146→  const t = pick(topics);
+  1147→  return {
+  1148→    subject: 'LANGUAGE', gradeBand: '9-12', topic: t.topic,
+  1149→    difficulty: randInt(4, 5), stem: t.q, answerKey: t.answer,
+  1150→    distractors: JSON.stringify(t.distractors),
+  1151→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 60,
+  1152→  };
+  1153→}
+  1154→
+  1155→// ============================================================
+  1156→// Social Studies / History Questions
+  1157→// ============================================================
+  1158→
+  1159→function generateSocialStudies(): SeedQuestion[] {
+  1160→  const questions: SeedQuestion[] = [];
+  1161→  for (let i = 0; i < 250; i++) questions.push(genSocialStudiesQ());
+  1162→  return questions;
+  1163→}
+  1164→
+  1165→function genSocialStudiesQ(): SeedQuestion {
+  1166→  const topics = [
+  1167→    { topic: 'US History', q: 'In which year did the Declaration of Independence get signed?', answer: '1776', gradeBand: '6-8', tags: 'us-history,declaration-independence' },
+  1168→    { topic: 'World History', q: 'Which ancient civilization built the pyramids at Giza?', answer: 'Ancient Egypt', gradeBand: '3-5', tags: 'world-history,ancient-civilizations' },
+  1169→    { topic: 'Geography', q: 'What is the largest continent by area?', answer: 'Asia', gradeBand: '3-5', tags: 'geography,continents' },
+  1170→    { topic: 'Civics', q: 'What are the three branches of the US government?', answer: 'Executive, Legislative, Judicial', gradeBand: '6-8', tags: 'civics,government,branches' },
+  1171→    { topic: 'US History', q: 'Who was the first President of the United States?', answer: 'George Washington', gradeBand: 'K-2', tags: 'us-history,presidents' },
+  1172→    { topic: 'World History', q: 'What event started World War I?', answer: 'The assassination of Archduke Franz Ferdinand', gradeBand: '9-12', tags: 'world-history,wwi,causes' },
+  1173→    { topic: 'Economics', q: 'What is supply and demand?', answer: 'An economic model where price is determined by availability (supply) and consumer desire (demand)', gradeBand: '9-12', tags: 'economics,supply-demand' },
+  1174→  ];
+  1175→  const t = pick(topics);
+  1176→  return {
+  1177→    subject: 'GENERAL', gradeBand: t.gradeBand, topic: t.topic,
+  1178→    difficulty: t.gradeBand === 'K-2' ? 1 : t.gradeBand === '3-5' ? 2 : t.gradeBand === '6-8' ? 3 : 4,
+  1179→    stem: t.q, answerKey: t.answer,
+  1180→    distractors: makeDistractors(t.answer, ['1789', '1787', '1812', 'Ancient Rome', 'Ancient Greece', 'Mesopotamia', 'Africa', 'Europe', 'North America', 'Executive, Senate, Supreme Court', 'President, Cabinet, Congress', 'Abraham Lincoln', 'Thomas Jefferson', 'The invasion of Poland', 'The bombing of Pearl Harbor']),
+  1181→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 60,
+  1182→  };
+  1183→}
+  1184→
+  1185→// ============================================================
+  1186→// ESL Questions
+  1187→// ============================================================
+  1188→
+  1189→function generateESL(): SeedQuestion[] {
+  1190→  const questions: SeedQuestion[] = [];
+  1191→  for (let i = 0; i < 250; i++) questions.push(genESLQ());
+  1192→  return questions;
+  1193→}
+  1194→
+  1195→function genESLQ(): SeedQuestion {
+  1196→  const topics = [
+  1197→    { topic: 'Grammar Basics', q: 'Choose the correct form: "She ___ to school every day."', answer: 'goes', distractors: ['go', 'going', 'gone'], level: '3-5', tags: 'esl,grammar,present-tense' },
+  1198→    { topic: 'Vocabulary', q: 'What is the opposite of "hot"?', answer: 'Cold', distractors: ['Warm', 'Cool', 'Wet'], level: 'K-2', tags: 'esl,vocabulary,antonyms' },
+  1199→    { topic: 'Sentence Structure', q: 'Which is a complete sentence?', answer: 'The cat sat on the mat.', distractors: ['Sat on the mat.', 'The big cat.', 'Quickly ran.'], level: '3-5', tags: 'esl,sentence-structure,complete-sentence' },
+  1200→    { topic: 'Prepositions', q: 'The book is ___ the table. (Choose the correct preposition)', answer: 'on', distractors: ['in', 'at', 'by'], level: '3-5', tags: 'esl,prepositions,location' },
+  1201→  ];
+  1202→  const t = pick(topics);
+  1203→  return {
+  1204→    subject: 'ESL', gradeBand: t.level, topic: t.topic,
+  1205→    difficulty: t.level === 'K-2' ? 1 : 2,
+  1206→    stem: t.q, answerKey: t.answer,
+  1207→    distractors: JSON.stringify(t.distractors),
+  1208→    questionType: 'MCQ', tags: t.tags, estimatedTimeSec: 30,
+  1209→  };
+  1210→}
+  1211→
+  1212→// ============================================================
+  1213→// Main Seed Function
+  1214→// ============================================================
+  1215→
+  1216→async function seedQuestionBank() {
+  1217→  console.log('Starting question bank seed...\n');
+  1218→
+  1219→  // Create test prep categories first
+  1220→  const testPrepCategories = [
+  1221→    { name: 'SAT Math', testType: 'SAT', subject: 'MATH', gradeLevel: '9-12', description: 'SAT Mathematics section questions covering algebra, geometry, data analysis, and advanced math.' },
+  1222→    { name: 'SAT Evidence-Based Reading', testType: 'SAT', subject: 'ENGLISH', gradeLevel: '9-12', description: 'SAT Reading section with passage-based comprehension questions.' },
+  1223→    { name: 'SAT Writing and Language', testType: 'SAT', subject: 'ENGLISH', gradeLevel: '9-12', description: 'SAT Writing section testing grammar, usage, and expression.' },
+  1224→    { name: 'ACT Math', testType: 'ACT', subject: 'MATH', gradeLevel: '9-12', description: 'ACT Mathematics section covering pre-algebra through trigonometry.' },
+  1225→    { name: 'ACT English', testType: 'ACT', subject: 'ENGLISH', gradeLevel: '9-12', description: 'ACT English section testing usage, mechanics, and rhetorical skills.' },
+  1226→    { name: 'ACT Reading', testType: 'ACT', subject: 'ENGLISH', gradeLevel: '9-12', description: 'ACT Reading section with passage-based comprehension.' },
+  1227→    { name: 'ACT Science', testType: 'ACT', subject: 'SCIENCE', gradeLevel: '9-12', description: 'ACT Science section testing data interpretation and scientific reasoning.' },
+  1228→    { name: 'AP Calculus AB', testType: 'AP', subject: 'MATH', gradeLevel: '9-12', description: 'AP Calculus AB covering limits, derivatives, and integrals.' },
+  1229→    { name: 'AP Biology', testType: 'AP', subject: 'SCIENCE', gradeLevel: '9-12', description: 'AP Biology covering cell biology, genetics, evolution, and ecology.' },
+  1230→    { name: 'AP Chemistry', testType: 'AP', subject: 'SCIENCE', gradeLevel: '9-12', description: 'AP Chemistry covering atomic structure, bonding, thermodynamics, and kinetics.' },
+  1231→    { name: 'AP Physics 1', testType: 'AP', subject: 'SCIENCE', gradeLevel: '9-12', description: 'AP Physics 1 covering mechanics, energy, waves, and electricity.' },
+  1232→    { name: 'AP US History', testType: 'AP', subject: 'GENERAL', gradeLevel: '9-12', description: 'AP US History covering colonial era through present day.' },
+  1233→    { name: 'AP English Language', testType: 'AP', subject: 'ENGLISH', gradeLevel: '9-12', description: 'AP English Language covering rhetoric, composition, and argument.' },
+  1234→  ];
+  1235→
+  1236→  console.log('Creating test prep categories...');
+  1237→  const categoryMap = new Map<string, string>();
+  1238→  for (const cat of testPrepCategories) {
+  1239→    const created = await prisma.testPrepCategory.upsert({
+  1240→      where: { name: cat.name },
+  1241→      update: {},
+  1242→      create: cat,
+  1243→    });
+  1244→    categoryMap.set(cat.name, created.id);
+  1245→    console.log(`  ✓ ${cat.name}`);
+  1246→  }
+  1247→
+  1248→  // Generate all questions
+  1249→  console.log('\nGenerating questions...\n');
+  1250→
+  1251→  const allQuestions: SeedQuestion[] = [
+  1252→    ...generateMathK2(),
+  1253→    ...generateMath35(),
+  1254→    ...generateMath68(),
+  1255→    ...generateMath912(),
+  1256→    ...generateScience(),
+  1257→    ...generateLanguage(),
+  1258→    ...generateSocialStudies(),
+  1259→    ...generateESL(),
+  1260→    ...generateTestPrep(),
+  1261→  ];
+  1262→
+  1263→  console.log(`Total questions generated: ${allQuestions.length}`);
+  1264→
+  1265→  // Batch insert (500 at a time to avoid timeout)
+  1266→  const BATCH_SIZE = 500;
+  1267→  let inserted = 0;
+  1268→
+  1269→  for (let i = 0; i < allQuestions.length; i += BATCH_SIZE) {
+  1270→    const batch = allQuestions.slice(i, i + BATCH_SIZE);
+  1271→
+  1272→    // Map test type names to category IDs
+  1273→    const createData = batch.map(q => {
+  1274→      const data: Record<string, unknown> = {
+  1275→        subject: q.subject,
+  1276→        gradeBand: q.gradeBand,
+  1277→        topic: q.topic,
+  1278→        difficulty: q.difficulty,
+  1279→        curriculum: q.curriculum || null,
+  1280→        standardCode: q.standardCode || null,
+  1281→        stem: q.stem,
+  1282→        answerKey: q.answerKey,
+  1283→        solutionSteps: q.solutionSteps || null,
+  1284→        distractors: q.distractors || null,
+  1285→        questionType: q.questionType,
+  1286→        tags: q.tags,
+  1287→        estimatedTimeSec: q.estimatedTimeSec || null,
+  1288→      };
+  1289→
+  1290→      // Link to test prep category if applicable
+  1291→      if (q.testTypeName) {
+  1292→        const catName = `${q.testTypeName} Math`;
+  1293→        const catId = categoryMap.get(catName)
+  1294→          || categoryMap.get(`${q.testTypeName} Evidence-Based Reading`)
+  1295→          || categoryMap.get(`${q.testTypeName} Writing and Language`)
+  1296→          || categoryMap.get(`${q.testTypeName} English`)
+  1297→          || categoryMap.get(`${q.testTypeName} Reading`)
+  1298→          || categoryMap.get(`${q.testTypeName} Science`);
+  1299→        if (catId) data.testPrepCategoryId = catId;
+  1300→      }
+  1301→
+  1302→      return data;
+  1303→    });
+  1304→
+  1305→    const result = await prisma.questionItem.createMany({
+  1306→      data: createData as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  1307→      skipDuplicates: true,
+  1308→    });
+  1309→
+  1310→    inserted += result.count;
+  1311→    console.log(`  Batch ${Math.floor(i / BATCH_SIZE) + 1}: inserted ${result.count} questions (total: ${inserted})`);
+  1312→  }
+  1313→
+  1314→  // Create some curriculum standards
+  1315→  console.log('\nCreating curriculum standards...');
+  1316→  const standards = [
+  1317→    { code: 'CCSS.MATH.CONTENT.K.CC.A.1', framework: 'CCSS', subject: 'MATH', gradeBand: 'K-2', topic: 'Counting', description: 'Count to 100 by ones and by tens' },
+  1318→    { code: 'CCSS.MATH.CONTENT.1.OA.C.6', framework: 'CCSS', subject: 'MATH', gradeBand: 'K-2', topic: 'Addition', description: 'Add and subtract within 20' },
+  1319→    { code: 'CCSS.MATH.CONTENT.3.OA.A.1', framework: 'CCSS', subject: 'MATH', gradeBand: '3-5', topic: 'Multiplication', description: 'Interpret products of whole numbers' },
+  1320→    { code: 'CCSS.MATH.CONTENT.4.NBT.B.4', framework: 'CCSS', subject: 'MATH', gradeBand: '3-5', topic: 'Multi-Digit Arithmetic', description: 'Fluently add and subtract multi-digit whole numbers' },
+  1321→    { code: 'CCSS.MATH.CONTENT.6.RP.A.1', framework: 'CCSS', subject: 'MATH', gradeBand: '6-8', topic: 'Ratios', description: 'Understand ratio concepts and use ratio reasoning' },
+  1322→    { code: 'CCSS.MATH.CONTENT.7.EE.B.4', framework: 'CCSS', subject: 'MATH', gradeBand: '6-8', topic: 'Equations', description: 'Use variables to represent quantities in real-world problems' },
+  1323→    { code: 'CCSS.MATH.CONTENT.HSA.REI.B.4', framework: 'CCSS', subject: 'MATH', gradeBand: '9-12', topic: 'Quadratic Equations', description: 'Solve quadratic equations in one variable' },
+  1324→    { code: 'CCSS.MATH.CONTENT.HSF.IF.A.1', framework: 'CCSS', subject: 'MATH', gradeBand: '9-12', topic: 'Functions', description: 'Understand that a function from one set to another set assigns to each element exactly one element' },
+  1325→    { code: 'NGSS.MS-LS1-1', framework: 'NGSS', subject: 'SCIENCE', gradeBand: '6-8', topic: 'Cells', description: 'Conduct an investigation to provide evidence that living things are made of cells' },
+  1326→    { code: 'NGSS.MS-PS2-2', framework: 'NGSS', subject: 'SCIENCE', gradeBand: '6-8', topic: 'Forces', description: 'Plan an investigation to provide evidence that the change in an object\'s motion depends on the sum of the forces on the object' },
+  1327→    { code: 'NGSS.HS-PS1-2', framework: 'NGSS', subject: 'SCIENCE', gradeBand: '9-12', topic: 'Chemical Reactions', description: 'Construct and revise an explanation for the outcome of a simple chemical reaction' },
+  1328→  ];
+  1329→
+  1330→  for (const std of standards) {
+  1331→    await prisma.curriculumStandard.upsert({
+  1332→      where: { code: std.code },
+  1333→      update: {},
+  1334→      create: std,
+  1335→    });
+  1336→  }
+  1337→
+  1338→  console.log(`\n✅ Seed complete!`);
+  1339→  console.log(`   Questions: ${inserted}`);
+  1340→  console.log(`   Test Prep Categories: ${categoryMap.size}`);
+  1341→  console.log(`   Curriculum Standards: ${standards.length}`);
+  1342→}
+  1343→
+  1344→// Run
+  1345→seedQuestionBank()
+  1346→  .catch(console.error)
+  1347→  .finally(() => prisma.$disconnect());
+  1348→

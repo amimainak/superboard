@@ -1,0 +1,707 @@
+     1→     1→     1→// ============================================================
+     2→     2→     2→// Superboard — Prisma Schema
+     3→     3→     3→// ============================================================
+     4→     4→     4→// PostgreSQL via Supabase. DATABASE_URL loaded from .env.
+     5→     5→     5→//
+     6→     6→     6→// SECURITY FIXES:
+     7→     7→     7→// - V-15: Added enum constraints for tier, subject, and invite status
+     8→     8→     8→// - V-17: Added length constraints on snapshot fields
+     9→     9→     9→// - V-18: Added AGENCY_STANDARD/AGENCY_PREMIUM tiers, Student model,
+    10→    10→    10→//         Room duration tracking, lesson hour metered billing
+    11→    11→    11→// ============================================================
+    12→    12→    12→
+    13→    13→    13→datasource db {
+    14→    14→    14→  provider  = "postgresql"
+    15→    15→    15→  url       = env("DATABASE_URL")
+    16→    16→    16→}
+    17→    17→    17→
+    18→    18→    18→generator client {
+    19→    19→    19→  provider = "prisma-client-js"
+    20→    20→    20→}
+    21→    21→    21→
+    22→    22→    22→// ============================================================
+    23→    23→    23→// User — Tutors & Agency Owners
+    24→    24→    24→// ============================================================
+    25→    25→    25→// parentAgencyId links a sub-tutor to their agency owner.
+    26→    26→    26→// An agency owner has tier=AGENCY_STANDARD or AGENCY_PREMIUM and no parentAgencyId.
+    27→    27→    27→// ============================================================
+    28→    28→    28→
+    29→    29→    29→model User {
+    30→    30→    30→  id                String          @id @default(uuid())
+    31→    31→    31→  email             String          @unique
+    32→    32→    32→  name              String?
+    33→    33→    33→  stripeCustomerId  String?         @unique
+    34→    34→    34→  stripeSubscriptionId String?      // Active Stripe subscription ID
+    35→    35→    35→  // SECURITY FIX (V-15): Enum constraint for tier — prevents invalid tier values
+    36→    36→    36→  tier              Tier            @default(FREE)
+    37→    37→    37→  isAdmin           Boolean         @default(false)
+    38→    38→    38→  status            UserStatus      @default(ACTIVE)
+    39→    39→    39→  fingerprintHash   String?
+    40→    40→    40→  gracePeriodEndsAt DateTime?
+    41→    41→    41→  // Referral System
+    42→    42→    42→  referralCode       String?         @unique // This user's unique referral code
+    43→    43→    43→  referredByCode     String?         // Who referred this user
+    44→    44→    44→  referralCount       Int             @default(0) // How many users this user has referred
+    45→    45→    45→  referralRewardClaimed Boolean      @default(false) // Whether the referral reward was claimed
+    46→    46→    46→  // AI Budget Tracking
+    47→    47→    47→  monthlyAiBudgetCents Int           @default(0) // Monthly AI spend tracking (cents)
+    48→    48→    48→  // Agency Features
+    49→    49→    49→  customDomain      String?         @unique
+    50→    50→    50→  brandingLogoUrl   String?
+    51→    51→    51→  brandingColor     String?         // Hex code e.g., #FF5733
+    52→    52→    52→  agencyName        String?         // Display name for the agency (for branded experiences)
+    53→    53→    53→  parentAgencyId    String?         // If this user is a sub-tutor under an agency
+    54→    54→    54→  agencyOwner      User?           @relation("AgencySubTutors", fields: [parentAgencyId], references: [id], onDelete: SetNull)
+    55→    55→    55→  createdAt         DateTime        @default(now())
+    56→    56→    56→  updatedAt         DateTime        @updatedAt
+    57→    57→    57→  // Relations
+    58→    58→    58→  rooms             Room[]
+    59→    59→    59→  usageLogs         UsageLog[]
+    60→    60→    60→  templates         Template[]
+    61→    61→    61→  subscriptions     Subscription[]
+    62→    62→    62→  sentInvites       AgencyInvite[]  @relation("InviteSender")
+    63→    63→    63→  receivedInvite    AgencyInvite?   @relation("InviteRecipient")
+    64→    64→    64→  subTutors        User[]          @relation("AgencySubTutors")
+    65→    65→    65→  auditLogs         AuditLog[]
+    66→    66→    66→  students          Student[]       // Students registered by this agency owner
+    67→    67→    67→  scheduledLessons  ScheduledLesson[]
+    68→    68→    68→  webhooks          WebhookConfig[]
+    69→    69→    69→  lessonNotes       LessonNote[]
+    70→    70→    70→  homeworksAgency   Homework[]       @relation("AgencyHomeworks")
+    71→    71→    71→  homeworksTutor    Homework[]       @relation("TutorHomeworks")
+    72→    72→    72→  resourceLibrary   ResourceLibrary[] @relation("AgencyResources")
+    73→    73→    73→  invoices          Invoice[]        @relation("AgencyInvoices")
+    74→    74→    74→  creditPacks       CreditPack[]
+    75→    75→    75→}
+    76→    76→    76→
+    77→    77→    77→// Lesson scheduling status
+    78→    78→    78→enum LessonStatus {
+    79→    79→    79→  SCHEDULED
+    80→    80→    80→  COMPLETED
+    81→    81→    81→  CANCELLED
+    82→    82→    82→  NO_SHOW
+    83→    83→    83→}
+    84→    84→    84→
+    85→    85→    85→// SECURITY FIX (V-15, V-18): Enum for user tier levels
+    86→    86→    86→enum Tier {
+    87→    87→    87→  FREE
+    88→    88→    88→  PRO
+    89→    89→    89→  AGENCY
+    90→    90→    90→  AGENCY_STANDARD
+    91→    91→    91→  AGENCY_PREMIUM
+    92→    92→    92→}
+    93→    93→    93→
+    94→    94→    94→// User account status
+    95→    95→    95→enum UserStatus {
+    96→    96→    96→  ACTIVE
+    97→    97→    97→  SUSPENDED
+    98→    98→    98→  BANNED
+    99→    99→    99→}
+   100→   100→   100→
+   101→   101→   101→// ============================================================
+   102→   102→   102→// Student — Agency Student Roster
+   103→   103→   103→// ============================================================
+   104→   104→   104→// Agencies register their students with email + name.
+   105→   105→   105→// Students must be active to join lessons.
+   106→   106→   106→// Unique per agency+email — same email can exist at different agencies.
+   107→   107→   107→// ============================================================
+   108→   108→   108→
+   109→   109→   109→model Student {
+   110→   110→   110→  id              String    @id @default(uuid())
+   111→   111→   111→  agencyId        String
+   112→   112→   112→  agency          User      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+   113→   113→   113→  email           String
+   114→   114→   114→  name            String
+   115→   115→   115→  grade           String?   // e.g., "Grade 5", "Year 10"
+   116→   116→   116→  phone           String?   // Student or parent contact phone
+   117→   117→   117→  parentName      String?   // Parent/guardian name
+   118→   118→   118→  parentEmail     String?   // Parent/guardian email for notifications
+   119→   119→   119→  parentAccessToken String? @unique // Token for parent portal access (no login required)
+   120→   120→   120→  isActive        Boolean   @default(true)
+   121→   121→   121→  createdAt       DateTime  @default(now())
+   122→   122→   122→  deactivatedAt   DateTime? // Set when student leaves the agency
+   123→   123→   123→  notes           String?   @db.Text // General notes about the student (learning style, goals, etc.)
+   124→   124→   124→
+   125→   125→   125→  @@unique([agencyId, email])
+   126→   126→   126→  @@index([agencyId, isActive])
+   127→   127→   127→  @@index([email])
+   128→   128→   128→  @@index([parentAccessToken])
+   129→   129→   129→
+   130→   130→   130→  // Relations
+   131→   131→   131→  roomParticipants  RoomParticipant[]
+   132→   132→   132→  homeworks         Homework[]
+   133→   133→   133→  lessonNotes      LessonNote[]
+   134→   134→   134→  invoices         Invoice[]
+   135→   135→   135→}
+   136→   136→   136→
+   137→   137→   137→// ============================================================
+   138→   138→   138→// UsageLog — Per-Period Usage Tracking
+   139→   139→   139→// ============================================================
+   140→   140→   140→// FREE:  period resets Monday 00:00 UTC (weekly)
+   141→   141→   141→// PRO:   period resets on billing cycle date (monthly)
+   142→   142→   142→// AGENCY_STANDARD/PREMIUM: period resets on billing cycle date (monthly)
+   143→   143→   143→// ============================================================
+   144→   144→   144→
+   145→   145→   145→model UsageLog {
+   146→   146→   146→  id               String   @id @default(uuid())
+   147→   147→   147→  userId           String
+   148→   148→   148→  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   149→   149→   149→  periodStartDate  DateTime // Monday for Free tier, Billing Day for Pro/Agency
+   150→   150→   150→  videoMinutesUsed Int      @default(0)
+   151→   151→   151→  aiCreditsUsed    Int      @default(0)
+   152→   152→   152→  aiCostCents      Int      @default(0) // Actual AI spend in cents this period
+   153→   153→   153→  recordingsUsed   Int      @default(0)
+   154→   154→   154→  createdAt        DateTime @default(now())
+   155→   155→   155→  updatedAt        DateTime @updatedAt
+   156→   156→   156→
+   157→   157→   157→  @@unique([userId, periodStartDate])
+   158→   158→   158→  @@index([userId])
+   159→   159→   159→}
+   160→   160→   160→
+   161→   161→   161→// ============================================================
+   162→   162→   162→// Room — Lesson Rooms
+   163→   163→   163→// ============================================================
+   164→   164→   164→// Each room belongs to a tutor (who may be a sub-tutor under an agency).
+   165→   165→   165→// Students join rooms and are tracked via RoomParticipant.
+   166→   166→   166→// Duration tracking for metered hourly billing.
+   167→   167→   167→// ============================================================
+   168→   168→   168→
+   169→   169→   169→model Room {
+   170→   170→   170→  id              String              @id @default(uuid())
+   171→   171→   171→  tutorId         String
+   172→   172→   172→  tutor           User                @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+   173→   173→   173→  // SECURITY FIX (V-15): Enum constraint for subject
+   174→   174→   174→  subject         Subject             @default(GENERAL)
+   175→   175→   175→  isActive        Boolean             @default(true)
+   176→   176→   176→  startedAt       DateTime?            // When the session was started (first participant joins)
+   177→   177→   177→  endedAt         DateTime?            // When the tutor closes the session
+   178→   178→   178→  durationMinutes Int                 @default(0) // Calculated on room close
+   179→   179→   179→  // Branding snapshot taken at room creation so it persists
+   180→   180→   180→  // even if agency changes logo later
+   181→   181→   181→  brandingLogo    String?
+   182→   182→   182→  brandingColor   String?
+   183→   183→   183→  lessonNotes     LessonNote[]
+   184→   184→   184→  createdAt       DateTime            @default(now())
+   185→   185→   185→  updatedAt       DateTime            @updatedAt
+   186→   186→   186→  // Relations
+   187→   187→   187→  pages           BoardPage[]
+   188→   188→   188→  recordings      Recording[]
+   189→   189→   189→  participants    RoomParticipant[]
+   190→   190→   190→
+   191→   191→   191→  @@index([tutorId, isActive])
+   192→   192→   192→  @@index([endedAt])
+   193→   193→   193→}
+   194→   194→   194→
+   195→   195→   195→// SECURITY FIX (V-15): Enum for room subjects
+   196→   196→   196→enum Subject {
+   197→   197→   197→  MATH
+   198→   198→   198→  SCIENCE
+   199→   199→   199→  LANGUAGE
+   200→   200→   200→  GENERAL
+   201→   201→   201→  MUSIC
+   202→   202→   202→  CODING
+   203→   203→   203→  TEST_PREP
+   204→   204→   204→  ART
+   205→   205→   205→  ESL
+   206→   206→   206→}
+   207→   207→   207→
+   208→   208→   208→model BoardPage {
+   209→   209→   209→  id        String   @id @default(uuid())
+   210→   210→   210→  roomId    String
+   211→   211→   211→  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+   212→   212→   212→  pageIndex Int
+   213→   213→   213→  // SECURITY FIX (V-17): Added length constraint on snapshot (max 5MB of JSON text)
+   214→   214→   214→  snapshot  String   @db.Text
+   215→   215→   215→  createdAt DateTime @default(now())
+   216→   216→   216→  updatedAt DateTime @updatedAt
+   217→   217→   217→
+   218→   218→   218→  @@unique([roomId, pageIndex])
+   219→   219→   219→  @@index([roomId, pageIndex])
+   220→   220→   220→}
+   221→   221→   221→
+   222→   222→   222→// ============================================================
+   223→   223→   223→// RoomParticipant — Student Join Tracking
+   224→   224→   224→// ============================================================
+   225→   225→   225→// Tracks every time a student joins a room.
+   226→   226→   226→// Used for agency billing and attendance tracking.
+   227→   227→   227→//
+   228→   228→   228→// studentId links to the Student model (registered agency students).
+   229→   229→   229→// studentIdentity is the display identifier (Student.name or fallback).
+   230→   230→   230→// ============================================================
+   231→   231→   231→
+   232→   232→   232→model RoomParticipant {
+   233→   233→   233→  id               String   @id @default(uuid())
+   234→   234→   234→  roomId           String
+   235→   235→   235→  room             Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+   236→   236→   236→  studentId        String?  // FK to Student model (nullable for backward compat)
+   237→   237→   237→  student          Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+   238→   238→   238→  studentIdentity  String   // Display name or identifier
+   239→   239→   239→  studentName      String?  // Display name provided during join
+   240→   240→   240→  joinedAt         DateTime @default(now())
+   241→   241→   241→  lastActiveAt     DateTime @default(now())
+   242→   242→   242→
+   243→   243→   243→  // A student can join a room multiple times, but we track
+   244→   244→   244→  // the latest visit via lastActiveAt (upserted on rejoin).
+   245→   245→   245→  @@unique([roomId, studentIdentity]) // One record per student per room
+   246→   246→   246→  @@index([roomId, lastActiveAt])
+   247→   247→   247→  @@index([studentIdentity, lastActiveAt])
+   248→   248→   248→  @@index([studentId])
+   249→   249→   249→}
+   250→   250→   250→
+   251→   251→   251→// ============================================================
+   252→   252→   252→// Template — Saved Board Layouts
+   253→   253→   253→// ============================================================
+   254→   254→   254→
+   255→   255→   255→model Template {
+   256→   256→   256→  id        String   @id @default(uuid())
+   257→   257→   257→  tutorId   String
+   258→   258→   258→  tutor     User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+   259→   259→   259→  name      String
+   260→   260→   260→  // SECURITY FIX (V-15): Enum constraint for subject
+   261→   261→   261→  subject   Subject
+   262→   262→   262→  // SECURITY FIX (V-17): Added length constraint on snapshot (max 5MB of JSON text)
+   263→   263→   263→  snapshot  String   @db.Text
+   264→   264→   264→  createdAt DateTime @default(now())
+   265→   265→   265→  updatedAt DateTime @updatedAt
+   266→   266→   266→
+   267→   267→   267→  @@index([tutorId, updatedAt])
+   268→   268→   268→}
+   269→   269→   269→
+   270→   270→   270→// ============================================================
+   271→   271→   271→// Recording — Lesson Recordings
+   272→   272→   272→// ============================================================
+   273→   273→   273→
+   274→   274→   274→model Recording {
+   275→   275→   275→  id        String   @id @default(uuid())
+   276→   276→   276→  roomId    String
+   277→   277→   277→  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+   278→   278→   278→  tutorId   String
+   279→   279→   279→  url       String   // Storage URL for the video file (Supabase Storage)
+   280→   280→   280→  status    String   @default("STOPPED") // STARTED, STOPPED, FAILED
+   281→   281→   281→  duration  Int      @default(0)  // Recording duration in seconds
+   282→   282→   282→  egressId  String?  // LiveKit Egress ID
+   283→   283→   283→  startedAt DateTime?
+   284→   284→   284→  endedAt   DateTime?
+   285→   285→   285→  createdAt DateTime @default(now())
+   286→   286→   286→
+   287→   287→   287→  @@index([roomId, createdAt])
+   288→   288→   288→  @@index([tutorId, createdAt])
+   289→   289→   289→}
+   290→   290→   290→
+   291→   291→   291→// ============================================================
+   292→   292→   292→// AgencyInvite — Sub-Tutor Invitation
+   293→   293→   293→// ============================================================
+   294→   294→   294→// An agency owner sends an invite to a tutor's email.
+   295→   295→   295→// The tutor clicks the invite link to accept and become a sub-tutor.
+   296→   296→   296→//
+   297→   297→   297→// Status flow: PENDING → ACCEPTED | EXPIRED | CANCELLED
+   298→   298→   298→// An invite expires after 7 days automatically.
+   299→   299→   299→// ============================================================
+   300→   300→   300→
+   301→   301→   301→model AgencyInvite {
+   302→   302→   302→  id             String   @id @default(uuid())
+   303→   303→   303→  code           String   @unique // 8-char alphanumeric code for URL: /invite/{code}
+   304→   304→   304→  agencyId       String
+   305→   305→   305→  agency         User     @relation("InviteSender", fields: [agencyId], references: [id], onDelete: Cascade)
+   306→   306→   306→  invitedEmail   String   // The email of the person being invited
+   307→   307→   307→  recipientId    String?  @unique // Set when the invite is accepted (links to User)
+   308→   308→   308→  recipient      User?    @relation("InviteRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
+   309→   309→   309→  // SECURITY FIX (V-15): Enum constraint for invite status
+   310→   310→   310→  status         InviteStatus @default(PENDING)
+   311→   311→   311→  expiresAt      DateTime // Invite expires at this time
+   312→   312→   312→  acceptedAt     DateTime? // Set when accepted
+   313→   313→   313→  createdAt      DateTime @default(now())
+   314→   314→   314→  updatedAt      DateTime @updatedAt
+   315→   315→   315→
+   316→   316→   316→  @@index([invitedEmail, status])
+   317→   317→   317→}
+   318→   318→   318→
+   319→   319→   319→// SECURITY FIX (V-15): Enum for invite status
+   320→   320→   320→enum InviteStatus {
+   321→   321→   321→  PENDING
+   322→   322→   322→  ACCEPTED
+   323→   323→   323→  EXPIRED
+   324→   324→   324→  CANCELLED
+   325→   325→   325→}
+   326→   326→   326→
+   327→   327→   327→// ============================================================
+   328→   328→   328→// Subscription — Stripe Subscription Tracking
+   329→   329→   329→// ============================================================
+   330→   330→   330→// Synced from Stripe webhooks. Stores current state so admin
+   331→   331→   331→// can view billing status without querying Stripe API each time.
+   332→   332→   332→// ============================================================
+   333→   333→   333→
+   334→   334→   334→model Subscription {
+   335→   335→   335→  id                    String          @id @default(uuid())
+   336→   336→   336→  userId                String
+   337→   337→   337→  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+   338→   338→   338→  stripeSubscriptionId  String          @unique
+   339→   339→   339→  planName              String          // e.g., "Pro Tutor", "Agency Standard", "Agency Premium"
+   340→   340→   340→  status                String          // active, past_due, canceled, trialing, unpaid
+   341→   341→   341→  currentPeriodStart    DateTime
+   342→   342→   342→  currentPeriodEnd      DateTime
+   343→   343→   343→  cancelAtPeriodEnd     Boolean         @default(false)
+   344→   344→   344→  amountMonthlyCents    Int             // Price in cents (e.g., 1000 = $10.00)
+   345→   345→   345→  createdAt             DateTime        @default(now())
+   346→   346→   346→  updatedAt             DateTime        @updatedAt
+   347→   347→   347→
+   348→   348→   348→  @@index([userId])
+   349→   349→   349→  @@index([status])
+   350→   350→   350→  @@index([currentPeriodEnd])
+   351→   351→   351→}
+   352→   352→   352→
+   353→   353→   353→// ============================================================
+   354→   354→   354→// AuditLog — Admin Action Trail
+   355→   355→   355→// ============================================================
+   356→   356→   356→// Every admin write action is logged here for accountability.
+   357→   357→   357→// ============================================================
+   358→   358→   358→
+   359→   359→   359→model AuditLog {
+   360→   360→   360→  id           String   @id @default(uuid())
+   361→   361→   361→  adminId      String
+   362→   362→   362→  admin        User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+   363→   363→   363→  action       String   // e.g., "USER_TIER_CHANGE", "USER_BAN", "ROOM_CLOSE"
+   364→   364→   364→  targetType   String?  // e.g., "User", "Room"
+   365→   365→   365→  targetId     String?  // ID of the affected resource
+   366→   366→   366→  metadata     String?  @db.Text // JSON string with details of the change
+   367→   367→   367→  createdAt    DateTime @default(now())
+   368→   368→   368→
+   369→   369→   369→  @@index([adminId])
+   370→   370→   370→  @@index([action])
+   371→   371→   371→  @@index([createdAt])
+   372→   372→   372→}
+   373→   373→   373→
+   374→   374→   374→// ============================================================
+   375→   375→   375→// ScheduledLesson — Tutor Lesson Scheduling
+   376→   376→   376→// ============================================================
+   377→   377→   377→// Tutors can schedule future lessons. Each lesson has a time,
+   378→   378→   378→// duration, subject, and optional student invite.
+   379→   379→   379→// ============================================================
+   380→   380→   380→
+   381→   381→   381→model ScheduledLesson {
+   382→   382→   382→  id            String    @id @default(uuid())
+   383→   383→   383→  tutorId       String
+   384→   384→   384→  tutor         User      @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+   385→   385→   385→  title         String
+   386→   386→   386→  description   String?   @db.Text
+   387→   387→   387→  subject       Subject   @default(GENERAL)
+   388→   388→   388→  studentEmail  String?   // Email of invited student
+   389→   389→   389→  studentName   String?   // Name of invited student
+   390→   390→   390→  scheduledAt   DateTime  // When the lesson is scheduled
+   391→   391→   391→  durationMinutes Int     @default(60)
+   392→   392→   392→  timeZone      String    @default("UTC")
+   393→   393→   393→  status        LessonStatus @default(SCHEDULED)
+   394→   394→   394→  roomUrl       String?   // Generated room URL when created
+   395→   395→   395→  reminderSent  Boolean   @default(false)
+   396→   396→   396→  maxStudents   Int       @default(1)  // Max students for group lessons (1 = individual)
+   397→   397→   397→  isGroup       Boolean   @default(false) // Whether this is a group lesson
+   398→   398→   398→  createdAt     DateTime  @default(now())
+   399→   399→   399→  updatedAt     DateTime  @updatedAt
+   400→   400→   400→
+   401→   401→   401→  @@index([tutorId, scheduledAt])
+   402→   402→   402→  @@index([tutorId, status])
+   403→   403→   403→}
+   404→   404→   404→
+   405→   405→   405→// ============================================================
+   406→   406→   406→// WebhookConfig — User Webhook Endpoints
+   407→   407→   407→// ============================================================
+   408→   408→   408→// Users register webhook URLs to receive event notifications.
+   409→   409→   409→// Each webhook has a unique HMAC secret for payload verification.
+   410→   410→   410→// ============================================================
+   411→   411→   411→
+   412→   412→   412→model WebhookConfig {
+   413→   413→   413→  id        String   @id @default(uuid())
+   414→   414→   414→  userId    String
+   415→   415→   415→  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+   416→   416→   416→  url       String
+   417→   417→   417→  events    String[] // Array of event types this webhook listens to
+   418→   418→   418→  secret    String   // HMAC secret for signature verification
+   419→   419→   419→  isActive  Boolean  @default(true)
+   420→   420→   420→  createdAt DateTime @default(now())
+   421→   421→   421→
+   422→   422→   422→  @@index([userId])
+   423→   423→   423→}
+   424→   424→   424→
+   425→   425→   425→model PlatformConfig {
+   426→   426→   426→  id                String   @id @default("platform") // Singleton row
+   427→   427→   427→  maintenanceMode   Boolean  @default(false)
+   428→   428→   428→  announcementText String? @db.Text
+   429→   429→   429→  updatedAt         DateTime @updatedAt
+   430→   430→   430→}
+   431→   431→   431→
+   432→   432→   432→// ============================================================
+   433→   433→   433→// CreditPack — Prepaid Hourly Credit Packs for Agencies
+   434→   434→   434→// ============================================================
+   435→   435→   435→// Agencies can buy prepaid hourly packs to smooth cash flow.
+   436→   436→   436→// Each pack has a fixed number of hours at a discounted rate.
+   437→   437→   437→// Hours are decremented as lessons run (via metered billing).
+   438→   438→   438→// ============================================================
+   439→   439→   439→
+   440→   440→   440→model CreditPack {
+   441→   441→   441→  id              String    @id @default(uuid())
+   442→   442→   442→  agencyId        String
+   443→   443→   443→  agency          User      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+   444→   444→   444→  hoursPurchased  Float     // Number of hours in this pack (e.g., 20)
+   445→   445→   445→  hoursRemaining  Float     @default(0) // Remaining unused hours
+   446→   446→   446→  pricePaidCents  Int       // What the agency paid (e.g., 5000 = $50)
+   447→   447→   447→  stripePaymentIntentId String? @unique // Stripe Payment Intent ID
+   448→   448→   448→  status          CreditPackStatus @default(ACTIVE)
+   449→   449→   449→  createdAt       DateTime  @default(now())
+   450→   450→   450→  updatedAt       DateTime  @updatedAt
+   451→   451→   451→
+   452→   452→   452→  @@index([agencyId, status])
+   453→   453→   453→}
+   454→   454→   454→
+   455→   455→   455→enum CreditPackStatus {
+   456→   456→   456→  ACTIVE
+   457→   457→   457→  EXHAUSTED
+   458→   458→   458→  EXPIRED
+   459→   459→   459→}
+   460→   460→   460→
+   461→   461→   461→// ============================================================
+   462→   462→   462→// Homework — Assignments for Students
+   463→   463→   463→// ============================================================
+   464→   464→   464→// Tutors can assign homework after a lesson. Students (or their parents)
+   465→   465→   465→// can view pending homework. Tutors can mark as complete and add feedback.
+   466→   466→   466→// ============================================================
+   467→   467→   467→
+   468→   468→   468→enum HomeworkStatus {
+   469→   469→   469→  PENDING
+   470→   470→   470→  SUBMITTED
+   471→   471→   471→  GRADED
+   472→   472→   472→  OVERDUE
+   473→   473→   473→}
+   474→   474→   474→
+   475→   475→   475→model Homework {
+   476→   476→   476→  id              String         @id @default(uuid())
+   477→   477→   477→  agencyId        String
+   478→   478→   478→  agency          User           @relation("AgencyHomeworks", fields: [agencyId], references: [id], onDelete: Cascade)
+   479→   479→   479→  studentId       String?
+   480→   480→   480→  student         Student?        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+   481→   481→   481→  tutorId         String
+   482→   482→   482→  tutor           User           @relation("TutorHomeworks", fields: [tutorId], references: [id], onDelete: Cascade)
+   483→   483→   483→  roomId          String?         // Which lesson this homework relates to
+   484→   484→   484→  title           String
+   485→   485→   485→  description     String?        @db.Text
+   486→   486→   486→  subject         Subject        @default(GENERAL)
+   487→   487→   487→  dueDate         DateTime?
+   488→   488→   488→  status          HomeworkStatus  @default(PENDING)
+   489→   489→   489→  snapshot        String?        @db.Text // Board snapshot as homework reference
+   490→   490→   490→  tutorFeedback   String?        @db.Text // Feedback after grading
+   491→   491→   491→  grade           String?        // Grade/score (e.g., "A", "85%", "9/10")
+   492→   492→   492→  createdAt       DateTime       @default(now())
+   493→   493→   493→  updatedAt       DateTime       @updatedAt
+   494→   494→   494→
+   495→   495→   495→  @@index([agencyId, status])
+   496→   496→   496→  @@index([studentId, status])
+   497→   497→   497→  @@index([tutorId, status])
+   498→   498→   498→  @@index([dueDate])
+   499→   499→   499→}
+   500→   500→   500→
+   501→   501→   501→// ============================================================
+   502→   502→   502→// LessonNote — Post-Lesson Notes & Feedback
+   503→   503→   503→// ============================================================
+   504→   504→   504→// After a lesson, tutors write notes about what was covered,
+   505→   505→   505→// student performance, and topics for next time.
+   506→   506→   506→// ============================================================
+   507→   507→   507→
+   508→   508→   508→model LessonNote {
+   509→   509→   509→  id              String   @id @default(uuid())
+   510→   510→   510→  roomId          String
+   511→   511→   511→  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+   512→   512→   512→  tutorId         String
+   513→   513→   513→  tutor           User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+   514→   514→   514→  studentId       String?
+   515→   515→   515→  student         Student? @relation(fields: [studentId], references: [id], onDelete: SetNull)
+   516→   516→   516→  content         String   @db.Text // What was covered in the lesson
+   517→   517→   517→  tutorFeedback   String?  @db.Text // Feedback on student performance
+   518→   518→   518→  topicsForNext   String?  @db.Text // Topics to cover next session
+   519→   519→   519→  rating          Int?     // Student performance rating (1-5)
+   520→   520→   520→  createdAt       DateTime @default(now())
+   521→   521→   521→  updatedAt       DateTime @updatedAt
+   522→   522→   522→
+   523→   523→   523→  @@unique([roomId]) // One set of notes per room/lesson
+   524→   524→   524→  @@index([tutorId, createdAt])
+   525→   525→   525→  @@index([studentId, createdAt])
+   526→   526→   526→}
+   527→   527→   527→
+   528→   528→   528→// ============================================================
+   529→   529→   529→// ResourceLibrary — Shared Agency Resources
+   530→   530→   530→// ============================================================
+   531→   531→   531→// Agencies can upload and share resources (PDFs, worksheets,
+   532→   532→   532→// reference materials) across all their sub-tutors.
+   533→   533→   533→// ============================================================
+   534→   534→   534→
+   535→   535→   535→model ResourceLibrary {
+   536→   536→   536→  id              String   @id @default(uuid())
+   537→   537→   537→  agencyId        String
+   538→   538→   538→  agency          User     @relation("AgencyResources", fields: [agencyId], references: [id], onDelete: Cascade)
+   539→   539→   539→  uploadedByTutorId String  // Which tutor uploaded it
+   540→   540→   540→  name            String
+   541→   541→   541→  description     String?  @db.Text
+   542→   542→   542→  category        String   @default("general") // general, worksheet, reference, exam, template
+   543→   543→   543→  subject         Subject  @default(GENERAL)
+   544→   544→   544→  fileUrl         String   // URL to the stored file
+   545→   545→   545→  fileType        String   // MIME type (e.g., "application/pdf")
+   546→   546→   546→  fileSize        Int      @default(0) // File size in bytes
+   547→   547→   547→  downloadCount   Int      @default(0)
+   548→   548→   548→  createdAt       DateTime @default(now())
+   549→   549→   549→  updatedAt       DateTime @updatedAt
+   550→   550→   550→
+   551→   551→   551→  @@index([agencyId, category])
+   552→   552→   552→  @@index([agencyId, subject])
+   553→   553→   553→  @@index([uploadedByTutorId])
+   554→   554→   554→}
+   555→   555→   555→
+   556→   556→   556→// ============================================================
+   557→   557→   557→// Invoice — Agency Billing Invoices
+   558→   558→   558→// ============================================================
+   559→   559→   559→// Agencies generate invoices for individual students or families.
+   560→   560→   560→// Tracks payment status and links to lessons/hours.
+   561→   561→   561→// ============================================================
+   562→   562→   562→
+   563→   563→   563→enum InvoiceStatus {
+   564→   564→   564→  DRAFT
+   565→   565→   565→  SENT
+   566→   566→   566→  PAID
+   567→   567→   567→  OVERDUE
+   568→   568→   568→  CANCELLED
+   569→   569→   569→}
+   570→   570→   570→
+   571→   571→   571→model Invoice {
+   572→   572→   572→  id              String        @id @default(uuid())
+   573→   573→   573→  agencyId        String
+   574→   574→   574→  agency          User          @relation("AgencyInvoices", fields: [agencyId], references: [id], onDelete: Cascade)
+   575→   575→   575→  studentId       String?
+   576→   576→   576→  student         Student?       @relation(fields: [studentId], references: [id], onDelete: SetNull)
+   577→   577→   577→  invoiceNumber   String        @unique // e.g., "INV-2024-001"
+   578→   578→   578→  description     String?       @db.Text // Invoice description
+   579→   579→   579→  amountCents     Int           // Total amount in cents
+   580→   580→   580→  currency        String        @default("USD")
+   581→   581→   581→  status          InvoiceStatus @default(DRAFT)
+   582→   582→   582→  lessonHours     Float         @default(0) // Number of lesson hours billed
+   583→   583→   583→  ratePerHourCents Int          @default(0) // Rate per hour in cents
+   584→   584→   584→  billingPeriodStart DateTime?  // Start of billing period
+   585→   585→   585→  billingPeriodEnd   DateTime?  // End of billing period
+   586→   586→   586→  paidAt          DateTime?
+   587→   587→   587→  paidAmountCents Int           @default(0)
+   588→   588→   588→  dueDate         DateTime?
+   589→   589→   589→  notes           String?       @db.Text // Additional notes on the invoice
+   590→   590→   590→  createdAt       DateTime      @default(now())
+   591→   591→   591→  updatedAt       DateTime      @updatedAt
+   592→   592→   592→
+   593→   593→   593→  @@index([agencyId, status])
+   594→   594→   594→  @@index([studentId, status])
+   595→   595→   595→  @@index([dueDate])
+   596→   596→   596→}
+   597→   597→   597→
+   598→   598→   598→// ============================================================
+   599→   599→   599→// QuestionBank — Cloud Question Bank (Sprint 1)
+   600→   600→   600→// ============================================================
+   601→   601→   601→// Pre-built, standards-tagged questions organized by subject,
+   602→   602→   602→// grade band, curriculum framework, and difficulty.
+   603→   603→   603→// Each question includes LaTeX stem, optional SVG diagram paths,
+   604→   604→   604→// solution tree, and taxonomy tags.
+   605→   605→   605→// ============================================================
+   606→   606→   606→
+   607→   607→   607→// Question type enum for structured question classification
+   608→   608→   608→enum QuestionType {
+   609→   609→   609→  OPEN
+   610→   610→   610→  MCQ
+   611→   611→   611→  TRUE_FALSE
+   612→   612→   612→  MULTI_SELECT
+   613→   613→   613→  FILL_IN_BLANK
+   614→   614→   614→  SHORT_ANSWER
+   615→   615→   615→  ESSAY
+   616→   616→   616→  MATCHING
+   617→   617→   617→  ORDERING
+   618→   618→   618→}
+   619→   619→   619→
+   620→   620→   620→model QuestionItem {
+   621→   621→   621→  id              String   @id @default(uuid())
+   622→   622→   622→  // Organization
+   623→   623→   623→  subject         String   // MATH, SCIENCE, LANGUAGE, etc.
+   624→   624→   624→  gradeBand       String   // K-2, 3-5, 6-8, 9-12
+   625→   625→   625→  topic           String   // e.g., "Quadratic Equations", "Forces & Motion"
+   626→   626→   626→  difficulty      Int      // 1-5 scale (1=easiest, 5=hardest)
+   627→   627→   627→  // Curriculum alignment
+   628→   628→   628→  curriculum      String?  // CCSS, NGSS, IB, AQA, etc.
+   629→   629→   629→  standardCode    String?  // e.g., "CCSS.MATH.CONTENT.HSA.REI.B.4"
+   630→   630→   630→  // Content
+   631→   631→   631→  stem            String   @db.Text  // Question text (may contain LaTeX)
+   632→   632→   632→  stemLatex       String?  @db.Text  // Raw LaTeX for rendering
+   633→   633→   633→  diagramSvg      String?  @db.Text  // SVG path data for diagrams
+   634→   634→   634→  answerKey       String   @db.Text  // Correct answer(s)
+   635→   635→   635→  solutionSteps   String?  @db.Text  // Step-by-step solution (JSON array)
+   636→   636→   636→  distractors     String?  @db.Text  // Wrong answer options (JSON array for MCQs)
+   637→   637→   637→  questionType    QuestionType @default(OPEN) // Enum-based question types
+   638→   638→   638→  // Test Prep & Curriculum Standard relations
+   639→   639→   639→  testPrepCategoryId    String?
+   640→   640→   640→  testPrepCategory      TestPrepCategory? @relation("TestPrepQuestions", fields: [testPrepCategoryId], references: [id])
+   641→   641→   641→  curriculumStandardId   String?
+   642→   642→   642→  curriculumStandard     CurriculumStandard? @relation("CurriculumStandardQuestions", fields: [curriculumStandardId], references: [id])
+   643→   643→   643→  // Metadata
+   644→   644→   644→  tags            String?  @db.Text  // Comma-separated tags for search
+   645→   645→   645→  estimatedTimeSec Int?    // Estimated time to solve (seconds)
+   646→   646→   646→  creatorId       String?  // User who created (null for system questions)
+   647→   647→   647→  isActive        Boolean  @default(true)
+   648→   648→   648→  createdAt       DateTime @default(now())
+   649→   649→   649→  updatedAt       DateTime @updatedAt
+   650→   650→   650→
+   651→   651→   651→  @@index([subject, gradeBand])
+   652→   652→   652→  @@index([curriculum, standardCode])
+   653→   653→   653→  @@index([topic])
+   654→   654→   654→  @@index([difficulty])
+   655→   655→   655→  @@index([creatorId])
+   656→   656→   656→  @@index([testPrepCategoryId])
+   657→   657→   657→  @@index([curriculumStandardId])
+   658→   658→   658→}
+   659→   659→   659→
+   660→   660→   660→// ============================================================
+   661→   661→   661→// TestPrepCategory — Standardized Test Categories (Sprint 2)
+   662→   662→   662→// ============================================================
+   663→   663→   663→// Groups questions by standardized test (SAT, ACT, AP, STAAR, etc.)
+   664→   664→   664→// with subject and grade level for filtering.
+   665→   665→   665→// ============================================================
+   666→   666→   666→
+   667→   667→   667→model TestPrepCategory {
+   668→   668→   668→  id          String   @id @default(uuid())
+   669→   669→   669→  name        String   @unique  // "SAT Math", "ACT English", "STAAR Grade 5 Math", etc.
+   670→   670→   670→  testType    String   // SAT, ACT, AP, STAAR, NYSESLAT, etc.
+   671→   671→   671→  subject     String   // MATH, ENGLISH, SCIENCE, etc.
+   672→   672→   672→  gradeLevel  String?  // Relevant grade level
+   673→   673→   673→  description String?  @db.Text
+   674→   674→   674→  isActive    Boolean  @default(true)
+   675→   675→   675→  createdAt   DateTime @default(now())
+   676→   676→   676→  updatedAt   DateTime @updatedAt
+   677→   677→   677→
+   678→   678→   678→  questions   QuestionItem[] @relation("TestPrepQuestions")
+   679→   679→   679→
+   680→   680→   680→  @@index([testType])
+   681→   681→   681→  @@index([subject])
+   682→   682→   682→}
+   683→   683→   683→
+   684→   684→   684→// ============================================================
+   685→   685→   685→// CurriculumStandard — Standards Framework Reference (Sprint 2)
+   686→   686→   686→// ============================================================
+   687→   687→   687→// Hierarchical curriculum standards (CCSS, NGSS, IB, AQA, etc.)
+   688→   688→   688→// that questions can be aligned to. Supports parent-child
+   689→   689→   689→// relationships for standard hierarchies.
+   690→   690→   690→// ============================================================
+   691→   691→   691→
+   692→   692→   692→model CurriculumStandard {
+   693→   693→   693→  id          String   @id @default(uuid())
+   694→   694→   694→  code        String   @unique  // "CCSS.MATH.CONTENT.HSA.REI.B.4"
+   695→   695→   695→  framework   String   // CCSS, NGSS, IB, AQA, etc.
+   696→   696→   696→  subject     String
+   697→   697→   697→  gradeBand   String
+   698→   698→   698→  topic       String
+   699→   699→   699→  description String?  @db.Text
+   700→   700→   700→  parentCode  String?  // For hierarchical standards (references parent code, not ID)
+   701→   701→   701→
+   702→   702→   702→  questions   QuestionItem[] @relation("CurriculumStandardQuestions")
+   703→   703→   703→
+   704→   704→   704→  @@index([framework, subject])
+   705→   705→   705→  @@index([gradeBand])
+   706→   706→   706→}
+   707→   707→   707→
