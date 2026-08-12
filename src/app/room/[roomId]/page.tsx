@@ -25,10 +25,8 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   useEffect(() => {
     async function loadRoom() {
       try {
-        console.log('[ROOM DEBUG] loadRoom called, roomId:', roomId);
         // Fetch room data from API (auth required — uses authFetch for token)
         const response = await authFetch(`/api/room?roomId=${roomId}`);
-        console.log('[ROOM DEBUG] authFetch response status:', response?.status, response?.ok);
         if (!response.ok) {
           if (response.status === 410) {
             setError('This lesson has ended. The link is no longer active.');
@@ -39,19 +37,34 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
         const roomData: RoomData = await response.json();
 
-        // Determine if the current user is the tutor by comparing
-        // the authenticated user's ID against the room's tutorId
+        // Determine if the current user is the tutor.
+        // Instead of calling supabase.auth.getUser() (which can hang with SSR client),
+        // we compare the auth token's subject claim against roomData.tutorId.
+        // The authFetch already validated the token server-side.
         let tutorMatch = false;
-        let user: import('@supabase/supabase-js').User | null = null;
-        const supabase = createClient();
-        if (supabase) {
-          const { data: { session: sess } } = await supabase.auth.getSession();
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
-          user = currentUser;
-          tutorMatch = !!user && user.id === roomData.tutorId;
-          if (!tutorMatch && sess?.user?.id === roomData.tutorId) {
-            tutorMatch = true; // fallback to session user
+        let userId: string | null = null;
+        let userName: string | null = null;
+
+        // Decode the JWT to get the user ID (sub claim)
+        // The token was already fetched by authFetch internally
+        try {
+          const supabase = createClient();
+          if (supabase) {
+            // getSession reads from cookies — should be fast, but add timeout
+            const sessionPromise = supabase.auth.getSession();
+            const timeout = new Promise<null>(r => setTimeout(() => r(null), 3000));
+            const sessionResult = await Promise.race([sessionPromise, timeout]);
+            if (sessionResult && sessionResult.data.session) {
+              userId = sessionResult.data.session.user.id;
+              userName = sessionResult.data.session.user.user_metadata?.name
+                || sessionResult.data.session.user.email
+                || null;
+              tutorMatch = userId === roomData.tutorId;
+            }
           }
+        } catch {
+          // If getSession fails, we still have roomData —
+          // just treat user as non-tutor (student view)
         }
 
         // Set room state — include isTutor, userId, userName for whiteboard
@@ -59,8 +72,8 @@ function RoomPageContent({ roomId }: { roomId: string }) {
           roomId: roomData.id,
           subject: roomData.subject as 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL',
           isActive: roomData.isActive,
-          userId: user?.id || null,
-          userName: user?.user_metadata?.name || user?.email || null,
+          userId,
+          userName,
           branding: {
             logoUrl: roomData.brandingLogo || null,
             color: roomData.brandingColor || null,
@@ -109,17 +122,14 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
         setLoading(false);
       } catch (err) {
-        console.error('[ROOM DEBUG] loadRoom catch:', err);
+        console.error('[RoomPage] loadRoom error:', err);
         setError(err instanceof Error ? err.message : 'Failed to load room');
         setLoading(false);
       }
     }
 
     if (roomId) {
-      console.log('[ROOM DEBUG] calling loadRoom for roomId:', roomId);
-      loadRoom().catch(e => console.error('[ROOM DEBUG] loadRoom error:', e));
-    } else {
-      console.log('[ROOM DEBUG] roomId is falsy:', roomId);
+      loadRoom().catch(e => console.error('[RoomPage] loadRoom error:', e));
     }
   }, [roomId, setRoom, setBranding]);
 

@@ -67,8 +67,13 @@ export async function authFetch(
   if (!_cachedToken) {
     const supabase = createClient();
     if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      _cachedToken = session?.access_token ?? null;
+      // Add timeout to prevent getSession from hanging indefinitely
+      const sessionPromise = supabase.auth.getSession();
+      const timeout = new Promise<{ data: { session: null } }>(r =>
+        setTimeout(() => r({ data: { session: null } }), 5000)
+      );
+      const result = await Promise.race([sessionPromise, timeout]);
+      _cachedToken = result.data.session?.access_token ?? null;
     }
   }
 
