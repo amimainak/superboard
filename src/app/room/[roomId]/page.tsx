@@ -94,7 +94,7 @@ function RoomPageContent({ roomId }: { roomId: string }) {
         // Track student participation (for agency billing)
         if (!tutorMatch) {
           // Student joined — track via fingerprint or user ID
-          let studentIdentity = user?.id || '';
+          let studentIdentity = userId || '';
           if (!studentIdentity) {
             // Generate a session-based identity for anonymous students
             try {
@@ -102,9 +102,9 @@ function RoomPageContent({ roomId }: { roomId: string }) {
               const fp = await getFingerprintHash();
               studentIdentity = fp || `anon_${roomId}_${Date.now()}`;
               // Also report fingerprint if user is logged in
-              if (user?.id) {
+              if (userId) {
                 const { reportFingerprint } = await import('@/lib/fingerprint');
-                reportFingerprint(user.id).catch(() => {});
+                reportFingerprint(userId).catch(() => {});
               }
             } catch {
               studentIdentity = `anon_${roomId}_${Date.now()}`;
@@ -115,7 +115,7 @@ function RoomPageContent({ roomId }: { roomId: string }) {
             body: JSON.stringify({
               roomId,
               studentIdentity,
-              studentName: user?.user_metadata?.name || null,
+              studentName: userName || null,
             }),
           }).catch(() => { /* silent — don't block the lesson */ });
         }
