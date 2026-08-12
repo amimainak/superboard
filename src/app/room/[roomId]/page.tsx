@@ -177,7 +177,7 @@ export default function RoomPage({
     );
   }
 
-  return <RoomPageContent roomId={roomId} />;
+  return <div suppressHydrationWarning><RoomPageContent roomId={roomId} /></div>;
 }
 
 // Safe hook to extract roomId from params without hydration issues
