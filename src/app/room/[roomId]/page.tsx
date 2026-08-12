@@ -25,8 +25,10 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   useEffect(() => {
     async function loadRoom() {
       try {
+        console.log('[ROOM DEBUG] loadRoom called, roomId:', roomId);
         // Fetch room data from API (auth required — uses authFetch for token)
         const response = await authFetch(`/api/room?roomId=${roomId}`);
+        console.log('[ROOM DEBUG] authFetch response status:', response?.status, response?.ok);
         if (!response.ok) {
           if (response.status === 410) {
             setError('This lesson has ended. The link is no longer active.');
@@ -107,13 +109,17 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 
         setLoading(false);
       } catch (err) {
+        console.error('[ROOM DEBUG] loadRoom catch:', err);
         setError(err instanceof Error ? err.message : 'Failed to load room');
         setLoading(false);
       }
     }
 
     if (roomId) {
-      loadRoom();
+      console.log('[ROOM DEBUG] calling loadRoom for roomId:', roomId);
+      loadRoom().catch(e => console.error('[ROOM DEBUG] loadRoom error:', e));
+    } else {
+      console.log('[ROOM DEBUG] roomId is falsy:', roomId);
     }
   }, [roomId, setRoom, setBranding]);
 
