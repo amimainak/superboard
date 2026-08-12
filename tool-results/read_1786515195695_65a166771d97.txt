@@ -1,0 +1,1142 @@
+     1→// ============================================================
+     2→// FabricCanvas — Interactive Whiteboard Canvas (Phase 4)
+     3→// ============================================================
+     4→// Purpose-built for K-12 online tutoring with Fabric.js + perfect-freehand.
+     5→//
+     6→// Architecture:
+     7→//   Fabric.js canvas (bottom layer) — shape rendering engine
+     8→//   DOM overlay layers — UI components, text editing, cursor rendering
+     9→//
+    10→// Phase 1: Freehand, shapes, text, eraser, pan/zoom, undo/redo
+    11→// Phase 2: Yjs per-object CRDT sync, awareness cursors, read-only
+    12→// Phase 3: Multi-page, image upload, PNG export, templates
+    13→// Phase 4: Touch gestures, pinch-zoom, remote cursors, copy/paste,
+    14→//          keyboard shortcuts, performance optimization, zoom-to-fit
+    15→// ============================================================
+    16→
+    17→'use client';
+    18→
+    19→import React, { useEffect, useRef, useCallback, useState, useImperativeHandle, forwardRef } from 'react';
+    20→import {
+    21→  Canvas,
+    22→  PencilBrush,
+    23→  Rect,
+    24→  Ellipse,
+    25→  Line,
+    26→  Triangle,
+    27→  IText,
+    28→  Group,
+    29→  Point as FabricPoint,
+    30→  Circle,
+    31→  Path,
+    32→  type Object as FabricObject,
+    33→} from 'fabric';
+    34→import getStroke from 'perfect-freehand';
+    35→import { useCanvasTools, useCanvasHistory, useKeyboardShortcuts, setKeyboardCanvasRef, type FabricCanvas, type CanvasTool } from './hooks';
+    36→import { useYjsCanvasSync } from './useYjsCanvasSync';
+    37→import { useFocusMode } from '@/hooks/useFocusMode';
+    38→import { useAppStore, type ColorBlindMode } from '@/store/app-store';
+    39→
+    40→// ---- Color-Blind Safe Canvas Colors (Sprint 1) ----
+    41→// Used when tutor draws with color-blind mode enabled.
+    42→// Maps common color names to accessible alternatives.
+    43→const COLOR_BLIND_PALETTES: Record<string, Record<string, string>> = {
+    44→  protanopia: {
+    45→    red: '#0066cc', orange: '#cc9900', green: '#009966',
+    46→    blue: '#3366ff', purple: '#9933cc', pink: '#cc6699',
+    47→  },
+    48→  deuteranopia: {
+    49→    red: '#cc3300', orange: '#cc9900', green: '#0066cc',
+    50→    blue: '#3333cc', purple: '#9933cc', pink: '#cc6699',
+    51→  },
+    52→  tritanopia: {
+    53→    red: '#cc0000', orange: '#cc6600', green: '#009900',
+    54→    blue: '#cc3300', purple: '#990099', pink: '#ff6666',
+    55→  },
+    56→};
+    57→
+    58→/** Remap a color name through the color-blind palette if applicable */
+    59→function getColorBlindSafeColor(colorName: string, mode: string): string {
+    60→  if (mode === 'none' || !COLOR_BLIND_PALETTES[mode]) return colorName;
+    61→  return COLOR_BLIND_PALETTES[mode][colorName.toLowerCase()] || colorName;
+    62→}
+    63→
+    64→// ---- Types ----
+    65→
+    66→interface Point {
+    67→  x: number;
+    68→  y: number;
+    69→}
+    70→
+    71→interface FreehandPoint {
+    72→  x: number;
+    73→  y: number;
+    74→  pressure?: number;
+    75→}
+    76→
+    77→interface RemoteCursor {
+    78→  id: string;
+    79→  name: string;
+    80→  color: string;
+    81→  x: number;
+    82→  y: number;
+    83→}
+    84→
+    85→export interface FabricCanvasProps {
+    86→  ydoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    87→  pageIndex: number;
+    88→  isTutor: boolean;
+    89→  readOnly: boolean;
+    90→  activeTool?: string;
+    91→  onCanvasReady?: (canvas: FabricCanvas) => void;
+    92→  awareness?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    93→  // Sprint 1: Viewport sync (student side — received from tutor)
+    94→  appliedViewport?: { x: number; y: number; zoom: number } | null;
+    95→  // Sprint 1: Focus mode flag (tutor broadcasts viewport when true)
+    96→  focusMode?: boolean;
+    97→  // Sprint 1: Scratchpad mode — uses separate Yjs map key
+    98→  isScratchpad?: boolean;
+    99→}
+   100→
+   101→// ---- Perfect-Freehand → Fabric.js Path ----
+   102→
+   103→function createFreehandPath(
+   104→  points: FreehandPoint[],
+   105→  strokeColor: string,
+   106→  strokeWidth: number
+   107→): Path | null {
+   108→  if (points.length < 2) return null;
+   109→
+   110→  const outline = getStroke(points, {
+   111→    size: strokeWidth * 3,
+   112→    thinning: 0.5,
+   113→    smoothing: 0.6,
+   114→    streamline: 0.5,
+   115→    simulatePressure: true,
+   116→  });
+   117→
+   118→  if (outline.length < 2) return null;
+   119→
+   120→  // Build SVG path string from the outline points
+   121→  let d = `M ${outline[0][0].toFixed(1)} ${outline[0][1].toFixed(1)}`;
+   122→  for (let i = 1; i < outline.length; i++) {
+   123→    d += ` L ${outline[i][0].toFixed(1)} ${outline[i][1].toFixed(1)}`;
+   124→  }
+   125→  d += ' Z';
+   126→
+   127→  try {
+   128→    const path = new Path(d, {
+   129→      fill: strokeColor,
+   130→      stroke: strokeColor,
+   131→      strokeWidth: 0.5,
+   132→      strokeLineCap: 'round',
+   133→      strokeLineJoin: 'round',
+   134→    } as any);
+   135→    return path;
+   136→  } catch {
+   137→    return null;
+   138→  }
+   139→}
+   140→
+   141→// ---- Canvas ID for uniqueness ----
+   142→let canvasInstanceId = 0;
+   143→function getNextCanvasId() {
+   144→  canvasInstanceId++;
+   145→  return `fabric-whiteboard-${canvasInstanceId}`;
+   146→}
+   147→
+   148→// ---- Main Component ----
+   149→
+   150→const FabricCanvasComponent = forwardRef<FabricCanvas, FabricCanvasProps>(
+   151→  function FabricCanvasInner(
+   152→    {
+   153→      ydoc,
+   154→      pageIndex,
+   155→      isTutor,
+   156→      readOnly,
+   157→      activeTool,
+   158→      onCanvasReady,
+   159→      awareness,
+   160→      appliedViewport,
+   161→      focusMode,
+   162→      isScratchpad,
+   163→    },
+   164→    ref
+   165→  ) {
+   166→    const containerRef = useRef<HTMLDivElement>(null);
+   167→    const fcanvasRef = useRef<FabricCanvas | null>(null);
+   168→    const [isReady, setIsReady] = useState(false);
+   169→    const [isPanning, setIsPanning] = useState(false);
+   170→    const canvasIdRef = useRef(getNextCanvasId());
+   171→
+   172→    // Drawing state for shapes
+   173→    const isDrawingRef = useRef(false);
+   174→    const startPointRef = useRef<Point | null>(null);
+   175→    const tempShapeRef = useRef<FabricObject | null>(null);
+   176→
+   177→    // Freehand points buffer for perfect-freehand
+   178→    const freehandPointsRef = useRef<FreehandPoint[]>([]);
+   179→    const freehandTempPathRef = useRef<Path | null>(null);
+   180→
+   181→    // Touch state for pinch-to-zoom
+   182→    const touchStateRef = useRef<{
+   183→      isPinching: boolean;
+   184→      lastDist: number;
+   185→      lastCenter: { x: number; y: number };
+   186→      touchCount: number;
+   187→    }>({ isPinching: false, lastDist: 0, lastCenter: { x: 0, y: 0 }, touchCount: 0 });
+   188→
+   189→    // Remote cursors state
+   190→    const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([]);
+   191→    const cursorOverlayRef = useRef<HTMLDivElement>(null);
+   192→
+   193→    // Render throttle
+   194→    const renderQueuedRef = useRef(false);
+   195→    const requestRenderThrottled = useCallback(() => {
+   196→      if (renderQueuedRef.current) return;
+   197→      renderQueuedRef.current = true;
+   198→      requestAnimationFrame(() => {
+   199→        fcanvasRef.current?.requestRenderAll();
+   200→        renderQueuedRef.current = false;
+   201→      });
+   202→    }, []);
+   203→
+   204→    // ---- Expose canvas ref via forwardRef ----
+   205→    useImperativeHandle(ref, () => fcanvasRef.current!, []);
+   206→
+   207→    // ---- Hooks ----
+   208→    const tools = useCanvasTools(fcanvasRef);
+   209→    const history = useCanvasHistory(fcanvasRef);
+   210→
+   211→    // Sprint 1: Focus mode — use the hook for viewport broadcast/receive
+   212→    // Sprint 1: Read color-blind mode from store for canvas stroke remapping
+   213→    const colorBlindMode = useAppStore((s) => s.colorBlindMode);
+   214→
+   215→    /** Remap a hex color through color-blind palette using nearest-name matching */
+   216→    const getRemappedColor = useCallback((hexColor: string): string => {
+   217→      if (colorBlindMode === 'none') return hexColor;
+   218→      // Quick name-based lookup for common colors
+   219→      const nameMap: Record<string, string> = {
+   220→        '#ef4444': 'red', '#f97316': 'orange', '#eab308': 'yellow',
+   221→        '#22c55e': 'green', '#3b82f6': 'blue', '#8b5cf6': 'purple',
+   222→        '#ec4899': 'pink', '#14b8a6': 'teal', '#dc2626': 'red',
+   223→        '#ea580c': 'orange', '#ca8a04': 'yellow', '#16a34a': 'green',
+   224→        '#2563eb': 'blue', '#7c3aed': 'purple', '#db2777': 'pink',
+   225→        '#0d9488': 'teal', '#1a1a2e': 'blue', '#000000': 'red',
+   226→      };
+   227→      const name = nameMap[hexColor.toLowerCase()];
+   228→      if (name) return getColorBlindSafeColor(name, colorBlindMode);
+   229→      return hexColor;
+   230→    }, [colorBlindMode]);
+   231→
+   232→    const focusModeHook = useFocusMode({
+   233→      awareness,
+   234→      onViewportReceived: undefined, // Student-side receive handled by appliedViewport prop
+   235→    });
+   236→
+   237→    // Register canvas ref for keyboard shortcuts
+   238→    useEffect(() => {
+   239→      setKeyboardCanvasRef(fcanvasRef);
+   240→      return () => setKeyboardCanvasRef({ current: null } as React.MutableRefObject<FabricCanvas | null>);
+   241→    }, []);
+   242→
+   243→    // ============================================================
+   244→    // Sync external tool changes (from toolbar) to canvas
+   245→    // ============================================================
+   246→    const prevActiveToolRef = useRef(activeTool);
+   247→    useEffect(() => {
+   248→      if (activeTool && activeTool !== prevActiveToolRef.current) {
+   249→        prevActiveToolRef.current = activeTool;
+   250→        tools.setTool(activeTool as CanvasTool);
+   251→      }
+   252→    }, [activeTool, tools]);
+   253→
+   254→    const sync = useYjsCanvasSync({
+   255→      ydoc,
+   256→      fcanvasRef,
+   257→      pageIndex: isScratchpad ? -1 : pageIndex,
+   258→      mapKeyPrefix: isScratchpad ? 'scratchpad-shapes' : 'page-shapes',
+   259→      onRemoteChange: () => {},
+   260→    });
+   261→
+   262→    // ============================================================
+   263→    // Canvas Initialization
+   264→    // ============================================================
+   265→    useEffect(() => {
+   266→      const container = containerRef.current;
+   267→      if (!container) return;
+   268→
+   269→      const canvasId = canvasIdRef.current;
+   270→      const fc = new Canvas(canvasId, {
+   271→        width: container.clientWidth,
+   272→        height: container.clientHeight,
+   273→        backgroundColor: '#ffffff',
+   274→        selection: false,
+   275→        preserveObjectStacking: true,
+   276→        stopContextMenu: true,
+   277→        fireRightClick: true,
+   278→        fireMiddleClick: true,
+   279→        enableRetinaScaling: true,
+   280→        renderOnAddRemove: false, // Performance: batch renders
+   281→      });
+   282→
+   283→      // Configure PencilBrush for freehand (fallback / raw path mode)
+   284→      const brush = new PencilBrush(fc);
+   285→      brush.color = tools.strokeColor;
+   286→      brush.width = tools.strokeWidth;
+   287→      brush.decimate = 2; // Reduce point density for performance
+   288→      fc.freeDrawingBrush = brush;
+   289→      fc.isDrawingMode = false;
+   290→
+   291→      fcanvasRef.current = fc;
+   292→      setIsReady(true);
+   293→
+   294→      sync.loadInitialState(fc);
+   295→      sync.wireCanvasEvents(fc);
+   296→      sync.setupRemoteObserver();
+   297→      onCanvasReady?.(fc);
+   298→
+   299→      // Initial render
+   300→      fc.requestRenderAll();
+   301→
+   302→      return () => {
+   303→        sync.flushPending();
+   304→        fc.dispose();
+   305→        fcanvasRef.current = null;
+   306→        setIsReady(false);
+   307→      };
+   308→      // eslint-disable-next-line react-hooks/exhaustive-deps
+   309→    }, []);
+   310→
+   311→    // ============================================================
+   312→    // Resize Handler (performance: debounced)
+   313→    // ============================================================
+   314→    useEffect(() => {
+   315→      const container = containerRef.current;
+   316→      const fc = fcanvasRef.current;
+   317→      if (!container || !fc) return;
+   318→
+   319→      let rafId: number;
+   320→      const observer = new ResizeObserver(() => {
+   321→        if (rafId) cancelAnimationFrame(rafId);
+   322→        rafId = requestAnimationFrame(() => {
+   323→          fc.setDimensions({
+   324→            width: container.clientWidth,
+   325→            height: container.clientHeight,
+   326→          });
+   327→          fc.requestRenderAll();
+   328→        });
+   329→      });
+   330→
+   331→      observer.observe(container);
+   332→      return () => {
+   333→        observer.disconnect();
+   334→        if (rafId) cancelAnimationFrame(rafId);
+   335→      };
+   336→    }, [isReady]);
+   337→
+   338→    // ============================================================
+   339→    // Page Change — reload from Yjs
+   340→    // ============================================================
+   341→    const prevPageIndexRef = useRef(pageIndex);
+   342→    useEffect(() => {
+   343→      if (pageIndex !== prevPageIndexRef.current) {
+   344→        const fc = fcanvasRef.current;
+   345→        if (fc && ydoc) {
+   346→          sync.flushPending();
+   347→          history.clearHistory();
+   348→          sync.loadInitialState(fc);
+   349→        }
+   350→        prevPageIndexRef.current = pageIndex;
+   351→      }
+   352→    }, [pageIndex, ydoc, sync, history]);
+   353→
+   354→    // ============================================================
+   355→    // Read-only mode
+   356→    // ============================================================
+   357→    useEffect(() => {
+   358→      const fc = fcanvasRef.current;
+   359→      if (!fc) return;
+   360→
+   361→      if (readOnly) {
+   362→        fc.selection = false;
+   363→        fc.isDrawingMode = false;
+   364→        fc.forEachObject((obj: FabricObject) => {
+   365→          obj.selectable = false;
+   366→          obj.evented = false;
+   367→        });
+   368→      } else {
+   369→        tools.setTool(tools.tool);
+   370→      }
+   371→      fc.requestRenderAll();
+   372→    }, [readOnly, tools]);
+   373→
+   374→    // ============================================================
+   375→    // Awareness Cursor Tracking — broadcast local cursor, render remote
+   376→    // ============================================================
+   377→    useEffect(() => {
+   378→      if (!awareness || !fcanvasRef.current) return;
+   379→
+   380→      const fc = fcanvasRef.current;
+   381→      const localUserId = awareness.clientId;
+   382→
+   383→      // Broadcast cursor position on mouse move
+   384→      const handleMouseMoveAwareness = (opt: any) => {
+   385→        const e = opt.e as MouseEvent;
+   386→        const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   387→        awareness.setLocalStateField('cursor', {
+   388→          x: pointer.x,
+   389→          y: pointer.y,
+   390→        });
+   391→      };
+   392→
+   393→      fc.on('mouse:move', handleMouseMoveAwareness);
+   394→
+   395→      // Observe remote awareness states for cursors
+   396→      const handleAwarenessChange = () => {
+   397→        const states = awareness.getStates() as Map<number, any>;
+   398→        const cursors: RemoteCursor[] = [];
+   399→
+   400→        states.forEach((state: any, clientId: number) => {
+   401→          if (clientId === localUserId) return; // Skip own cursor
+   402→          const cursor = state?.cursor;
+   403→          const user = state?.user;
+   404→          if (cursor && user) {
+   405→            cursors.push({
+   406→              id: String(clientId),
+   407→              name: user.name || 'Anonymous',
+   408→              color: user.color || '#6366f1',
+   409→              x: cursor.x,
+   410→              y: cursor.y,
+   411→            });
+   412→          }
+   413→        });
+   414→
+   415→        setRemoteCursors(cursors);
+   416→      };
+   417→
+   418→      awareness.on('change', handleAwarenessChange);
+   419→
+   420→      return () => {
+   421→        fc.off('mouse:move', handleMouseMoveAwareness);
+   422→        awareness.off('change', handleAwarenessChange);
+   423→      };
+   424→    }, [awareness, isReady]);
+   425→
+   426→    // ============================================================
+   427→    // Sprint 1: Viewport Broadcast (Tutor Side — Focus Mode)
+   428→    // Broadcasts viewport (x, y, zoom) via awareness when focus mode is on.
+   429→    // ============================================================
+   430→    useEffect(() => {
+   431→      const fc = fcanvasRef.current;
+   432→      if (!fc || !awareness || !isTutor || !focusMode) return;
+   433→
+   434→      let lastKey = '';
+   435→      let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+   436→
+   437→      const broadcastCurrentViewport = () => {
+   438→        const vpt = fc.viewportTransform;
+   439→        if (!vpt) return;
+   440→        const zoom = parseFloat((vpt[0] || 1).toFixed(2));
+   441→        const x = Math.round(vpt[4] || 0);
+   442→        const y = Math.round(vpt[5] || 0);
+   443→        const key = `${x},${y},${zoom}`;
+   444→
+   445→        if (key !== lastKey) {
+   446→          lastKey = key;
+   447→          if (debounceTimer) clearTimeout(debounceTimer);
+   448→          debounceTimer = setTimeout(() => {
+   449→            awareness.setLocalStateField('viewport', { x, y, zoom });
+   450→          }, 60);
+   451→        }
+   452→      };
+   453→
+   454→      // Broadcast on zoom (wheel) and pan (after:render when panning)
+   455→      const handleAfterRender = () => {
+   456→        if (isPanning) broadcastCurrentViewport();
+   457→      };
+   458→
+   459→      const handleZoom = () => {
+   460→        broadcastCurrentViewport();
+   461→      };
+   462→
+   463→      // Sprint 1: Also broadcast on mouse:up (when pan/zoom gesture ends)
+   464→      const handleMouseUp = () => {
+   465→        broadcastCurrentViewport();
+   466→      };
+   467→
+   468→      fc.on('after:render', handleAfterRender);
+   469→      fc.on('mouse:wheel', handleZoom);
+   470→      fc.on('mouse:up', handleMouseUp);
+   471→
+   472→      // Initial broadcast
+   473→      broadcastCurrentViewport();
+   474→
+   475→      return () => {
+   476→        fc.off('after:render', handleAfterRender);
+   477→        fc.off('mouse:wheel', handleZoom);
+   478→        fc.off('mouse:up', handleMouseUp);
+   479→        if (debounceTimer) clearTimeout(debounceTimer);
+   480→        // Clear viewport when focus mode changes or component unmounts
+   481→        awareness.setLocalStateField('viewport', null);
+   482→      };
+   483→    }, [awareness, isTutor, focusMode, isReady, isPanning]);
+   484→
+   485→    // ============================================================
+   486→    // Sprint 1: Viewport Receive (Student Side — Focus Mode)
+   487→    // Applies viewport broadcasted by tutor.
+   488→    // ============================================================
+   489→    useEffect(() => {
+   490→      const fc = fcanvasRef.current;
+   491→      if (!fc || !appliedViewport || isTutor) return;
+   492→
+   493→      const vpt = [...(fc.viewportTransform || [1, 0, 0, 1, 0, 0])];
+   494→      vpt[0] = appliedViewport.zoom;
+   495→      vpt[3] = appliedViewport.zoom;
+   496→      vpt[4] = appliedViewport.x;
+   497→      vpt[5] = appliedViewport.y;
+   498→      fc.setViewportTransform(vpt as any);
+   499→      requestRenderThrottled();
+   500→    }, [appliedViewport, isTutor, isReady]); // eslint-disable-line react-hooks/exhaustive-deps
+   501→
+   502→    // ============================================================
+   503→    // Canvas Interaction — Pan, Zoom, Draw, Erase, Text, Shapes
+   504→    // ============================================================
+   505→    useEffect(() => {
+   506→      const fc = fcanvasRef.current;
+   507→      if (!fc || readOnly) return;
+   508→
+   509→      // ---- Zoom (mouse wheel) ----
+   510→      const handleWheel = (opt: any) => {
+   511→        const e = opt.e as WheelEvent;
+   512→        e.preventDefault();
+   513→        e.stopPropagation();
+   514→
+   515→        const delta = e.deltaY;
+   516→        let zoom = fc.getZoom();
+   517→        zoom *= 0.999 ** delta;
+   518→        zoom = Math.min(Math.max(0.1, zoom), 10);
+   519→        fc.zoomToPoint(new FabricPoint(e.offsetX, e.offsetY), zoom);
+   520→        requestRenderThrottled();
+   521→      };
+   522→      fc.on('mouse:wheel', handleWheel);
+   523→
+   524→      // ---- Mouse interactions ----
+   525→      let panningActive = false;
+   526→      let lastPosX = 0;
+   527→      let lastPosY = 0;
+   528→      let beforeState = '';
+   529→
+   530→      // ---- Mouse Down ----
+   531→      const handleMouseDown = (opt: any) => {
+   532→        const e = opt.e as MouseEvent;
+   533→
+   534→        // Hand tool: left click pans
+   535→        if (tools.tool === 'hand' && e.button === 0) {
+   536→          panningActive = true;
+   537→          setIsPanning(true);
+   538→          lastPosX = e.clientX;
+   539→          lastPosY = e.clientY;
+   540→          (fc as any).defaultCursor = 'grabbing';
+   541→          return;
+   542→        }
+   543→
+   544→        // Middle click pans
+   545→        if (e.button === 1) {
+   546→          panningActive = true;
+   547→          setIsPanning(true);
+   548→          lastPosX = e.clientX;
+   549→          lastPosY = e.clientY;
+   550→          return;
+   551→        }
+   552→
+   553→        // Eraser: click to delete
+   554→        if (tools.tool === 'eraser' && e.button === 0) {
+   555→          const target = opt.target as FabricObject | undefined;
+   556→          if (target) {
+   557→            beforeState = fc.toJSON().toString();
+   558→            fc.remove(target);
+   559→            fc.renderAll();
+   560→            history.pushState('erase', beforeState, fc.toJSON().toString());
+   561→          }
+   562→          return;
+   563→        }
+   564→
+   565→        // Text: click empty space to place IText
+   566→        if (tools.tool === 'text' && e.button === 0 && !opt.target) {
+   567→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   568→          beforeState = fc.toJSON().toString();
+   569→
+   570→          const text = new IText('Type here', {
+   571→            left: pointer.x,
+   572→            top: pointer.y,
+   573→            fontSize: tools.fontSize,
+   574→            fill: getRemappedColor(tools.strokeColor),
+   575→            fontFamily: 'Inter, system-ui, sans-serif',
+   576→            selectable: true,
+   577→            evented: true,
+   578→          } as any);
+   579→          (text as any).name = `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+   580→
+   581→          fc.add(text);
+   582→          fc.setActiveObject(text);
+   583→          text.enterEditing();
+   584→          text.selectAll();
+   585→          fc.renderAll();
+   586→
+   587→          history.pushState('add-text', beforeState, fc.toJSON().toString());
+   588→          return;
+   589→        }
+   590→
+   591→        // Freehand (draw tool): start collecting points for perfect-freehand
+   592→        if (tools.tool === 'draw' && e.button === 0 && !opt.target) {
+   593→          // We use Fabric's built-in freeDrawingMode but with perfect-freehand
+   594→          // post-processing. The PencilBrush collects points; on path:created
+   595→          // we replace it with a smooth perfect-freehand path.
+   596→          // But for real-time preview, we track raw points ourselves.
+   597→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   598→          freehandPointsRef.current = [{ x: pointer.x, y: pointer.y, pressure: 0.5 }];
+   599→          isDrawingRef.current = true;
+   600→          beforeState = fc.toJSON().toString();
+   601→          return;
+   602→        }
+   603→
+   604→        // Shape tools: start drawing
+   605→        if (['rectangle', 'ellipse', 'line', 'arrow'].includes(tools.tool) && e.button === 0 && !opt.target) {
+   606→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   607→          isDrawingRef.current = true;
+   608→          startPointRef.current = pointer;
+   609→          beforeState = fc.toJSON().toString();
+   610→
+   611→          const objName = `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+   612→          let shape: FabricObject;
+   613→
+   614→          switch (tools.tool) {
+   615→            case 'rectangle':
+   616→              shape = new Rect({
+   617→                left: pointer.x,
+   618→                top: pointer.y,
+   619→                width: 1,
+   620→                height: 1,
+   621→                fill: tools.fillColor === 'transparent' ? 'transparent' : getRemappedColor(tools.fillColor),
+   622→                stroke: getRemappedColor(tools.strokeColor),
+   623→                strokeWidth: tools.strokeWidth,
+   624→                selectable: false,
+   625→                evented: false,
+   626→              } as any);
+   627→              break;
+   628→
+   629→            case 'ellipse':
+   630→              shape = new Ellipse({
+   631→                left: pointer.x,
+   632→                top: pointer.y,
+   633→                rx: 1,
+   634→                ry: 1,
+   635→                fill: tools.fillColor === 'transparent' ? 'transparent' : getRemappedColor(tools.fillColor),
+   636→                stroke: getRemappedColor(tools.strokeColor),
+   637→                strokeWidth: tools.strokeWidth,
+   638→                selectable: false,
+   639→                evented: false,
+   640→              } as any);
+   641→              break;
+   642→
+   643→            case 'line':
+   644→              shape = new Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+   645→                stroke: getRemappedColor(tools.strokeColor),
+   646→                strokeWidth: tools.strokeWidth,
+   647→                selectable: false,
+   648→                evented: false,
+   649→              } as any);
+   650→              break;
+   651→
+   652→            case 'arrow': {
+   653→              const line = new Line([pointer.x, pointer.y, pointer.x, pointer.y], {
+   654→                stroke: getRemappedColor(tools.strokeColor),
+   655→                strokeWidth: tools.strokeWidth,
+   656→                selectable: false,
+   657→                evented: false,
+   658→              } as any);
+   659→              const headSize = Math.max(10, tools.strokeWidth * 4);
+   660→              const arrowhead = new Triangle({
+   661→                left: pointer.x,
+   662→                top: pointer.y,
+   663→                width: headSize,
+   664→                height: headSize,
+   665→                fill: getRemappedColor(tools.strokeColor),
+   666→                angle: 90,
+   667→                originX: 'center',
+   668→                originY: 'center',
+   669→                selectable: false,
+   670→                evented: false,
+   671→              } as any);
+   672→              shape = new Group([line, arrowhead], {
+   673→                selectable: false,
+   674→                evented: false,
+   675→              } as any);
+   676→              break;
+   677→            }
+   678→
+   679→            default:
+   680→              return;
+   681→          }
+   682→
+   683→          (shape as any).name = objName;
+   684→          fc.add(shape);
+   685→          tempShapeRef.current = shape;
+   686→          requestRenderThrottled();
+   687→          return;
+   688→        }
+   689→      };
+   690→
+   691→      // ---- Mouse Move ----
+   692→      const handleMouseMove = (opt: any) => {
+   693→        const e = opt.e as MouseEvent;
+   694→
+   695→        // Panning
+   696→        if (panningActive) {
+   697→          const vpt = fc.viewportTransform!;
+   698→          vpt[4] += e.clientX - lastPosX;
+   699→          vpt[5] += e.clientY - lastPosY;
+   700→          lastPosX = e.clientX;
+   701→          lastPosY = e.clientY;
+   702→          requestRenderThrottled();
+   703→          return;
+   704→        }
+   705→
+   706→        // Freehand drawing — collect points
+   707→        if (isDrawingRef.current && tools.tool === 'draw') {
+   708→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   709→          freehandPointsRef.current.push({
+   710→            x: pointer.x,
+   711→            y: pointer.y,
+   712→            pressure: 0.5,
+   713→          });
+   714→
+   715→          // Real-time preview with perfect-freehand
+   716→          if (freehandTempPathRef.current) {
+   717→            fc.remove(freehandTempPathRef.current);
+   718→          }
+   719→
+   720→          const previewPath = createFreehandPath(
+   721→            freehandPointsRef.current,
+   722→            getRemappedColor(tools.strokeColor),
+   723→            tools.strokeWidth
+   724→          );
+   725→          if (previewPath) {
+   726→            (previewPath as any).name = '__freehand_temp__';
+   727→            freehandTempPathRef.current = previewPath;
+   728→            fc.add(previewPath);
+   729→          }
+   730→
+   731→          requestRenderThrottled();
+   732→          return;
+   733→        }
+   734→
+   735→        // Shape drawing
+   736→        if (isDrawingRef.current && tempShapeRef.current && startPointRef.current) {
+   737→          const pointer = fc.getScenePoint(e) as unknown as FabricPoint;
+   738→          const start = startPointRef.current;
+   739→          const t = tempShapeRef.current;
+   740→
+   741→          if (t instanceof Rect) {
+   742→            const left = Math.min(start.x, pointer.x);
+   743→            const top = Math.min(start.y, pointer.y);
+   744→            t.set({
+   745→              left,
+   746→              top,
+   747→              width: Math.abs(pointer.x - start.x),
+   748→              height: Math.abs(pointer.y - start.y),
+   749→            });
+   750→          } else if (t instanceof Ellipse) {
+   751→            const left = Math.min(start.x, pointer.x);
+   752→            const top = Math.min(start.y, pointer.y);
+   753→            const rx = Math.max(1, Math.abs(pointer.x - start.x) / 2);
+   754→            const ry = Math.max(1, Math.abs(pointer.y - start.y) / 2);
+   755→            t.set({ left: left + rx, top: top + ry, rx, ry });
+   756→          } else if (t instanceof Line) {
+   757→            t.set({ x2: pointer.x, y2: pointer.y });
+   758→          } else if (t instanceof Group) {
+   759→            const objs = t.getObjects();
+   760→            const line = objs[0] as Line;
+   761→            const head = objs[1] as Triangle;
+   762→            if (line && head) {
+   763→              line.set({ x2: pointer.x - start.x, y2: pointer.y - start.y });
+   764→              head.set({
+   765→                left: pointer.x - start.x,
+   766→                top: pointer.y - start.y,
+   767→                angle:
+   768→                  Math.atan2(pointer.y - start.y, pointer.x - start.x) *
+   769→                    (180 / Math.PI) +
+   770→                  90,
+   771→              });
+   772→            }
+   773→            t.setCoords();
+   774→          }
+   775→
+   776→          requestRenderThrottled();
+   777→        }
+   778→      };
+   779→
+   780→      // ---- Mouse Up ----
+   781→      const handleMouseUp = () => {
+   782→        // Stop panning
+   783→        if (panningActive) {
+   784→          panningActive = false;
+   785→          setIsPanning(false);
+   786→          (fc as any).defaultCursor =
+   787→            tools.tool === 'hand' ? 'grab' : 'default';
+   788→          return;
+   789→        }
+   790→
+   791→        // Finalize freehand
+   792→        if (isDrawingRef.current && tools.tool === 'draw') {
+   793→          isDrawingRef.current = false;
+   794→
+   795→          // Remove preview path
+   796→          if (freehandTempPathRef.current) {
+   797→            fc.remove(freehandTempPathRef.current);
+   798→            freehandTempPathRef.current = null;
+   799→          }
+   800→
+   801→          // Create final perfect-freehand path
+   802→          const points = freehandPointsRef.current;
+   803→          if (points.length >= 2) {
+   804→            const finalPath = createFreehandPath(
+   805→              points,
+   806→              getRemappedColor(tools.strokeColor),
+   807→              tools.strokeWidth
+   808→            );
+   809→            if (finalPath) {
+   810→              (finalPath as any).name = `obj-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+   811→              fc.add(finalPath);
+   812→            }
+   813→          }
+   814→
+   815→          freehandPointsRef.current = [];
+   816→          history.pushState('draw', beforeState, fc.toJSON().toString());
+   817→          fc.renderAll();
+   818→          return;
+   819→        }
+   820→
+   821→        // Finalize shape
+   822→        if (isDrawingRef.current && tempShapeRef.current) {
+   823→          tempShapeRef.current.set({
+   824→            selectable: true,
+   825→            evented: true,
+   826→          });
+   827→
+   828→          history.pushState(
+   829→            `draw-${tools.tool}`,
+   830→            beforeState,
+   831→            fc.toJSON().toString()
+   832→          );
+   833→          tempShapeRef.current = null;
+   834→          isDrawingRef.current = false;
+   835→          startPointRef.current = null;
+   836→          fc.renderAll();
+   837→        }
+   838→      };
+   839→
+   840→      fc.on('mouse:down', handleMouseDown);
+   841→      fc.on('mouse:move', handleMouseMove);
+   842→      fc.on('mouse:up', handleMouseUp);
+   843→
+   844→      // Track undo state: capture before-state when user starts modifying
+   845→      const undoBeforeRef = useRef('');
+   846→      const captureBefore = () => {
+   847→        undoBeforeRef.current = fc.toJSON().toString();
+   848→      };
+   849→      fc.on('object:moving', captureBefore);
+   850→      fc.on('object:scaling', captureBefore);
+   851→      fc.on('object:rotating', captureBefore);
+   852→      fc.on('object:modified', () => {
+   853→        if (undoBeforeRef.current) {
+   854→          history.pushState(
+   855→            'modify',
+   856→            undoBeforeRef.current,
+   857→            fc.toJSON().toString()
+   858→          );
+   859→          undoBeforeRef.current = '';
+   860→        }
+   861→      });
+   862→
+   863→      // Filter out temp freehand paths from sync
+   864→      const origBeforeAdd = fc.on;
+   865→      fc.on('object:added', ((e: any) => {
+   866→        const obj = e.target as FabricObject;
+   867→        const name = (obj as any).name;
+   868→        if (name === '__freehand_temp__') {
+   869→          // Don't sync temp paths
+   870→          return;
+   871→        }
+   872→      }) as any);
+   873→
+   874→      return () => {
+   875→        fc.off('mouse:wheel', handleWheel);
+   876→        fc.off('mouse:down', handleMouseDown);
+   877→        fc.off('mouse:move', handleMouseMove);
+   878→        fc.off('mouse:up', handleMouseUp);
+   879→      };
+   880→    }, [isReady, tools.tool, tools.strokeColor, tools.strokeWidth, tools.fillColor, tools.fontSize, readOnly, history, requestRenderThrottled, colorBlindMode, getRemappedColor]);
+   881→
+   882→    // ============================================================
+   883→    // Touch: Pinch-to-zoom via native DOM events on container
+   884→    // ============================================================
+   885→    useEffect(() => {
+   886→      const container = containerRef.current;
+   887→      const fc = fcanvasRef.current;
+   888→      if (!container || !fc) return;
+   889→
+   890→      const domTouchStart = (e: TouchEvent) => {
+   891→        const touches = e.touches;
+   892→        if (touches.length === 2) {
+   893→          e.preventDefault();
+   894→          e.stopPropagation();
+   895→
+   896→          const dx = touches[0].clientX - touches[1].clientX;
+   897→          const dy = touches[0].clientY - touches[1].clientY;
+   898→          const dist = Math.sqrt(dx * dx + dy * dy);
+   899→          const centerX = (touches[0].clientX + touches[1].clientX) / 2;
+   900→          const centerY = (touches[0].clientY + touches[1].clientY) / 2;
+   901→
+   902→          touchStateRef.current = {
+   903→            isPinching: true,
+   904→            lastDist: dist,
+   905→            lastCenter: { x: centerX, y: centerY },
+   906→            touchCount: 2,
+   907→          };
+   908→
+   909→          // Cancel any active drawing
+   910→          isDrawingRef.current = false;
+   911→          tempShapeRef.current = null;
+   912→          freehandPointsRef.current = [];
+   913→          if (freehandTempPathRef.current) {
+   914→            fc.remove(freehandTempPathRef.current);
+   915→            freehandTempPathRef.current = null;
+   916→          }
+   917→        }
+   918→      };
+   919→
+   920→      const domTouchMove = (e: TouchEvent) => {
+   921→        const touches = e.touches;
+   922→        if (touches.length === 2 && touchStateRef.current.isPinching) {
+   923→          e.preventDefault();
+   924→          e.stopPropagation();
+   925→
+   926→          const dx = touches[0].clientX - touches[1].clientX;
+   927→          const dy = touches[0].clientY - touches[1].clientY;
+   928→          const dist = Math.sqrt(dx * dx + dy * dy);
+   929→          const centerX = (touches[0].clientX + touches[1].clientX) / 2;
+   930→          const centerY = (touches[0].clientY + touches[1].clientY) / 2;
+   931→
+   932→          const prev = touchStateRef.current;
+   933→
+   934→          // Zoom
+   935→          const scale = dist / Math.max(prev.lastDist, 1);
+   936→          let zoom = fc.getZoom() * scale;
+   937→          zoom = Math.min(Math.max(0.1, zoom), 10);
+   938→
+   939→          // Pan
+   940→          const vpt = fc.viewportTransform!;
+   941→          vpt[4] += centerX - prev.lastCenter.x;
+   942→          vpt[5] += centerY - prev.lastCenter.y;
+   943→
+   944→          // Apply zoom to center of pinch
+   945→          fc.zoomToPoint(new FabricPoint(centerX, centerY), zoom);
+   946→
+   947→          touchStateRef.current = {
+   948→            isPinching: true,
+   949→            lastDist: dist,
+   950→            lastCenter: { x: centerX, y: centerY },
+   951→            touchCount: 2,
+   952→          };
+   953→
+   954→          requestRenderThrottled();
+   955→        }
+   956→      };
+   957→
+   958→      const domTouchEnd = (e: TouchEvent) => {
+   959→        if (e.touches.length < 2) {
+   960→          touchStateRef.current.isPinching = false;
+   961→          touchStateRef.current.touchCount = e.touches.length;
+   962→        }
+   963→      };
+   964→
+   965→      container.addEventListener('touchstart', domTouchStart, { passive: false });
+   966→      container.addEventListener('touchmove', domTouchMove, { passive: false });
+   967→      container.addEventListener('touchend', domTouchEnd, { passive: false });
+   968→
+   969→      return () => {
+   970→        container.removeEventListener('touchstart', domTouchStart);
+   971→        container.removeEventListener('touchmove', domTouchMove);
+   972→        container.removeEventListener('touchend', domTouchEnd);
+   973→      };
+   974→    }, [isReady, requestRenderThrottled]);
+   975→
+   976→    // ============================================================
+   977→    // Keyboard Shortcuts (Phase 4: extended)
+   978→    // ============================================================
+   979→    useKeyboardShortcuts({
+   980→      onUndo: history.undo,
+   981→      onRedo: history.redo,
+   982→      onDelete: () => {
+   983→        const fc = fcanvasRef.current;
+   984→        if (!fc || readOnly) return;
+   985→        const active = fc.getActiveObject();
+   986→        if (active) {
+   987→          const before = fc.toJSON().toString();
+   988→          fc.remove(active);
+   989→          fc.renderAll();
+   990→          history.pushState('delete', before, fc.toJSON().toString());
+   991→          fc.discardActiveObject();
+   992→        }
+   993→      },
+   994→      onEscape: () => {
+   995→        const fc = fcanvasRef.current;
+   996→        if (fc) {
+   997→          fc.discardActiveObject();
+   998→          fc.requestRenderAll();
+   999→        }
+  1000→      },
+  1001→      onToolChange: (tool: CanvasTool) => {
+  1002→        tools.setTool(tool);
+  1003→      },
+  1004→      onZoomToFit: () => {
+  1005→        const fc = fcanvasRef.current;
+  1006→        if (!fc || fc.getObjects().length === 0) return;
+  1007→        // Calculate bounding rect of all objects
+  1008→        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  1009→        fc.getObjects().forEach((obj: FabricObject) => {
+  1010→          const bound = obj.getBoundingRect();
+  1011→          minX = Math.min(minX, bound.left);
+  1012→          minY = Math.min(minY, bound.top);
+  1013→          maxX = Math.max(maxX, bound.left + bound.width);
+  1014→          maxY = Math.max(maxY, bound.top + bound.height);
+  1015→        });
+  1016→
+  1017→        const padding = 60;
+  1018→        const contentWidth = maxX - minX + padding * 2;
+  1019→        const contentHeight = maxY - minY + padding * 2;
+  1020→        const scaleX = fc.getWidth() / contentWidth;
+  1021→        const scaleY = fc.getHeight() / contentHeight;
+  1022→        const zoom = Math.min(scaleX, scaleY, 2); // Cap at 2x
+  1023→
+  1024→        fc.setViewportTransform([1, 0, 0, 1, 0, 0]);
+  1025→        const centerX = (minX + maxX) / 2;
+  1026→        const centerY = (minY + maxY) / 2;
+  1027→        const vptCenterX = fc.getWidth() / 2;
+  1028→        const vptCenterY = fc.getHeight() / 2;
+  1029→
+  1030→        fc.zoomToPoint(
+  1031→          new FabricPoint(vptCenterX, vptCenterY),
+  1032→          zoom
+  1033→        );
+  1034→
+  1035→        // Pan to center content
+  1036→        const vpt = fc.viewportTransform!;
+  1037→        vpt[4] = vptCenterX - centerX * zoom;
+  1038→        vpt[5] = vptCenterY - centerY * zoom;
+  1039→
+  1040→        fc.requestRenderAll();
+  1041→      },
+  1042→      disabled: readOnly,
+  1043→      readOnly,
+  1044→    });
+  1045→
+  1046→    // ============================================================
+  1047→    // Compute viewport transform for remote cursor rendering
+  1048→    // ============================================================
+  1049→    const vpt = fcanvasRef.current?.viewportTransform;
+  1050→
+  1051→    // ============================================================
+  1052→    // Render
+  1053→    // ============================================================
+  1054→    return (
+  1055→      <div
+  1056→        ref={containerRef}
+  1057→        className="w-full h-full relative"
+  1058→        style={{
+  1059→          cursor: isPanning
+  1060→            ? 'grabbing'
+  1061→            : tools.tool === 'hand'
+  1062→              ? 'grab'
+  1063→              : tools.tool === 'eraser'
+  1064→                ? 'crosshair'
+  1065→                : tools.tool === 'text'
+  1066→                  ? 'text'
+  1067→                  : tools.tool === 'draw'
+  1068→                    ? 'crosshair'
+  1069→                    : 'default',
+  1070→          touchAction: 'none', // Prevent browser touch defaults for pinch-zoom
+  1071→        }}
+  1072→      >
+  1073→        {!isReady && (
+  1074→          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+  1075→            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+  1076→              <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  1077→              <span>Loading canvas...</span>
+  1078→            </div>
+  1079→          </div>
+  1080→        )}
+  1081→        <canvas id={canvasIdRef.current} />
+  1082→
+  1083→        {/* Remote Cursors Overlay */}
+  1084→        {remoteCursors.length > 0 && vpt && (
+  1085→          <div
+  1086→            ref={cursorOverlayRef}
+  1087→            className="absolute inset-0 pointer-events-none z-20 overflow-hidden"
+  1088→            style={{ touchAction: 'none' }}
+  1089→          >
+  1090→            {remoteCursors.map((cursor) => (
+  1091→              <div
+  1092→                key={cursor.id}
+  1093→                className="absolute transition-transform duration-75 ease-out"
+  1094→                style={{
+  1095→                  left: cursor.x * vpt[0] + vpt[4],
+  1096→                  top: cursor.y * vpt[3] + vpt[5],
+  1097→                  transform: 'translate(-2px, -2px)',
+  1098→                }}
+  1099→              >
+  1100→                {/* Cursor dot */}
+  1101→                <svg
+  1102→                  width="12"
+  1103→                  height="18"
+  1104→                  viewBox="0 0 12 18"
+  1105→                  fill="none"
+  1106→                  className="drop-shadow-sm"
+  1107→                >
+  1108→                  <path
+  1109→                    d="M1 1L6 16L7.5 10.5L12 9L1 1Z"
+  1110→                    fill={cursor.color}
+  1111→                    stroke="white"
+  1112→                    strokeWidth="1.5"
+  1113→                    strokeLinejoin="round"
+  1114→                  />
+  1115→                </svg>
+  1116→                {/* Name label */}
+  1117→                <div
+  1118→                  className="absolute left-3 top-3 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap shadow-sm"
+  1119→                  style={{
+  1120→                    backgroundColor: cursor.color,
+  1121→                    color: 'white',
+  1122→                  }}
+  1123→                >
+  1124→                  {cursor.name}
+  1125→                </div>
+  1126→              </div>
+  1127→            ))}
+  1128→          </div>
+  1129→        )}
+  1130→
+  1131→        {/* Zoom indicator */}
+  1132→        <div className="absolute bottom-2 right-2 z-20 px-2 py-0.5 rounded-md bg-black/50 text-white text-[10px] font-mono">
+  1133→          {Math.round((fcanvasRef.current?.getZoom() || 1) * 100)}%
+  1134→        </div>
+  1135→      </div>
+  1136→    );
+  1137→  }
+  1138→);
+  1139→
+  1140→FabricCanvasComponent.displayName = 'FabricCanvas';
+  1141→export default FabricCanvasComponent;
+  1142→

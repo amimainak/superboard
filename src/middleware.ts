@@ -130,16 +130,12 @@ export async function middleware(request: NextRequest) {
   const hocuspocusWsUrl = process.env.NEXT_PUBLIC_HOCUSPOCUS_URL || '';
   const hocuspocusCspEntry = hocuspocusWsUrl ? ` ${hocuspocusWsUrl}` : '';
 
-  // SECURITY FIX (FE-C01): Use nonce in CSP with 'unsafe-inline' fallback for SSG pages
-  // The nonce is generated above and passed via X-Nonce header for use in <script> tags
+  // SECURITY (FE-C01): CSP without nonce to avoid blocking Next.js inline RSC payload scripts.
+  // When nonce is present in script-src, browsers ignore 'unsafe-inline' per CSP spec,
+  // which blocks React's hydration script (embedded as inline <script> by Next.js).
+  // Using hash-based or strict-dynamic would be alternatives but require build-time changes.
   // NOTE: Google OAuth requires accounts.google.com and *.googleapis.com in form-action and connect-src
-  // NOTE: 'unsafe-inline' is included alongside nonce as a fallback for SSG/ISR pages.
-  // Next.js pre-renders static HTML at build time without nonces, but middleware
-  // generates a per-request nonce for the CSP header. The mismatch blocks React's
-  // inline RSC payload scripts from executing, preventing hydration.
-  // Browsers that support nonces ignore 'unsafe-inline', so nonce-based protection
-  // remains effective in modern browsers while static pages still work.
-  const cspDirectives = `default-src 'self'; script-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'nonce-${nonce}' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.superboard.app https://superboard.app https://lh3.googleusercontent.com; connect-src 'self' wss://*.livekit.io https://*.supabase.co https://api.stripe.com https://api.mathpix.com https://api.anthropic.com https://accounts.google.com https://*.googleapis.com${hocuspocusCspEntry}; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://accounts.google.com https://*.googleapis.com; frame-ancestors 'self'; upgrade-insecure-requests`;
+  const cspDirectives = `default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.supabase.co https://*.superboard.app https://superboard.app https://lh3.googleusercontent.com; connect-src 'self' wss://*.livekit.io https://*.supabase.co https://api.stripe.com https://api.mathpix.com https://api.anthropic.com https://accounts.google.com https://*.googleapis.com${hocuspocusCspEntry}; frame-src 'self' https://js.stripe.com https://hooks.stripe.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com https://accounts.google.com https://*.googleapis.com; frame-ancestors 'self'; upgrade-insecure-requests`;
 
   // ---- Custom domain routing ----
   if (MAIN_DOMAIN && hostnameWithoutPort !== MAIN_DOMAIN && hostnameWithoutPort !== 'localhost') {

@@ -82,4 +82,6 @@ export function createServerClient() {
   return createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
-export const supabase = isConfigured ? createClient() : null;
+// NOTE: Removed module-level `export const supabase = createClient()` to prevent
+// hydration issues — createBrowserClient accesses browser APIs at module evaluation time.
+// Use createClient() function directly instead.
