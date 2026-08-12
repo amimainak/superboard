@@ -1,0 +1,1187 @@
+     1→// ============================================================
+     2→// Manipulative Renderer — AI-Generated Math Manipulatives
+     3→// ============================================================
+     4→// Converts AI-generated manipulative descriptions into Fabric.js
+     5→// object groups. Each manipulative is a self-contained Group of
+     6→// objects that can be moved, resized, and interacted with.
+     7→//
+     8→// Used by AI actions like "create-fraction-bars", "create-number-line",
+     9→// "create-base-ten-blocks", etc.
+    10→// ============================================================
+    11→
+    12→import {
+    13→  Rect,
+    14→  Circle,
+    15→  Line,
+    16→  IText,
+    17→  Group,
+    18→  Triangle,
+    19→  Polygon,
+    20→  Path,
+    21→  Ellipse,
+    22→  type Object as FabricObject,
+    23→} from 'fabric';
+    24→
+    25→// ---- Types ----
+    26→
+    27→export interface ManipulativeSpec {
+    28→  type: string;
+    29→  params: Record<string, any>;
+    30→}
+    31→
+    32→// ---- Color palette for manipulatives ----
+    33→
+    34→const MANIPULATIVE_COLORS = [
+    35→  '#ef4444', // red
+    36→  '#f97316', // orange
+    37→  '#eab308', // yellow
+    38→  '#22c55e', // green
+    39→  '#3b82f6', // blue
+    40→  '#8b5cf6', // purple
+    41→  '#ec4899', // pink
+    42→  '#14b8a6', // teal
+    43→];
+    44→
+    45→function getColor(index: number): string {
+    46→  return MANIPULATIVE_COLORS[index % MANIPULATIVE_COLORS.length];
+    47→}
+    48→
+    49→// ---- Main entry point ----
+    50→
+    51→/**
+    52→ * Render a manipulative specification into an array of Fabric.js objects.
+    53→ * Each manipulative type has its own factory function.
+    54→ */
+    55→export function renderManipulative(spec: ManipulativeSpec): FabricObject[] {
+    56→  switch (spec.type) {
+    57→    case 'fraction-bar':
+    58→      return createFractionBars(spec.params);
+    59→    case 'number-line':
+    60→      return createNumberLine(spec.params);
+    61→    case 'base-ten-blocks':
+    62→      return createBaseTenBlocks(spec.params);
+    63→    case 'coordinate-grid':
+    64→      return createCoordinateGrid(spec.params);
+    65→    case 'angle-protractor':
+    66→      return createAngleProtractor(spec.params);
+    67→    case 'geometry-shape':
+    68→      return createGeometryShape(spec.params);
+    69→    case 'place-value-chart':
+    70→      return createPlaceValueChart(spec.params);
+    71→    case 'clock':
+    72→      return createClock(spec.params);
+    73→    case 'bar-chart':
+    74→      return createBarChart(spec.params);
+    75→    // ---- New manipulatives ----
+    76→    case 'fraction-decimal-grid':
+    77→      return createFractionDecimalGrid(spec.params);
+    78→    case 'geometry-compass':
+    79→      return createGeometryCompass(spec.params);
+    80→    case 'protractor-tool':
+    81→      return createProtractorTool(spec.params);
+    82→    case 'quadratic-graph':
+    83→      return createQuadraticGraph(spec.params);
+    84→    case 'unit-circle':
+    85→      return createUnitCircle(spec.params);
+    86→    case 'slope-triangle':
+    87→      return createSlopeTriangle(spec.params);
+    88→    case 'box-plot':
+    89→      return createBoxPlot(spec.params);
+    90→    case 'stem-leaf-plot':
+    91→      return createStemLeafPlot(spec.params);
+    92→    case 'solar-system':
+    93→      return createSolarSystem(spec.params);
+    94→    case 'rock-cycle':
+    95→      return createRockCycle(spec.params);
+    96→    case 'water-cycle':
+    97→      return createWaterCycle(spec.params);
+    98→    case 'food-chain':
+    99→      return createFoodChain(spec.params);
+   100→    case 'human-heart':
+   101→      return createHumanHeart(spec.params);
+   102→    case 'ph-scale':
+   103→      return createPHScale(spec.params);
+   104→    case 'word-web':
+   105→      return createWordWeb(spec.params);
+   106→    case 'writing-paragraph':
+   107→      return createWritingParagraph(spec.params);
+   108→    case 'grammar-tree':
+   109→      return createGrammarTree(spec.params);
+   110→    case 'spiral-curriculum':
+   111→      return createSpiralCurriculum(spec.params);
+   112→    case 'world-map-continent':
+   113→      return createWorldMapContinent(spec.params);
+   114→    case 'government-branches':
+   115→      return createGovernmentBranches(spec.params);
+   116→    case 'economic-cycle':
+   117→      return createEconomicCycle(spec.params);
+   118→    case 'answer-grid-bubble':
+   119→      return createAnswerGridBubble(spec.params);
+   120→    case 'test-strategy-clock':
+   121→      return createTestStrategyClock(spec.params);
+   122→    case 'elimination-board':
+   123→      return createEliminationBoard(spec.params);
+   124→    case 'treble-clef-staff':
+   125→      return createTrebleClefStaff(spec.params);
+   126→    case 'rhythm-grid':
+   127→      return createRhythmGrid(spec.params);
+   128→    default:
+   129→      return createGenericManipulative(spec);
+   130→  }
+   131→}
+   132→
+   133→// ============================================================
+   134→// Fraction Bars
+   135→// ============================================================
+   136→// Visual representation of fractions using colored bars.
+   137→// params: { numerator, denominator, label? }
+   138→
+   139→function createFractionBars(params: Record<string, any>): FabricObject[] {
+   140→  const {
+   141→    numerator = 1,
+   142→    denominator = 4,
+   143→    label,
+   144→    x = 100,
+   145→    y = 100,
+   146→    width = 300,
+   147→    height = 40,
+   148→  } = params;
+   149→
+   150→  const objects: FabricObject[] = [];
+   151→  const slotWidth = width / denominator;
+   152→
+   153→  // Background bar (outline)
+   154→  const bg = new Rect({
+   155→    left: x,
+   156→    top: y,
+   157→    width,
+   158→    height,
+   159→    fill: 'transparent',
+   160→    stroke: '#374151',
+   161→    strokeWidth: 2,
+   162→    rx: 4,
+   163→    ry: 4,
+   164→  } as any);
+   165→  objects.push(bg);
+   166→
+   167→  // Filled slots (numerator)
+   168→  for (let i = 0; i < numerator && i < denominator; i++) {
+   169→    const filled = new Rect({
+   170→      left: x + i * slotWidth + 1,
+   171→      top: y + 1,
+   172→      width: slotWidth - 2,
+   173→      height: height - 2,
+   174→      fill: getColor(i),
+   175→      stroke: '#374151',
+   176→      strokeWidth: 1,
+   177→      rx: 3,
+   178→      ry: 3,
+   179→    } as any);
+   180→    objects.push(filled);
+   181→  }
+   182→
+   183→  // Slot dividers
+   184→  for (let i = 1; i < denominator; i++) {
+   185→    const divider = new Line(
+   186→      [x + i * slotWidth, y, x + i * slotWidth, y + height],
+   187→      {
+   188→        stroke: '#374151',
+   189→        strokeWidth: 1.5,
+   190→      } as any
+   191→    );
+   192→    objects.push(divider);
+   193→  }
+   194→
+   195→  // Label
+   196→  const labelText = label || `${numerator}/${denominator}`;
+   197→  const labelObj = new IText(labelText, {
+   198→    left: x + width / 2,
+   199→    top: y + height + 12,
+   200→    fontSize: 18,
+   201→    fontFamily: 'Inter, system-ui, sans-serif',
+   202→    fill: '#374151',
+   203→    originX: 'center',
+   204→    originY: 'top',
+   205→    textAlign: 'center',
+   206→  } as any);
+   207→  objects.push(labelObj);
+   208→
+   209→  // Wrap in a group
+   210→  const group = new Group(objects, {
+   211→    left: x,
+   212→    top: y,
+   213→  } as any);
+   214→  (group as any).name = `manipulative-fraction-bar-${Date.now()}`;
+   215→  return [group];
+   216→}
+   217→
+   218→// ============================================================
+   219→// Number Line
+   220→// ============================================================
+   221→// Horizontal number line with tick marks and labels.
+   222→// params: { min, max, step?, highlightValues?, label? }
+   223→
+   224→function createNumberLine(params: Record<string, any>): FabricObject[] {
+   225→  const {
+   226→    min = 0,
+   227→    max = 10,
+   228→    step = 1,
+   229→    highlightValues = [],
+   230→    label,
+   231→    x = 100,
+   232→    y = 200,
+   233→    length = 500,
+   234→  } = params;
+   235→
+   236→  const objects: FabricObject[] = [];
+   237→  const tickSpacing = length / ((max - min) / step);
+   238→
+   239→  // Main line
+   240→  const mainLine = new Line([x, y, x + length, y], {
+   241→    stroke: '#374151',
+   242→    strokeWidth: 2,
+   243→    strokeLineCap: 'round',
+   244→  } as any);
+   245→  objects.push(mainLine);
+   246→
+   247→  // Arrow at end
+   248→  const arrow = new Triangle({
+   249→    left: x + length,
+   250→    top: y,
+   251→    width: 12,
+   252→    height: 12,
+   253→    fill: '#374151',
+   254→    angle: 90,
+   255→    originX: 'center',
+   256→    originY: 'center',
+   257→  } as any);
+   258→  objects.push(arrow);
+   259→
+   260→  // Tick marks and labels
+   261→  const totalTicks = Math.round((max - min) / step);
+   262→  for (let i = 0; i <= totalTicks; i++) {
+   263→    const value = min + i * step;
+   264→    const tickX = x + i * tickSpacing;
+   265→    const isHighlighted = highlightValues.includes(value);
+   266→
+   267→    // Tick mark
+   268→    const tick = new Line([tickX, y - 8, tickX, y + 8], {
+   269→      stroke: isHighlighted ? '#059669' : '#374151',
+   270→      strokeWidth: isHighlighted ? 3 : 1.5,
+   271→    } as any);
+   272→    objects.push(tick);
+   273→
+   274→    // Highlight dot
+   275→    if (isHighlighted) {
+   276→      const dot = new Circle({
+   277→        left: tickX,
+   278→        top: y - 16,
+   279→        radius: 6,
+   280→        fill: '#059669',
+   281→        originX: 'center',
+   282→        originY: 'center',
+   283→      } as any);
+   284→      objects.push(dot);
+   285→    }
+   286→
+   287→    // Number label (show every step, or every other for small steps)
+   288→    const showLabel = step >= 1 || i % Math.max(1, Math.round(1 / step)) === 0;
+   289→    if (showLabel) {
+   290→      const numLabel = new IText(
+   291→        Number.isInteger(value) ? String(value) : value.toFixed(1),
+   292→        {
+   293→          left: tickX,
+   294→          top: y + 16,
+   295→          fontSize: 14,
+   296→          fontFamily: 'Inter, system-ui, sans-serif',
+   297→          fill: '#374151',
+   298→          originX: 'center',
+   299→          originY: 'top',
+   300→          textAlign: 'center',
+   301→        } as any
+   302→      );
+   303→      objects.push(numLabel);
+   304→    }
+   305→  }
+   306→
+   307→  // Optional top label
+   308→  if (label) {
+   309→    const titleLabel = new IText(label, {
+   310→      left: x + length / 2,
+   311→      top: y - 40,
+   312→      fontSize: 16,
+   313→      fontFamily: 'Inter, system-ui, sans-serif',
+   314→      fill: '#374151',
+   315→      originX: 'center',
+   316→      originY: 'top',
+   317→      fontWeight: 'bold',
+   318→    } as any);
+   319→    objects.push(titleLabel);
+   320→  }
+   321→
+   322→  const group = new Group(objects, {
+   323→    left: x,
+   324→    top: y - 40,
+   325→  } as any);
+   326→  (group as any).name = `manipulative-number-line-${Date.now()}`;
+   327→  return [group];
+   328→}
+   329→
+   330→// ============================================================
+   331→// Base-Ten Blocks
+   332→// ============================================================
+   333→// Visual representation of base-10 place value.
+   334→// params: { hundreds, tens, ones, x?, y? }
+   335→
+   336→function createBaseTenBlocks(params: Record<string, any>): FabricObject[] {
+   337→  const {
+   338→    hundreds = 0,
+   339→    tens = 0,
+   340→    ones = 0,
+   341→    x = 100,
+   342→    y = 100,
+   343→    unitSize = 20,
+   344→  } = params;
+   345→
+   346→  const objects: FabricObject[] = [];
+   347→  let currentX = x;
+   348→  const gap = 10;
+   349→
+   350→  // Label
+   351→  if (hundreds > 0 || tens > 0 || ones > 0) {
+   352→    const titleLabel = new IText('Base-Ten Blocks', {
+   353→      left: x,
+   354→      top: y - 30,
+   355→      fontSize: 16,
+   356→      fontFamily: 'Inter, system-ui, sans-serif',
+   357→      fill: '#374151',
+   358→      fontWeight: 'bold',
+   359→    } as any);
+   360→    objects.push(titleLabel);
+   361→  }
+   362→
+   363→  // Hundreds (large 10x10 grid)
+   364→  for (let h = 0; h < Math.min(hundreds, 5); h++) {
+   365→    const block = new Rect({
+   366→      left: currentX,
+   367→      top: y,
+   368→      width: unitSize * 10,
+   369→      height: unitSize * 10,
+   370→      fill: '#fbbf24',
+   371→      stroke: '#374151',
+   372→      strokeWidth: 2,
+   373→    } as any);
+   374→    objects.push(block);
+   375→
+   376→    // Grid lines for hundreds block
+   377→    for (let i = 1; i < 10; i++) {
+   378→      const vLine = new Line(
+   379→        [currentX + i * unitSize, y, currentX + i * unitSize, y + unitSize * 10],
+   380→        { stroke: '#92400e', strokeWidth: 0.5 } as any
+   381→      );
+   382→      objects.push(vLine);
+   383→      const hLine = new Line(
+   384→        [currentX, y + i * unitSize, currentX + unitSize * 10, y + i * unitSize],
+   385→        { stroke: '#92400e', strokeWidth: 0.5 } as any
+   386→      );
+   387→      objects.push(hLine);
+   388→    }
+   389→
+   390→    // Count label
+   391→    const hLabel = new IText(`${hundreds}00`, {
+   392→      left: currentX + unitSize * 5,
+   393→      top: y + unitSize * 10 + 8,
+   394→      fontSize: 14,
+   395→      fontFamily: 'Inter, system-ui, sans-serif',
+   396→      fill: '#92400e',
+   397→      originX: 'center',
+   398→    } as any);
+   399→    objects.push(hLabel);
+   400→
+   401→    currentX += unitSize * 10 + gap;
+   402→  }
+   403→
+   404→  // Tens (1x10 rods)
+   405→  for (let t = 0; t < Math.min(tens, 5); t++) {
+   406→    const rod = new Rect({
+   407→      left: currentX,
+   408→      top: y,
+   409→      width: unitSize,
+   410→      height: unitSize * 10,
+   411→      fill: '#60a5fa',
+   412→      stroke: '#1e3a5f',
+   413→      strokeWidth: 1.5,
+   414→    } as any);
+   415→    objects.push(rod);
+   416→
+   417→    // Grid lines for tens rod
+   418→    for (let i = 1; i < 10; i++) {
+   419→      const hLine = new Line(
+   420→        [currentX, y + i * unitSize, currentX + unitSize, y + i * unitSize],
+   421→        { stroke: '#1e3a5f', strokeWidth: 0.5 } as any
+   422→      );
+   423→      objects.push(hLine);
+   424→    }
+   425→
+   426→    const tLabel = new IText(`${tens}x10`, {
+   427→      left: currentX + unitSize / 2,
+   428→      top: y + unitSize * 10 + 8,
+   429→      fontSize: 14,
+   430→      fontFamily: 'Inter, system-ui, sans-serif',
+   431→      fill: '#1e3a5f',
+   432→      originX: 'center',
+   433→    } as any);
+   434→    objects.push(tLabel);
+   435→
+   436→    currentX += unitSize + gap;
+   437→  }
+   438→
+   439→  // Ones (individual unit cubes)
+   440→  for (let o = 0; o < Math.min(ones, 10); o++) {
+   441→    const cube = new Rect({
+   442→      left: currentX + (o % 5) * (unitSize + gap),
+   443→      top: y + Math.floor(o / 5) * (unitSize + gap),
+   444→      width: unitSize,
+   445→      height: unitSize,
+   446→      fill: '#34d399',
+   447→      stroke: '#065f46',
+   448→      strokeWidth: 1.5,
+   449→    } as any);
+   450→    objects.push(cube);
+   451→  }
+   452→
+   453→  if (ones > 0) {
+   454→    const oLabel = new IText(`${ones}`, {
+   455→      left: currentX + Math.min(ones, 5) * (unitSize + gap) / 2 - gap / 2,
+   456→      top: y + (ones > 5 ? 2 : 1) * (unitSize + gap) + 8,
+   457→      fontSize: 14,
+   458→      fontFamily: 'Inter, system-ui, sans-serif',
+   459→      fill: '#065f46',
+   460→      originX: 'center',
+   461→    } as any);
+   462→    objects.push(oLabel);
+   463→  }
+   464→
+   465→  const group = new Group(objects, {
+   466→    left: x,
+   467→    top: y - 30,
+   468→  } as any);
+   469→  (group as any).name = `manipulative-base-ten-${Date.now()}`;
+   470→  return [group];
+   471→}
+   472→
+   473→// ============================================================
+   474→// Coordinate Grid
+   475→// ============================================================
+   476→// X-Y coordinate plane with grid lines.
+   477→// params: { xMin, xMax, yMin, yMax, step?, points? }
+   478→
+   479→function createCoordinateGrid(params: Record<string, any>): FabricObject[] {
+   480→  const {
+   481→    xMin = -5,
+   482→    xMax = 5,
+   483→    yMin = -5,
+   484→    yMax = 5,
+   485→    step = 1,
+   486→    points = [],
+   487→    x = 200,
+   488→    y = 200,
+   489→    cellSize = 40,
+   490→  } = params;
+   491→
+   492→  const objects: FabricObject[] = [];
+   493→  const originX = (0 - xMin) * cellSize;
+   494→  const originY = (yMax - 0) * cellSize;
+   495→
+   496→  // Grid lines
+   497→  for (let gx = xMin; gx <= xMax; gx += step) {
+   498→    const px = (gx - xMin) * cellSize;
+   499→    const isAxis = gx === 0;
+   500→    const line = new Line([px, 0, px, (yMax - yMin) * cellSize], {
+   501→      stroke: isAxis ? '#374151' : '#e5e7eb',
+   502→      strokeWidth: isAxis ? 2 : 0.5,
+   503→    } as any);
+   504→    objects.push(line);
+   505→  }
+   506→
+   507→  for (let gy = yMin; gy <= yMax; gy += step) {
+   508→    const py = (yMax - gy) * cellSize;
+   509→    const isAxis = gy === 0;
+   510→    const line = new Line([0, py, (xMax - xMin) * cellSize, py], {
+   511→      stroke: isAxis ? '#374151' : '#e5e7eb',
+   512→      strokeWidth: isAxis ? 2 : 0.5,
+   513→    } as any);
+   514→    objects.push(line);
+   515→  }
+   516→
+   517→  // Axis labels
+   518→  for (let gx = xMin; gx <= xMax; gx += step) {
+   519→    if (gx === 0) continue;
+   520→    const px = (gx - xMin) * cellSize;
+   521→    const label = new IText(String(gx), {
+   522→      left: px,
+   523→      top: originY + 6,
+   524→      fontSize: 11,
+   525→      fontFamily: 'Inter, system-ui, sans-serif',
+   526→      fill: '#6b7280',
+   527→      originX: 'center',
+   528→      originY: 'top',
+   529→    } as any);
+   530→    objects.push(label);
+   531→  }
+   532→
+   533→  for (let gy = yMin; gy <= yMax; gy += step) {
+   534→    if (gy === 0) continue;
+   535→    const py = (yMax - gy) * cellSize;
+   536→    const label = new IText(String(gy), {
+   537→      left: originX - 8,
+   538→      top: py,
+   539→      fontSize: 11,
+   540→      fontFamily: 'Inter, system-ui, sans-serif',
+   541→      fill: '#6b7280',
+   542→      originX: 'right',
+   543→      originY: 'center',
+   544→    } as any);
+   545→    objects.push(label);
+   546→  }
+   547→
+   548→  // Origin label
+   549→  const originLabel = new IText('0', {
+   550→    left: originX - 8,
+   551→    top: originY + 6,
+   552→    fontSize: 11,
+   553→    fontFamily: 'Inter, system-ui, sans-serif',
+   554→    fill: '#6b7280',
+   555→    originX: 'right',
+   556→    originY: 'top',
+   557→  } as any);
+   558→  objects.push(originLabel);
+   559→
+   560→  // Plotted points
+   561→  points.forEach((pt: { x: number; y: number; label?: string; color?: string }, idx: number) => {
+   562→    const px = (pt.x - xMin) * cellSize;
+   563→    const py = (yMax - pt.y) * cellSize;
+   564→    const color = pt.color || getColor(idx);
+   565→
+   566→    const dot = new Circle({
+   567→      left: px,
+   568→      top: py,
+   569→      radius: 5,
+   570→      fill: color,
+   571→      stroke: '#ffffff',
+   572→      strokeWidth: 2,
+   573→      originX: 'center',
+   574→      originY: 'center',
+   575→    } as any);
+   576→    objects.push(dot);
+   577→
+   578→    if (pt.label) {
+   579→      const ptLabel = new IText(pt.label, {
+   580→        left: px + 8,
+   581→        top: py - 8,
+   582→        fontSize: 12,
+   583→        fontFamily: 'Inter, system-ui, sans-serif',
+   584→        fill: color,
+   585→      } as any);
+   586→      objects.push(ptLabel);
+   587→    }
+   588→  });
+   589→
+   590→  const group = new Group(objects, {
+   591→    left: x,
+   592→    top: y,
+   593→  } as any);
+   594→  (group as any).name = `manipulative-coordinate-grid-${Date.now()}`;
+   595→  return [group];
+   596→}
+   597→
+   598→// ============================================================
+   599→// Angle Protractor
+   600→// ============================================================
+   601→// Visual angle measurement with arc and degree label.
+   602→// params: { degrees, radius?, label? }
+   603→
+   604→function createAngleProtractor(params: Record<string, any>): FabricObject[] {
+   605→  const {
+   606→    degrees = 90,
+   607→    radius = 80,
+   608→    label,
+   609→    x = 200,
+   610→    y = 250,
+   611→  } = params;
+   612→
+   613→  const objects: FabricObject[] = [];
+   614→  const rad = (degrees * Math.PI) / 180;
+   615→
+   616→  // Baseline arm
+   617→  const baseArm = new Line([x, y, x + radius + 20, y], {
+   618→    stroke: '#374151',
+   619→    strokeWidth: 2,
+   620→    strokeLineCap: 'round',
+   621→  } as any);
+   622→  objects.push(baseArm);
+   623→
+   624→  // Angle arm
+   625→  const endX = x + (radius + 20) * Math.cos(-rad);
+   626→  const endY = y + (radius + 20) * Math.sin(-rad);
+   627→  const angleArm = new Line([x, y, endX, endY], {
+   628→    stroke: '#374151',
+   629→    strokeWidth: 2,
+   630→    strokeLineCap: 'round',
+   631→  } as any);
+   632→  objects.push(angleArm);
+   633→
+   634→  // Arc (approximate with line segments)
+   635→  const arcSegments = 36;
+   636→  const arcRadius = radius * 0.4;
+   637→  for (let i = 0; i < arcSegments; i++) {
+   638→    const startAngle = -((i / arcSegments) * rad);
+   639→    const endAngle = -(((i + 1) / arcSegments) * rad);
+   640→    const x1 = x + arcRadius * Math.cos(startAngle);
+   641→    const y1 = y + arcRadius * Math.sin(startAngle);
+   642→    const x2 = x + arcRadius * Math.cos(endAngle);
+   643→    const y2 = y + arcRadius * Math.sin(endAngle);
+   644→
+   645→    const seg = new Line([x1, y1, x2, y2], {
+   646→      stroke: '#059669',
+   647→      strokeWidth: 2,
+   648→    } as any);
+   649→    objects.push(seg);
+   650→  }
+   651→
+   652→  // Angle label
+   653→  const labelAngle = -rad / 2;
+   654→  const labelRadius = radius * 0.55;
+   655→  const angleLabel = new IText(
+   656→    label || `${degrees}°`,
+   657→    {
+   658→      left: x + labelRadius * Math.cos(labelAngle),
+   659→      top: y + labelRadius * Math.sin(labelAngle),
+   660→      fontSize: 18,
+   661→      fontFamily: 'Inter, system-ui, sans-serif',
+   662→      fill: '#059669',
+   663→      originX: 'center',
+   664→      originY: 'center',
+   665→      fontWeight: 'bold',
+   666→    } as any
+   667→  );
+   668→  objects.push(angleLabel);
+   669→
+   670→  // Vertex dot
+   671→  const vertex = new Circle({
+   672→    left: x,
+   673→    top: y,
+   674→    radius: 4,
+   675→    fill: '#374151',
+   676→    originX: 'center',
+   677→    originY: 'center',
+   678→  } as any);
+   679→  objects.push(vertex);
+   680→
+   681→  // Right angle indicator for 90°
+   682→  if (degrees === 90) {
+   683→    const squareSize = 15;
+   684→    const square = new Line(
+   685→      [x + squareSize, y, x + squareSize, y - squareSize, x, y - squareSize],
+   686→      {
+   687→        stroke: '#059669',
+   688→        strokeWidth: 1.5,
+   689→      } as any
+   690→    );
+   691→    objects.push(square);
+   692→  }
+   693→
+   694→  const group = new Group(objects, {
+   695→    left: x - 20,
+   696→    top: y - radius - 20,
+   697→  } as any);
+   698→  (group as any).name = `manipulative-angle-${Date.now()}`;
+   699→  return [group];
+   700→}
+   701→
+   702→// ============================================================
+   703→// Geometry Shape
+   704→// ============================================================
+   705→// Common geometric shapes with labels and measurements.
+   706→// params: { shape, sideLength?, width?, height?, radius?, label? }
+   707→
+   708→function createGeometryShape(params: Record<string, any>): FabricObject[] {
+   709→  const {
+   710→    shape = 'square',
+   711→    sideLength = 100,
+   712→    width,
+   713→    height,
+   714→    radius = 50,
+   715→    label,
+   716→    x = 200,
+   717→    y = 200,
+   718→    fill = 'transparent',
+   719→    stroke = '#374151',
+   720→    strokeWidth = 2,
+   721→    showDimensions = true,
+   722→  } = params;
+   723→
+   724→  const objects: FabricObject[] = [];
+   725→  let shapeObj: FabricObject;
+   726→  const w = width || sideLength;
+   727→  const h = height || sideLength;
+   728→
+   729→  switch (shape) {
+   730→    case 'rectangle':
+   731→      shapeObj = new Rect({
+   732→        left: x, top: y, width: w, height: h,
+   733→        fill, stroke, strokeWidth,
+   734→      } as any);
+   735→      break;
+   736→
+   737→    case 'square':
+   738→      shapeObj = new Rect({
+   739→        left: x, top: y, width: sideLength, height: sideLength,
+   740→        fill, stroke, strokeWidth,
+   741→      } as any);
+   742→      break;
+   743→
+   744→    case 'circle':
+   745→      shapeObj = new Circle({
+   746→        left: x + radius, top: y + radius, radius,
+   747→        fill, stroke, strokeWidth,
+   748→        originX: 'center', originY: 'center',
+   749→      } as any);
+   750→      break;
+   751→
+   752→    case 'triangle': {
+   753→      const triHeight = sideLength * (Math.sqrt(3) / 2);
+   754→      const triPoints = [
+   755→        { x: x + sideLength / 2, y: y },
+   756→        { x: x + sideLength, y: y + triHeight },
+   757→        { x: x, y: y + triHeight },
+   758→      ];
+   759→      shapeObj = new Polygon(triPoints, {
+   760→        fill, stroke, strokeWidth,
+   761→      } as any);
+   762→      break;
+   763→    }
+   764→
+   765→    case 'pentagon': {
+   766→      const pentPoints = generateRegularPolygonPoints(x + sideLength / 2, y + sideLength / 2, sideLength / 2, 5, -Math.PI / 2);
+   767→      shapeObj = new Polygon(pentPoints, {
+   768→        fill, stroke, strokeWidth,
+   769→      } as any);
+   770→      break;
+   771→    }
+   772→
+   773→    case 'hexagon': {
+   774→      const hexPoints = generateRegularPolygonPoints(x + sideLength / 2, y + sideLength / 2, sideLength / 2, 6, 0);
+   775→      shapeObj = new Polygon(hexPoints, {
+   776→        fill, stroke, strokeWidth,
+   777→      } as any);
+   778→      break;
+   779→    }
+   780→
+   781→    default:
+   782→      shapeObj = new Rect({
+   783→        left: x, top: y, width: w, height: h,
+   784→        fill, stroke, strokeWidth,
+   785→      } as any);
+   786→  }
+   787→
+   788→  objects.push(shapeObj);
+   789→
+   790→  // Dimension labels
+   791→  if (showDimensions) {
+   792→    if (shape === 'circle') {
+   793→      const dimLabel = new IText(`r = ${radius}`, {
+   794→        left: x + radius,
+   795→        top: y + radius + radius + 10,
+   796→        fontSize: 14,
+   797→        fontFamily: 'Inter, system-ui, sans-serif',
+   798→        fill: '#6b7280',
+   799→        originX: 'center',
+   800→      } as any);
+   801→      objects.push(dimLabel);
+   802→    } else if (shape === 'rectangle' || shape === 'square') {
+   803→      const actualW = shape === 'square' ? sideLength : w;
+   804→      const actualH = shape === 'square' ? sideLength : h;
+   805→      const wLabel = new IText(`${actualW}`, {
+   806→        left: x + actualW / 2,
+   807→        top: y + actualH + 10,
+   808→        fontSize: 14,
+   809→        fontFamily: 'Inter, system-ui, sans-serif',
+   810→        fill: '#6b7280',
+   811→        originX: 'center',
+   812→      } as any);
+   813→      objects.push(wLabel);
+   814→
+   815→      if (shape === 'rectangle' && w !== h) {
+   816→        const hLabel = new IText(`${actualH}`, {
+   817→          left: x + actualW + 10,
+   818→          top: y + actualH / 2,
+   819→          fontSize: 14,
+   820→          fontFamily: 'Inter, system-ui, sans-serif',
+   821→          fill: '#6b7280',
+   822→          originY: 'center',
+   823→        } as any);
+   824→        objects.push(hLabel);
+   825→      }
+   826→    }
+   827→  }
+   828→
+   829→  // Custom label
+   830→  if (label) {
+   831→    const customLabel = new IText(label, {
+   832→      left: x + (shape === 'circle' ? radius : (w || sideLength) / 2),
+   833→      top: shape === 'circle' ? y - 10 : y - 10,
+   834→      fontSize: 16,
+   835→      fontFamily: 'Inter, system-ui, sans-serif',
+   836→      fill: '#374151',
+   837→      originX: 'center',
+   838→      originY: 'bottom',
+   839→      fontWeight: 'bold',
+   840→    } as any);
+   841→    objects.push(customLabel);
+   842→  }
+   843→
+   844→  const group = new Group(objects, {
+   845→    left: x,
+   846→    top: y,
+   847→  } as any);
+   848→  (group as any).name = `manipulative-geometry-${shape}-${Date.now()}`;
+   849→  return [group];
+   850→}
+   851→
+   852→// ============================================================
+   853→// Place Value Chart
+   854→// ============================================================
+   855→// params: { columns: [{ header, value }], x?, y? }
+   856→
+   857→function createPlaceValueChart(params: Record<string, any>): FabricObject[] {
+   858→  const {
+   859→    columns = [
+   860→      { header: 'Thousands', value: '1' },
+   861→      { header: 'Hundreds', value: '2' },
+   862→      { header: 'Tens', value: '3' },
+   863→      { header: 'Ones', value: '4' },
+   864→    ],
+   865→    x = 100,
+   866→    y = 100,
+   867→    colWidth = 80,
+   868→    rowHeight = 60,
+   869→  } = params;
+   870→
+   871→  const objects: FabricObject[] = [];
+   872→
+   873→  columns.forEach((col: { header: string; value: string }, idx: number) => {
+   874→    const cx = x + idx * colWidth;
+   875→
+   876→    // Column background
+   877→    const bg = new Rect({
+   878→      left: cx, top: y,
+   879→      width: colWidth, height: rowHeight,
+   880→      fill: idx % 2 === 0 ? '#f0fdf4' : '#ecfdf5',
+   881→      stroke: '#374151',
+   882→      strokeWidth: 1.5,
+   883→    } as any);
+   884→    objects.push(bg);
+   885→
+   886→    // Header
+   887→    const header = new IText(col.header, {
+   888→      left: cx + colWidth / 2,
+   889→      top: y + 8,
+   890→      fontSize: 11,
+   891→      fontFamily: 'Inter, system-ui, sans-serif',
+   892→      fill: '#6b7280',
+   893→      originX: 'center',
+   894→      textAlign: 'center',
+   895→    } as any);
+   896→    objects.push(header);
+   897→
+   898→    // Value
+   899→    const value = new IText(col.value, {
+   900→      left: cx + colWidth / 2,
+   901→      top: y + 30,
+   902→      fontSize: 28,
+   903→      fontFamily: 'Inter, system-ui, sans-serif',
+   904→      fill: '#059669',
+   905→      originX: 'center',
+   906→      fontWeight: 'bold',
+   907→    } as any);
+   908→    objects.push(value);
+   909→  });
+   910→
+   911→  const group = new Group(objects, {
+   912→    left: x,
+   913→    top: y,
+   914→  } as any);
+   915→  (group as any).name = `manipulative-place-value-${Date.now()}`;
+   916→  return [group];
+   917→}
+   918→
+   919→// ============================================================
+   920→// Clock
+   921→// ============================================================
+   922→// Analog clock face for time-telling exercises.
+   923→// params: { hours, minutes, label? }
+   924→
+   925→function createClock(params: Record<string, any>): FabricObject[] {
+   926→  const {
+   927→    hours = 3,
+   928→    minutes = 0,
+   929→    label,
+   930→    x = 200,
+   931→    y = 200,
+   932→    radius = 80,
+   933→  } = params;
+   934→
+   935→  const objects: FabricObject[] = [];
+   936→
+   937→  // Clock face
+   938→  const face = new Circle({
+   939→    left: x,
+   940→    top: y,
+   941→    radius,
+   942→    fill: '#ffffff',
+   943→    stroke: '#374151',
+   944→    strokeWidth: 3,
+   945→    originX: 'center',
+   946→    originY: 'center',
+   947→  } as any);
+   948→  objects.push(face);
+   949→
+   950→  // Hour markers and numbers
+   951→  for (let i = 1; i <= 12; i++) {
+   952→    const angle = ((i * 30 - 90) * Math.PI) / 180;
+   953→    const innerR = radius - 8;
+   954→    const outerR = radius - 2;
+   955→
+   956→    // Tick mark
+   957→    const tick = new Line(
+   958→      [x + innerR * Math.cos(angle), y + innerR * Math.sin(angle),
+   959→       x + outerR * Math.cos(angle), y + outerR * Math.sin(angle)],
+   960→      { stroke: '#374151', strokeWidth: 2 } as any
+   961→    );
+   962→    objects.push(tick);
+   963→
+   964→    // Number
+   965→    const numR = radius - 18;
+   966→    const num = new IText(String(i), {
+   967→      left: x + numR * Math.cos(angle),
+   968→      top: y + numR * Math.sin(angle),
+   969→      fontSize: 14,
+   970→      fontFamily: 'Inter, system-ui, sans-serif',
+   971→      fill: '#374151',
+   972→      originX: 'center',
+   973→      originY: 'center',
+   974→      fontWeight: i % 3 === 0 ? 'bold' : 'normal',
+   975→    } as any);
+   976→    objects.push(num);
+   977→  }
+   978→
+   979→  // Minute markers
+   980→  for (let i = 0; i < 60; i++) {
+   981→    if (i % 5 === 0) continue; // Skip hour positions
+   982→    const angle = ((i * 6 - 90) * Math.PI) / 180;
+   983→    const outerR = radius - 2;
+   984→    const innerR = radius - 5;
+   985→    const tick = new Line(
+   986→      [x + innerR * Math.cos(angle), y + innerR * Math.sin(angle),
+   987→       x + outerR * Math.cos(angle), y + outerR * Math.sin(angle)],
+   988→      { stroke: '#d1d5db', strokeWidth: 1 } as any
+   989→    );
+   990→    objects.push(tick);
+   991→  }
+   992→
+   993→  // Hour hand
+   994→  const hourAngle = ((hours % 12 + minutes / 60) * 30 - 90) * (Math.PI / 180);
+   995→  const hourLength = radius * 0.5;
+   996→  const hourHand = new Line(
+   997→    [x, y, x + hourLength * Math.cos(hourAngle), y + hourLength * Math.sin(hourAngle)],
+   998→    { stroke: '#374151', strokeWidth: 4, strokeLineCap: 'round' } as any
+   999→  );
+  1000→  objects.push(hourHand);
+  1001→
+  1002→  // Minute hand
+  1003→  const minuteAngle = (minutes * 6 - 90) * (Math.PI / 180);
+  1004→  const minuteLength = radius * 0.7;
+  1005→  const minuteHand = new Line(
+  1006→    [x, y, x + minuteLength * Math.cos(minuteAngle), y + minuteLength * Math.sin(minuteAngle)],
+  1007→    { stroke: '#6b7280', strokeWidth: 2.5, strokeLineCap: 'round' } as any
+  1008→  );
+  1009→  objects.push(minuteHand);
+  1010→
+  1011→  // Center dot
+  1012→  const centerDot = new Circle({
+  1013→    left: x, top: y, radius: 4,
+  1014→    fill: '#374151',
+  1015→    originX: 'center', originY: 'center',
+  1016→  } as any);
+  1017→  objects.push(centerDot);
+  1018→
+  1019→  // Digital time label below
+  1020→  const timeStr = `${hours % 12 || 12}:${minutes.toString().padStart(2, '0')}`;
+  1021→  const digitalLabel = new IText(label || timeStr, {
+  1022→    left: x,
+  1023→    top: y + radius + 16,
+  1024→    fontSize: 16,
+  1025→    fontFamily: 'Inter, system-ui, sans-serif',
+  1026→    fill: '#374151',
+  1027→    originX: 'center',
+  1028→    fontWeight: 'bold',
+  1029→  } as any);
+  1030→  objects.push(digitalLabel);
+  1031→
+  1032→  const group = new Group(objects, {
+  1033→    left: x - radius - 10,
+  1034→    top: y - radius - 10,
+  1035→  } as any);
+  1036→  (group as any).name = `manipulative-clock-${Date.now()}`;
+  1037→  return [group];
+  1038→}
+  1039→
+  1040→// ============================================================
+  1041→// Bar Chart
+  1042→// ============================================================
+  1043→// Simple bar chart for data visualization.
+  1044→// params: { data: [{ label, value, color? }], title? }
+  1045→
+  1046→function createBarChart(params: Record<string, any>): FabricObject[] {
+  1047→  const {
+  1048→    data = [
+  1049→      { label: 'A', value: 5 },
+  1050→      { label: 'B', value: 8 },
+  1051→      { label: 'C', value: 3 },
+  1052→    ],
+  1053→    title,
+  1054→    x = 100,
+  1055→    y = 100,
+  1056→    chartWidth = 300,
+  1057→    chartHeight = 200,
+  1058→    barWidth = 40,
+  1059→  } = params;
+  1060→
+  1061→  const objects: FabricObject[] = [];
+  1062→  const maxValue = Math.max(...data.map((d: { value: number }) => d.value), 1);
+  1063→  const barGap = (chartWidth - data.length * barWidth) / (data.length + 1);
+  1064→
+  1065→  // Y-axis
+  1066→  const yAxis = new Line([x, y, x, y + chartHeight], {
+  1067→    stroke: '#374151', strokeWidth: 2,
+  1068→  } as any);
+  1069→  objects.push(yAxis);
+  1070→
+  1071→  // X-axis
+  1072→  const xAxis = new Line([x, y + chartHeight, x + chartWidth, y + chartHeight], {
+  1073→    stroke: '#374151', strokeWidth: 2,
+  1074→  } as any);
+  1075→  objects.push(xAxis);
+  1076→
+  1077→  // Bars
+  1078→  data.forEach((item: { label: string; value: number; color?: string }, idx: number) => {
+  1079→    const barHeight = (item.value / maxValue) * (chartHeight - 20);
+  1080→    const bx = x + barGap + idx * (barWidth + barGap);
+  1081→    const by = y + chartHeight - barHeight;
+  1082→    const color = item.color || getColor(idx);
+  1083→
+  1084→    const bar = new Rect({
+  1085→      left: bx, top: by, width: barWidth, height: barHeight,
+  1086→      fill: color, stroke: '#374151', strokeWidth: 1, rx: 3, ry: 3,
+  1087→    } as any);
+  1088→    objects.push(bar);
+  1089→
+  1090→    // Value label on top
+  1091→    const valLabel = new IText(String(item.value), {
+  1092→      left: bx + barWidth / 2, top: by - 8,
+  1093→      fontSize: 12, fontFamily: 'Inter, system-ui, sans-serif',
+  1094→      fill: '#374151', originX: 'center', originY: 'bottom',
+  1095→    } as any);
+  1096→    objects.push(valLabel);
+  1097→
+  1098→    // Category label
+  1099→    const catLabel = new IText(item.label, {
+  1100→      left: bx + barWidth / 2, top: y + chartHeight + 8,
+  1101→      fontSize: 12, fontFamily: 'Inter, system-ui, sans-serif',
+  1102→      fill: '#6b7280', originX: 'center',
+  1103→    } as any);
+  1104→    objects.push(catLabel);
+  1105→  });
+  1106→
+  1107→  // Title
+  1108→  if (title) {
+  1109→    const titleLabel = new IText(title, {
+  1110→      left: x + chartWidth / 2, top: y - 24,
+  1111→      fontSize: 16, fontFamily: 'Inter, system-ui, sans-serif',
+  1112→      fill: '#374151', originX: 'center', fontWeight: 'bold',
+  1113→    } as any);
+  1114→    objects.push(titleLabel);
+  1115→  }
+  1116→
+  1117→  const group = new Group(objects, {
+  1118→    left: x,
+  1119→    top: title ? y - 24 : y,
+  1120→  } as any);
+  1121→  (group as any).name = `manipulative-bar-chart-${Date.now()}`;
+  1122→  return [group];
+  1123→}
+  1124→
+  1125→// ============================================================
+  1126→// Generic Manipulative (fallback)
+  1127→// ============================================================
+  1128→
+  1129→function createGenericManipulative(spec: ManipulativeSpec): FabricObject[] {
+  1130→  const { params } = spec;
+  1131→  const x = params.x || 200;
+  1132→  const y = params.y || 200;
+  1133→
+  1134→  // Draw a labeled card with the spec type
+  1135→  const bg = new Rect({
+  1136→    left: x, top: y, width: 200, height: 80,
+  1137→    fill: '#fef3c7', stroke: '#f59e0b', strokeWidth: 2, rx: 8, ry: 8,
+  1138→  } as any);
+  1139→
+  1140→  const icon = new IText('🧩', {
+  1141→    left: x + 16, top: y + 20,
+  1142→    fontSize: 28,
+  1143→  } as any);
+  1144→
+  1145→  const label = new IText(spec.type || 'Manipulative', {
+  1146→    left: x + 56, top: y + 20,
+  1147→    fontSize: 14,
+  1148→    fontFamily: 'Inter, system-ui, sans-serif',
+  1149→    fill: '#92400e',
+  1150→    fontWeight: 'bold',
+  1151→  } as any);
+  1152→
+  1153→  const subtitle = new IText('AI-generated manipulative', {
+  1154→    left: x + 56, top: y + 42,
+  1155→    fontSize: 11,
+  1156→    fontFamily: 'Inter, system-ui, sans-serif',
+  1157→    fill: '#b45309',
+  1158→  } as any);
+  1159→
+  1160→  const group = new Group([bg, icon, label, subtitle], {
+  1161→    left: x, top: y,
+  1162→  } as any);
+  1163→  (group as any).name = `manipulative-generic-${Date.now()}`;
+  1164→  return [group];
+  1165→}
+  1166→
+  1167→// ============================================================
+  1168→// Helper: Generate regular polygon points
+  1169→// ============================================================
+  1170→
+  1171→function generateRegularPolygonPoints(
+  1172→  cx: number,
+  1173→  cy: number,
+  1174→  r: number,
+  1175→  sides: number,
+  1176→  startAngle: number
+  1177→): Array<{ x: number; y: number }> {
+  1178→  const points: Array<{ x: number; y: number }> = [];
+  1179→  for (let i = 0; i < sides; i++) {
+  1180→    const angle = startAngle + (2 * Math.PI * i) / sides;
+  1181→    points.push({
+  1182→      x: cx + r * Math.cos(angle),
+  1183→      y: cy + r * Math.sin(angle),
+  1184→    });
+  1185→  }
+  1186→  return points;
+  1187→}
