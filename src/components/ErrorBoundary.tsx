@@ -30,23 +30,26 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    // Don't catch hydration mismatches — React can recover from these gracefully.
-    // The DOM will be patched to match the client render without crashing.
-    // Only catch actual runtime errors.
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Check if it's a hydration mismatch — these are harmless and React
+    // will patch the DOM automatically. Reset error state so the app
+    // continues to render normally.
     const isHydrationError = error.message?.includes('#321')
       || error.message?.includes('hydration')
       || error.message?.includes('Minified React error')
       || error.message?.includes('Hydration');
 
     if (isHydrationError) {
-      console.warn('[ErrorBoundary] Ignoring hydration mismatch:', error.message);
-      return { hasError: false, error: null };
+      console.warn('[ErrorBoundary] Suppressing hydration mismatch:', error.message);
+      // Reset error state — this allows the component tree to continue rendering
+      // React will patch the DOM to match the client render.
+      this.setState({ hasError: false, error: null });
+      return;
     }
 
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[ErrorBoundary] Caught error:', error, errorInfo);
   }
 
