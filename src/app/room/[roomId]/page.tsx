@@ -159,21 +159,17 @@ function RoomPageContent({ roomId }: { roomId: string }) {
 }
 
 // Page component — uses params from the URL
-// In Next.js App Router, params is a Promise that we await
+// In Next.js 15 App Router, params is a Promise.
+// We use React.use() to unwrap it synchronously in the client.
 export default function RoomPage({
   params,
 }: {
   params: Promise<{ roomId: string }>;
 }) {
-  // Use React.use() to synchronously unwrap params — works on both server
-  // and client without useEffect, avoiding the hydration interrupt issue.
-  let roomId: string | null = null;
-  try {
-    const resolved = use(params);
-    roomId = resolved.roomId || null;
-  } catch {
-    roomId = null;
-  }
+  // React.use() unwraps the Promise synchronously.
+  // This works in both server and client rendering.
+  const resolved = use(params);
+  const roomId = resolved.roomId;
 
   if (!roomId) {
     return (
@@ -182,7 +178,7 @@ export default function RoomPage({
           <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
             <GraduationCap className="w-9 h-9 text-white" />
           </div>
-          <p className="text-sm text-gray-500 font-medium">Loading your lesson...</p>
+          <p className="text-sm text-gray-500 font-medium">Invalid lesson link.</p>
         </div>
       </div>
     );
