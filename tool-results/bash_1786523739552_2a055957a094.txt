@@ -1,0 +1,416 @@
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] authFetch response status: 200 true
+[log] [ROOM DEBUG] calling loadRoom for roomId: a939db45-dc7c-4290-afaa-b838d55433f3
+[log] [ROOM DEBUG] loadRoom called, roomId: a939db45-dc7c-4290-afaa-b838d55433f3

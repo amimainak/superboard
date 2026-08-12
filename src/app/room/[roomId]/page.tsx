@@ -11,7 +11,7 @@
 import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
-import { authFetch } from '@/lib/auth-fetch';
+import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import { useEffect, useState, use } from 'react';
 import { GraduationCap } from 'lucide-react';
 import type { RoomData, BrandingConfig } from '@/types';
@@ -23,10 +23,33 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Ensure auth token is cached before making API calls
+    initAuthFetch();
+
     async function loadRoom() {
       try {
+        // Small delay to allow initAuthFetch to populate _cachedToken
+        await new Promise(r => setTimeout(r, 100));
+
         // Fetch room data from API (auth required — uses authFetch for token)
-        const response = await authFetch(`/api/room?roomId=${roomId}`);
+        let response = await authFetch(`/api/room?roomId=${roomId}`);
+
+        // If auth failed (401), wait for session and retry once
+        if (response.status === 401) {
+          const supabase = createClient();
+          if (supabase) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.access_token) {
+              response = await fetch(`/api/room?roomId=${roomId}`, {
+                headers: {
+                  'Authorization': `Bearer ${session.access_token}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+            }
+          }
+        }
+
         if (!response.ok) {
           if (response.status === 410) {
             setError('This lesson has ended. The link is no longer active.');
