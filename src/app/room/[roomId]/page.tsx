@@ -12,7 +12,7 @@ import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
 import { authFetch } from '@/lib/auth-fetch';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { GraduationCap } from 'lucide-react';
 import type { RoomData, BrandingConfig } from '@/types';
 
@@ -159,36 +159,14 @@ export default function RoomPage({
 }: {
   params: Promise<{ roomId: string }>;
 }) {
-  // Fully client-rendered to avoid hydration mismatches from server vs client
-  // rendering differences (dynamic imports, browser APIs, auth state).
-  return <ClientRoomLoader params={params} />;
-}
-
-// Client-side wrapper that loads params and renders the room content.
-// This avoids hydration mismatch because the entire subtree is rendered
-// only after mount (useEffect), so there's no server HTML to mismatch with.
-function ClientRoomLoader({ params }: { params: Promise<{ roomId: string }> }) {
-  const [roomId, setRoomId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    params.then((p) => {
-      setRoomId(p.roomId || null);
-      setLoading(false);
-    });
-  }, [params]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-fade-in-up">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
-            <GraduationCap className="w-9 h-9 text-white" />
-          </div>
-          <p className="text-sm text-gray-500 font-medium">Loading your lesson...</p>
-        </div>
-      </div>
-    );
+  // Use React.use() to synchronously unwrap params — works on both server
+  // and client without useEffect, avoiding the hydration interrupt issue.
+  let roomId: string | null = null;
+  try {
+    const resolved = use(params);
+    roomId = resolved.roomId || null;
+  } catch {
+    roomId = null;
   }
 
   if (!roomId) {
