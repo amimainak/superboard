@@ -279,7 +279,7 @@ function genMultiplication35(): SeedQuestion {
   const a = randInt(2, 12);
   const b = randInt(2, 12);
   const product = a * b;
-  const items = pick(['bags of marbles (each has', 'boxes of crayons (each has', 'packs of cards (each has', 'rows of chairs (each row has')];
+  const items = pick(['bags of marbles, each with', 'boxes of crayons, each with', 'packs of cards, each with', 'rows of chairs, each row with']);
   return {
     subject: 'MATH', gradeBand: '3-5', topic: 'Multiplication',
     difficulty: a <= 5 && b <= 5 ? 2 : a <= 9 && b <= 9 ? 3 : 4,
