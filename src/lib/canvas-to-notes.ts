@@ -32,7 +32,7 @@ export function generateLessonNotes(
 
   for (const obj of objects) {
     // Skip internal temp objects
-    const name = (obj as Record<string, unknown>).name as string | undefined;
+    const name = (obj as unknown as Record<string, unknown>).name as string | undefined;
     if (name?.startsWith('__')) continue;
 
     // IText / Textbox — direct text content

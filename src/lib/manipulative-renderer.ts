@@ -19,6 +19,7 @@ import {
   Polygon,
   Path,
   Ellipse,
+  Polyline,
   type Object as FabricObject,
 } from 'fabric';
 
@@ -681,11 +682,12 @@ function createAngleProtractor(params: Record<string, any>): FabricObject[] {
   // Right angle indicator for 90°
   if (degrees === 90) {
     const squareSize = 15;
-    const square = new Line(
+    const square = new Polyline(
       [x + squareSize, y, x + squareSize, y - squareSize, x, y - squareSize],
       {
         stroke: '#059669',
         strokeWidth: 1.5,
+        fill: '',
       } as any
     );
     objects.push(square);
@@ -1625,9 +1627,10 @@ function createSlopeTriangle(params: Record<string, any>): FabricObject[] {
 
   // Right angle marker
   const markerSize = 10;
-  const marker = new Line([bx - markerSize, by, bx - markerSize, by - markerSize, bx, by - markerSize], {
+  const marker = new Polyline([bx - markerSize, by, bx - markerSize, by - markerSize, bx, by - markerSize], {
     stroke: '#374151', strokeWidth: 1.5,
     name: 'manipulative-slope-triangle-right-angle',
+    fill: '',
   } as any);
   objects.push(marker);
 

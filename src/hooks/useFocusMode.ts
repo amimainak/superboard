@@ -99,7 +99,7 @@ export function useFocusMode(options: UseFocusModeOptions = {}) {
     const handleAwarenessChange = () => {
       const states = awareness.getStates() as Map<number, Record<string, unknown>>;
       states.forEach((state, clientId) => {
-        if (clientId === awareness.clientId) return;
+        if (clientId === awareness.clientID) return;
         const user = state.user as { role?: string } | undefined;
         const viewport = state.viewport as ViewportState | null | undefined;
 
