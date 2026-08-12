@@ -8,7 +8,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 
@@ -30,39 +30,32 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Don't catch hydration mismatches — React can recover from these gracefully.
+    // The DOM will be patched to match the client render without crashing.
+    // Only catch actual runtime errors.
+    const isHydrationError = error.message?.includes('#321')
+      || error.message?.includes('hydration')
+      || error.message?.includes('Minified React error')
+      || error.message?.includes('Hydration');
+
+    if (isHydrationError) {
+      console.warn('[ErrorBoundary] Ignoring hydration mismatch:', error.message);
+      return { hasError: false, error: null };
+    }
+
     return { hasError: true, error };
   }
 
-  private retryCount = 0;
-
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log the error for debugging (in production, send to error tracking service)
     console.error('[ErrorBoundary] Caught error:', error, errorInfo);
   }
 
   handleReset = () => {
-    this.retryCount = 0;
     this.setState({ hasError: false, error: null });
   };
 
   render() {
     if (this.state.hasError) {
-      // Check if it's a hydration mismatch error — auto-retry once
-      const isHydrationError = this.state.error?.message?.includes('#321')
-        || this.state.error?.message?.includes('hydration')
-        || this.state.error?.message?.includes('Minified React error');
-
-      if (isHydrationError && this.retryCount === 0) {
-        this.retryCount = 1;
-        // Use key to force React to unmount and remount children from scratch
-        // This bypasses hydration because the new tree starts as a fresh client render
-        return (
-          <HydrationRetryWrapper>
-            {this.props.children}
-          </HydrationRetryWrapper>
-        );
-      }
-
       if (this.props.fallback) {
         return this.props.fallback;
       }
@@ -94,26 +87,4 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
     return this.props.children;
   }
-}
-
-// Hydration retry wrapper — forces a completely fresh client-side mount
-// by using a key change in useEffect. The children are rendered inside a
-// component that only renders after mount (useEffect), so React treats
-// the subtree as a new client-only tree.
-function HydrationRetryWrapper({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  const [retryKey, setRetryKey] = useState(0);
-
-  useEffect(() => {
-    // Trigger a re-render with a new key after initial mount
-    setRetryKey(prev => prev + 1);
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null; // Render nothing during initial hydration
-  }
-
-  // Use key to force React to create a fresh component tree
-  return <React.Fragment key={retryKey}>{children}</React.Fragment>;
 }
