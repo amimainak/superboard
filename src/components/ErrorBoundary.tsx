@@ -8,7 +8,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
 
@@ -44,6 +44,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render() {
     if (this.state.hasError) {
+      // Check if it's a hydration mismatch error — retry once automatically
+      if (this.state.error?.message?.includes('#321') || this.state.error?.message?.includes('hydration')) {
+        // Force a full client-side re-render to bypass hydration mismatch
+        return (
+          <HydrationRetryWrapper onRetry={this.handleReset}>
+            {this.props.children}
+          </HydrationRetryWrapper>
+        );
+      }
+
       if (this.props.fallback) {
         return this.props.fallback;
       }
@@ -75,4 +85,21 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
     return this.props.children;
   }
+}
+
+// Hydration retry wrapper — remounts children on client only,
+// bypassing the hydration mismatch since useEffect only runs client-side
+function HydrationRetryWrapper({ children, onRetry }: { children: React.ReactNode; onRetry: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    onRetry(); // Clear the error state in parent ErrorBoundary
+  }, [onRetry]);
+
+  if (!mounted) {
+    return null; // Render nothing during server/initial hydration
+  }
+
+  return <>{children}</>;
 }
