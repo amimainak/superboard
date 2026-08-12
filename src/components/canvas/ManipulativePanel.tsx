@@ -54,8 +54,8 @@ import {
   CircleDot as CircleDotIcon,
   Grid2x2,
   Grid3x3,
-  SemiCircle,
-  Drum,
+  Circle,
+  AudioLines,
 } from 'lucide-react';
 import {
   Sheet,
@@ -130,10 +130,9 @@ const ICON_MAP: Record<string, React.ElementType> = {
   CircleDot: CircleDotIcon,
   Grid2x2,
   Grid3x3,
-  SemiCircle,
-  Drum,
-  Shapes,
   Circle,
+  AudioLines,
+  Shapes,
 };
 
 // Category display names
