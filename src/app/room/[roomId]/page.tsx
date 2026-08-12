@@ -12,7 +12,8 @@ import Whiteboard from '@/components/canvas/Whiteboard';
 import { useAppStore } from '@/store/app-store';
 import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useParams } from 'next/navigation';
 import { GraduationCap } from 'lucide-react';
 import type { RoomData, BrandingConfig } from '@/types';
 
@@ -21,15 +22,18 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   const { setRoom, setBranding } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
-    // Ensure auth token is cached before making API calls
-    initAuthFetch();
+    if (hasLoaded.current) return;
+    hasLoaded.current = true;
 
     async function loadRoom() {
       try {
+        // Ensure auth token is cached before making API calls
+        initAuthFetch();
         // Small delay to allow initAuthFetch to populate _cachedToken
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 200));
 
         // Fetch room data from API (auth required — uses authFetch for token)
         let response = await authFetch(`/api/room?roomId=${roomId}`);
@@ -38,11 +42,15 @@ function RoomPageContent({ roomId }: { roomId: string }) {
         if (response.status === 401) {
           const supabase = createClient();
           if (supabase) {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.access_token) {
+            const sessionPromise = supabase.auth.getSession();
+            const timeout = new Promise<{ data: { session: null } }>(r =>
+              setTimeout(() => r({ data: { session: null } }), 5000)
+            );
+            const result = await Promise.race([sessionPromise, timeout]);
+            if (result.data.session?.access_token) {
               response = await fetch(`/api/room?roomId=${roomId}`, {
                 headers: {
-                  'Authorization': `Bearer ${session.access_token}`,
+                  'Authorization': `Bearer ${result.data.session.access_token}`,
                   'Content-Type': 'application/json',
                 },
               });
@@ -53,27 +61,22 @@ function RoomPageContent({ roomId }: { roomId: string }) {
         if (!response.ok) {
           if (response.status === 410) {
             setError('This lesson has ended. The link is no longer active.');
+            setLoading(false);
             return;
           }
-          throw new Error('Failed to load room');
+          throw new Error(`Failed to load room (${response.status})`);
         }
 
         const roomData: RoomData = await response.json();
 
-        // Determine if the current user is the tutor.
-        // Instead of calling supabase.auth.getUser() (which can hang with SSR client),
-        // we compare the auth token's subject claim against roomData.tutorId.
-        // The authFetch already validated the token server-side.
+        // Determine if the current user is the tutor
         let tutorMatch = false;
         let userId: string | null = null;
         let userName: string | null = null;
 
-        // Decode the JWT to get the user ID (sub claim)
-        // The token was already fetched by authFetch internally
         try {
           const supabase = createClient();
           if (supabase) {
-            // getSession reads from cookies — should be fast, but add timeout
             const sessionPromise = supabase.auth.getSession();
             const timeout = new Promise<null>(r => setTimeout(() => r(null), 3000));
             const sessionResult = await Promise.race([sessionPromise, timeout]);
@@ -86,11 +89,10 @@ function RoomPageContent({ roomId }: { roomId: string }) {
             }
           }
         } catch {
-          // If getSession fails, we still have roomData —
-          // just treat user as non-tutor (student view)
+          // If getSession fails, treat as non-tutor
         }
 
-        // Set room state — include isTutor, userId, userName for whiteboard
+        // Set room state
         setRoom({
           roomId: roomData.id,
           subject: roomData.subject as 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'GENERAL',
@@ -114,17 +116,14 @@ function RoomPageContent({ roomId }: { roomId: string }) {
         };
         setBranding(branding);
 
-        // Track student participation (for agency billing)
+        // Track student participation
         if (!tutorMatch) {
-          // Student joined — track via fingerprint or user ID
           let studentIdentity = userId || '';
           if (!studentIdentity) {
-            // Generate a session-based identity for anonymous students
             try {
               const { getFingerprintHash } = await import('@/lib/fingerprint');
               const fp = await getFingerprintHash();
               studentIdentity = fp || `anon_${roomId}_${Date.now()}`;
-              // Also report fingerprint if user is logged in
               if (userId) {
                 const { reportFingerprint } = await import('@/lib/fingerprint');
                 reportFingerprint(userId).catch(() => {});
@@ -140,7 +139,7 @@ function RoomPageContent({ roomId }: { roomId: string }) {
               studentIdentity,
               studentName: userName || null,
             }),
-          }).catch(() => { /* silent — don't block the lesson */ });
+          }).catch(() => { /* silent */ });
         }
 
         setLoading(false);
@@ -151,9 +150,7 @@ function RoomPageContent({ roomId }: { roomId: string }) {
       }
     }
 
-    if (roomId) {
-      loadRoom().catch(e => console.error('[RoomPage] loadRoom error:', e));
-    }
+    loadRoom();
   }, [roomId, setRoom, setBranding]);
 
   if (loading) {
@@ -191,18 +188,11 @@ function RoomPageContent({ roomId }: { roomId: string }) {
   return <Whiteboard />;
 }
 
-// Page component — uses params from the URL
-// In Next.js 15 App Router, params is a Promise.
-// We use React.use() to unwrap it synchronously in the client.
-export default function RoomPage({
-  params,
-}: {
-  params: Promise<{ roomId: string }>;
-}) {
-  // React.use() unwraps the Promise synchronously.
-  // This works in both server and client rendering.
-  const resolved = use(params);
-  const roomId = resolved.roomId;
+// Page component — uses useParams from next/navigation (client-side hook)
+// This avoids the hydration issues with React.use() on Promise params
+export default function RoomPage() {
+  const params = useParams<{ roomId: string }>();
+  const roomId = params.roomId;
 
   if (!roomId) {
     return (
