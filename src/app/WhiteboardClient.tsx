@@ -24,10 +24,6 @@ import {
 } from '@/lib/whiteboard/export'
 
 export default function WhiteboardClient() {
-  // Debug: verify mount
-  const [mounted, setMounted] = useState(false)
-  React.useEffect(() => { setMounted(true) }, [])
-
   const {
     isDark,
     tool,
@@ -227,17 +223,6 @@ export default function WhiteboardClient() {
       {/* Shortcuts Dialog */}
       {shortcutsOpen && (
         <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />
-      )}
-
-      {/* Debug indicator */}
-      {!mounted && (
-        <div style={{
-          position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)',
-          background: '#fef3c7', color: '#92400e', padding: '8px 16px',
-          borderRadius: 8, fontSize: 13, zIndex: 9999,
-        }}>
-          ⏳ Hydrating...
-        </div>
       )}
     </div>
   )

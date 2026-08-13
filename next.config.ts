@@ -33,8 +33,6 @@ const nextConfig: NextConfig = {
       'perfect-freehand',
     ],
   },
-  // Allow dev access from preview origin
-  allowedDevOrigins: ['*'],
   // Prevent server-only packages from leaking into client bundles
   serverExternalPackages: ['@prisma/client', 'stripe', 'pg'],
   // Security headers
