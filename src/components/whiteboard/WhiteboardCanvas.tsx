@@ -59,6 +59,8 @@ export function WhiteboardCanvas() {
     moveSelected,
     removeElements,
     eraseAtPoint,
+    eraserSize,
+    setEraserActive,
     addLaserPoint,
     clearLaser,
     undo,
@@ -90,6 +92,9 @@ export function WhiteboardCanvas() {
   const lastPanPoint = useRef<Point | null>(null)
   const lastMovePoint = useRef<Point | null>(null)
   const boxSelectStart = useRef<Point | null>(null)
+  const [eraserCursor, setEraserCursor] = useState<{ x: number; y: number } | null>(null)
+  const eraserHistoryPushed = useRef(false)
+  const isErasing = useRef(false)
   const [boxSelect, setBoxSelect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
   // Observe container size
@@ -201,6 +206,12 @@ export function WhiteboardCanvas() {
           break
         }
         case 'eraser': {
+          isErasing.current = true
+          // Push history once at the start of the eraser stroke
+          if (!eraserHistoryPushed.current) {
+            pushHistory()
+            eraserHistoryPushed.current = true
+          }
           eraseAtPoint(point, camera.zoom)
           break
         }
@@ -299,9 +310,14 @@ export function WhiteboardCanvas() {
         continueDrawing(point)
       }
 
-      // Eraser (continuous)
-      if (tool === 'eraser') {
+      // Eraser (continuous, only while button is held)
+      if (tool === 'eraser' && isErasing.current) {
         eraseAtPoint(point, camera.zoom)
+      }
+
+      // Eraser cursor position (shown on hover too)
+      if (tool === 'eraser') {
+        setEraserCursor({ x: e.clientX, y: e.clientY })
       }
 
       // Laser
@@ -347,6 +363,12 @@ export function WhiteboardCanvas() {
 
       if (tool === 'laser') {
         clearLaser()
+      }
+
+      // Eraser stroke ended
+      if (tool === 'eraser') {
+        isErasing.current = false
+        eraserHistoryPushed.current = false
       }
     },
     [
@@ -522,7 +544,7 @@ export function WhiteboardCanvas() {
               ? 'grabbing'
               : 'grab'
             : tool === 'eraser'
-              ? 'crosshair'
+              ? 'none'
               : tool === 'select'
                 ? 'default'
                 : 'crosshair',
@@ -533,6 +555,7 @@ export function WhiteboardCanvas() {
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
+      onPointerLeave={() => tool === 'eraser' && setEraserCursor(null)}
     >
       {/* Grid Background */}
       {showGrid && (
@@ -606,6 +629,24 @@ export function WhiteboardCanvas() {
           )}
         </g>
       </svg>
+
+      {/* Eraser cursor visual */}
+      {tool === 'eraser' && eraserCursor && (
+        <div
+          style={{
+            position: 'absolute',
+            left: eraserCursor.x - containerRef.current!.getBoundingClientRect().left - eraserSize / 2,
+            top: eraserCursor.y - containerRef.current!.getBoundingClientRect().top - eraserSize / 2,
+            width: eraserSize,
+            height: eraserSize,
+            borderRadius: '50%',
+            border: '2px solid #059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.08)',
+            pointerEvents: 'none',
+            zIndex: 1000,
+          }}
+        />
+      )}
 
       {/* Zoom indicator */}
       <div

@@ -324,6 +324,133 @@ export function simulatePressure(points: Point[]): Point[] {
   })
 }
 
+// ---- Freehand Eraser (Point-level splitting) ----
+
+/**
+ * Split a freehand element at an eraser point.
+ * Returns an array of freehand elements (0 = fully erased, 1 = trimmed, 2+ = split).
+ */
+export function splitFreehandAtPoint(
+  el: WhiteboardElement & { type: 'freehand'; points: Point[] },
+  point: Point,
+  radius: number
+): (WhiteboardElement & { type: 'freehand'; points: Point[] })[] {
+  const pts = el.points
+  if (pts.length < 2) return []
+
+  // Mark each point as "inside" (should be erased) or "outside" the eraser circle
+  const inside: boolean[] = pts.map((p) => dist(p, point) <= radius)
+
+  // Find contiguous "outside" segments
+  const segments: { start: number; end: number }[] = []
+  let i = 0
+  while (i < pts.length) {
+    if (!inside[i]) {
+      // Start of an outside segment
+      const start = i
+      while (i < pts.length && !inside[i]) i++
+      segments.push({ start, end: i - 1 })
+    } else {
+      i++
+    }
+  }
+
+  if (segments.length === 0) return [] // Fully erased
+
+  // Helper: compute bounding box from points array
+  const makeElement = (points: Point[]): WhiteboardElement & { type: 'freehand'; points: Point[] } => {
+    if (points.length < 2) {
+      return null!
+    }
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    for (const p of points) {
+      if (p.x < minX) minX = p.x
+      if (p.y < minY) minY = p.y
+      if (p.x > maxX) maxX = p.x
+      if (p.y > maxY) maxY = p.y
+    }
+    const pad = el.strokeWidth
+    return {
+      ...el,
+      id: generateId(),
+      points,
+      x: minX - pad,
+      y: minY - pad,
+      width: maxX - minX + pad * 2,
+      height: maxY - minY + pad * 2,
+    }
+  }
+
+  const results: (WhiteboardElement & { type: 'freehand'; points: Point[] })[] = []
+
+  for (const seg of segments) {
+    // Build the points array for this segment, with interpolated edge points
+    const segPoints: Point[] = []
+
+    // Add interpolated start point (midpoint between last inside and first outside)
+    if (seg.start > 0 && inside[seg.start - 1]) {
+      const insidePt = pts[seg.start - 1]
+      const outsidePt = pts[seg.start]
+      const interp = interpolateToCircle(insidePt, outsidePt, point, radius)
+      segPoints.push(interp)
+    }
+
+    // Add the outside points
+    for (let j = seg.start; j <= seg.end; j++) {
+      segPoints.push(pts[j])
+    }
+
+    // Add interpolated end point
+    if (seg.end < pts.length - 1 && inside[seg.end + 1]) {
+      const outsidePt = pts[seg.end]
+      const insidePt = pts[seg.end + 1]
+      const interp = interpolateToCircle(outsidePt, insidePt, point, radius)
+      segPoints.push(interp)
+    }
+
+    const newEl = makeElement(segPoints)
+    if (newEl && newEl.points.length >= 2) {
+      results.push(newEl)
+    }
+  }
+
+  return results
+}
+
+/**
+ * Interpolate between an outside point and an inside point to find
+ * the approximate position on the edge of the eraser circle.
+ */
+function interpolateToCircle(
+  outsidePt: Point,
+  insidePt: Point,
+  center: Point,
+  radius: number
+): Point {
+  const d = dist(outsidePt, insidePt)
+  if (d === 0) return { ...outsidePt }
+
+  // Binary search for the point on the circle boundary
+  let lo = 0
+  let hi = 1
+  for (let iter = 0; iter < 8; iter++) {
+    const mid = (lo + hi) / 2
+    const px = outsidePt.x + (insidePt.x - outsidePt.x) * mid
+    const py = outsidePt.y + (insidePt.y - outsidePt.y) * mid
+    if (dist({ x: px, y: py }, center) <= radius) {
+      hi = mid
+    } else {
+      lo = mid
+    }
+  }
+  const t = (lo + hi) / 2
+  return {
+    x: outsidePt.x + (insidePt.x - outsidePt.x) * t,
+    y: outsidePt.y + (insidePt.y - outsidePt.y) * t,
+    pressure: outsidePt.pressure,
+  }
+}
+
 // ---- Color Utilities ----
 
 /** Convert hex color to rgba string */

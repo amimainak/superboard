@@ -25,8 +25,10 @@ const DASH_PATTERNS: { label: string; value: number[] }[] = [
 ]
 
 export function StylePanel() {
-  const { style, setStyle, isDark, selectedIds } = useWhiteboardStore()
+  const { style, setStyle, isDark, selectedIds, tool, eraserSize, setEraserSize } = useWhiteboardStore()
   const [activeSection, setActiveSection] = useState<string>('color')
+
+  const ERASER_SIZES = [4, 8, 12, 20, 32, 48]
 
   return (
     <div
@@ -178,6 +180,52 @@ export function StylePanel() {
           {Math.round(style.opacity * 100)}%
         </span>
       </div>
+
+      {/* Eraser Size (only when eraser tool is active) */}
+      {tool === 'eraser' && (
+        <>
+          <Divider />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 11, color: isDark ? '#9ca3af' : '#6b7280', fontWeight: 500 }}>
+              Eraser
+            </span>
+            {ERASER_SIZES.map((s) => (
+              <button
+                key={s}
+                onClick={() => setEraserSize(s)}
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  border: 'none',
+                  background:
+                    eraserSize === s
+                      ? isDark
+                        ? 'rgba(5,150,105,0.2)'
+                        : 'rgba(5,150,105,0.1)'
+                      : 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: eraserSize === s ? '#059669' : isDark ? '#d1d5db' : '#4b5563',
+                }}
+              >
+                <svg width={20} height={20} viewBox="0 0 20 20">
+                  <circle
+                    cx={10}
+                    cy={10}
+                    r={Math.min(s / 2, 8)}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

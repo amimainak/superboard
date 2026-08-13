@@ -13,7 +13,7 @@ import type {
   Point,
   ElementStyle,
 } from './types'
-import { generateId, getElementBounds } from './utils'
+import { generateId, getElementBounds, splitFreehandAtPoint } from './utils'
 
 // ---- Default Values ----
 
@@ -133,6 +133,10 @@ export interface WhiteboardStore {
 
   // Eraser
   eraseAtPoint: (point: Point, zoom: number) => void
+  eraserSize: number
+  setEraserSize: (size: number) => void
+  eraserActive: boolean
+  setEraserActive: (active: boolean) => void
 
   // Bulk
   loadState: (elements: WhiteboardElement[]) => void
@@ -758,22 +762,61 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     },
 
     // ---- Eraser ----
+    eraserSize: 10,
+    eraserActive: false,
+
+    setEraserSize: (size) => set({ eraserSize: size }),
+
+    setEraserActive: (active) => set({ eraserActive: active }),
+
     eraseAtPoint: (point, zoom) => {
-      const threshold = 10 / zoom
-      const { elements } = get()
-      const toRemove: string[] = []
+      const eraserRadius = (get().eraserSize / 2) / zoom
+      const { elements, currentPageIndex } = get()
+      let changed = false
+      const updatedElements: WhiteboardElement[] = []
+      const removedIds: string[] = []
+
       for (const el of elements) {
-        if (el.locked) continue
-        const b = getElementBounds(el)
-        const inX = point.x >= b.x - threshold && point.x <= b.x + b.width + threshold
-        const inY = point.y >= b.y - threshold && point.y <= b.y + b.height + threshold
-        if (inX && inY) {
-          toRemove.push(el.id)
+        if (el.locked || el.pageIndex !== currentPageIndex) {
+          updatedElements.push(el)
+          continue
+        }
+
+        if (el.type === 'freehand') {
+          // Split freehand: remove points near the eraser circle
+          const remaining = splitFreehandAtPoint(el, point, eraserRadius)
+          if (remaining.length === 0) {
+            // Entire stroke erased
+            removedIds.push(el.id)
+            changed = true
+          } else if (remaining.length === 1) {
+            // Stroke modified but not split
+            updatedElements.push(remaining[0])
+            changed = true
+          } else {
+            // Stroke split into multiple segments
+            for (const seg of remaining) {
+              updatedElements.push(seg)
+            }
+            changed = true
+          }
+        } else {
+          // For non-freehand elements, check actual hit
+          const threshold = eraserRadius
+          const b = getElementBounds(el)
+          const inX = point.x >= b.x - threshold && point.x <= b.x + b.width + threshold
+          const inY = point.y >= b.y - threshold && point.y <= b.y + b.height + threshold
+          if (inX && inY) {
+            removedIds.push(el.id)
+            changed = true
+          } else {
+            updatedElements.push(el)
+          }
         }
       }
-      if (toRemove.length) {
-        get().pushHistory()
-        get().removeElements(toRemove)
+
+      if (changed) {
+        set({ elements: updatedElements })
       }
     },
 
