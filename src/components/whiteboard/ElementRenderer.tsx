@@ -16,6 +16,7 @@ import {
   HIGHLIGHT_OPTIONS,
   hexToRgba,
 } from '@/lib/whiteboard/utils'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface ElementRendererProps {
   element: WhiteboardElement
@@ -34,6 +35,8 @@ export function ElementRenderer({
   onTextChange,
   cameraZoom,
 }: ElementRendererProps) {
+  const tool = useWhiteboardStore((s) => s.tool)
+
   const commonProps = {
     opacity: element.opacity,
     stroke: element.strokeColor,
@@ -41,7 +44,12 @@ export function ElementRenderer({
     strokeWidth: element.strokeWidth,
     strokeDasharray: element.dash?.length ? element.dash.join(' ') : undefined,
     onPointerDown: (e: React.PointerEvent) => {
-      e.stopPropagation()
+      // Only stop propagation in select mode so that drawing/erasing over
+      // existing elements still works.  In select mode the container's
+      // hit-test handles selection, so we prevent double-handling.
+      if (tool === 'select') {
+        e.stopPropagation()
+      }
       onPointerDown(e, element.id)
     },
     onDoubleClick: () => onDoubleClick(element.id),
@@ -134,7 +142,7 @@ export function ElementRenderer({
           height={element.height || 100}
           opacity={element.opacity}
           onPointerDown={(e) => {
-            e.stopPropagation()
+            if (tool === 'select') e.stopPropagation()
             onPointerDown(e, element.id)
           }}
           onDoubleClick={() => onDoubleClick(element.id)}
@@ -164,7 +172,7 @@ export function ElementRenderer({
       )
 
     case 'sticky':
-      return <StickySvg element={element} commonProps={commonProps} onTextChange={onTextChange} />
+      return <StickySvg element={element} commonProps={commonProps} onTextChange={onTextChange} tool={tool} />
 
     case 'image':
       return (
@@ -175,7 +183,7 @@ export function ElementRenderer({
           height={element.height}
           opacity={element.opacity}
           onPointerDown={(e) => {
-            e.stopPropagation()
+            if (tool === 'select') e.stopPropagation()
             onPointerDown(e, element.id)
           }}
           style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
@@ -261,10 +269,12 @@ function StickySvg({
   element,
   commonProps,
   onTextChange,
+  tool,
 }: {
   element: { id: string; x: number; y: number; width: number; height: number; noteColor: string; text: string; fontSize: number; locked: boolean }
   commonProps: Record<string, unknown>
   onTextChange?: (id: string, text: string) => void
+  tool: string
 }) {
   return (
     <g>
@@ -288,7 +298,7 @@ function StickySvg({
         stroke={commonProps.stroke as string || '#00000020'}
         strokeWidth={1}
         onPointerDown={(e: React.PointerEvent) => {
-          e.stopPropagation()
+          if (tool === 'select') e.stopPropagation()
           ;(commonProps.onPointerDown as (e: React.PointerEvent) => void)?.(e)
         }}
         style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
