@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import dynamic from 'next/dynamic'
 
 const WhiteboardClient = dynamic(() => import('./WhiteboardClient'), {
@@ -43,6 +44,73 @@ const WhiteboardClient = dynamic(() => import('./WhiteboardClient'), {
   ),
 })
 
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  state: { error: Error | null } = { error: null }
+
+  static getDerivedStateFromError(error: Error) {
+    return { error }
+  }
+
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('Whiteboard Error:', error, info)
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          background: '#fef2f2',
+          fontFamily: 'inherit',
+          padding: 24,
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 12,
+            background: '#ef4444', display: 'flex',
+            alignItems: 'center', justifyContent: 'center',
+            marginBottom: 16, color: 'white', fontSize: 24,
+          }}>!</div>
+          <h2 style={{ margin: '0 0 8px', fontSize: 18, color: '#991b1b' }}>
+            Something went wrong
+          </h2>
+          <p style={{ margin: '0 0 16px', fontSize: 14, color: '#b91c1c', maxWidth: 400, textAlign: 'center' }}>
+            {this.state.error.message}
+          </p>
+          <pre style={{
+            fontSize: 11, color: '#7f1d1d', background: '#fff1f2',
+            padding: 12, borderRadius: 8, maxWidth: 600,
+            overflow: 'auto', maxHeight: 200, border: '1px solid #fecaca',
+          }}>
+            {this.state.error.stack}
+          </pre>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{
+              marginTop: 16, padding: '8px 20px', borderRadius: 8,
+              border: 'none', background: '#ef4444', color: 'white',
+              cursor: 'pointer', fontSize: 14, fontWeight: 500,
+            }}
+          >
+            Try Again
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 export default function Home() {
-  return <WhiteboardClient />
+  return (
+    <ErrorBoundary>
+      <WhiteboardClient />
+    </ErrorBoundary>
+  )
 }

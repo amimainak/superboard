@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
       'perfect-freehand',
     ],
   },
+  // Allow dev access from preview origin
+  allowedDevOrigins: ['*'],
   // Prevent server-only packages from leaking into client bundles
   serverExternalPackages: ['@prisma/client', 'stripe', 'pg'],
   // Security headers
@@ -68,11 +70,11 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cross-Origin-Opener-Policy',
-            value: 'same-origin',
+            value: 'same-origin, allow-popups',
           },
           {
             key: 'Cross-Origin-Resource-Policy',
-            value: 'same-origin',
+            value: 'cross-origin',
           },
           // SECURITY FIX: Remove X-Powered-By header to avoid server fingerprinting
           {
