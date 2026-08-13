@@ -84,6 +84,7 @@ export interface WhiteboardStore {
   toggleDark: () => void
   toggleGrid: () => void
   toggleSnap: () => void
+  setGridType: (type: 'dot' | 'line') => void
   toggleShortcuts: () => void
   setShortcutsOpen: (open: boolean) => void
 
@@ -164,7 +165,9 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     style: { ...DEFAULT_STYLE },
     pages: [{ id: generateId(), name: 'Page 1', index: 0 }],
     currentPageIndex: 0,
-    isDark: false,
+    isDark: typeof window !== 'undefined'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false,
     showGrid: true,
     gridSize: 20,
     gridType: 'dot',
@@ -246,6 +249,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
     toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
     toggleSnap: () => set((s) => ({ snapToGrid: !s.snapToGrid })),
+    setGridType: (type) => set({ gridType: type }),
     toggleShortcuts: () => set((s) => ({ shortcutsOpen: !s.shortcutsOpen })),
     setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
 

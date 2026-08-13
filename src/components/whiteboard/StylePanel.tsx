@@ -24,6 +24,13 @@ const DASH_PATTERNS: { label: string; value: number[] }[] = [
   { label: 'Dash-dot', value: [8, 4, 2, 4] },
 ]
 
+const FONT_FAMILIES = [
+  { label: 'Sans', value: 'inherit', preview: 'Aa' },
+  { label: 'Serif', value: 'Georgia, serif', preview: 'Aa' },
+  { label: 'Mono', value: '"Courier New", monospace', preview: 'Aa' },
+  { label: 'Hand', value: 'cursive', preview: 'Aa' },
+]
+
 export function StylePanel() {
   const { style, setStyle, isDark, selectedIds, tool, eraserSize, setEraserSize } = useWhiteboardStore()
   const [activeSection, setActiveSection] = useState<string>('color')
@@ -156,6 +163,78 @@ export function StylePanel() {
                 strokeLinecap="round"
               />
             </svg>
+          </button>
+        ))}
+      </div>
+
+      <Divider />
+
+      {/* Font Family */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 11, color: isDark ? '#9ca3af' : '#6b7280', fontWeight: 500 }}>
+          Font
+        </span>
+        {FONT_FAMILIES.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setStyle({ fontFamily: f.value })}
+            title={f.label}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              border: 'none',
+              background:
+                style.fontFamily === f.value
+                  ? isDark
+                    ? 'rgba(5,150,105,0.2)'
+                    : 'rgba(5,150,105,0.1)'
+                  : 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: style.fontFamily === f.value ? '#059669' : isDark ? '#d1d5db' : '#4b5563',
+            }}
+          >
+            <span style={{ fontFamily: f.value, fontSize: 13, fontWeight: 500 }}>
+              {f.preview}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <Divider />
+
+      {/* Font Size */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 11, color: isDark ? '#9ca3af' : '#6b7280', fontWeight: 500 }}>
+          Size
+        </span>
+        {[14, 20, 28, 36, 48].map((s) => (
+          <button
+            key={s}
+            onClick={() => setStyle({ fontSize: s })}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              border: 'none',
+              background:
+                style.fontSize === s
+                  ? isDark
+                    ? 'rgba(5,150,105,0.2)'
+                    : 'rgba(5,150,105,0.1)'
+                  : 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 11,
+              color: style.fontSize === s ? '#059669' : isDark ? '#d1d5db' : '#4b5563',
+            }}
+          >
+            {s}
           </button>
         ))}
       </div>

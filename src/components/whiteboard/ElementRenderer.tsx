@@ -305,6 +305,8 @@ function FreehandSvg({ element, commonProps }: { element: FreehandElement; commo
   )
 }
 
+const STICKY_COLOR_OPTIONS = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fecaca', '#e9d5ff']
+
 function StickySvg({
   element,
   commonProps,
@@ -316,6 +318,8 @@ function StickySvg({
   onTextChange?: (id: string, text: string) => void
   tool: string
 }) {
+  const updateElement = useWhiteboardStore((s) => s.updateElement)
+
   return (
     <g>
       {/* Shadow */}
@@ -343,6 +347,29 @@ function StickySvg({
         }}
         style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
       />
+      {/* Color picker dots */}
+      {!element.locked && (
+        <g style={{ cursor: 'pointer' }}>
+          {STICKY_COLOR_OPTIONS.map((color, i) => (
+            <circle
+              key={color}
+              cx={element.x + element.width - 12 - (STICKY_COLOR_OPTIONS.length - 1 - i) * 16}
+              cy={element.y + 12}
+              r={5}
+              fill={color}
+              stroke="#00000020"
+              strokeWidth={0.5}
+              onClick={(e) => {
+                e.stopPropagation()
+                updateElement(element.id, { noteColor: color, fillColor: color } as Partial<WhiteboardElement>)
+              }}
+              style={{ opacity: 0.6 }}
+              onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}
+              onMouseOut={(e) => (e.currentTarget.style.opacity = '0.6')}
+            />
+          ))}
+        </g>
+      )}
       {/* Text area */}
       <foreignObject
         x={element.x + 12}

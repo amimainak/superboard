@@ -21,6 +21,10 @@ import {
   ArrowDownToLine,
   Pen,
   Frame,
+  Magnet,
+  Grid3X3,
+  BorderAll,
+  Eye,
 } from 'lucide-react'
 
 interface TopBarProps {
@@ -45,6 +49,12 @@ interface TopBarProps {
   currentTool: string
   currentPage: string
   zoom: number
+  showGrid: boolean
+  snapToGrid: boolean
+  gridType: 'dot' | 'line'
+  onToggleGrid: () => void
+  onToggleSnap: () => void
+  onToggleGridType: () => void
 }
 
 export function TopBar({
@@ -69,6 +79,12 @@ export function TopBar({
   currentTool,
   currentPage,
   zoom,
+  showGrid,
+  snapToGrid,
+  gridType,
+  onToggleGrid,
+  onToggleSnap,
+  onToggleGridType,
 }: TopBarProps) {
   const [exportOpen, setExportOpen] = React.useState(false)
 
@@ -214,6 +230,34 @@ export function TopBar({
       </IconButton>
       <IconButton title="Zoom to Fit" isDark={isDark} onClick={onZoomFit}>
         <Expand size={16} />
+      </IconButton>
+
+      {/* Divider */}
+      <Divider />
+
+      {/* Grid Controls */}
+      <IconButton
+        title={showGrid ? 'Hide Grid' : 'Show Grid'}
+        isDark={isDark}
+        onClick={onToggleGrid}
+        active={showGrid}
+      >
+        <Eye size={16} />
+      </IconButton>
+      <IconButton
+        title={snapToGrid ? 'Disable Snap to Grid' : 'Enable Snap to Grid'}
+        isDark={isDark}
+        onClick={onToggleSnap}
+        active={snapToGrid}
+      >
+        <Magnet size={16} />
+      </IconButton>
+      <IconButton
+        title={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'} (click to switch)`}
+        isDark={isDark}
+        onClick={onToggleGridType}
+      >
+        {gridType === 'dot' ? <Grid3X3 size={16} /> : <BorderAll size={16} />}
       </IconButton>
 
       {/* Divider */}
