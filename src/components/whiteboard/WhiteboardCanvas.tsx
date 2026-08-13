@@ -18,7 +18,7 @@ import {
   HIGHLIGHT_OPTIONS,
   getElementBounds,
 } from '@/lib/whiteboard/utils'
-import type { Point, WhiteboardElement } from '@/lib/whiteboard/types'
+import type { Point, WhiteboardElement, ToolId } from '@/lib/whiteboard/types'
 
 function calcAlignGuides(
   selectedIds: string[],
@@ -132,6 +132,7 @@ export function WhiteboardCanvas() {
     toggleDark,
     toggleGrid,
     toggleSnap,
+    togglePresentationMode,
     deletePage,
     switchPage,
     addPage,
@@ -146,6 +147,13 @@ export function WhiteboardCanvas() {
   const eraserHistoryPushed = useRef(false)
   const isErasing = useRef(false)
   const [boxSelect, setBoxSelect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+
+  // ---- Touch / Stylus / Multi-touch state ----
+  const isLaserActive = useRef(false)       // laser only draws when pointer is down
+  const activePointers = useRef<Map<number, { x: number; y: number }>>(new Map())  // for pinch/pan
+  const pinchState = useRef<{ startDist: number; startZoom: number; startCenter: { x: number; y: number }; lastCenter: { x: number; y: number } } | null>(null)
+  const prevToolRef = useRef<ToolId | null>(null) // for stylus barrel-button eraser
+  const palmRejectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Observe container size
   useEffect(() => {
@@ -187,11 +195,74 @@ export function WhiteboardCanvas() {
   // Filter elements for current page
   const pageElements = elements.filter((el) => el.pageIndex === currentPageIndex)
 
+  // ---- Palm / Touch Rejection ----
+  // Reject non-primary touch pointers (secondary fingers, palm rests).
+  // For stylus (`pointerType === 'pen'`) always allow.
+  // For touch, reject if the contact area is suspiciously large (palm).
+  const shouldRejectPointer = useCallback((e: React.PointerEvent | PointerEvent): boolean => {
+    // Always allow mouse and pen (stylus/tablet pen)
+    if (e.pointerType === 'mouse' || e.pointerType === 'pen') return false
+    // Touch: reject non-primary pointers (extra fingers / palm)
+    if (!e.isPrimary) return true
+    // Touch: reject if contact area looks like palm (width or height > 30px)
+    // PointerEvent.width/height are in CSS pixels of the contact ellipse
+    if (e.width > 30 || e.height > 30) return true
+    return false
+  }, [])
+
+  // ---- Pinch-to-Zoom helpers ----
+  const getPinchDist = (pts: { x: number; y: number }[]) => {
+    if (pts.length < 2) return 0
+    const [a, b] = pts
+    return Math.hypot(b.x - a.x, b.y - a.y)
+  }
+  const getPinchCenter = (pts: { x: number; y: number }[]) => {
+    if (pts.length < 2) return pts[0]
+    return { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 }
+  }
+
   // ---- Pointer Handlers ----
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      // ---- Palm rejection for touch ----
+      if (shouldRejectPointer(e)) {
+        e.preventDefault()
+        return
+      }
+
+      // ---- Multi-touch pinch/pan detection ----
+      activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (activePointers.current.size === 2 && e.pointerType === 'touch') {
+        // Two-finger gesture: enter pinch/pan mode
+        const pts = Array.from(activePointers.current.values())
+        const container = containerRef.current
+        if (container) {
+          // Cancel any ongoing drawing
+          if (isDrawing) finishDrawing()
+          clearSelection()
+          startPanning()
+          pinchState.current = {
+            startDist: getPinchDist(pts),
+            startZoom: camera.zoom,
+            startCenter: getPinchCenter(pts),
+            lastCenter: getPinchCenter(pts),
+          }
+          lastPanPoint.current = getPinchCenter(pts)
+        }
+        e.preventDefault()
+        return
+      }
+
       const point = getCanvasPoint(e)
+
+      // ---- Stylus barrel button (button 2 = eraser) ----
+      if (e.pointerType === 'pen' && e.buttons === 2) {
+        if (tool !== 'eraser') {
+          prevToolRef.current = tool
+          setTool('eraser')
+        }
+      }
 
       // Middle mouse or Space+click => pan
       if (e.button === 1 || spaceHeld) {
@@ -269,6 +340,7 @@ export function WhiteboardCanvas() {
           break
         }
         case 'laser': {
+          isLaserActive.current = true
           addLaserPoint(point)
           break
         }
@@ -318,13 +390,40 @@ export function WhiteboardCanvas() {
     },
     [
       tool, camera, spaceHeld, pageElements, selectedIds, currentPageIndex,
-      getCanvasPoint, startPanning, startDrawing, clearSelection, selectElements,
-      pushHistory, eraseAtPoint, addLaserPoint, addElement,
+      getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
+      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool,
     ]
   )
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
+      // ---- Palm rejection: skip non-primary touch moves ----
+      if (e.pointerType === 'touch' && !e.isPrimary) return
+
+      // ---- Multi-touch pinch/pan tracking ----
+      if (activePointers.current.has(e.pointerId)) {
+        activePointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      }
+      if (pinchState.current && activePointers.current.size >= 2) {
+        const pts = Array.from(activePointers.current.values()).slice(0, 2)
+        const dist = getPinchDist(pts)
+        const center = getPinchCenter(pts)
+        const container = containerRef.current
+        if (container) {
+          const rect = container.getBoundingClientRect()
+          const cx = center.x - rect.left
+          const cy = center.y - rect.top
+          // Pinch zoom
+          const scale = dist / pinchState.current.startDist
+          const newZoom = Math.max(0.1, Math.min(5, pinchState.current.startZoom * scale))
+          // Pan towards pinch center
+          const newCameraX = cx - (cx - camera.x) * (newZoom / camera.zoom)
+          const newCameraY = cy - (cy - camera.y) * (newZoom / camera.zoom)
+          setCamera({ x: newCameraX, y: newCameraY, zoom: newZoom })
+        }
+        return
+      }
+
       // Pan
       if (isPanning && lastPanPoint.current) {
         const dx = e.clientX - lastPanPoint.current.x
@@ -374,19 +473,28 @@ export function WhiteboardCanvas() {
         setEraserCursor({ x: e.clientX, y: e.clientY })
       }
 
-      // Laser
-      if (tool === 'laser') {
+      // Laser — ONLY when pointer button is held down (no hover drawing)
+      if (tool === 'laser' && isLaserActive.current) {
         addLaserPoint(point)
       }
     },
     [
-      isPanning, isDrawing, tool, selectedIds, camera.zoom,
-      getCanvasPoint, panBy, moveSelected, continueDrawing, eraseAtPoint, addLaserPoint,
+      isPanning, isDrawing, tool, selectedIds, camera.zoom, camera.x, camera.y,
+      getCanvasPoint, panBy, moveSelected, continueDrawing, eraseAtPoint, addLaserPoint, setCamera,
     ]
   )
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
+      // ---- Multi-touch: remove pointer, end pinch if < 2 ----
+      activePointers.current.delete(e.pointerId)
+      if (pinchState.current && activePointers.current.size < 2) {
+        pinchState.current = null
+        stopPanning()
+        lastPanPoint.current = null
+        return
+      }
+
       if (isPanning) {
         stopPanning()
         lastPanPoint.current = null
@@ -416,7 +524,9 @@ export function WhiteboardCanvas() {
         finishDrawing()
       }
 
-      if (tool === 'laser') {
+      // Laser: stop drawing on pointer up, trigger fade
+      if (tool === 'laser' && isLaserActive.current) {
+        isLaserActive.current = false
         clearLaser()
       }
 
@@ -425,10 +535,16 @@ export function WhiteboardCanvas() {
         isErasing.current = false
         eraserHistoryPushed.current = false
       }
+
+      // ---- Stylus barrel button release: restore previous tool ----
+      if (e.pointerType === 'pen' && tool === 'eraser' && prevToolRef.current) {
+        setTool(prevToolRef.current)
+        prevToolRef.current = null
+      }
     },
     [
       isPanning, isDrawing, tool, boxSelect, pageElements,
-      stopPanning, finishDrawing, clearLaser, selectElements,
+      stopPanning, finishDrawing, clearLaser, selectElements, setTool,
     ]
   )
 
@@ -475,6 +591,25 @@ export function WhiteboardCanvas() {
 
       const ctrl = e.ctrlKey || e.metaKey
       const shift = e.shiftKey
+
+      // Escape: exit presentation mode or clear selection
+      if (e.key === 'Escape') {
+        const store = useWhiteboardStore.getState()
+        if (store.isPresentationMode) {
+          togglePresentationMode()
+          return
+        }
+        if (selectedIds.length) {
+          clearSelection()
+          return
+        }
+      }
+
+      // Presentation mode shortcut (P)
+      if (!ctrl && !shift && e.key.toLowerCase() === 'p') {
+        togglePresentationMode()
+        return
+      }
 
       // Tool shortcuts
       if (!ctrl && !shift) {
@@ -568,6 +703,7 @@ export function WhiteboardCanvas() {
     }
   }, [
     selectedIds, spaceHeld,
+    togglePresentationMode,
     setTool, undo, redo, selectAll, copySelected, cutSelected, pasteClipboard,
     duplicateSelected, groupSelected, ungroupSelected, zoomIn, zoomOut,
     zoomReset, zoomToFit, toggleLock, bringToFront, sendToBack,
@@ -618,7 +754,14 @@ export function WhiteboardCanvas() {
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
-      onPointerLeave={() => tool === 'eraser' && setEraserCursor(null)}
+      onPointerLeave={() => {
+        if (tool === 'eraser') setEraserCursor(null)
+        // Cancel laser on pointer leave
+        if (tool === 'laser' && isLaserActive.current) {
+          isLaserActive.current = false
+          clearLaser()
+        }
+      }}
     >
       {/* Grid Background */}
       {showGrid && (

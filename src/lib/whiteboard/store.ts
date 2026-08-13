@@ -63,6 +63,7 @@ export interface WhiteboardStore {
   spaceHeld: boolean
   shiftHeld: boolean
   shortcutsOpen: boolean
+  isPresentationMode: boolean
   clipboard: WhiteboardElement[]
   currentPageName: string
 
@@ -151,6 +152,10 @@ export interface WhiteboardStore {
   // Laser
   addLaserPoint: (point: Point) => void
   clearLaser: () => void
+
+  // Presentation Mode
+  togglePresentationMode: () => void
+  setPresentationMode: (mode: boolean) => void
 }
 
 // ---- Smooth Camera Animation Helper ----
@@ -209,6 +214,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     spaceHeld: false,
     shiftHeld: false,
     shortcutsOpen: false,
+    isPresentationMode: false,
     clipboard: [],
     currentPageName: 'Page 1',
 
@@ -286,6 +292,8 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     setGridType: (type) => set({ gridType: type }),
     toggleShortcuts: () => set((s) => ({ shortcutsOpen: !s.shortcutsOpen })),
     setShortcutsOpen: (open) => set({ shortcutsOpen: open }),
+    togglePresentationMode: () => set((s) => ({ isPresentationMode: !s.isPresentationMode })),
+    setPresentationMode: (mode) => set({ isPresentationMode: mode }),
 
     // ---- Elements ----
     addElement: (el) => set((s) => ({ elements: [...s.elements, el] })),

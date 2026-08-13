@@ -25,6 +25,7 @@ import {
   Grid3X3,
   LayoutGrid,
   Eye,
+  Maximize,
 } from 'lucide-react'
 
 interface TopBarProps {
@@ -55,6 +56,7 @@ interface TopBarProps {
   onToggleGrid: () => void
   onToggleSnap: () => void
   onToggleGridType: () => void
+  onTogglePresentation: () => void
 }
 
 export function TopBar({
@@ -85,6 +87,7 @@ export function TopBar({
   onToggleGrid,
   onToggleSnap,
   onToggleGridType,
+  onTogglePresentation,
 }: TopBarProps) {
   const [exportOpen, setExportOpen] = React.useState(false)
 
@@ -330,6 +333,10 @@ export function TopBar({
       {/* Right side actions */}
       <IconButton title="Keyboard Shortcuts (Ctrl+/)" isDark={isDark} onClick={onShowShortcuts}>
         <Keyboard size={16} />
+      </IconButton>
+
+      <IconButton title="Presentation Mode" isDark={isDark} onClick={onTogglePresentation}>
+        <Maximize size={16} />
       </IconButton>
 
       <IconButton

@@ -36,6 +36,7 @@ export default function WhiteboardClient() {
     showGrid,
     snapToGrid,
     gridType,
+    isPresentationMode,
     setShortcutsOpen,
     zoomIn,
     zoomOut,
@@ -53,6 +54,7 @@ export default function WhiteboardClient() {
     toggleGrid,
     toggleSnap,
     setGridType,
+    togglePresentationMode,
     undo,
     redo,
   } = useWhiteboardStore()
@@ -172,8 +174,8 @@ export default function WhiteboardClient() {
       className="whiteboard-root"
       style={{
         display: 'grid',
-        gridTemplateRows: '44px 1fr 44px',
-        gridTemplateColumns: '44px 1fr',
+        gridTemplateRows: isPresentationMode ? '1fr' : '44px 1fr 44px',
+        gridTemplateColumns: isPresentationMode ? '1fr' : '44px 1fr',
         height: '100vh',
         width: '100vw',
         overflow: 'hidden',
@@ -181,56 +183,114 @@ export default function WhiteboardClient() {
         color: isDark ? '#e5e7eb' : '#111827',
       }}
     >
-      {/* Top Bar — spans full width */}
-      <div style={{ gridColumn: '1 / -1' }}>
-      <TopBar
-        isDark={isDark}
-        onToggleDark={toggleDark}
-        onExportPng={handleExportPng}
-        onExportSvg={handleExportSvg}
-        onExportJson={handleExportJson}
-        onExportJpg={handleExportJpg}
-        onShowShortcuts={() => setShortcutsOpen(true)}
-        onGroup={groupSelected}
-        onUngroup={ungroupSelected}
-        onToggleLock={toggleLock}
-        onSelectAll={selectAll}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onZoomFit={zoomToFit}
-        onZoomReset={zoomReset}
-        onBringToFront={handleBringToFront}
-        onSendToBack={handleSendToBack}
-        onFileUpload={handleFileUpload}
-        currentTool={tool}
-        currentPage={currentPageName}
-        zoom={Math.round(camera.zoom * 100)}
-        showGrid={showGrid}
-        snapToGrid={snapToGrid}
-        gridType={gridType}
-        onToggleGrid={toggleGrid}
-        onToggleSnap={toggleSnap}
-        onToggleGridType={handleToggleGridType}
-      />
-      </div>
+      {/* Top Bar — spans full width (hidden in presentation mode) */}
+      {!isPresentationMode && (
+        <div style={{ gridColumn: '1 / -1' }}>
+        <TopBar
+          isDark={isDark}
+          onToggleDark={toggleDark}
+          onExportPng={handleExportPng}
+          onExportSvg={handleExportSvg}
+          onExportJson={handleExportJson}
+          onExportJpg={handleExportJpg}
+          onShowShortcuts={() => setShortcutsOpen(true)}
+          onGroup={groupSelected}
+          onUngroup={ungroupSelected}
+          onToggleLock={toggleLock}
+          onSelectAll={selectAll}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onZoomFit={zoomToFit}
+          onZoomReset={zoomReset}
+          onBringToFront={handleBringToFront}
+          onSendToBack={handleSendToBack}
+          onFileUpload={handleFileUpload}
+          onTogglePresentation={togglePresentationMode}
+          currentTool={tool}
+          currentPage={currentPageName}
+          zoom={Math.round(camera.zoom * 100)}
+          showGrid={showGrid}
+          snapToGrid={snapToGrid}
+          gridType={gridType}
+          onToggleGrid={toggleGrid}
+          onToggleSnap={toggleSnap}
+          onToggleGridType={handleToggleGridType}
+        />
+        </div>
+      )}
 
-      {/* Left Toolbar */}
-      <LeftToolbar />
+      {/* Left Toolbar (hidden in presentation mode) */}
+      {!isPresentationMode && <LeftToolbar />}
 
       {/* Canvas Area */}
       <div ref={canvasContainerRef} style={{ position: 'relative', overflow: 'hidden' }}>
         <WhiteboardCanvas />
-        <PageTabs />
+        {!isPresentationMode && <PageTabs />}
       </div>
 
-      {/* Style Panel — spans full width */}
-      <div style={{ gridColumn: '1 / -1' }}>
-      <StylePanel />
-      </div>
+      {/* Style Panel — spans full width (hidden in presentation mode) */}
+      {!isPresentationMode && (
+        <div style={{ gridColumn: '1 / -1' }}>
+        <StylePanel />
+        </div>
+      )}
 
       {/* Shortcuts Dialog */}
       {shortcutsOpen && (
         <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />
+      )}
+
+      {/* Presentation Mode: floating exit button + minimal info */}
+      {isPresentationMode && (
+        <>
+          {/* Semi-transparent overlay that fades on interaction */}
+          <div
+            style={{
+              position: 'fixed',
+              top: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 10000,
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+              pointerEvents: 'auto',
+            }}
+          >
+            <button
+              onClick={togglePresentationMode}
+              style={{
+                padding: '8px 18px',
+                borderRadius: 8,
+                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'rgba(0,0,0,0.6)',
+                color: '#fff',
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                transition: 'opacity 0.3s ease',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.8)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.6)'}
+            >
+              Exit Presentation (Esc)
+            </button>
+            <div
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                background: 'rgba(0,0,0,0.5)',
+                color: 'rgba(255,255,255,0.6)',
+                fontSize: 11,
+                fontFamily: 'monospace',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              {Math.round(camera.zoom * 100)}% · {currentPageName}
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
