@@ -23,7 +23,7 @@ import {
   Frame,
   Magnet,
   Grid3X3,
-  BorderAll,
+  LayoutGrid,
   Eye,
 } from 'lucide-react'
 
@@ -257,7 +257,7 @@ export function TopBar({
         isDark={isDark}
         onClick={onToggleGridType}
       >
-        {gridType === 'dot' ? <Grid3X3 size={16} /> : <BorderAll size={16} />}
+        {gridType === 'dot' ? <Grid3X3 size={16} /> : <LayoutGrid size={16} />}
       </IconButton>
 
       {/* Divider */}
@@ -348,11 +348,13 @@ function IconButton({
   title,
   isDark,
   onClick,
+  active,
 }: {
   children: React.ReactNode
   title: string
   isDark: boolean
   onClick?: () => void
+  active?: boolean
 }) {
   return (
     <button
@@ -363,8 +365,12 @@ function IconButton({
         height: 32,
         borderRadius: 6,
         border: 'none',
-        background: 'transparent',
-        color: isDark ? '#d1d5db' : '#4b5563',
+        background: active
+          ? (isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.12)')
+          : 'transparent',
+        color: active
+          ? (isDark ? '#34d399' : '#059669')
+          : (isDark ? '#d1d5db' : '#4b5563'),
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
@@ -372,12 +378,17 @@ function IconButton({
         transition: 'background 0.15s, color 0.15s',
       }}
       onMouseOver={(e) => {
+        if (active) return
         e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'
         e.currentTarget.style.color = isDark ? '#f3f4f6' : '#111827'
       }}
       onMouseOut={(e) => {
-        e.currentTarget.style.background = 'transparent'
-        e.currentTarget.style.color = isDark ? '#d1d5db' : '#4b5563'
+        e.currentTarget.style.background = active
+          ? (isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.12)')
+          : 'transparent'
+        e.currentTarget.style.color = active
+          ? (isDark ? '#34d399' : '#059669')
+          : (isDark ? '#d1d5db' : '#4b5563')
       }}
     >
       {children}

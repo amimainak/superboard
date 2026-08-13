@@ -33,6 +33,9 @@ export default function WhiteboardClient() {
     elements,
     shortcutsOpen,
     selectedIds,
+    showGrid,
+    snapToGrid,
+    gridType,
     setShortcutsOpen,
     zoomIn,
     zoomOut,
@@ -49,6 +52,7 @@ export default function WhiteboardClient() {
     toggleDark,
     toggleGrid,
     toggleSnap,
+    setGridType,
     undo,
     redo,
   } = useWhiteboardStore()
@@ -159,6 +163,10 @@ export default function WhiteboardClient() {
 
   const currentPageName = pages[currentPageIndex]?.name || 'Page 1'
 
+  const handleToggleGridType = useCallback(() => {
+    setGridType(gridType === 'dot' ? 'line' : 'dot')
+  }, [gridType, setGridType])
+
   return (
     <div
       className="whiteboard-root"
@@ -197,6 +205,12 @@ export default function WhiteboardClient() {
         currentTool={tool}
         currentPage={currentPageName}
         zoom={Math.round(camera.zoom * 100)}
+        showGrid={showGrid}
+        snapToGrid={snapToGrid}
+        gridType={gridType}
+        onToggleGrid={toggleGrid}
+        onToggleSnap={toggleSnap}
+        onToggleGridType={handleToggleGridType}
       />
       </div>
 
