@@ -58,6 +58,7 @@ export interface WhiteboardStore {
   isPanning: boolean
   isResizing: boolean
   spaceHeld: boolean
+  shiftHeld: boolean
   shortcutsOpen: boolean
   clipboard: WhiteboardElement[]
   currentPageName: string
@@ -114,6 +115,7 @@ export interface WhiteboardStore {
   startPanning: () => void
   stopPanning: () => void
   setSpaceHeld: (held: boolean) => void
+  setShiftHeld: (held: boolean) => void
 
   // History
   pushHistory: () => void
@@ -176,6 +178,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     isPanning: false,
     isResizing: false,
     spaceHeld: false,
+    shiftHeld: false,
     shortcutsOpen: false,
     clipboard: [],
     currentPageName: 'Page 1',
@@ -574,10 +577,17 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         case 'diamond':
         case 'triangle':
         case 'frame': {
-          const x = Math.min(currentElement.x, point.x)
-          const y = Math.min(currentElement.y, point.y)
-          const w = Math.abs(point.x - currentElement.x)
-          const h = Math.abs(point.y - currentElement.y)
+          const rawDx = point.x - currentElement.x
+          const rawDy = point.y - currentElement.y
+          let w = Math.abs(rawDx)
+          let h = Math.abs(rawDy)
+          if (get().shiftHeld) {
+            const side = Math.max(w, h)
+            w = side
+            h = side
+          }
+          const x = rawDx >= 0 ? currentElement.x : currentElement.x - w
+          const y = rawDy >= 0 ? currentElement.y : currentElement.y - h
           set({
             currentElement: { ...currentElement, x, y, width: w, height: h },
           })
@@ -655,6 +665,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     startPanning: () => set({ isPanning: true }),
     stopPanning: () => set({ isPanning: false }),
     setSpaceHeld: (held) => set({ spaceHeld: held }),
+    setShiftHeld: (held) => set({ shiftHeld: held }),
 
     // ---- History ----
     pushHistory: () => {

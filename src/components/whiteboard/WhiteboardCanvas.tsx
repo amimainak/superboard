@@ -20,6 +20,54 @@ import {
 } from '@/lib/whiteboard/utils'
 import type { Point, WhiteboardElement } from '@/lib/whiteboard/types'
 
+function calcAlignGuides(
+  selectedIds: string[],
+  allElements: WhiteboardElement[],
+  threshold: number
+): { axis: 'x' | 'y'; pos: number; start: number; end: number }[] {
+  const selected = allElements.filter((el) => selectedIds.includes(el.id))
+  const others = allElements.filter((el) => !selectedIds.includes(el.id))
+  const guides: { axis: 'x' | 'y'; pos: number; start: number; end: number }[] = []
+
+  for (const sel of selected) {
+    const sb = getElementBounds(sel)
+    const scx = sb.x + sb.width / 2
+    const scy = sb.y + sb.height / 2
+
+    for (const other of others) {
+      const ob = getElementBounds(other)
+      const ocx = ob.x + ob.width / 2
+      const ocy = ob.y + ob.height / 2
+
+      // Center-to-center
+      if (Math.abs(scx - ocx) < threshold) {
+        guides.push({ axis: 'x', pos: scx, start: Math.min(sb.y, ob.y) - 50, end: Math.max(sb.y + sb.height, ob.y + ob.height) + 50 })
+      }
+      if (Math.abs(scy - ocy) < threshold) {
+        guides.push({ axis: 'y', pos: scy, start: Math.min(sb.x, ob.x) - 50, end: Math.max(sb.x + sb.width, ob.x + ob.width) + 50 })
+      }
+
+      // Left/Right edges
+      if (Math.abs(sb.x - ob.x) < threshold) {
+        guides.push({ axis: 'x', pos: sb.x, start: Math.min(sb.y, ob.y) - 50, end: Math.max(sb.y + sb.height, ob.y + ob.height) + 50 })
+      }
+      if (Math.abs(sb.x + sb.width - (ob.x + ob.width)) < threshold) {
+        guides.push({ axis: 'x', pos: sb.x + sb.width, start: Math.min(sb.y, ob.y) - 50, end: Math.max(sb.y + sb.height, ob.y + ob.height) + 50 })
+      }
+
+      // Top/Bottom edges
+      if (Math.abs(sb.y - ob.y) < threshold) {
+        guides.push({ axis: 'y', pos: sb.y, start: Math.min(sb.x, ob.x) - 50, end: Math.max(sb.x + sb.width, ob.x + ob.width) + 50 })
+      }
+      if (Math.abs(sb.y + sb.height - (ob.y + ob.height)) < threshold) {
+        guides.push({ axis: 'y', pos: sb.y + sb.height, start: Math.min(sb.x, ob.x) - 50, end: Math.max(sb.x + sb.width, ob.x + ob.width) + 50 })
+      }
+    }
+  }
+
+  return guides
+}
+
 export function WhiteboardCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
@@ -55,6 +103,7 @@ export function WhiteboardCanvas() {
     startPanning,
     stopPanning,
     setSpaceHeld,
+    setShiftHeld,
     pushHistory,
     moveSelected,
     removeElements,
@@ -89,6 +138,7 @@ export function WhiteboardCanvas() {
   } = useWhiteboardStore()
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 })
+  const [alignGuides, setAlignGuides] = useState<{ axis: 'x' | 'y'; pos: number; start: number; end: number }[]>([])
   const lastPanPoint = useRef<Point | null>(null)
   const lastMovePoint = useRef<Point | null>(null)
   const boxSelectStart = useRef<Point | null>(null)
@@ -289,6 +339,7 @@ export function WhiteboardCanvas() {
         const dy = point.y - lastMovePoint.current.y
         moveSelected(dx, dy)
         lastMovePoint.current = point
+        setAlignGuides(calcAlignGuides(selectedIds, pageElements, 8 / camera.zoom))
         return
       }
 
@@ -341,6 +392,7 @@ export function WhiteboardCanvas() {
 
       if (lastMovePoint.current) {
         lastMovePoint.current = null
+        setAlignGuides([])
       }
 
       if (boxSelectStart.current && boxSelect) {
@@ -489,11 +541,19 @@ export function WhiteboardCanvas() {
         e.preventDefault()
         setSpaceHeld(true)
       }
+
+      // Shift for aspect-ratio lock
+      if (e.key === 'Shift') {
+        setShiftHeld(true)
+      }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === ' ') {
         setSpaceHeld(false)
+      }
+      if (e.key === 'Shift') {
+        setShiftHeld(false)
       }
     }
 
@@ -508,7 +568,7 @@ export function WhiteboardCanvas() {
     setTool, undo, redo, selectAll, copySelected, cutSelected, pasteClipboard,
     duplicateSelected, groupSelected, ungroupSelected, zoomIn, zoomOut,
     zoomReset, zoomToFit, toggleLock, bringToFront, sendToBack,
-    pushHistory, removeElements, clearSelection, setSpaceHeld, setShortcutsOpen,
+    pushHistory, removeElements, clearSelection, setSpaceHeld, setShiftHeld, setShortcutsOpen,
   ])
 
   // Prevent context menu
@@ -611,6 +671,22 @@ export function WhiteboardCanvas() {
 
           {/* Selection handles */}
           <SelectionHandles containerRef={containerRef} />
+
+          {/* Alignment guides */}
+          {alignGuides.map((g, i) => (
+            <line
+              key={i}
+              x1={g.axis === 'x' ? g.pos : g.start}
+              y1={g.axis === 'y' ? g.pos : g.start}
+              x2={g.axis === 'x' ? g.pos : g.end}
+              y2={g.axis === 'y' ? g.pos : g.end}
+              stroke="#059669"
+              strokeWidth={1 / camera.zoom}
+              strokeDasharray={`${4 / camera.zoom} ${4 / camera.zoom}`}
+              pointerEvents="none"
+              opacity={0.7}
+            />
+          ))}
 
           {/* Box select rectangle */}
           {boxSelect && (
