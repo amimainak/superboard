@@ -394,7 +394,20 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       }
 
       switch (tool) {
-        case 'draw':
+        case 'draw': {
+          const el: WhiteboardElement = {
+            ...base,
+            type: 'freehand',
+            points: [{ ...point, pressure: 0.5 }],
+            x: point.x,
+            y: point.y,
+            width: 0,
+            height: 0,
+            isHighlighter: false,
+          }
+          set({ isDrawing: true, currentElement: el, drawingPoints: [{ ...point, pressure: 0.5 }] })
+          break
+        }
         case 'highlighter': {
           const el: WhiteboardElement = {
             ...base,
@@ -404,6 +417,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
             y: point.y,
             width: 0,
             height: 0,
+            isHighlighter: true,
           }
           set({ isDrawing: true, currentElement: el, drawingPoints: [{ ...point, pressure: 0.5 }] })
           break

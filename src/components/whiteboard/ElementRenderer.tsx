@@ -35,7 +35,7 @@ export function ElementRenderer({
   onTextChange,
   cameraZoom,
 }: ElementRendererProps) {
-  const tool = useWhiteboardStore((s) => s.tool)
+  const { tool, isDark } = useWhiteboardStore()
 
   const commonProps = {
     opacity: element.opacity,
@@ -133,7 +133,8 @@ export function ElementRenderer({
       )
     }
 
-    case 'text':
+    case 'text': {
+      const hasText = !!element.text
       return (
         <foreignObject
           x={element.x}
@@ -156,20 +157,27 @@ export function ElementRenderer({
               height: '100%',
               fontSize: element.fontSize,
               fontFamily: element.fontFamily,
-              color: element.strokeColor,
+              color: hasText ? element.strokeColor : (isDark ? '#6b7280' : '#9ca3af'),
               outline: 'none',
               lineHeight: 1.4,
               whiteSpace: 'pre-wrap',
               overflow: 'hidden',
               textAlign: ((element as { textAlign?: string }).textAlign || 'left') as React.CSSProperties['textAlign'],
+              cursor: 'text',
+              caretColor: element.strokeColor,
             }}
             onBlur={(e) => {
               onTextChange?.(element.id, e.currentTarget.textContent || '')
             }}
-            dangerouslySetInnerHTML={{ __html: element.text.replace(/\n/g, '<br>') }}
+            dangerouslySetInnerHTML={{
+              __html: hasText
+                ? element.text.replace(/\n/g, '<br>')
+                : '<span style="color:inherit">Type here...</span>',
+            }}
           />
         </foreignObject>
       )
+    }
 
     case 'sticky':
       return <StickySvg element={element} commonProps={commonProps} onTextChange={onTextChange} tool={tool} />
@@ -240,12 +248,24 @@ export function ElementRenderer({
 // ---- Sub-components ----
 
 function FreehandSvg({ element, commonProps }: { element: FreehandElement; commonProps: Record<string, unknown> }) {
+  const isHighlighter = !!element.isHighlighter
+
   const pathD = useMemo(() => {
     if (element.points.length < 2) return ''
+    const pts = element.points.map(p => ({ ...p, pressure: 0.5 }))
+    if (isHighlighter) {
+      return getFreehandPath(pts, {
+        size: 16,
+        thinning: 0,
+        smoothing: 0.5,
+        streamline: 0.5,
+        start: { cap: true } as const,
+        end: { cap: true } as const,
+      })
+    }
     // Use constant pressure for consistent pen-like line thickness.
     // thinning=0 disables pressure-based width variation,
     // and round caps without taper give clean start/end.
-    const pts = element.points.map(p => ({ ...p, pressure: 0.5 }))
     return getFreehandPath(pts, {
       size: element.strokeWidth * 2,
       thinning: 0,
@@ -254,9 +274,24 @@ function FreehandSvg({ element, commonProps }: { element: FreehandElement; commo
       start: { cap: true } as const,
       end: { cap: true } as const,
     })
-  }, [element.points, element.strokeWidth])
+  }, [element.points, element.strokeWidth, isHighlighter])
 
   if (!pathD) return null
+
+  if (isHighlighter) {
+    return (
+      <path
+        {...commonProps}
+        d={pathD}
+        fill={hexToRgba(element.strokeColor, 0.4)}
+        stroke="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={1}
+        style={{ mixBlendMode: 'multiply' } as React.CSSProperties}
+      />
+    )
+  }
 
   return (
     <path

@@ -71,6 +71,7 @@ interface BaseElement {
 export interface FreehandElement extends BaseElement {
   type: 'freehand'
   points: Point[]
+  isHighlighter?: boolean
 }
 
 export interface RectangleElement extends BaseElement {

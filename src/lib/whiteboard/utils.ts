@@ -20,7 +20,7 @@ export const DEFAULT_DRAW_OPTIONS = {
 
 /** Default options for highlighter strokes */
 export const HIGHLIGHT_OPTIONS = {
-  size: 20,
+  size: 16,
   thinning: 0,
   smoothing: 0.5,
   streamline: 0.5,
