@@ -57,6 +57,52 @@ export function LeftToolbar() {
   const { tool, setTool, isDark } = useWhiteboardStore()
 
   return (
+    <>
+      <style>{`
+        .wb-tooltip-btn {
+          position: relative;
+        }
+        .wb-tooltip-btn::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          left: calc(100% + 10px);
+          top: 50%;
+          transform: translateY(-50%);
+          background: #1e293b;
+          color: #fff;
+          padding: 4px 10px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 1.4;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+          z-index: 1000;
+        }
+        .wb-tooltip-btn::before {
+          content: '';
+          position: absolute;
+          left: calc(100% + 4px);
+          top: 50%;
+          transform: translateY(-50%);
+          border: 5px solid transparent;
+          border-right-color: #1e293b;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.15s ease;
+          z-index: 1000;
+        }
+        .wb-tooltip-btn:hover::after {
+          opacity: 1;
+          transition: opacity 0.15s ease 0.6s;
+        }
+        .wb-tooltip-btn:hover::before {
+          opacity: 1;
+          transition: opacity 0.15s ease 0.6s;
+        }
+      `}</style>
     <div
       className="left-toolbar"
       style={{
@@ -91,6 +137,7 @@ export function LeftToolbar() {
         )
       })}
     </div>
+    </>
   )
 }
 
@@ -107,7 +154,8 @@ function ToolButton({
 }) {
   return (
     <button
-      title={`${tool.label} (${tool.shortcut})`}
+      className="wb-tooltip-btn"
+      data-tooltip={`${tool.label}  ${tool.shortcut}`}
       onClick={onClick}
       style={{
         width: 36,
