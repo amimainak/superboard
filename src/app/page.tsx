@@ -1,17 +1,12 @@
-// ============================================================
-// K-12 AI Superboard — Root Page (Server Component Wrapper)
-// ============================================================
-// Forces dynamic rendering (no SSG) so the auth gate
-// client component hydrates properly on every request.
-// ============================================================
+'use client'
 
-import AuthGate from '@/components/auth/AuthGate';
+import { Tldraw } from 'tldraw'
+import 'tldraw/tldraw.css'
 
-// Force dynamic rendering — prevent SSG pre-rendering that
-// bakes authLoading=true into static HTML and breaks Turbopack
-// RSC hydration in the browser.
-export const dynamic = 'force-dynamic';
-
-export default function RootPage() {
-  return <AuthGate />;
+export default function Home() {
+  return (
+    <div style={{ position: 'fixed', inset: 0, width: '100vw', height: '100vh' }}>
+      <Tldraw />
+    </div>
+  )
 }
