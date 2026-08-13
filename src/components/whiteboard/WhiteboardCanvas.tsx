@@ -512,8 +512,8 @@ export function WhiteboardCanvas() {
     <div
       ref={containerRef}
       style={{
-        flex: 1,
-        position: 'relative',
+        position: 'absolute',
+        inset: 0,
         overflow: 'hidden',
         background: isDark ? '#0f172a' : '#f8fafc',
         cursor:

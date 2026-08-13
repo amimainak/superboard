@@ -163,8 +163,9 @@ export default function WhiteboardClient() {
     <div
       className="whiteboard-root"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'grid',
+        gridTemplateRows: '44px 1fr 44px',
+        gridTemplateColumns: '44px 1fr',
         height: '100vh',
         width: '100vw',
         overflow: 'hidden',
@@ -172,7 +173,8 @@ export default function WhiteboardClient() {
         color: isDark ? '#e5e7eb' : '#111827',
       }}
     >
-      {/* Top Bar */}
+      {/* Top Bar — spans full width */}
+      <div style={{ gridColumn: '1 / -1' }}>
       <TopBar
         isDark={isDark}
         onToggleDark={toggleDark}
@@ -196,29 +198,21 @@ export default function WhiteboardClient() {
         currentPage={currentPageName}
         zoom={Math.round(camera.zoom * 100)}
       />
-
-      {/* Main Area */}
-      <div
-        ref={canvasContainerRef}
-        style={{
-          display: 'flex',
-          flex: 1,
-          minHeight: 0,
-          position: 'relative',
-        }}
-      >
-        {/* Left Toolbar */}
-        <LeftToolbar />
-
-        {/* Canvas Area */}
-        <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
-          <WhiteboardCanvas />
-          <PageTabs />
-        </div>
       </div>
 
-      {/* Style Panel (Bottom Bar) */}
+      {/* Left Toolbar */}
+      <LeftToolbar />
+
+      {/* Canvas Area */}
+      <div ref={canvasContainerRef} style={{ position: 'relative', overflow: 'hidden' }}>
+        <WhiteboardCanvas />
+        <PageTabs />
+      </div>
+
+      {/* Style Panel — spans full width */}
+      <div style={{ gridColumn: '1 / -1' }}>
       <StylePanel />
+      </div>
 
       {/* Shortcuts Dialog */}
       {shortcutsOpen && (
