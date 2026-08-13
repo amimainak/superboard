@@ -93,16 +93,42 @@
   }
 }
 
-/* Ensure tldraw fills remaining space below the top bar */
-.whiteboard-root > div:last-of-type {
-  position: relative;
-  flex: 1;
-  min-height: 0;
+/* Whiteboard-specific styles */
+.whiteboard-root {
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.whiteboard-root .tl-container {
-  position: absolute !important;
-  inset: 0 !important;
+.left-toolbar::-webkit-scrollbar,
+.style-panel::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.left-toolbar::-webkit-scrollbar-track,
+.style-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.left-toolbar::-webkit-scrollbar-thumb,
+.style-panel::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.2);
+  border-radius: 4px;
+}
+
+/* Selection animation */
+@keyframes selection-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+
+/* Cursor styles */
+.cursor-draw {
+  cursor: crosshair;
+}
+
+.cursor-eraser {
+  cursor: crosshair;
 }
 
 @media (prefers-reduced-motion: reduce) {

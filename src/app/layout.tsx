@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Whiteboard — tldraw",
-  description: "A powerful infinite canvas whiteboard for drawing, writing, and brainstorming.",
+  title: "Superboard — Free Collaborative Whiteboard",
+  description: "A powerful infinite canvas whiteboard built with React, SVG, and perfect-freehand. Free and open source.",
 };
 
 export default function RootLayout({

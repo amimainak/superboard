@@ -27,10 +27,10 @@ const nextConfig: NextConfig = {
   // Experimental features for performance
   experimental: {
     optimizePackageImports: [
-      '@tldraw/tldraw',
       'lucide-react',
       '@radix-ui/react-icons',
       'yjs',
+      'perfect-freehand',
     ],
   },
   // Prevent server-only packages from leaking into client bundles
