@@ -31,7 +31,12 @@ export const HIGHLIGHT_OPTIONS = {
 /** Convert perfect-freehand outline points to an SVG path `d` attribute */
 export function getSvgPathFromStroke(stroke: Point[]): string {
   if (!stroke.length) return ''
-  const d = stroke.reduce(
+  // perfect-freehand v1.2.x returns points as [x, y] arrays;
+  // normalise them to { x, y } objects for the SVG builder.
+  const pts = stroke.map((p) =>
+    Array.isArray(p) ? { x: p[0], y: p[1] } : p
+  )
+  const d = pts.reduce(
     (acc, point, i, arr) => {
       if (i === 0) {
         const next = arr[1]
