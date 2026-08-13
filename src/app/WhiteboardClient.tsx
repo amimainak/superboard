@@ -174,7 +174,7 @@ export default function WhiteboardClient() {
       className="whiteboard-root"
       style={{
         display: 'grid',
-        gridTemplateRows: isPresentationMode ? '1fr' : '44px 1fr 44px',
+        gridTemplateRows: isPresentationMode ? '1fr' : '40px 1fr 40px',
         gridTemplateColumns: isPresentationMode ? '1fr' : '44px 1fr',
         height: '100vh',
         width: '100vw',

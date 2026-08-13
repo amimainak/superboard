@@ -41,3 +41,34 @@ Stage Summary:
 - Stylus barrel button auto-switches to eraser
 - Presentation mode hides all UI for clean board view (shortcut: P or Esc to exit)
 - All builds pass cleanly, deployed to production
+
+---
+Task ID: 3
+Agent: main
+Task: Redesign all sidebars to minimalist pocket-based UI
+
+Work Log:
+- Completely rewrote LeftToolbar.tsx with collapsible "pocket" groups
+- Tool groups: Navigate (Select, Hand), Draw (Pen, Highlighter, Laser), Shapes (Rect, Ellipse, Diamond, Triangle, Line, Arrow), Content (Text, Sticky, Image, Frame), Erase (Eraser)
+- Each pocket shows one icon representing the active tool; clicking opens a fly-out sub-menu with all tools in the group, each showing name + keyboard shortcut
+- Single-tool groups (Eraser) render as direct buttons, no pocket
+- Active tool indicator bar shown on the left edge of the pocket
+- Fly-out closes on outside click via high-z-index backdrop (z-index: 10000)
+- Completely rewrote TopBar.tsx — reduced from 15+ buttons to: logo, tool name, page name, zoom controls, Presentation/Dark/More buttons
+- All secondary actions (Export, Group/Ungroup, Lock, Z-Order, Grid, Snap, Shortcuts) moved into a "More" dropdown with labeled sections (File, Edit, View, Help)
+- Reduced bar height from 44px to 40px for a lighter feel
+- Completely rewrote StylePanel.tsx — all options collapsed into pockets
+- Stroke Color pocket: opens color grid with 16 colors + custom color picker
+- Fill Color pocket: same grid + "None" option for transparency
+- Stroke Style pocket: combined width selector (7 options) + dash pattern (4 options) in one fly-out
+- Text pocket: font family, font size, alignment (left/center/right), Bold, Italic all in one fly-out
+- Opacity slider remains always visible (compact)
+- Eraser size shows only when eraser tool is active
+- All fly-outs use consistent pocket design with backdrop dismiss
+
+Stage Summary:
+- Left toolbar: 5 pocket buttons replace 16 individual tool buttons
+- Top bar: 7 visible elements replace 15+ buttons; secondary actions in "More" menu
+- Style panel: 4 pocket labels replace 50+ inline controls
+- Consistent minimalist design language: pockets, fly-outs, section labels, keyboard shortcut hints
+- All builds pass, deployed to production

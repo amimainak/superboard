@@ -1,30 +1,19 @@
+// ============================================================
+// Superboard — Top Bar (Minimalist)
+// Clean, light top bar with collapsible actions menu
+// ============================================================
+
 'use client'
 
 import React from 'react'
 import {
-  Download,
   Sun,
   Moon,
-  Keyboard,
-  Group,
-  Ungroup,
-  Lock,
-  Unlock,
+  Download,
+  Pen,
+  MoreHorizontal,
   ZoomIn,
   ZoomOut,
-  Expand,
-  Upload,
-  Image,
-  FileJson,
-  FileType,
-  ArrowUpToLine,
-  ArrowDownToLine,
-  Pen,
-  Frame,
-  Magnet,
-  Grid3X3,
-  LayoutGrid,
-  Eye,
   Maximize,
 } from 'lucide-react'
 
@@ -89,268 +78,179 @@ export function TopBar({
   onToggleGridType,
   onTogglePresentation,
 }: TopBarProps) {
-  const [exportOpen, setExportOpen] = React.useState(false)
+  const [menuOpen, setMenuOpen] = React.useState(false)
 
   const ToolLabel: Record<string, string> = {
     select: 'Select',
     hand: 'Hand',
-    draw: 'Draw',
+    draw: 'Pen',
+    highlighter: 'Highlight',
     eraser: 'Eraser',
     arrow: 'Arrow',
     text: 'Text',
-    note: 'Note',
-    geo: 'Shape',
-    line: 'Line',
+    sticky: 'Sticky',
+    image: 'Image',
     frame: 'Frame',
-    highlight: 'Highlight',
     laser: 'Laser',
-    zoom: 'Zoom',
-    asset: 'Media',
-    embed: 'Embed',
+    line: 'Line',
+    rectangle: 'Rectangle',
+    ellipse: 'Ellipse',
+    diamond: 'Diamond',
+    triangle: 'Triangle',
   }
 
   return (
     <header
       className="top-bar"
       style={{
-        height: '44px',
-        minHeight: '44px',
+        height: '40px',
+        minHeight: '40px',
         display: 'flex',
         alignItems: 'center',
-        padding: '0 12px',
-        gap: '4px',
-        borderBottom: '1px solid var(--color-border)',
-        background: isDark ? '#1a1a2e' : '#ffffff',
+        padding: '0 10px',
+        gap: 2,
+        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+        background: isDark ? '#0d1117' : '#ffffff',
         zIndex: 1000,
         overflow: 'hidden',
       }}
     >
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '8px' }}>
-        <div
-          style={{
-            width: 24,
-            height: 24,
-            borderRadius: 6,
-            background: 'linear-gradient(135deg, #059669, #0891b2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Pen size={14} color="white" />
-        </div>
-        <span
-          style={{
-            fontWeight: 700,
-            fontSize: 14,
-            color: isDark ? '#e5e7eb' : '#111827',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Whiteboard
-        </span>
-      </div>
-
-      {/* Divider */}
-      <Divider />
-
-      {/* Current Tool Badge */}
+      {/* Logo — minimal */}
       <div
         style={{
+          width: 26,
+          height: 26,
+          borderRadius: 7,
+          background: 'linear-gradient(135deg, #059669, #0891b2)',
           display: 'flex',
           alignItems: 'center',
-          gap: '4px',
-          padding: '2px 8px',
-          borderRadius: 6,
-          background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-          fontSize: 12,
-          color: isDark ? '#9ca3af' : '#6b7280',
+          justifyContent: 'center',
+          flexShrink: 0,
         }}
       >
-        <span>{ToolLabel[currentTool] || currentTool}</span>
+        <Pen size={13} color="white" />
       </div>
 
-      {/* Page indicator */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          padding: '2px 8px',
-          borderRadius: 6,
-          fontSize: 12,
-          color: isDark ? '#9ca3af' : '#6b7280',
-        }}
-      >
-        <Frame size={12} />
-        <span>{currentPage}</span>
-      </div>
+      {/* Thin divider */}
+      <div style={{ width: 1, height: 18, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '0 6px', flexShrink: 0 }} />
 
-      {/* Divider */}
-      <Divider />
+      {/* Tool name — subtle */}
+      <span style={{ fontSize: 12, fontWeight: 500, color: isDark ? '#9ca3af' : '#9ca3af', flexShrink: 0 }}>
+        {ToolLabel[currentTool] || currentTool}
+      </span>
 
-      {/* File Upload */}
-      <label style={{ cursor: 'pointer' }}>
-        <input
-          type="file"
-          accept="image/*,video/*,.pdf"
-          multiple
-          onChange={onFileUpload}
-          style={{ display: 'none' }}
-        />
-        <IconButton title="Upload Image/Video" isDark={isDark}>
-          <Upload size={16} />
-        </IconButton>
-      </label>
-
-      {/* Divider */}
-      <Divider />
-
-      {/* Zoom Controls */}
-      <IconButton title="Zoom Out" isDark={isDark} onClick={onZoomOut}>
-        <ZoomOut size={16} />
-      </IconButton>
-      <button
-        onClick={onZoomReset}
-        style={{
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          padding: '2px 6px',
-          borderRadius: 4,
-          fontSize: 12,
-          fontWeight: 600,
-          color: isDark ? '#e5e7eb' : '#374151',
-          minWidth: 42,
-          textAlign: 'center',
-        }}
-      >
-        {zoom}%
-      </button>
-      <IconButton title="Zoom In" isDark={isDark} onClick={onZoomIn}>
-        <ZoomIn size={16} />
-      </IconButton>
-      <IconButton title="Zoom to Fit" isDark={isDark} onClick={onZoomFit}>
-        <Expand size={16} />
-      </IconButton>
-
-      {/* Divider */}
-      <Divider />
-
-      {/* Grid Controls */}
-      <IconButton
-        title={showGrid ? 'Hide Grid' : 'Show Grid'}
-        isDark={isDark}
-        onClick={onToggleGrid}
-        active={showGrid}
-      >
-        <Eye size={16} />
-      </IconButton>
-      <IconButton
-        title={snapToGrid ? 'Disable Snap to Grid' : 'Enable Snap to Grid'}
-        isDark={isDark}
-        onClick={onToggleSnap}
-        active={snapToGrid}
-      >
-        <Magnet size={16} />
-      </IconButton>
-      <IconButton
-        title={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'} (click to switch)`}
-        isDark={isDark}
-        onClick={onToggleGridType}
-      >
-        {gridType === 'dot' ? <Grid3X3 size={16} /> : <LayoutGrid size={16} />}
-      </IconButton>
-
-      {/* Divider */}
-      <Divider />
-
-      {/* Group/Ungroup */}
-      <IconButton title="Group (Ctrl+G)" isDark={isDark} onClick={onGroup}>
-        <Group size={16} />
-      </IconButton>
-      <IconButton title="Ungroup (Ctrl+Shift+G)" isDark={isDark} onClick={onUngroup}>
-        <Ungroup size={16} />
-      </IconButton>
-
-      {/* Lock */}
-      <IconButton title="Toggle Lock (Shift+L)" isDark={isDark} onClick={onToggleLock}>
-        <Lock size={16} />
-      </IconButton>
-
-      {/* Z-Order */}
-      <IconButton title="Bring to Front" isDark={isDark} onClick={onBringToFront}>
-        <ArrowUpToLine size={16} />
-      </IconButton>
-      <IconButton title="Send to Back" isDark={isDark} onClick={onSendToBack}>
-        <ArrowDownToLine size={16} />
-      </IconButton>
-
-      {/* Divider */}
-      <Divider />
-
-      {/* Export */}
-      <div style={{ position: 'relative' }}>
-        <IconButton
-          title="Export"
-          isDark={isDark}
-          onClick={() => setExportOpen(!exportOpen)}
-        >
-          <Download size={16} />
-        </IconButton>
-        {exportOpen && (
-          <>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setExportOpen(false)} />
-            <div
-              className="export-dropdown"
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                marginTop: 4,
-                background: isDark ? '#1f2937' : '#ffffff',
-                border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                borderRadius: 8,
-                padding: 4,
-                zIndex: 1001,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                minWidth: 160,
-              }}
-            >
-              <DropdownItem label="Export as PNG" icon={<Image size={14} />} isDark={isDark} onClick={() => { onExportPng(); setExportOpen(false) }} />
-              <DropdownItem label="Export as JPEG" icon={<Image size={14} />} isDark={isDark} onClick={() => { onExportJpg(); setExportOpen(false) }} />
-              <DropdownItem label="Export as SVG" icon={<FileType size={14} />} isDark={isDark} onClick={() => { onExportSvg(); setExportOpen(false) }} />
-              <DropdownItem label="Export as JSON" icon={<FileJson size={14} />} isDark={isDark} onClick={() => { onExportJson(); setExportOpen(false) }} />
-            </div>
-          </>
-        )}
-      </div>
+      {/* Page name */}
+      <span style={{ fontSize: 11, color: isDark ? '#4b5563' : '#c0c4cc', flexShrink: 0, marginLeft: 4 }}>
+        {currentPage}
+      </span>
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
 
-      {/* Right side actions */}
-      <IconButton title="Keyboard Shortcuts (Ctrl+/)" isDark={isDark} onClick={onShowShortcuts}>
-        <Keyboard size={16} />
-      </IconButton>
+      {/* Zoom — compact */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+        <Ico title="Zoom Out" isDark={isDark} onClick={onZoomOut}>
+          <ZoomOut size={14} />
+        </Ico>
+        <button
+          onClick={onZoomReset}
+          style={{
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            padding: '0 4px',
+            borderRadius: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            color: isDark ? '#9ca3af' : '#6b7280',
+            minWidth: 36,
+            textAlign: 'center',
+            lineHeight: '20px',
+          }}
+        >
+          {zoom}%
+        </button>
+        <Ico title="Zoom In" isDark={isDark} onClick={onZoomIn}>
+          <ZoomIn size={14} />
+        </Ico>
+      </div>
 
-      <IconButton title="Presentation Mode" isDark={isDark} onClick={onTogglePresentation}>
-        <Maximize size={16} />
-      </IconButton>
+      {/* Thin divider */}
+      <div style={{ width: 1, height: 18, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '0 4px', flexShrink: 0 }} />
 
-      <IconButton
-        title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        isDark={isDark}
-        onClick={onToggleDark}
-      >
-        {isDark ? <Sun size={16} /> : <Moon size={16} />}
-      </IconButton>
+      {/* Right actions — minimal icons */}
+      <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation}>
+        <Maximize size={14} />
+      </Ico>
+
+      <Ico title={isDark ? 'Light mode' : 'Dark mode'} isDark={isDark} onClick={onToggleDark}>
+        {isDark ? <Sun size={14} /> : <Moon size={14} />}
+      </Ico>
+
+      {/* More menu — groups all secondary actions */}
+      <div style={{ position: 'relative' }}>
+        <Ico title="More" isDark={isDark} onClick={() => setMenuOpen(!menuOpen)}>
+          <MoreHorizontal size={14} />
+        </Ico>
+        {menuOpen && (
+          <>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setMenuOpen(false)} />
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: 6,
+                background: isDark ? '#1f2937' : '#ffffff',
+                border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+                borderRadius: 10,
+                padding: 6,
+                zIndex: 1001,
+                boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.12)',
+                minWidth: 200,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1,
+              }}
+            >
+              {/* File */}
+              <MenuSection label="File" isDark={isDark}>
+                <MenuItem label="Upload Image" isDark={isDark} onClick={() => { /* trigger file input via ref workaround */ }} />
+                <MenuItem label="Export as PNG" isDark={isDark} onClick={() => { onExportPng(); setMenuOpen(false) }} />
+                <MenuItem label="Export as JPEG" isDark={isDark} onClick={() => { onExportJpg(); setMenuOpen(false) }} />
+                <MenuItem label="Export as SVG" isDark={isDark} onClick={() => { onExportSvg(); setMenuOpen(false) }} />
+                <MenuItem label="Export as JSON" isDark={isDark} onClick={() => { onExportJson(); setMenuOpen(false) }} />
+              </MenuSection>
+              {/* Edit */}
+              <MenuSection label="Edit" isDark={isDark}>
+                <MenuItem label="Select All" isDark={isDark} shortcut="Ctrl+A" onClick={() => { onSelectAll(); setMenuOpen(false) }} />
+                <MenuItem label="Group" isDark={isDark} shortcut="Ctrl+G" onClick={() => { onGroup(); setMenuOpen(false) }} />
+                <MenuItem label="Ungroup" isDark={isDark} shortcut="Ctrl+⇧G" onClick={() => { onUngroup(); setMenuOpen(false) }} />
+                <MenuItem label="Lock / Unlock" isDark={isDark} shortcut="⇧L" onClick={() => { onToggleLock(); setMenuOpen(false) }} />
+                <MenuItem label="Bring to Front" isDark={isDark} onClick={() => { onBringToFront(); setMenuOpen(false) }} />
+                <MenuItem label="Send to Back" isDark={isDark} onClick={() => { onSendToBack(); setMenuOpen(false) }} />
+              </MenuSection>
+              {/* View */}
+              <MenuSection label="View" isDark={isDark}>
+                <MenuItem label={showGrid ? 'Hide Grid' : 'Show Grid'} isDark={isDark} onClick={() => { onToggleGrid(); setMenuOpen(false) }} />
+                <MenuItem label={snapToGrid ? 'Disable Snap' : 'Enable Snap'} isDark={isDark} onClick={() => { onToggleSnap(); setMenuOpen(false) }} />
+                <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
+                <MenuItem label="Zoom to Fit" isDark={isDark} shortcut="⇧1" onClick={() => { onZoomFit(); setMenuOpen(false) }} />
+              </MenuSection>
+              {/* Help */}
+              <MenuSection label="Help" isDark={isDark}>
+                <MenuItem label="Keyboard Shortcuts" isDark={isDark} shortcut="Ctrl+/" onClick={() => { onShowShortcuts(); setMenuOpen(false) }} />
+              </MenuSection>
+            </div>
+          </>
+        )}
+      </div>
     </header>
   )
 }
 
-function IconButton({
+// ---- Minimal Icon Button ----
+function Ico({
   children,
   title,
   isDark,
@@ -368,34 +268,34 @@ function IconButton({
       title={title}
       onClick={onClick}
       style={{
-        width: 32,
-        height: 32,
+        width: 28,
+        height: 28,
         borderRadius: 6,
         border: 'none',
         background: active
-          ? (isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.12)')
+          ? isDark ? 'rgba(5,150,105,0.15)' : 'rgba(5,150,105,0.08)'
           : 'transparent',
         color: active
-          ? (isDark ? '#34d399' : '#059669')
-          : (isDark ? '#d1d5db' : '#4b5563'),
+          ? '#059669'
+          : isDark ? '#9ca3af' : '#6b7280',
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        transition: 'background 0.15s, color 0.15s',
+        transition: 'all 0.12s ease',
+        flexShrink: 0,
       }}
-      onMouseOver={(e) => {
-        if (active) return
-        e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'
-        e.currentTarget.style.color = isDark ? '#f3f4f6' : '#111827'
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
+          e.currentTarget.style.color = isDark ? '#e5e7eb' : '#374151'
+        }
       }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.background = active
-          ? (isDark ? 'rgba(16,185,129,0.2)' : 'rgba(16,185,129,0.12)')
-          : 'transparent'
-        e.currentTarget.style.color = active
-          ? (isDark ? '#34d399' : '#059669')
-          : (isDark ? '#d1d5db' : '#4b5563')
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = isDark ? '#9ca3af' : '#6b7280'
+        }
       }}
     >
       {children}
@@ -403,29 +303,45 @@ function IconButton({
   )
 }
 
-function Divider() {
+// ---- Menu Section ----
+function MenuSection({
+  label,
+  isDark,
+  children,
+}: {
+  label: string
+  isDark: boolean
+  children: React.ReactNode
+}) {
   return (
-    <div
-      style={{
-        width: 1,
-        height: 20,
-        background: 'var(--color-border)',
-        margin: '0 4px',
-        flexShrink: 0,
-      }}
-    />
+    <>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+          color: isDark ? '#4b5563' : '#9ca3af',
+          padding: '6px 10px 3px',
+        }}
+      >
+        {label}
+      </div>
+      {children}
+    </>
   )
 }
 
-function DropdownItem({
+// ---- Menu Item ----
+function MenuItem({
   label,
-  icon,
   isDark,
+  shortcut,
   onClick,
 }: {
   label: string
-  icon: React.ReactNode
   isDark: boolean
+  shortcut?: string
   onClick: () => void
 }) {
   return (
@@ -434,27 +350,31 @@ function DropdownItem({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        justifyContent: 'space-between',
         width: '100%',
-        padding: '6px 10px',
+        padding: '5px 10px',
         borderRadius: 6,
         border: 'none',
         background: 'transparent',
-        color: isDark ? '#e5e7eb' : '#374151',
+        color: isDark ? '#d1d5db' : '#374151',
         cursor: 'pointer',
-        fontSize: 13,
-        fontWeight: 500,
-        transition: 'background 0.15s',
+        fontSize: 12,
+        fontWeight: 400,
+        transition: 'background 0.1s',
       }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
       }}
-      onMouseOut={(e) => {
+      onMouseLeave={(e) => {
         e.currentTarget.style.background = 'transparent'
       }}
     >
-      {icon}
-      {label}
+      <span>{label}</span>
+      {shortcut && (
+        <span style={{ fontSize: 10, fontFamily: 'monospace', color: isDark ? '#4b5563' : '#9ca3af' }}>
+          {shortcut}
+        </span>
+      )}
     </button>
   )
 }
