@@ -81,27 +81,28 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-    overflow: hidden;
-  }
-  html, body, #root {
-    height: 100%;
-    width: 100%;
+  html, body {
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
   }
   html {
     scroll-behavior: smooth;
   }
 }
 
-/* tldraw overrides — ensure the editor fills the viewport */
-.tl-container {
-  position: fixed;
-  inset: 0;
-  width: 100vw !important;
-  height: 100vh !important;
+/* Ensure tldraw fills remaining space below the top bar */
+.whiteboard-root > div:last-of-type {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.whiteboard-root .tl-container {
+  position: absolute !important;
+  inset: 0 !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
