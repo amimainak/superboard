@@ -257,7 +257,7 @@ function FreehandSvg({ element, commonProps }: { element: FreehandElement; commo
     <path
       {...commonProps}
       d={pathD}
-      fill={element.fillColor === 'transparent' ? 'none' : element.fillColor}
+      fill={element.strokeColor}
       stroke="none"
       strokeLinecap="round"
       strokeLinejoin="round"
