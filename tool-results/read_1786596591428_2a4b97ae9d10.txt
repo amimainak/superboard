@@ -1,0 +1,1068 @@
+     1→import { registerTldrawLibraryVersion } from "@tldraw/editor";
+     2→import { getPointsFromDrawSegment, getPointsFromDrawSegments } from "./lib/shapes/draw/getPath.mjs";
+     3→import {
+     4→  PathBuilder,
+     5→  PathBuilderGeometry2d
+     6→} from "./lib/shapes/shared/PathBuilder.mjs";
+     7→import { usePrefersReducedMotion } from "./lib/shapes/shared/usePrefersReducedMotion.mjs";
+     8→import { startEditingShapeWithRichText } from "./lib/tools/SelectTool/selectHelpers.mjs";
+     9→import { DefaultA11yAnnouncer, useSelectedShapesAnnouncer } from "./lib/ui/components/A11y.mjs";
+    10→import { AccessibilityMenu } from "./lib/ui/components/AccessibilityMenu.mjs";
+    11→import { ColorSchemeMenu } from "./lib/ui/components/ColorSchemeMenu.mjs";
+    12→import { DefaultFollowingIndicator } from "./lib/ui/components/DefaultFollowingIndicator.mjs";
+    13→import { DefaultDialogs } from "./lib/ui/components/Dialogs.mjs";
+    14→import {
+    15→  TldrawUiColumn,
+    16→  TldrawUiGrid,
+    17→  TldrawUiOrientationProvider,
+    18→  TldrawUiRow,
+    19→  useTldrawUiOrientation
+    20→} from "./lib/ui/components/primitives/layout.mjs";
+    21→import {
+    22→  TldrawUiMenuActionCheckboxItem
+    23→} from "./lib/ui/components/primitives/menus/TldrawUiMenuActionCheckboxItem.mjs";
+    24→import {
+    25→  TldrawUiMenuActionItem
+    26→} from "./lib/ui/components/primitives/menus/TldrawUiMenuActionItem.mjs";
+    27→import {
+    28→  TldrawUiMenuToolItem
+    29→} from "./lib/ui/components/primitives/menus/TldrawUiMenuToolItem.mjs";
+    30→import { DefaultToasts } from "./lib/ui/components/Toasts.mjs";
+    31→import { TldrawUiTranslationProvider } from "./lib/ui/hooks/useTranslation/useTranslation.mjs";
+    32→export * from "@tldraw/editor";
+    33→import { BookmarkAssetUtil } from "./lib/assets/BookmarkAssetUtil.mjs";
+    34→import { ImageAssetUtil } from "./lib/assets/ImageAssetUtil.mjs";
+    35→import { VideoAssetUtil } from "./lib/assets/VideoAssetUtil.mjs";
+    36→import {
+    37→  ArrowBindingHintOverlayUtil
+    38→} from "./lib/overlays/ArrowBindingHintOverlayUtil.mjs";
+    39→import { ArrowBindingUtil } from "./lib/bindings/arrow/ArrowBindingUtil.mjs";
+    40→import { ArrowHintOverlayUtil } from "./lib/overlays/ArrowHintOverlayUtil.mjs";
+    41→import {
+    42→  BrushOverlayUtil
+    43→} from "./lib/overlays/BrushOverlayUtil.mjs";
+    44→import { ZoomBrushOverlayUtil } from "./lib/overlays/ZoomBrushOverlayUtil.mjs";
+    45→import { ScribbleOverlayUtil } from "./lib/overlays/ScribbleOverlayUtil.mjs";
+    46→import {
+    47→  CollaboratorHintOverlayUtil
+    48→} from "./lib/overlays/CollaboratorHintOverlayUtil.mjs";
+    49→import { CollaboratorCursorOverlayUtil } from "./lib/overlays/CollaboratorCursorOverlayUtil.mjs";
+    50→import {
+    51→  CollaboratorBrushOverlayUtil
+    52→} from "./lib/overlays/CollaboratorBrushOverlayUtil.mjs";
+    53→import {
+    54→  CollaboratorScribbleOverlayUtil
+    55→} from "./lib/overlays/CollaboratorScribbleOverlayUtil.mjs";
+    56→import {
+    57→  CollaboratorShapeIndicatorOverlayUtil
+    58→} from "./lib/overlays/CollaboratorShapeIndicatorOverlayUtil.mjs";
+    59→import {
+    60→  ShapeHandleOverlayUtil
+    61→} from "./lib/overlays/ShapeHandleOverlayUtil.mjs";
+    62→import {
+    63→  ShapeIndicatorOverlayUtil
+    64→} from "./lib/overlays/ShapeIndicatorOverlayUtil.mjs";
+    65→import {
+    66→  SelectionForegroundOverlayUtil
+    67→} from "./lib/overlays/SelectionForegroundOverlayUtil.mjs";
+    68→import {
+    69→  SnapIndicatorOverlayUtil
+    70→} from "./lib/overlays/SnapIndicatorOverlayUtil.mjs";
+    71→import { defaultAssetUtils } from "./lib/defaultAssetUtils.mjs";
+    72→import { defaultBindingUtils } from "./lib/defaultBindingUtils.mjs";
+    73→import { defaultOverlayUtils } from "./lib/defaultOverlayUtils.mjs";
+    74→import {
+    75→  DEFAULT_EMBED_DEFINITIONS,
+    76→  embedShapePermissionDefaults,
+    77→  unknownEmbedShapePermissionOverrides
+    78→} from "./lib/defaultEmbedDefinitions.mjs";
+    79→import {
+    80→  centerSelectionAroundPoint,
+    81→  createEmptyBookmarkShape,
+    82→  createShapesForAssets,
+    83→  DEFAULT_MAX_ASSET_SIZE,
+    84→  DEFAULT_MAX_IMAGE_DIMENSION,
+    85→  defaultHandleExternalEmbedContent,
+    86→  defaultHandleExternalExcalidrawContent,
+    87→  defaultHandleExternalFileAsset,
+    88→  defaultHandleExternalFileContent,
+    89→  defaultHandleExternalFileReplaceContent,
+    90→  defaultHandleExternalSvgTextContent,
+    91→  defaultHandleExternalTextContent,
+    92→  defaultHandleExternalTldrawContent,
+    93→  defaultHandleExternalUrlAsset,
+    94→  defaultHandleExternalUrlContent,
+    95→  getAssetInfo,
+    96→  notifyIfFileNotAllowed,
+    97→  registerDefaultExternalContentHandlers
+    98→} from "./lib/defaultExternalContentHandlers.mjs";
+    99→import { defaultShapeTools } from "./lib/defaultShapeTools.mjs";
+   100→import { defaultShapeUtils } from "./lib/defaultShapeUtils.mjs";
+   101→import { registerDefaultSideEffects } from "./lib/defaultSideEffects.mjs";
+   102→import { defaultTools } from "./lib/defaultTools.mjs";
+   103→import { ArrowShapeTool } from "./lib/shapes/arrow/ArrowShapeTool.mjs";
+   104→import { ArrowShapeUtil } from "./lib/shapes/arrow/ArrowShapeUtil.mjs";
+   105→import {
+   106→  clearArrowTargetState,
+   107→  getArrowTargetState,
+   108→  updateArrowTargetState
+   109→} from "./lib/shapes/arrow/arrowTargetState.mjs";
+   110→import { getArrowInfo } from "./lib/shapes/arrow/getArrowInfo.mjs";
+   111→import {
+   112→  getArrowBindings,
+   113→  getArrowTerminalsInArrowSpace
+   114→} from "./lib/shapes/arrow/shared.mjs";
+   115→import { createBookmarkFromUrl } from "./lib/shapes/bookmark/bookmarks.mjs";
+   116→import {
+   117→  BookmarkShapeUtil
+   118→} from "./lib/shapes/bookmark/BookmarkShapeUtil.mjs";
+   119→import { DrawShapeTool } from "./lib/shapes/draw/DrawShapeTool.mjs";
+   120→import {
+   121→  DrawShapeUtil
+   122→} from "./lib/shapes/draw/DrawShapeUtil.mjs";
+   123→import {
+   124→  EmbedShapeUtil
+   125→} from "./lib/shapes/embed/EmbedShapeUtil.mjs";
+   126→import { FrameShapeTool } from "./lib/shapes/frame/FrameShapeTool.mjs";
+   127→import {
+   128→  FrameShapeUtil
+   129→} from "./lib/shapes/frame/FrameShapeUtil.mjs";
+   130→import { GeoShapeTool } from "./lib/shapes/geo/GeoShapeTool.mjs";
+   131→import {
+   132→  GeoShapeUtil
+   133→} from "./lib/shapes/geo/GeoShapeUtil.mjs";
+   134→import {
+   135→  defaultGeoTypeDefinitions,
+   136→  getGeoTypeDefinition
+   137→} from "./lib/shapes/geo/getGeoShapePath.mjs";
+   138→import { HighlightShapeTool } from "./lib/shapes/highlight/HighlightShapeTool.mjs";
+   139→import {
+   140→  HighlightShapeUtil
+   141→} from "./lib/shapes/highlight/HighlightShapeUtil.mjs";
+   142→import {
+   143→  ImageShapeUtil
+   144→} from "./lib/shapes/image/ImageShapeUtil.mjs";
+   145→import { LineShapeTool } from "./lib/shapes/line/LineShapeTool.mjs";
+   146→import {
+   147→  LineShapeUtil
+   148→} from "./lib/shapes/line/LineShapeUtil.mjs";
+   149→import { NoteShapeTool } from "./lib/shapes/note/NoteShapeTool.mjs";
+   150→import {
+   151→  NoteShapeUtil
+   152→} from "./lib/shapes/note/NoteShapeUtil.mjs";
+   153→import {
+   154→  ASPECT_RATIO_OPTIONS,
+   155→  ASPECT_RATIO_TO_VALUE,
+   156→  getCropBox,
+   157→  getDefaultCrop,
+   158→  getUncroppedSize
+   159→} from "./lib/shapes/shared/crop.mjs";
+   160→import { getFontFamily } from "./lib/shapes/shared/default-shape-constants.mjs";
+   161→import {
+   162→  allDefaultFontFaces,
+   163→  DefaultFontFaces
+   164→} from "./lib/shapes/shared/defaultFonts.mjs";
+   165→import { getStroke } from "./lib/shapes/shared/freehand/getStroke.mjs";
+   166→import { getStrokeOutlinePoints } from "./lib/shapes/shared/freehand/getStrokeOutlinePoints.mjs";
+   167→import { getStrokePoints } from "./lib/shapes/shared/freehand/getStrokePoints.mjs";
+   168→import { getSvgPathFromStrokePoints } from "./lib/shapes/shared/freehand/svg.mjs";
+   169→import {
+   170→  getDisplayValues
+   171→} from "./lib/shapes/shared/getDisplayValues.mjs";
+   172→import { PlainTextLabel } from "./lib/shapes/shared/PlainTextLabel.mjs";
+   173→import {
+   174→  RichTextLabel,
+   175→  RichTextSVG
+   176→} from "./lib/shapes/shared/RichTextLabel.mjs";
+   177→import { useEditablePlainText } from "./lib/shapes/shared/useEditablePlainText.mjs";
+   178→import { useEditableRichText } from "./lib/shapes/shared/useEditableRichText.mjs";
+   179→import {
+   180→  useImageOrVideoAsset
+   181→} from "./lib/shapes/shared/useImageOrVideoAsset.mjs";
+   182→import { PlainTextArea } from "./lib/shapes/text/PlainTextArea.mjs";
+   183→import { RichTextArea } from "./lib/shapes/text/RichTextArea.mjs";
+   184→import { TextShapeTool } from "./lib/shapes/text/TextShapeTool.mjs";
+   185→import {
+   186→  TextShapeUtil
+   187→} from "./lib/shapes/text/TextShapeUtil.mjs";
+   188→import {
+   189→  VideoShapeUtil
+   190→} from "./lib/shapes/video/VideoShapeUtil.mjs";
+   191→import { getColorStyleItems, getFontStyleItems } from "./lib/styles.mjs";
+   192→import { Tldraw } from "./lib/Tldraw.mjs";
+   193→import { TldrawImage } from "./lib/TldrawImage.mjs";
+   194→import { EraserTool } from "./lib/tools/EraserTool/EraserTool.mjs";
+   195→import { HandTool } from "./lib/tools/HandTool/HandTool.mjs";
+   196→import { LaserTool } from "./lib/tools/LaserTool/LaserTool.mjs";
+   197→import { getHitShapeOnCanvasPointerDown } from "./lib/tools/selection-logic/getHitShapeOnCanvasPointerDown.mjs";
+   198→import { SelectTool } from "./lib/tools/SelectTool/SelectTool.mjs";
+   199→import { ZoomTool } from "./lib/tools/ZoomTool/ZoomTool.mjs";
+   200→import {
+   201→  setDefaultUiAssetUrls
+   202→} from "./lib/ui/assetUrls.mjs";
+   203→import {
+   204→  DefaultActionsMenu
+   205→} from "./lib/ui/components/ActionsMenu/DefaultActionsMenu.mjs";
+   206→import {
+   207→  AlignMenuItems,
+   208→  DefaultActionsMenuContent,
+   209→  DistributeMenuItems,
+   210→  GroupOrUngroupMenuItem,
+   211→  ReorderMenuItems,
+   212→  RotateCWMenuItem,
+   213→  StackMenuItems,
+   214→  ZoomOrRotateMenuItem
+   215→} from "./lib/ui/components/ActionsMenu/DefaultActionsMenuContent.mjs";
+   216→import {
+   217→  DefaultContextMenu,
+   218→  DefaultContextMenu as DefaultContextMenu2
+   219→} from "./lib/ui/components/ContextMenu/DefaultContextMenu.mjs";
+   220→import { DefaultContextMenuContent } from "./lib/ui/components/ContextMenu/DefaultContextMenuContent.mjs";
+   221→import {
+   222→  DefaultDebugMenu
+   223→} from "./lib/ui/components/DebugMenu/DefaultDebugMenu.mjs";
+   224→import {
+   225→  DebugFlags,
+   226→  DefaultDebugMenuContent,
+   227→  ExampleDialog,
+   228→  FeatureFlags
+   229→} from "./lib/ui/components/DebugMenu/DefaultDebugMenuContent.mjs";
+   230→import { DefaultMenuPanel } from "./lib/ui/components/DefaultMenuPanel.mjs";
+   231→import {
+   232→  DefaultHelperButtons
+   233→} from "./lib/ui/components/HelperButtons/DefaultHelperButtons.mjs";
+   234→import { DefaultHelperButtonsContent } from "./lib/ui/components/HelperButtons/DefaultHelperButtonsContent.mjs";
+   235→import {
+   236→  DefaultHelpMenu
+   237→} from "./lib/ui/components/HelpMenu/DefaultHelpMenu.mjs";
+   238→import {
+   239→  DefaultHelpMenuContent,
+   240→  KeyboardShortcutsMenuItem
+   241→} from "./lib/ui/components/HelpMenu/DefaultHelpMenuContent.mjs";
+   242→import {
+   243→  DefaultKeyboardShortcutsDialog
+   244→} from "./lib/ui/components/KeyboardShortcutsDialog/DefaultKeyboardShortcutsDialog.mjs";
+   245→import { DefaultKeyboardShortcutsDialogContent } from "./lib/ui/components/KeyboardShortcutsDialog/DefaultKeyboardShortcutsDialogContent.mjs";
+   246→import { LanguageMenu } from "./lib/ui/components/LanguageMenu.mjs";
+   247→import { InputModeMenu } from "./lib/ui/components/InputModeMenu.mjs";
+   248→import {
+   249→  DefaultMainMenu
+   250→} from "./lib/ui/components/MainMenu/DefaultMainMenu.mjs";
+   251→import {
+   252→  DefaultMainMenuContent,
+   253→  EditSubmenu,
+   254→  ExportFileContentSubMenu,
+   255→  ExtrasGroup,
+   256→  LockGroup,
+   257→  MiscMenuGroup,
+   258→  PreferencesGroup,
+   259→  UndoRedoGroup,
+   260→  ViewSubmenu
+   261→} from "./lib/ui/components/MainMenu/DefaultMainMenuContent.mjs";
+   262→import {
+   263→  ArrangeMenuSubmenu,
+   264→  ClipboardMenuGroup,
+   265→  ConversionsMenuGroup,
+   266→  ConvertToBookmarkMenuItem,
+   267→  ConvertToEmbedMenuItem,
+   268→  CopyAsMenuGroup,
+   269→  CopyMenuItem,
+   270→  CursorChatItem,
+   271→  CutMenuItem,
+   272→  DeleteMenuItem,
+   273→  DuplicateMenuItem,
+   274→  EditLinkMenuItem,
+   275→  EditMenuSubmenu,
+   276→  ExportAsMenuGroup,
+   277→  FitFrameToContentMenuItem,
+   278→  GroupMenuItem,
+   279→  MoveToPageMenu,
+   280→  PasteMenuItem,
+   281→  PrintItem,
+   282→  RemoveFrameMenuItem,
+   283→  ReorderMenuSubmenu,
+   284→  SelectAllMenuItem,
+   285→  ToggleAutoSizeMenuItem,
+   286→  ToggleDebugModeItem,
+   287→  ToggleDynamicSizeModeItem,
+   288→  ToggleEdgeScrollingItem,
+   289→  ToggleEnhancedA11yModeItem,
+   290→  ToggleFocusModeItem,
+   291→  ToggleGridItem,
+   292→  ToggleInvertZoomItem,
+   293→  ToggleKeyboardShortcutsItem,
+   294→  ToggleLockMenuItem,
+   295→  TogglePasteAtCursorItem,
+   296→  ToggleReduceMotionItem,
+   297→  ToggleSnapModeItem,
+   298→  ToggleToolLockItem,
+   299→  ToggleTransparentBgMenuItem,
+   300→  ToggleWrapModeItem,
+   301→  UngroupMenuItem,
+   302→  UnlockAllMenuItem,
+   303→  ZoomTo100MenuItem,
+   304→  ZoomToFitMenuItem,
+   305→  ZoomToSelectionMenuItem
+   306→} from "./lib/ui/components/menu-items.mjs";
+   307→import { DefaultMinimap } from "./lib/ui/components/Minimap/DefaultMinimap.mjs";
+   308→import { MobileStylePanel } from "./lib/ui/components/MobileStylePanel.mjs";
+   309→import { DefaultNavigationPanel } from "./lib/ui/components/NavigationPanel/DefaultNavigationPanel.mjs";
+   310→import { OfflineIndicator } from "./lib/ui/components/OfflineIndicator/OfflineIndicator.mjs";
+   311→import { DefaultPageMenu } from "./lib/ui/components/PageMenu/DefaultPageMenu.mjs";
+   312→import { PageItemInput } from "./lib/ui/components/PageMenu/PageItemInput.mjs";
+   313→import {
+   314→  PageItemSubmenu
+   315→} from "./lib/ui/components/PageMenu/PageItemSubmenu.mjs";
+   316→import {
+   317→  TldrawUiButton
+   318→} from "./lib/ui/components/primitives/Button/TldrawUiButton.mjs";
+   319→import {
+   320→  TldrawUiButtonCheck
+   321→} from "./lib/ui/components/primitives/Button/TldrawUiButtonCheck.mjs";
+   322→import {
+   323→  TldrawUiButtonIcon
+   324→} from "./lib/ui/components/primitives/Button/TldrawUiButtonIcon.mjs";
+   325→import {
+   326→  TldrawUiButtonLabel
+   327→} from "./lib/ui/components/primitives/Button/TldrawUiButtonLabel.mjs";
+   328→import {
+   329→  TldrawUiMenuCheckboxItem
+   330→} from "./lib/ui/components/primitives/menus/TldrawUiMenuCheckboxItem.mjs";
+   331→import {
+   332→  TldrawUiMenuContextProvider
+   333→} from "./lib/ui/components/primitives/menus/TldrawUiMenuContext.mjs";
+   334→import {
+   335→  TldrawUiMenuGroup
+   336→} from "./lib/ui/components/primitives/menus/TldrawUiMenuGroup.mjs";
+   337→import {
+   338→  TldrawUiMenuItem
+   339→} from "./lib/ui/components/primitives/menus/TldrawUiMenuItem.mjs";
+   340→import {
+   341→  TldrawUiMenuSubmenu
+   342→} from "./lib/ui/components/primitives/menus/TldrawUiMenuSubmenu.mjs";
+   343→import {
+   344→  TldrawUiContextualToolbar
+   345→} from "./lib/ui/components/primitives/TldrawUiContextualToolbar.mjs";
+   346→import {
+   347→  TldrawUiDialogBody,
+   348→  TldrawUiDialogCloseButton,
+   349→  TldrawUiDialogFooter,
+   350→  TldrawUiDialogHeader,
+   351→  TldrawUiDialogTitle
+   352→} from "./lib/ui/components/primitives/TldrawUiDialog.mjs";
+   353→import {
+   354→  TldrawUiDropdownMenuCheckboxItem,
+   355→  TldrawUiDropdownMenuContent,
+   356→  TldrawUiDropdownMenuGroup,
+   357→  TldrawUiDropdownMenuIndicator,
+   358→  TldrawUiDropdownMenuItem,
+   359→  TldrawUiDropdownMenuRoot,
+   360→  TldrawUiDropdownMenuSub,
+   361→  TldrawUiDropdownMenuSubContent,
+   362→  TldrawUiDropdownMenuSubTrigger,
+   363→  TldrawUiDropdownMenuTrigger
+   364→} from "./lib/ui/components/primitives/TldrawUiDropdownMenu.mjs";
+   365→import {
+   366→  TldrawUiIcon
+   367→} from "./lib/ui/components/primitives/TldrawUiIcon.mjs";
+   368→import { TldrawUiInput } from "./lib/ui/components/primitives/TldrawUiInput.mjs";
+   369→import { TldrawUiKbd } from "./lib/ui/components/primitives/TldrawUiKbd.mjs";
+   370→import {
+   371→  TldrawUiPopover,
+   372→  TldrawUiPopoverContent,
+   373→  TldrawUiPopoverTrigger
+   374→} from "./lib/ui/components/primitives/TldrawUiPopover.mjs";
+   375→import {
+   376→  TldrawUiSelect,
+   377→  TldrawUiSelectContent,
+   378→  TldrawUiSelectItem,
+   379→  TldrawUiSelectTrigger,
+   380→  TldrawUiSelectValue
+   381→} from "./lib/ui/components/primitives/TldrawUiSelect.mjs";
+   382→import { TldrawUiSlider } from "./lib/ui/components/primitives/TldrawUiSlider.mjs";
+   383→import {
+   384→  TldrawUiToolbar,
+   385→  TldrawUiToolbarButton,
+   386→  TldrawUiToolbarToggleGroup,
+   387→  TldrawUiToolbarToggleItem
+   388→} from "./lib/ui/components/primitives/TldrawUiToolbar.mjs";
+   389→import {
+   390→  hideAllTooltips,
+   391→  TldrawUiTooltip,
+   392→  TldrawUiTooltipProvider
+   393→} from "./lib/ui/components/primitives/TldrawUiTooltip.mjs";
+   394→import {
+   395→  DefaultQuickActions
+   396→} from "./lib/ui/components/QuickActions/DefaultQuickActions.mjs";
+   397→import { DefaultQuickActionsContent } from "./lib/ui/components/QuickActions/DefaultQuickActionsContent.mjs";
+   398→import {
+   399→  DefaultPeopleMenu,
+   400→  DefaultPeopleMenu as DefaultPeopleMenu2
+   401→} from "./lib/ui/components/SharePanel/DefaultPeopleMenu.mjs";
+   402→import {
+   403→  DefaultPeopleMenuAvatar
+   404→} from "./lib/ui/components/SharePanel/DefaultPeopleMenuAvatar.mjs";
+   405→import {
+   406→  DefaultPeopleMenuContent
+   407→} from "./lib/ui/components/SharePanel/DefaultPeopleMenuContent.mjs";
+   408→import {
+   409→  DefaultPeopleMenuFacePile
+   410→} from "./lib/ui/components/SharePanel/DefaultPeopleMenuFacePile.mjs";
+   411→import {
+   412→  DefaultPeopleMenuItem
+   413→} from "./lib/ui/components/SharePanel/DefaultPeopleMenuItem.mjs";
+   414→import { DefaultSharePanel } from "./lib/ui/components/SharePanel/DefaultSharePanel.mjs";
+   415→import { DefaultUserPresenceEditor } from "./lib/ui/components/SharePanel/DefaultUserPresenceEditor.mjs";
+   416→import { Spinner } from "./lib/ui/components/Spinner.mjs";
+   417→import {
+   418→  DefaultStylePanel
+   419→} from "./lib/ui/components/StylePanel/DefaultStylePanel.mjs";
+   420→import {
+   421→  DefaultStylePanelContent,
+   422→  StylePanelArrowheadPicker,
+   423→  StylePanelArrowKindPicker,
+   424→  StylePanelColorPicker,
+   425→  StylePanelDashPicker,
+   426→  StylePanelFillPicker,
+   427→  StylePanelFontPicker,
+   428→  StylePanelGeoShapePicker,
+   429→  StylePanelLabelAlignPicker,
+   430→  StylePanelOpacityPicker,
+   431→  StylePanelSection,
+   432→  StylePanelSizePicker,
+   433→  StylePanelSplinePicker,
+   434→  StylePanelTextAlignPicker
+   435→} from "./lib/ui/components/StylePanel/DefaultStylePanelContent.mjs";
+   436→import {
+   437→  StylePanelButtonPicker,
+   438→  StylePanelButtonPickerInline
+   439→} from "./lib/ui/components/StylePanel/StylePanelButtonPicker.mjs";
+   440→import {
+   441→  StylePanelContextProvider,
+   442→  useStylePanelContext
+   443→} from "./lib/ui/components/StylePanel/StylePanelContext.mjs";
+   444→import {
+   445→  StylePanelDoubleDropdownPicker,
+   446→  StylePanelDoubleDropdownPickerInline
+   447→} from "./lib/ui/components/StylePanel/StylePanelDoubleDropdownPicker.mjs";
+   448→import {
+   449→  StylePanelDropdownPicker,
+   450→  StylePanelDropdownPickerInline
+   451→} from "./lib/ui/components/StylePanel/StylePanelDropdownPicker.mjs";
+   452→import {
+   453→  StylePanelSubheading
+   454→} from "./lib/ui/components/StylePanel/StylePanelSubheading.mjs";
+   455→import {
+   456→  DefaultImageToolbar
+   457→} from "./lib/ui/components/Toolbar/DefaultImageToolbar.mjs";
+   458→import {
+   459→  DefaultImageToolbarContent
+   460→} from "./lib/ui/components/Toolbar/DefaultImageToolbarContent.mjs";
+   461→import {
+   462→  DefaultRichTextToolbar
+   463→} from "./lib/ui/components/Toolbar/DefaultRichTextToolbar.mjs";
+   464→import {
+   465→  DefaultRichTextToolbarContent
+   466→} from "./lib/ui/components/Toolbar/DefaultRichTextToolbarContent.mjs";
+   467→import {
+   468→  DefaultToolbar
+   469→} from "./lib/ui/components/Toolbar/DefaultToolbar.mjs";
+   470→import {
+   471→  ArrowDownToolbarItem,
+   472→  ArrowLeftToolbarItem,
+   473→  ArrowRightToolbarItem,
+   474→  ArrowToolbarItem,
+   475→  ArrowUpToolbarItem,
+   476→  AssetToolbarItem,
+   477→  CheckBoxToolbarItem,
+   478→  CloudToolbarItem,
+   479→  CommentToolbarItem,
+   480→  DefaultToolbarContent,
+   481→  DiamondToolbarItem,
+   482→  DrawToolbarItem,
+   483→  EllipseToolbarItem,
+   484→  EraserToolbarItem,
+   485→  FrameToolbarItem,
+   486→  HandToolbarItem,
+   487→  HeartToolbarItem,
+   488→  HexagonToolbarItem,
+   489→  HighlightToolbarItem,
+   490→  LaserToolbarItem,
+   491→  LineToolbarItem,
+   492→  NoteToolbarItem,
+   493→  OvalToolbarItem,
+   494→  RectangleToolbarItem,
+   495→  RhombusToolbarItem,
+   496→  SelectToolbarItem,
+   497→  StarToolbarItem,
+   498→  TextToolbarItem,
+   499→  ToolbarItem,
+   500→  TrapezoidToolbarItem,
+   501→  TriangleToolbarItem,
+   502→  useIsToolSelected,
+   503→  XBoxToolbarItem
+   504→} from "./lib/ui/components/Toolbar/DefaultToolbarContent.mjs";
+   505→import {
+   506→  DefaultVideoToolbar
+   507→} from "./lib/ui/components/Toolbar/DefaultVideoToolbar.mjs";
+   508→import {
+   509→  DefaultVideoToolbarContent
+   510→} from "./lib/ui/components/Toolbar/DefaultVideoToolbarContent.mjs";
+   511→import {
+   512→  OverflowingToolbar
+   513→} from "./lib/ui/components/Toolbar/OverflowingToolbar.mjs";
+   514→import {
+   515→  ToggleToolLockedButton
+   516→} from "./lib/ui/components/Toolbar/ToggleToolLockedButton.mjs";
+   517→import {
+   518→  CenteredTopPanelContainer
+   519→} from "./lib/ui/components/TopPanel/CenteredTopPanelContainer.mjs";
+   520→import {
+   521→  DefaultZoomMenu
+   522→} from "./lib/ui/components/ZoomMenu/DefaultZoomMenu.mjs";
+   523→import { DefaultZoomMenuContent } from "./lib/ui/components/ZoomMenu/DefaultZoomMenuContent.mjs";
+   524→import { PORTRAIT_BREAKPOINT } from "./lib/ui/constants.mjs";
+   525→import {
+   526→  TldrawUiA11yProvider,
+   527→  useA11y
+   528→} from "./lib/ui/context/a11y.mjs";
+   529→import {
+   530→  unwrapLabel,
+   531→  useActions
+   532→} from "./lib/ui/context/actions.mjs";
+   533→import {
+   534→  AssetUrlsProvider,
+   535→  useAssetUrls
+   536→} from "./lib/ui/context/asset-urls.mjs";
+   537→import {
+   538→  BreakPointProvider,
+   539→  useBreakpoint
+   540→} from "./lib/ui/context/breakpoints.mjs";
+   541→import {
+   542→  TldrawUiComponentsProvider,
+   543→  useTldrawUiComponents
+   544→} from "./lib/ui/context/components.mjs";
+   545→import {
+   546→  TldrawUiDialogsProvider,
+   547→  useDialogs
+   548→} from "./lib/ui/context/dialogs.mjs";
+   549→import {
+   550→  TldrawUiEventsProvider,
+   551→  useUiEvents
+   552→} from "./lib/ui/context/events.mjs";
+   553→import {
+   554→  TldrawUiContextProvider
+   555→} from "./lib/ui/context/TldrawUiContextProvider.mjs";
+   556→import {
+   557→  TldrawUiToastsProvider,
+   558→  useToasts
+   559→} from "./lib/ui/context/toasts.mjs";
+   560→import {
+   561→  useCanApplySelectionAction,
+   562→  useCanRedo,
+   563→  useCanUndo,
+   564→  useUnlockedSelectedShapesCount
+   565→} from "./lib/ui/hooks/menu-hooks.mjs";
+   566→import {
+   567→  handleNativeOrMenuCopy,
+   568→  useMenuClipboardEvents,
+   569→  useNativeClipboardEvents
+   570→} from "./lib/ui/hooks/useClipboardEvents.mjs";
+   571→import {
+   572→  useCollaborationStatus,
+   573→  useShowCollaborationUi
+   574→} from "./lib/ui/hooks/useCollaborationStatus.mjs";
+   575→import { useCopyAs } from "./lib/ui/hooks/useCopyAs.mjs";
+   576→import { useExportAs } from "./lib/ui/hooks/useExportAs.mjs";
+   577→import { useKeyboardShortcuts } from "./lib/ui/hooks/useKeyboardShortcuts.mjs";
+   578→import { useLocalStorageState } from "./lib/ui/hooks/useLocalStorageState.mjs";
+   579→import { useMenuIsOpen } from "./lib/ui/hooks/useMenuIsOpen.mjs";
+   580→import { useReadonly } from "./lib/ui/hooks/useReadonly.mjs";
+   581→import { useRelevantStyles } from "./lib/ui/hooks/useRelevantStyles.mjs";
+   582→import {
+   583→  onDragFromToolbarToCreateShape,
+   584→  useTools
+   585→} from "./lib/ui/hooks/useTools.mjs";
+   586→import { RTL_LANGUAGES } from "./lib/ui/hooks/useTranslation/translations.mjs";
+   587→import {
+   588→  useCurrentTranslation,
+   589→  useDirection,
+   590→  useMaybeCurrentTranslation,
+   591→  useTranslation
+   592→} from "./lib/ui/hooks/useTranslation/useTranslation.mjs";
+   593→import { iconTypes } from "./lib/ui/icon-types.mjs";
+   594→import { useDefaultHelpers } from "./lib/ui/overrides.mjs";
+   595→import { TldrawUi, TldrawUiInFrontOfTheCanvas } from "./lib/ui/TldrawUi.mjs";
+   596→import { containBoxSize, downsizeImage } from "./lib/utils/assets/assets.mjs";
+   597→import { preloadFont } from "./lib/utils/assets/preload-font.mjs";
+   598→import { getEmbedInfo } from "./lib/utils/embeds/embeds.mjs";
+   599→import { putExcalidrawContent } from "./lib/utils/excalidraw/putExcalidrawContent.mjs";
+   600→import { copyAs } from "./lib/utils/export/copyAs.mjs";
+   601→import { downloadFile, exportAs } from "./lib/utils/export/exportAs.mjs";
+   602→import { fitFrameToContent, removeFrame } from "./lib/utils/frames/frames.mjs";
+   603→import {
+   604→  defaultEditorAssetUrls,
+   605→  setDefaultEditorAssetUrls
+   606→} from "./lib/utils/static-assets/assetUrls.mjs";
+   607→import { sanitizeSvg } from "./lib/utils/svg/sanitizeSvg.mjs";
+   608→import {
+   609→  defaultAddFontsFromNode,
+   610→  getTipTapDefaultExtensions,
+   611→  KeyboardShiftEnterTweakExtension,
+   612→  renderHtmlFromRichText,
+   613→  renderHtmlFromRichTextForMeasurement,
+   614→  renderHtmlFromRichTextWithExtensions,
+   615→  renderPlaintextFromRichText,
+   616→  renderRichTextFromHTML,
+   617→  tipTapDefaultExtensions
+   618→} from "./lib/utils/text/richText.mjs";
+   619→import { truncateStringWithEllipsis } from "./lib/utils/text/text.mjs";
+   620→import {
+   621→  buildFromV1Document,
+   622→  TLV1AlignStyle,
+   623→  TLV1AssetType,
+   624→  TLV1ColorStyle,
+   625→  TLV1DashStyle,
+   626→  TLV1Decoration,
+   627→  TLV1FontStyle,
+   628→  TLV1ShapeType,
+   629→  TLV1SizeStyle
+   630→} from "./lib/utils/tldr/buildFromV1Document.mjs";
+   631→import {
+   632→  parseAndLoadDocument,
+   633→  parseTldrawJsonFile,
+   634→  serializeTldrawJson,
+   635→  serializeTldrawJsonBlob,
+   636→  TLDRAW_FILE_EXTENSION
+   637→} from "./lib/utils/tldr/file.mjs";
+   638→registerTldrawLibraryVersion(
+   639→  "tldraw",
+   640→  "5.3.0",
+   641→  "esm"
+   642→);
+   643→export {
+   644→  ASPECT_RATIO_OPTIONS,
+   645→  ASPECT_RATIO_TO_VALUE,
+   646→  AccessibilityMenu,
+   647→  AlignMenuItems,
+   648→  ArrangeMenuSubmenu,
+   649→  ArrowBindingHintOverlayUtil,
+   650→  ArrowBindingUtil,
+   651→  ArrowDownToolbarItem,
+   652→  ArrowHintOverlayUtil,
+   653→  ArrowLeftToolbarItem,
+   654→  ArrowRightToolbarItem,
+   655→  ArrowShapeTool,
+   656→  ArrowShapeUtil,
+   657→  ArrowToolbarItem,
+   658→  ArrowUpToolbarItem,
+   659→  AssetToolbarItem,
+   660→  AssetUrlsProvider,
+   661→  BookmarkAssetUtil,
+   662→  BookmarkShapeUtil,
+   663→  BreakPointProvider,
+   664→  BrushOverlayUtil,
+   665→  CenteredTopPanelContainer,
+   666→  CheckBoxToolbarItem,
+   667→  ClipboardMenuGroup,
+   668→  CloudToolbarItem,
+   669→  CollaboratorBrushOverlayUtil,
+   670→  CollaboratorCursorOverlayUtil,
+   671→  CollaboratorHintOverlayUtil,
+   672→  CollaboratorScribbleOverlayUtil,
+   673→  CollaboratorShapeIndicatorOverlayUtil,
+   674→  ColorSchemeMenu,
+   675→  CommentToolbarItem,
+   676→  DefaultContextMenu as ContextMenu,
+   677→  ConversionsMenuGroup,
+   678→  ConvertToBookmarkMenuItem,
+   679→  ConvertToEmbedMenuItem,
+   680→  CopyAsMenuGroup,
+   681→  CopyMenuItem,
+   682→  CursorChatItem,
+   683→  CutMenuItem,
+   684→  DEFAULT_EMBED_DEFINITIONS,
+   685→  DEFAULT_MAX_ASSET_SIZE,
+   686→  DEFAULT_MAX_IMAGE_DIMENSION,
+   687→  DebugFlags,
+   688→  DefaultA11yAnnouncer,
+   689→  DefaultActionsMenu,
+   690→  DefaultActionsMenuContent,
+   691→  DefaultContextMenu2 as DefaultContextMenu,
+   692→  DefaultContextMenuContent,
+   693→  DefaultDebugMenu,
+   694→  DefaultDebugMenuContent,
+   695→  DefaultDialogs,
+   696→  DefaultFollowingIndicator,
+   697→  DefaultFontFaces,
+   698→  DefaultHelpMenu,
+   699→  DefaultHelpMenuContent,
+   700→  DefaultHelperButtons,
+   701→  DefaultHelperButtonsContent,
+   702→  DefaultImageToolbar,
+   703→  DefaultImageToolbarContent,
+   704→  DefaultKeyboardShortcutsDialog,
+   705→  DefaultKeyboardShortcutsDialogContent,
+   706→  DefaultMainMenu,
+   707→  DefaultMainMenuContent,
+   708→  DefaultMenuPanel,
+   709→  DefaultMinimap,
+   710→  DefaultNavigationPanel,
+   711→  DefaultPageMenu,
+   712→  DefaultPeopleMenu,
+   713→  DefaultPeopleMenuAvatar,
+   714→  DefaultPeopleMenuContent,
+   715→  DefaultPeopleMenuFacePile,
+   716→  DefaultPeopleMenuItem,
+   717→  DefaultQuickActions,
+   718→  DefaultQuickActionsContent,
+   719→  DefaultRichTextToolbar,
+   720→  DefaultRichTextToolbarContent,
+   721→  DefaultSharePanel,
+   722→  DefaultStylePanel,
+   723→  DefaultStylePanelContent,
+   724→  DefaultToasts,
+   725→  DefaultToolbar,
+   726→  DefaultToolbarContent,
+   727→  DefaultUserPresenceEditor,
+   728→  DefaultVideoToolbar,
+   729→  DefaultVideoToolbarContent,
+   730→  DefaultZoomMenu,
+   731→  DefaultZoomMenuContent,
+   732→  DeleteMenuItem,
+   733→  DiamondToolbarItem,
+   734→  DistributeMenuItems,
+   735→  DrawShapeTool,
+   736→  DrawShapeUtil,
+   737→  DrawToolbarItem,
+   738→  DuplicateMenuItem,
+   739→  EditLinkMenuItem,
+   740→  EditMenuSubmenu,
+   741→  EditSubmenu,
+   742→  EllipseToolbarItem,
+   743→  EmbedShapeUtil,
+   744→  EraserTool,
+   745→  EraserToolbarItem,
+   746→  ExampleDialog,
+   747→  ExportAsMenuGroup,
+   748→  ExportFileContentSubMenu,
+   749→  ExtrasGroup,
+   750→  FeatureFlags,
+   751→  FitFrameToContentMenuItem,
+   752→  FrameShapeTool,
+   753→  FrameShapeUtil,
+   754→  FrameToolbarItem,
+   755→  GeoShapeTool,
+   756→  GeoShapeUtil,
+   757→  GroupMenuItem,
+   758→  GroupOrUngroupMenuItem,
+   759→  HandTool,
+   760→  HandToolbarItem,
+   761→  HeartToolbarItem,
+   762→  HexagonToolbarItem,
+   763→  HighlightShapeTool,
+   764→  HighlightShapeUtil,
+   765→  HighlightToolbarItem,
+   766→  ImageAssetUtil,
+   767→  ImageShapeUtil,
+   768→  InputModeMenu,
+   769→  KeyboardShiftEnterTweakExtension,
+   770→  KeyboardShortcutsMenuItem,
+   771→  LanguageMenu,
+   772→  LaserTool,
+   773→  LaserToolbarItem,
+   774→  LineShapeTool,
+   775→  LineShapeUtil,
+   776→  LineToolbarItem,
+   777→  LockGroup,
+   778→  MiscMenuGroup,
+   779→  MobileStylePanel,
+   780→  MoveToPageMenu,
+   781→  NoteShapeTool,
+   782→  NoteShapeUtil,
+   783→  NoteToolbarItem,
+   784→  OfflineIndicator,
+   785→  OvalToolbarItem,
+   786→  OverflowingToolbar,
+   787→  PORTRAIT_BREAKPOINT,
+   788→  PageItemInput,
+   789→  PageItemSubmenu,
+   790→  PasteMenuItem,
+   791→  PathBuilder,
+   792→  PathBuilderGeometry2d,
+   793→  DefaultPeopleMenu2 as PeopleMenu,
+   794→  PlainTextArea,
+   795→  PlainTextLabel,
+   796→  PreferencesGroup,
+   797→  PrintItem,
+   798→  RTL_LANGUAGES,
+   799→  RectangleToolbarItem,
+   800→  RemoveFrameMenuItem,
+   801→  ReorderMenuItems,
+   802→  ReorderMenuSubmenu,
+   803→  RhombusToolbarItem,
+   804→  RichTextArea,
+   805→  RichTextLabel,
+   806→  RichTextSVG,
+   807→  RotateCWMenuItem,
+   808→  ScribbleOverlayUtil,
+   809→  SelectAllMenuItem,
+   810→  SelectTool,
+   811→  SelectToolbarItem,
+   812→  SelectionForegroundOverlayUtil,
+   813→  ShapeHandleOverlayUtil,
+   814→  ShapeIndicatorOverlayUtil,
+   815→  SnapIndicatorOverlayUtil,
+   816→  Spinner,
+   817→  StackMenuItems,
+   818→  StarToolbarItem,
+   819→  StylePanelArrowKindPicker,
+   820→  StylePanelArrowheadPicker,
+   821→  StylePanelButtonPicker,
+   822→  StylePanelButtonPickerInline,
+   823→  StylePanelColorPicker,
+   824→  StylePanelContextProvider,
+   825→  StylePanelDashPicker,
+   826→  StylePanelDoubleDropdownPicker,
+   827→  StylePanelDoubleDropdownPickerInline,
+   828→  StylePanelDropdownPicker,
+   829→  StylePanelDropdownPickerInline,
+   830→  StylePanelFillPicker,
+   831→  StylePanelFontPicker,
+   832→  StylePanelGeoShapePicker,
+   833→  StylePanelLabelAlignPicker,
+   834→  StylePanelOpacityPicker,
+   835→  StylePanelSection,
+   836→  StylePanelSizePicker,
+   837→  StylePanelSplinePicker,
+   838→  StylePanelSubheading,
+   839→  StylePanelTextAlignPicker,
+   840→  TLDRAW_FILE_EXTENSION,
+   841→  TLV1AlignStyle,
+   842→  TLV1AssetType,
+   843→  TLV1ColorStyle,
+   844→  TLV1DashStyle,
+   845→  TLV1Decoration,
+   846→  TLV1FontStyle,
+   847→  TLV1ShapeType,
+   848→  TLV1SizeStyle,
+   849→  TextShapeTool,
+   850→  TextShapeUtil,
+   851→  TextToolbarItem,
+   852→  Tldraw,
+   853→  TldrawImage,
+   854→  TldrawUi,
+   855→  TldrawUiA11yProvider,
+   856→  TldrawUiButton,
+   857→  TldrawUiButtonCheck,
+   858→  TldrawUiButtonIcon,
+   859→  TldrawUiButtonLabel,
+   860→  TldrawUiColumn,
+   861→  TldrawUiComponentsProvider,
+   862→  TldrawUiContextProvider,
+   863→  TldrawUiContextualToolbar,
+   864→  TldrawUiDialogBody,
+   865→  TldrawUiDialogCloseButton,
+   866→  TldrawUiDialogFooter,
+   867→  TldrawUiDialogHeader,
+   868→  TldrawUiDialogTitle,
+   869→  TldrawUiDialogsProvider,
+   870→  TldrawUiDropdownMenuCheckboxItem,
+   871→  TldrawUiDropdownMenuContent,
+   872→  TldrawUiDropdownMenuGroup,
+   873→  TldrawUiDropdownMenuIndicator,
+   874→  TldrawUiDropdownMenuItem,
+   875→  TldrawUiDropdownMenuRoot,
+   876→  TldrawUiDropdownMenuSub,
+   877→  TldrawUiDropdownMenuSubContent,
+   878→  TldrawUiDropdownMenuSubTrigger,
+   879→  TldrawUiDropdownMenuTrigger,
+   880→  TldrawUiEventsProvider,
+   881→  TldrawUiGrid,
+   882→  TldrawUiIcon,
+   883→  TldrawUiInFrontOfTheCanvas,
+   884→  TldrawUiInput,
+   885→  TldrawUiKbd,
+   886→  TldrawUiMenuActionCheckboxItem,
+   887→  TldrawUiMenuActionItem,
+   888→  TldrawUiMenuCheckboxItem,
+   889→  TldrawUiMenuContextProvider,
+   890→  TldrawUiMenuGroup,
+   891→  TldrawUiMenuItem,
+   892→  TldrawUiMenuSubmenu,
+   893→  TldrawUiMenuToolItem,
+   894→  TldrawUiOrientationProvider,
+   895→  TldrawUiPopover,
+   896→  TldrawUiPopoverContent,
+   897→  TldrawUiPopoverTrigger,
+   898→  TldrawUiRow,
+   899→  TldrawUiSelect,
+   900→  TldrawUiSelectContent,
+   901→  TldrawUiSelectItem,
+   902→  TldrawUiSelectTrigger,
+   903→  TldrawUiSelectValue,
+   904→  TldrawUiSlider,
+   905→  TldrawUiToastsProvider,
+   906→  TldrawUiToolbar,
+   907→  TldrawUiToolbarButton,
+   908→  TldrawUiToolbarToggleGroup,
+   909→  TldrawUiToolbarToggleItem,
+   910→  TldrawUiTooltip,
+   911→  TldrawUiTooltipProvider,
+   912→  TldrawUiTranslationProvider,
+   913→  ToggleAutoSizeMenuItem,
+   914→  ToggleDebugModeItem,
+   915→  ToggleDynamicSizeModeItem,
+   916→  ToggleEdgeScrollingItem,
+   917→  ToggleEnhancedA11yModeItem,
+   918→  ToggleFocusModeItem,
+   919→  ToggleGridItem,
+   920→  ToggleInvertZoomItem,
+   921→  ToggleKeyboardShortcutsItem,
+   922→  ToggleLockMenuItem,
+   923→  TogglePasteAtCursorItem,
+   924→  ToggleReduceMotionItem,
+   925→  ToggleSnapModeItem,
+   926→  ToggleToolLockItem,
+   927→  ToggleToolLockedButton,
+   928→  ToggleTransparentBgMenuItem,
+   929→  ToggleWrapModeItem,
+   930→  ToolbarItem,
+   931→  TrapezoidToolbarItem,
+   932→  TriangleToolbarItem,
+   933→  UndoRedoGroup,
+   934→  UngroupMenuItem,
+   935→  UnlockAllMenuItem,
+   936→  VideoAssetUtil,
+   937→  VideoShapeUtil,
+   938→  ViewSubmenu,
+   939→  XBoxToolbarItem,
+   940→  ZoomBrushOverlayUtil,
+   941→  ZoomOrRotateMenuItem,
+   942→  ZoomTo100MenuItem,
+   943→  ZoomToFitMenuItem,
+   944→  ZoomToSelectionMenuItem,
+   945→  ZoomTool,
+   946→  allDefaultFontFaces,
+   947→  buildFromV1Document,
+   948→  centerSelectionAroundPoint,
+   949→  clearArrowTargetState,
+   950→  containBoxSize,
+   951→  copyAs,
+   952→  createBookmarkFromUrl,
+   953→  createEmptyBookmarkShape,
+   954→  createShapesForAssets,
+   955→  defaultAddFontsFromNode,
+   956→  defaultAssetUtils,
+   957→  defaultBindingUtils,
+   958→  defaultEditorAssetUrls,
+   959→  defaultGeoTypeDefinitions,
+   960→  defaultHandleExternalEmbedContent,
+   961→  defaultHandleExternalExcalidrawContent,
+   962→  defaultHandleExternalFileAsset,
+   963→  defaultHandleExternalFileContent,
+   964→  defaultHandleExternalFileReplaceContent,
+   965→  defaultHandleExternalSvgTextContent,
+   966→  defaultHandleExternalTextContent,
+   967→  defaultHandleExternalTldrawContent,
+   968→  defaultHandleExternalUrlAsset,
+   969→  defaultHandleExternalUrlContent,
+   970→  defaultOverlayUtils,
+   971→  defaultShapeTools,
+   972→  defaultShapeUtils,
+   973→  defaultTools,
+   974→  downloadFile,
+   975→  downsizeImage,
+   976→  embedShapePermissionDefaults,
+   977→  exportAs,
+   978→  fitFrameToContent,
+   979→  getArrowBindings,
+   980→  getArrowInfo,
+   981→  getArrowTargetState,
+   982→  getArrowTerminalsInArrowSpace,
+   983→  getAssetInfo,
+   984→  getColorStyleItems,
+   985→  getCropBox,
+   986→  getDefaultCrop,
+   987→  getDisplayValues,
+   988→  getEmbedInfo,
+   989→  getFontFamily,
+   990→  getFontStyleItems,
+   991→  getGeoTypeDefinition,
+   992→  getHitShapeOnCanvasPointerDown,
+   993→  getPointsFromDrawSegment,
+   994→  getPointsFromDrawSegments,
+   995→  getStroke,
+   996→  getStrokeOutlinePoints,
+   997→  getStrokePoints,
+   998→  getSvgPathFromStrokePoints,
+   999→  getTipTapDefaultExtensions,
+  1000→  getUncroppedSize,
+  1001→  handleNativeOrMenuCopy,
+  1002→  hideAllTooltips,
+  1003→  iconTypes,
+  1004→  notifyIfFileNotAllowed,
+  1005→  onDragFromToolbarToCreateShape,
+  1006→  parseAndLoadDocument,
+  1007→  parseTldrawJsonFile,
+  1008→  preloadFont,
+  1009→  putExcalidrawContent,
+  1010→  registerDefaultExternalContentHandlers,
+  1011→  registerDefaultSideEffects,
+  1012→  removeFrame,
+  1013→  renderHtmlFromRichText,
+  1014→  renderHtmlFromRichTextForMeasurement,
+  1015→  renderHtmlFromRichTextWithExtensions,
+  1016→  renderPlaintextFromRichText,
+  1017→  renderRichTextFromHTML,
+  1018→  sanitizeSvg,
+  1019→  serializeTldrawJson,
+  1020→  serializeTldrawJsonBlob,
+  1021→  setDefaultEditorAssetUrls,
+  1022→  setDefaultUiAssetUrls,
+  1023→  startEditingShapeWithRichText,
+  1024→  tipTapDefaultExtensions,
+  1025→  truncateStringWithEllipsis,
+  1026→  unknownEmbedShapePermissionOverrides,
+  1027→  unwrapLabel,
+  1028→  updateArrowTargetState,
+  1029→  useA11y,
+  1030→  useActions,
+  1031→  useAssetUrls,
+  1032→  useBreakpoint,
+  1033→  useCanApplySelectionAction,
+  1034→  useCanRedo,
+  1035→  useCanUndo,
+  1036→  useCollaborationStatus,
+  1037→  useCopyAs,
+  1038→  useCurrentTranslation,
+  1039→  useDefaultHelpers,
+  1040→  useDialogs,
+  1041→  useDirection,
+  1042→  useEditablePlainText,
+  1043→  useEditableRichText,
+  1044→  useExportAs,
+  1045→  useImageOrVideoAsset,
+  1046→  useIsToolSelected,
+  1047→  useKeyboardShortcuts,
+  1048→  useLocalStorageState,
+  1049→  useMaybeCurrentTranslation,
+  1050→  useMenuClipboardEvents,
+  1051→  useMenuIsOpen,
+  1052→  useNativeClipboardEvents,
+  1053→  usePrefersReducedMotion,
+  1054→  useReadonly,
+  1055→  useRelevantStyles,
+  1056→  useSelectedShapesAnnouncer,
+  1057→  useShowCollaborationUi,
+  1058→  useStylePanelContext,
+  1059→  useTldrawUiComponents,
+  1060→  useTldrawUiOrientation,
+  1061→  useToasts,
+  1062→  useTools,
+  1063→  useTranslation,
+  1064→  useUiEvents,
+  1065→  useUnlockedSelectedShapesCount
+  1066→};
+  1067→//# sourceMappingURL=index.mjs.map
+  1068→

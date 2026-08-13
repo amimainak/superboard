@@ -1,0 +1,1098 @@
+  5200→    print: null;
+  5201→    copy: null;
+  5202→    paste: null;
+  5203→    cut: null;
+  5204→    'set-style': {
+  5205→        id: string;
+  5206→        value: number | string;
+  5207→    };
+  5208→    'toggle-transparent': null;
+  5209→    'toggle-snap-mode': null;
+  5210→    'toggle-tool-lock': null;
+  5211→    'toggle-grid-mode': null;
+  5212→    'toggle-wrap-mode': null;
+  5213→    'toggle-focus-mode': null;
+  5214→    'input-mode': {
+  5215→        value: string;
+  5216→    };
+  5217→    'toggle-invert-zoom': null;
+  5218→    'toggle-debug-mode': null;
+  5219→    'toggle-dynamic-size-mode': null;
+  5220→    'toggle-paste-at-cursor': null;
+  5221→    'toggle-lock': null;
+  5222→    'toggle-reduce-motion': null;
+  5223→    'toggle-keyboard-shortcuts': null;
+  5224→    'enhanced-a11y-mode': null;
+  5225→    'toggle-edge-scrolling': null;
+  5226→    'color-scheme': {
+  5227→        value: string;
+  5228→    };
+  5229→    'exit-pen-mode': null;
+  5230→    'start-following': null;
+  5231→    'stop-following': null;
+  5232→    'set-color': null;
+  5233→    'change-user-name': null;
+  5234→    'open-cursor-chat': null;
+  5235→    'zoom-tool': null;
+  5236→    'unlock-all': null;
+  5237→    'enlarge-shapes': null;
+  5238→    'shrink-shapes': null;
+  5239→    'flatten-to-image': null;
+  5240→    'a11y-repeat-shape-announce': null;
+  5241→    'open-url': {
+  5242→        destinationUrl: string;
+  5243→    };
+  5244→    'open-context-menu': null;
+  5245→    'adjust-shape-styles': null;
+  5246→    'copy-link': null;
+  5247→    'drag-tool': {
+  5248→        id: string;
+  5249→    };
+  5250→    'image-replace': null;
+  5251→    'video-replace': null;
+  5252→    'open-kbd-shortcuts': null;
+  5253→    'rich-text': {
+  5254→        operation: 'bold' | 'bulletList' | 'heading' | 'link-edit' | 'link-remove' | 'link-visit' | 'link' | 'strike';
+  5255→    };
+  5256→    edit: null;
+  5257→    'copy-hovered-styles': null;
+  5258→}
+  5259→
+  5260→/** @public */
+  5261→export declare type TLUiEventSource = 'actions-menu' | 'context-menu' | 'debug-panel' | 'dialog' | 'document-name' | 'export-menu' | 'help-menu' | 'helper-buttons' | 'image-toolbar' | 'kbd' | 'main-menu' | 'menu' | 'navigation-zone' | 'page-menu' | 'people-menu' | 'quick-actions' | 'rich-text-menu' | 'share-menu' | 'style-panel' | 'toolbar' | 'unknown' | 'video-toolbar' | 'zoom-menu';
+  5262→
+  5263→/** @public */
+  5264→export declare interface TLUiHelperButtonsProps {
+  5265→    children?: ReactNode;
+  5266→}
+  5267→
+  5268→/** @public */
+  5269→export declare interface TLUiHelpMenuProps {
+  5270→    children?: ReactNode;
+  5271→}
+  5272→
+  5273→/** @public */
+  5274→export declare type TLUiIconJsx = ReactElement<React.HTMLAttributes<HTMLDivElement>>;
+  5275→
+  5276→/** @public */
+  5277→export declare interface TLUiIconProps extends React.HTMLAttributes<HTMLDivElement> {
+  5278→    icon: Exclude<string, TLUiIconType> | TLUiIconJsx | TLUiIconType;
+  5279→    label: string;
+  5280→    small?: boolean;
+  5281→    tiny?: boolean;
+  5282→    color?: string;
+  5283→    children?: undefined;
+  5284→    invertIcon?: boolean;
+  5285→    crossOrigin?: 'anonymous' | 'use-credentials';
+  5286→}
+  5287→
+  5288→/** @public */
+  5289→export declare type TLUiIconType = 'align-bottom' | 'align-center-horizontal' | 'align-center-vertical' | 'align-left' | 'align-right' | 'align-top' | 'alt' | 'arrow-arc' | 'arrow-cycle' | 'arrow-elbow' | 'arrow-left' | 'arrowhead-arrow' | 'arrowhead-bar' | 'arrowhead-diamond' | 'arrowhead-dot' | 'arrowhead-none' | 'arrowhead-square' | 'arrowhead-triangle-inverted' | 'arrowhead-triangle' | 'blob' | 'bold' | 'bookmark' | 'bring-forward' | 'bring-to-front' | 'broken' | 'bulletList' | 'check-circle' | 'check' | 'chevron-down' | 'chevron-left' | 'chevron-right' | 'chevron-up' | 'chevrons-ne' | 'chevrons-sw' | 'clipboard-copied' | 'clipboard-copy' | 'closed' | 'code' | 'color' | 'comment' | 'corners' | 'crop' | 'cross-2' | 'cross-circle' | 'dash-dashed' | 'dash-dotted' | 'dash-draw' | 'dash-solid' | 'disconnected' | 'discord' | 'distribute-horizontal' | 'distribute-vertical' | 'dot' | 'dots-horizontal' | 'dots-vertical' | 'download' | 'drag-handle-dots' | 'duplicate' | 'edit' | 'external-link' | 'fill-fill' | 'fill-lined-fill' | 'fill-none' | 'fill-pattern' | 'fill-semi' | 'fill-solid' | 'follow' | 'following' | 'font-draw' | 'font-mono' | 'font-sans' | 'font-serif' | 'geo-arrow-down' | 'geo-arrow-left' | 'geo-arrow-right' | 'geo-arrow-up' | 'geo-check-box' | 'geo-cloud' | 'geo-diamond' | 'geo-ellipse' | 'geo-heart' | 'geo-hexagon' | 'geo-octagon' | 'geo-oval' | 'geo-pentagon' | 'geo-rectangle' | 'geo-rhombus-2' | 'geo-rhombus' | 'geo-star' | 'geo-trapezoid' | 'geo-triangle' | 'geo-x-box' | 'github' | 'group' | 'heading' | 'help-circle' | 'highlight' | 'horizontal-align-end' | 'horizontal-align-middle' | 'horizontal-align-start' | 'info-circle' | 'italic' | 'leading' | 'link' | 'list' | 'lock' | 'manual' | 'menu' | 'minus' | 'mixed' | 'pack' | 'plus' | 'question-mark-circle' | 'question-mark' | 'redo' | 'reset-zoom' | 'rotate-ccw' | 'rotate-cw' | 'send-backward' | 'send-to-back' | 'share-1' | 'size-extra-large' | 'size-large' | 'size-medium' | 'size-small' | 'spline-cubic' | 'spline-line' | 'stack-horizontal' | 'stack-vertical' | 'status-offline' | 'stretch-horizontal' | 'stretch-vertical' | 'strike' | 'text-align-center' | 'text-align-left' | 'text-align-right' | 'toggle-off' | 'toggle-on' | 'tool-arrow' | 'tool-eraser' | 'tool-frame' | 'tool-hand' | 'tool-highlight' | 'tool-laser' | 'tool-line' | 'tool-media' | 'tool-note' | 'tool-pencil' | 'tool-pointer' | 'tool-screenshot' | 'tool-text' | 'trash' | 'twitter' | 'underline' | 'undo' | 'ungroup' | 'unlock' | 'vertical-align-end' | 'vertical-align-middle' | 'vertical-align-start' | 'warning-triangle' | 'zoom-in' | 'zoom-out';
+  5290→
+  5291→/** @public */
+  5292→export declare interface TLUiImageToolbarProps {
+  5293→    children?: React.ReactNode;
+  5294→}
+  5295→
+  5296→/** @public */
+  5297→export declare interface TLUiInputProps {
+  5298→    disabled?: boolean;
+  5299→    label?: Exclude<string, TLUiTranslationKey> | TLUiTranslationKey;
+  5300→    icon?: Exclude<string, TLUiIconType> | TLUiIconType;
+  5301→    iconLeft?: Exclude<string, TLUiIconType> | TLUiIconType;
+  5302→    iconLabel?: Exclude<string, TLUiTranslationKey> | TLUiTranslationKey;
+  5303→    autoFocus?: boolean;
+  5304→    autoSelect?: boolean;
+  5305→    children?: React_2.ReactNode;
+  5306→    defaultValue?: string;
+  5307→    /** Maximum number of characters the input will accept. */
+  5308→    maxLength?: number;
+  5309→    placeholder?: string;
+  5310→    onComplete?(value: string): void;
+  5311→    onValueChange?(value: string): void;
+  5312→    onCancel?(value: string): void;
+  5313→    onBlur?(value: string): void;
+  5314→    onFocus?(): void;
+  5315→    className?: string;
+  5316→    /**
+  5317→     * Usually on iOS when you focus an input, the browser will adjust the viewport to bring the input
+  5318→     * into view. Sometimes this doesn't work properly though - for example, if the input is newly
+  5319→     * created, iOS seems to have a hard time adjusting the viewport for it. This prop allows you to
+  5320→     * opt-in to some extra code to manually bring the input into view when the visual viewport of the
+  5321→     * browser changes, but we don't want to use it everywhere because generally the native behavior
+  5322→     * looks nicer in scenarios where it's sufficient.
+  5323→     */
+  5324→    shouldManuallyMaintainScrollPositionWhenFocused?: boolean;
+  5325→    value?: string;
+  5326→    'data-testid'?: string;
+  5327→    'aria-label'?: string;
+  5328→}
+  5329→
+  5330→/** @public */
+  5331→export declare interface TLUiKbdProps {
+  5332→    children: string;
+  5333→    visibleOnMobileLayout?: boolean;
+  5334→}
+  5335→
+  5336→/** @public */
+  5337→export declare type TLUiKeyboardShortcutsDialogProps = TLUiDialogProps & {
+  5338→    children?: ReactNode;
+  5339→};
+  5340→
+  5341→/** @public */
+  5342→export declare interface TLUiLayoutProps extends HTMLAttributes<HTMLDivElement> {
+  5343→    children: ReactNode;
+  5344→    tooltipSide?: 'bottom' | 'left' | 'right' | 'top';
+  5345→    asChild?: boolean;
+  5346→}
+  5347→
+  5348→/** @public */
+  5349→export declare interface TLUiMainMenuProps {
+  5350→    children?: ReactNode;
+  5351→}
+  5352→
+  5353→/** @public */
+  5354→export declare type TLUiMenuActionCheckboxItemProps = {
+  5355→    actionId?: string;
+  5356→} & Pick<TLUiMenuCheckboxItemProps, 'checked' | 'disabled' | 'toggle'>;
+  5357→
+  5358→/** @public */
+  5359→export declare type TLUiMenuActionItemProps = {
+  5360→    actionId?: string;
+  5361→} & Partial<Pick<TLUiMenuItemProps, 'disabled' | 'isSelected' | 'noClose' | 'onSelect'>>;
+  5362→
+  5363→/** @public */
+  5364→export declare interface TLUiMenuCheckboxItemProps<TranslationKey extends string = string, IconType extends string = string> {
+  5365→    icon?: IconType | TLUiIconJsx;
+  5366→    id: string;
+  5367→    kbd?: string;
+  5368→    title?: string;
+  5369→    label?: {
+  5370→        [key: string]: TranslationKey;
+  5371→    } | TranslationKey;
+  5372→    lang?: string;
+  5373→    readonlyOk?: boolean;
+  5374→    onSelect(source: TLUiEventSource): Promise<void> | void;
+  5375→    toggle?: boolean;
+  5376→    checked?: boolean;
+  5377→    disabled?: boolean;
+  5378→}
+  5379→
+  5380→/** @public */
+  5381→export declare interface TLUiMenuContextProviderProps {
+  5382→    type: TLUiMenuContextType;
+  5383→    sourceId: TLUiEventSource;
+  5384→    children: React.ReactNode;
+  5385→}
+  5386→
+  5387→/** @public */
+  5388→export declare type TLUiMenuContextType = 'context-menu' | 'helper-buttons' | 'icons' | 'keyboard-shortcuts' | 'menu' | 'small-icons' | 'toolbar-overflow' | 'toolbar';
+  5389→
+  5390→/** @public */
+  5391→export declare interface TLUiMenuGroupProps<TranslationKey extends string = string> {
+  5392→    id: string;
+  5393→    /**
+  5394→     * The label to display on the item. If it's a string, it will be translated. If it's an object, the keys will be used as the language keys and the values will be translated.
+  5395→     */
+  5396→    label?: {
+  5397→        [key: string]: TranslationKey;
+  5398→    } | TranslationKey;
+  5399→    className?: string;
+  5400→    children?: ReactNode;
+  5401→}
+  5402→
+  5403→/** @public */
+  5404→export declare interface TLUiMenuItemProps<TranslationKey extends string = string, IconType extends string = string> {
+  5405→    id: string;
+  5406→    /**
+  5407→     * The icon to display on the item. Icons are only shown in certain menu types.
+  5408→     */
+  5409→    icon?: IconType | TLUiIconJsx;
+  5410→    /**
+  5411→     * An icon to display to the left of the menu item.
+  5412→     */
+  5413→    iconLeft?: IconType | TLUiIconJsx;
+  5414→    /**
+  5415→     * The keyboard shortcut to display on the item.
+  5416→     */
+  5417→    kbd?: string;
+  5418→    /**
+  5419→     * The label to display on the item. If it's a string, it will be translated. If it's an object, the keys will be used as the language keys and the values will be translated.
+  5420→     */
+  5421→    label?: {
+  5422→        [key: string]: TranslationKey;
+  5423→    } | TranslationKey;
+  5424→    /**
+  5425→     * If the editor is in readonly mode and the item is not marked as readonlyok, it will not be rendered.
+  5426→     */
+  5427→    readonlyOk?: boolean;
+  5428→    /**
+  5429→     * The function to call when the item is clicked.
+  5430→     */
+  5431→    onSelect(source: TLUiEventSource): Promise<void> | void;
+  5432→    /**
+  5433→     * Whether this item should be disabled.
+  5434→     */
+  5435→    disabled?: boolean;
+  5436→    /**
+  5437→     * Prevent the menu from closing when the item is clicked
+  5438→     */
+  5439→    noClose?: boolean;
+  5440→    /**
+  5441→     * Whether to show a spinner on the item.
+  5442→     */
+  5443→    spinner?: boolean;
+  5444→    /**
+  5445→     * Whether the item is selected.
+  5446→     */
+  5447→    isSelected?: boolean;
+  5448→    /**
+  5449→     * The function to call when the item is dragged. If this is provided, the item will be draggable.
+  5450→     */
+  5451→    onDragStart?(source: TLUiEventSource, info: TLPointerEventInfo): void;
+  5452→}
+  5453→
+  5454→/** @public */
+  5455→export declare interface TLUiMenuSubmenuProps<Translation extends string = string> {
+  5456→    id: string;
+  5457→    label?: {
+  5458→        [key: string]: Translation;
+  5459→    } | Translation;
+  5460→    disabled?: boolean;
+  5461→    children: ReactNode;
+  5462→    size?: 'medium' | 'small' | 'tiny' | 'wide';
+  5463→}
+  5464→
+  5465→/** @public */
+  5466→export declare type TLUiMenuToolItemProps = {
+  5467→    toolId?: string;
+  5468→} & Pick<TLUiMenuItemProps, 'disabled' | 'isSelected'>;
+  5469→
+  5470→/** @public */
+  5471→export declare type TLUiOverrideHelpers = ReturnType<typeof useDefaultHelpers>;
+  5472→
+  5473→/** @public */
+  5474→export declare interface TLUiOverrides {
+  5475→    actions?(editor: Editor, actions: TLUiActionsContextType, helpers: TLUiOverrideHelpers): TLUiActionsContextType;
+  5476→    tools?(editor: Editor, tools: TLUiToolsContextType, helpers: TLUiOverrideHelpers): TLUiToolsContextType;
+  5477→    translations?: TLUiTranslationProviderProps['overrides'];
+  5478→}
+  5479→
+  5480→/** @public */
+  5481→export declare interface TLUiPeopleMenuAvatarProps {
+  5482→    userId: TLUserId;
+  5483→}
+  5484→
+  5485→/** @public */
+  5486→export declare interface TLUiPeopleMenuFacePileProps {
+  5487→    userIds: TLUserId[];
+  5488→    userName: string;
+  5489→    userColor: string;
+  5490→}
+  5491→
+  5492→/** @public */
+  5493→export declare interface TLUiPeopleMenuItemProps {
+  5494→    userId: TLUserId;
+  5495→}
+  5496→
+  5497→/** @public */
+  5498→export declare interface TLUiPopoverContentProps {
+  5499→    children: React_3.ReactNode;
+  5500→    side: 'bottom' | 'left' | 'right' | 'top';
+  5501→    align?: 'center' | 'end' | 'start';
+  5502→    alignOffset?: number;
+  5503→    sideOffset?: number;
+  5504→    /**
+  5505→     * Minimum distance to keep between the popover and the viewport edge before it
+  5506→     * shifts to stay in view. Defaults to Radix's `0`.
+  5507→     */
+  5508→    collisionPadding?: number;
+  5509→    disableEscapeKeyDown?: boolean;
+  5510→    autoFocusFirstButton?: boolean;
+  5511→}
+  5512→
+  5513→/** @public */
+  5514→export declare interface TLUiPopoverProps {
+  5515→    id: string;
+  5516→    open?: boolean;
+  5517→    children: React_3.ReactNode;
+  5518→    onOpenChange?(isOpen: boolean): void;
+  5519→    className?: string;
+  5520→}
+  5521→
+  5522→/** @public */
+  5523→export declare interface TLUiPopoverTriggerProps {
+  5524→    children?: React_3.ReactNode;
+  5525→}
+  5526→
+  5527→/** @public */
+  5528→export declare interface TLUiQuickActionsProps {
+  5529→    children?: ReactNode;
+  5530→}
+  5531→
+  5532→/** @public */
+  5533→export declare interface TLUiRichTextToolbarProps {
+  5534→    children?: React_3.ReactNode;
+  5535→}
+  5536→
+  5537→/** @public */
+  5538→export declare interface TLUiSelectContentProps {
+  5539→    children: React_2.ReactNode;
+  5540→    side?: 'bottom' | 'top';
+  5541→    align?: 'center' | 'end' | 'start';
+  5542→    className?: string;
+  5543→}
+  5544→
+  5545→/** @public */
+  5546→export declare interface TLUiSelectItemProps {
+  5547→    value: string;
+  5548→    label: string;
+  5549→    icon?: Exclude<string, TLUiIconType> | TLUiIconType;
+  5550→    disabled?: boolean;
+  5551→    className?: string;
+  5552→}
+  5553→
+  5554→/** @public */
+  5555→export declare interface TLUiSelectProps {
+  5556→    id: string;
+  5557→    value: string;
+  5558→    onValueChange(value: string): void;
+  5559→    onOpenChange?(isOpen: boolean): void;
+  5560→    disabled?: boolean;
+  5561→    className?: string;
+  5562→    children: React_2.ReactNode;
+  5563→    'data-testid'?: string;
+  5564→    'aria-label'?: string;
+  5565→}
+  5566→
+  5567→/** @public */
+  5568→export declare interface TLUiSelectTriggerProps {
+  5569→    children: React_2.ReactNode;
+  5570→    className?: string;
+  5571→}
+  5572→
+  5573→/** @public */
+  5574→export declare interface TLUiSelectValueProps {
+  5575→    placeholder?: string;
+  5576→    icon?: Exclude<string, TLUiIconType> | TLUiIconType;
+  5577→    children?: React_2.ReactNode;
+  5578→}
+  5579→
+  5580→/** @public */
+  5581→export declare interface TLUiSliderProps {
+  5582→    min?: number;
+  5583→    steps: number;
+  5584→    value: null | number;
+  5585→    label: string;
+  5586→    title: string;
+  5587→    onValueChange(value: number): void;
+  5588→    onHistoryMark?(id: string): void;
+  5589→    'data-testid'?: string;
+  5590→    ariaValueModifier?: number;
+  5591→}
+  5592→
+  5593→/** @public */
+  5594→export declare interface TLUiStylePanelProps {
+  5595→    isMobile?: boolean;
+  5596→    styles?: null | ReadonlySharedStyleMap;
+  5597→    children?: ReactNode;
+  5598→}
+  5599→
+  5600→/** @public */
+  5601→export declare interface TLUiToast {
+  5602→    id: string;
+  5603→    icon?: TLUiIconType;
+  5604→    iconLabel?: string;
+  5605→    severity?: AlertSeverity;
+  5606→    title?: string;
+  5607→    description?: string;
+  5608→    actions?: TLUiToastAction[];
+  5609→    keepOpen?: boolean;
+  5610→    closeLabel?: string;
+  5611→}
+  5612→
+  5613→/** @public */
+  5614→export declare interface TLUiToastAction {
+  5615→    type: 'danger' | 'normal' | 'primary';
+  5616→    label: string;
+  5617→    onClick(): void;
+  5618→}
+  5619→
+  5620→/** @public */
+  5621→export declare interface TLUiToastsContextType {
+  5622→    addToast(toast: Omit<TLUiToast, 'id'> & {
+  5623→        id?: string;
+  5624→    }): string;
+  5625→    removeToast(id: TLUiToast['id']): string;
+  5626→    clearToasts(): void;
+  5627→    toasts: Atom<TLUiToast[]>;
+  5628→}
+  5629→
+  5630→/** @public */
+  5631→export declare interface TLUiToastsProviderProps {
+  5632→    overrides?(editor: Editor): TLUiToastsContextType;
+  5633→    children: ReactNode;
+  5634→}
+  5635→
+  5636→/** @public */
+  5637→export declare interface TLUiToolbarButtonProps extends React_3.HTMLAttributes<HTMLButtonElement> {
+  5638→    asChild?: boolean;
+  5639→    children?: React_3.ReactNode;
+  5640→    className?: string;
+  5641→    disabled?: boolean;
+  5642→    isActive?: boolean;
+  5643→    type: 'icon' | 'menu' | 'tool';
+  5644→    tooltip?: string;
+  5645→}
+  5646→
+  5647→/** @public */
+  5648→export declare interface TLUiToolbarProps extends React_3.HTMLAttributes<HTMLDivElement> {
+  5649→    children?: React_3.ReactNode;
+  5650→    className?: string;
+  5651→    dir?: 'ltr' | 'rtl';
+  5652→    label: string;
+  5653→    orientation?: 'grid' | 'horizontal' | 'vertical';
+  5654→    tooltipSide?: 'bottom' | 'left' | 'right' | 'top';
+  5655→}
+  5656→
+  5657→/** @public */
+  5658→export declare interface TLUiToolbarToggleGroupProps extends React_3.HTMLAttributes<HTMLDivElement> {
+  5659→    children?: React_3.ReactNode;
+  5660→    className?: string;
+  5661→    dir?: 'ltr' | 'rtl';
+  5662→    value: any;
+  5663→    defaultValue?: any;
+  5664→    type: 'multiple' | 'single';
+  5665→    asChild?: boolean;
+  5666→}
+  5667→
+  5668→/** @public */
+  5669→export declare interface TLUiToolbarToggleItemProps extends React_3.HTMLAttributes<HTMLButtonElement> {
+  5670→    children?: React_3.ReactNode;
+  5671→    className?: string;
+  5672→    type: 'icon' | 'tool';
+  5673→    value: string;
+  5674→    tooltip?: React_3.ReactNode;
+  5675→}
+  5676→
+  5677→/** @public */
+  5678→export declare interface TLUiToolItem<TranslationKey extends string = string, IconType extends string = string> {
+  5679→    id: string;
+  5680→    label: TranslationKey;
+  5681→    shortcutsLabel?: TranslationKey;
+  5682→    icon: IconType | TLUiIconJsx;
+  5683→    onSelect(source: TLUiEventSource): void;
+  5684→    onDragStart?(source: TLUiEventSource, info: TLPointerEventInfo): void;
+  5685→    /**
+  5686→     * The keyboard shortcut for this tool. This is a string that can be a single key,
+  5687→     * or a combination of keys.
+  5688→     * For example, `cmd+z` or `cmd+shift+z` or `cmd+u,ctrl+u`, or just `v` or `a`.
+  5689→     * We have backwards compatibility with the old system, where we used to use
+  5690→     * symbols to denote cmd/alt/shift, using `!` for shift, `$` for cmd, and `?` for alt.
+  5691→     */
+  5692→    kbd?: string;
+  5693→    readonlyOk?: boolean;
+  5694→    meta?: {
+  5695→        [key: string]: any;
+  5696→    };
+  5697→}
+  5698→
+  5699→/** @public */
+  5700→export declare type TLUiToolsContextType = Record<string, TLUiToolItem>;
+  5701→
+  5702→/** @public */
+  5703→export declare interface TLUiToolsProviderProps {
+  5704→    overrides?(editor: Editor, tools: TLUiToolsContextType, helpers: Partial<TLUiOverrideHelpers>): TLUiToolsContextType;
+  5705→    children: React_2.ReactNode;
+  5706→}
+  5707→
+  5708→/** @public */
+  5709→export declare interface TLUiTranslation {
+  5710→    readonly locale: string;
+  5711→    readonly label: string;
+  5712→    readonly messages: Record<TLUiTranslationKey, string>;
+  5713→    readonly dir: 'ltr' | 'rtl';
+  5714→}
+  5715→
+  5716→/** @public */
+  5717→export declare type TLUiTranslationContextType = TLUiTranslation;
+  5718→
+  5719→/** @public */
+  5720→export declare type TLUiTranslationKey = 'a11y.adjust-shape-styles' | 'a11y.enlarge-shape' | 'a11y.enter-leave-container' | 'a11y.move-shape-faster' | 'a11y.move-shape' | 'a11y.multiple-shapes' | 'a11y.open-context-menu' | 'a11y.open-keyboard-shortcuts' | 'a11y.pan-camera' | 'a11y.repeat-shape' | 'a11y.rotate-shape-ccw-fine' | 'a11y.rotate-shape-ccw' | 'a11y.rotate-shape-cw-fine' | 'a11y.rotate-shape-cw' | 'a11y.select-shape-direction' | 'a11y.select-shape' | 'a11y.shape-image' | 'a11y.shape-index' | 'a11y.shape-video' | 'a11y.shrink-shape' | 'a11y.skip-to-main-content' | 'a11y.status' | 'action.align-bottom' | 'action.align-center-horizontal.short' | 'action.align-center-horizontal' | 'action.align-center-vertical.short' | 'action.align-center-vertical' | 'action.align-left' | 'action.align-right' | 'action.align-top' | 'action.back-to-content' | 'action.bring-forward' | 'action.bring-to-front' | 'action.convert-to-bookmark' | 'action.convert-to-embed' | 'action.copy-as-json.short' | 'action.copy-as-json' | 'action.copy-as-png.short' | 'action.copy-as-png' | 'action.copy-as-svg.short' | 'action.copy-as-svg' | 'action.copy-hovered-styles' | 'action.copy' | 'action.cut' | 'action.delete' | 'action.distribute-horizontal.short' | 'action.distribute-horizontal' | 'action.distribute-vertical.short' | 'action.distribute-vertical' | 'action.download-original' | 'action.duplicate' | 'action.edit-link' | 'action.enhanced-a11y-mode.menu' | 'action.enhanced-a11y-mode' | 'action.exit-pen-mode' | 'action.export-all-as-png.short' | 'action.export-all-as-png' | 'action.export-all-as-svg.short' | 'action.export-all-as-svg' | 'action.export-as-png.short' | 'action.export-as-png' | 'action.export-as-svg.short' | 'action.export-as-svg' | 'action.fit-frame-to-content' | 'action.flatten-to-image' | 'action.flip-horizontal.short' | 'action.flip-horizontal' | 'action.flip-vertical.short' | 'action.flip-vertical' | 'action.fork-project-on-tldraw' | 'action.fork-project' | 'action.frame-selection' | 'action.group' | 'action.insert-embed' | 'action.insert-media' | 'action.leave-shared-project' | 'action.new-project' | 'action.new-shared-project' | 'action.open-cursor-chat' | 'action.open-embed-link' | 'action.open-file' | 'action.open-kbd-shortcuts' | 'action.pack' | 'action.paste-error-description' | 'action.paste-error-title' | 'action.paste' | 'action.print' | 'action.redo' | 'action.remove-frame' | 'action.rename' | 'action.rotate-ccw' | 'action.rotate-cw' | 'action.save-copy' | 'action.select-all' | 'action.select-none' | 'action.select-zoom-tool' | 'action.send-backward' | 'action.send-to-back' | 'action.share-project' | 'action.stack-horizontal.short' | 'action.stack-horizontal' | 'action.stack-vertical.short' | 'action.stack-vertical' | 'action.stop-following' | 'action.stretch-horizontal.short' | 'action.stretch-horizontal' | 'action.stretch-vertical.short' | 'action.stretch-vertical' | 'action.toggle-auto-none' | 'action.toggle-auto-pan' | 'action.toggle-auto-size' | 'action.toggle-auto-zoom' | 'action.toggle-dark-mode.menu' | 'action.toggle-dark-mode' | 'action.toggle-debug-mode.menu' | 'action.toggle-debug-mode' | 'action.toggle-dynamic-size-mode.menu' | 'action.toggle-dynamic-size-mode' | 'action.toggle-edge-scrolling.menu' | 'action.toggle-edge-scrolling' | 'action.toggle-focus-mode.menu' | 'action.toggle-focus-mode' | 'action.toggle-grid.menu' | 'action.toggle-grid' | 'action.toggle-invert-zoom.menu' | 'action.toggle-invert-zoom' | 'action.toggle-keyboard-shortcuts.menu' | 'action.toggle-keyboard-shortcuts' | 'action.toggle-lock' | 'action.toggle-mouse' | 'action.toggle-paste-at-cursor.menu' | 'action.toggle-paste-at-cursor' | 'action.toggle-reduce-motion.menu' | 'action.toggle-reduce-motion' | 'action.toggle-snap-mode.menu' | 'action.toggle-snap-mode' | 'action.toggle-tool-lock.menu' | 'action.toggle-tool-lock' | 'action.toggle-trackpad' | 'action.toggle-transparent.context-menu' | 'action.toggle-transparent.menu' | 'action.toggle-transparent' | 'action.toggle-wrap-mode.menu' | 'action.toggle-wrap-mode' | 'action.undo' | 'action.ungroup' | 'action.unlock-all' | 'action.zoom-in' | 'action.zoom-out' | 'action.zoom-quick' | 'action.zoom-to-100' | 'action.zoom-to-fit' | 'action.zoom-to-selection' | 'actions-menu.title' | 'align-style.end' | 'align-style.justify' | 'align-style.middle' | 'align-style.start' | 'app.loading' | 'arrow-kind-style.arc' | 'arrow-kind-style.elbow' | 'arrowheadEnd-style.arrow' | 'arrowheadEnd-style.bar' | 'arrowheadEnd-style.diamond' | 'arrowheadEnd-style.dot' | 'arrowheadEnd-style.inverted' | 'arrowheadEnd-style.none' | 'arrowheadEnd-style.pipe' | 'arrowheadEnd-style.square' | 'arrowheadEnd-style.triangle' | 'arrowheadStart-style.arrow' | 'arrowheadStart-style.bar' | 'arrowheadStart-style.diamond' | 'arrowheadStart-style.dot' | 'arrowheadStart-style.inverted' | 'arrowheadStart-style.none' | 'arrowheadStart-style.pipe' | 'arrowheadStart-style.square' | 'arrowheadStart-style.triangle' | 'assets.files.amount-too-many' | 'assets.files.maximum-size' | 'assets.files.size-too-big' | 'assets.files.type-not-allowed' | 'assets.files.upload-failed' | 'assets.url.failed' | 'color-style.black' | 'color-style.blue' | 'color-style.green' | 'color-style.grey' | 'color-style.light-blue' | 'color-style.light-green' | 'color-style.light-red' | 'color-style.light-violet' | 'color-style.orange' | 'color-style.red' | 'color-style.violet' | 'color-style.white' | 'color-style.yellow' | 'comments.add-placeholder' | 'comments.add-reaction' | 'comments.cluster-label' | 'comments.copy-link' | 'comments.delete-comment' | 'comments.delete' | 'comments.dismiss' | 'comments.edit-comment' | 'comments.edit-placeholder' | 'comments.edit' | 'comments.empty-filtered' | 'comments.empty' | 'comments.filter' | 'comments.hide' | 'comments.link-copied' | 'comments.mention-no-matches' | 'comments.mention-you' | 'comments.more-options' | 'comments.only-my-comments' | 'comments.only-unread' | 'comments.pin-label-resolved' | 'comments.pin-label' | 'comments.preview-more' | 'comments.reacted-1' | 'comments.reacted-2' | 'comments.reacted-3' | 'comments.reacted-more-one' | 'comments.reacted-more' | 'comments.reopen' | 'comments.replies-one' | 'comments.replies' | 'comments.reply-placeholder' | 'comments.resolve' | 'comments.resolved-by' | 'comments.resolved' | 'comments.save' | 'comments.send' | 'comments.show-all-pages' | 'comments.show-resolved' | 'comments.show' | 'comments.stack-label' | 'comments.thread-title' | 'comments.title' | 'context-menu.arrange' | 'context-menu.copy-as' | 'context-menu.edit' | 'context-menu.export-all-as' | 'context-menu.export-as' | 'context-menu.move-to-page' | 'context-menu.reorder' | 'context-menu.title' | 'context.pages.new-page' | 'cursor-chat.type-to-chat' | 'dash-style.dashed' | 'dash-style.dotted' | 'dash-style.draw' | 'dash-style.solid' | 'document-name-menu.copy-link' | 'document.default-name' | 'edit-link-dialog.cancel' | 'edit-link-dialog.clear' | 'edit-link-dialog.detail' | 'edit-link-dialog.external-link' | 'edit-link-dialog.invalid-url' | 'edit-link-dialog.save' | 'edit-link-dialog.title' | 'edit-link-dialog.url' | 'embed-dialog.back' | 'embed-dialog.cancel' | 'embed-dialog.create' | 'embed-dialog.instruction' | 'embed-dialog.invalid-url' | 'embed-dialog.title' | 'embed-dialog.url' | 'file-system.confirm-clear.cancel' | 'file-system.confirm-clear.continue' | 'file-system.confirm-clear.description' | 'file-system.confirm-clear.dont-show-again' | 'file-system.confirm-clear.title' | 'file-system.confirm-open.cancel' | 'file-system.confirm-open.description' | 'file-system.confirm-open.dont-show-again' | 'file-system.confirm-open.open' | 'file-system.confirm-open.title' | 'file-system.file-open-error.file-format-version-too-new' | 'file-system.file-open-error.generic-corrupted-file' | 'file-system.file-open-error.not-a-tldraw-file' | 'file-system.file-open-error.title' | 'file-system.shared-document-file-open-error.description' | 'file-system.shared-document-file-open-error.title' | 'fill-style.fill' | 'fill-style.lined-fill' | 'fill-style.none' | 'fill-style.pattern' | 'fill-style.semi' | 'fill-style.solid' | 'focus-mode.toggle-focus-mode' | 'font-style.draw' | 'font-style.mono' | 'font-style.sans' | 'font-style.serif' | 'geo-style.arrow-down' | 'geo-style.arrow-left' | 'geo-style.arrow-right' | 'geo-style.arrow-up' | 'geo-style.check-box' | 'geo-style.cloud' | 'geo-style.diamond' | 'geo-style.ellipse' | 'geo-style.heart' | 'geo-style.hexagon' | 'geo-style.octagon' | 'geo-style.oval' | 'geo-style.pentagon' | 'geo-style.rectangle' | 'geo-style.rhombus-2' | 'geo-style.rhombus' | 'geo-style.star' | 'geo-style.trapezoid' | 'geo-style.triangle' | 'geo-style.x-box' | 'handle.crop.bottom-left' | 'handle.crop.bottom-right' | 'handle.crop.bottom' | 'handle.crop.left' | 'handle.crop.right' | 'handle.crop.top-left' | 'handle.crop.top-right' | 'handle.crop.top' | 'handle.resize-bottom-left' | 'handle.resize-bottom-right' | 'handle.resize-bottom' | 'handle.resize-left' | 'handle.resize-right' | 'handle.resize-top-left' | 'handle.resize-top-right' | 'handle.resize-top' | 'handle.rotate.bottom_left_rotate' | 'handle.rotate.bottom_right_rotate' | 'handle.rotate.mobile_rotate' | 'handle.rotate.top_left_rotate' | 'handle.rotate.top_right_rotate' | 'help-menu.about' | 'help-menu.discord' | 'help-menu.github' | 'help-menu.import-tldr-file' | 'help-menu.keyboard-shortcuts' | 'help-menu.privacy' | 'help-menu.terms' | 'help-menu.title' | 'help-menu.twitter' | 'menu.accessibility' | 'menu.color-theme' | 'menu.copy-as' | 'menu.edit' | 'menu.export-as' | 'menu.file' | 'menu.input-device' | 'menu.language' | 'menu.preferences' | 'menu.theme' | 'menu.title' | 'menu.view' | 'navigation-zone.minimap' | 'navigation-zone.title' | 'navigation-zone.toggle-minimap' | 'navigation-zone.zoom' | 'opacity-style.0.1' | 'opacity-style.0.25' | 'opacity-style.0.5' | 'opacity-style.0.75' | 'opacity-style.1' | 'page-menu.create-new-page' | 'page-menu.edit-done' | 'page-menu.edit-start' | 'page-menu.go-to-page' | 'page-menu.max-pages-reached' | 'page-menu.new-page-initial-name' | 'page-menu.resize' | 'page-menu.submenu.delete' | 'page-menu.submenu.duplicate-page' | 'page-menu.submenu.move-down' | 'page-menu.submenu.move-up' | 'page-menu.submenu.rename' | 'page-menu.submenu.title' | 'page-menu.title' | 'people-menu.anonymous-user' | 'people-menu.avatar-color' | 'people-menu.change-color' | 'people-menu.change-name' | 'people-menu.follow' | 'people-menu.following' | 'people-menu.invite' | 'people-menu.leading' | 'people-menu.title' | 'people-menu.user' | 'share-menu.copied' | 'share-menu.copy-link-note' | 'share-menu.copy-link' | 'share-menu.copy-readonly-link-note' | 'share-menu.copy-readonly-link' | 'share-menu.create-snapshot-link' | 'share-menu.creating-project' | 'share-menu.fork-note' | 'share-menu.offline-note' | 'share-menu.project-too-large' | 'share-menu.save-note' | 'share-menu.share-project' | 'share-menu.snapshot-link-note' | 'share-menu.title' | 'share-menu.upload-failed' | 'sharing.confirm-leave.cancel' | 'sharing.confirm-leave.description' | 'sharing.confirm-leave.dont-show-again' | 'sharing.confirm-leave.leave' | 'sharing.confirm-leave.title' | 'shortcuts-dialog.a11y' | 'shortcuts-dialog.collaboration' | 'shortcuts-dialog.edit' | 'shortcuts-dialog.file' | 'shortcuts-dialog.preferences' | 'shortcuts-dialog.text-formatting' | 'shortcuts-dialog.title' | 'shortcuts-dialog.tools' | 'shortcuts-dialog.transform' | 'shortcuts-dialog.view' | 'size-style.l' | 'size-style.m' | 'size-style.s' | 'size-style.xl' | 'spline-style.cubic' | 'spline-style.line' | 'status.offline' | 'style-panel.align' | 'style-panel.arrow-kind' | 'style-panel.arrowhead-end' | 'style-panel.arrowhead-start' | 'style-panel.arrowheads' | 'style-panel.color' | 'style-panel.dash' | 'style-panel.fill' | 'style-panel.font' | 'style-panel.geo' | 'style-panel.label-align' | 'style-panel.mixed' | 'style-panel.opacity' | 'style-panel.position' | 'style-panel.selected' | 'style-panel.size' | 'style-panel.spline' | 'style-panel.title' | 'style-panel.vertical-align' | 'theme.dark' | 'theme.light' | 'theme.system' | 'toast.close' | 'toast.error.copy-fail.desc' | 'toast.error.copy-fail.title' | 'toast.error.export-fail.desc' | 'toast.error.export-fail.title' | 'toast.error' | 'toast.info' | 'toast.success' | 'toast.warning' | 'tool-panel.more' | 'tool-panel.title' | 'tool.arrow-down' | 'tool.arrow-left' | 'tool.arrow-right' | 'tool.arrow-up' | 'tool.arrow' | 'tool.aspect-ratio.circle' | 'tool.aspect-ratio.landscape' | 'tool.aspect-ratio.original' | 'tool.aspect-ratio.portrait' | 'tool.aspect-ratio.square' | 'tool.aspect-ratio.wide' | 'tool.aspect-ratio' | 'tool.bookmark' | 'tool.check-box' | 'tool.cloud' | 'tool.diamond' | 'tool.draw' | 'tool.ellipse' | 'tool.embed' | 'tool.eraser' | 'tool.flip-horz' | 'tool.flip-vert' | 'tool.frame' | 'tool.hand' | 'tool.heart' | 'tool.hexagon' | 'tool.highlight' | 'tool.image-crop-confirm' | 'tool.image-crop' | 'tool.image-toolbar-title' | 'tool.image-zoom' | 'tool.laser' | 'tool.line' | 'tool.media-alt-text-confirm' | 'tool.media-alt-text-desc' | 'tool.media-alt-text' | 'tool.media' | 'tool.note' | 'tool.octagon' | 'tool.oval' | 'tool.pentagon' | 'tool.pointer-down' | 'tool.rectangle' | 'tool.replace-media' | 'tool.rhombus' | 'tool.rich-text-bold' | 'tool.rich-text-bulletList' | 'tool.rich-text-code' | 'tool.rich-text-header' | 'tool.rich-text-highlight' | 'tool.rich-text-italic' | 'tool.rich-text-link-remove' | 'tool.rich-text-link-visit' | 'tool.rich-text-link' | 'tool.rich-text-orderedList' | 'tool.rich-text-strikethrough' | 'tool.rich-text-toolbar-title' | 'tool.rotate-cw' | 'tool.select' | 'tool.star' | 'tool.text' | 'tool.trapezoid' | 'tool.triangle' | 'tool.x-box' | 'ui.checked' | 'ui.close' | 'ui.unchecked' | 'verticalAlign-style.end' | 'verticalAlign-style.middle' | 'verticalAlign-style.start' | 'vscode.file-open.backup-failed' | 'vscode.file-open.backup-saved' | 'vscode.file-open.backup' | 'vscode.file-open.desc' | 'vscode.file-open.dont-show-again' | 'vscode.file-open.open';
+  5721→
+  5722→/** @public */
+  5723→export declare interface TLUiTranslationProviderProps {
+  5724→    children: React_2.ReactNode;
+  5725→    locale: string;
+  5726→    /**
+  5727→     * A collection of overrides different locales.
+  5728→     *
+  5729→     * @example
+  5730→     *
+  5731→     * ```ts
+  5732→     * <TranslationProvider overrides={{ en: { 'style-panel.styles': 'Properties' } }} />
+  5733→     * ```
+  5734→     */
+  5735→    overrides?: Record<string, Record<string, string>>;
+  5736→}
+  5737→
+  5738→/** @public */
+  5739→export declare interface TLUiVideoToolbarProps {
+  5740→    children?: React.ReactNode;
+  5741→}
+  5742→
+  5743→/** @public */
+  5744→export declare interface TLUiZoomMenuProps {
+  5745→    children?: ReactNode;
+  5746→}
+  5747→
+  5748→/* Excluded from this release type: TLV1AlignStyle */
+  5749→
+  5750→/* Excluded from this release type: TLV1ArrowBinding */
+  5751→
+  5752→/* Excluded from this release type: TLV1ArrowShape */
+  5753→
+  5754→/* Excluded from this release type: TLV1Asset */
+  5755→
+  5756→/* Excluded from this release type: TLV1AssetType */
+  5757→
+  5758→/* Excluded from this release type: TLV1BaseAsset */
+  5759→
+  5760→/* Excluded from this release type: TLV1BaseBinding */
+  5761→
+  5762→/* Excluded from this release type: TLV1BaseShape */
+  5763→
+  5764→/* Excluded from this release type: TLV1Binding */
+  5765→
+  5766→/* Excluded from this release type: TLV1Bounds */
+  5767→
+  5768→/* Excluded from this release type: TLV1ColorStyle */
+  5769→
+  5770→/* Excluded from this release type: TLV1DashStyle */
+  5771→
+  5772→/* Excluded from this release type: TLV1Decoration */
+  5773→
+  5774→/* Excluded from this release type: TLV1Document */
+  5775→
+  5776→/* Excluded from this release type: TLV1DrawShape */
+  5777→
+  5778→/* Excluded from this release type: TLV1EllipseShape */
+  5779→
+  5780→/* Excluded from this release type: TLV1FontStyle */
+  5781→
+  5782→/* Excluded from this release type: TLV1GroupShape */
+  5783→
+  5784→/* Excluded from this release type: TLV1Handle */
+  5785→
+  5786→/* Excluded from this release type: TLV1ImageAsset */
+  5787→
+  5788→/* Excluded from this release type: TLV1ImageShape */
+  5789→
+  5790→/* Excluded from this release type: TLV1Page */
+  5791→
+  5792→/* Excluded from this release type: TLV1PageState */
+  5793→
+  5794→/* Excluded from this release type: TLV1RectangleShape */
+  5795→
+  5796→/* Excluded from this release type: TLV1Shape */
+  5797→
+  5798→/* Excluded from this release type: TLV1ShapeStyles */
+  5799→
+  5800→/* Excluded from this release type: TLV1ShapeType */
+  5801→
+  5802→/* Excluded from this release type: TLV1SizeStyle */
+  5803→
+  5804→/* Excluded from this release type: TLV1StickyShape */
+  5805→
+  5806→/* Excluded from this release type: TLV1TextShape */
+  5807→
+  5808→/* Excluded from this release type: TLV1TriangleShape */
+  5809→
+  5810→/* Excluded from this release type: TLV1VideoAsset */
+  5811→
+  5812→/* Excluded from this release type: TLV1VideoShape */
+  5813→
+  5814→/** @public */
+  5815→export declare interface TLZoomBrushOverlay extends TLOverlay {
+  5816→    props: {
+  5817→        h: number;
+  5818→        w: number;
+  5819→        x: number;
+  5820→        y: number;
+  5821→    };
+  5822→}
+  5823→
+  5824→/** @public @react */
+  5825→export declare function ToggleAutoSizeMenuItem(): JSX.Element | null;
+  5826→
+  5827→/** @public @react */
+  5828→export declare function ToggleDebugModeItem(): JSX.Element;
+  5829→
+  5830→/** @public @react */
+  5831→export declare function ToggleDynamicSizeModeItem(): JSX.Element;
+  5832→
+  5833→/** @public @react */
+  5834→export declare function ToggleEdgeScrollingItem(): JSX.Element;
+  5835→
+  5836→/** @public @react */
+  5837→export declare function ToggleEnhancedA11yModeItem(): JSX.Element;
+  5838→
+  5839→/** @public @react */
+  5840→export declare function ToggleFocusModeItem(): JSX.Element;
+  5841→
+  5842→/** @public @react */
+  5843→export declare function ToggleGridItem(): JSX.Element;
+  5844→
+  5845→/** @public @react */
+  5846→export declare function ToggleInvertZoomItem(): JSX.Element;
+  5847→
+  5848→/** @public @react */
+  5849→export declare function ToggleKeyboardShortcutsItem(): JSX.Element;
+  5850→
+  5851→/** @public @react */
+  5852→export declare function ToggleLockMenuItem(): JSX.Element | null;
+  5853→
+  5854→/** @public @react */
+  5855→export declare function TogglePasteAtCursorItem(): JSX.Element;
+  5856→
+  5857→/** @public @react */
+  5858→export declare function ToggleReduceMotionItem(): JSX.Element;
+  5859→
+  5860→/** @public @react */
+  5861→export declare function ToggleSnapModeItem(): JSX.Element;
+  5862→
+  5863→/** @public @react */
+  5864→export declare function ToggleToolLockedButton({ activeToolId }: ToggleToolLockedButtonProps): JSX.Element | null;
+  5865→
+  5866→/** @public */
+  5867→export declare interface ToggleToolLockedButtonProps {
+  5868→    activeToolId?: string;
+  5869→}
+  5870→
+  5871→/** @public @react */
+  5872→export declare function ToggleToolLockItem(): JSX.Element;
+  5873→
+  5874→/** @public @react */
+  5875→export declare function ToggleTransparentBgMenuItem(): JSX.Element;
+  5876→
+  5877→/** @public @react */
+  5878→export declare function ToggleWrapModeItem(): JSX.Element;
+  5879→
+  5880→/** @public @react */
+  5881→export declare function ToolbarItem({ tool }: ToolbarItemProps): JSX.Element;
+  5882→
+  5883→/** @public */
+  5884→export declare interface ToolbarItemProps {
+  5885→    tool: string;
+  5886→}
+  5887→
+  5888→/** @public @react */
+  5889→export declare function TrapezoidToolbarItem(): JSX.Element;
+  5890→
+  5891→/** @public @react */
+  5892→export declare function TriangleToolbarItem(): JSX.Element;
+  5893→
+  5894→/** @public */
+  5895→export declare function truncateStringWithEllipsis(str: string, maxLength: number): string;
+  5896→
+  5897→/** @public @react */
+  5898→export declare function UndoRedoGroup(): JSX.Element;
+  5899→
+  5900→/** @public @react */
+  5901→export declare function UngroupMenuItem(): JSX.Element | null;
+  5902→
+  5903→/**
+  5904→ * Overrides for unknown/arbitrary embeds that aren't in the curated embed definitions list.
+  5905→ * These restrict the most dangerous sandbox permissions to mitigate:
+  5906→ * - Same-origin sandbox escape (allow-scripts + allow-same-origin lets the iframe remove its own sandbox)
+  5907→ * - Phishing via embedded forms
+  5908→ * - Popup-based social engineering
+  5909→ *
+  5910→ * @public
+  5911→ */
+  5912→export declare const unknownEmbedShapePermissionOverrides: TLEmbedShapePermissions;
+  5913→
+  5914→/** @public @react */
+  5915→export declare function UnlockAllMenuItem(): JSX.Element;
+  5916→
+  5917→/** @public */
+  5918→export declare function unwrapLabel(label?: TLUiActionItem['label'], menuType?: string): string | undefined;
+  5919→
+  5920→/**
+  5921→ * Update the current arrow target state for an editor. See {@link ArrowTargetState} for more
+  5922→ * information.
+  5923→ *
+  5924→ * @public
+  5925→ */
+  5926→export declare function updateArrowTargetState({ editor, pointInPageSpace, arrow, isPrecise, currentBinding, oppositeBinding }: UpdateArrowTargetStateOpts): ArrowTargetState | null;
+  5927→
+  5928→/**
+  5929→ * Options passed to {@link updateArrowTargetState}.
+  5930→ *
+  5931→ * @public
+  5932→ */
+  5933→export declare interface UpdateArrowTargetStateOpts {
+  5934→    editor: Editor;
+  5935→    pointInPageSpace: VecLike;
+  5936→    arrow: TLArrowShape | undefined;
+  5937→    isPrecise: boolean;
+  5938→    currentBinding: TLArrowBinding | undefined;
+  5939→    /** The binding from the opposite end of the arrow, if one exists. */
+  5940→    oppositeBinding: TLArrowBinding | undefined;
+  5941→}
+  5942→
+  5943→/** @public */
+  5944→export declare function useA11y(): TLUiA11yContextType;
+  5945→
+  5946→/** @public */
+  5947→export declare function useActions(): TLUiActionsContextType;
+  5948→
+  5949→/** @public */
+  5950→export declare function useAssetUrls(): TLUiAssetUrls;
+  5951→
+  5952→/** @public */
+  5953→export declare function useBreakpoint(): number;
+  5954→
+  5955→/**
+  5956→ * Returns true if the user is in the select tool and has at least one shape selected.
+  5957→ * This corresponds to the `canApplySelectionAction()` check in actions.tsx.
+  5958→ * @public
+  5959→ */
+  5960→export declare function useCanApplySelectionAction(): boolean;
+  5961→
+  5962→/** @public */
+  5963→export declare function useCanRedo(): boolean;
+  5964→
+  5965→/** @public */
+  5966→export declare function useCanUndo(): boolean;
+  5967→
+  5968→/** @public */
+  5969→export declare function useCollaborationStatus(): "offline" | "online" | null;
+  5970→
+  5971→/** @public */
+  5972→export declare function useCopyAs(): (ids: TLShapeId[], format?: TLCopyType) => void;
+  5973→
+  5974→/** @public */
+  5975→export declare function useCurrentTranslation(): TLUiTranslation;
+  5976→
+  5977→/** @public */
+  5978→export declare function useDefaultHelpers(): {
+  5979→    addDialog: (dialog: Omit<TLUiDialog, "id"> & {
+  5980→        id?: string | undefined;
+  5981→    }) => string;
+  5982→    addToast: (toast: Omit<TLUiToast, "id"> & {
+  5983→        id?: string | undefined;
+  5984→    }) => string;
+  5985→    clearDialogs: () => void;
+  5986→    clearToasts: () => void;
+  5987→    copy: (source: TLUiEventSource) => Promise<void>;
+  5988→    copyAs: (ids: TLShapeId_2[], format?: TLCopyType) => void;
+  5989→    cut: (source: TLUiEventSource) => Promise<void>;
+  5990→    exportAs: (ids: TLShapeId_2[], opts?: {
+  5991→        format?: TLExportType | undefined;
+  5992→        name?: string | undefined;
+  5993→        scale?: number | undefined;
+  5994→    }) => void;
+  5995→    getEmbedDefinition: (url: string) => TLEmbedResult;
+  5996→    insertMedia: () => Promise<void>;
+  5997→    isMobile: boolean;
+  5998→    msg: (id?: string | undefined) => string;
+  5999→    paste: (data: ClipboardItem[] | DataTransfer, source: TLUiEventSource, point?: VecLike | undefined) => Promise<void>;
+  6000→    printSelectionOrPages: () => Promise<void>;
+  6001→    removeDialog: (id: string) => string;
+  6002→    removeToast: (id: string) => string;
+  6003→    replaceImage: () => Promise<void>;
+  6004→    replaceVideo: () => Promise<void>;
+  6005→};
+  6006→
+  6007→/** @public */
+  6008→export declare function useDialogs(): TLUiDialogsContextType;
+  6009→
+  6010→/**
+  6011→ * Returns the current text direction ('ltr' or 'rtl') based on the current translation.
+  6012→ *
+  6013→ * @public
+  6014→ */
+  6015→export declare function useDirection(): "ltr" | "rtl";
+  6016→
+  6017→/** @public */
+  6018→export declare function useEditablePlainText(shapeId: TLShapeId, type: ExtractShapeByProps<{
+  6019→    text: string;
+  6020→}>['type'], text?: string): {
+  6021→    handleBlur: () => void;
+  6022→    handleChange: ({ plaintext }: {
+  6023→        plaintext: string;
+  6024→    }) => void;
+  6025→    handleDoubleClick: (e: {
+  6026→        nativeEvent: Event;
+  6027→    } | Event) => void;
+  6028→    handleFocus: () => void;
+  6029→    handleInputPointerDown: (e: React_3.PointerEvent<Element>) => void;
+  6030→    handleKeyDown: (e: KeyboardEvent) => void;
+  6031→    handlePaste: (e: ClipboardEvent | React_3.ClipboardEvent<HTMLTextAreaElement>) => void;
+  6032→    isEditing: boolean;
+  6033→    isEmpty: boolean;
+  6034→    isReadyForEditing: boolean;
+  6035→    rInput: React_3.RefObject<HTMLTextAreaElement | null>;
+  6036→};
+  6037→
+  6038→/** @public */
+  6039→export declare function useEditableRichText(shapeId: TLShapeId, type: ExtractShapeByProps<{
+  6040→    richText: TLRichText;
+  6041→}>['type'], richText?: TLRichText): {
+  6042→    handleBlur: () => void;
+  6043→    handleChange: ({ richText }: {
+  6044→        richText: {
+  6045→            attrs?: any;
+  6046→            content: unknown[];
+  6047→            type: string;
+  6048→        };
+  6049→    }) => void;
+  6050→    handleDoubleClick: (e: {
+  6051→        nativeEvent: Event;
+  6052→    } | Event) => void;
+  6053→    handleFocus: () => void;
+  6054→    handleInputPointerDown: (e: PointerEvent_2<Element>) => void;
+  6055→    handleKeyDown: (e: KeyboardEvent) => void;
+  6056→    handlePaste: (e: ClipboardEvent | ClipboardEvent_2<HTMLTextAreaElement>) => void;
+  6057→    isEditing: boolean;
+  6058→    isEmpty: boolean | undefined;
+  6059→    isReadyForEditing: boolean;
+  6060→    rInput: RefObject<HTMLDivElement | null>;
+  6061→};
+  6062→
+  6063→/** @public */
+  6064→export declare function useExportAs(): (ids: TLShapeId[], opts?: {
+  6065→    format?: TLExportType | undefined;
+  6066→    name?: string | undefined;
+  6067→    scale?: number | undefined;
+  6068→}) => void;
+  6069→
+  6070→/**
+  6071→ * This is a handy helper hook that resolves an asset to an optimized URL for a given shape, or its
+  6072→ * {@link @tldraw/editor#Editor.createTemporaryAssetPreview | placeholder} if the asset is still
+  6073→ * uploading. This is used in particular for high-resolution images when you want lower and higher
+  6074→ * resolution depending on the size of the image on the canvas and the zoom level.
+  6075→ *
+  6076→ * For image scaling to work, you need to implement scaled URLs in
+  6077→ * {@link @tldraw/tlschema#TLAssetStore.resolve}.
+  6078→ *
+  6079→ * @public
+  6080→ */
+  6081→export declare function useImageOrVideoAsset({ shapeId, assetId, width }: UseImageOrVideoAssetOptions): {
+  6082→    asset: null | TLImageAsset | TLVideoAsset;
+  6083→    url: null | string;
+  6084→};
+  6085→
+  6086→/**
+  6087→ * Options for {@link useImageOrVideoAsset}.
+  6088→ *
+  6089→ * @public
+  6090→ */
+  6091→export declare interface UseImageOrVideoAssetOptions {
+  6092→    /** The asset ID you want a URL for. */
+  6093→    assetId: null | TLAssetId;
+  6094→    /**
+  6095→     * The shape the asset is being used for. We won't update the resolved URL while the shape is
+  6096→     * off-screen.
+  6097→     */
+  6098→    shapeId?: TLShapeId;
+  6099→    /**
+  6100→     * The width at which the asset will be displayed, in shape-space pixels.
+  6101→     */
+  6102→    width: number;
+  6103→}
+  6104→
+  6105→/** @public */
+  6106→export declare function useIsToolSelected(tool: TLUiToolItem | undefined): boolean;
+  6107→
+  6108→/** @public */
+  6109→export declare function useKeyboardShortcuts(): void;
+  6110→
+  6111→/** @public */
+  6112→export declare function useLocalStorageState<T = any>(key: string, defaultValue: T): readonly [T, (setter: ((value: T) => T) | T) => void];
+  6113→
+  6114→/**
+  6115→ * Like {@link useCurrentTranslation}, but returns `null` instead of throwing when used outside
+  6116→ * of a `<TldrawUiTranslationProvider />` / `<TldrawUiContextProvider />`.
+  6117→ *
+  6118→ * @public
+  6119→ */
+  6120→export declare function useMaybeCurrentTranslation(): null | TLUiTranslation;
+  6121→
+  6122→/** @public */
+  6123→export declare function useMenuClipboardEvents(): {
+  6124→    copy: (source: TLUiEventSource) => Promise<void>;
+  6125→    cut: (source: TLUiEventSource) => Promise<void>;
+  6126→    paste: (data: ClipboardItem[] | DataTransfer, source: TLUiEventSource, point?: undefined | VecLike) => Promise<void>;
+  6127→};
+  6128→
+  6129→/** @public */
+  6130→export declare function useMenuIsOpen(id: string, cb?: (isOpen: boolean) => void): readonly [boolean, (isOpen: boolean) => void];
+  6131→
+  6132→/** @public */
+  6133→export declare function useNativeClipboardEvents(): void;
+  6134→
+  6135→/** @public */
+  6136→export declare function usePrefersReducedMotion(): boolean;
+  6137→
+  6138→/** @public */
+  6139→export declare function useReadonly(): boolean;
+  6140→
+  6141→/** @public */
+  6142→export declare function useRelevantStyles(stylesToCheck?: readonly StyleProp<any>[]): null | ReadonlySharedStyleMap;
+  6143→
+  6144→/** @public */
+  6145→export declare function useSelectedShapesAnnouncer(): void;
+  6146→
+  6147→/** @public */
+  6148→export declare function useShowCollaborationUi(): boolean;
+  6149→
+  6150→/** @public */
+  6151→export declare function useStylePanelContext(): StylePanelContext;
+  6152→
+  6153→/** @public */
+  6154→export declare function useTldrawUiComponents(): TLUiComponents;
+  6155→
+  6156→/** @public */
+  6157→export declare function useTldrawUiOrientation(): TldrawUiOrientationContext;
+  6158→
+  6159→/** @public */
+  6160→export declare function useToasts(): TLUiToastsContextType;
+  6161→
+  6162→/** @public */
+  6163→export declare function useTools(): TLUiToolsContextType;
+  6164→
+  6165→/**
+  6166→ * Returns a function to translate a translation key into a string based on the current translation.
+  6167→ *
+  6168→ * @example
+  6169→ *
+  6170→ * ```ts
+  6171→ * const msg = useTranslation()
+  6172→ * const label = msg('style-panel.styles')
+  6173→ * ```
+  6174→ *
+  6175→ * @public
+  6176→ */
+  6177→export declare function useTranslation(): (id?: string | undefined) => string;
+  6178→
+  6179→/** @public */
+  6180→export declare function useUiEvents(): TLUiEventContextType;
+  6181→
+  6182→/**
+  6183→ * Returns true if the number of UNLOCKED selected shapes is at least min or at most max.
+  6184→ * @public
+  6185→ */
+  6186→export declare function useUnlockedSelectedShapesCount(min?: number, max?: number): boolean | number;
+  6187→
+  6188→/** @public */
+  6189→export declare class VideoAssetUtil extends AssetUtil<TLVideoAsset> {
+  6190→    static type: "video";
+  6191→    static props: {
+  6192→        fileSize: Validator<number | undefined>;
+  6193→        h: Validator<number>;
+  6194→        isAnimated: Validator<boolean>;
+  6195→        mimeType: Validator<null | string>;
+  6196→        name: Validator<string>;
+  6197→        src: Validator<null | string>;
+  6198→        w: Validator<number>;
+  6199→    };
+  6200→    static migrations: MigrationSequence;
+  6201→    options: {
+  6202→        supportedMimeTypes: null | readonly string[];
+  6203→    };
+  6204→    getDefaultProps(): TLVideoAsset['props'];
+  6205→    getSupportedMimeTypes(): readonly string[];
+  6206→    getAssetFromFile(file: File, assetId: TLAssetId): Promise<null | TLVideoAsset>;
+  6207→}
+  6208→
+  6209→/** @public */
+  6210→export declare interface VideoShapeOptions extends ShapeOptionsWithDisplayValues<TLVideoShape, VideoShapeUtilDisplayValues> {
+  6211→    /**
+  6212→     * Should videos play automatically?
+  6213→     */
+  6214→    autoplay: boolean;
+  6215→}
+  6216→
+  6217→/** @public */
+  6218→export declare class VideoShapeUtil extends BaseBoxShapeUtil<TLVideoShape> {
+  6219→    static type: "video";
+  6220→    static props: RecordProps<TLVideoShape>;
+  6221→    static migrations: TLPropsMigrations;
+  6222→    static handledAssetTypes: readonly ["video"];
+  6223→    options: VideoShapeOptions;
+  6224→    canEdit(shape: TLVideoShape): boolean;
+  6225→    isAspectRatioLocked(shape: TLVideoShape): boolean;
+  6226→    getDefaultProps(): TLVideoShape['props'];
+  6227→    createShapeForAsset(asset: TLAsset, position: VecModel): null | TLShapePartial;
+  6228→    getAriaDescriptor(shape: TLVideoShape): string;
+  6229→    component(shape: TLVideoShape): JSX.Element;
+  6230→    getIndicatorPath(shape: TLVideoShape): Path2D;
+  6231→    toSvg(shape: TLVideoShape, ctx: SvgExportContext): Promise<JSX.Element | null>;
+  6232→}
+  6233→
+  6234→/** @public */
+  6235→export declare interface VideoShapeUtilDisplayValues {
+  6236→}
+  6237→
+  6238→/** @public @react */
+  6239→export declare function ViewSubmenu(): JSX.Element;
+  6240→
+  6241→/** @public @react */
+  6242→export declare function XBoxToolbarItem(): JSX.Element;
+  6243→
+  6244→/**
+  6245→ * Overlay util for the zoom brush rectangle.
+  6246→ *
+  6247→ * @public
+  6248→ */
+  6249→export declare class ZoomBrushOverlayUtil extends OverlayUtil<TLZoomBrushOverlay> {
+  6250→    static type: string;
+  6251→    options: {
+  6252→        lineWidth: number;
+  6253→        zIndex: number;
+  6254→    };
+  6255→    isActive(): boolean;
+  6256→    getOverlays(): TLZoomBrushOverlay[];
+  6257→    render(ctx: CanvasRenderingContext2D, overlays: TLZoomBrushOverlay[]): void;
+  6258→    renderMinimap(ctx: CanvasRenderingContext2D, overlays: TLZoomBrushOverlay[], zoom: number): void;
+  6259→}
+  6260→
+  6261→/** @public @react */
+  6262→export declare function ZoomOrRotateMenuItem(): JSX.Element;
+  6263→
+  6264→/** @public @react */
+  6265→export declare function ZoomTo100MenuItem(): JSX.Element;
+  6266→
+  6267→/** @public @react */
+  6268→export declare function ZoomToFitMenuItem(): JSX.Element;
+  6269→
+  6270→/** @public */
+  6271→export declare class ZoomTool extends StateNode {
+  6272→    static id: string;
+  6273→    static initial: string;
+  6274→    static children(): TLStateNodeConstructor[];
+  6275→    static isLockable: boolean;
+  6276→    info: TLPointerEventInfo & {
+  6277→        onInteractionEnd?: string | undefined;
+  6278→    };
+  6279→    onEnter(info: TLPointerEventInfo & {
+  6280→        onInteractionEnd: string;
+  6281→    }): void;
+  6282→    onExit(): void;
+  6283→    onKeyDown(): void;
+  6284→    onKeyUp(info: TLKeyboardEventInfo): void;
+  6285→    onInterrupt(): void;
+  6286→    private complete;
+  6287→    private updateCursor;
+  6288→}
+  6289→
+  6290→/** @public @react */
+  6291→export declare function ZoomToSelectionMenuItem(): JSX.Element;
+  6292→
+  6293→
+  6294→export * from "@tldraw/editor";
+  6295→
+  6296→export { }
+  6297→

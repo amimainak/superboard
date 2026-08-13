@@ -1,0 +1,2002 @@
+  2060→    onCancel(): void;
+  2061→    onContinue(): void;
+  2062→}
+  2063→
+  2064→/**
+  2065→ * Export the given shapes as files.
+  2066→ *
+  2067→ * @param editor - The editor instance.
+  2068→ * @param ids - The ids of the shapes to export.
+  2069→ * @param opts - Options for the export.
+  2070→ *
+  2071→ * @public
+  2072→ */
+  2073→export declare function exportAs(editor: Editor, ids: TLShapeId[], opts: ExportAsOptions): Promise<void>;
+  2074→
+  2075→/** @public @react */
+  2076→export declare function ExportAsMenuGroup(): JSX.Element | null;
+  2077→
+  2078→/** @public */
+  2079→export declare interface ExportAsOptions extends TLImageExportOptions {
+  2080→    /** {@inheritdoc @tldraw/editor#TLImageExportOptions.format} */
+  2081→    format: TLExportType;
+  2082→    /** Name of the exported file. If undefined a predefined name, based on the selection, will be used. */
+  2083→    name?: string;
+  2084→}
+  2085→
+  2086→/** @public @react */
+  2087→export declare function ExportFileContentSubMenu(): JSX.Element | null;
+  2088→
+  2089→/** @public @react */
+  2090→export declare function ExtrasGroup(): JSX.Element;
+  2091→
+  2092→/** @public @react */
+  2093→export declare function FeatureFlags(props: FeatureFlagsProps): JSX.Element | null;
+  2094→
+  2095→/** @public */
+  2096→export declare interface FeatureFlagsProps {
+  2097→    customFeatureFlags?: Record<string, DebugFlag<boolean>> | undefined;
+  2098→}
+  2099→
+  2100→/**
+  2101→ * Fit a frame (or any frame-like container shape) to its content.
+  2102→ *
+  2103→ * @param id - Id of the frame you wish to fit to content.
+  2104→ * @param editor - tlraw editor instance.
+  2105→ * @param opts - Options for fitting the frame.
+  2106→ *
+  2107→ * @public
+  2108→ */
+  2109→export declare function fitFrameToContent(editor: Editor, id: TLShapeId, opts?: {
+  2110→    padding: number;
+  2111→}): void;
+  2112→
+  2113→/** @public @react */
+  2114→export declare function FitFrameToContentMenuItem(): JSX.Element | null;
+  2115→
+  2116→/** @public */
+  2117→export declare interface FrameShapeOptions extends ShapeOptionsWithDisplayValues<TLFrameShape, FrameShapeUtilDisplayValues> {
+  2118→    /**
+  2119→     * When true, the frame will display colors for the shape's headings and background.
+  2120→     */
+  2121→    showColors: boolean;
+  2122→    /**
+  2123→     * When true, the frame will resize its children when the frame itself is resized.
+  2124→     */
+  2125→    resizeChildren: boolean;
+  2126→}
+  2127→
+  2128→/** @public */
+  2129→export declare class FrameShapeTool extends BaseBoxShapeTool {
+  2130→    static id: string;
+  2131→    static initial: string;
+  2132→    shapeType: "frame";
+  2133→    onCreate(shape: null | TLShape): void;
+  2134→}
+  2135→
+  2136→/** @public */
+  2137→export declare class FrameShapeUtil extends BaseFrameLikeShapeUtil<TLFrameShape> {
+  2138→    static type: "frame";
+  2139→    static props: RecordProps<TLFrameShape>;
+  2140→    static migrations: TLPropsMigrations;
+  2141→    options: FrameShapeOptions;
+  2142→    static configure<T extends TLShapeUtilConstructor<any, any>>(this: T, options: T extends new (...args: any[]) => {
+  2143→        options: infer Options;
+  2144→    } ? Partial<Options> : never): T;
+  2145→    canEdit(shape: TLFrameShape, info: TLEditStartInfo): boolean;
+  2146→    canResize(shape: TLFrameShape): boolean;
+  2147→    canResizeChildren(shape: TLFrameShape): boolean;
+  2148→    isExportBoundsContainer(): boolean;
+  2149→    getDefaultProps(): TLFrameShape['props'];
+  2150→    getAriaDescriptor(shape: TLFrameShape): string;
+  2151→    getGeometry(shape: TLFrameShape): Geometry2d;
+  2152→    getText(shape: TLFrameShape): string | undefined;
+  2153→    component(shape: TLFrameShape): JSX.Element;
+  2154→    toSvg(shape: TLFrameShape, ctx: SvgExportContext): JSX.Element;
+  2155→    getIndicatorPath(shape: TLFrameShape): Path2D;
+  2156→    getInterpolatedProps(startShape: TLFrameShape, endShape: TLFrameShape, t: number): TLFrameShapeProps;
+  2157→    onDoubleClickEdge(shape: TLFrameShape, info: TLClickEventInfo): {
+  2158→        id: TLShapeId_2;
+  2159→        props: {
+  2160→            h: number;
+  2161→            w: number;
+  2162→        };
+  2163→        type: "frame";
+  2164→    } | undefined;
+  2165→    onDoubleClickCorner(shape: TLFrameShape): {
+  2166→        id: TLShapeId_2;
+  2167→        type: "frame";
+  2168→    };
+  2169→}
+  2170→
+  2171→/** @public */
+  2172→export declare interface FrameShapeUtilDisplayValues {
+  2173→    fillColor: string;
+  2174→    strokeColor: string;
+  2175→    showColorsFillColor: string;
+  2176→    showColorsStrokeColor: string;
+  2177→    headingFillColor: string;
+  2178→    headingStrokeColor: string;
+  2179→    headingTextColor: string;
+  2180→    showColorsHeadingFillColor: string;
+  2181→    showColorsHeadingStrokeColor: string;
+  2182→    showColorsHeadingTextColor: string;
+  2183→}
+  2184→
+  2185→/** @public @react */
+  2186→export declare function FrameToolbarItem(): JSX.Element;
+  2187→
+  2188→/** @public */
+  2189→export declare interface GeoShapeOptions extends ShapeOptionsWithDisplayValues<TLGeoShape, GeoShapeUtilDisplayValues> {
+  2190→    showTextOutline: boolean;
+  2191→    /**
+  2192→     * A map of custom geo type definitions. Each key becomes a new value for
+  2193→     * {@link @tldraw/editor#GeoShapeGeoStyle} that can be used in the style panel
+  2194→     * and on shapes. Custom geo types inherit all standard geo shape behavior
+  2195→     * (labels, resizing, styling, etc.).
+  2196→     *
+  2197→     * @example
+  2198→     * ```ts
+  2199→     * const MyGeoShapeUtil = GeoShapeUtil.configure({
+  2200→     *   customGeoTypes: {
+  2201→     *     'my-shape': {
+  2202→     *       getPath: (w, h) => new PathBuilder().moveTo(0, 0).lineTo(w, 0).lineTo(w, h).lineTo(0, h).close(),
+  2203→     *       snapType: 'polygon',
+  2204→     *       icon: 'geo-rectangle',
+  2205→     *     },
+  2206→     *   },
+  2207→     * })
+  2208→     * ```
+  2209→     */
+  2210→    customGeoTypes?: Record<string, GeoTypeDefinition>;
+  2211→}
+  2212→
+  2213→/** @public */
+  2214→export declare class GeoShapeTool extends StateNode {
+  2215→    static id: string;
+  2216→    static initial: string;
+  2217→    static children(): TLStateNodeConstructor[];
+  2218→    shapeType: string;
+  2219→}
+  2220→
+  2221→/** @public */
+  2222→export declare class GeoShapeUtil extends BaseBoxShapeUtil<TLGeoShape> {
+  2223→    static type: "geo";
+  2224→    static props: RecordProps<TLGeoShape>;
+  2225→    static migrations: TLPropsMigrations;
+  2226→    static configure<T extends TLShapeUtilConstructor<any, any>>(this: T, options: T extends new (...args: any[]) => {
+  2227→        options: infer Options;
+  2228→    } ? Partial<Options> : never): T;
+  2229→    options: GeoShapeOptions;
+  2230→    canEdit(shape: TLGeoShape): boolean;
+  2231→    getDefaultProps(): TLGeoShape['props'];
+  2232→    getGeometry(shape: TLGeoShape): Group2d;
+  2233→    getHandleSnapGeometry(shape: TLGeoShape): HandleSnapGeometry;
+  2234→    getText(shape: TLGeoShape): string;
+  2235→    getFontFaces(shape: TLGeoShape): TLFontFace[];
+  2236→    component(shape: TLGeoShape): JSX.Element;
+  2237→    getIndicatorPath(shape: TLGeoShape): Path2D | undefined;
+  2238→    toSvg(shape: TLGeoShape, ctx: SvgExportContext): JSX.Element;
+  2239→    getCanvasSvgDefs(): TLShapeUtilCanvasSvgDef[];
+  2240→    onResize(shape: TLGeoShape, { handle, newPoint, scaleX, scaleY, initialShape }: TLResizeInfo<TLGeoShape>): {
+  2241→        props: {
+  2242→            flipX: boolean;
+  2243→            flipY: boolean;
+  2244→            growY: number;
+  2245→            h: number;
+  2246→            w: number;
+  2247→        };
+  2248→        x: number;
+  2249→        y: number;
+  2250→    };
+  2251→    onBeforeCreate(shape: TLGeoShape): {
+  2252→        id: TLShapeId;
+  2253→        index: IndexKey;
+  2254→        isLocked: boolean;
+  2255→        meta: JsonObject;
+  2256→        opacity: number;
+  2257→        parentId: TLParentId;
+  2258→        props: {
+  2259→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  2260→            color: TLDefaultColorStyle;
+  2261→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2262→            fill: "fill" | "lined-fill" | "none" | "pattern" | "semi" | "solid";
+  2263→            flipX: boolean;
+  2264→            flipY: boolean;
+  2265→            font: TLDefaultFontStyle;
+  2266→            geo: "arrow-down" | "arrow-left" | "arrow-right" | "arrow-up" | "check-box" | "cloud" | "diamond" | "ellipse" | "heart" | "hexagon" | "octagon" | "oval" | "pentagon" | "rectangle" | "rhombus-2" | "rhombus" | "star" | "trapezoid" | "triangle" | "x-box";
+  2267→            growY: number;
+  2268→            h: number;
+  2269→            labelColor: TLDefaultColorStyle;
+  2270→            richText: {
+  2271→                attrs?: any;
+  2272→                content: unknown[];
+  2273→                type: string;
+  2274→            };
+  2275→            scale: number;
+  2276→            size: "l" | "m" | "s" | "xl";
+  2277→            url: string;
+  2278→            verticalAlign: "end" | "middle" | "start";
+  2279→            w: number;
+  2280→        };
+  2281→        rotation: number;
+  2282→        type: "geo";
+  2283→        typeName: "shape";
+  2284→        x: number;
+  2285→        y: number;
+  2286→    } | undefined;
+  2287→    onBeforeUpdate(prev: TLGeoShape, next: TLGeoShape): {
+  2288→        id: TLShapeId;
+  2289→        index: IndexKey;
+  2290→        isLocked: boolean;
+  2291→        meta: JsonObject;
+  2292→        opacity: number;
+  2293→        parentId: TLParentId;
+  2294→        props: {
+  2295→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  2296→            color: TLDefaultColorStyle;
+  2297→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2298→            fill: "fill" | "lined-fill" | "none" | "pattern" | "semi" | "solid";
+  2299→            flipX: boolean;
+  2300→            flipY: boolean;
+  2301→            font: TLDefaultFontStyle;
+  2302→            geo: "arrow-down" | "arrow-left" | "arrow-right" | "arrow-up" | "check-box" | "cloud" | "diamond" | "ellipse" | "heart" | "hexagon" | "octagon" | "oval" | "pentagon" | "rectangle" | "rhombus-2" | "rhombus" | "star" | "trapezoid" | "triangle" | "x-box";
+  2303→            growY: number;
+  2304→            h: number;
+  2305→            labelColor: TLDefaultColorStyle;
+  2306→            richText: {
+  2307→                attrs?: any;
+  2308→                content: unknown[];
+  2309→                type: string;
+  2310→            };
+  2311→            scale: number;
+  2312→            size: "l" | "m" | "s" | "xl";
+  2313→            url: string;
+  2314→            verticalAlign: "end" | "middle" | "start";
+  2315→            w: number;
+  2316→        };
+  2317→        rotation: number;
+  2318→        type: "geo";
+  2319→        typeName: "shape";
+  2320→        x: number;
+  2321→        y: number;
+  2322→    } | undefined;
+  2323→    onDoubleClick(shape: TLGeoShape): {
+  2324→        id: TLShapeId;
+  2325→        index: IndexKey;
+  2326→        isLocked: boolean;
+  2327→        meta: JsonObject;
+  2328→        opacity: number;
+  2329→        parentId: TLParentId;
+  2330→        props: {
+  2331→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  2332→            color: TLDefaultColorStyle;
+  2333→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2334→            fill: "fill" | "lined-fill" | "none" | "pattern" | "semi" | "solid";
+  2335→            flipX: boolean;
+  2336→            flipY: boolean;
+  2337→            font: TLDefaultFontStyle;
+  2338→            geo: "arrow-down" | "arrow-left" | "arrow-right" | "arrow-up" | "check-box" | "cloud" | "diamond" | "ellipse" | "heart" | "hexagon" | "octagon" | "oval" | "pentagon" | "rectangle" | "rhombus-2" | "rhombus" | "star" | "trapezoid" | "triangle" | "x-box";
+  2339→            growY: number;
+  2340→            h: number;
+  2341→            labelColor: TLDefaultColorStyle;
+  2342→            richText: {
+  2343→                attrs?: any;
+  2344→                content: unknown[];
+  2345→                type: string;
+  2346→            };
+  2347→            scale: number;
+  2348→            size: "l" | "m" | "s" | "xl";
+  2349→            url: string;
+  2350→            verticalAlign: "end" | "middle" | "start";
+  2351→            w: number;
+  2352→        };
+  2353→        rotation: number;
+  2354→        type: "geo";
+  2355→        typeName: "shape";
+  2356→        x: number;
+  2357→        y: number;
+  2358→    } | {
+  2359→        id: TLShapeId;
+  2360→        index: IndexKey;
+  2361→        isLocked: boolean;
+  2362→        meta: JsonObject;
+  2363→        opacity: number;
+  2364→        parentId: TLParentId;
+  2365→        props: {
+  2366→            geo: "check-box";
+  2367→        };
+  2368→        rotation: number;
+  2369→        type: "geo";
+  2370→        typeName: "shape";
+  2371→        x: number;
+  2372→        y: number;
+  2373→    } | {
+  2374→        id: TLShapeId;
+  2375→        index: IndexKey;
+  2376→        isLocked: boolean;
+  2377→        meta: JsonObject;
+  2378→        opacity: number;
+  2379→        parentId: TLParentId;
+  2380→        props: {
+  2381→            geo: "rectangle";
+  2382→        };
+  2383→        rotation: number;
+  2384→        type: "geo";
+  2385→        typeName: "shape";
+  2386→        x: number;
+  2387→        y: number;
+  2388→    } | undefined;
+  2389→    getInterpolatedProps(startShape: TLGeoShape, endShape: TLGeoShape, t: number): TLGeoShapeProps;
+  2390→    /**
+  2391→     * Get the unscaled dimensions from a geo shape's props
+  2392→     */
+  2393→    private getUnscaledGeoProps;
+  2394→    /**
+  2395→     * Calculate the growY needed to fit a label within a shape.
+  2396→     * Returns null if no change is needed, otherwise returns the new unscaled growY value.
+  2397→     */
+  2398→    private calculateGrowY;
+  2399→    /**
+  2400→     * Calculate expanded dimensions when adding a label to a shape for the first time.
+  2401→     * Ensures the shape meets minimum size requirements and is square if originally small.
+  2402→     */
+  2403→    private expandShapeForFirstLabel;
+  2404→    private _labelSizesForGeoCache;
+  2405→    /**
+  2406→     * Get the cached label size for the shape. Don't call with empty rich text.
+  2407→     */
+  2408→    private getUnscaledLabelSize;
+  2409→    /**
+  2410→     * Expensively measure the unscaled label size for the shape. Avoid using it if we can.
+  2411→     */
+  2412→    private measureUnscaledLabelSize;
+  2413→}
+  2414→
+  2415→/** @public */
+  2416→export declare interface GeoShapeUtilDisplayValues {
+  2417→    strokeColor: string;
+  2418→    strokeRoundness: number;
+  2419→    strokeWidth: number;
+  2420→    fillColor: string;
+  2421→    patternFillFallbackColor: string;
+  2422→    labelColor: string;
+  2423→    labelFontFamily: string;
+  2424→    labelFontSize: number;
+  2425→    labelMinWidth: number;
+  2426→    labelExtraPadding: number;
+  2427→    labelLineHeight: number;
+  2428→    labelFontWeight: string;
+  2429→    labelFontVariant: string;
+  2430→    labelFontStyle: string;
+  2431→    labelHorizontalAlign: 'center' | 'end' | 'start';
+  2432→    labelVerticalAlign: 'end' | 'middle' | 'start';
+  2433→    labelPadding: number;
+  2434→    labelEdgeMargin: number;
+  2435→    minSizeWithLabel: number;
+  2436→}
+  2437→
+  2438→/**
+  2439→ * Defines the behavior for a geo shape type. Every built-in geo type is
+  2440→ * registered through this same interface (see {@link defaultGeoTypeDefinitions}),
+  2441→ * and consumers can register additional types via
+  2442→ * {@link @tldraw/tldraw#GeoShapeUtil.configure | GeoShapeUtil.configure()}.
+  2443→ *
+  2444→ * @public
+  2445→ */
+  2446→export declare interface GeoTypeDefinition {
+  2447→    /**
+  2448→     * Generate the path geometry for this geo type.
+  2449→     *
+  2450→     * @param w - The width of the shape (already clamped to min 1)
+  2451→     * @param h - The height of the shape (already clamped to min 1, includes growY)
+  2452→     * @param shape - The full geo shape record, for access to props like id, dash, fill, etc.
+  2453→     * @param strokeWidth - The scaled stroke width (strokeWidth * scale)
+  2454→     */
+  2455→    getPath(w: number, h: number, shape: TLGeoShape, strokeWidth: number): PathBuilder;
+  2456→    /** Snap behavior: 'polygon' snaps to vertices + center, 'blobby' snaps to center only. */
+  2457→    snapType: 'blobby' | 'polygon';
+  2458→    /** Default creation size when clicking (not dragging). Defaults to 200x200. */
+  2459→    defaultSize?: {
+  2460→        h: number;
+  2461→        w: number;
+  2462→    };
+  2463→    /** Icon name for the style panel geo picker. */
+  2464→    icon: string;
+  2465→    /**
+  2466→     * Optional double-click handler. Return an object with partial props to update the shape,
+  2467→     * or void to do nothing.
+  2468→     */
+  2469→    onDoubleClick?(shape: TLGeoShape): {
+  2470→        props: Partial<TLGeoShape['props']>;
+  2471→    } | void;
+  2472→}
+  2473→
+  2474→/** @public */
+  2475→export declare function getArrowBindings(editor: Editor, shape: TLArrowShape): TLArrowBindings;
+  2476→
+  2477→/** @public */
+  2478→export declare function getArrowInfo(editor: Editor, shape: TLArrowShape | TLShapeId): TLArrowInfo | undefined;
+  2479→
+  2480→/**
+  2481→ * Get the current arrow target state for an editor. See {@link ArrowTargetState} for more
+  2482→ * information.
+  2483→ *
+  2484→ * @public
+  2485→ */
+  2486→export declare function getArrowTargetState(editor: Editor): ArrowTargetState | null;
+  2487→
+  2488→/** @public */
+  2489→export declare function getArrowTerminalsInArrowSpace(editor: Editor, shape: TLArrowShape, bindings: TLArrowBindings): {
+  2490→    end: Vec;
+  2491→    start: Vec;
+  2492→};
+  2493→
+  2494→/** @public */
+  2495→export declare function getAssetInfo(editor: Editor, file: File, assetId?: TLAssetId): Promise<null | TLAsset>;
+  2496→
+  2497→/**
+  2498→ * Returns the current list of color style items for the style panel,
+  2499→ * derived from the theme's color palette. Only palette colors are included;
+  2500→ * utility colors like `text`, `background`, etc. are excluded.
+  2501→ *
+  2502→ * Colors are ordered by their position in {@link @tldraw/tlschema#DefaultColorStyle},
+  2503→ * followed by any additional theme colors in their object key order.
+  2504→ *
+  2505→ * @public
+  2506→ */
+  2507→export declare function getColorStyleItems(colors: TLThemeColors): StyleValuesForUi<string>;
+  2508→
+  2509→/** @public */
+  2510→export declare function getCropBox<T extends ShapeWithCrop>(shape: T, info: TLCropInfo<T>, opts?: CropBoxOptions): {
+  2511→    id: TLShapeId;
+  2512→    props: ShapeWithCrop['props'];
+  2513→    type: T['type'];
+  2514→    x: number;
+  2515→    y: number;
+  2516→} | undefined;
+  2517→
+  2518→/** @public */
+  2519→export declare function getDefaultCrop(): TLShapeCrop;
+  2520→
+  2521→/**
+  2522→ * Get the resolved display values for a shape, merging the base values with any overrides.
+  2523→ *
+  2524→ * @public
+  2525→ */
+  2526→export declare function getDisplayValues<Shape extends TLShape, DisplayValues extends object>(util: {
+  2527→    editor: Editor;
+  2528→    options: ShapeOptionsWithDisplayValues<Shape, DisplayValues>;
+  2529→}, shape: Shape, colorMode?: 'dark' | 'light'): DisplayValues;
+  2530→
+  2531→/**
+  2532→ * Tests whether an URL supports embedding and returns the result. If we encounter an error, we
+  2533→ * return undefined.
+  2534→ *
+  2535→ * @param inputUrl - The URL to match
+  2536→ * @param embedConfig - Optional per-embed config, keyed by embed type, passed to `toEmbedUrl`
+  2537→ * @public
+  2538→ */
+  2539→export declare function getEmbedInfo(definitions: readonly TLEmbedDefinition[], inputUrl: string, embedConfig?: Record<string, unknown>): TLEmbedResult;
+  2540→
+  2541→/** @public */
+  2542→export declare function getFontFamily(theme: TLTheme, font: string): string;
+  2543→
+  2544→/**
+  2545→ * Returns the current list of font style items for the style panel,
+  2546→ * derived from the theme's font palette.
+  2547→ *
+  2548→ * Fonts are ordered by their position in {@link @tldraw/tlschema#DefaultFontStyle},
+  2549→ * followed by any additional theme fonts in their object key order.
+  2550→ *
+  2551→ * @public
+  2552→ */
+  2553→export declare function getFontStyleItems(theme: TLTheme): StyleValuesForUi<string>;
+  2554→
+  2555→/**
+  2556→ * Look up a geo type definition by name, checking custom types first then
+  2557→ * falling back to the built-in registry.
+  2558→ *
+  2559→ * @public
+  2560→ */
+  2561→export declare function getGeoTypeDefinition(name: string, customGeoTypes?: Record<string, GeoTypeDefinition>): GeoTypeDefinition | undefined;
+  2562→
+  2563→/** @public */
+  2564→export declare function getHitShapeOnCanvasPointerDown(editor: Editor, hitLabels?: boolean): TLShape | undefined;
+  2565→
+  2566→/** @public */
+  2567→export declare function getPointsFromDrawSegment(segment: TLDrawShapeSegment, scaleX: number, scaleY: number, points?: Vec[]): Vec[];
+  2568→
+  2569→/** @public */
+  2570→export declare function getPointsFromDrawSegments(segments: TLDrawShapeSegment[], scaleX?: number, scaleY?: number): Vec[];
+  2571→
+  2572→/**
+  2573→ * ## getStroke
+  2574→ *
+  2575→ * Get an array of points describing a polygon that surrounds the input points.
+  2576→ *
+  2577→ * @param points - An array of points (as `[x, y, pressure]` or `{x, y, pressure}`). Pressure is
+  2578→ *   optional in both cases.
+  2579→ * @param options - An object with options.
+  2580→ * @public
+  2581→ */
+  2582→export declare function getStroke(points: VecLike[], options?: StrokeOptions): Vec[];
+  2583→
+  2584→/**
+  2585→ * ## getStrokeOutlinePoints
+  2586→ *
+  2587→ * Get an array of points (as `[x, y]`) representing the outline of a stroke.
+  2588→ *
+  2589→ * @param points - An array of StrokePoints as returned from `getStrokePoints`.
+  2590→ * @param options - An object with options.
+  2591→ * @public
+  2592→ */
+  2593→export declare function getStrokeOutlinePoints(strokePoints: StrokePoint[], options?: StrokeOptions): Vec[];
+  2594→
+  2595→/**
+  2596→ * ## getStrokePoints
+  2597→ *
+  2598→ * Get an array of points as objects with an adjusted point, pressure, vector, distance, and
+  2599→ * runningLength.
+  2600→ *
+  2601→ * @param points - An array of points (as `[x, y, pressure]` or `{x, y, pressure}`). Pressure is
+  2602→ *   optional in both cases.
+  2603→ * @param options - An object with options.
+  2604→ * @public
+  2605→ */
+  2606→export declare function getStrokePoints(rawInputPoints: VecLike[], options?: StrokeOptions): StrokePoint[];
+  2607→
+  2608→/**
+  2609→ * Turn an array of stroke points into a path of quadratic curves.
+  2610→ *
+  2611→ * The path uses relative commands with coordinates rounded to hundredths of a pixel, which
+  2612→ * renders identically to the absolute 4-decimal form but is much smaller and faster to build.
+  2613→ *
+  2614→ * @param points - The stroke points returned from perfect-freehand
+  2615→ * @param closed - Whether the shape is closed
+  2616→ *
+  2617→ * @public
+  2618→ */
+  2619→export declare function getSvgPathFromStrokePoints(points: StrokePoint[], closed?: boolean): string;
+  2620→
+  2621→/**
+  2622→ * Build tldraw's default TipTap extension set, optionally overriding the bundled `StarterKit`
+  2623→ * options. The one lever most consumers want is turning individual nodes off (e.g. comments use a
+  2624→ * headingless set via `getTipTapDefaultExtensions({ heading: false })`); because `StarterKit` is a
+  2625→ * single umbrella extension, its sub-extensions can only be disabled through its config, not by
+  2626→ * filtering the returned array.
+  2627→ *
+  2628→ * @public
+  2629→ */
+  2630→export declare function getTipTapDefaultExtensions(starterKitOptions?: Partial<StarterKitOptions>): Extensions;
+  2631→
+  2632→/**
+  2633→ * Original (uncropped) width and height of shape.
+  2634→ *
+  2635→ * @public
+  2636→ */
+  2637→export declare function getUncroppedSize(shapeSize: {
+  2638→    h: number;
+  2639→    w: number;
+  2640→}, crop: null | TLShapeCrop): {
+  2641→    h: number;
+  2642→    w: number;
+  2643→};
+  2644→
+  2645→/**
+  2646→ * Configuration for the default Google Maps embed. Provide an `apiKey` through
+  2647→ * {@link EmbedShapeUtil}'s `embedConfig` option to render Google Maps embeds.
+  2648→ *
+  2649→ * @public
+  2650→ */
+  2651→export declare interface GoogleMapsEmbedConfig {
+  2652→    readonly apiKey?: string;
+  2653→}
+  2654→
+  2655→/** @public @react */
+  2656→export declare function GroupMenuItem(): JSX.Element | null;
+  2657→
+  2658→/** @public @react */
+  2659→export declare function GroupOrUngroupMenuItem(): JSX.Element;
+  2660→
+  2661→/**
+  2662→ * When the user copies or cuts, write the contents to the clipboard.
+  2663→ *
+  2664→ * @public
+  2665→ */
+  2666→export declare function handleNativeOrMenuCopy(editor: Editor, context?: TLClipboardWriteInfo): Promise<boolean>;
+  2667→
+  2668→/** @public */
+  2669→export declare class HandTool extends StateNode {
+  2670→    static id: string;
+  2671→    static initial: string;
+  2672→    static isLockable: boolean;
+  2673→    static children(): TLStateNodeConstructor[];
+  2674→    onDoubleClick(info: TLClickEventInfo): void;
+  2675→}
+  2676→
+  2677→/** @public @react */
+  2678→export declare function HandToolbarItem(): JSX.Element;
+  2679→
+  2680→/** @public @react */
+  2681→export declare function HeartToolbarItem(): JSX.Element;
+  2682→
+  2683→/** @public @react */
+  2684→export declare function HexagonToolbarItem(): JSX.Element;
+  2685→
+  2686→/** @public */
+  2687→export declare function hideAllTooltips(): void;
+  2688→
+  2689→/** @public */
+  2690→export declare interface HighlightShapeOptions extends ShapeOptionsWithDisplayValues<TLHighlightShape, HighlightShapeUtilDisplayValues> {
+  2691→    /**
+  2692→     * The maximum number of points in a line before the draw tool will begin a new shape.
+  2693→     * A higher number will lead to poor performance while drawing very long lines.
+  2694→     */
+  2695→    readonly maxPointsPerShape: number;
+  2696→}
+  2697→
+  2698→/** @public */
+  2699→export declare class HighlightShapeTool extends StateNode {
+  2700→    static id: string;
+  2701→    static initial: string;
+  2702→    static useCoalescedEvents: boolean;
+  2703→    static children(): TLStateNodeConstructor[];
+  2704→    static isLockable: boolean;
+  2705→    shapeType: string;
+  2706→    onExit(): void;
+  2707→}
+  2708→
+  2709→/** @public */
+  2710→export declare class HighlightShapeUtil extends ShapeUtil<TLHighlightShape> {
+  2711→    static type: "highlight";
+  2712→    static props: RecordProps<TLHighlightShape>;
+  2713→    static migrations: TLPropsMigrations;
+  2714→    options: HighlightShapeOptions;
+  2715→    hideResizeHandles(shape: TLHighlightShape): boolean;
+  2716→    hideRotateHandle(shape: TLHighlightShape): boolean;
+  2717→    hideSelectionBoundsFg(shape: TLHighlightShape): boolean;
+  2718→    getDefaultProps(): TLHighlightShape['props'];
+  2719→    getGeometry(shape: TLHighlightShape): Circle2d | Polygon2d;
+  2720→    component(shape: TLHighlightShape): JSX.Element;
+  2721→    backgroundComponent(shape: TLHighlightShape): JSX.Element;
+  2722→    getIndicatorPath(shape: TLHighlightShape): Path2D;
+  2723→    toSvg(shape: TLHighlightShape, ctx: SvgExportContext): JSX.Element;
+  2724→    toBackgroundSvg(shape: TLHighlightShape, ctx: SvgExportContext): JSX.Element;
+  2725→    onResize(shape: TLHighlightShape, info: TLResizeInfo<TLHighlightShape>): {
+  2726→        props: {
+  2727→            scaleX: number;
+  2728→            scaleY: number;
+  2729→        };
+  2730→    } | undefined;
+  2731→    getInterpolatedProps(startShape: TLHighlightShape, endShape: TLHighlightShape, t: number): TLHighlightShapeProps;
+  2732→}
+  2733→
+  2734→/** @public */
+  2735→export declare interface HighlightShapeUtilDisplayValues {
+  2736→    strokeColor: string;
+  2737→    strokeWidth: number;
+  2738→    underlayOpacity: number;
+  2739→    overlayOpacity: number;
+  2740→}
+  2741→
+  2742→/** @public @react */
+  2743→export declare function HighlightToolbarItem(): JSX.Element;
+  2744→
+  2745→/** @public */
+  2746→export declare const iconTypes: readonly ["align-bottom", "align-center-horizontal", "align-center-vertical", "align-left", "align-right", "align-top", "alt", "arrow-arc", "arrow-cycle", "arrow-elbow", "arrow-left", "arrowhead-arrow", "arrowhead-bar", "arrowhead-diamond", "arrowhead-dot", "arrowhead-none", "arrowhead-square", "arrowhead-triangle-inverted", "arrowhead-triangle", "blob", "bold", "bookmark", "bring-forward", "bring-to-front", "broken", "bulletList", "check-circle", "check", "chevron-down", "chevron-left", "chevron-right", "chevron-up", "chevrons-ne", "chevrons-sw", "clipboard-copied", "clipboard-copy", "closed", "code", "color", "comment", "corners", "crop", "cross-2", "cross-circle", "dash-dashed", "dash-dotted", "dash-draw", "dash-solid", "disconnected", "discord", "distribute-horizontal", "distribute-vertical", "dot", "dots-horizontal", "dots-vertical", "download", "drag-handle-dots", "duplicate", "edit", "external-link", "fill-fill", "fill-lined-fill", "fill-none", "fill-pattern", "fill-semi", "fill-solid", "follow", "following", "font-draw", "font-mono", "font-sans", "font-serif", "geo-arrow-down", "geo-arrow-left", "geo-arrow-right", "geo-arrow-up", "geo-check-box", "geo-cloud", "geo-diamond", "geo-ellipse", "geo-heart", "geo-hexagon", "geo-octagon", "geo-oval", "geo-pentagon", "geo-rectangle", "geo-rhombus-2", "geo-rhombus", "geo-star", "geo-trapezoid", "geo-triangle", "geo-x-box", "github", "group", "heading", "help-circle", "highlight", "horizontal-align-end", "horizontal-align-middle", "horizontal-align-start", "info-circle", "italic", "leading", "link", "list", "lock", "manual", "menu", "minus", "mixed", "pack", "plus", "question-mark-circle", "question-mark", "redo", "reset-zoom", "rotate-ccw", "rotate-cw", "send-backward", "send-to-back", "share-1", "size-extra-large", "size-large", "size-medium", "size-small", "spline-cubic", "spline-line", "stack-horizontal", "stack-vertical", "status-offline", "stretch-horizontal", "stretch-vertical", "strike", "text-align-center", "text-align-left", "text-align-right", "toggle-off", "toggle-on", "tool-arrow", "tool-eraser", "tool-frame", "tool-hand", "tool-highlight", "tool-laser", "tool-line", "tool-media", "tool-note", "tool-pencil", "tool-pointer", "tool-screenshot", "tool-text", "trash", "twitter", "underline", "undo", "ungroup", "unlock", "vertical-align-end", "vertical-align-middle", "vertical-align-start", "warning-triangle", "zoom-in", "zoom-out"];
+  2747→
+  2748→/** @public */
+  2749→export declare class ImageAssetUtil extends AssetUtil<TLImageAsset> {
+  2750→    static type: "image";
+  2751→    static props: {
+  2752→        fileSize: Validator<number | undefined>;
+  2753→        h: Validator<number>;
+  2754→        isAnimated: Validator<boolean>;
+  2755→        mimeType: Validator<null | string>;
+  2756→        name: Validator<string>;
+  2757→        pixelRatio: Validator<number | undefined>;
+  2758→        src: Validator<null | string>;
+  2759→        w: Validator<number>;
+  2760→    };
+  2761→    static migrations: MigrationSequence;
+  2762→    options: {
+  2763→        maxDimension: number;
+  2764→        supportedMimeTypes: null | readonly string[];
+  2765→    };
+  2766→    getDefaultProps(): TLImageAsset['props'];
+  2767→    getSupportedMimeTypes(): readonly string[];
+  2768→    getAssetFromFile(file: File, assetId: TLAssetId): Promise<null | TLImageAsset>;
+  2769→}
+  2770→
+  2771→/** @public */
+  2772→export declare interface ImageShapeOptions extends ShapeOptionsWithDisplayValues<TLImageShape, ImageShapeUtilDisplayValues> {
+  2773→}
+  2774→
+  2775→/** @public */
+  2776→export declare class ImageShapeUtil extends BaseBoxShapeUtil<TLImageShape> {
+  2777→    static type: "image";
+  2778→    static props: RecordProps<TLImageShape>;
+  2779→    static migrations: TLPropsMigrations;
+  2780→    static handledAssetTypes: readonly ["image"];
+  2781→    options: ImageShapeOptions;
+  2782→    isAspectRatioLocked(shape: TLImageShape): boolean;
+  2783→    canCrop(shape: TLImageShape): boolean;
+  2784→    isExportBoundsContainer(): boolean;
+  2785→    getDefaultProps(): TLImageShape['props'];
+  2786→    createShapeForAsset(asset: TLAsset, position: VecModel): null | TLShapePartial;
+  2787→    getGeometry(shape: TLImageShape): Geometry2d;
+  2788→    getAriaDescriptor(shape: TLImageShape): string;
+  2789→    onResize(shape: TLImageShape, info: TLResizeInfo<TLImageShape>): TLImageShape;
+  2790→    component(shape: TLImageShape): JSX.Element;
+  2791→    getIndicatorPath(shape: TLImageShape): Path2D | undefined;
+  2792→    toSvg(shape: TLImageShape, ctx: SvgExportContext): Promise<JSX.Element | null>;
+  2793→    onDoubleClickEdge(shape: TLImageShape): void;
+  2794→    getInterpolatedProps(startShape: TLImageShape, endShape: TLImageShape, t: number): TLImageShapeProps;
+  2795→}
+  2796→
+  2797→/** @public */
+  2798→export declare interface ImageShapeUtilDisplayValues {
+  2799→}
+  2800→
+  2801→/** @public @react */
+  2802→export declare function InputModeMenu(): JSX.Element;
+  2803→
+  2804→/** @public */
+  2805→export declare const KeyboardShiftEnterTweakExtension: Extension<any, any>;
+  2806→
+  2807→/** @public @react */
+  2808→export declare function KeyboardShortcutsMenuItem(): JSX.Element | null;
+  2809→
+  2810→/** @public @react */
+  2811→export declare function LanguageMenu(): JSX.Element | null;
+  2812→
+  2813→/** @public */
+  2814→export declare class LaserTool extends StateNode {
+  2815→    static id: string;
+  2816→    static initial: string;
+  2817→    static children(): TLStateNodeConstructor[];
+  2818→    static isLockable: boolean;
+  2819→    private sessionId;
+  2820→    onEnter(): void;
+  2821→    onExit(): void;
+  2822→    onCancel(): void;
+  2823→    /**
+  2824→     * Get the current laser session ID, or create a new one if none exists or the current one is fading.
+  2825→     */
+  2826→    getSessionId(): string;
+  2827→}
+  2828→
+  2829→/** @public @react */
+  2830→export declare function LaserToolbarItem(): JSX.Element;
+  2831→
+  2832→/** @public */
+  2833→export declare interface LineShapeOptions extends ShapeOptionsWithDisplayValues<TLLineShape, LineShapeUtilDisplayValues> {
+  2834→}
+  2835→
+  2836→/** @public */
+  2837→export declare class LineShapeTool extends StateNode {
+  2838→    static id: string;
+  2839→    static initial: string;
+  2840→    static children(): TLStateNodeConstructor[];
+  2841→    shapeType: string;
+  2842→}
+  2843→
+  2844→/** @public */
+  2845→export declare class LineShapeUtil extends ShapeUtil<TLLineShape> {
+  2846→    static type: "line";
+  2847→    static props: RecordProps<TLLineShape>;
+  2848→    static migrations: TLPropsMigrations;
+  2849→    options: LineShapeOptions;
+  2850→    hideResizeHandles(shape: TLLineShape): boolean;
+  2851→    hideRotateHandle(shape: TLLineShape): boolean;
+  2852→    hideSelectionBoundsFg(shape: TLLineShape): boolean;
+  2853→    hideSelectionBoundsBg(shape: TLLineShape): boolean;
+  2854→    hideInMinimap(): boolean;
+  2855→    getDefaultProps(): TLLineShape['props'];
+  2856→    getGeometry(shape: TLLineShape): PathBuilderGeometry2d;
+  2857→    getHandles(shape: TLLineShape): TLHandle[];
+  2858→    onResize(shape: TLLineShape, info: TLResizeInfo<TLLineShape>): {
+  2859→        props: {
+  2860→            points: {
+  2861→                [x: string]: {
+  2862→                    id: string;
+  2863→                    index: IndexKey;
+  2864→                    x: number;
+  2865→                    y: number;
+  2866→                };
+  2867→            };
+  2868→        };
+  2869→    };
+  2870→    onBeforeCreate(next: TLLineShape): TLLineShape | void;
+  2871→    onHandleDrag(shape: TLLineShape, { handle }: TLHandleDragInfo<TLLineShape>): {
+  2872→        id: TLShapeId_2;
+  2873→        index: IndexKey;
+  2874→        isLocked: boolean;
+  2875→        meta: JsonObject;
+  2876→        opacity: number;
+  2877→        parentId: TLParentId;
+  2878→        props: {
+  2879→            color: TLDefaultColorStyle;
+  2880→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2881→            points: {
+  2882→                [x: string]: {
+  2883→                    id: string;
+  2884→                    index: IndexKey;
+  2885→                    x: number;
+  2886→                    y: number;
+  2887→                } | TLLineShapePoint;
+  2888→            };
+  2889→            scale: number;
+  2890→            size: "l" | "m" | "s" | "xl";
+  2891→            spline: "cubic" | "line";
+  2892→        };
+  2893→        rotation: number;
+  2894→        type: "line";
+  2895→        typeName: "shape";
+  2896→        x: number;
+  2897→        y: number;
+  2898→    };
+  2899→    onHandleDragStart(shape: TLLineShape, { handle }: TLHandleDragInfo<TLLineShape>): {
+  2900→        id: TLShapeId_2;
+  2901→        index: IndexKey;
+  2902→        isLocked: boolean;
+  2903→        meta: JsonObject;
+  2904→        opacity: number;
+  2905→        parentId: TLParentId;
+  2906→        props: {
+  2907→            color: TLDefaultColorStyle;
+  2908→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2909→            points: {
+  2910→                [x: string]: {
+  2911→                    id: IndexKey;
+  2912→                    index: IndexKey;
+  2913→                    x: number;
+  2914→                    y: number;
+  2915→                } | TLLineShapePoint;
+  2916→            };
+  2917→            scale: number;
+  2918→            size: "l" | "m" | "s" | "xl";
+  2919→            spline: "cubic" | "line";
+  2920→        };
+  2921→        rotation: number;
+  2922→        type: "line";
+  2923→        typeName: "shape";
+  2924→        x: number;
+  2925→        y: number;
+  2926→    } | undefined;
+  2927→    component(shape: TLLineShape): JSX.Element;
+  2928→    getIndicatorPath(shape: TLLineShape): Path2D;
+  2929→    toSvg(shape: TLLineShape, ctx: SvgExportContext): JSX.Element;
+  2930→    getHandleSnapGeometry(shape: TLLineShape): HandleSnapGeometry;
+  2931→    getInterpolatedProps(startShape: TLLineShape, endShape: TLLineShape, t: number): TLLineShape['props'];
+  2932→}
+  2933→
+  2934→/** @public */
+  2935→export declare interface LineShapeUtilDisplayValues {
+  2936→    strokeColor: string;
+  2937→    strokeWidth: number;
+  2938→}
+  2939→
+  2940→/** @public @react */
+  2941→export declare function LineToolbarItem(): JSX.Element;
+  2942→
+  2943→/* Excluded from this release type: LineToPathBuilderCommand */
+  2944→
+  2945→/** @public @react */
+  2946→export declare function LockGroup(): JSX.Element;
+  2947→
+  2948→/** @public @react */
+  2949→export declare function MiscMenuGroup(): JSX.Element;
+  2950→
+  2951→/** @public @react */
+  2952→export declare function MobileStylePanel(): JSX.Element | null;
+  2953→
+  2954→/** @public @react */
+  2955→export declare function MoveToPageMenu(): JSX.Element | null;
+  2956→
+  2957→/* Excluded from this release type: MoveToPathBuilderCommand */
+  2958→
+  2959→/** @public */
+  2960→export declare interface NonePathBuilderOpts extends BasePathBuilderOpts {
+  2961→    style: 'none';
+  2962→}
+  2963→
+  2964→/** @public */
+  2965→export declare interface NoteShapeOptions extends ShapeOptionsWithDisplayValues<TLNoteShape, NoteShapeUtilDisplayValues> {
+  2966→    /**
+  2967→     * How should the note shape resize? By default it does not resize (except automatically based on its text content),
+  2968→     * but you can set it to be user-resizable using scale.
+  2969→     */
+  2970→    resizeMode: 'none' | 'scale';
+  2971→}
+  2972→
+  2973→/** @public */
+  2974→export declare class NoteShapeTool extends StateNode {
+  2975→    static id: string;
+  2976→    static initial: string;
+  2977→    static children(): TLStateNodeConstructor[];
+  2978→    shapeType: string;
+  2979→}
+  2980→
+  2981→/** @public */
+  2982→export declare class NoteShapeUtil extends ShapeUtil<TLNoteShape> {
+  2983→    static type: "note";
+  2984→    static props: RecordProps<TLNoteShape>;
+  2985→    static migrations: TLPropsMigrations;
+  2986→    options: NoteShapeOptions;
+  2987→    canEdit(shape: TLNoteShape): boolean;
+  2988→    hideResizeHandles(shape: TLNoteShape): boolean;
+  2989→    isAspectRatioLocked(shape: TLNoteShape): boolean;
+  2990→    hideSelectionBoundsFg(shape: TLNoteShape): boolean;
+  2991→    getDefaultProps(): TLNoteShape['props'];
+  2992→    getGeometry(shape: TLNoteShape): Group2d;
+  2993→    getHandles(shape: TLNoteShape): TLHandle[];
+  2994→    onResize(shape: any, info: TLResizeInfo<any>): {
+  2995→        props: {
+  2996→            scale: number;
+  2997→        };
+  2998→        x: number;
+  2999→        y: number;
+  3000→    } | undefined;
+  3001→    getText(shape: TLNoteShape): string;
+  3002→    getReferencedUserIds(shape: TLNoteShape): string[];
+  3003→    getFontFaces(shape: TLNoteShape): TLFontFace[];
+  3004→    component(shape: TLNoteShape): JSX.Element;
+  3005→    getIndicatorPath(shape: TLNoteShape): Path2D;
+  3006→    toSvg(shape: TLNoteShape, ctx: SvgExportContext): JSX.Element;
+  3007→    onBeforeCreate(next: TLNoteShape): {
+  3008→        id: TLShapeId;
+  3009→        index: IndexKey_2;
+  3010→        isLocked: boolean;
+  3011→        meta: JsonObject;
+  3012→        opacity: number;
+  3013→        parentId: TLParentId;
+  3014→        props: {
+  3015→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  3016→            color: TLDefaultColorStyle;
+  3017→            font: TLDefaultFontStyle;
+  3018→            fontSizeAdjustment: number;
+  3019→            growY: number;
+  3020→            labelColor: TLDefaultColorStyle;
+  3021→            richText: {
+  3022→                attrs?: any;
+  3023→                content: unknown[];
+  3024→                type: string;
+  3025→            };
+  3026→            scale: number;
+  3027→            size: "l" | "m" | "s" | "xl";
+  3028→            textLastEditedBy: null | string;
+  3029→            url: string;
+  3030→            verticalAlign: "end" | "middle" | "start";
+  3031→        };
+  3032→        rotation: number;
+  3033→        type: "note";
+  3034→        typeName: "shape";
+  3035→        x: number;
+  3036→        y: number;
+  3037→    } | undefined;
+  3038→    onBeforeDuplicate(_source: TLNoteShape, duplicate: TLNoteShape): TLNoteShape | undefined;
+  3039→    onBeforeUpdate(prev: TLNoteShape, next: TLNoteShape): TLNoteShape | undefined;
+  3040→    getInterpolatedProps(startShape: TLNoteShape, endShape: TLNoteShape, t: number): TLNoteShapeProps;
+  3041→    /**
+  3042→     * Get the growY and fontSizeAdjustment for a shape.
+  3043→     */
+  3044→    private getNoteSizeAdjustments;
+  3045→    private _labelSizesForNoteCache;
+  3046→    /**
+  3047→     * Get the cached label size for the shape.
+  3048→     */
+  3049→    private getLabelSize;
+  3050→    /**
+  3051→     * Expensively measure the label size for a note shape.
+  3052→     */
+  3053→    private measureNoteLabelSize;
+  3054→}
+  3055→
+  3056→/** @public */
+  3057→export declare interface NoteShapeUtilDisplayValues {
+  3058→    noteWidth: number;
+  3059→    noteHeight: number;
+  3060→    noteBackgroundColor: string;
+  3061→    borderColor: string;
+  3062→    borderWidth: number;
+  3063→    labelColor: string;
+  3064→    labelFontFamily: string;
+  3065→    labelFontSize: number;
+  3066→    labelLineHeight: number;
+  3067→    labelFontWeight: string;
+  3068→    labelFontVariant: string;
+  3069→    labelFontStyle: string;
+  3070→    labelPadding: number;
+  3071→    labelHorizontalAlign: 'center' | 'end' | 'start';
+  3072→    labelVerticalAlign: 'end' | 'middle' | 'start';
+  3073→}
+  3074→
+  3075→/** @public @react */
+  3076→export declare function NoteToolbarItem(): JSX.Element;
+  3077→
+  3078→/**
+  3079→ * Checks if a file is allowed to be uploaded. If it is not, it will show a toast explaining why to the user.
+  3080→ *
+  3081→ * @param editor - The editor instance
+  3082→ * @param file - The file to check
+  3083→ * @param options - The options for the external content handler
+  3084→ * @returns True if the file is allowed, false otherwise
+  3085→ * @public
+  3086→ */
+  3087→export declare function notifyIfFileNotAllowed(editor: Editor, file: File, options: TLDefaultExternalContentHandlerOpts): boolean;
+  3088→
+  3089→/** @public @react */
+  3090→export declare function OfflineIndicator(): JSX.Element;
+  3091→
+  3092→/**
+  3093→ * A helper method to use in {@link tldraw#TLUiToolItem.onDragStart} to create a shape by dragging it from
+  3094→ * the toolbar.
+  3095→ * @public
+  3096→ */
+  3097→export declare function onDragFromToolbarToCreateShape(editor: Editor, info: TLPointerEventInfo, opts: OnDragFromToolbarToCreateShapesOpts): void;
+  3098→
+  3099→/**
+  3100→ * Options for {@link onDragFromToolbarToCreateShape}.
+  3101→ * @public
+  3102→ */
+  3103→export declare interface OnDragFromToolbarToCreateShapesOpts {
+  3104→    /**
+  3105→     * Create the shape being dragged. You don't need to worry about positioning it, as it'll be
+  3106→     * immediately updated with the correct position.
+  3107→     */
+  3108→    createShape(id: TLShapeId): void;
+  3109→    /**
+  3110→     * Called once the drag interaction has finished.
+  3111→     */
+  3112→    onDragEnd?(id: TLShapeId): void;
+  3113→    /**
+  3114→     * The id of the toolbar tool to keep highlighted while dragging. Defaults to the created shape's
+  3115→     * type. Set this when the dragged shape's type differs from the tool it's dragged from — for
+  3116→     * example, dragging a `draw` shape out from the select tool.
+  3117→     */
+  3118→    maskedToolId?: string;
+  3119→}
+  3120→
+  3121→/** @public @react */
+  3122→export declare function OvalToolbarItem(): JSX.Element;
+  3123→
+  3124→/** @public @react */
+  3125→export declare function OverflowingToolbar({ children, orientation, sizingParentClassName, minItems, minSizePx, maxItems, maxSizePx }: OverflowingToolbarProps): JSX.Element;
+  3126→
+  3127→/** @public */
+  3128→export declare interface OverflowingToolbarProps {
+  3129→    children: React.ReactNode;
+  3130→    orientation: 'horizontal' | 'vertical';
+  3131→    sizingParentClassName: string;
+  3132→    minItems: number;
+  3133→    minSizePx: number;
+  3134→    maxItems: number;
+  3135→    maxSizePx: number;
+  3136→}
+  3137→
+  3138→/** @public @react */
+  3139→export declare const PageItemInput: ({ name, id, isCurrentPage, onCancel, onComplete, }: PageItemInputProps) => JSX.Element;
+  3140→
+  3141→/** @public */
+  3142→export declare interface PageItemInputProps {
+  3143→    name: string;
+  3144→    id: TLPageId;
+  3145→    isCurrentPage: boolean;
+  3146→    onCancel(): void;
+  3147→    onComplete?(): void;
+  3148→}
+  3149→
+  3150→/** @public */
+  3151→export declare const PageItemSubmenu: NamedExoticComponent<PageItemSubmenuProps>;
+  3152→
+  3153→/** @public */
+  3154→export declare interface PageItemSubmenuProps {
+  3155→    index: number;
+  3156→    item: {
+  3157→        id: string;
+  3158→        name: string;
+  3159→    };
+  3160→    listSize: number;
+  3161→    onRename?(): void;
+  3162→}
+  3163→
+  3164→/* Excluded from this release type: parseAndLoadDocument */
+  3165→
+  3166→/** @public */
+  3167→export declare function parseTldrawJsonFile({ json, schema }: {
+  3168→    json: string;
+  3169→    schema: TLSchema;
+  3170→}): Result<TLStore, TldrawFileParseError>;
+  3171→
+  3172→/** @public @react */
+  3173→export declare function PasteMenuItem(): JSX.Element;
+  3174→
+  3175→/** @public */
+  3176→export declare class PathBuilder {
+  3177→    static lineThroughPoints(points: VecLike[], opts?: PathBuilderLineOpts & {
+  3178→        endOffsets?: number;
+  3179→    }): PathBuilder;
+  3180→    static cubicSplineThroughPoints(points: VecLike[], opts?: PathBuilderLineOpts & {
+  3181→        endOffsets?: number;
+  3182→    }): PathBuilder;
+  3183→    constructor();
+  3184→    /* Excluded from this release type: commands */
+  3185→    private lastMoveTo;
+  3186→    private assertHasMoveTo;
+  3187→    moveTo(x: number, y: number, opts?: PathBuilderLineOpts): this;
+  3188→    lineTo(x: number, y: number, opts?: PathBuilderCommandOpts): this;
+  3189→    circularArcTo(radius: number, largeArcFlag: boolean, sweepFlag: boolean, x2: number, y2: number, opts?: PathBuilderCommandOpts): this;
+  3190→    arcTo(rx: number, ry: number, largeArcFlag: boolean, sweepFlag: boolean, xAxisRotationRadians: number, x2: number, y2: number, opts?: PathBuilderCommandOpts): this;
+  3191→    cubicBezierTo(x: number, y: number, cp1X: number, cp1Y: number, cp2X: number, cp2Y: number, opts?: PathBuilderCommandOpts): this;
+  3192→    private cubicBezierToWithResolution;
+  3193→    close(): this;
+  3194→    /**
+  3195→     * Return a new path with every point (including bezier control points) transformed by the given
+  3196→     * affine matrix. Command metadata (fill, dash, close state, draw offsets, etc.) is preserved, so
+  3197→     * this can be used to mirror, scale, translate, or otherwise transform a finished path while
+  3198→     * keeping it renderable and hit-testable.
+  3199→     *
+  3200→     * @param mat - The affine matrix to apply to each point.
+  3201→     */
+  3202→    transform(mat: MatLike): PathBuilder;
+  3203→    toD(opts?: PathBuilderToDOpts): string;
+  3204→    toSvg(opts: PathBuilderOpts): JSX.Element | null;
+  3205→    toPath2D(opts: PathBuilderOpts): Path2D;
+  3206→    toGeometry(): Group2d | PathBuilderGeometry2d;
+  3207→    private toSolidSvg;
+  3208→    private toDashedSvg;
+  3209→    private toDrawSvg;
+  3210→    toDrawD(opts: DrawPathBuilderDOpts): string;
+  3211→    private calculateSegmentLength;
+  3212→    /* Excluded from this release type: getCommands */
+  3213→    /* Excluded from this release type: getCommandInfo */
+  3214→}
+  3215→
+  3216→/* Excluded from this release type: PathBuilderCommand */
+  3217→
+  3218→/* Excluded from this release type: PathBuilderCommandBase */
+  3219→
+  3220→/* Excluded from this release type: PathBuilderCommandInfo */
+  3221→
+  3222→/** @public */
+  3223→export declare interface PathBuilderCommandOpts {
+  3224→    /**
+  3225→     * When converting to a draw-style line, how much offset from the original point should be
+  3226→     * applied?
+  3227→     */
+  3228→    offset?: number;
+  3229→    /**
+  3230→     * When converting to a draw-style line, how much roundness should be applied to the end of this
+  3231→     * line?
+  3232→     */
+  3233→    roundness?: number;
+  3234→    /**
+  3235→     * When converting to a dash- or dot-style line, should the current segment be merged with the
+  3236→     * previous segment when calculating the dash pattern? This is false by default, meaning each
+  3237→     * command will start/end on a dash/dot boundary.
+  3238→     */
+  3239→    mergeWithPrevious?: boolean;
+  3240→}
+  3241→
+  3242→/** @public */
+  3243→export declare class PathBuilderGeometry2d extends Geometry2d {
+  3244→    private readonly path;
+  3245→    private readonly startIdx;
+  3246→    private readonly endIdx;
+  3247→    constructor(path: PathBuilder, startIdx: number, endIdx: number, options: Geometry2dOptions);
+  3248→    private _segments;
+  3249→    getSegments(): Geometry2d[];
+  3250→    getVertices(filters: Geometry2dFilters): Vec[];
+  3251→    nearestPoint(point: VecLike, _filters?: Geometry2dFilters): Vec;
+  3252→    hitTestLineSegment(A: VecLike, B: VecLike, distance?: number, filters?: Geometry2dFilters): boolean;
+  3253→    getSvgPathData(): string;
+  3254→}
+  3255→
+  3256→/** @public */
+  3257→export declare interface PathBuilderLineOpts extends PathBuilderCommandOpts {
+  3258→    geometry?: false | Omit<Geometry2dOptions, 'isClosed'>;
+  3259→    dashStart?: PerfectDashTerminal;
+  3260→    dashEnd?: PerfectDashTerminal;
+  3261→}
+  3262→
+  3263→/** @public */
+  3264→export declare type PathBuilderOpts = DashedPathBuilderOpts | DrawPathBuilderOpts | NonePathBuilderOpts | SolidPathBuilderOpts;
+  3265→
+  3266→/** @public */
+  3267→export declare interface PathBuilderToDOpts {
+  3268→    startIdx?: number;
+  3269→    endIdx?: number;
+  3270→    onlyFilled?: boolean;
+  3271→}
+  3272→
+  3273→/**
+  3274→ * A plain text area that can be used for basic editing text.
+  3275→ *
+  3276→ * @public @react
+  3277→ */
+  3278→export declare const PlainTextArea: React_3.ForwardRefExoticComponent<TextAreaProps & React_3.RefAttributes<HTMLTextAreaElement>>;
+  3279→
+  3280→/**
+  3281→ * Renders a text label that can be used inside of shapes.
+  3282→ * The component has the ability to be edited in place and furthermore
+  3283→ * supports rich text editing.
+  3284→ *
+  3285→ * @public @react
+  3286→ */
+  3287→export declare const PlainTextLabel: React_3.NamedExoticComponent<PlainTextLabelProps>;
+  3288→
+  3289→/** @public */
+  3290→export declare interface PlainTextLabelProps {
+  3291→    shapeId: TLShapeId;
+  3292→    type: ExtractShapeByProps<{
+  3293→        text: string;
+  3294→    }>['type'];
+  3295→    fontFamily: string;
+  3296→    fontSize: number;
+  3297→    lineHeight: number;
+  3298→    textAlign: 'center' | 'end' | 'start';
+  3299→    verticalAlign: 'end' | 'middle' | 'start';
+  3300→    wrap?: boolean;
+  3301→    text?: string;
+  3302→    labelColor: string;
+  3303→    bounds?: Box;
+  3304→    isSelected: boolean;
+  3305→    onKeyDown?(e: KeyboardEvent): void;
+  3306→    classNamePrefix?: string;
+  3307→    style?: React_3.CSSProperties;
+  3308→    textWidth?: number;
+  3309→    textHeight?: number;
+  3310→    padding?: number;
+  3311→    showTextOutline?: boolean;
+  3312→}
+  3313→
+  3314→/** @public */
+  3315→export declare const PORTRAIT_BREAKPOINT: {
+  3316→    readonly DESKTOP: 7;
+  3317→    readonly MOBILE_SM: 3;
+  3318→    readonly MOBILE_XS: 2;
+  3319→    readonly MOBILE_XXS: 1;
+  3320→    readonly MOBILE: 4;
+  3321→    readonly TABLET_SM: 5;
+  3322→    readonly TABLET: 6;
+  3323→    readonly ZERO: 0;
+  3324→};
+  3325→
+  3326→/** @public */
+  3327→export declare type PORTRAIT_BREAKPOINT = (typeof PORTRAIT_BREAKPOINT)[keyof typeof PORTRAIT_BREAKPOINT];
+  3328→
+  3329→/** @public */
+  3330→export declare namespace PORTRAIT_BREAKPOINT {
+  3331→    export type ZERO = typeof PORTRAIT_BREAKPOINT.ZERO;
+  3332→    export type MOBILE_XXS = typeof PORTRAIT_BREAKPOINT.MOBILE_XXS;
+  3333→    export type MOBILE_XS = typeof PORTRAIT_BREAKPOINT.MOBILE_XS;
+  3334→    export type MOBILE_SM = typeof PORTRAIT_BREAKPOINT.MOBILE_SM;
+  3335→    export type MOBILE = typeof PORTRAIT_BREAKPOINT.MOBILE;
+  3336→    export type TABLET_SM = typeof PORTRAIT_BREAKPOINT.TABLET_SM;
+  3337→    export type TABLET = typeof PORTRAIT_BREAKPOINT.TABLET;
+  3338→    export type DESKTOP = typeof PORTRAIT_BREAKPOINT.DESKTOP;
+  3339→}
+  3340→
+  3341→/** @public @react */
+  3342→export declare function PreferencesGroup(): JSX.Element;
+  3343→
+  3344→/** @public */
+  3345→export declare function preloadFont(id: string, font: TLTypeFace, targetDocument?: Document): Promise<FontFace>;
+  3346→
+  3347→/** @public @react */
+  3348→export declare function PrintItem(): JSX.Element;
+  3349→
+  3350→/**
+  3351→ * Put excalidraw clipboard content onto the current page.
+  3352→ *
+  3353→ * @param editor - The editor instance.
+  3354→ * @param excalidrawClipboardContent - The excalidraw clipboard model.
+  3355→ * @param point - The point at which to put the excalidraw content.
+  3356→ * @public
+  3357→ */
+  3358→export declare function putExcalidrawContent(editor: Editor, excalidrawClipboardContent: any, point?: VecLike): Promise<void>;
+  3359→
+  3360→/** @public @react */
+  3361→export declare function RectangleToolbarItem(): JSX.Element;
+  3362→
+  3363→/** @public */
+  3364→export declare function registerDefaultExternalContentHandlers(editor: Editor, options: TLDefaultExternalContentHandlerOpts): void;
+  3365→
+  3366→/** @public */
+  3367→export declare function registerDefaultSideEffects(editor: Editor): () => void;
+  3368→
+  3369→/**
+  3370→ * Remove a frame (or any frame-like container shape).
+  3371→ *
+  3372→ * @param editor - tldraw editor instance.
+  3373→ * @param ids - Ids of the frames you wish to remove.
+  3374→ *
+  3375→ * @public
+  3376→ */
+  3377→export declare function removeFrame(editor: Editor, ids: TLShapeId[]): void;
+  3378→
+  3379→/** @public @react */
+  3380→export declare function RemoveFrameMenuItem(): JSX.Element | null;
+  3381→
+  3382→/**
+  3383→ * Renders HTML from a rich text string.
+  3384→ *
+  3385→ * @param editor - The editor instance.
+  3386→ * @param richText - The rich text content.
+  3387→ *
+  3388→ * @public
+  3389→ */
+  3390→export declare function renderHtmlFromRichText(editor: Editor, richText: TLRichText): string;
+  3391→
+  3392→/**
+  3393→ * Renders HTML from a rich text string for measurement.
+  3394→ * @param editor - The editor instance.
+  3395→ * @param richText - The rich text content.
+  3396→ *
+  3397→ * @public
+  3398→ */
+  3399→export declare function renderHtmlFromRichTextForMeasurement(editor: Editor, richText: TLRichText): string;
+  3400→
+  3401→/**
+  3402→ * Renders HTML from a rich text string using an explicit set of TipTap extensions, rather than the
+  3403→ * ones configured on an editor. Use this when rendering rich text outside of a shape's editor
+  3404→ * config (e.g. comments, which render through their own headingless extension set).
+  3405→ *
+  3406→ * @param richText - The rich text content.
+  3407→ * @param extensions - The TipTap extensions to render with.
+  3408→ *
+  3409→ * @public
+  3410→ */
+  3411→export declare function renderHtmlFromRichTextWithExtensions(richText: TLRichText, extensions: Extensions): string;
+  3412→
+  3413→/**
+  3414→ * Renders plaintext from a rich text string.
+  3415→ * @param editor - The editor instance.
+  3416→ * @param richText - The rich text content.
+  3417→ *
+  3418→ * @public
+  3419→ */
+  3420→export declare function renderPlaintextFromRichText(editor: Editor, richText: TLRichText): string;
+  3421→
+  3422→/**
+  3423→ * Renders JSONContent from html.
+  3424→ * @param editor - The editor instance.
+  3425→ * @param richText - The rich text content.
+  3426→ *
+  3427→ * @public
+  3428→ */
+  3429→export declare function renderRichTextFromHTML(editor: Editor, html: string): TLRichText;
+  3430→
+  3431→/** @public @react */
+  3432→export declare function ReorderMenuItems(): JSX.Element;
+  3433→
+  3434→/** @public @react */
+  3435→export declare function ReorderMenuSubmenu(): JSX.Element | null;
+  3436→
+  3437→/** @public @react */
+  3438→export declare function RhombusToolbarItem(): JSX.Element;
+  3439→
+  3440→/**
+  3441→ * A rich text area that can be used for editing text with rich text formatting.
+  3442→ * This component uses the TipTap editor under the hood.
+  3443→ *
+  3444→ * @public @react
+  3445→ */
+  3446→export declare const RichTextArea: React_3.ForwardRefExoticComponent<TextAreaProps & React_3.RefAttributes<HTMLDivElement>>;
+  3447→
+  3448→/**
+  3449→ * Renders a text label that can be used inside of shapes.
+  3450→ * The component has the ability to be edited in place and furthermore
+  3451→ * supports rich text editing.
+  3452→ *
+  3453→ * @public @react
+  3454→ */
+  3455→export declare const RichTextLabel: React_3.NamedExoticComponent<RichTextLabelProps>;
+  3456→
+  3457→/** @public */
+  3458→export declare interface RichTextLabelProps {
+  3459→    shapeId: TLShapeId;
+  3460→    type: ExtractShapeByProps<{
+  3461→        richText: TLRichText;
+  3462→    }>['type'];
+  3463→    fontFamily: string;
+  3464→    fontSize: number;
+  3465→    lineHeight: number;
+  3466→    textAlign: 'center' | 'end' | 'start';
+  3467→    verticalAlign: 'end' | 'middle' | 'start';
+  3468→    wrap?: boolean;
+  3469→    richText?: TLRichText;
+  3470→    labelColor: string;
+  3471→    bounds?: Box;
+  3472→    isSelected: boolean;
+  3473→    onKeyDown?(e: KeyboardEvent): void;
+  3474→    classNamePrefix?: string;
+  3475→    style?: React_3.CSSProperties;
+  3476→    textWidth?: number;
+  3477→    textHeight?: number;
+  3478→    padding?: number;
+  3479→    hasCustomTabBehavior?: boolean;
+  3480→    showTextOutline?: boolean;
+  3481→}
+  3482→
+  3483→/**
+  3484→ * Renders a rich text string as SVG given bounds and text properties.
+  3485→ *
+  3486→ * @public @react
+  3487→ */
+  3488→export declare function RichTextSVG({ bounds, richText, fontSize, fontFamily, lineHeight, textAlign, verticalAlign, wrap, labelColor, padding, showTextOutline }: RichTextSVGProps): JSX.Element;
+  3489→
+  3490→/** @public */
+  3491→export declare interface RichTextSVGProps {
+  3492→    bounds: Box;
+  3493→    richText: TLRichText;
+  3494→    fontSize: number;
+  3495→    fontFamily: string;
+  3496→    lineHeight: number;
+  3497→    textAlign: 'center' | 'end' | 'start';
+  3498→    verticalAlign: 'end' | 'middle' | 'start';
+  3499→    wrap?: boolean;
+  3500→    labelColor: string;
+  3501→    padding: number;
+  3502→    showTextOutline?: boolean;
+  3503→}
+  3504→
+  3505→/** @public @react */
+  3506→export declare function RotateCWMenuItem(): JSX.Element;
+  3507→
+  3508→/** @public */
+  3509→export declare const RTL_LANGUAGES: Set<string>;
+  3510→
+  3511→/**
+  3512→ * Sanitizes an SVG string by removing dangerous elements, attributes, and URIs
+  3513→ * while preserving safe content including foreignObject (for text rendering),
+  3514→ * style elements (for fonts with data: URLs), and animation elements.
+  3515→ * Embedded SVG data URIs on `<image>`/`<feImage>` are recursively sanitized.
+  3516→ *
+  3517→ * Returns the sanitized SVG string, or an empty string if the input was
+  3518→ * malformed (parse error) or contained no safe content after sanitization.
+  3519→ *
+  3520→ * @public
+  3521→ */
+  3522→export declare function sanitizeSvg(svgText: string): string;
+  3523→
+  3524→/**
+  3525→ * Overlay util for scribble strokes (eraser, lasso selection, etc.).
+  3526→ *
+  3527→ * @public
+  3528→ */
+  3529→export declare class ScribbleOverlayUtil extends OverlayUtil<TLScribbleOverlay> {
+  3530→    static type: string;
+  3531→    options: {
+  3532→        cacheSize: number;
+  3533→        streamline: number;
+  3534→        zIndex: number;
+  3535→    };
+  3536→    private _scribblePathCache;
+  3537→    isActive(): boolean;
+  3538→    getOverlays(): TLScribbleOverlay[];
+  3539→    render(ctx: CanvasRenderingContext2D, overlays: TLScribbleOverlay[]): void;
+  3540→}
+  3541→
+  3542→/** @public @react */
+  3543→export declare function SelectAllMenuItem(): JSX.Element;
+  3544→
+  3545→/**
+  3546→ * Overlay util for selection foreground handles (resize corners/edges, rotate corners, mobile rotate).
+  3547→ * Each interactive element of the selection foreground becomes its own overlay instance.
+  3548→ *
+  3549→ * @public
+  3550→ */
+  3551→export declare class SelectionForegroundOverlayUtil extends OverlayUtil<TLSelectionForegroundOverlay> {
+  3552→    static type: string;
+  3553→    options: {
+  3554→        lineWidth: number;
+  3555→        zIndex: number;
+  3556→    };
+  3557→    isActive(): boolean;
+  3558→    getOverlays(): TLSelectionForegroundOverlay[];
+  3559→    getGeometry(overlay: TLSelectionForegroundOverlay): Geometry2d | null;
+  3560→    render(ctx: CanvasRenderingContext2D, _overlays: TLSelectionForegroundOverlay[]): void;
+  3561→    getCursor(overlay: TLSelectionForegroundOverlay): TLCursorType | undefined;
+  3562→    private _collectResizeCornerOverlays;
+  3563→    private _collectResizeEdgeOverlays;
+  3564→    private _collectRotateOverlays;
+  3565→    private _getResizeHandleGeometry;
+  3566→    private _getRotateHandleGeometry;
+  3567→    private _getMobileRotateGeometry;
+  3568→    private _renderSelectionBox;
+  3569→    private _renderResizeCorners;
+  3570→    private _renderCropHandles;
+  3571→    private _renderMobileRotateHandle;
+  3572→    private _renderTextResizeHandles;
+  3573→    /**
+  3574→     * Single source of truth for the derived state the selection foreground needs.
+  3575→     * Called from `getOverlays()`, `getGeometry()`, and `render()` so their visibility
+  3576→     * predicates can't drift. Returns `null` when no selection UI should appear at all
+  3577→     * (nothing selected, or the only selected shape is hidden).
+  3578→     */
+  3579→    private _computeSelectionState;
+  3580→    private _getMobileRotateCenter;
+  3581→    private _getThemeColors;
+  3582→    private _makeOverlay;
+  3583→    private _getEdgeLocalRect;
+  3584→    private _getRotateHandleLocalCenter;
+  3585→    private _getCornerLocalPoint;
+  3586→    private _localRectToPoints;
+  3587→}
+  3588→
+  3589→/** @public */
+  3590→export declare class SelectTool extends StateNode {
+  3591→    static id: string;
+  3592→    static initial: string;
+  3593→    static isLockable: boolean;
+  3594→    reactor: (() => void) | undefined;
+  3595→    static children(): TLStateNodeConstructor[];
+  3596→    cleanUpDuplicateProps(): void;
+  3597→    onEnter(): void;
+  3598→    onExit(): void;
+  3599→}
+  3600→
+  3601→/** @public @react */
+  3602→export declare function SelectToolbarItem(): JSX.Element;
+  3603→
+  3604→/** @public */
+  3605→export declare function serializeTldrawJson(editor: Editor): Promise<string>;
+  3606→
+  3607→/** @public */
+  3608→export declare function serializeTldrawJsonBlob(editor: Editor): Promise<Blob>;
+  3609→
+  3610→/* Excluded from this release type: setDefaultEditorAssetUrls */
+  3611→
+  3612→/* Excluded from this release type: setDefaultUiAssetUrls */
+  3613→
+  3614→/**
+  3615→ * Overlay util for shape handles (arrow endpoints, line vertices, etc.).
+  3616→ *
+  3617→ * @public
+  3618→ */
+  3619→export declare class ShapeHandleOverlayUtil extends OverlayUtil<TLShapeHandleOverlay> {
+  3620→    static type: string;
+  3621→    options: {
+  3622→        lineWidth: number;
+  3623→        zIndex: number;
+  3624→    };
+  3625→    isActive(): boolean;
+  3626→    getOverlays(): TLShapeHandleOverlay[];
+  3627→    getGeometry(overlay: TLShapeHandleOverlay): Geometry2d | null;
+  3628→    getCursor(_overlay: TLShapeHandleOverlay): TLCursorType | undefined;
+  3629→    render(ctx: CanvasRenderingContext2D, overlays: TLShapeHandleOverlay[]): void;
+  3630→}
+  3631→
+  3632→/**
+  3633→ * Overlay util for shape indicators — the selection / hover / hint outlines drawn
+  3634→ * under the selection foreground. Paints local indicators in the theme's
+  3635→ * selection color.
+  3636→ *
+  3637→ * Remote collaborator selection indicators are drawn by a separate overlay util
+  3638→ * (e.g. `CollaboratorShapeIndicatorOverlayUtil` from `tldraw`) that runs at a
+  3639→ * lower z-index so peer selections appear under the local indicators.
+  3640→ *
+  3641→ * Non-interactive: contributes no hit-test geometry.
+  3642→ *
+  3643→ * @public
+  3644→ */
+  3645→export declare class ShapeIndicatorOverlayUtil extends OverlayUtil<TLShapeIndicatorOverlay> {
+  3646→    static type: string;
+  3647→    options: {
+  3648→        hintedLineWidth: number;
+  3649→        lineWidth: number;
+  3650→        zIndex: number;
+  3651→    };
+  3652→    private _instanceFlags$;
+  3653→    isActive(): boolean;
+  3654→    getOverlays(): TLShapeIndicatorOverlay[];
+  3655→    render(ctx: CanvasRenderingContext2D, overlays: TLShapeIndicatorOverlay[]): void;
+  3656→}
+  3657→
+  3658→/** @public */
+  3659→export declare interface ShapeOptionsWithDisplayValues<Shape extends TLShape, DisplayValues extends object> {
+  3660→    getDefaultDisplayValues(editor: Editor, shape: Shape, theme: TLTheme, colorMode: 'dark' | 'light'): DisplayValues;
+  3661→    getCustomDisplayValues(editor: Editor, shape: Shape, theme: TLTheme, colorMode: 'dark' | 'light'): Partial<DisplayValues>;
+  3662→}
+  3663→
+  3664→/**
+  3665→ * Overlay util for snap alignment indicators (point snap lines and gap indicators).
+  3666→ *
+  3667→ * @public
+  3668→ */
+  3669→export declare class SnapIndicatorOverlayUtil extends OverlayUtil<TLSnapIndicatorOverlay> {
+  3670→    static type: string;
+  3671→    options: {
+  3672→        lineWidth: number;
+  3673→        zIndex: number;
+  3674→    };
+  3675→    isActive(): boolean;
+  3676→    getOverlays(): TLSnapIndicatorOverlay[];
+  3677→    render(ctx: CanvasRenderingContext2D, overlays: TLSnapIndicatorOverlay[]): void;
+  3678→    private _renderPoints;
+  3679→    private _renderGaps;
+  3680→}
+  3681→
+  3682→/** @public */
+  3683→export declare interface SolidPathBuilderOpts extends BasePathBuilderOpts {
+  3684→    style: 'solid';
+  3685→}
+  3686→
+  3687→/* Excluded from this release type: Spinner */
+  3688→
+  3689→/** @public @react */
+  3690→export declare function StackMenuItems(): JSX.Element;
+  3691→
+  3692→/**
+  3693→ * Start editing a shape that has rich text, such as text, note, geo, or arrow shapes.
+  3694→ * This will enter the editing state for the shape and optionally select all the text.
+  3695→ *
+  3696→ * @param editor - The editor instance.
+  3697→ * @param shapeOrId - The shape to start editing. This shape must have a richText property with a TLRichText value.
+  3698→ * @param options - Options: selectAll or info (TLEventInfo)
+  3699→ *
+  3700→ * @public
+  3701→ */
+  3702→export declare function startEditingShapeWithRichText(editor: Editor, shapeOrId: TLShape | TLShapeId, options?: {
+  3703→    info?: TLEventInfo;
+  3704→    selectAll?: boolean;
+  3705→}): void;
+  3706→
+  3707→/** @public @react */
+  3708→export declare function StarToolbarItem(): JSX.Element;
+  3709→
+  3710→/**
+  3711→ * The options object for `getStroke` or `getStrokePoints`.
+  3712→ *
+  3713→ * @public
+  3714→ */
+  3715→export declare interface StrokeOptions {
+  3716→    /** The base size (diameter) of the stroke. */
+  3717→    size?: number;
+  3718→    /** The effect of pressure on the stroke's size. */
+  3719→    thinning?: number;
+  3720→    /** How much to soften the stroke's edges. */
+  3721→    smoothing?: number;
+  3722→    streamline?: number;
+  3723→    /** An easing function to apply to each point's pressure. */
+  3724→    easing?(pressure: number): number;
+  3725→    /** Whether to simulate pressure based on velocity. */
+  3726→    simulatePressure?: boolean;
+  3727→    /** Cap, taper and easing for the start of the line. */
+  3728→    start?: {
+  3729→        cap?: boolean;
+  3730→        easing?(distance: number): number;
+  3731→        taper?: boolean | number;
+  3732→    };
+  3733→    /** Cap, taper and easing for the end of the line. */
+  3734→    end?: {
+  3735→        cap?: boolean;
+  3736→        easing?(distance: number): number;
+  3737→        taper?: boolean | number;
+  3738→    };
+  3739→    /** Whether to handle the points as a completed stroke. */
+  3740→    last?: boolean;
+  3741→}
+  3742→
+  3743→/**
+  3744→ * The points returned by `getStrokePoints`, and the input for `getStrokeOutlinePoints`
+  3745→ *
+  3746→ * @public
+  3747→ */
+  3748→export declare interface StrokePoint {
+  3749→    point: Vec;
+  3750→    input: Vec;
+  3751→    pressure: number;
+  3752→    distance: number;
+  3753→    runningLength: number;
+  3754→    radius: number;
+  3755→}
+  3756→
+  3757→/** @public @react */
+  3758→export declare function StylePanelArrowheadPicker(): JSX.Element | null;
+  3759→
+  3760→/** @public @react */
+  3761→export declare function StylePanelArrowKindPicker(): JSX.Element | null;
+  3762→
+  3763→/** @public @react */
+  3764→export declare const StylePanelButtonPicker: <T extends string>(props: StylePanelButtonPickerProps<T>) => JSX_2.Element;
+  3765→
+  3766→/** @public @react*/
+  3767→export declare const StylePanelButtonPickerInline: <T extends string>(props: StylePanelButtonPickerProps<T>) => JSX_2.Element;
+  3768→
+  3769→/** @public */
+  3770→export declare interface StylePanelButtonPickerProps<T extends string> {
+  3771→    title: string;
+  3772→    uiType: string;
+  3773→    style: StyleProp<T>;
+  3774→    value: SharedStyle<T>;
+  3775→    items: StyleValuesForUi<T>;
+  3776→    onValueChange?(style: StyleProp<T>, value: T): void;
+  3777→    onHistoryMark?(id: string): void;
+  3778→}
+  3779→
+  3780→/** @public @react */
+  3781→export declare function StylePanelColorPicker(): JSX.Element | null;
+  3782→
+  3783→/** @public */
+  3784→export declare interface StylePanelContext {
+  3785→    styles: ReadonlySharedStyleMap;
+  3786→    enhancedA11yMode: boolean;
+  3787→    onHistoryMark(id: string): void;
+  3788→    onValueChange<T>(style: StyleProp<T>, value: T): void;
+  3789→    onOpacityChange(opacity: number): void;
+  3790→}
+  3791→
+  3792→/** @public @react */
+  3793→export declare function StylePanelContextProvider({ children, styles }: StylePanelContextProviderProps): JSX.Element;
+  3794→
+  3795→/** @public */
+  3796→export declare interface StylePanelContextProviderProps {
+  3797→    children: React.ReactNode;
+  3798→    styles: ReadonlySharedStyleMap;
+  3799→}
+  3800→
+  3801→/** @public @react */
+  3802→export declare function StylePanelDashPicker(): JSX.Element | null;
+  3803→
+  3804→/** @public @react */
+  3805→export declare const StylePanelDoubleDropdownPicker: <T extends string>(props: StylePanelDoubleDropdownPickerProps<T>) => React_2.JSX.Element;
+  3806→
+  3807→/** @public @react */
+  3808→export declare const StylePanelDoubleDropdownPickerInline: <T extends string>(props: StylePanelDoubleDropdownPickerProps<T>) => React_2.JSX.Element;
+  3809→
+  3810→/** @public */
+  3811→export declare interface StylePanelDoubleDropdownPickerProps<T extends string> {
+  3812→    uiTypeA: string;
+  3813→    uiTypeB: string;
+  3814→    label: Exclude<string, TLUiTranslationKey> | TLUiTranslationKey;
+  3815→    labelA: Exclude<string, TLUiTranslationKey> | TLUiTranslationKey;
+  3816→    labelB: Exclude<string, TLUiTranslationKey> | TLUiTranslationKey;
+  3817→    itemsA: StyleValuesForUi<T>;
+  3818→    itemsB: StyleValuesForUi<T>;
+  3819→    styleA: StyleProp<T>;
+  3820→    styleB: StyleProp<T>;
+  3821→    valueA: SharedStyle<T>;
+  3822→    valueB: SharedStyle<T>;
+  3823→    onValueChange?(style: StyleProp<T>, value: T): void;
+  3824→}
+  3825→
+  3826→/** @public @react */
+  3827→export declare const StylePanelDropdownPicker: <T extends string>(props: StylePanelDropdownPickerProps<T>) => React_2.JSX.Element;
+  3828→
+  3829→/** @public @react */
+  3830→export declare const StylePanelDropdownPickerInline: <T extends string>(props: StylePanelDropdownPickerProps<T>) => React_2.JSX.Element;
+  3831→
+  3832→/** @public */
+  3833→export declare interface StylePanelDropdownPickerProps<T extends string> {
+  3834→    id: string;
+  3835→    label?: Exclude<string, TLUiTranslationKey> | TLUiTranslationKey;
+  3836→    uiType: string;
+  3837→    stylePanelType: string;
+  3838→    style: StyleProp<T>;
+  3839→    value: SharedStyle<T>;
+  3840→    items: StyleValuesForUi<T>;
+  3841→    type: 'icon' | 'menu' | 'tool';
+  3842→    onValueChange?(style: StyleProp<T>, value: T): void;
+  3843→    /** Override the test ID prefix. Defaults to uiType. */
+  3844→    testIdType?: string;
+  3845→    /**
+  3846→     * Distance to push the popover left of the trigger so it lands flush with the style panel.
+  3847→     * Defaults to the standard popover gap so standalone dropdowns don't sit flush against the panel.
+  3848→     */
+  3849→    sideOffset?: number;
+  3850→    /** Is the dropdown an overflow of a different radio group? If so, show active when the group's active item is inside of the dropdown.*/
+  3851→    isOverflow?: boolean;
+  3852→}
+  3853→
+  3854→/** @public @react */
+  3855→export declare function StylePanelFillPicker(): JSX.Element | null;
+  3856→
+  3857→/** @public @react */
+  3858→export declare function StylePanelFontPicker(): JSX.Element | null;
+  3859→
+  3860→/** @public @react */
+  3861→export declare function StylePanelGeoShapePicker(): JSX.Element | null;
+  3862→
+  3863→/** @public @react */
+  3864→export declare function StylePanelLabelAlignPicker(): JSX.Element | null;
+  3865→
+  3866→/** @public @react */
+  3867→export declare function StylePanelOpacityPicker(): JSX.Element | null;
+  3868→
+  3869→/** @public @react */
+  3870→export declare function StylePanelSection({ children }: StylePanelSectionProps): JSX.Element;
+  3871→
+  3872→/** @public */
+  3873→export declare interface StylePanelSectionProps {
+  3874→    children: React_3.ReactNode;
+  3875→}
+  3876→
+  3877→/** @public @react */
+  3878→export declare function StylePanelSizePicker(): JSX.Element | null;
+  3879→
+  3880→/** @public @react */
+  3881→export declare function StylePanelSplinePicker(): JSX.Element | null;
+  3882→
+  3883→/** @public @react */
+  3884→export declare function StylePanelSubheading({ children }: StylePanelSubheadingProps): JSX.Element;
+  3885→
+  3886→/** @public */
+  3887→export declare interface StylePanelSubheadingProps {
+  3888→    children: React.ReactNode;
+  3889→}
+  3890→
+  3891→/** @public @react */
+  3892→export declare function StylePanelTextAlignPicker(): JSX.Element | null;
+  3893→
+  3894→/** @public */
+  3895→export declare type StyleValuesForUi<T> = readonly {
+  3896→    readonly icon: string | TLUiIconJsx;
+  3897→    readonly value: T;
+  3898→}[];
+  3899→
+  3900→/** @public */
+  3901→export declare interface TextAreaProps {
+  3902→    isEditing: boolean;
+  3903→    text?: string;
+  3904→    shapeId: TLShapeId;
+  3905→    richText?: TLRichText;
+  3906→    handleFocus(): void;
+  3907→    handleBlur(): void;
+  3908→    handleKeyDown(e: KeyboardEvent): void;
+  3909→    handleChange(changeInfo: {
+  3910→        plaintext?: string;
+  3911→        richText?: TLRichText;
+  3912→    }): void;
+  3913→    handleInputPointerDown(e: React_3.PointerEvent<HTMLElement>): void;
+  3914→    handleDoubleClick(e: any): any;
+  3915→    handlePaste(e: ClipboardEvent | React_3.ClipboardEvent<HTMLTextAreaElement>): void;
+  3916→    hasCustomTabBehavior?: boolean;
+  3917→}
+  3918→
+  3919→/** @public */
+  3920→export declare interface TextShapeOptions extends ShapeOptionsWithDisplayValues<TLTextShape, TextShapeUtilDisplayValues> {
+  3921→    /** How much addition padding should be added to the horizontal geometry of the shape when binding to an arrow? */
+  3922→    extraArrowHorizontalPadding: number;
+  3923→    /** Whether to show the outline of the text shape (using the same color as the canvas). This helps with overlapping shapes. It does not show up on Safari, where text outline is a performance issues. */
+  3924→    showTextOutline: boolean;
+  3925→}
+  3926→
+  3927→/** @public */
+  3928→export declare class TextShapeTool extends StateNode {
+  3929→    static id: string;
+  3930→    static initial: string;
+  3931→    static children(): TLStateNodeConstructor[];
+  3932→    shapeType: string;
+  3933→}
+  3934→
+  3935→/** @public */
+  3936→export declare class TextShapeUtil extends ShapeUtil<TLTextShape> {
+  3937→    static type: "text";
+  3938→    static props: RecordProps<TLTextShape>;
+  3939→    static migrations: TLPropsMigrations;
+  3940→    options: TextShapeOptions;
+  3941→    getDefaultProps(): TLTextShape['props'];
+  3942→    getMinDimensions(shape: TLTextShape): {
+  3943→        height: number;
+  3944→        width: number;
+  3945→    };
+  3946→    getGeometry(shape: TLTextShape, opts: TLGeometryOpts): Rectangle2d;
+  3947→    getFontFaces(shape: TLTextShape): TLFontFace[];
+  3948→    getText(shape: TLTextShape): string;
+  3949→    canEdit(shape: TLTextShape): boolean;
+  3950→    isAspectRatioLocked(shape: TLTextShape): boolean;
+  3951→    component(shape: TLTextShape): JSX.Element;
+  3952→    getIndicatorPath(shape: TLTextShape): Path2D | undefined;
+  3953→    toSvg(shape: TLTextShape, ctx: SvgExportContext): JSX.Element;
+  3954→    onResize(shape: TLTextShape, info: TLResizeInfo<TLTextShape>): {
+  3955→        id: TLShapeId;
+  3956→        props: {
+  3957→            autoSize: boolean;
+  3958→            w: number;
+  3959→        };
+  3960→        type: "text";
+  3961→        x: number;
+  3962→        y: number;
+  3963→    } | {
+  3964→        id: TLShapeId;
+  3965→        props: {
+  3966→            scale: number;
+  3967→        };
+  3968→        type: "text";
+  3969→        x: number;
+  3970→        y: number;
+  3971→    };
+  3972→    onEditEnd(shape: TLTextShape): void;
+  3973→    onBeforeUpdate(prev: TLTextShape, next: TLTextShape): {
+  3974→        id: TLShapeId;
+  3975→        index: IndexKey;
+  3976→        isLocked: boolean;
+  3977→        meta: JsonObject;
+  3978→        opacity: number;
+  3979→        parentId: TLParentId;
+  3980→        props: {
+  3981→            autoSize: boolean;
+  3982→            color: TLDefaultColorStyle;
+  3983→            font: TLDefaultFontStyle;
+  3984→            richText: {
+  3985→                attrs?: any;
+  3986→                content: unknown[];
+  3987→                type: string;
+  3988→            };
+  3989→            scale: number;
+  3990→            size: "l" | "m" | "s" | "xl";
+  3991→            textAlign: "end" | "middle" | "start";
+  3992→            w: number;
+  3993→        };
+  3994→        rotation: number;
+  3995→        type: "text";
+  3996→        typeName: "shape";
+  3997→        x: number;
+  3998→        y: number;
+  3999→    } | undefined;
+  4000→}
+  4001→
+  4002→/** @public */
+  4003→export declare interface TextShapeUtilDisplayValues {
+  4004→    color: string;
+  4005→    fontFamily: string;
+  4006→    fontSize: number;
+  4007→    lineHeight: number;
+  4008→    fontWeight: string;
+  4009→    fontStyle: string;
+  4010→    fontVariant: string;
+  4011→}
+  4012→
+  4013→/** @public @react */
+  4014→export declare function TextToolbarItem(): JSX.Element;
+  4015→
+  4016→/**
+  4017→ * Default extensions for the TipTap editor.
+  4018→ *
+  4019→ * @public
+  4020→ */
+  4021→export declare const tipTapDefaultExtensions: Extensions;
+  4022→
+  4023→/** @public */
+  4024→export declare interface TLArcArrowInfo {
+  4025→    bindings: TLArrowBindings;
+  4026→    type: 'arc';
+  4027→    start: TLArrowPoint;
+  4028→    end: TLArrowPoint;
+  4029→    middle: VecLike;
+  4030→    handleArc: TLArcInfo;
+  4031→    bodyArc: TLArcInfo;
+  4032→    isValid: boolean;
+  4033→}
+  4034→
+  4035→/** @public */
+  4036→export declare interface TLArcInfo {
+  4037→    center: VecLike;
+  4038→    radius: number;
+  4039→    size: number;
+  4040→    length: number;
+  4041→    largeArcFlag: number;
+  4042→    sweepFlag: number;
+  4043→}
+  4044→
+  4045→/** @public */
+  4046→export declare interface TLArrowBindingHintOverlay extends TLOverlay {
+  4047→    props: {
+  4048→        arrowId: TLShapeId;
+  4049→    };
+  4050→}
+  4051→
+  4052→/** @public */
+  4053→export declare interface TLArrowBindings {
+  4054→    start: TLArrowBinding | undefined;
+  4055→    end: TLArrowBinding | undefined;
+  4056→}
+  4057→
+  4058→/** @public */
+  4059→export declare interface TLArrowHintOverlay extends TLOverlay {
+
+[showing lines 2060-4059 of 6297; use offset=4060 with limit to continue reading]

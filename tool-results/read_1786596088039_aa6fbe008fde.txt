@@ -1,0 +1,1745 @@
+  8458→     * getShapeVisibility={(shape, editor) => shape.meta.hidden ? 'hidden' : 'inherit'}
+  8459→     * ```
+  8460→     *
+  8461→     * - `'inherit' | undefined` - (default) The shape will be visible unless its parent is hidden.
+  8462→     * - `'hidden'` - The shape will be hidden.
+  8463→     * - `'visible'` - The shape will be visible.
+  8464→     *
+  8465→     * @param shape - The shape to check.
+  8466→     * @param editor - The editor instance.
+  8467→     */
+  8468→    getShapeVisibility?(shape: TLShape, editor: Editor): 'hidden' | 'inherit' | 'visible' | null | undefined;
+  8469→    /**
+  8470→     * Named theme definitions for the editor. Each theme contains shared
+  8471→     * properties (font size, line height, stroke width) and color palettes
+  8472→     * for both light and dark modes.
+  8473→     */
+  8474→    themes?: Partial<TLThemes>;
+  8475→    /**
+  8476→     * The id of the initially active theme. Defaults to `'default'`.
+  8477→     */
+  8478→    initialTheme?: TLThemeId;
+  8479→    /**
+  8480→     * The editor's color scheme preference, controls the default color mode. Defaults to `'light'`.
+  8481→     *
+  8482→     * - `'light'` - Always use light mode.
+  8483→     * - `'dark'` - Always use dark mode.
+  8484→     * - `'system'` - Follow the OS color scheme preference.
+  8485→     */
+  8486→    colorScheme?: 'dark' | 'light' | 'system';
+  8487→    /**
+  8488→     * Additional configuration options for the tldraw editor.
+  8489→     */
+  8490→    options?: Partial<TldrawOptions>;
+  8491→    /**
+  8492→     * Options for the editor's camera.
+  8493→     *
+  8494→     * @deprecated Use `options.cameraOptions` instead. This will be removed in a future release.
+  8495→     */
+  8496→    cameraOptions?: Partial<TLCameraOptions>;
+  8497→    /**
+  8498→     * Text options for the editor.
+  8499→     *
+  8500→     * @deprecated Use `options.text` instead. This prop will be removed in a future release.
+  8501→     */
+  8502→    textOptions?: TLTextOptions;
+  8503→}
+  8504→
+  8505→/**
+  8506→ * Options for {@link Editor.(run:1)}.
+  8507→ * @public
+  8508→ */
+  8509→export declare interface TLEditorRunOptions extends TLHistoryBatchOptions {
+  8510→    ignoreShapeLock?: boolean;
+  8511→}
+  8512→
+  8513→/** @public */
+  8514→export declare interface TLEditorSnapshot {
+  8515→    document: TLStoreSnapshot;
+  8516→    session: TLSessionStateSnapshot;
+  8517→}
+  8518→
+  8519→/** @public */
+  8520→export declare interface TLEditStartInfo {
+  8521→    type: 'click-header' | 'click' | 'double-click-corner' | 'double-click-edge' | 'double-click' | 'press_enter' | 'unknown';
+  8522→}
+  8523→
+  8524→/** @public */
+  8525→export declare interface TLEmbedExternalContent<EmbedDefinition> extends TLBaseExternalContent {
+  8526→    type: 'embed';
+  8527→    url: string;
+  8528→    embed: EmbedDefinition;
+  8529→}
+  8530→
+  8531→/** @public */
+  8532→export declare type TLEnterEventHandler = (info: any, from: string) => void;
+  8533→
+  8534→/**
+  8535→ * An object that contains information about the current device and environment.
+  8536→ * This object is not reactive and will not update automatically when the environment changes,
+  8537→ * so only include values that are fixed, such as the user's browser and operating system.
+  8538→ *
+  8539→ * @public
+  8540→ */
+  8541→export declare const tlenv: {
+  8542→    hasCanvasSupport: boolean;
+  8543→    isAndroid: boolean;
+  8544→    isChromeForIos: boolean;
+  8545→    isDarwin: boolean;
+  8546→    isFirefox: boolean;
+  8547→    isIos: boolean;
+  8548→    isSafari: boolean;
+  8549→    isTouchDevice: boolean;
+  8550→    isWebview: boolean;
+  8551→};
+  8552→
+  8553→/**
+  8554→ * An atom that contains information about the current device and environment.
+  8555→ * This object is reactive and will update automatically when the environment changes.
+  8556→ * Use it for values that may change over time, such as the pointer type.
+  8557→ *
+  8558→ * @public
+  8559→ */
+  8560→export declare const tlenvReactive: Atom<    {
+  8561→isCoarsePointer: boolean;
+  8562→supportsP3ColorSpace: boolean;
+  8563→}, unknown>;
+  8564→
+  8565→/** @public */
+  8566→export declare interface TLErrorBoundaryProps {
+  8567→    children: React_2.ReactNode;
+  8568→    onError?: ((error: unknown) => void) | null;
+  8569→    fallback: TLErrorFallbackComponent;
+  8570→}
+  8571→
+  8572→/** @public */
+  8573→export declare interface TLErrorExternalContentSource {
+  8574→    type: 'error';
+  8575→    data: null | string;
+  8576→    reason: string;
+  8577→}
+  8578→
+  8579→/** @public */
+  8580→export declare type TLErrorFallbackComponent = ComponentType<{
+  8581→    editor?: Editor;
+  8582→    error: unknown;
+  8583→}>;
+  8584→
+  8585→/** @public */
+  8586→export declare interface TLEventHandlers {
+  8587→    onPointerDown: TLPointerEvent;
+  8588→    onPointerMove: TLPointerEvent;
+  8589→    onLongPress: TLPointerEvent;
+  8590→    onRightClick: TLPointerEvent;
+  8591→    onDoubleClick: TLClickEvent;
+  8592→    onMiddleClick: TLPointerEvent;
+  8593→    onPointerUp: TLPointerEvent;
+  8594→    onKeyDown: TLKeyboardEvent;
+  8595→    onKeyUp: TLKeyboardEvent;
+  8596→    onKeyRepeat: TLKeyboardEvent;
+  8597→    onWheel: TLWheelEvent;
+  8598→    onCancel: TLCancelEvent;
+  8599→    onComplete: TLCompleteEvent;
+  8600→    onInterrupt: TLInterruptEvent;
+  8601→    onTick: TLTickEvent;
+  8602→}
+  8603→
+  8604→/** @public */
+  8605→export declare type TLEventInfo = TLCancelEventInfo | TLClickEventInfo | TLCompleteEventInfo | TLInterruptEventInfo | TLKeyboardEventInfo | TLPinchEventInfo | TLPointerEventInfo | TLTickEventInfo | TLWheelEventInfo;
+  8606→
+  8607→/** @public */
+  8608→export declare interface TLEventMap {
+  8609→    mount: [];
+  8610→    unmount: [];
+  8611→    'max-shapes': [{
+  8612→        count: number;
+  8613→        name: string;
+  8614→        pageId: TLPageId;
+  8615→    }];
+  8616→    change: [HistoryEntry<TLRecord>];
+  8617→    update: [];
+  8618→    crash: [{
+  8619→        error: unknown;
+  8620→    }];
+  8621→    'stop-camera-animation': [];
+  8622→    'stop-following': [];
+  8623→    'before-event': [TLEventInfo];
+  8624→    event: [TLEventInfo];
+  8625→    tick: [number];
+  8626→    frame: [number];
+  8627→    resize: [BoxModel];
+  8628→    'select-all-text': [{
+  8629→        shapeId: TLShapeId;
+  8630→    }];
+  8631→    'place-caret': [{
+  8632→        point: {
+  8633→            x: number;
+  8634→            y: number;
+  8635→        };
+  8636→        shapeId: TLShapeId;
+  8637→    }];
+  8638→    'created-shapes': [TLRecord[]];
+  8639→    'edited-shapes': [TLRecord[]];
+  8640→    'deleted-shapes': [TLShapeId[]];
+  8641→    edit: [];
+  8642→    dispose: [];
+  8643→}
+  8644→
+  8645→/** @public */
+  8646→export declare type TLEventMapHandler<T extends keyof TLEventMap> = (...args: TLEventMap[T]) => void;
+  8647→
+  8648→/** @public */
+  8649→export declare type TLEventName = 'cancel' | 'complete' | 'interrupt' | 'tick' | 'wheel' | TLCLickEventName | TLKeyboardEventName | TLPinchEventName | TLPointerEventName;
+  8650→
+  8651→/** @public */
+  8652→export declare interface TLExcalidrawExternalContent extends TLBaseExternalContent {
+  8653→    type: 'excalidraw';
+  8654→    content: any;
+  8655→}
+  8656→
+  8657→/** @public */
+  8658→export declare interface TLExcalidrawExternalContentSource {
+  8659→    type: 'excalidraw';
+  8660→    data: any;
+  8661→}
+  8662→
+  8663→/** @public */
+  8664→export declare type TLExitEventHandler = (info: any, to: string) => void;
+  8665→
+  8666→/** @public */
+  8667→export declare type TLExportType = 'jpeg' | 'png' | 'svg' | 'webp';
+  8668→
+  8669→/** @public */
+  8670→export declare type TLExternalAsset = TLFileExternalAsset | TLUrlExternalAsset;
+  8671→
+  8672→/** @public */
+  8673→export declare type TLExternalContent<EmbedDefinition> = TLEmbedExternalContent<EmbedDefinition> | TLExcalidrawExternalContent | TLFileReplaceExternalContent | TLFilesExternalContent | TLSvgTextExternalContent | TLTextExternalContent | TLTldrawExternalContent | TLUrlExternalContent;
+  8674→
+  8675→/** @public */
+  8676→export declare type TLExternalContentSource = TLErrorExternalContentSource | TLExcalidrawExternalContentSource | TLTextExternalContentSource | TLTldrawExternalContentSource;
+  8677→
+  8678→/** @public */
+  8679→export declare interface TLFileExternalAsset {
+  8680→    type: 'file';
+  8681→    file: File;
+  8682→    assetId?: TLAssetId;
+  8683→}
+  8684→
+  8685→/** @public */
+  8686→export declare interface TLFileReplaceExternalContent extends TLBaseExternalContent {
+  8687→    type: 'file-replace';
+  8688→    file: File;
+  8689→    shapeId: TLShapeId;
+  8690→    /** @deprecated This field is no longer used by the default handler. It may be removed in a future version. */
+  8691→    isImage: boolean;
+  8692→}
+  8693→
+  8694→/** @public */
+  8695→export declare interface TLFilesExternalContent extends TLBaseExternalContent {
+  8696→    type: 'files';
+  8697→    files: File[];
+  8698→    ignoreParent?: boolean;
+  8699→}
+  8700→
+  8701→/**
+  8702→ * Emitted every animation frame when at least one `'frame'` listener is registered.
+  8703→ * @public
+  8704→ */
+  8705→export declare interface TLFramePerfEvent {
+  8706→    /** Time since the last frame in ms. */
+  8707→    elapsed: number;
+  8708→    /** Total shapes on the current page. */
+  8709→    shapeCount: number;
+  8710→    /** Number of shapes culled (off-screen) from rendering. */
+  8711→    culledShapeCount: number;
+  8712→    /** Number of shapes visible (not culled) in the viewport. */
+  8713→    visibleShapeCount: number;
+  8714→}
+  8715→
+  8716→/** Additional options for the {@link ShapeUtil.getGeometry} method.
+  8717→ *
+  8718→ * @public
+  8719→ */
+  8720→export declare interface TLGeometryOpts {
+  8721→    /** The context in which the geometry is being requested. */
+  8722→    context?: string;
+  8723→}
+  8724→
+  8725→/**
+  8726→ * Options to {@link Editor.getShapeAtPoint}.
+  8727→ *
+  8728→ * @public
+  8729→ */
+  8730→export declare interface TLGetShapeAtPointOptions {
+  8731→    /**
+  8732→     * The margin to apply to the shape.
+  8733→     * If a number, it will be applied to both the inside and outside of the shape.
+  8734→     * If an array, the first element will be applied to the inside of the shape, and the second element will be applied to the outside.
+  8735→     *
+  8736→     * @example
+  8737→     * ```ts
+  8738→     * // Get the shape at the center of the screen
+  8739→     * const shape = editor.getShapeAtProps({
+  8740→     *   margin: 10,
+  8741→     * })
+  8742→     *
+  8743→     * // Get the shape at the center of the screen with a 10px inner margin and a 5px outer margin
+  8744→     * const shape = editor.getShapeAtProps({
+  8745→     *   margin: [10, 5],
+  8746→     * })
+  8747→     * ```
+  8748→     */
+  8749→    margin?: [number, number] | number;
+  8750→    /**
+  8751→     * Whether to register hits inside of shapes (beyond the margin), such as the inside of a solid shape.
+  8752→     */
+  8753→    hitInside?: boolean;
+  8754→    /**
+  8755→     * Whether to register hits on locked shapes.
+  8756→     */
+  8757→    hitLocked?: boolean;
+  8758→    /**
+  8759→     * Whether to register hits on labels.
+  8760→     */
+  8761→    hitLabels?: boolean;
+  8762→    /**
+  8763→     * Whether to only return hits on shapes that are currently being rendered.
+  8764→     * todo: rename this to hitCulled or hitNotRendering
+  8765→     */
+  8766→    renderingOnly?: boolean;
+  8767→    /**
+  8768→     * Whether to register hits on the inside of frame shapes.
+  8769→     * todo: rename this to hitInsideFrames
+  8770→     */
+  8771→    hitFrameInside?: boolean;
+  8772→    /**
+  8773→     * A filter function to apply to the shapes.
+  8774→     */
+  8775→    filter?(shape: TLShape): boolean;
+  8776→}
+  8777→
+  8778→/** @public */
+  8779→export declare interface TLGridProps {
+  8780→    x: number;
+  8781→    y: number;
+  8782→    z: number;
+  8783→    size: number;
+  8784→}
+  8785→
+  8786→/** @public */
+  8787→export declare interface TLHandleDragInfo<T extends TLShape> {
+  8788→    handle: TLHandle;
+  8789→    isPrecise: boolean;
+  8790→    isCreatingShape: boolean;
+  8791→    initial?: T | undefined;
+  8792→}
+  8793→
+  8794→/** @public */
+  8795→export declare interface TLHistoryBatchOptions {
+  8796→    /**
+  8797→     * How should this change interact with the history stack?
+  8798→     * - record: Add to the undo stack and clear the redo stack
+  8799→     * - record-preserveRedoStack: Add to the undo stack but do not clear the redo stack
+  8800→     * - ignore: Do not add to the undo stack or the redo stack
+  8801→     */
+  8802→    history?: 'ignore' | 'record-preserveRedoStack' | 'record';
+  8803→}
+  8804→
+  8805→/** @public */
+  8806→export declare interface TLHistoryDiff<R extends UnknownRecord> {
+  8807→    type: 'diff';
+  8808→    diff: RecordsDiff<R>;
+  8809→}
+  8810→
+  8811→/** @public */
+  8812→export declare type TLHistoryEntry<R extends UnknownRecord> = TLHistoryDiff<R> | TLHistoryMark;
+  8813→
+  8814→/** @public */
+  8815→export declare interface TLHistoryMark {
+  8816→    type: 'stop';
+  8817→    id: string;
+  8818→}
+  8819→
+  8820→/** @public */
+  8821→export declare interface TLImageExportOptions extends TLSvgExportOptions {
+  8822→    /**
+  8823→     * If the export is being converted to a lossy bitmap format (e.g. jpeg), this is the quality of
+  8824→     * the export. This is a number between 0 and 1.
+  8825→     */
+  8826→    quality?: number;
+  8827→    /**
+  8828→     * The format to export as. Defaults to 'png'.
+  8829→     */
+  8830→    format?: TLExportType;
+  8831→}
+  8832→
+  8833→/**
+  8834→ * Return type for {@link ShapeUtil.getIndicatorPath}. Can be either a simple Path2D
+  8835→ * or an object with additional rendering info like clip paths for complex indicators.
+  8836→ * @public
+  8837→ */
+  8838→export declare type TLIndicatorPath = {
+  8839→    additionalPaths?: Path2D[];
+  8840→    clipPath?: Path2D;
+  8841→    path: Path2D;
+  8842→} | Path2D;
+  8843→
+  8844→/**
+  8845→ * Emitted when an interaction state is exited, with aggregated frame time stats.
+  8846→ * @public
+  8847→ */
+  8848→export declare interface TLInteractionEndPerfEvent extends TLPerfFrameTimeStats {
+  8849→    /** The state node id (e.g. `'translating'`). */
+  8850→    name: string;
+  8851→    /** Full tool path (e.g. `'select.translating'`). */
+  8852→    path: string;
+  8853→    /** Total shapes on the current page. */
+  8854→    shapeCount: number;
+  8855→    /** Breakdown of selected shape types at interaction start (e.g. `{ geo: 2, draw: 1 }`). */
+  8856→    selectedShapeTypes: Record<string, number>;
+  8857→    /** Camera zoom level (`camera.z`) at interaction end. */
+  8858→    zoomLevel: number;
+  8859→    /** `performance.now()` when the interaction ended. */
+  8860→    timestamp: number;
+  8861→}
+  8862→
+  8863→/**
+  8864→ * Emitted when an interaction state (e.g. translating, resizing) is entered.
+  8865→ * @public
+  8866→ */
+  8867→export declare interface TLInteractionStartPerfEvent {
+  8868→    /** The state node id (e.g. `'translating'`). */
+  8869→    name: string;
+  8870→    /** Full tool path (e.g. `'select.translating'`). */
+  8871→    path: string;
+  8872→    /** `performance.now()` when the interaction started. */
+  8873→    timestamp: number;
+  8874→}
+  8875→
+  8876→/** @public */
+  8877→export declare type TLInterruptEvent = (info: TLInterruptEventInfo) => void;
+  8878→
+  8879→/** @public */
+  8880→export declare interface TLInterruptEventInfo {
+  8881→    type: 'misc';
+  8882→    name: 'interrupt';
+  8883→}
+  8884→
+  8885→/** @public */
+  8886→export declare type TLKeyboardEvent = (info: TLKeyboardEventInfo) => void;
+  8887→
+  8888→/** @public */
+  8889→export declare type TLKeyboardEventInfo = TLBaseEventInfo & {
+  8890→    code: string;
+  8891→    key: string;
+  8892→    name: TLKeyboardEventName;
+  8893→    type: 'keyboard';
+  8894→};
+  8895→
+  8896→/** @public */
+  8897→export declare type TLKeyboardEventName = 'key_down' | 'key_repeat' | 'key_up';
+  8898→
+  8899→/**
+  8900→ * Options for {@link loadSessionStateSnapshotIntoStore}
+  8901→ * @public
+  8902→ */
+  8903→export declare interface TLLoadSessionStateSnapshotOptions {
+  8904→    /**
+  8905→     * By default, some session state flags like `isDebugMode` are not overwritten when loading a snapshot.
+  8906→     * These are usually considered "sticky" by users while the document data is not.
+  8907→     * If you want to overwrite these flags, set this to `true`.
+  8908→     */
+  8909→    forceOverwrite?: boolean;
+  8910→}
+  8911→
+  8912→/**
+  8913→ * Options for {@link loadSnapshot}
+  8914→ * @public
+  8915→ */
+  8916→export declare interface TLLoadSnapshotOptions {
+  8917→    /**
+  8918→     * By default, some session state flags like `isDebugMode` are not overwritten when loading a snapshot.
+  8919→     * These are usually considered "sticky" by users while the document data is not.
+  8920→     * If you want to overwrite these flags, set this to `true`.
+  8921→     */
+  8922→    forceOverwriteSessionState?: boolean;
+  8923→}
+  8924→
+  8925→/** @public */
+  8926→export declare type TLMeasuredTextSize = BoxModel & {
+  8927→    scrollWidth: number;
+  8928→};
+  8929→
+  8930→/** @public */
+  8931→export declare interface TLMeasureTextOpts {
+  8932→    fontStyle: string;
+  8933→    fontWeight: string;
+  8934→    fontFamily: string;
+  8935→    fontSize: number;
+  8936→    /** This must be a number, e.g. 1.35, not a pixel value. */
+  8937→    lineHeight: number;
+  8938→    /**
+  8939→     * When maxWidth is a number, the text will be wrapped to that maxWidth. When maxWidth
+  8940→     * is null, the text will be measured without wrapping, but explicit line breaks and
+  8941→     * space are preserved.
+  8942→     */
+  8943→    maxWidth: null | number;
+  8944→    minWidth?: null | number;
+  8945→    padding: string;
+  8946→    otherStyles?: Record<string, string>;
+  8947→    disableOverflowWrapBreaking?: boolean;
+  8948→    measureScrollWidth?: boolean;
+  8949→}
+  8950→
+  8951→/** @public */
+  8952→export declare interface TLMeasureTextSpanOpts {
+  8953→    overflow: 'truncate-clip' | 'truncate-ellipsis' | 'wrap';
+  8954→    width: number;
+  8955→    height: number;
+  8956→    padding: number;
+  8957→    fontSize: number;
+  8958→    fontWeight: string;
+  8959→    fontFamily: string;
+  8960→    fontStyle: string;
+  8961→    lineHeight: number;
+  8962→    textAlign: TLDefaultHorizontalAlignStyle;
+  8963→    otherStyles?: Record<string, string>;
+  8964→    measureScrollWidth?: boolean;
+  8965→}
+  8966→
+  8967→/** @public */
+  8968→export declare const tlmenus: {
+  8969→    _hiddenMenus: string[];
+  8970→    /**
+  8971→     * A set of strings representing any open menus. When menus are open,
+  8972→     * certain interactions will behave differently; for example, when a
+  8973→     * draw tool is selected and a menu is open, a pointer-down will not
+  8974→     * create a dot (because the user is probably trying to close the menu)
+  8975→     * however a pointer-down event followed by a drag will begin drawing
+  8976→     * a line (because the user is BOTH trying to close the menu AND start
+  8977→     * drawing a line).
+  8978→     *
+  8979→     * @public
+  8980→     */
+  8981→    menus: Atom<string[], unknown>;
+  8982→    /**
+  8983→     * Add an open menu.
+  8984→     *
+  8985→     * @example
+  8986→     * ```ts
+  8987→     * addOpenMenu('menu-id')
+  8988→     * addOpenMenu('menu-id', myEditorId)
+  8989→     * ```
+  8990→     *
+  8991→     * @param id - The id of the menu to add.
+  8992→     * @param contextId - An optional context to add the menu to.
+  8993→     *
+  8994→     * @public
+  8995→     */
+  8996→    addOpenMenu(id: string, contextId?: string): void;
+  8997→    /**
+  8998→     * Clear all open menus.
+  8999→     *
+  9000→     * @example
+  9001→     * ```ts
+  9002→     * clearOpenMenus()
+  9003→     * clearOpenMenus(myEditorId)
+  9004→     * ```
+  9005→     *
+  9006→     * @param contextId - An optional context to clear menus for.
+  9007→     *
+  9008→     * @public
+  9009→     */
+  9010→    clearOpenMenus(contextId?: string | undefined): void;
+  9011→    /**
+  9012→     * Delete an open menu.
+  9013→     *
+  9014→     * @example
+  9015→     * ```ts
+  9016→     * deleteOpenMenu('menu-id')
+  9017→     * deleteOpenMenu('menu-id', myEditorId)
+  9018→     * ```
+  9019→     *
+  9020→     * @param id - The id of the menu to delete.
+  9021→     * @param contextId - An optional context to delete the menu from.
+  9022→     *
+  9023→     * @public
+  9024→     */
+  9025→    deleteOpenMenu(id: string, contextId?: string): void;
+  9026→    /**
+  9027→     * Get the current open menus.
+  9028→     *
+  9029→     * @param contextId - An optional context to get menus for.
+  9030→     *
+  9031→     * @public
+  9032→     */
+  9033→    getOpenMenus(contextId?: string | undefined): string[];
+  9034→    /**
+  9035→     * Get whether a menu is open for a given context.
+  9036→     *
+  9037→     * @example
+  9038→     * ```ts
+  9039→     * isMenuOpem(id, myEditorId)
+  9040→     * ```
+  9041→     *
+  9042→     * @param id - The id of the menu to check.
+  9043→     * @param contextId - An optional context to check menus for.
+  9044→     *
+  9045→     * @public
+  9046→     */
+  9047→    isMenuOpen(id: string, contextId?: string | undefined): boolean;
+  9048→    /**
+  9049→     * Get whether any menus are open for a given context.
+  9050→     *
+  9051→     * @example
+  9052→     * ```ts
+  9053→     * hasOpenMenus(myEditorId)
+  9054→     * ```
+  9055→     *
+  9056→     * @param contextId - A context to check menus for.
+  9057→     *
+  9058→     * @public
+  9059→     */
+  9060→    hasOpenMenus(contextId: string): boolean;
+  9061→    /**
+  9062→     * Get whether any menus are open for any context.
+  9063→     *
+  9064→     * @example
+  9065→     * ```ts
+  9066→     * hasAnyOpenMenus()
+  9067→     * ```
+  9068→     *
+  9069→     * @public
+  9070→     */
+  9071→    hasAnyOpenMenus(): boolean;
+  9072→    /**
+  9073→     * Hide all open menus. Restore them with the `showOpenMenus` method.
+  9074→     *
+  9075→     * @example
+  9076→     * ```ts
+  9077→     * hideOpenMenus()
+  9078→     * hideOpenMenus(myEditorId)
+  9079→     * ```
+  9080→     *
+  9081→     * @param contextId - An optional context to hide menus for.
+  9082→     *
+  9083→     * @public
+  9084→     */
+  9085→    hideOpenMenus(contextId?: string | undefined): void;
+  9086→    /**
+  9087→     * Show all hidden menus.
+  9088→     *
+  9089→     * @example
+  9090→     * ```ts
+  9091→     * showOpenMenus()
+  9092→     * showOpenMenus(myEditorId)
+  9093→     * ```
+  9094→     *
+  9095→     * @param contextId - An optional context to show menus for.
+  9096→     *
+  9097→     * @public
+  9098→     */
+  9099→    showOpenMenus(contextId?: string | undefined): void;
+  9100→    forContext(contextId: string): {
+  9101→        addOpenMenu: (id: string) => void;
+  9102→        clearOpenMenus: () => void;
+  9103→        deleteOpenMenu: (id: string) => void;
+  9104→        getOpenMenus: () => string[];
+  9105→        hasAnyOpenMenus: () => boolean;
+  9106→        hasOpenMenus: () => boolean;
+  9107→        isMenuOpen: (id: string) => boolean;
+  9108→    };
+  9109→};
+  9110→
+  9111→/**
+  9112→ * Called when the editor has mounted.
+  9113→ * @example
+  9114→ * ```ts
+  9115→ * <Tldraw onMount={(editor) => editor.selectAll()} />
+  9116→ * ```
+  9117→ * @param editor - The editor instance.
+  9118→ *
+  9119→ * @public
+  9120→ */
+  9121→export declare type TLOnMountHandler = (editor: Editor) => (() => undefined | void) | undefined | void;
+  9122→
+  9123→/** @public */
+  9124→export declare interface TLOverlay<Props = Record<string, unknown>> {
+  9125→    /**
+  9126→     * Globally unique id for this overlay instance across all overlay utils.
+  9127→     * Hit-test and hover lookup key on `id` alone, so utils must namespace their
+  9128→     * ids (e.g. `'selection_fg:top_left'`, `'handle:<shapeId>:<handleId>'`) to
+  9129→     * avoid colliding with overlays from other utils.
+  9130→     */
+  9131→    id: string;
+  9132→    /** The overlay util type that owns this instance */
+  9133→    type: string;
+  9134→    /** Arbitrary props for the overlay (handle id, corner name, etc.) */
+  9135→    props: Props;
+  9136→}
+  9137→
+  9138→/**
+  9139→ * An active overlay util paired with the overlays it produced for the current
+  9140→ * editor state. Returned by {@link OverlayManager.getActiveOverlayEntries} so
+  9141→ * hit-test, render, and debug paths share a single scan per reactive tick.
+  9142→ *
+  9143→ * @public
+  9144→ */
+  9145→export declare interface TLOverlayEntry {
+  9146→    util: OverlayUtil;
+  9147→    overlays: TLOverlay[];
+  9148→}
+  9149→
+  9150→/** @public */
+  9151→export declare interface TLOverlayUtilConstructor<U extends OverlayUtil = OverlayUtil> {
+  9152→    new (editor: Editor): U;
+  9153→    type: string;
+  9154→    configure<T extends TLOverlayUtilConstructor<any>>(this: T, options: T extends new (...args: any[]) => {
+  9155→        options: infer Options;
+  9156→    } ? Partial<Options> : never): T;
+  9157→}
+  9158→
+  9159→/**
+  9160→ * Map of all performance event names to their payload types.
+  9161→ * Used with {@link PerformanceManager.on} and {@link PerformanceManager.once}.
+  9162→ * @public
+  9163→ */
+  9164→export declare interface TLPerfEventMap {
+  9165→    /** An interaction state was entered. */
+  9166→    'interaction-start': [TLInteractionStartPerfEvent];
+  9167→    /** An interaction state was exited, with aggregated frame time stats. */
+  9168→    'interaction-end': [TLInteractionEndPerfEvent];
+  9169→    /** A camera operation (pan/zoom) began. */
+  9170→    'camera-start': [TLCameraStartPerfEvent];
+  9171→    /** A camera operation ended (after debounce), with aggregated frame time stats. */
+  9172→    'camera-end': [TLCameraEndPerfEvent];
+  9173→    /** Shapes were created. */
+  9174→    'shapes-created': [TLShapeOperationPerfEvent];
+  9175→    /** Shapes were updated. */
+  9176→    'shapes-updated': [TLShapeOperationPerfEvent];
+  9177→    /** Shapes were deleted. */
+  9178→    'shapes-deleted': [TLShapeOperationPerfEvent];
+  9179→    /** An animation frame was rendered. Only fires when listeners are registered. */
+  9180→    frame: [TLFramePerfEvent];
+  9181→    /** An undo operation was performed. */
+  9182→    undo: [TLUndoRedoPerfEvent];
+  9183→    /** A redo operation was performed. */
+  9184→    redo: [TLUndoRedoPerfEvent];
+  9185→}
+  9186→
+  9187→/**
+  9188→ * Common frame time statistics shared by interaction and camera end events.
+  9189→ * @public
+  9190→ */
+  9191→export declare interface TLPerfFrameTimeStats {
+  9192→    /** Total duration of the session in ms. */
+  9193→    duration: number;
+  9194→    /** Average frames per second during the session. */
+  9195→    fps: number;
+  9196→    /** Total number of frames recorded. */
+  9197→    frameCount: number;
+  9198→    /** Mean frame duration in ms. */
+  9199→    avgFrameTime: number;
+  9200→    /** Median (p50) frame duration in ms. */
+  9201→    medianFrameTime: number;
+  9202→    /** 95th percentile frame duration in ms. */
+  9203→    p95FrameTime: number;
+  9204→    /** 99th percentile frame duration in ms. */
+  9205→    p99FrameTime: number;
+  9206→    /** Shortest frame duration in ms. */
+  9207→    minFrameTime: number;
+  9208→    /** Longest frame duration in ms. */
+  9209→    maxFrameTime: number;
+  9210→    /** Raw frame durations for local analysis. Exclude when sending to analytics. */
+  9211→    frameTimes: number[];
+  9212→    /**
+  9213→     * Long animation frames observed during this period (Chromium 123+).
+  9214→     * Only present when the browser supports the Long Animation Frames API and
+  9215→     * at least one long frame was observed.
+  9216→     * Exclude when sending to analytics — entries are large and contain script URLs.
+  9217→     */
+  9218→    longAnimationFrames?: TLPerfLongAnimationFrame[];
+  9219→}
+  9220→
+  9221→/**
+  9222→ * A long animation frame observed by the browser during an interaction.
+  9223→ * Available only in browsers that support the Long Animation Frames API (Chromium 123+).
+  9224→ * @public
+  9225→ */
+  9226→export declare interface TLPerfLongAnimationFrame {
+  9227→    /** Frame start time (relative to timeOrigin). */
+  9228→    startTime: number;
+  9229→    /** Total frame duration in ms. */
+  9230→    duration: number;
+  9231→    /** Time the main thread was blocked in ms. */
+  9232→    blockingDuration: number;
+  9233→    /** Scripts that contributed to the long frame. */
+  9234→    scripts: TLPerfLongAnimationFrameScript[];
+  9235→}
+  9236→
+  9237→/** A script attribution entry from a long animation frame. @public */
+  9238→export declare interface TLPerfLongAnimationFrameScript {
+  9239→    /** The script source URL (may be empty for inline scripts). */
+  9240→    sourceURL: string;
+  9241→    /** The function name or invoker description. */
+  9242→    invoker: string;
+  9243→    /** Time spent in this script in ms. */
+  9244→    duration: number;
+  9245→}
+  9246→
+  9247→/** @public */
+  9248→export declare type TLPinchEvent = (info: TLPinchEventInfo) => void;
+  9249→
+  9250→/** @public */
+  9251→export declare type TLPinchEventInfo = TLBaseEventInfo & {
+  9252→    delta: VecModel;
+  9253→    name: TLPinchEventName;
+  9254→    point: VecModel;
+  9255→    type: 'pinch';
+  9256→};
+  9257→
+  9258→/** @public */
+  9259→export declare type TLPinchEventName = 'pinch_end' | 'pinch_start' | 'pinch';
+  9260→
+  9261→/** @public */
+  9262→export declare type TLPointerEvent = (info: TLPointerEventInfo) => void;
+  9263→
+  9264→/** @public */
+  9265→export declare type TLPointerEventInfo = TLBaseEventInfo & {
+  9266→    /**
+  9267→     * Whether this pen event appears to be direct manipulation on the display (e.g. Apple Pencil on
+  9268→     * an iPad or a Surface Pen on a touchscreen) rather than indirect input from a desktop graphics
+  9269→     * tablet (e.g. a Wacom Intuos). Only direct-display pens should auto-enable pen mode. Drawing and
+  9270→     * pressure behavior is driven by `isPen` and applies to all pens regardless of this flag.
+  9271→     */
+  9272→    isPenDirect?: boolean;
+  9273→    button: number;
+  9274→    isPen: boolean;
+  9275→    name: TLPointerEventName;
+  9276→    point: VecLike;
+  9277→    pointerId: number;
+  9278→    type: 'pointer';
+  9279→} & TLPointerEventTarget;
+  9280→
+  9281→/** @public */
+  9282→export declare type TLPointerEventName = 'long_press' | 'middle_click' | 'pointer_down' | 'pointer_move' | 'pointer_up' | 'right_click';
+  9283→
+  9284→/** @public */
+  9285→export declare type TLPointerEventTarget = {
+  9286→    handle: TLHandle;
+  9287→    shape: TLShape;
+  9288→    target: 'handle';
+  9289→} | {
+  9290→    handle?: TLSelectionHandle;
+  9291→    shape?: undefined;
+  9292→    target: 'selection';
+  9293→} | {
+  9294→    overlay: TLOverlay;
+  9295→    shape?: undefined;
+  9296→    target: 'overlay';
+  9297→} | {
+  9298→    shape: TLShape;
+  9299→    target: 'shape';
+  9300→} | {
+  9301→    shape?: undefined;
+  9302→    target: 'canvas';
+  9303→};
+  9304→
+  9305→/** @public */
+  9306→export declare interface TLRenderingShape {
+  9307→    id: TLShapeId;
+  9308→    shape: TLShape;
+  9309→    util: ShapeUtil;
+  9310→    index: number;
+  9311→    backgroundIndex: number;
+  9312→    opacity: number;
+  9313→}
+  9314→
+  9315→/** @public */
+  9316→export declare type TLResizeHandle = SelectionCorner | SelectionEdge;
+  9317→
+  9318→/**
+  9319→ * Info about a resize.
+  9320→ * @param newPoint - The new local position of the shape.
+  9321→ * @param handle - The handle being dragged.
+  9322→ * @param mode - The type of resize.
+  9323→ * @param scaleX - The scale in the x-axis.
+  9324→ * @param scaleY - The scale in the y-axis.
+  9325→ * @param initialBounds - The bounds of the shape at the start of the resize.
+  9326→ * @param initialShape - The shape at the start of the resize.
+  9327→ * @public
+  9328→ */
+  9329→export declare interface TLResizeInfo<T extends TLShape> {
+  9330→    newPoint: Vec;
+  9331→    handle: TLResizeHandle;
+  9332→    mode: TLResizeMode;
+  9333→    scaleX: number;
+  9334→    scaleY: number;
+  9335→    initialBounds: Box;
+  9336→    initialShape: T;
+  9337→}
+  9338→
+  9339→/**
+  9340→ * The type of resize.
+  9341→ *
+  9342→ * 'scale_shape' - The shape is being scaled, usually as part of a larger selection.
+  9343→ *
+  9344→ * 'resize_bounds' - The user is directly manipulating an individual shape's bounds using a resize
+  9345→ * handle. It is up to shape util implementers to decide how they want to handle the two
+  9346→ * situations.
+  9347→ *
+  9348→ * @public
+  9349→ */
+  9350→export declare type TLResizeMode = 'resize_bounds' | 'scale_shape';
+  9351→
+  9352→/** @public */
+  9353→export declare type TLResizeShapeOptions = Partial<{
+  9354→    dragHandle: TLResizeHandle;
+  9355→    initialBounds: Box;
+  9356→    initialPageTransform: MatLike;
+  9357→    initialShape: TLShape;
+  9358→    isAspectRatioLocked: boolean;
+  9359→    mode: TLResizeMode;
+  9360→    scaleAxisRotation: number;
+  9361→    scaleOrigin: VecLike;
+  9362→    skipStartAndEndCallbacks: boolean;
+  9363→}>;
+  9364→
+  9365→/* Excluded from this release type: TLRotationSnapshot */
+  9366→
+  9367→/** @public */
+  9368→export declare type TLSelectionHandle = RotateCorner | SelectionCorner | SelectionEdge;
+  9369→
+  9370→/**
+  9371→ * The state of the editor instance, not including any document state.
+  9372→ *
+  9373→ * @public
+  9374→ */
+  9375→export declare interface TLSessionStateSnapshot {
+  9376→    version: number;
+  9377→    currentPageId?: TLPageId;
+  9378→    isFocusMode?: boolean;
+  9379→    exportBackground?: boolean;
+  9380→    isDebugMode?: boolean;
+  9381→    isToolLocked?: boolean;
+  9382→    isGridMode?: boolean;
+  9383→    pageStates?: Array<{
+  9384→        camera?: {
+  9385→            x: number;
+  9386→            y: number;
+  9387→            z: number;
+  9388→        };
+  9389→        focusedGroupId?: null | TLShapeId;
+  9390→        pageId: TLPageId;
+  9391→        selectedShapeIds?: TLShapeId[];
+  9392→    }>;
+  9393→}
+  9394→
+  9395→/** @public */
+  9396→export declare type TLShapeErrorFallbackComponent = ComponentType<{
+  9397→    error: any;
+  9398→}>;
+  9399→
+  9400→/**
+  9401→ * Emitted when shapes are created, updated, or deleted.
+  9402→ * @public
+  9403→ */
+  9404→export declare interface TLShapeOperationPerfEvent {
+  9405→    /** The operation type. */
+  9406→    operation: 'create' | 'delete' | 'update';
+  9407→    /** Number of shapes affected. */
+  9408→    count: number;
+  9409→    /** Breakdown by shape type (e.g. `{ geo: 2, draw: 1 }`). */
+  9410→    shapeTypes: Record<string, number>;
+  9411→    /** `performance.now()` when the operation occurred. */
+  9412→    timestamp: number;
+  9413→}
+  9414→
+  9415→/**
+  9416→ * Options passed to {@link ShapeUtil.canBeLaidOut}.
+  9417→ *
+  9418→ * @public
+  9419→ */
+  9420→export declare interface TLShapeUtilCanBeLaidOutOpts {
+  9421→    /** The type of action causing the layout. */
+  9422→    type?: 'align' | 'distribute' | 'flip' | 'pack' | 'resize_to_bounds' | 'stack' | 'stretch';
+  9423→    /** The other shapes being laid out */
+  9424→    shapes?: TLShape[];
+  9425→}
+  9426→
+  9427→/**
+  9428→ * Options passed to {@link ShapeUtil.canBind}. A binding that could be made. At least one of
+  9429→ * `fromShape` or `toShape` will belong to this shape util.
+  9430→ *
+  9431→ * The shapes may be full {@link @tldraw/tlschema#TLShape} objects when available, or just
+  9432→ * `{ type }` stubs when the shape hasn't been created yet (e.g. during arrow creation). Use
+  9433→ * `'id' in shape` to check whether the full shape is available.
+  9434→ *
+  9435→ * @public
+  9436→ */
+  9437→export declare interface TLShapeUtilCanBindOpts<Shape extends TLShape = TLShape> {
+  9438→    /** The shape referenced by the `fromId` of the binding, or a `{ type }` stub if unavailable. */
+  9439→    fromShape: {
+  9440→        type: TLShape['type'];
+  9441→    } | TLShape;
+  9442→    /** The shape referenced by the `toId` of the binding, or a `{ type }` stub if unavailable. */
+  9443→    toShape: {
+  9444→        type: TLShape['type'];
+  9445→    } | TLShape;
+  9446→    /** The type of binding. */
+  9447→    bindingType: string;
+  9448→    /**
+  9449→     * The type of shape referenced by the `fromId` of the binding.
+  9450→     * @deprecated Use `fromShape.type` instead.
+  9451→     */
+  9452→    fromShapeType: TLShape['type'];
+  9453→    /**
+  9454→     * The type of shape referenced by the `toId` of the binding.
+  9455→     * @deprecated Use `toShape.type` instead.
+  9456→     */
+  9457→    toShapeType: TLShape['type'];
+  9458→}
+  9459→
+  9460→/** @public */
+  9461→export declare interface TLShapeUtilCanvasSvgDef {
+  9462→    key: string;
+  9463→    component: React.ComponentType;
+  9464→}
+  9465→
+  9466→/** @public */
+  9467→export declare interface TLShapeUtilConstructor<T extends TLShape, U extends ShapeUtil<T> = ShapeUtil<T>> {
+  9468→    new (editor: Editor): U;
+  9469→    type: T['type'];
+  9470→    props?: RecordProps<T>;
+  9471→    migrations?: LegacyMigrations | MigrationSequence | TLPropsMigrations;
+  9472→    handledAssetTypes?: readonly string[];
+  9473→}
+  9474→
+  9475→/** @public */
+  9476→export declare interface TLShapeWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
+  9477→    /** The shape being rendered. */
+  9478→    shape: TLShape;
+  9479→    /** Whether this is the shapes regular, or background component. */
+  9480→    isBackground: boolean;
+  9481→    /** The shape's rendered component. */
+  9482→    children: ReactNode;
+  9483→}
+  9484→
+  9485→/** @public */
+  9486→export declare interface TLStateNodeConstructor {
+  9487→    new (editor: Editor, parent?: StateNode): StateNode;
+  9488→    id: string;
+  9489→    initial?: string;
+  9490→    children?(): TLStateNodeConstructor[];
+  9491→    isLockable: boolean;
+  9492→    useCoalescedEvents: boolean;
+  9493→    trackPerformance: boolean;
+  9494→}
+  9495→
+  9496→/** @public */
+  9497→export declare interface TLStoreBaseOptions {
+  9498→    /** The initial data for the store. */
+  9499→    initialData?: SerializedStore<TLRecord>;
+  9500→    /** A snapshot of initial data to migrate and load into the store. */
+  9501→    snapshot?: Partial<TLEditorSnapshot> | TLStoreSnapshot;
+  9502→    /** The default name for the store. */
+  9503→    defaultName?: string;
+  9504→    /** How should this store upload & resolve assets? */
+  9505→    assets?: TLAssetStore;
+  9506→    /**
+  9507→     * Named theme definitions. When provided, custom color names are automatically
+  9508→     * registered before the store is constructed so persisted data with those
+  9509→     * colors passes validation on load.
+  9510→     */
+  9511→    themes?: Partial<TLThemes>;
+  9512→    /** How should this store resolve users for attribution? */
+  9513→    users?: TLUserStore;
+  9514→    /** Called when the store is connected to an {@link @tldraw/editor#Editor}. */
+  9515→    onMount?(editor: Editor): (() => void) | void;
+  9516→}
+  9517→
+  9518→/** @public */
+  9519→export declare type TLStoreEventInfo = HistoryEntry<TLRecord>;
+  9520→
+  9521→/** @public */
+  9522→export declare type TLStoreOptions = TLStoreBaseOptions & {
+  9523→    /** Collaboration options for the store. */
+  9524→    collaboration?: {
+  9525→        mode?: null | Signal<'readonly' | 'readwrite'>;
+  9526→        status: null | Signal<'offline' | 'online'>;
+  9527→    };
+  9528→    id?: string;
+  9529→} & TLStoreSchemaOptions;
+  9530→
+  9531→/** @public */
+  9532→export declare type TLStoreSchemaOptions = {
+  9533→    assetUtils?: readonly TLAnyAssetUtilConstructor[];
+  9534→    bindingUtils?: readonly TLAnyBindingUtilConstructor[];
+  9535→    migrations?: readonly MigrationSequence[];
+  9536→    records?: Record<string, CustomRecordInfo>;
+  9537→    shapeUtils?: readonly TLAnyShapeUtilConstructor[];
+  9538→} | {
+  9539→    schema?: StoreSchema<TLRecord, TLStoreProps>;
+  9540→};
+  9541→
+  9542→/** @public */
+  9543→export declare type TLStoreWithStatus = {
+  9544→    readonly connectionStatus: 'offline' | 'online';
+  9545→    readonly error?: undefined;
+  9546→    readonly status: 'synced-remote';
+  9547→    readonly store: TLStore;
+  9548→} | {
+  9549→    readonly error: Error;
+  9550→    readonly status: 'error';
+  9551→    readonly store?: undefined;
+  9552→} | {
+  9553→    readonly error?: undefined;
+  9554→    readonly status: 'loading';
+  9555→    readonly store?: undefined;
+  9556→} | {
+  9557→    readonly error?: undefined;
+  9558→    readonly status: 'not-synced';
+  9559→    readonly store: TLStore;
+  9560→} | {
+  9561→    readonly error?: undefined;
+  9562→    readonly status: 'synced-local';
+  9563→    readonly store: TLStore;
+  9564→};
+  9565→
+  9566→/** @public */
+  9567→export declare interface TLSvgExportOptions {
+  9568→    /**
+  9569→     * The bounding box, in page coordinates, of the area being exported.
+  9570→     */
+  9571→    bounds?: Box;
+  9572→    /**
+  9573→     * The logical scale of the export. This scales the resulting size of the SVG being generated.
+  9574→     */
+  9575→    scale?: number;
+  9576→    /**
+  9577→     * When exporting an SVG, the expected pixel ratio of the export will be passed in to
+  9578→     * {@link @tldraw/tlschema#TLAssetStore.resolve} as the `dpr` property, so that assets can be
+  9579→     * downscaled to the appropriate resolution.
+  9580→     *
+  9581→     * When exporting to a bitmap image format, the size of the resulting image will be multiplied
+  9582→     * by this number.
+  9583→     *
+  9584→     * For SVG exports, this defaults to undefined - which means we'll request original-quality
+  9585→     * assets. For bitmap exports, this defaults to 2.
+  9586→     */
+  9587→    pixelRatio?: number;
+  9588→    /**
+  9589→     * Should the background color be included in the export? If false, the generated image will be
+  9590→     * transparent (if exporting to a format that supports transparency).
+  9591→     */
+  9592→    background?: boolean;
+  9593→    /**
+  9594→     * How much padding to include around the bounds of exports.
+  9595→     *
+  9596→     * - `'auto'` (default) — trim to visual content bounds, capturing overflow (like thick
+  9597→     *    strokes or arrowheads) without extra whitespace.
+  9598→     * - `number` (e.g. `32`) — fixed padding in px. No trimming; overflow beyond the padding
+  9599→     *    region is clipped.
+  9600→     * - `0` — no padding, no trimming, overflow is clipped.
+  9601→     */
+  9602→    padding?: 'auto' | number;
+  9603→    /**
+  9604→     * Should the export be rendered in dark mode (true) or light mode (false)? Defaults to the
+  9605→     * current instance's dark mode setting.
+  9606→     */
+  9607→    darkMode?: boolean;
+  9608→    /**
+  9609→     * The
+  9610→     * {@link https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio | `preserveAspectRatio` }
+  9611→     * attribute of the SVG element.
+  9612→     */
+  9613→    preserveAspectRatio?: React.SVGAttributes<SVGSVGElement>['preserveAspectRatio'];
+  9614→}
+  9615→
+  9616→/** @public */
+  9617→export declare interface TLSvgTextExternalContent extends TLBaseExternalContent {
+  9618→    type: 'svg-text';
+  9619→    text: string;
+  9620→}
+  9621→
+  9622→/** @public */
+  9623→export declare interface TLTextExternalContent extends TLBaseExternalContent {
+  9624→    type: 'text';
+  9625→    text: string;
+  9626→    html?: string;
+  9627→}
+  9628→
+  9629→/** @public */
+  9630→export declare interface TLTextExternalContentSource {
+  9631→    type: 'text';
+  9632→    data: string;
+  9633→    subtype: 'html' | 'json' | 'text' | 'url';
+  9634→}
+  9635→
+  9636→/** @public */
+  9637→export declare interface TLTextOptions {
+  9638→    tipTapConfig?: EditorProviderProps_2;
+  9639→    addFontsFromNode?: RichTextFontVisitor;
+  9640→}
+  9641→
+  9642→/** @public */
+  9643→export declare type TLTickEvent = (info: TLTickEventInfo) => void;
+  9644→
+  9645→/** @public */
+  9646→export declare interface TLTickEventInfo {
+  9647→    type: 'misc';
+  9648→    name: 'tick';
+  9649→    elapsed: number;
+  9650→}
+  9651→
+  9652→/**
+  9653→ * A global timer manager.
+  9654→ *
+  9655→ * @public
+  9656→ */
+  9657→export declare const tltime: Timers;
+  9658→
+  9659→/** @public */
+  9660→export declare interface TLTldrawExternalContent extends TLBaseExternalContent {
+  9661→    type: 'tldraw';
+  9662→    content: TLContent;
+  9663→}
+  9664→
+  9665→/** @public */
+  9666→export declare interface TLTldrawExternalContentSource {
+  9667→    type: 'tldraw';
+  9668→    data: TLContent;
+  9669→}
+  9670→
+  9671→/**
+  9672→ * Emitted after an undo or redo operation.
+  9673→ * @public
+  9674→ */
+  9675→export declare interface TLUndoRedoPerfEvent {
+  9676→    /** Whether this was an undo or redo. */
+  9677→    type: 'redo' | 'undo';
+  9678→    /** Number of undo steps remaining. */
+  9679→    undoDepth: number;
+  9680→    /** Number of redo steps remaining. */
+  9681→    redoDepth: number;
+  9682→}
+  9683→
+  9684→/** @public */
+  9685→export declare interface TLUpdatePointerOptions {
+  9686→    /** Whether to update the pointer immediately, rather than on the next tick. */
+  9687→    immediate?: boolean;
+  9688→    /**
+  9689→     * The point, in screen-space, to update the pointer to. Defaults to the position of the last
+  9690→     * pointer event.
+  9691→     */
+  9692→    point?: VecLike;
+  9693→    pointerId?: number;
+  9694→    ctrlKey?: boolean;
+  9695→    altKey?: boolean;
+  9696→    shiftKey?: boolean;
+  9697→    metaKey?: boolean;
+  9698→    accelKey?: boolean;
+  9699→    isPen?: boolean;
+  9700→    button?: number;
+  9701→}
+  9702→
+  9703→/** @public */
+  9704→export declare interface TLUrlExternalAsset {
+  9705→    type: 'url';
+  9706→    url: string;
+  9707→}
+  9708→
+  9709→/** @public */
+  9710→export declare interface TLUrlExternalContent extends TLBaseExternalContent {
+  9711→    type: 'url';
+  9712→    url: string;
+  9713→}
+  9714→
+  9715→/**
+  9716→ * A user of tldraw
+  9717→ *
+  9718→ * @public
+  9719→ */
+  9720→export declare interface TLUserPreferences {
+  9721→    id: string;
+  9722→    name?: null | string;
+  9723→    color?: null | string;
+  9724→    locale?: null | string;
+  9725→    animationSpeed?: null | number;
+  9726→    areKeyboardShortcutsEnabled?: boolean | null;
+  9727→    edgeScrollSpeed?: null | number;
+  9728→    colorScheme?: 'dark' | 'light' | 'system';
+  9729→    isSnapMode?: boolean | null;
+  9730→    isWrapMode?: boolean | null;
+  9731→    isDynamicSizeMode?: boolean | null;
+  9732→    isPasteAtCursorMode?: boolean | null;
+  9733→    enhancedA11yMode?: boolean | null;
+  9734→    inputMode?: 'mouse' | 'trackpad' | null;
+  9735→    isZoomDirectionInverted?: boolean | null;
+  9736→}
+  9737→
+  9738→/** @public */
+  9739→export declare type TLWheelEvent = (info: TLWheelEventInfo) => void;
+  9740→
+  9741→/** @public */
+  9742→export declare type TLWheelEventInfo = TLBaseEventInfo & {
+  9743→    delta: VecModel;
+  9744→    name: 'wheel';
+  9745→    point: VecModel;
+  9746→    type: 'wheel';
+  9747→};
+  9748→
+  9749→/**
+  9750→ * The DOM likes values to be fixed to 3 decimal places
+  9751→ *
+  9752→ * @public
+  9753→ */
+  9754→export declare function toDomPrecision(v: number): number;
+  9755→
+  9756→/**
+  9757→ * @public
+  9758→ */
+  9759→export declare function toFixed(v: number): number;
+  9760→
+  9761→/**
+  9762→ * Get a number to a precision.
+  9763→ *
+  9764→ * @param n - The number.
+  9765→ * @param precision - The precision.
+  9766→ * @public
+  9767→ */
+  9768→export declare function toPrecision(n: number, precision?: number): number;
+  9769→
+  9770→/** @public */
+  9771→export declare class TransformedGeometry2d extends Geometry2d {
+  9772→    private readonly geometry;
+  9773→    private readonly matrix;
+  9774→    private readonly inverse;
+  9775→    private readonly decomposed;
+  9776→    constructor(geometry: Geometry2d, matrix: MatModel, opts?: TransformedGeometry2dOptions);
+  9777→    getVertices(filters: Geometry2dFilters): Vec[];
+  9778→    getBoundsVertices(): Vec[];
+  9779→    nearestPoint(point: VecLike, filters?: Geometry2dFilters): Vec;
+  9780→    hitTestPoint(point: VecLike, margin?: number, hitInside?: boolean, filters?: Geometry2dFilters): boolean;
+  9781→    distanceToPoint(point: VecLike, hitInside?: boolean, filters?: Geometry2dFilters): number;
+  9782→    distanceToLineSegment(A: VecLike, B: VecLike, filters?: Geometry2dFilters): number;
+  9783→    hitTestLineSegment(A: VecLike, B: VecLike, distance?: number, filters?: Geometry2dFilters): boolean;
+  9784→    intersectLineSegment(A: VecLike, B: VecLike, filters?: Geometry2dFilters): Vec[];
+  9785→    intersectCircle(center: VecLike, radius: number, filters?: Geometry2dFilters): Vec[];
+  9786→    intersectPolygon(polygon: VecLike[], filters?: Geometry2dFilters): VecLike[];
+  9787→    intersectPolyline(polyline: VecLike[], filters?: Geometry2dFilters): VecLike[];
+  9788→    ignoreHit(point: VecLike): boolean;
+  9789→    transform(transform: MatModel, opts?: TransformedGeometry2dOptions): Geometry2d;
+  9790→    getSvgPathData(): string;
+  9791→}
+  9792→
+  9793→/** @public */
+  9794→export declare interface TransformedGeometry2dOptions {
+  9795→    isLabel?: boolean;
+  9796→    isEmptyLabel?: boolean;
+  9797→    isInternal?: boolean;
+  9798→    debugColor?: string;
+  9799→    ignore?: boolean;
+  9800→    excludeFromShapeBounds?: boolean;
+  9801→}
+  9802→
+  9803→/** @public */
+  9804→export declare type UiEvent = TLCancelEvent | TLClickEvent | TLCompleteEvent | TLKeyboardEvent | TLPinchEvent | TLPointerEvent;
+  9805→
+  9806→/** @public */
+  9807→export declare type UiEventType = 'click' | 'keyboard' | 'pinch' | 'pointer' | 'wheel' | 'zoom';
+  9808→
+  9809→/** @public */
+  9810→export declare function uniq<T>(array: {
+  9811→    readonly [n: number]: T;
+  9812→    readonly length: number;
+  9813→} | null | undefined): T[];
+  9814→
+  9815→/** @public */
+  9816→export declare function useColorMode(): 'dark' | 'light';
+  9817→
+  9818→/** @public */
+  9819→export declare function useContainer(): HTMLElement;
+  9820→
+  9821→/** @public */
+  9822→export declare function useContainerIfExists(): HTMLElement | null;
+  9823→
+  9824→/**
+  9825→ * Delay an SVG export until the returned function is called. This is useful if e.g. your shape
+  9826→ * loads data dynamically, and you need to prevent the export from happening until after the data is
+  9827→ * loaded.
+  9828→ *
+  9829→ * If used outside of an SVG export, this hook has no effect.
+  9830→ *
+  9831→ * @example
+  9832→ * ```tsx
+  9833→ * const readyForExport = useDelaySvgExport()
+  9834→ *
+  9835→ * return <MyDynamicComponent onDataLoaded={() => readyForExport()} />
+  9836→ * ```
+  9837→ *
+  9838→ * @public
+  9839→ */
+  9840→export declare function useDelaySvgExport(): () => void;
+  9841→
+  9842→/** @public */
+  9843→export declare function useEditor(): Editor;
+  9844→
+  9845→/** @public */
+  9846→export declare function useEditorComponents(): Required<TLEditorComponents>;
+  9847→
+  9848→/**
+  9849→ * The DOM node that {@link EditorPortal} renders into: an empty `display: contents` element the
+  9850→ * editor renders last among its container's children, after the canvas and after the UI.
+  9851→ *
+  9852→ * Null until the container has mounted, so prefer {@link EditorPortal}, which handles that for you.
+  9853→ *
+  9854→ * @public
+  9855→ */
+  9856→export declare function useEditorPortalHost(): HTMLElement | null;
+  9857→
+  9858→/* Excluded from this release type: useEvent */
+  9859→
+  9860→/** @public */
+  9861→export declare function useGlobalMenuIsOpen(id: string, onChange?: (isOpen: boolean) => void, onEvent?: (id: string) => void): readonly [boolean, (isOpen: boolean) => void];
+  9862→
+  9863→/** @public */
+  9864→export declare function useIsCropping(shapeId: TLShapeId): boolean;
+  9865→
+  9866→/** @public */
+  9867→export declare function useIsEditing(shapeId: TLShapeId): boolean;
+  9868→
+  9869→/* Excluded from this release type: useLicenseContext */
+  9870→
+  9871→/* Excluded from this release type: useLicenseFeatureFlag */
+  9872→
+  9873→/* Excluded from this release type: useLocalStore */
+  9874→
+  9875→/** @public */
+  9876→export declare function useMaybeEditor(): Editor | null;
+  9877→
+  9878→/* Excluded from this release type: useOnMount */
+  9879→
+  9880→/** @public */
+  9881→export declare function usePassThroughWheelEvents(ref: RefObject<HTMLElement | null>): void;
+  9882→
+  9883→/**
+  9884→ * Reactive list of peer user IDs for collaborators currently shown in the UI.
+  9885→ * This list includes user ids who are not on the user's current page.
+  9886→ * Mirrors {@link Editor.getVisibleCollaborators} — peers fade out as they
+  9887→ * transition to idle/inactive, without requiring a manual re-render.
+  9888→ *
+  9889→ * @returns The list of peer UserIDs
+  9890→ * @public
+  9891→ */
+  9892→export declare function usePeerIds(): TLUserId[];
+  9893→
+  9894→/**
+  9895→ * @returns The latest presence of the user matching userId
+  9896→ * @public
+  9897→ */
+  9898→export declare function usePresence(userId: TLUserId): null | TLInstancePresence;
+  9899→
+  9900→/* Excluded from this release type: USER_COLORS */
+  9901→
+  9902→/* Excluded from this release type: useReactiveEvent */
+  9903→
+  9904→/* Excluded from this release type: useRefState */
+  9905→
+  9906→/** @public */
+  9907→export declare class UserPreferencesManager {
+  9908→    private readonly user;
+  9909→    private readonly colorScheme;
+  9910→    systemColorScheme: Atom<"dark" | "light", unknown>;
+  9911→    disposables: Set<() => void>;
+  9912→    dispose(): void;
+  9913→    constructor(user: TLCurrentUser, colorScheme: 'dark' | 'light' | 'system');
+  9914→    updateUserPreferences(userPreferences: Partial<TLUserPreferences>): void;
+  9915→    getUserPreferences(): {
+  9916→        animationSpeed: number;
+  9917→        areKeyboardShortcutsEnabled: boolean;
+  9918→        color: string;
+  9919→        colorScheme: "dark" | "light" | "system" | undefined;
+  9920→        enhancedA11yMode: boolean;
+  9921→        id: string;
+  9922→        inputMode: "mouse" | "trackpad" | null;
+  9923→        isDarkMode: boolean;
+  9924→        isDynamicResizeMode: boolean;
+  9925→        isSnapMode: boolean;
+  9926→        isWrapMode: boolean;
+  9927→        isZoomDirectionInverted: boolean;
+  9928→        locale: string;
+  9929→        name: string;
+  9930→    };
+  9931→    getIsDarkMode(): boolean;
+  9932→    /**
+  9933→     * The speed at which the user can scroll by dragging toward the edge of the screen.
+  9934→     */
+  9935→    getEdgeScrollSpeed(): number;
+  9936→    getAnimationSpeed(): number;
+  9937→    getAreKeyboardShortcutsEnabled(): boolean;
+  9938→    /**
+  9939→     * The current user's raw, app-provided id — the value set in the user's
+  9940→     * {@link @tldraw/editor#TLUserPreferences}. Use this when you need the id your application
+  9941→     * assigned to the user. To compare against or look up store records, use
+  9942→     * {@link UserPreferencesManager.getRecordId} instead.
+  9943→     */
+  9944→    getExternalId(): string;
+  9945→    /**
+  9946→     * @deprecated Use {@link UserPreferencesManager.getExternalId} for the raw app-provided id, or
+  9947→     * {@link UserPreferencesManager.getRecordId} for the prefixed `TLUserId` record id.
+  9948→     */
+  9949→    getId(): string;
+  9950→    /**
+  9951→     * The current user's id as a tldraw {@link @tldraw/tlschema#TLUserId} record id (prefixed
+  9952→     * with `user:`). Use this when comparing against or looking up store records, such as a
+  9953→     * presence record's `userId` or `followingUserId`. For the raw, app-provided id, use
+  9954→     * {@link UserPreferencesManager.getExternalId}.
+  9955→     */
+  9956→    getRecordId(): TLUserId;
+  9957→    getName(): string;
+  9958→    getLocale(): string;
+  9959→    getColor(): string;
+  9960→    getIsSnapMode(): boolean;
+  9961→    getIsWrapMode(): boolean;
+  9962→    getIsDynamicResizeMode(): boolean;
+  9963→    getIsPasteAtCursorMode(): boolean;
+  9964→    getEnhancedA11yMode(): boolean;
+  9965→    getInputMode(): "mouse" | "trackpad" | null;
+  9966→    getIsZoomDirectionInverted(): boolean;
+  9967→}
+  9968→
+  9969→/** @public */
+  9970→export declare const userTypeValidator: T.Validator<TLUserPreferences>;
+  9971→
+  9972→/* Excluded from this release type: useShallowArrayIdentity */
+  9973→
+  9974→/* Excluded from this release type: useShallowObjectIdentity */
+  9975→
+  9976→/**
+  9977→ * React's useId hook returns a unique id for the component. However, it uses a colon in the id,
+  9978→ * which is not valid for CSS selectors. This hook replaces the colon with an underscore.
+  9979→ *
+  9980→ * @public
+  9981→ */
+  9982→export declare function useSharedSafeId(id: string): SafeId;
+  9983→
+  9984→/**
+  9985→ * Returns the current SVG export context. Returns null if the component isn't being rendered for an
+  9986→ * SVG export.
+  9987→ *
+  9988→ * @public
+  9989→ */
+  9990→export declare function useSvgExportContext(): null | SvgExportContext;
+  9991→
+  9992→/**
+  9993→ * @public
+  9994→ */
+  9995→export declare function useTldrawCurrentUser(opts: {
+  9996→    setUserPreferences?: (userPreferences: TLUserPreferences) => void;
+  9997→    userPreferences?: Signal<TLUserPreferences> | TLUserPreferences;
+  9998→}): TLCurrentUser;
+  9999→
+ 10000→/** @public */
+ 10001→export declare function useTLSchemaFromUtils(opts: TLStoreSchemaOptions): StoreSchema<TLRecord, TLStoreProps>;
+ 10002→
+ 10003→/** @public */
+ 10004→export declare function useTLStore(opts: TLStoreOptions): TLStore;
+ 10005→
+ 10006→/**
+ 10007→ * Position an element by writing its `transform` directly, outside React's render output — the
+ 10008→ * cheap path for elements that move at pointer/presence frequency.
+ 10009→ * @public
+ 10010→ */
+ 10011→export declare function useTransform(ref: React.RefObject<HTMLElement | null | SVGElement>, x?: number, y?: number, scale?: number, rotate?: number, additionalOffset?: VecLike): void;
+ 10012→
+ 10013→/**
+ 10014→ * React's useId hook returns a unique id for the component. However, it uses a colon in the id,
+ 10015→ * which is not valid for CSS selectors. This hook replaces the colon with an underscore.
+ 10016→ *
+ 10017→ * @public
+ 10018→ */
+ 10019→export declare function useUniqueSafeId(suffix?: string): SafeId;
+ 10020→
+ 10021→/** @public */
+ 10022→export declare function useViewportHeight(): number;
+ 10023→
+ 10024→/* Excluded from this release type: ValidLicenseKeyResult */
+ 10025→
+ 10026→/** @public */
+ 10027→export declare class Vec {
+ 10028→    x: number;
+ 10029→    y: number;
+ 10030→    z: number;
+ 10031→    constructor(x?: number, y?: number, z?: number);
+ 10032→    get pressure(): number;
+ 10033→    set(x?: number, y?: number, z?: number): this;
+ 10034→    setTo({ x, y, z }: VecLike): this;
+ 10035→    rot(r: number): this;
+ 10036→    rotWith(C: VecLike, r: number): this;
+ 10037→    clone(): Vec;
+ 10038→    sub(V: VecLike): this;
+ 10039→    subXY(x: number, y: number): this;
+ 10040→    subScalar(n: number): this;
+ 10041→    add(V: VecLike): this;
+ 10042→    addXY(x: number, y: number): this;
+ 10043→    addScalar(n: number): this;
+ 10044→    clamp(min: number, max?: number): this;
+ 10045→    div(t: number): this;
+ 10046→    divV(V: VecLike): this;
+ 10047→    mul(t: number): this;
+ 10048→    mulV(V: VecLike): this;
+ 10049→    abs(): this;
+ 10050→    nudge(B: VecLike, distance: number): this;
+ 10051→    neg(): this;
+ 10052→    cross(V: VecLike): this;
+ 10053→    dpr(V: VecLike): number;
+ 10054→    cpr(V: VecLike): number;
+ 10055→    len2(): number;
+ 10056→    len(): number;
+ 10057→    pry(V: VecLike): number;
+ 10058→    per(): this;
+ 10059→    uni(): this;
+ 10060→    tan(V: VecLike): Vec;
+ 10061→    dist(V: VecLike): number;
+ 10062→    distanceToLineSegment(A: VecLike, B: VecLike): number;
+ 10063→    slope(B: VecLike): number;
+ 10064→    snapToGrid(gridSize: number): this;
+ 10065→    angle(B: VecLike): number;
+ 10066→    toAngle(): number;
+ 10067→    lrp(B: VecLike, t: number): Vec;
+ 10068→    equals(B: VecLike): boolean;
+ 10069→    equalsXY(x: number, y: number): boolean;
+ 10070→    toFixed(): this;
+ 10071→    toString(): string;
+ 10072→    toJson(): VecModel;
+ 10073→    toArray(): number[];
+ 10074→    static Add(A: VecLike, B: VecLike): Vec;
+ 10075→    static AddXY(A: VecLike, x: number, y: number): Vec;
+ 10076→    static Sub(A: VecLike, B: VecLike): Vec;
+ 10077→    static SubXY(A: VecLike, x: number, y: number): Vec;
+ 10078→    static AddScalar(A: VecLike, n: number): Vec;
+ 10079→    static SubScalar(A: VecLike, n: number): Vec;
+ 10080→    static Div(A: VecLike, t: number): Vec;
+ 10081→    static Mul(A: VecLike, t: number): Vec;
+ 10082→    static DivV(A: VecLike, B: VecLike): Vec;
+ 10083→    static MulV(A: VecLike, B: VecLike): Vec;
+ 10084→    static Neg(A: VecLike): Vec;
+ 10085→    /**
+ 10086→     * Get the perpendicular vector to A.
+ 10087→     */
+ 10088→    static Per(A: VecLike): Vec;
+ 10089→    static Abs(A: VecLike): Vec;
+ 10090→    static Dist(A: VecLike, B: VecLike): number;
+ 10091→    static ManhattanDist(A: VecLike, B: VecLike): number;
+ 10092→    static DistMin(A: VecLike, B: VecLike, n: number): boolean;
+ 10093→    static Dist2(A: VecLike, B: VecLike): number;
+ 10094→    /**
+ 10095→     * Dot product of two vectors which is used to calculate the angle between them.
+ 10096→     */
+ 10097→    static Dpr(A: VecLike, B: VecLike): number;
+ 10098→    static Cross(A: VecLike, V: VecLike): Vec;
+ 10099→    /**
+ 10100→     * Cross product of two vectors which is used to calculate the area of a parallelogram.
+ 10101→     */
+ 10102→    static Cpr(A: VecLike, B: VecLike): number;
+ 10103→    static Len2(A: VecLike): number;
+ 10104→    static Len(A: VecLike): number;
+ 10105→    /**
+ 10106→     * Get the projection of A onto B.
+ 10107→     */
+ 10108→    static Pry(A: VecLike, B: VecLike): number;
+ 10109→    /**
+ 10110→     * Get the unit vector of A.
+ 10111→     */
+ 10112→    static Uni(A: VecLike): Vec;
+ 10113→    static Tan(A: VecLike, B: VecLike): Vec;
+ 10114→    static Min(A: VecLike, B: VecLike): Vec;
+ 10115→    static Max(A: VecLike, B: VecLike): Vec;
+ 10116→    static From({ x, y, z }: VecModel): Vec;
+ 10117→    static FromArray(v: number[]): Vec;
+ 10118→    static Rot(A: VecLike, r?: number): Vec;
+ 10119→    static RotWith(A: VecLike, C: VecLike, r: number): Vec;
+ 10120→    /**
+ 10121→     * Get the nearest point on a line with a known unit vector that passes through point A
+ 10122→     *
+ 10123→     * ```ts
+ 10124→     * Vec.nearestPointOnLineThroughPoint(A, u, Point)
+ 10125→     * ```
+ 10126→     *
+ 10127→     * @param A - Any point on the line
+ 10128→     * @param u - The unit vector for the line.
+ 10129→     * @param P - A point not on the line to test.
+ 10130→     */
+ 10131→    static NearestPointOnLineThroughPoint(A: VecLike, u: VecLike, P: VecLike): Vec;
+ 10132→    static NearestPointOnLineSegment(A: VecLike, B: VecLike, P: VecLike, clamp?: boolean): Vec;
+ 10133→    static DistanceToLineThroughPoint(A: VecLike, u: VecLike, P: VecLike): number;
+ 10134→    static DistanceToLineSegment(A: VecLike, B: VecLike, P: VecLike, clamp?: boolean): number;
+ 10135→    static Snap(A: VecLike, step?: number): Vec;
+ 10136→    static Cast(A: VecLike): Vec;
+ 10137→    static Slope(A: VecLike, B: VecLike): number;
+ 10138→    static IsNaN(A: VecLike): boolean;
+ 10139→    static IsFinite(A: VecLike): boolean;
+ 10140→    /**
+ 10141→     * Get the angle from position A to position B.
+ 10142→     */
+ 10143→    static Angle(A: VecLike, B: VecLike): number;
+ 10144→    /**
+ 10145→     * Get the angle between vector A and vector B. This will return the smallest angle between the
+ 10146→     * two vectors, between -π and π. The sign indicates direction of angle.
+ 10147→     */
+ 10148→    static AngleBetween(A: VecLike, B: VecLike): number;
+ 10149→    /**
+ 10150→     * Linearly interpolate between two points.
+ 10151→     * @param A - The first point.
+ 10152→     * @param B - The second point.
+ 10153→     * @param t - The interpolation value between 0 and 1.
+ 10154→     * @returns The interpolated point.
+ 10155→     */
+ 10156→    static Lrp(A: VecLike, B: VecLike, t: number): Vec;
+ 10157→    static Med(A: VecLike, B: VecLike): Vec;
+ 10158→    static Equals(A: VecLike, B: VecLike): boolean;
+ 10159→    static EqualsXY(A: VecLike, x: number, y: number): boolean;
+ 10160→    static Clockwise(A: VecLike, B: VecLike, C: VecLike): boolean;
+ 10161→    static Rescale(A: VecLike, n: number): Vec;
+ 10162→    static ScaleWithOrigin(A: VecLike, scale: number, origin: VecLike): Vec;
+ 10163→    static ToFixed(A: VecLike): Vec;
+ 10164→    static ToInt(A: VecLike): Vec;
+ 10165→    static ToCss(A: VecLike): string;
+ 10166→    static Nudge(A: VecLike, B: VecLike, distance: number): Vec;
+ 10167→    static ToString(A: VecLike): string;
+ 10168→    static ToAngle(A: VecLike): number;
+ 10169→    static FromAngle(r: number, length?: number): Vec;
+ 10170→    static ToArray(A: VecLike): number[];
+ 10171→    static ToJson(A: VecLike): {
+ 10172→        x: number;
+ 10173→        y: number;
+ 10174→        z: number | undefined;
+ 10175→    };
+ 10176→    static Average(arr: VecLike[]): Vec;
+ 10177→    static Clamp(A: Vec, min: number, max?: number): Vec;
+ 10178→    /**
+ 10179→     * Get an array of points (with simulated pressure) between two points.
+ 10180→     *
+ 10181→     * @param A - The first point.
+ 10182→     * @param B - The second point.
+ 10183→     * @param steps - The number of points to return.
+ 10184→     * @param ease - The easing to use.
+ 10185→     */
+ 10186→    static PointsBetween(A: VecModel, B: VecModel, steps?: number, ease?: (t: number) => number): Vec[];
+ 10187→    static SnapToGrid(A: VecLike, gridSize?: number): Vec;
+ 10188→}
+ 10189→
+ 10190→/** @public */
+ 10191→export declare type VecLike = Vec | VecModel;
+ 10192→
+ 10193→
+ 10194→export * from "@tldraw/state";
+ 10195→export * from "@tldraw/state-react";
+ 10196→export * from "@tldraw/store";
+ 10197→export * from "@tldraw/tlschema";
+ 10198→export * from "@tldraw/utils";
+ 10199→export * from "@tldraw/validate";
+ 10200→
+ 10201→export { }
+ 10202→

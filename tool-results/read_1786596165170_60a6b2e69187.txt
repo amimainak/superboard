@@ -1,0 +1,2002 @@
+   960→    readonly height: 500;
+   961→    readonly hostnames: readonly ["canva.com"];
+   962→    readonly title: "Canva";
+   963→    readonly toEmbedUrl: (url: string) => string | undefined;
+   964→    readonly type: "canva";
+   965→    readonly width: 720;
+   966→}, {
+   967→    readonly doesResize: true;
+   968→    readonly embedOnPaste: true;
+   969→    readonly fromEmbedUrl: (url: string) => string | undefined;
+   970→    readonly height: 500;
+   971→    readonly hostnames: readonly ["google.*"];
+   972→    readonly overridePermissions: {
+   973→        readonly 'allow-presentation': true;
+   974→    };
+   975→    readonly title: "Google Maps";
+   976→    readonly toEmbedUrl: (url: string, config?: GoogleMapsEmbedConfig | undefined) => string | undefined;
+   977→    readonly type: "google_maps";
+   978→    readonly width: 720;
+   979→}, {
+   980→    readonly doesResize: true;
+   981→    readonly embedOnPaste: true;
+   982→    readonly fromEmbedUrl: (url: string) => string | undefined;
+   983→    readonly height: 500;
+   984→    readonly hostnames: readonly ["val.town"];
+   985→    readonly minHeight: 100;
+   986→    readonly minWidth: 260;
+   987→    readonly title: "Val Town";
+   988→    readonly toEmbedUrl: (url: string) => string | undefined;
+   989→    readonly type: "val_town";
+   990→    readonly width: 720;
+   991→}, {
+   992→    readonly doesResize: true;
+   993→    readonly embedOnPaste: true;
+   994→    readonly fromEmbedUrl: (url: string) => string | undefined;
+   995→    readonly height: 500;
+   996→    readonly hostnames: readonly ["codesandbox.io"];
+   997→    readonly minHeight: 300;
+   998→    readonly minWidth: 300;
+   999→    readonly title: "CodeSandbox";
+  1000→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1001→    readonly type: "codesandbox";
+  1002→    readonly width: 720;
+  1003→}, {
+  1004→    readonly doesResize: true;
+  1005→    readonly embedOnPaste: true;
+  1006→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1007→    readonly height: 400;
+  1008→    readonly hostnames: readonly ["codepen.io"];
+  1009→    readonly minHeight: 300;
+  1010→    readonly minWidth: 300;
+  1011→    readonly title: "Codepen";
+  1012→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1013→    readonly type: "codepen";
+  1014→    readonly width: 520;
+  1015→}, {
+  1016→    readonly doesResize: false;
+  1017→    readonly embedOnPaste: true;
+  1018→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1019→    readonly height: 400;
+  1020→    readonly hostnames: readonly ["scratch.mit.edu"];
+  1021→    readonly title: "Scratch";
+  1022→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1023→    readonly type: "scratch";
+  1024→    readonly width: 520;
+  1025→}, {
+  1026→    readonly doesResize: true;
+  1027→    readonly embedOnPaste: true;
+  1028→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1029→    readonly height: 450;
+  1030→    readonly hostnames: readonly ["*.youtube.com", "youtube.com", "youtu.be"];
+  1031→    readonly isAspectRatioLocked: true;
+  1032→    readonly overridePermissions: {
+  1033→        readonly 'allow-popups-to-escape-sandbox': true;
+  1034→        readonly 'allow-presentation': true;
+  1035→    };
+  1036→    readonly title: "YouTube";
+  1037→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1038→    readonly type: "youtube";
+  1039→    readonly width: 800;
+  1040→}, {
+  1041→    readonly doesResize: true;
+  1042→    readonly embedOnPaste: true;
+  1043→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1044→    readonly height: 500;
+  1045→    readonly hostnames: readonly ["calendar.google.*"];
+  1046→    readonly instructionLink: "https://support.google.com/calendar/answer/41207?hl=en";
+  1047→    readonly minHeight: 360;
+  1048→    readonly minWidth: 460;
+  1049→    readonly overridePermissions: {
+  1050→        readonly 'allow-popups-to-escape-sandbox': true;
+  1051→    };
+  1052→    readonly title: "Google Calendar";
+  1053→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1054→    readonly type: "google_calendar";
+  1055→    readonly width: 720;
+  1056→}, {
+  1057→    readonly doesResize: true;
+  1058→    readonly embedOnPaste: true;
+  1059→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1060→    readonly height: 500;
+  1061→    readonly hostnames: readonly ["docs.google.*"];
+  1062→    readonly minHeight: 360;
+  1063→    readonly minWidth: 460;
+  1064→    readonly overridePermissions: {
+  1065→        readonly 'allow-popups-to-escape-sandbox': true;
+  1066→    };
+  1067→    readonly title: "Google Slides";
+  1068→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1069→    readonly type: "google_slides";
+  1070→    readonly width: 720;
+  1071→}, {
+  1072→    readonly doesResize: true;
+  1073→    readonly embedOnPaste: true;
+  1074→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1075→    readonly height: 500;
+  1076→    readonly hostnames: readonly ["gist.github.com"];
+  1077→    readonly title: "GitHub Gist";
+  1078→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1079→    readonly type: "github_gist";
+  1080→    readonly width: 720;
+  1081→}, {
+  1082→    readonly doesResize: true;
+  1083→    readonly embedOnPaste: true;
+  1084→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1085→    readonly height: 500;
+  1086→    readonly hostnames: readonly ["replit.com"];
+  1087→    readonly title: "Replit";
+  1088→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1089→    readonly type: "replit";
+  1090→    readonly width: 720;
+  1091→}, {
+  1092→    readonly doesResize: true;
+  1093→    readonly embedOnPaste: true;
+  1094→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1095→    readonly height: 500;
+  1096→    readonly hostnames: readonly ["felt.com"];
+  1097→    readonly title: "Felt";
+  1098→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1099→    readonly type: "felt";
+  1100→    readonly width: 720;
+  1101→}, {
+  1102→    readonly doesResize: true;
+  1103→    readonly embedOnPaste: true;
+  1104→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1105→    readonly height: 500;
+  1106→    readonly hostnames: readonly ["open.spotify.com"];
+  1107→    readonly minHeight: 500;
+  1108→    readonly overrideOutlineRadius: 12;
+  1109→    readonly title: "Spotify";
+  1110→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1111→    readonly type: "spotify";
+  1112→    readonly width: 720;
+  1113→}, {
+  1114→    readonly doesResize: true;
+  1115→    readonly embedOnPaste: true;
+  1116→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1117→    readonly height: 360;
+  1118→    readonly hostnames: readonly ["vimeo.com", "player.vimeo.com"];
+  1119→    readonly isAspectRatioLocked: true;
+  1120→    readonly sizeToContentAspectRatio: true;
+  1121→    readonly title: "Vimeo";
+  1122→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1123→    readonly type: "vimeo";
+  1124→    readonly width: 640;
+  1125→}, {
+  1126→    readonly backgroundColor: "#fff";
+  1127→    readonly doesResize: true;
+  1128→    readonly embedOnPaste: true;
+  1129→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1130→    readonly height: 500;
+  1131→    readonly hostnames: readonly ["observablehq.com"];
+  1132→    readonly isAspectRatioLocked: false;
+  1133→    readonly title: "Observable";
+  1134→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1135→    readonly type: "observable";
+  1136→    readonly width: 720;
+  1137→}, {
+  1138→    readonly doesResize: true;
+  1139→    readonly embedOnPaste: true;
+  1140→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1141→    readonly height: 450;
+  1142→    readonly hostnames: readonly ["desmos.com"];
+  1143→    readonly title: "Desmos";
+  1144→    readonly toEmbedUrl: (url: string) => string | undefined;
+  1145→    readonly type: "desmos";
+  1146→    readonly width: 700;
+  1147→}];
+  1148→
+  1149→/**
+  1150→ * 10mb
+  1151→ * @public
+  1152→ */
+  1153→export declare const DEFAULT_MAX_ASSET_SIZE: number;
+  1154→
+  1155→/**
+  1156→ * 5000px
+  1157→ * @public
+  1158→ */
+  1159→export declare const DEFAULT_MAX_IMAGE_DIMENSION = 5000;
+  1160→
+  1161→/** @public @react */
+  1162→export declare const DefaultA11yAnnouncer: NamedExoticComponent<object>;
+  1163→
+  1164→/** @public @react */
+  1165→export declare const DefaultActionsMenu: NamedExoticComponent<TLUiActionsMenuProps>;
+  1166→
+  1167→/** @public @react */
+  1168→export declare function DefaultActionsMenuContent(): JSX.Element;
+  1169→
+  1170→/** @public */
+  1171→export declare function defaultAddFontsFromNode(node: Node_2, state: RichTextFontVisitorState, addFont: (font: TLFontFace_2) => void): RichTextFontVisitorState;
+  1172→
+  1173→/** @public */
+  1174→export declare const defaultAssetUtils: readonly [typeof ImageAssetUtil, typeof VideoAssetUtil, typeof BookmarkAssetUtil];
+  1175→
+  1176→/** @public */
+  1177→export declare const defaultBindingUtils: readonly [typeof ArrowBindingUtil];
+  1178→
+  1179→/** @public @react */
+  1180→declare const DefaultContextMenu: NamedExoticComponent<TLUiContextMenuProps>;
+  1181→export { DefaultContextMenu as ContextMenu }
+  1182→export { DefaultContextMenu }
+  1183→
+  1184→/** @public @react */
+  1185→export declare function DefaultContextMenuContent(): JSX.Element;
+  1186→
+  1187→/** @public @react */
+  1188→export declare function DefaultDebugMenu({ children }: TLUiDebugMenuProps): JSX.Element;
+  1189→
+  1190→/** @public @react */
+  1191→export declare function DefaultDebugMenuContent({ customDebugFlags, customFeatureFlags }: CustomDebugFlags): JSX.Element;
+  1192→
+  1193→/** @public @react */
+  1194→export declare const DefaultDialogs: NamedExoticComponent<object>;
+  1195→
+  1196→/** @public */
+  1197→export declare let defaultEditorAssetUrls: TLEditorAssetUrls;
+  1198→
+  1199→/**
+  1200→ * Per-embed configuration for the default embed definitions, keyed by embed type.
+  1201→ * Passed to an embed definition's `toEmbedUrl` when building its embed URL.
+  1202→ *
+  1203→ * @public
+  1204→ */
+  1205→export declare interface DefaultEmbedConfig {
+  1206→    readonly google_maps?: GoogleMapsEmbedConfig;
+  1207→}
+  1208→
+  1209→/** @public */
+  1210→export declare type DefaultEmbedDefinitionType = (typeof DEFAULT_EMBED_DEFINITIONS)[number]['type'];
+  1211→
+  1212→/** @public @react */
+  1213→export declare function DefaultFollowingIndicator(): JSX.Element | null;
+  1214→
+  1215→/** @public */
+  1216→export declare const DefaultFontFaces: TLDefaultFonts;
+  1217→
+  1218→/**
+  1219→ * Built-in geo type definitions keyed by their `geo` prop value. Every default
+  1220→ * geo type (rectangle, ellipse, cloud, etc.) is registered here. The same
+  1221→ * registry powers path generation, handle snapping, the style panel picker,
+  1222→ * and creation defaults — so custom types added through
+  1223→ * {@link @tldraw/tldraw#GeoShapeUtil.configure | GeoShapeUtil.configure()} get
+  1224→ * the same treatment as the built-ins.
+  1225→ *
+  1226→ * The key order here defines the visual order of items in the geo style panel
+  1227→ * picker.
+  1228→ *
+  1229→ * @public
+  1230→ */
+  1231→export declare const defaultGeoTypeDefinitions: {
+  1232→    readonly 'arrow-down': {
+  1233→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1234→        readonly icon: "geo-arrow-down";
+  1235→        readonly snapType: "polygon";
+  1236→    };
+  1237→    readonly 'arrow-left': {
+  1238→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1239→        readonly icon: "geo-arrow-left";
+  1240→        readonly snapType: "polygon";
+  1241→    };
+  1242→    readonly 'arrow-right': {
+  1243→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1244→        readonly icon: "geo-arrow-right";
+  1245→        readonly snapType: "polygon";
+  1246→    };
+  1247→    readonly 'arrow-up': {
+  1248→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1249→        readonly icon: "geo-arrow-up";
+  1250→        readonly snapType: "polygon";
+  1251→    };
+  1252→    readonly 'check-box': {
+  1253→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1254→        readonly icon: "geo-check-box";
+  1255→        readonly snapType: "polygon";
+  1256→    };
+  1257→    readonly 'rhombus-2': {
+  1258→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1259→        readonly icon: "geo-rhombus-2";
+  1260→        readonly snapType: "polygon";
+  1261→    };
+  1262→    readonly 'x-box': {
+  1263→        readonly getPath: (w: number, h: number, shape: TLGeoShape, strokeWidth: number) => PathBuilder;
+  1264→        readonly icon: "geo-x-box";
+  1265→        readonly snapType: "polygon";
+  1266→    };
+  1267→    readonly cloud: {
+  1268→        readonly defaultSize: {
+  1269→            readonly h: 180;
+  1270→            readonly w: 300;
+  1271→        };
+  1272→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1273→        readonly icon: "geo-cloud";
+  1274→        readonly snapType: "blobby";
+  1275→    };
+  1276→    readonly diamond: {
+  1277→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1278→        readonly icon: "geo-diamond";
+  1279→        readonly snapType: "polygon";
+  1280→    };
+  1281→    readonly ellipse: {
+  1282→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1283→        readonly icon: "geo-ellipse";
+  1284→        readonly snapType: "blobby";
+  1285→    };
+  1286→    readonly heart: {
+  1287→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1288→        readonly icon: "geo-heart";
+  1289→        readonly snapType: "blobby";
+  1290→    };
+  1291→    readonly hexagon: {
+  1292→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1293→        readonly icon: "geo-hexagon";
+  1294→        readonly snapType: "polygon";
+  1295→    };
+  1296→    readonly octagon: {
+  1297→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1298→        readonly icon: "geo-octagon";
+  1299→        readonly snapType: "polygon";
+  1300→    };
+  1301→    readonly oval: {
+  1302→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1303→        readonly icon: "geo-oval";
+  1304→        readonly snapType: "blobby";
+  1305→    };
+  1306→    readonly pentagon: {
+  1307→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1308→        readonly icon: "geo-pentagon";
+  1309→        readonly snapType: "polygon";
+  1310→    };
+  1311→    readonly rectangle: {
+  1312→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1313→        readonly icon: "geo-rectangle";
+  1314→        readonly snapType: "polygon";
+  1315→    };
+  1316→    readonly rhombus: {
+  1317→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1318→        readonly icon: "geo-rhombus";
+  1319→        readonly snapType: "polygon";
+  1320→    };
+  1321→    readonly star: {
+  1322→        readonly defaultSize: {
+  1323→            readonly h: 190;
+  1324→            readonly w: 200;
+  1325→        };
+  1326→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1327→        readonly icon: "geo-star";
+  1328→        readonly snapType: "polygon";
+  1329→    };
+  1330→    readonly trapezoid: {
+  1331→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1332→        readonly icon: "geo-trapezoid";
+  1333→        readonly snapType: "polygon";
+  1334→    };
+  1335→    readonly triangle: {
+  1336→        readonly getPath: (w: number, h: number, shape: TLGeoShape) => PathBuilder;
+  1337→        readonly icon: "geo-triangle";
+  1338→        readonly snapType: "polygon";
+  1339→    };
+  1340→};
+  1341→
+  1342→/** @public */
+  1343→export declare function defaultHandleExternalEmbedContent<T>(editor: Editor, { point, url, embed }: {
+  1344→    embed: T;
+  1345→    point?: VecLike;
+  1346→    url: string;
+  1347→}): void;
+  1348→
+  1349→/** @public */
+  1350→export declare function defaultHandleExternalExcalidrawContent(editor: Editor, { point, content }: {
+  1351→    content: any;
+  1352→    point?: VecLike;
+  1353→}): Promise<void>;
+  1354→
+  1355→/** @public */
+  1356→export declare function defaultHandleExternalFileAsset(editor: Editor, { file, assetId }: TLFileExternalAsset, options: TLDefaultExternalContentHandlerOpts): Promise<TLAsset<"bookmark" | "image" | "video">>;
+  1357→
+  1358→/** @public */
+  1359→export declare function defaultHandleExternalFileContent(editor: Editor, { point, files }: {
+  1360→    files: File[];
+  1361→    point?: VecLike;
+  1362→}, options: TLDefaultExternalContentHandlerOpts): Promise<void>;
+  1363→
+  1364→/** @public */
+  1365→export declare function defaultHandleExternalFileReplaceContent(editor: Editor, { file, shapeId }: TLFileReplaceExternalContent, options: TLDefaultExternalContentHandlerOpts): Promise<TLAsset | undefined>;
+  1366→
+  1367→/** @public */
+  1368→export declare function defaultHandleExternalSvgTextContent(editor: Editor, { point, text }: {
+  1369→    point?: VecLike;
+  1370→    text: string;
+  1371→}): Promise<void>;
+  1372→
+  1373→/** @public */
+  1374→export declare function defaultHandleExternalTextContent(editor: Editor, { point, text, html }: {
+  1375→    html?: string;
+  1376→    point?: VecLike;
+  1377→    text: string;
+  1378→}): Promise<void>;
+  1379→
+  1380→/** @public */
+  1381→export declare function defaultHandleExternalTldrawContent(editor: Editor, { point, content }: {
+  1382→    content: TLContent;
+  1383→    point?: VecLike;
+  1384→}): Promise<void>;
+  1385→
+  1386→/** @public */
+  1387→export declare function defaultHandleExternalUrlAsset(editor: Editor, { url }: TLUrlExternalAsset, { toasts, msg }: TLDefaultExternalContentHandlerOpts): Promise<TLBookmarkAsset>;
+  1388→
+  1389→/** @public */
+  1390→export declare function defaultHandleExternalUrlContent(editor: Editor, { point, url }: {
+  1391→    point?: VecLike;
+  1392→    url: string;
+  1393→}, { toasts, msg }: TLDefaultExternalContentHandlerOpts): Promise<void>;
+  1394→
+  1395→/** @public @react */
+  1396→export declare function DefaultHelperButtons({ children }: TLUiHelperButtonsProps): JSX.Element;
+  1397→
+  1398→/** @public @react */
+  1399→export declare function DefaultHelperButtonsContent(): JSX.Element;
+  1400→
+  1401→/** @public @react */
+  1402→export declare const DefaultHelpMenu: NamedExoticComponent<TLUiHelpMenuProps>;
+  1403→
+  1404→/** @public @react */
+  1405→export declare function DefaultHelpMenuContent(): JSX.Element;
+  1406→
+  1407→/** @public @react */
+  1408→export declare function DefaultImageToolbar({ children }: TLUiImageToolbarProps): JSX.Element | null;
+  1409→
+  1410→/** @public @react */
+  1411→export declare const DefaultImageToolbarContent: NamedExoticComponent<DefaultImageToolbarContentProps>;
+  1412→
+  1413→/** @public */
+  1414→export declare interface DefaultImageToolbarContentProps {
+  1415→    imageShapeId: TLImageShape['id'];
+  1416→    isManipulating: boolean;
+  1417→    onEditAltTextStart(): void;
+  1418→    onManipulatingStart(): void;
+  1419→    onManipulatingEnd(): void;
+  1420→}
+  1421→
+  1422→/** @public @react */
+  1423→export declare const DefaultKeyboardShortcutsDialog: NamedExoticComponent<TLUiKeyboardShortcutsDialogProps>;
+  1424→
+  1425→/** @public @react */
+  1426→export declare function DefaultKeyboardShortcutsDialogContent(): JSX.Element;
+  1427→
+  1428→/** @public @react */
+  1429→export declare const DefaultMainMenu: NamedExoticComponent<TLUiMainMenuProps>;
+  1430→
+  1431→/** @public @react */
+  1432→export declare function DefaultMainMenuContent(): JSX.Element;
+  1433→
+  1434→/** @public @react */
+  1435→export declare const DefaultMenuPanel: NamedExoticComponent<object>;
+  1436→
+  1437→/** @public @react */
+  1438→export declare function DefaultMinimap(): JSX.Element;
+  1439→
+  1440→/** @public @react */
+  1441→export declare const DefaultNavigationPanel: NamedExoticComponent<object>;
+  1442→
+  1443→/** @public */
+  1444→export declare const defaultOverlayUtils: readonly [typeof ArrowBindingHintOverlayUtil, typeof ArrowHintOverlayUtil, typeof BrushOverlayUtil, typeof CollaboratorBrushOverlayUtil, typeof CollaboratorHintOverlayUtil, typeof CollaboratorScribbleOverlayUtil, typeof CollaboratorShapeIndicatorOverlayUtil, typeof ScribbleOverlayUtil, typeof SelectionForegroundOverlayUtil, typeof ShapeHandleOverlayUtil, typeof ShapeIndicatorOverlayUtil, typeof SnapIndicatorOverlayUtil, typeof ZoomBrushOverlayUtil];
+  1445→
+  1446→/** @public @react */
+  1447→export declare const DefaultPageMenu: NamedExoticComponent<object>;
+  1448→
+  1449→/** @public @react */
+  1450→declare function DefaultPeopleMenu({ children }: DefaultPeopleMenuProps): JSX.Element | null;
+  1451→export { DefaultPeopleMenu }
+  1452→export { DefaultPeopleMenu as PeopleMenu }
+  1453→
+  1454→/** @public @react */
+  1455→export declare function DefaultPeopleMenuAvatar({ userId }: TLUiPeopleMenuAvatarProps): JSX.Element | null;
+  1456→
+  1457→/** @public @react */
+  1458→export declare function DefaultPeopleMenuContent({ userIds }: DefaultPeopleMenuContentProps): JSX.Element;
+  1459→
+  1460→/** @public */
+  1461→export declare interface DefaultPeopleMenuContentProps {
+  1462→    userIds: TLUserId[];
+  1463→}
+  1464→
+  1465→/** @public @react */
+  1466→export declare function DefaultPeopleMenuFacePile({ userIds, userName, userColor }: TLUiPeopleMenuFacePileProps): JSX.Element;
+  1467→
+  1468→/** @public @react */
+  1469→export declare const DefaultPeopleMenuItem: NamedExoticComponent<TLUiPeopleMenuItemProps>;
+  1470→
+  1471→/** @public */
+  1472→declare interface DefaultPeopleMenuProps {
+  1473→    children?: ReactNode;
+  1474→}
+  1475→export { DefaultPeopleMenuProps }
+  1476→export { DefaultPeopleMenuProps as PeopleMenuProps }
+  1477→
+  1478→/** @public @react */
+  1479→export declare const DefaultQuickActions: NamedExoticComponent<TLUiQuickActionsProps>;
+  1480→
+  1481→/** @public @react */
+  1482→export declare function DefaultQuickActionsContent(): JSX.Element | undefined;
+  1483→
+  1484→/**
+  1485→ * The default rich text toolbar.
+  1486→ *
+  1487→ * @public @react
+  1488→ */
+  1489→export declare const DefaultRichTextToolbar: React_3.NamedExoticComponent<TLUiRichTextToolbarProps>;
+  1490→
+  1491→/**
+  1492→ * Rich text toolbar items that have the basics.
+  1493→ *
+  1494→ * @public @react
+  1495→ */
+  1496→export declare function DefaultRichTextToolbarContent({ textEditor, onEditLinkStart }: DefaultRichTextToolbarContentProps): JSX.Element[];
+  1497→
+  1498→/** @public */
+  1499→export declare interface DefaultRichTextToolbarContentProps {
+  1500→    onEditLinkStart?(): void;
+  1501→    textEditor: TiptapEditor;
+  1502→}
+  1503→
+  1504→/** @public */
+  1505→export declare const defaultShapeTools: readonly [typeof TextShapeTool, typeof DrawShapeTool, typeof GeoShapeTool, typeof NoteShapeTool, typeof LineShapeTool, typeof FrameShapeTool, typeof ArrowShapeTool, typeof HighlightShapeTool];
+  1506→
+  1507→/** @public */
+  1508→export declare const defaultShapeUtils: readonly [typeof TextShapeUtil, typeof BookmarkShapeUtil, typeof DrawShapeUtil, typeof GeoShapeUtil, typeof NoteShapeUtil, typeof LineShapeUtil, typeof FrameShapeUtil, typeof ArrowShapeUtil, typeof HighlightShapeUtil, typeof EmbedShapeUtil, typeof ImageShapeUtil, typeof VideoShapeUtil];
+  1509→
+  1510→/** @public @react */
+  1511→export declare function DefaultSharePanel(): JSX.Element | null;
+  1512→
+  1513→/** @public @react */
+  1514→export declare const DefaultStylePanel: NamedExoticComponent<TLUiStylePanelProps>;
+  1515→
+  1516→/** @public @react */
+  1517→export declare function DefaultStylePanelContent(): JSX.Element;
+  1518→
+  1519→/** @public @react */
+  1520→export declare const DefaultToasts: NamedExoticComponent<object>;
+  1521→
+  1522→/**
+  1523→ * The default toolbar for the editor. `children` defaults to the `DefaultToolbarContent` component.
+  1524→ * Depending on the screen size, the children will overflow into a drop-down menu, with the most
+  1525→ * recently active item from the overflow being shown in the main toolbar.
+  1526→ *
+  1527→ * @public
+  1528→ * @react
+  1529→ */
+  1530→export declare const DefaultToolbar: NamedExoticComponent<DefaultToolbarProps>;
+  1531→
+  1532→/** @public @react */
+  1533→export declare function DefaultToolbarContent(): JSX.Element;
+  1534→
+  1535→/** @public */
+  1536→export declare interface DefaultToolbarProps {
+  1537→    children?: ReactNode;
+  1538→    orientation?: 'horizontal' | 'vertical';
+  1539→    minItems?: number;
+  1540→    minSizePx?: number;
+  1541→    maxItems?: number;
+  1542→    maxSizePx?: number;
+  1543→}
+  1544→
+  1545→/** @public */
+  1546→export declare const defaultTools: readonly [typeof EraserTool, typeof HandTool, typeof LaserTool, typeof ZoomTool, typeof SelectTool];
+  1547→
+  1548→/** @public @react */
+  1549→export declare function DefaultUserPresenceEditor(): JSX.Element;
+  1550→
+  1551→/** @public @react */
+  1552→export declare const DefaultVideoToolbar: NamedExoticComponent<TLUiVideoToolbarProps>;
+  1553→
+  1554→/** @public @react */
+  1555→export declare const DefaultVideoToolbarContent: NamedExoticComponent<DefaultVideoToolbarContentProps>;
+  1556→
+  1557→/** @public */
+  1558→export declare interface DefaultVideoToolbarContentProps {
+  1559→    videoShapeId: TLVideoShape['id'];
+  1560→    onEditAltTextStart(): void;
+  1561→}
+  1562→
+  1563→/** @public @react */
+  1564→export declare const DefaultZoomMenu: NamedExoticComponent<TLUiZoomMenuProps>;
+  1565→
+  1566→/** @public @react */
+  1567→export declare function DefaultZoomMenuContent(): JSX.Element;
+  1568→
+  1569→/** @public @react */
+  1570→export declare function DeleteMenuItem(): JSX.Element;
+  1571→
+  1572→/** @public @react */
+  1573→export declare function DiamondToolbarItem(): JSX.Element;
+  1574→
+  1575→/** @public @react */
+  1576→export declare function DistributeMenuItems(): JSX.Element;
+  1577→
+  1578→/* Excluded from this release type: downloadFile */
+  1579→
+  1580→/**
+  1581→ * Resize an image Blob to be smaller than it is currently.
+  1582→ *
+  1583→ * @example
+  1584→ * ```ts
+  1585→ * const image = await (await fetch('/image.jpg')).blob()
+  1586→ * const size = await getImageSize(image)
+  1587→ * const resizedImage = await downsizeImage(image, size.w / 2, size.h / 2, { type: "image/jpeg", quality: 0.85 })
+  1588→ * ```
+  1589→ *
+  1590→ * @param image - The image Blob.
+  1591→ * @param width - The desired width.
+  1592→ * @param height - The desired height.
+  1593→ * @param opts - Options for the image.
+  1594→ * @public
+  1595→ */
+  1596→export declare function downsizeImage(blob: Blob, width: number, height: number, opts?: {
+  1597→    quality?: number | undefined;
+  1598→    type?: string | undefined;
+  1599→}): Promise<Blob>;
+  1600→
+  1601→/** @public */
+  1602→export declare interface DrawPathBuilderDOpts {
+  1603→    strokeWidth: number;
+  1604→    randomSeed: string;
+  1605→    offset?: number;
+  1606→    roundness?: number;
+  1607→    passes?: number;
+  1608→    onlyFilled?: boolean;
+  1609→}
+  1610→
+  1611→/** @public */
+  1612→export declare interface DrawPathBuilderOpts extends BasePathBuilderOpts, DrawPathBuilderDOpts {
+  1613→    style: 'draw';
+  1614→}
+  1615→
+  1616→/** @public */
+  1617→export declare interface DrawShapeOptions extends ShapeOptionsWithDisplayValues<TLDrawShape, DrawShapeUtilDisplayValues> {
+  1618→    /**
+  1619→     * The maximum number of points in a line before the draw tool will begin a new shape.
+  1620→     * A higher number will lead to poor performance while drawing very long lines.
+  1621→     */
+  1622→    readonly maxPointsPerShape: number;
+  1623→}
+  1624→
+  1625→/** @public */
+  1626→export declare class DrawShapeTool extends StateNode {
+  1627→    static id: string;
+  1628→    static initial: string;
+  1629→    static isLockable: boolean;
+  1630→    static useCoalescedEvents: boolean;
+  1631→    static children(): TLStateNodeConstructor[];
+  1632→    shapeType: string;
+  1633→    onExit(): void;
+  1634→}
+  1635→
+  1636→/** @public */
+  1637→export declare class DrawShapeUtil extends ShapeUtil<TLDrawShape> {
+  1638→    static type: "draw";
+  1639→    static props: RecordProps<TLDrawShape>;
+  1640→    static migrations: TLPropsMigrations;
+  1641→    options: DrawShapeOptions;
+  1642→    hideResizeHandles(shape: TLDrawShape): boolean;
+  1643→    hideRotateHandle(shape: TLDrawShape): boolean;
+  1644→    hideSelectionBoundsFg(shape: TLDrawShape): boolean;
+  1645→    getDefaultProps(): TLDrawShape['props'];
+  1646→    getGeometry(shape: TLDrawShape): Circle2d | Polyline2d;
+  1647→    component(shape: TLDrawShape): JSX.Element;
+  1648→    getIndicatorPath(shape: TLDrawShape): Path2D;
+  1649→    toSvg(shape: TLDrawShape, ctx: SvgExportContext): JSX.Element;
+  1650→    getCanvasSvgDefs(): TLShapeUtilCanvasSvgDef[];
+  1651→    onResize(shape: TLDrawShape, info: TLResizeInfo<TLDrawShape>): {
+  1652→        props: {
+  1653→            scaleX: number;
+  1654→            scaleY: number;
+  1655→        };
+  1656→    } | undefined;
+  1657→    expandSelectionOutlinePx(shape: TLDrawShape): number;
+  1658→    getInterpolatedProps(startShape: TLDrawShape, endShape: TLDrawShape, t: number): TLDrawShapeProps;
+  1659→}
+  1660→
+  1661→/** @public */
+  1662→export declare interface DrawShapeUtilDisplayValues {
+  1663→    strokeColor: string;
+  1664→    strokeWidth: number;
+  1665→    fillColor: string;
+  1666→    patternFillFallbackColor: string;
+  1667→}
+  1668→
+  1669→/** @public @react */
+  1670→export declare function DrawToolbarItem(): JSX.Element;
+  1671→
+  1672→/** @public @react */
+  1673→export declare function DuplicateMenuItem(): JSX.Element | null;
+  1674→
+  1675→/** @public @react */
+  1676→export declare function EditLinkMenuItem(): JSX.Element | null;
+  1677→
+  1678→/** @public @react */
+  1679→export declare function EditMenuSubmenu(): JSX.Element | null;
+  1680→
+  1681→/** @public @react */
+  1682→export declare function EditSubmenu(): JSX.Element;
+  1683→
+  1684→/**
+  1685→ * @public
+  1686→ */
+  1687→export declare interface ElbowArrowBox {
+  1688→    /** The original bounding box */
+  1689→    original: Box;
+  1690→    /**
+  1691→     * The bounding box, expanded by {@link ArrowShapeOptions.expandElbowLegLength}.
+  1692→     */
+  1693→    expanded: Box;
+  1694→}
+  1695→
+  1696→/**
+  1697→ * The usable range of the edges of a box. Each edge might be null if the edge is not usable for
+  1698→ * entry/exit.
+  1699→ * @public
+  1700→ */
+  1701→export declare interface ElbowArrowBoxEdges {
+  1702→    top: ElbowArrowEdge | null;
+  1703→    right: ElbowArrowEdge | null;
+  1704→    bottom: ElbowArrowEdge | null;
+  1705→    left: ElbowArrowEdge | null;
+  1706→}
+  1707→
+  1708→/** @public */
+  1709→export declare interface ElbowArrowBoxes {
+  1710→    /** The starting bounding box */
+  1711→    A: Box;
+  1712→    /** The ending bounding box */
+  1713→    B: Box;
+  1714→    /** The common bounding box of A and B */
+  1715→    common: Box;
+  1716→}
+  1717→
+  1718→/**
+  1719→ * An edge on a box.
+  1720→ * @public
+  1721→ */
+  1722→export declare interface ElbowArrowEdge {
+  1723→    /**
+  1724→     * The co-ordinate of the edge. An x-coordinate if left/right, a y-coordinate if top/bottom.
+  1725→     */
+  1726→    value: number;
+  1727→    /**
+  1728→     * The co-ordinate of the edge, expanded by {@link ArrowShapeOptions.expandElbowLegLength}. May
+  1729→     * be null if the target is a point.
+  1730→     */
+  1731→    expanded: null | number;
+  1732→    /**
+  1733→     * The usable range of the edge along its cross-axis. Y-coordinates if left/right, x-coordinated
+  1734→     * if top/bottom.
+  1735→     */
+  1736→    cross: ElbowArrowRange;
+  1737→    /**
+  1738→     * The point of the target along the edge, constrained to within {@link ElbowArrowEdge.cross}.
+  1739→     */
+  1740→    crossTarget: number;
+  1741→    /**
+  1742→     * Whether the cross-axis range is shrunk from the original range to make space for the other shape.
+  1743→     */
+  1744→    isPartial: boolean;
+  1745→}
+  1746→
+  1747→/** @public */
+  1748→export declare interface ElbowArrowInfo extends ElbowArrowInfoWithoutRoute {
+  1749→    /**
+  1750→     * The route of the arrow.
+  1751→     */
+  1752→    route: ElbowArrowRoute | null;
+  1753→    midXRange: {
+  1754→        hi: number;
+  1755→        lo: number;
+  1756→    } | null;
+  1757→    midYRange: {
+  1758→        hi: number;
+  1759→        lo: number;
+  1760→    } | null;
+  1761→}
+  1762→
+  1763→/** @public */
+  1764→export declare interface ElbowArrowInfoWithoutRoute {
+  1765→    /**
+  1766→     * The options used for this elbow arrow
+  1767→     */
+  1768→    options: ElbowArrowOptions;
+  1769→    /**
+  1770→     * If false, A is the start shape and B is the end shape. If true, A is the end shape and B is
+  1771→     * the start shape.
+  1772→     */
+  1773→    swapOrder: boolean;
+  1774→    /**
+  1775→     * One of the two shapes we're drawing an arrow between. Could be either the start or end
+  1776→     * depending on `swapOrder`.
+  1777→     */
+  1778→    A: ElbowArrowTargetBox;
+  1779→    /**
+  1780→     * The other shape we're drawing an arrow between. Could be either the start or end
+  1781→     * depending on `swapOrder`.
+  1782→     */
+  1783→    B: ElbowArrowTargetBox;
+  1784→    /**
+  1785→     * The common bounding box of A and B.
+  1786→     */
+  1787→    common: ElbowArrowBox;
+  1788→    /**
+  1789→     * The gap between the right edge of A and the left edge of B.
+  1790→     */
+  1791→    gapX: number;
+  1792→    /**
+  1793→     * The gap between the bottom edge of A and the top edge of B.
+  1794→     */
+  1795→    gapY: number;
+  1796→    /**
+  1797→     * The X coordinate of the middle line between the two boxes. If the boxes are too close or
+  1798→     * overlap, this may be null.
+  1799→     */
+  1800→    midX: null | number;
+  1801→    /**
+  1802→     * The Y coordinate of the middle line between the two boxes. If the boxes are too close or
+  1803→     * overlap, this may be null.
+  1804→     */
+  1805→    midY: null | number;
+  1806→}
+  1807→
+  1808→/**
+  1809→ * Part of an {@link ElbowArrowRoute} that describes a handle for dragging the midpoint line, a line
+  1810→ * roughly halfway between the two shapes.
+  1811→ * @public
+  1812→ */
+  1813→export declare interface ElbowArrowMidpointHandle {
+  1814→    axis: 'x' | 'y';
+  1815→    /** The start point of the segment in the route that the handle is on. */
+  1816→    segmentStart: VecLike;
+  1817→    /** The end point of the segment in the route that the handle is on. */
+  1818→    segmentEnd: VecLike;
+  1819→    /** The position of the handle, in arrow-space. */
+  1820→    point: VecLike;
+  1821→}
+  1822→
+  1823→/**
+  1824→ * Extracted from {@link ArrowShapeOptions}. Options for one specific arrow.
+  1825→ * @public
+  1826→ */
+  1827→export declare interface ElbowArrowOptions {
+  1828→    expandElbowLegLength: number;
+  1829→    minElbowLegLength: number;
+  1830→    elbowMidpoint: number;
+  1831→}
+  1832→
+  1833→/** @public */
+  1834→export declare interface ElbowArrowRange {
+  1835→    min: number;
+  1836→    max: number;
+  1837→}
+  1838→
+  1839→/**
+  1840→ * A route for an elbow arrow.
+  1841→ *
+  1842→ * @public
+  1843→ */
+  1844→export declare interface ElbowArrowRoute {
+  1845→    /* Excluded from this release type: name */
+  1846→    /** The vertices of the route. Draw a line through them to see the route. */
+  1847→    points: Vec[];
+  1848→    /** The total distance of the route, in arrow-space pixels. */
+  1849→    distance: number;
+  1850→    /* Excluded from this release type: aEdgePicking */
+  1851→    /* Excluded from this release type: bEdgePicking */
+  1852→    /**
+  1853→     * Some points on the line are there for more informative than display reasons - e.g. where the
+  1854→     * midpoint handle is. If we draw these in our "draw" style, the line will look weird. We still
+  1855→     * need them for some of the calculations we do, but we want to skip them specifically when
+  1856→     * rendering the arrow.
+  1857→     */
+  1858→    skipPointsWhenDrawing: Set<Vec>;
+  1859→    /**
+  1860→     * The midpoint handle of the route, if any.
+  1861→     */
+  1862→    midpointHandle: ElbowArrowMidpointHandle | null;
+  1863→}
+  1864→
+  1865→/**
+  1866→ * The side of a box that an elbow arrow could enter/exit from.
+  1867→ * @public
+  1868→ */
+  1869→export declare type ElbowArrowSide = 'bottom' | 'left' | 'right' | 'top';
+  1870→
+  1871→/* Excluded from this release type: ElbowArrowSideReason */
+  1872→
+  1873→/**
+  1874→ * @public
+  1875→ */
+  1876→export declare interface ElbowArrowTargetBox extends ElbowArrowBox {
+  1877→    /** What specific point in the box are we aiming for? */
+  1878→    target: Vec;
+  1879→    /**
+  1880→     * If true, the arrow should end at `target`. If false, the arrow should end at the edge of the
+  1881→     * shape, pointing at `target`.
+  1882→     */
+  1883→    isExact: boolean;
+  1884→    /**
+  1885→     * How far away from this box should the arrow terminate to leave space for the arrowhead?
+  1886→     */
+  1887→    arrowheadOffset: number;
+  1888→    /**
+  1889→     * The minimum length of the segment of the arrow that actually reaches the target - and has the
+  1890→     * arrowhead on it.
+  1891→     */
+  1892→    minEndSegmentLength: number;
+  1893→    /**
+  1894→     * The usable edges of the box.
+  1895→     */
+  1896→    edges: ElbowArrowBoxEdges;
+  1897→    /**
+  1898→     * The geometry of the bound shape, in arrow space.
+  1899→     */
+  1900→    geometry: Geometry2d | null;
+  1901→    /**
+  1902→     * Are we treating this target as a single point in space rather than a bounding box?
+  1903→     */
+  1904→    isPoint: boolean;
+  1905→}
+  1906→
+  1907→/** @public @react */
+  1908→export declare function EllipseToolbarItem(): JSX.Element;
+  1909→
+  1910→/** @public */
+  1911→export declare interface EmbedDefinition<Config = never> {
+  1912→    readonly type: string;
+  1913→    readonly title: string;
+  1914→    readonly hostnames: readonly string[];
+  1915→    readonly minWidth?: number;
+  1916→    readonly minHeight?: number;
+  1917→    readonly width: number;
+  1918→    readonly height: number;
+  1919→    readonly doesResize: boolean;
+  1920→    readonly isAspectRatioLocked?: boolean;
+  1921→    readonly overridePermissions?: TLEmbedShapePermissions;
+  1922→    readonly instructionLink?: string;
+  1923→    readonly backgroundColor?: string;
+  1924→    readonly embedOnPaste?: boolean;
+  1925→    readonly canEditWhileLocked?: boolean;
+  1926→    readonly overrideOutlineRadius?: number;
+  1927→    /**
+  1928→     * When true, the embed shape corrects its size after creation to match the real aspect ratio of
+  1929→     * its content, so fixed-aspect media (like video) isn't letterboxed inside the default box. The
+  1930→     * dimensions are resolved from the URL's OpenGraph metadata via the editor's url asset handler
+  1931→     * (the same "unfurl" path used for bookmarks), so it degrades gracefully when no metadata is
+  1932→     * available.
+  1933→     */
+  1934→    readonly sizeToContentAspectRatio?: boolean;
+  1935→    readonly toEmbedUrl: (url: string, config?: Config) => string | undefined;
+  1936→    readonly fromEmbedUrl: (url: string) => string | undefined;
+  1937→}
+  1938→
+  1939→/** @public */
+  1940→export declare interface EmbedShapeOptions extends ShapeOptionsWithDisplayValues<TLEmbedShape, EmbedShapeUtilDisplayValues> {
+  1941→    /** The embed definitions to use for this shape util. */
+  1942→    readonly embedDefinitions: readonly TLEmbedDefinition[];
+  1943→    /**
+  1944→     * Per-embed configuration, keyed by embed type. Passed to each definition's `toEmbedUrl` when
+  1945→     * building its embed URL — for example, an API key for the default Google Maps embed:
+  1946→     *
+  1947→     * ```ts
+  1948→     * EmbedShapeUtil.configure({ embedConfig: { google_maps: { apiKey: '...' } } })
+  1949→     * ```
+  1950→     */
+  1951→    readonly embedConfig?: DefaultEmbedConfig & Record<string, unknown>;
+  1952→}
+  1953→
+  1954→/**
+  1955→ * Permissions with note inline from
+  1956→ * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox
+  1957→ *
+  1958→ * @public
+  1959→ */
+  1960→export declare const embedShapePermissionDefaults: {
+  1961→    readonly 'allow-downloads-without-user-activation': false;
+  1962→    readonly 'allow-downloads': false;
+  1963→    readonly 'allow-forms': true;
+  1964→    readonly 'allow-modals': false;
+  1965→    readonly 'allow-orientation-lock': false;
+  1966→    readonly 'allow-pointer-lock': false;
+  1967→    readonly 'allow-popups-to-escape-sandbox': false;
+  1968→    readonly 'allow-popups': true;
+  1969→    readonly 'allow-presentation': false;
+  1970→    readonly 'allow-same-origin': true;
+  1971→    readonly 'allow-scripts': true;
+  1972→    readonly 'allow-storage-access-by-user-activation': false;
+  1973→    readonly 'allow-top-navigation-by-user-activation': false;
+  1974→    readonly 'allow-top-navigation': false;
+  1975→};
+  1976→
+  1977→/** @public */
+  1978→export declare class EmbedShapeUtil extends BaseBoxShapeUtil<TLEmbedShape> {
+  1979→    static type: "embed";
+  1980→    static props: RecordProps<TLEmbedShape>;
+  1981→    static migrations: TLPropsMigrations;
+  1982→    options: EmbedShapeOptions;
+  1983→    canEditWhileLocked(shape: TLEmbedShape): boolean;
+  1984→    private static legacyEmbedDefinitions;
+  1985→    /** @deprecated - Use `EmbedShapeUtil.configure({ embedDefinitions: [...] })` instead. */
+  1986→    static setEmbedDefinitions(embedDefinitions: readonly TLEmbedDefinition[]): void;
+  1987→    private getEmbedDefs;
+  1988→    getEmbedDefinitions(): readonly TLEmbedDefinition[];
+  1989→    getEmbedDefinition(url: string): TLEmbedResult;
+  1990→    /**
+  1991→     * Resolve the embed's true aspect ratio (for definitions with `sizeToContentAspectRatio`) and
+  1992→     * correct the shape's size to match. The dimensions come from the URL's OpenGraph metadata via
+  1993→     * the editor's url asset handler (the same "unfurl" path bookmarks use). The correction is
+  1994→     * applied without adding to the undo history.
+  1995→     */
+  1996→    resolveAspectRatio(shape: TLEmbedShape): Promise<void>;
+  1997→    private getContentAspectRatio;
+  1998→    getText(shape: TLEmbedShape): string;
+  1999→    getAriaDescriptor(shape: TLEmbedShape): string | undefined;
+  2000→    hideSelectionBoundsFg(shape: TLEmbedShape): boolean;
+  2001→    canEdit(shape: TLEmbedShape): boolean;
+  2002→    canResize(shape: TLEmbedShape): boolean;
+  2003→    canEditInReadonly(shape: TLEmbedShape): boolean;
+  2004→    getDefaultProps(): TLEmbedShape['props'];
+  2005→    getGeometry(shape: TLEmbedShape): Geometry2d;
+  2006→    isAspectRatioLocked(shape: TLEmbedShape): boolean;
+  2007→    /**
+  2008→     * The minimum width/height a resize of `shape` is allowed to reach. When the embed's aspect ratio
+  2009→     * is locked, the longer axis's minimum is inflated by the current aspect ratio so that shrinking
+  2010→     * to the floor keeps the shorter axis at or above the base minimum.
+  2011→     */
+  2012→    private getResizeMinBounds;
+  2013→    onResize(shape: TLEmbedShape, info: TLResizeInfo<TLEmbedShape>): TLEmbedShape;
+  2014→    component(shape: TLEmbedShape): JSX.Element | null;
+  2015→    getIndicatorPath(shape: TLEmbedShape): Path2D;
+  2016→    getInterpolatedProps(startShape: TLEmbedShape, endShape: TLEmbedShape, t: number): TLEmbedShapeProps;
+  2017→}
+  2018→
+  2019→/** @public */
+  2020→export declare interface EmbedShapeUtilDisplayValues {
+  2021→    showShadow: boolean;
+  2022→}
+  2023→
+  2024→/** @public */
+  2025→export declare class EraserTool extends StateNode {
+  2026→    static id: string;
+  2027→    static initial: string;
+  2028→    static isLockable: boolean;
+  2029→    static children(): TLStateNodeConstructor[];
+  2030→    info: {
+  2031→        onInteractionEnd?: string | undefined;
+  2032→    };
+  2033→    onEnter(info?: {
+  2034→        onInteractionEnd?: string;
+  2035→    }): void;
+  2036→    onExit(): void;
+  2037→    maybeReturnToOriginatingTool(): void;
+  2038→}
+  2039→
+  2040→/** @public @react */
+  2041→export declare function EraserToolbarItem(): JSX.Element;
+  2042→
+  2043→/** @public */
+  2044→export declare interface EventsProviderProps {
+  2045→    onEvent?: TLUiEventHandler;
+  2046→    children: React_2.ReactNode;
+  2047→}
+  2048→
+  2049→/** @public @react */
+  2050→export declare function ExampleDialog({ title, body, cancel, confirm, displayDontShowAgain, maxWidth, onCancel, onContinue }: ExampleDialogProps): JSX.Element;
+  2051→
+  2052→/** @public */
+  2053→export declare interface ExampleDialogProps {
+  2054→    title?: string;
+  2055→    body?: React_3.ReactNode;
+  2056→    cancel?: string;
+  2057→    confirm?: string;
+  2058→    displayDontShowAgain?: boolean;
+  2059→    maxWidth?: string;
+  2060→    onCancel(): void;
+  2061→    onContinue(): void;
+  2062→}
+  2063→
+  2064→/**
+  2065→ * Export the given shapes as files.
+  2066→ *
+  2067→ * @param editor - The editor instance.
+  2068→ * @param ids - The ids of the shapes to export.
+  2069→ * @param opts - Options for the export.
+  2070→ *
+  2071→ * @public
+  2072→ */
+  2073→export declare function exportAs(editor: Editor, ids: TLShapeId[], opts: ExportAsOptions): Promise<void>;
+  2074→
+  2075→/** @public @react */
+  2076→export declare function ExportAsMenuGroup(): JSX.Element | null;
+  2077→
+  2078→/** @public */
+  2079→export declare interface ExportAsOptions extends TLImageExportOptions {
+  2080→    /** {@inheritdoc @tldraw/editor#TLImageExportOptions.format} */
+  2081→    format: TLExportType;
+  2082→    /** Name of the exported file. If undefined a predefined name, based on the selection, will be used. */
+  2083→    name?: string;
+  2084→}
+  2085→
+  2086→/** @public @react */
+  2087→export declare function ExportFileContentSubMenu(): JSX.Element | null;
+  2088→
+  2089→/** @public @react */
+  2090→export declare function ExtrasGroup(): JSX.Element;
+  2091→
+  2092→/** @public @react */
+  2093→export declare function FeatureFlags(props: FeatureFlagsProps): JSX.Element | null;
+  2094→
+  2095→/** @public */
+  2096→export declare interface FeatureFlagsProps {
+  2097→    customFeatureFlags?: Record<string, DebugFlag<boolean>> | undefined;
+  2098→}
+  2099→
+  2100→/**
+  2101→ * Fit a frame (or any frame-like container shape) to its content.
+  2102→ *
+  2103→ * @param id - Id of the frame you wish to fit to content.
+  2104→ * @param editor - tlraw editor instance.
+  2105→ * @param opts - Options for fitting the frame.
+  2106→ *
+  2107→ * @public
+  2108→ */
+  2109→export declare function fitFrameToContent(editor: Editor, id: TLShapeId, opts?: {
+  2110→    padding: number;
+  2111→}): void;
+  2112→
+  2113→/** @public @react */
+  2114→export declare function FitFrameToContentMenuItem(): JSX.Element | null;
+  2115→
+  2116→/** @public */
+  2117→export declare interface FrameShapeOptions extends ShapeOptionsWithDisplayValues<TLFrameShape, FrameShapeUtilDisplayValues> {
+  2118→    /**
+  2119→     * When true, the frame will display colors for the shape's headings and background.
+  2120→     */
+  2121→    showColors: boolean;
+  2122→    /**
+  2123→     * When true, the frame will resize its children when the frame itself is resized.
+  2124→     */
+  2125→    resizeChildren: boolean;
+  2126→}
+  2127→
+  2128→/** @public */
+  2129→export declare class FrameShapeTool extends BaseBoxShapeTool {
+  2130→    static id: string;
+  2131→    static initial: string;
+  2132→    shapeType: "frame";
+  2133→    onCreate(shape: null | TLShape): void;
+  2134→}
+  2135→
+  2136→/** @public */
+  2137→export declare class FrameShapeUtil extends BaseFrameLikeShapeUtil<TLFrameShape> {
+  2138→    static type: "frame";
+  2139→    static props: RecordProps<TLFrameShape>;
+  2140→    static migrations: TLPropsMigrations;
+  2141→    options: FrameShapeOptions;
+  2142→    static configure<T extends TLShapeUtilConstructor<any, any>>(this: T, options: T extends new (...args: any[]) => {
+  2143→        options: infer Options;
+  2144→    } ? Partial<Options> : never): T;
+  2145→    canEdit(shape: TLFrameShape, info: TLEditStartInfo): boolean;
+  2146→    canResize(shape: TLFrameShape): boolean;
+  2147→    canResizeChildren(shape: TLFrameShape): boolean;
+  2148→    isExportBoundsContainer(): boolean;
+  2149→    getDefaultProps(): TLFrameShape['props'];
+  2150→    getAriaDescriptor(shape: TLFrameShape): string;
+  2151→    getGeometry(shape: TLFrameShape): Geometry2d;
+  2152→    getText(shape: TLFrameShape): string | undefined;
+  2153→    component(shape: TLFrameShape): JSX.Element;
+  2154→    toSvg(shape: TLFrameShape, ctx: SvgExportContext): JSX.Element;
+  2155→    getIndicatorPath(shape: TLFrameShape): Path2D;
+  2156→    getInterpolatedProps(startShape: TLFrameShape, endShape: TLFrameShape, t: number): TLFrameShapeProps;
+  2157→    onDoubleClickEdge(shape: TLFrameShape, info: TLClickEventInfo): {
+  2158→        id: TLShapeId_2;
+  2159→        props: {
+  2160→            h: number;
+  2161→            w: number;
+  2162→        };
+  2163→        type: "frame";
+  2164→    } | undefined;
+  2165→    onDoubleClickCorner(shape: TLFrameShape): {
+  2166→        id: TLShapeId_2;
+  2167→        type: "frame";
+  2168→    };
+  2169→}
+  2170→
+  2171→/** @public */
+  2172→export declare interface FrameShapeUtilDisplayValues {
+  2173→    fillColor: string;
+  2174→    strokeColor: string;
+  2175→    showColorsFillColor: string;
+  2176→    showColorsStrokeColor: string;
+  2177→    headingFillColor: string;
+  2178→    headingStrokeColor: string;
+  2179→    headingTextColor: string;
+  2180→    showColorsHeadingFillColor: string;
+  2181→    showColorsHeadingStrokeColor: string;
+  2182→    showColorsHeadingTextColor: string;
+  2183→}
+  2184→
+  2185→/** @public @react */
+  2186→export declare function FrameToolbarItem(): JSX.Element;
+  2187→
+  2188→/** @public */
+  2189→export declare interface GeoShapeOptions extends ShapeOptionsWithDisplayValues<TLGeoShape, GeoShapeUtilDisplayValues> {
+  2190→    showTextOutline: boolean;
+  2191→    /**
+  2192→     * A map of custom geo type definitions. Each key becomes a new value for
+  2193→     * {@link @tldraw/editor#GeoShapeGeoStyle} that can be used in the style panel
+  2194→     * and on shapes. Custom geo types inherit all standard geo shape behavior
+  2195→     * (labels, resizing, styling, etc.).
+  2196→     *
+  2197→     * @example
+  2198→     * ```ts
+  2199→     * const MyGeoShapeUtil = GeoShapeUtil.configure({
+  2200→     *   customGeoTypes: {
+  2201→     *     'my-shape': {
+  2202→     *       getPath: (w, h) => new PathBuilder().moveTo(0, 0).lineTo(w, 0).lineTo(w, h).lineTo(0, h).close(),
+  2203→     *       snapType: 'polygon',
+  2204→     *       icon: 'geo-rectangle',
+  2205→     *     },
+  2206→     *   },
+  2207→     * })
+  2208→     * ```
+  2209→     */
+  2210→    customGeoTypes?: Record<string, GeoTypeDefinition>;
+  2211→}
+  2212→
+  2213→/** @public */
+  2214→export declare class GeoShapeTool extends StateNode {
+  2215→    static id: string;
+  2216→    static initial: string;
+  2217→    static children(): TLStateNodeConstructor[];
+  2218→    shapeType: string;
+  2219→}
+  2220→
+  2221→/** @public */
+  2222→export declare class GeoShapeUtil extends BaseBoxShapeUtil<TLGeoShape> {
+  2223→    static type: "geo";
+  2224→    static props: RecordProps<TLGeoShape>;
+  2225→    static migrations: TLPropsMigrations;
+  2226→    static configure<T extends TLShapeUtilConstructor<any, any>>(this: T, options: T extends new (...args: any[]) => {
+  2227→        options: infer Options;
+  2228→    } ? Partial<Options> : never): T;
+  2229→    options: GeoShapeOptions;
+  2230→    canEdit(shape: TLGeoShape): boolean;
+  2231→    getDefaultProps(): TLGeoShape['props'];
+  2232→    getGeometry(shape: TLGeoShape): Group2d;
+  2233→    getHandleSnapGeometry(shape: TLGeoShape): HandleSnapGeometry;
+  2234→    getText(shape: TLGeoShape): string;
+  2235→    getFontFaces(shape: TLGeoShape): TLFontFace[];
+  2236→    component(shape: TLGeoShape): JSX.Element;
+  2237→    getIndicatorPath(shape: TLGeoShape): Path2D | undefined;
+  2238→    toSvg(shape: TLGeoShape, ctx: SvgExportContext): JSX.Element;
+  2239→    getCanvasSvgDefs(): TLShapeUtilCanvasSvgDef[];
+  2240→    onResize(shape: TLGeoShape, { handle, newPoint, scaleX, scaleY, initialShape }: TLResizeInfo<TLGeoShape>): {
+  2241→        props: {
+  2242→            flipX: boolean;
+  2243→            flipY: boolean;
+  2244→            growY: number;
+  2245→            h: number;
+  2246→            w: number;
+  2247→        };
+  2248→        x: number;
+  2249→        y: number;
+  2250→    };
+  2251→    onBeforeCreate(shape: TLGeoShape): {
+  2252→        id: TLShapeId;
+  2253→        index: IndexKey;
+  2254→        isLocked: boolean;
+  2255→        meta: JsonObject;
+  2256→        opacity: number;
+  2257→        parentId: TLParentId;
+  2258→        props: {
+  2259→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  2260→            color: TLDefaultColorStyle;
+  2261→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2262→            fill: "fill" | "lined-fill" | "none" | "pattern" | "semi" | "solid";
+  2263→            flipX: boolean;
+  2264→            flipY: boolean;
+  2265→            font: TLDefaultFontStyle;
+  2266→            geo: "arrow-down" | "arrow-left" | "arrow-right" | "arrow-up" | "check-box" | "cloud" | "diamond" | "ellipse" | "heart" | "hexagon" | "octagon" | "oval" | "pentagon" | "rectangle" | "rhombus-2" | "rhombus" | "star" | "trapezoid" | "triangle" | "x-box";
+  2267→            growY: number;
+  2268→            h: number;
+  2269→            labelColor: TLDefaultColorStyle;
+  2270→            richText: {
+  2271→                attrs?: any;
+  2272→                content: unknown[];
+  2273→                type: string;
+  2274→            };
+  2275→            scale: number;
+  2276→            size: "l" | "m" | "s" | "xl";
+  2277→            url: string;
+  2278→            verticalAlign: "end" | "middle" | "start";
+  2279→            w: number;
+  2280→        };
+  2281→        rotation: number;
+  2282→        type: "geo";
+  2283→        typeName: "shape";
+  2284→        x: number;
+  2285→        y: number;
+  2286→    } | undefined;
+  2287→    onBeforeUpdate(prev: TLGeoShape, next: TLGeoShape): {
+  2288→        id: TLShapeId;
+  2289→        index: IndexKey;
+  2290→        isLocked: boolean;
+  2291→        meta: JsonObject;
+  2292→        opacity: number;
+  2293→        parentId: TLParentId;
+  2294→        props: {
+  2295→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  2296→            color: TLDefaultColorStyle;
+  2297→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2298→            fill: "fill" | "lined-fill" | "none" | "pattern" | "semi" | "solid";
+  2299→            flipX: boolean;
+  2300→            flipY: boolean;
+  2301→            font: TLDefaultFontStyle;
+  2302→            geo: "arrow-down" | "arrow-left" | "arrow-right" | "arrow-up" | "check-box" | "cloud" | "diamond" | "ellipse" | "heart" | "hexagon" | "octagon" | "oval" | "pentagon" | "rectangle" | "rhombus-2" | "rhombus" | "star" | "trapezoid" | "triangle" | "x-box";
+  2303→            growY: number;
+  2304→            h: number;
+  2305→            labelColor: TLDefaultColorStyle;
+  2306→            richText: {
+  2307→                attrs?: any;
+  2308→                content: unknown[];
+  2309→                type: string;
+  2310→            };
+  2311→            scale: number;
+  2312→            size: "l" | "m" | "s" | "xl";
+  2313→            url: string;
+  2314→            verticalAlign: "end" | "middle" | "start";
+  2315→            w: number;
+  2316→        };
+  2317→        rotation: number;
+  2318→        type: "geo";
+  2319→        typeName: "shape";
+  2320→        x: number;
+  2321→        y: number;
+  2322→    } | undefined;
+  2323→    onDoubleClick(shape: TLGeoShape): {
+  2324→        id: TLShapeId;
+  2325→        index: IndexKey;
+  2326→        isLocked: boolean;
+  2327→        meta: JsonObject;
+  2328→        opacity: number;
+  2329→        parentId: TLParentId;
+  2330→        props: {
+  2331→            align: "end-legacy" | "end" | "middle-legacy" | "middle" | "start-legacy" | "start";
+  2332→            color: TLDefaultColorStyle;
+  2333→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2334→            fill: "fill" | "lined-fill" | "none" | "pattern" | "semi" | "solid";
+  2335→            flipX: boolean;
+  2336→            flipY: boolean;
+  2337→            font: TLDefaultFontStyle;
+  2338→            geo: "arrow-down" | "arrow-left" | "arrow-right" | "arrow-up" | "check-box" | "cloud" | "diamond" | "ellipse" | "heart" | "hexagon" | "octagon" | "oval" | "pentagon" | "rectangle" | "rhombus-2" | "rhombus" | "star" | "trapezoid" | "triangle" | "x-box";
+  2339→            growY: number;
+  2340→            h: number;
+  2341→            labelColor: TLDefaultColorStyle;
+  2342→            richText: {
+  2343→                attrs?: any;
+  2344→                content: unknown[];
+  2345→                type: string;
+  2346→            };
+  2347→            scale: number;
+  2348→            size: "l" | "m" | "s" | "xl";
+  2349→            url: string;
+  2350→            verticalAlign: "end" | "middle" | "start";
+  2351→            w: number;
+  2352→        };
+  2353→        rotation: number;
+  2354→        type: "geo";
+  2355→        typeName: "shape";
+  2356→        x: number;
+  2357→        y: number;
+  2358→    } | {
+  2359→        id: TLShapeId;
+  2360→        index: IndexKey;
+  2361→        isLocked: boolean;
+  2362→        meta: JsonObject;
+  2363→        opacity: number;
+  2364→        parentId: TLParentId;
+  2365→        props: {
+  2366→            geo: "check-box";
+  2367→        };
+  2368→        rotation: number;
+  2369→        type: "geo";
+  2370→        typeName: "shape";
+  2371→        x: number;
+  2372→        y: number;
+  2373→    } | {
+  2374→        id: TLShapeId;
+  2375→        index: IndexKey;
+  2376→        isLocked: boolean;
+  2377→        meta: JsonObject;
+  2378→        opacity: number;
+  2379→        parentId: TLParentId;
+  2380→        props: {
+  2381→            geo: "rectangle";
+  2382→        };
+  2383→        rotation: number;
+  2384→        type: "geo";
+  2385→        typeName: "shape";
+  2386→        x: number;
+  2387→        y: number;
+  2388→    } | undefined;
+  2389→    getInterpolatedProps(startShape: TLGeoShape, endShape: TLGeoShape, t: number): TLGeoShapeProps;
+  2390→    /**
+  2391→     * Get the unscaled dimensions from a geo shape's props
+  2392→     */
+  2393→    private getUnscaledGeoProps;
+  2394→    /**
+  2395→     * Calculate the growY needed to fit a label within a shape.
+  2396→     * Returns null if no change is needed, otherwise returns the new unscaled growY value.
+  2397→     */
+  2398→    private calculateGrowY;
+  2399→    /**
+  2400→     * Calculate expanded dimensions when adding a label to a shape for the first time.
+  2401→     * Ensures the shape meets minimum size requirements and is square if originally small.
+  2402→     */
+  2403→    private expandShapeForFirstLabel;
+  2404→    private _labelSizesForGeoCache;
+  2405→    /**
+  2406→     * Get the cached label size for the shape. Don't call with empty rich text.
+  2407→     */
+  2408→    private getUnscaledLabelSize;
+  2409→    /**
+  2410→     * Expensively measure the unscaled label size for the shape. Avoid using it if we can.
+  2411→     */
+  2412→    private measureUnscaledLabelSize;
+  2413→}
+  2414→
+  2415→/** @public */
+  2416→export declare interface GeoShapeUtilDisplayValues {
+  2417→    strokeColor: string;
+  2418→    strokeRoundness: number;
+  2419→    strokeWidth: number;
+  2420→    fillColor: string;
+  2421→    patternFillFallbackColor: string;
+  2422→    labelColor: string;
+  2423→    labelFontFamily: string;
+  2424→    labelFontSize: number;
+  2425→    labelMinWidth: number;
+  2426→    labelExtraPadding: number;
+  2427→    labelLineHeight: number;
+  2428→    labelFontWeight: string;
+  2429→    labelFontVariant: string;
+  2430→    labelFontStyle: string;
+  2431→    labelHorizontalAlign: 'center' | 'end' | 'start';
+  2432→    labelVerticalAlign: 'end' | 'middle' | 'start';
+  2433→    labelPadding: number;
+  2434→    labelEdgeMargin: number;
+  2435→    minSizeWithLabel: number;
+  2436→}
+  2437→
+  2438→/**
+  2439→ * Defines the behavior for a geo shape type. Every built-in geo type is
+  2440→ * registered through this same interface (see {@link defaultGeoTypeDefinitions}),
+  2441→ * and consumers can register additional types via
+  2442→ * {@link @tldraw/tldraw#GeoShapeUtil.configure | GeoShapeUtil.configure()}.
+  2443→ *
+  2444→ * @public
+  2445→ */
+  2446→export declare interface GeoTypeDefinition {
+  2447→    /**
+  2448→     * Generate the path geometry for this geo type.
+  2449→     *
+  2450→     * @param w - The width of the shape (already clamped to min 1)
+  2451→     * @param h - The height of the shape (already clamped to min 1, includes growY)
+  2452→     * @param shape - The full geo shape record, for access to props like id, dash, fill, etc.
+  2453→     * @param strokeWidth - The scaled stroke width (strokeWidth * scale)
+  2454→     */
+  2455→    getPath(w: number, h: number, shape: TLGeoShape, strokeWidth: number): PathBuilder;
+  2456→    /** Snap behavior: 'polygon' snaps to vertices + center, 'blobby' snaps to center only. */
+  2457→    snapType: 'blobby' | 'polygon';
+  2458→    /** Default creation size when clicking (not dragging). Defaults to 200x200. */
+  2459→    defaultSize?: {
+  2460→        h: number;
+  2461→        w: number;
+  2462→    };
+  2463→    /** Icon name for the style panel geo picker. */
+  2464→    icon: string;
+  2465→    /**
+  2466→     * Optional double-click handler. Return an object with partial props to update the shape,
+  2467→     * or void to do nothing.
+  2468→     */
+  2469→    onDoubleClick?(shape: TLGeoShape): {
+  2470→        props: Partial<TLGeoShape['props']>;
+  2471→    } | void;
+  2472→}
+  2473→
+  2474→/** @public */
+  2475→export declare function getArrowBindings(editor: Editor, shape: TLArrowShape): TLArrowBindings;
+  2476→
+  2477→/** @public */
+  2478→export declare function getArrowInfo(editor: Editor, shape: TLArrowShape | TLShapeId): TLArrowInfo | undefined;
+  2479→
+  2480→/**
+  2481→ * Get the current arrow target state for an editor. See {@link ArrowTargetState} for more
+  2482→ * information.
+  2483→ *
+  2484→ * @public
+  2485→ */
+  2486→export declare function getArrowTargetState(editor: Editor): ArrowTargetState | null;
+  2487→
+  2488→/** @public */
+  2489→export declare function getArrowTerminalsInArrowSpace(editor: Editor, shape: TLArrowShape, bindings: TLArrowBindings): {
+  2490→    end: Vec;
+  2491→    start: Vec;
+  2492→};
+  2493→
+  2494→/** @public */
+  2495→export declare function getAssetInfo(editor: Editor, file: File, assetId?: TLAssetId): Promise<null | TLAsset>;
+  2496→
+  2497→/**
+  2498→ * Returns the current list of color style items for the style panel,
+  2499→ * derived from the theme's color palette. Only palette colors are included;
+  2500→ * utility colors like `text`, `background`, etc. are excluded.
+  2501→ *
+  2502→ * Colors are ordered by their position in {@link @tldraw/tlschema#DefaultColorStyle},
+  2503→ * followed by any additional theme colors in their object key order.
+  2504→ *
+  2505→ * @public
+  2506→ */
+  2507→export declare function getColorStyleItems(colors: TLThemeColors): StyleValuesForUi<string>;
+  2508→
+  2509→/** @public */
+  2510→export declare function getCropBox<T extends ShapeWithCrop>(shape: T, info: TLCropInfo<T>, opts?: CropBoxOptions): {
+  2511→    id: TLShapeId;
+  2512→    props: ShapeWithCrop['props'];
+  2513→    type: T['type'];
+  2514→    x: number;
+  2515→    y: number;
+  2516→} | undefined;
+  2517→
+  2518→/** @public */
+  2519→export declare function getDefaultCrop(): TLShapeCrop;
+  2520→
+  2521→/**
+  2522→ * Get the resolved display values for a shape, merging the base values with any overrides.
+  2523→ *
+  2524→ * @public
+  2525→ */
+  2526→export declare function getDisplayValues<Shape extends TLShape, DisplayValues extends object>(util: {
+  2527→    editor: Editor;
+  2528→    options: ShapeOptionsWithDisplayValues<Shape, DisplayValues>;
+  2529→}, shape: Shape, colorMode?: 'dark' | 'light'): DisplayValues;
+  2530→
+  2531→/**
+  2532→ * Tests whether an URL supports embedding and returns the result. If we encounter an error, we
+  2533→ * return undefined.
+  2534→ *
+  2535→ * @param inputUrl - The URL to match
+  2536→ * @param embedConfig - Optional per-embed config, keyed by embed type, passed to `toEmbedUrl`
+  2537→ * @public
+  2538→ */
+  2539→export declare function getEmbedInfo(definitions: readonly TLEmbedDefinition[], inputUrl: string, embedConfig?: Record<string, unknown>): TLEmbedResult;
+  2540→
+  2541→/** @public */
+  2542→export declare function getFontFamily(theme: TLTheme, font: string): string;
+  2543→
+  2544→/**
+  2545→ * Returns the current list of font style items for the style panel,
+  2546→ * derived from the theme's font palette.
+  2547→ *
+  2548→ * Fonts are ordered by their position in {@link @tldraw/tlschema#DefaultFontStyle},
+  2549→ * followed by any additional theme fonts in their object key order.
+  2550→ *
+  2551→ * @public
+  2552→ */
+  2553→export declare function getFontStyleItems(theme: TLTheme): StyleValuesForUi<string>;
+  2554→
+  2555→/**
+  2556→ * Look up a geo type definition by name, checking custom types first then
+  2557→ * falling back to the built-in registry.
+  2558→ *
+  2559→ * @public
+  2560→ */
+  2561→export declare function getGeoTypeDefinition(name: string, customGeoTypes?: Record<string, GeoTypeDefinition>): GeoTypeDefinition | undefined;
+  2562→
+  2563→/** @public */
+  2564→export declare function getHitShapeOnCanvasPointerDown(editor: Editor, hitLabels?: boolean): TLShape | undefined;
+  2565→
+  2566→/** @public */
+  2567→export declare function getPointsFromDrawSegment(segment: TLDrawShapeSegment, scaleX: number, scaleY: number, points?: Vec[]): Vec[];
+  2568→
+  2569→/** @public */
+  2570→export declare function getPointsFromDrawSegments(segments: TLDrawShapeSegment[], scaleX?: number, scaleY?: number): Vec[];
+  2571→
+  2572→/**
+  2573→ * ## getStroke
+  2574→ *
+  2575→ * Get an array of points describing a polygon that surrounds the input points.
+  2576→ *
+  2577→ * @param points - An array of points (as `[x, y, pressure]` or `{x, y, pressure}`). Pressure is
+  2578→ *   optional in both cases.
+  2579→ * @param options - An object with options.
+  2580→ * @public
+  2581→ */
+  2582→export declare function getStroke(points: VecLike[], options?: StrokeOptions): Vec[];
+  2583→
+  2584→/**
+  2585→ * ## getStrokeOutlinePoints
+  2586→ *
+  2587→ * Get an array of points (as `[x, y]`) representing the outline of a stroke.
+  2588→ *
+  2589→ * @param points - An array of StrokePoints as returned from `getStrokePoints`.
+  2590→ * @param options - An object with options.
+  2591→ * @public
+  2592→ */
+  2593→export declare function getStrokeOutlinePoints(strokePoints: StrokePoint[], options?: StrokeOptions): Vec[];
+  2594→
+  2595→/**
+  2596→ * ## getStrokePoints
+  2597→ *
+  2598→ * Get an array of points as objects with an adjusted point, pressure, vector, distance, and
+  2599→ * runningLength.
+  2600→ *
+  2601→ * @param points - An array of points (as `[x, y, pressure]` or `{x, y, pressure}`). Pressure is
+  2602→ *   optional in both cases.
+  2603→ * @param options - An object with options.
+  2604→ * @public
+  2605→ */
+  2606→export declare function getStrokePoints(rawInputPoints: VecLike[], options?: StrokeOptions): StrokePoint[];
+  2607→
+  2608→/**
+  2609→ * Turn an array of stroke points into a path of quadratic curves.
+  2610→ *
+  2611→ * The path uses relative commands with coordinates rounded to hundredths of a pixel, which
+  2612→ * renders identically to the absolute 4-decimal form but is much smaller and faster to build.
+  2613→ *
+  2614→ * @param points - The stroke points returned from perfect-freehand
+  2615→ * @param closed - Whether the shape is closed
+  2616→ *
+  2617→ * @public
+  2618→ */
+  2619→export declare function getSvgPathFromStrokePoints(points: StrokePoint[], closed?: boolean): string;
+  2620→
+  2621→/**
+  2622→ * Build tldraw's default TipTap extension set, optionally overriding the bundled `StarterKit`
+  2623→ * options. The one lever most consumers want is turning individual nodes off (e.g. comments use a
+  2624→ * headingless set via `getTipTapDefaultExtensions({ heading: false })`); because `StarterKit` is a
+  2625→ * single umbrella extension, its sub-extensions can only be disabled through its config, not by
+  2626→ * filtering the returned array.
+  2627→ *
+  2628→ * @public
+  2629→ */
+  2630→export declare function getTipTapDefaultExtensions(starterKitOptions?: Partial<StarterKitOptions>): Extensions;
+  2631→
+  2632→/**
+  2633→ * Original (uncropped) width and height of shape.
+  2634→ *
+  2635→ * @public
+  2636→ */
+  2637→export declare function getUncroppedSize(shapeSize: {
+  2638→    h: number;
+  2639→    w: number;
+  2640→}, crop: null | TLShapeCrop): {
+  2641→    h: number;
+  2642→    w: number;
+  2643→};
+  2644→
+  2645→/**
+  2646→ * Configuration for the default Google Maps embed. Provide an `apiKey` through
+  2647→ * {@link EmbedShapeUtil}'s `embedConfig` option to render Google Maps embeds.
+  2648→ *
+  2649→ * @public
+  2650→ */
+  2651→export declare interface GoogleMapsEmbedConfig {
+  2652→    readonly apiKey?: string;
+  2653→}
+  2654→
+  2655→/** @public @react */
+  2656→export declare function GroupMenuItem(): JSX.Element | null;
+  2657→
+  2658→/** @public @react */
+  2659→export declare function GroupOrUngroupMenuItem(): JSX.Element;
+  2660→
+  2661→/**
+  2662→ * When the user copies or cuts, write the contents to the clipboard.
+  2663→ *
+  2664→ * @public
+  2665→ */
+  2666→export declare function handleNativeOrMenuCopy(editor: Editor, context?: TLClipboardWriteInfo): Promise<boolean>;
+  2667→
+  2668→/** @public */
+  2669→export declare class HandTool extends StateNode {
+  2670→    static id: string;
+  2671→    static initial: string;
+  2672→    static isLockable: boolean;
+  2673→    static children(): TLStateNodeConstructor[];
+  2674→    onDoubleClick(info: TLClickEventInfo): void;
+  2675→}
+  2676→
+  2677→/** @public @react */
+  2678→export declare function HandToolbarItem(): JSX.Element;
+  2679→
+  2680→/** @public @react */
+  2681→export declare function HeartToolbarItem(): JSX.Element;
+  2682→
+  2683→/** @public @react */
+  2684→export declare function HexagonToolbarItem(): JSX.Element;
+  2685→
+  2686→/** @public */
+  2687→export declare function hideAllTooltips(): void;
+  2688→
+  2689→/** @public */
+  2690→export declare interface HighlightShapeOptions extends ShapeOptionsWithDisplayValues<TLHighlightShape, HighlightShapeUtilDisplayValues> {
+  2691→    /**
+  2692→     * The maximum number of points in a line before the draw tool will begin a new shape.
+  2693→     * A higher number will lead to poor performance while drawing very long lines.
+  2694→     */
+  2695→    readonly maxPointsPerShape: number;
+  2696→}
+  2697→
+  2698→/** @public */
+  2699→export declare class HighlightShapeTool extends StateNode {
+  2700→    static id: string;
+  2701→    static initial: string;
+  2702→    static useCoalescedEvents: boolean;
+  2703→    static children(): TLStateNodeConstructor[];
+  2704→    static isLockable: boolean;
+  2705→    shapeType: string;
+  2706→    onExit(): void;
+  2707→}
+  2708→
+  2709→/** @public */
+  2710→export declare class HighlightShapeUtil extends ShapeUtil<TLHighlightShape> {
+  2711→    static type: "highlight";
+  2712→    static props: RecordProps<TLHighlightShape>;
+  2713→    static migrations: TLPropsMigrations;
+  2714→    options: HighlightShapeOptions;
+  2715→    hideResizeHandles(shape: TLHighlightShape): boolean;
+  2716→    hideRotateHandle(shape: TLHighlightShape): boolean;
+  2717→    hideSelectionBoundsFg(shape: TLHighlightShape): boolean;
+  2718→    getDefaultProps(): TLHighlightShape['props'];
+  2719→    getGeometry(shape: TLHighlightShape): Circle2d | Polygon2d;
+  2720→    component(shape: TLHighlightShape): JSX.Element;
+  2721→    backgroundComponent(shape: TLHighlightShape): JSX.Element;
+  2722→    getIndicatorPath(shape: TLHighlightShape): Path2D;
+  2723→    toSvg(shape: TLHighlightShape, ctx: SvgExportContext): JSX.Element;
+  2724→    toBackgroundSvg(shape: TLHighlightShape, ctx: SvgExportContext): JSX.Element;
+  2725→    onResize(shape: TLHighlightShape, info: TLResizeInfo<TLHighlightShape>): {
+  2726→        props: {
+  2727→            scaleX: number;
+  2728→            scaleY: number;
+  2729→        };
+  2730→    } | undefined;
+  2731→    getInterpolatedProps(startShape: TLHighlightShape, endShape: TLHighlightShape, t: number): TLHighlightShapeProps;
+  2732→}
+  2733→
+  2734→/** @public */
+  2735→export declare interface HighlightShapeUtilDisplayValues {
+  2736→    strokeColor: string;
+  2737→    strokeWidth: number;
+  2738→    underlayOpacity: number;
+  2739→    overlayOpacity: number;
+  2740→}
+  2741→
+  2742→/** @public @react */
+  2743→export declare function HighlightToolbarItem(): JSX.Element;
+  2744→
+  2745→/** @public */
+  2746→export declare const iconTypes: readonly ["align-bottom", "align-center-horizontal", "align-center-vertical", "align-left", "align-right", "align-top", "alt", "arrow-arc", "arrow-cycle", "arrow-elbow", "arrow-left", "arrowhead-arrow", "arrowhead-bar", "arrowhead-diamond", "arrowhead-dot", "arrowhead-none", "arrowhead-square", "arrowhead-triangle-inverted", "arrowhead-triangle", "blob", "bold", "bookmark", "bring-forward", "bring-to-front", "broken", "bulletList", "check-circle", "check", "chevron-down", "chevron-left", "chevron-right", "chevron-up", "chevrons-ne", "chevrons-sw", "clipboard-copied", "clipboard-copy", "closed", "code", "color", "comment", "corners", "crop", "cross-2", "cross-circle", "dash-dashed", "dash-dotted", "dash-draw", "dash-solid", "disconnected", "discord", "distribute-horizontal", "distribute-vertical", "dot", "dots-horizontal", "dots-vertical", "download", "drag-handle-dots", "duplicate", "edit", "external-link", "fill-fill", "fill-lined-fill", "fill-none", "fill-pattern", "fill-semi", "fill-solid", "follow", "following", "font-draw", "font-mono", "font-sans", "font-serif", "geo-arrow-down", "geo-arrow-left", "geo-arrow-right", "geo-arrow-up", "geo-check-box", "geo-cloud", "geo-diamond", "geo-ellipse", "geo-heart", "geo-hexagon", "geo-octagon", "geo-oval", "geo-pentagon", "geo-rectangle", "geo-rhombus-2", "geo-rhombus", "geo-star", "geo-trapezoid", "geo-triangle", "geo-x-box", "github", "group", "heading", "help-circle", "highlight", "horizontal-align-end", "horizontal-align-middle", "horizontal-align-start", "info-circle", "italic", "leading", "link", "list", "lock", "manual", "menu", "minus", "mixed", "pack", "plus", "question-mark-circle", "question-mark", "redo", "reset-zoom", "rotate-ccw", "rotate-cw", "send-backward", "send-to-back", "share-1", "size-extra-large", "size-large", "size-medium", "size-small", "spline-cubic", "spline-line", "stack-horizontal", "stack-vertical", "status-offline", "stretch-horizontal", "stretch-vertical", "strike", "text-align-center", "text-align-left", "text-align-right", "toggle-off", "toggle-on", "tool-arrow", "tool-eraser", "tool-frame", "tool-hand", "tool-highlight", "tool-laser", "tool-line", "tool-media", "tool-note", "tool-pencil", "tool-pointer", "tool-screenshot", "tool-text", "trash", "twitter", "underline", "undo", "ungroup", "unlock", "vertical-align-end", "vertical-align-middle", "vertical-align-start", "warning-triangle", "zoom-in", "zoom-out"];
+  2747→
+  2748→/** @public */
+  2749→export declare class ImageAssetUtil extends AssetUtil<TLImageAsset> {
+  2750→    static type: "image";
+  2751→    static props: {
+  2752→        fileSize: Validator<number | undefined>;
+  2753→        h: Validator<number>;
+  2754→        isAnimated: Validator<boolean>;
+  2755→        mimeType: Validator<null | string>;
+  2756→        name: Validator<string>;
+  2757→        pixelRatio: Validator<number | undefined>;
+  2758→        src: Validator<null | string>;
+  2759→        w: Validator<number>;
+  2760→    };
+  2761→    static migrations: MigrationSequence;
+  2762→    options: {
+  2763→        maxDimension: number;
+  2764→        supportedMimeTypes: null | readonly string[];
+  2765→    };
+  2766→    getDefaultProps(): TLImageAsset['props'];
+  2767→    getSupportedMimeTypes(): readonly string[];
+  2768→    getAssetFromFile(file: File, assetId: TLAssetId): Promise<null | TLImageAsset>;
+  2769→}
+  2770→
+  2771→/** @public */
+  2772→export declare interface ImageShapeOptions extends ShapeOptionsWithDisplayValues<TLImageShape, ImageShapeUtilDisplayValues> {
+  2773→}
+  2774→
+  2775→/** @public */
+  2776→export declare class ImageShapeUtil extends BaseBoxShapeUtil<TLImageShape> {
+  2777→    static type: "image";
+  2778→    static props: RecordProps<TLImageShape>;
+  2779→    static migrations: TLPropsMigrations;
+  2780→    static handledAssetTypes: readonly ["image"];
+  2781→    options: ImageShapeOptions;
+  2782→    isAspectRatioLocked(shape: TLImageShape): boolean;
+  2783→    canCrop(shape: TLImageShape): boolean;
+  2784→    isExportBoundsContainer(): boolean;
+  2785→    getDefaultProps(): TLImageShape['props'];
+  2786→    createShapeForAsset(asset: TLAsset, position: VecModel): null | TLShapePartial;
+  2787→    getGeometry(shape: TLImageShape): Geometry2d;
+  2788→    getAriaDescriptor(shape: TLImageShape): string;
+  2789→    onResize(shape: TLImageShape, info: TLResizeInfo<TLImageShape>): TLImageShape;
+  2790→    component(shape: TLImageShape): JSX.Element;
+  2791→    getIndicatorPath(shape: TLImageShape): Path2D | undefined;
+  2792→    toSvg(shape: TLImageShape, ctx: SvgExportContext): Promise<JSX.Element | null>;
+  2793→    onDoubleClickEdge(shape: TLImageShape): void;
+  2794→    getInterpolatedProps(startShape: TLImageShape, endShape: TLImageShape, t: number): TLImageShapeProps;
+  2795→}
+  2796→
+  2797→/** @public */
+  2798→export declare interface ImageShapeUtilDisplayValues {
+  2799→}
+  2800→
+  2801→/** @public @react */
+  2802→export declare function InputModeMenu(): JSX.Element;
+  2803→
+  2804→/** @public */
+  2805→export declare const KeyboardShiftEnterTweakExtension: Extension<any, any>;
+  2806→
+  2807→/** @public @react */
+  2808→export declare function KeyboardShortcutsMenuItem(): JSX.Element | null;
+  2809→
+  2810→/** @public @react */
+  2811→export declare function LanguageMenu(): JSX.Element | null;
+  2812→
+  2813→/** @public */
+  2814→export declare class LaserTool extends StateNode {
+  2815→    static id: string;
+  2816→    static initial: string;
+  2817→    static children(): TLStateNodeConstructor[];
+  2818→    static isLockable: boolean;
+  2819→    private sessionId;
+  2820→    onEnter(): void;
+  2821→    onExit(): void;
+  2822→    onCancel(): void;
+  2823→    /**
+  2824→     * Get the current laser session ID, or create a new one if none exists or the current one is fading.
+  2825→     */
+  2826→    getSessionId(): string;
+  2827→}
+  2828→
+  2829→/** @public @react */
+  2830→export declare function LaserToolbarItem(): JSX.Element;
+  2831→
+  2832→/** @public */
+  2833→export declare interface LineShapeOptions extends ShapeOptionsWithDisplayValues<TLLineShape, LineShapeUtilDisplayValues> {
+  2834→}
+  2835→
+  2836→/** @public */
+  2837→export declare class LineShapeTool extends StateNode {
+  2838→    static id: string;
+  2839→    static initial: string;
+  2840→    static children(): TLStateNodeConstructor[];
+  2841→    shapeType: string;
+  2842→}
+  2843→
+  2844→/** @public */
+  2845→export declare class LineShapeUtil extends ShapeUtil<TLLineShape> {
+  2846→    static type: "line";
+  2847→    static props: RecordProps<TLLineShape>;
+  2848→    static migrations: TLPropsMigrations;
+  2849→    options: LineShapeOptions;
+  2850→    hideResizeHandles(shape: TLLineShape): boolean;
+  2851→    hideRotateHandle(shape: TLLineShape): boolean;
+  2852→    hideSelectionBoundsFg(shape: TLLineShape): boolean;
+  2853→    hideSelectionBoundsBg(shape: TLLineShape): boolean;
+  2854→    hideInMinimap(): boolean;
+  2855→    getDefaultProps(): TLLineShape['props'];
+  2856→    getGeometry(shape: TLLineShape): PathBuilderGeometry2d;
+  2857→    getHandles(shape: TLLineShape): TLHandle[];
+  2858→    onResize(shape: TLLineShape, info: TLResizeInfo<TLLineShape>): {
+  2859→        props: {
+  2860→            points: {
+  2861→                [x: string]: {
+  2862→                    id: string;
+  2863→                    index: IndexKey;
+  2864→                    x: number;
+  2865→                    y: number;
+  2866→                };
+  2867→            };
+  2868→        };
+  2869→    };
+  2870→    onBeforeCreate(next: TLLineShape): TLLineShape | void;
+  2871→    onHandleDrag(shape: TLLineShape, { handle }: TLHandleDragInfo<TLLineShape>): {
+  2872→        id: TLShapeId_2;
+  2873→        index: IndexKey;
+  2874→        isLocked: boolean;
+  2875→        meta: JsonObject;
+  2876→        opacity: number;
+  2877→        parentId: TLParentId;
+  2878→        props: {
+  2879→            color: TLDefaultColorStyle;
+  2880→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2881→            points: {
+  2882→                [x: string]: {
+  2883→                    id: string;
+  2884→                    index: IndexKey;
+  2885→                    x: number;
+  2886→                    y: number;
+  2887→                } | TLLineShapePoint;
+  2888→            };
+  2889→            scale: number;
+  2890→            size: "l" | "m" | "s" | "xl";
+  2891→            spline: "cubic" | "line";
+  2892→        };
+  2893→        rotation: number;
+  2894→        type: "line";
+  2895→        typeName: "shape";
+  2896→        x: number;
+  2897→        y: number;
+  2898→    };
+  2899→    onHandleDragStart(shape: TLLineShape, { handle }: TLHandleDragInfo<TLLineShape>): {
+  2900→        id: TLShapeId_2;
+  2901→        index: IndexKey;
+  2902→        isLocked: boolean;
+  2903→        meta: JsonObject;
+  2904→        opacity: number;
+  2905→        parentId: TLParentId;
+  2906→        props: {
+  2907→            color: TLDefaultColorStyle;
+  2908→            dash: "dashed" | "dotted" | "draw" | "none" | "solid";
+  2909→            points: {
+  2910→                [x: string]: {
+  2911→                    id: IndexKey;
+  2912→                    index: IndexKey;
+  2913→                    x: number;
+  2914→                    y: number;
+  2915→                } | TLLineShapePoint;
+  2916→            };
+  2917→            scale: number;
+  2918→            size: "l" | "m" | "s" | "xl";
+  2919→            spline: "cubic" | "line";
+  2920→        };
+  2921→        rotation: number;
+  2922→        type: "line";
+  2923→        typeName: "shape";
+  2924→        x: number;
+  2925→        y: number;
+  2926→    } | undefined;
+  2927→    component(shape: TLLineShape): JSX.Element;
+  2928→    getIndicatorPath(shape: TLLineShape): Path2D;
+  2929→    toSvg(shape: TLLineShape, ctx: SvgExportContext): JSX.Element;
+  2930→    getHandleSnapGeometry(shape: TLLineShape): HandleSnapGeometry;
+  2931→    getInterpolatedProps(startShape: TLLineShape, endShape: TLLineShape, t: number): TLLineShape['props'];
+  2932→}
+  2933→
+  2934→/** @public */
+  2935→export declare interface LineShapeUtilDisplayValues {
+  2936→    strokeColor: string;
+  2937→    strokeWidth: number;
+  2938→}
+  2939→
+  2940→/** @public @react */
+  2941→export declare function LineToolbarItem(): JSX.Element;
+  2942→
+  2943→/* Excluded from this release type: LineToPathBuilderCommand */
+  2944→
+  2945→/** @public @react */
+  2946→export declare function LockGroup(): JSX.Element;
+  2947→
+  2948→/** @public @react */
+  2949→export declare function MiscMenuGroup(): JSX.Element;
+  2950→
+  2951→/** @public @react */
+  2952→export declare function MobileStylePanel(): JSX.Element | null;
+  2953→
+  2954→/** @public @react */
+  2955→export declare function MoveToPageMenu(): JSX.Element | null;
+  2956→
+  2957→/* Excluded from this release type: MoveToPathBuilderCommand */
+  2958→
+  2959→/** @public */
+
+[showing lines 960-2959 of 6297; use offset=2960 with limit to continue reading]

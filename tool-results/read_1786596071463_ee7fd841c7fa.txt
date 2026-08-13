@@ -1,0 +1,2002 @@
+  1005→/** @public @react */
+  1006→export declare function DefaultSpinner(props: React.SVGProps<SVGSVGElement>): JSX.Element;
+  1007→
+  1008→/** @public @react */
+  1009→export declare function DefaultSvgDefs(): null;
+  1010→
+  1011→/** @public */
+  1012→export declare const defaultTldrawOptions: {
+  1013→    readonly actionShortcutsLocation: "swap";
+  1014→    readonly adjacentShapeMargin: 10;
+  1015→    readonly animationMediumMs: 320;
+  1016→    readonly camera: TLCameraOptions;
+  1017→    readonly cameraMovingTimeoutMs: 64;
+  1018→    readonly cameraSlideFriction: 0.09;
+  1019→    readonly coarseDragDistanceSquared: 36;
+  1020→    readonly coarseHandleRadius: 20;
+  1021→    readonly coarseHitTestMargin: 4;
+  1022→    readonly coarsePointerWidth: 12;
+  1023→    readonly collaboratorCheckIntervalMs: 1200;
+  1024→    readonly collaboratorIdleTimeoutMs: 3000;
+  1025→    readonly collaboratorInactiveTimeoutMs: 60000;
+  1026→    readonly createTextOnCanvasDoubleClick: true;
+  1027→    readonly debouncedZoom: true;
+  1028→    readonly debouncedZoomThreshold: 500;
+  1029→    readonly deepLinks: undefined;
+  1030→    readonly defaultSvgPadding: 32;
+  1031→    readonly doubleClickDurationMs: 450;
+  1032→    readonly dragDistanceSquared: 16;
+  1033→    readonly edgeScrollDelay: 200;
+  1034→    readonly edgeScrollDistance: 8;
+  1035→    readonly edgeScrollEaseDuration: 200;
+  1036→    readonly edgeScrollSpeed: 25;
+  1037→    readonly enableToolbarKeyboardShortcuts: true;
+  1038→    readonly experimental__onDropOnCanvas: undefined;
+  1039→    readonly exportProvider: ExoticComponent<FragmentProps>;
+  1040→    readonly flattenImageBoundsExpand: 64;
+  1041→    readonly flattenImageBoundsPadding: 16;
+  1042→    readonly followChaseViewportSnap: 2;
+  1043→    readonly gridSteps: readonly [{
+  1044→        readonly mid: 0.15;
+  1045→        readonly min: -1;
+  1046→        readonly step: 64;
+  1047→    }, {
+  1048→        readonly mid: 0.375;
+  1049→        readonly min: 0.05;
+  1050→        readonly step: 16;
+  1051→    }, {
+  1052→        readonly mid: 1;
+  1053→        readonly min: 0.15;
+  1054→        readonly step: 4;
+  1055→    }, {
+  1056→        readonly mid: 2.5;
+  1057→        readonly min: 0.7;
+  1058→        readonly step: 1;
+  1059→    }];
+  1060→    readonly handleRadius: 12;
+  1061→    readonly hitTestMargin: 3;
+  1062→    readonly laserDelayMs: 1200;
+  1063→    readonly laserFadeoutMs: 500;
+  1064→    readonly longPressDurationMs: 500;
+  1065→    readonly maxExportDelayMs: 5000;
+  1066→    readonly maxFilesAtOnce: 100;
+  1067→    readonly maxFontsToLoadBeforeRender: number;
+  1068→    readonly maxPages: 40;
+  1069→    readonly maxShapesPerPage: 4000;
+  1070→    readonly multiClickDurationMs: 200;
+  1071→    readonly nonce: undefined;
+  1072→    readonly onBeforeCopyToClipboard: undefined;
+  1073→    readonly onBeforePasteFromClipboard: undefined;
+  1074→    readonly onClipboardPasteRaw: undefined;
+  1075→    readonly quickZoomPreservesScreenBounds: true;
+  1076→    readonly rightClickPanning: true;
+  1077→    readonly selectLockedShapes: false;
+  1078→    readonly snapThreshold: 8;
+  1079→    readonly spacebarPanning: true;
+  1080→    readonly temporaryAssetPreviewLifetimeMs: 180000;
+  1081→    readonly text: {};
+  1082→    readonly textShadowLod: 0.35;
+  1083→    readonly tooltipDelayMs: 700;
+  1084→    readonly uiCoarseDragDistanceSquared: 625;
+  1085→    readonly uiDragDistanceSquared: 16;
+  1086→    readonly zoomToFitPadding: 128;
+  1087→};
+  1088→
+  1089→/** @public */
+  1090→export declare const defaultUserPreferences: Readonly<{
+  1091→    animationSpeed: 0 | 1;
+  1092→    areKeyboardShortcutsEnabled: true;
+  1093→    color: "#02B1CC" | "#11B3A3" | "#39B178" | "#55B467" | "#7B66DC" | "#9D5BD2" | "#BD54C6" | "#E34BA9" | "#EC5E41" | "#F04F88" | "#F2555A" | "#FF802B";
+  1094→    colorScheme: "light";
+  1095→    edgeScrollSpeed: 1;
+  1096→    enhancedA11yMode: false;
+  1097→    inputMode: null;
+  1098→    isDynamicSizeMode: false;
+  1099→    isPasteAtCursorMode: false;
+  1100→    isSnapMode: false;
+  1101→    isWrapMode: false;
+  1102→    isZoomDirectionInverted: false;
+  1103→    locale: "ar" | "bn" | "ca" | "cs" | "da" | "de" | "el" | "en" | "es" | "fa" | "fi" | "fr" | "gl" | "gu-in" | "he" | "hi-in" | "hr" | "hu" | "id" | "it" | "ja" | "km-kh" | "kn" | "ko-kr" | "ml" | "mr" | "ms" | "ne" | "nl" | "no" | "pa" | "pl" | "pt-br" | "pt-pt" | "ro" | "ru" | "sl" | "so" | "sv" | "ta" | "te" | "th" | "tl" | "tr" | "uk" | "ur" | "vi" | "zh-cn" | "zh-tw";
+  1104→    name: "";
+  1105→}>;
+  1106→
+  1107→/** @public */
+  1108→export declare const defaultUserStore: TLUserStore;
+  1109→
+  1110→/**
+  1111→ * Convert degrees to radians.
+  1112→ *
+  1113→ * @param d - The degree in degrees.
+  1114→ * @public
+  1115→ */
+  1116→export declare function degreesToRadians(d: number): number;
+  1117→
+  1118→/** @public */
+  1119→export declare const EASINGS: {
+  1120→    readonly easeInCubic: (t: number) => number;
+  1121→    readonly easeInExpo: (t: number) => number;
+  1122→    readonly easeInOutCubic: (t: number) => number;
+  1123→    readonly easeInOutExpo: (t: number) => number;
+  1124→    readonly easeInOutQuad: (t: number) => number;
+  1125→    readonly easeInOutQuart: (t: number) => number;
+  1126→    readonly easeInOutQuint: (t: number) => number;
+  1127→    readonly easeInOutSine: (t: number) => number;
+  1128→    readonly easeInQuad: (t: number) => number;
+  1129→    readonly easeInQuart: (t: number) => number;
+  1130→    readonly easeInQuint: (t: number) => number;
+  1131→    readonly easeInSine: (t: number) => number;
+  1132→    readonly easeOutCubic: (t: number) => number;
+  1133→    readonly easeOutExpo: (t: number) => number;
+  1134→    readonly easeOutQuad: (t: number) => number;
+  1135→    readonly easeOutQuart: (t: number) => number;
+  1136→    readonly easeOutQuint: (t: number) => number;
+  1137→    readonly easeOutSine: (t: number) => number;
+  1138→    readonly linear: (t: number) => number;
+  1139→};
+  1140→
+  1141→/** @public */
+  1142→export declare class Edge2d extends Geometry2d {
+  1143→    private _start;
+  1144→    private _end;
+  1145→    private _dx;
+  1146→    private _dy;
+  1147→    private _len2;
+  1148→    constructor(config: {
+  1149→        end: Vec;
+  1150→        start: Vec;
+  1151→    });
+  1152→    getLength(): number;
+  1153→    getVertices(): Vec[];
+  1154→    nearestPoint(point: VecLike): Vec;
+  1155→    distanceToPoint(point: VecLike, _hitInside?: boolean): number;
+  1156→    getSvgPathData(first?: boolean): string;
+  1157→}
+  1158→
+  1159→/** @public */
+  1160→export declare class EdgeScrollManager {
+  1161→    editor: Editor;
+  1162→    constructor(editor: Editor);
+  1163→    private _isEdgeScrolling;
+  1164→    private _edgeScrollDuration;
+  1165→    getIsEdgeScrolling(): boolean;
+  1166→    /**
+  1167→     * Update the camera position when the mouse is close to the edge of the screen.
+  1168→     * Run this on every tick when in a state where edge scrolling is enabled.
+  1169→     *
+  1170→     * @public
+  1171→     */
+  1172→    updateEdgeScrolling(elapsed: number): void;
+  1173→    /* Excluded from this release type: getEdgeProximityFactors */
+  1174→    private getEdgeScroll;
+  1175→    /**
+  1176→     * Moves the camera when the mouse is close to the edge of the screen.
+  1177→     * @public
+  1178→     */
+  1179→    private moveCameraWhenCloseToEdge;
+  1180→}
+  1181→
+  1182→/** @public */
+  1183→export declare class Editor extends EventEmitter<TLEventMap> {
+  1184→    readonly id: string;
+  1185→    constructor({ store, user, shapeUtils, bindingUtils, assetUtils: assetUtilConstructors, overlayUtils: overlayUtilConstructors, tools, getContainer, cameraOptions, initialState, autoFocus, options: _options, textOptions: _textOptions, getShapeVisibility, colorScheme, fontAssetUrls, themes, initialTheme }: TLEditorOptions);
+  1186→    private readonly _getShapeVisibility?;
+  1187→    private getIsShapeHiddenCache;
+  1188→    isShapeHidden(shapeOrId: TLShape | TLShapeId): boolean;
+  1189→    readonly options: TldrawOptions;
+  1190→    readonly contextId: string;
+  1191→    /**
+  1192→     * The editor's store
+  1193→     *
+  1194→     * @public
+  1195→     */
+  1196→    readonly store: TLStore;
+  1197→    /**
+  1198→     * The root state of the statechart.
+  1199→     *
+  1200→     * @public
+  1201→     */
+  1202→    readonly root: StateNode;
+  1203→    /**
+  1204→     * Set a tool. Useful if you need to add a tool to the state chart on demand,
+  1205→     * after the editor has already been initialized.
+  1206→     *
+  1207→     * @param Tool - The tool to set.
+  1208→     * @param parent - The parent state node to set the tool on.
+  1209→     *
+  1210→     * @public
+  1211→     */
+  1212→    setTool(Tool: TLStateNodeConstructor, parent?: StateNode): void;
+  1213→    /**
+  1214→     * Remove a tool. Useful if you need to remove a tool from the state chart on demand,
+  1215→     * after the editor has already been initialized.
+  1216→     *
+  1217→     * @param Tool - The tool to delete.
+  1218→     * @param parent - The parent state node to remove the tool from.
+  1219→     *
+  1220→     * @public
+  1221→     */
+  1222→    removeTool(Tool: TLStateNodeConstructor, parent?: StateNode): void;
+  1223→    /**
+  1224→     * A set of functions to call when the editor is disposed.
+  1225→     *
+  1226→     * @public
+  1227→     */
+  1228→    readonly disposables: Set<() => void>;
+  1229→    /**
+  1230→     * Whether the editor is disposed.
+  1231→     *
+  1232→     * @public
+  1233→     */
+  1234→    isDisposed: boolean;
+  1235→    private readonly _isMounted;
+  1236→    /**
+  1237→     * Whether the editor is currently mounted. This is `true` while the editor's component is
+  1238→     * mounted in the DOM (after the `mount` event) and `false` before mount and after `unmount`.
+  1239→     *
+  1240→     * Unlike disposal, mounting is not terminal: the editor's component can unmount and remount
+  1241→     * (for example when the canvas is replaced by an error fallback and restored) without the
+  1242→     * editor itself being disposed. To react to the transitions, listen to the editor's `mount`
+  1243→     * and `unmount` events.
+  1244→     *
+  1245→     * @public
+  1246→     */
+  1247→    getIsMounted(): boolean;
+  1248→    /* Excluded from this release type: _tickManager */
+  1249→    /**
+  1250→     * A manager for the editor's input state.
+  1251→     *
+  1252→     * @public
+  1253→     */
+  1254→    readonly inputs: InputsManager;
+  1255→    /**
+  1256→     * A manager for the editor's snapping feature.
+  1257→     *
+  1258→     * @public
+  1259→     */
+  1260→    readonly snaps: SnapManager;
+  1261→    /**
+  1262→     * A manager for performance measurement hooks.
+  1263→     *
+  1264→     * @public
+  1265→     */
+  1266→    readonly performance: PerformanceManager;
+  1267→    /* Excluded from this release type: _spatialIndex */
+  1268→    /**
+  1269→     * A manager for the any asynchronous events and making sure they're
+  1270→     * cleaned up upon disposal.
+  1271→     *
+  1272→     * @public
+  1273→     */
+  1274→    readonly timers: {
+  1275→        dispose: () => void;
+  1276→        requestAnimationFrame: (callback: FrameRequestCallback) => number;
+  1277→        setInterval: (handler: TimerHandler, timeout?: number | undefined, ...args: any[]) => number;
+  1278→        setTimeout: (handler: TimerHandler, timeout?: number | undefined, ...args: any[]) => number;
+  1279→    };
+  1280→    /**
+  1281→     * A manager for remote peer collaborators connected to this editor.
+  1282→     *
+  1283→     * @public
+  1284→     */
+  1285→    readonly collaborators: CollaboratorsManager;
+  1286→    /**
+  1287→     * A manager for the user and their preferences.
+  1288→     *
+  1289→     * @public
+  1290→     */
+  1291→    readonly user: UserPreferencesManager;
+  1292→    /* Excluded from this release type: _themeManager */
+  1293→    /**
+  1294→     * A helper for measuring text.
+  1295→     *
+  1296→     * @public
+  1297→     */
+  1298→    readonly textMeasure: TextManager;
+  1299→    /**
+  1300→     * A utility for managing the set of fonts that should be rendered in the document.
+  1301→     *
+  1302→     * @public
+  1303→     */
+  1304→    readonly fonts: FontManager;
+  1305→    /**
+  1306→     * A manager for the editor's scribbles.
+  1307→     *
+  1308→     * @public
+  1309→     */
+  1310→    readonly scribbles: ScribbleManager;
+  1311→    /**
+  1312→     * A manager for canvas overlay UI elements (selection handles, shape handles, etc.).
+  1313→     *
+  1314→     * @public
+  1315→     */
+  1316→    readonly overlays: OverlayManager;
+  1317→    /**
+  1318→     * A manager for side effects and correct state enforcement. See {@link @tldraw/store#StoreSideEffects} for details.
+  1319→     *
+  1320→     * @public
+  1321→     */
+  1322→    readonly sideEffects: StoreSideEffects<TLRecord>;
+  1323→    /**
+  1324→     * A manager for moving the camera when the mouse is at the edge of the screen.
+  1325→     *
+  1326→     * @public
+  1327→     */
+  1328→    edgeScrollManager: EdgeScrollManager;
+  1329→    /* Excluded from this release type: focusManager */
+  1330→    /**
+  1331→     * The current HTML element containing the editor.
+  1332→     *
+  1333→     * @example
+  1334→     * ```ts
+  1335→     * const container = editor.getContainer()
+  1336→     * ```
+  1337→     *
+  1338→     * @public
+  1339→     */
+  1340→    getContainer: () => HTMLElement;
+  1341→    /* Excluded from this release type: getContainerDocument */
+  1342→    /* Excluded from this release type: getContainerWindow */
+  1343→    /**
+  1344→     * Dispose the editor.
+  1345→     *
+  1346→     * @public
+  1347→     */
+  1348→    dispose(): void;
+  1349→    /**
+  1350→     * Get the current color mode (`'light'` or `'dark'`), based on the user's dark mode preference.
+  1351→     *
+  1352→     * @public
+  1353→     */
+  1354→    getColorMode(): 'dark' | 'light';
+  1355→    /**
+  1356→     * Set the color mode. Note that this is a convenience method that passes the mode to
+  1357→     * `user.updateUserPreferences`, which is the source of truth for the user's color mode preference.
+  1358→     *
+  1359→     * @public
+  1360→     */
+  1361→    setColorMode(mode: 'dark' | 'light'): this;
+  1362→    /**
+  1363→     * Get the id of the current theme.
+  1364→     *
+  1365→     * @public
+  1366→     */
+  1367→    getCurrentThemeId(): TLThemeId;
+  1368→    /**
+  1369→     * Get the current theme definition.
+  1370→     *
+  1371→     * @public
+  1372→     */
+  1373→    getCurrentTheme(): TLTheme;
+  1374→    /**
+  1375→     * Set the current theme by id.
+  1376→     *
+  1377→     * @public
+  1378→     */
+  1379→    setCurrentTheme(id: TLThemeId): this;
+  1380→    /**
+  1381→     * Get all registered theme definitions.
+  1382→     *
+  1383→     * @public
+  1384→     */
+  1385→    getThemes(): TLThemes;
+  1386→    /**
+  1387→     * Get a single theme definition by id.
+  1388→     *
+  1389→     * @public
+  1390→     */
+  1391→    getTheme(id: TLThemeId): TLTheme | undefined;
+  1392→    /**
+  1393→     * Replace all theme definitions, or update them via a callback that receives a deep copy.
+  1394→     * The `'default'` theme must always be present in the result.
+  1395→     *
+  1396→     * @example
+  1397→     * ```ts
+  1398→     * // Replace all themes
+  1399→     * editor.updateThemes({ default: myDefaultTheme, ocean: myOceanTheme })
+  1400→     *
+  1401→     * // Update via callback
+  1402→     * editor.updateThemes((themes) => {
+  1403→     *   delete themes.ocean
+  1404→     *   return themes
+  1405→     * })
+  1406→     * ```
+  1407→     *
+  1408→     * @public
+  1409→     */
+  1410→    updateThemes(themes: ((themes: TLThemes) => TLThemes) | TLThemes): this;
+  1411→    /**
+  1412→     * Register or update a single theme definition. The theme is keyed by its `id` property.
+  1413→     *
+  1414→     * @example
+  1415→     * ```ts
+  1416→     * // Override a property on the default theme
+  1417→     * editor.updateTheme({ ...editor.getTheme('default')!, fontSize: 24 })
+  1418→     *
+  1419→     * // Register a new theme
+  1420→     * editor.updateTheme({ id: 'ocean', ...myOceanTheme })
+  1421→     * ```
+  1422→     *
+  1423→     * @public
+  1424→     */
+  1425→    updateTheme(theme: TLTheme): this;
+  1426→    /**
+  1427→     * A map of shape utility classes (TLShapeUtils) by shape type.
+  1428→     *
+  1429→     * @public
+  1430→     */
+  1431→    shapeUtils: {
+  1432→        readonly [K in string]?: ShapeUtil<TLShape>;
+  1433→    };
+  1434→    /* Excluded from this release type: _shapeUtilsByAssetType */
+  1435→    styleProps: {
+  1436→        [key: string]: Map<StyleProp<any>, string>;
+  1437→    };
+  1438→    /**
+  1439→     * Get a shape util from a shape itself.
+  1440→     *
+  1441→     * @example
+  1442→     * ```ts
+  1443→     * const util = editor.getShapeUtil(myArrowShape)
+  1444→     * const util = editor.getShapeUtil('arrow')
+  1445→     * const util = editor.getShapeUtil<TLArrowShape>(myArrowShape)
+  1446→     * const util = editor.getShapeUtil(TLArrowShape)('arrow')
+  1447→     * ```
+  1448→     *
+  1449→     * @param shape - A shape, shape partial, or shape type.
+  1450→     *
+  1451→     * @public
+  1452→     */
+  1453→    getShapeUtil<K extends TLShape['type']>(type: K): ShapeUtil<Extract<TLShape, {
+  1454→        type: K;
+  1455→    }>>;
+  1456→    getShapeUtil<S extends TLShape>(shape: S | S['type'] | TLShapePartial<S>): ShapeUtil<S>;
+  1457→    getShapeUtil<T extends ShapeUtil>(type: T extends ShapeUtil<infer R> ? R['type'] : string): T;
+  1458→    /**
+  1459→     * Returns true if the editor has a shape util for the given shape / shape type.
+  1460→     *
+  1461→     * @param shape - A shape, shape partial, or shape type.
+  1462→     */
+  1463→    hasShapeUtil(shape: TLShape | TLShapePartial<TLShape>): boolean;
+  1464→    hasShapeUtil(type: TLShape['type']): boolean;
+  1465→    hasShapeUtil<T extends ShapeUtil>(type: T extends ShapeUtil<infer R> ? R['type'] : string): boolean;
+  1466→    /**
+  1467→     * Get the shape util that handles the given asset type.
+  1468→     * Returns the shape util whose {@link ShapeUtil.handledAssetTypes} includes
+  1469→     * the given asset type, or undefined if none matches.
+  1470→     *
+  1471→     * @param assetType - The asset type string.
+  1472→     * @public
+  1473→     */
+  1474→    getShapeUtilForAssetType(assetType: string): ShapeUtil | undefined;
+  1475→    /**
+  1476→     * A map of shape utility classes (TLShapeUtils) by shape type.
+  1477→     *
+  1478→     * @public
+  1479→     */
+  1480→    bindingUtils: {
+  1481→        readonly [K in string]?: BindingUtil<TLBinding>;
+  1482→    };
+  1483→    /**
+  1484→     * Get a binding util from a binding itself.
+  1485→     *
+  1486→     * @example
+  1487→     * ```ts
+  1488→     * const util = editor.getBindingUtil(myArrowBinding)
+  1489→     * const util = editor.getBindingUtil('arrow')
+  1490→     * const util = editor.getBindingUtil<TLArrowBinding>(myArrowBinding)
+  1491→     * const util = editor.getBindingUtil(TLArrowBinding)('arrow')
+  1492→     * ```
+  1493→     *
+  1494→     * @param binding - A binding, binding partial, or binding type.
+  1495→     *
+  1496→     * @public
+  1497→     */
+  1498→    getBindingUtil<K extends TLBinding['type']>(type: K): BindingUtil<Extract<TLBinding, {
+  1499→        type: K;
+  1500→    }>>;
+  1501→    getBindingUtil<S extends TLBinding>(binding: {
+  1502→        type: S['type'];
+  1503→    } | S): BindingUtil<S>;
+  1504→    getBindingUtil<T extends BindingUtil>(type: T extends BindingUtil<infer R> ? R['type'] : string): T;
+  1505→    /**
+  1506→     * A map of asset utility classes by asset type.
+  1507→     *
+  1508→     * @public
+  1509→     */
+  1510→    assetUtils: {
+  1511→        readonly [K in string]?: AssetUtil<TLAsset>;
+  1512→    };
+  1513→    /**
+  1514→     * Get an asset util from an asset or asset type.
+  1515→     *
+  1516→     * @param arg - An asset, asset type string, or object with type.
+  1517→     *
+  1518→     * @public
+  1519→     */
+  1520→    getAssetUtil<S extends TLAsset>(asset: {
+  1521→        type: S['type'];
+  1522→    } | S): AssetUtil<S>;
+  1523→    getAssetUtil(type: string): AssetUtil;
+  1524→    /**
+  1525→     * Returns true if the editor has an asset util for the given asset type.
+  1526→     *
+  1527→     * @public
+  1528→     */
+  1529→    hasAssetUtil(arg: {
+  1530→        type: string;
+  1531→    } | string): boolean;
+  1532→    /**
+  1533→     * Get the asset util that accepts the given MIME type.
+  1534→     * Returns null if no registered asset util accepts the MIME type.
+  1535→     *
+  1536→     * @public
+  1537→     */
+  1538→    getAssetUtilForMimeType(mimeType: string): AssetUtil | null;
+  1539→    /**
+  1540→     * A manager for the editor's history.
+  1541→     *
+  1542→     * @readonly
+  1543→     */
+  1544→    protected readonly history: HistoryManager<TLRecord>;
+  1545→    /**
+  1546→     * Undo to the last mark.
+  1547→     *
+  1548→     * @example
+  1549→     * ```ts
+  1550→     * editor.undo()
+  1551→     * ```
+  1552→     *
+  1553→     * @public
+  1554→     */
+  1555→    undo(): this;
+  1556→    /**
+  1557→     * Whether the editor can undo.
+  1558→     *
+  1559→     * @public
+  1560→     */
+  1561→    canUndo(): boolean;
+  1562→    getCanUndo(): boolean;
+  1563→    /**
+  1564→     * Redo to the next mark.
+  1565→     *
+  1566→     * @example
+  1567→     * ```ts
+  1568→     * editor.redo()
+  1569→     * ```
+  1570→     *
+  1571→     * @public
+  1572→     */
+  1573→    redo(): this;
+  1574→    /**
+  1575→     * Whether the editor can redo.
+  1576→     *
+  1577→     * @public
+  1578→     */
+  1579→    canRedo(): boolean;
+  1580→    getCanRedo(): boolean;
+  1581→    clearHistory(): this;
+  1582→    /**
+  1583→     * Create a new "mark", or stopping point, in the undo redo history. Creating a mark will clear
+  1584→     * any redos. You typically want to do this just before a user interaction begins or is handled.
+  1585→     *
+  1586→     * @example
+  1587→     * ```ts
+  1588→     * editor.markHistoryStoppingPoint()
+  1589→     * editor.flipShapes(editor.getSelectedShapes())
+  1590→     * ```
+  1591→     * @example
+  1592→     * ```ts
+  1593→     * const beginRotateMark = editor.markHistoryStoppingPoint()
+  1594→     * // if the use cancels the rotation, you can bail back to this mark
+  1595→     * editor.bailToMark(beginRotateMark)
+  1596→     * ```
+  1597→     *
+  1598→     * @public
+  1599→     * @param name - The name of the mark, useful for debugging the undo/redo stacks
+  1600→     * @returns a unique id for the mark that can be used with `squashToMark` or `bailToMark`.
+  1601→     */
+  1602→    markHistoryStoppingPoint(name?: string): string;
+  1603→    /* Excluded from this release type: getMarkIdMatching */
+  1604→    /* Excluded from this release type: isReplayingHistory */
+  1605→    /**
+  1606→     * Coalesces all changes since the given mark into a single change, removing any intermediate marks.
+  1607→     *
+  1608→     * This is useful if you need to 'compress' the recent history to simplify the undo/redo experience of a complex interaction.
+  1609→     *
+  1610→     * @example
+  1611→     * ```ts
+  1612→     * const bumpShapesMark = editor.markHistoryStoppingPoint()
+  1613→     * // ... some changes
+  1614→     * editor.squashToMark(bumpShapesMark)
+  1615→     * ```
+  1616→     *
+  1617→     * @param markId - The mark id to squash to.
+  1618→     */
+  1619→    squashToMark(markId: string): this;
+  1620→    /**
+  1621→     * Undo to the closest mark, discarding the changes so they cannot be redone.
+  1622→     *
+  1623→     * @example
+  1624→     * ```ts
+  1625→     * editor.bail()
+  1626→     * ```
+  1627→     *
+  1628→     * @public
+  1629→     */
+  1630→    bail(): this;
+  1631→    /**
+  1632→     * Undo to the given mark, discarding the changes so they cannot be redone.
+  1633→     *
+  1634→     * @example
+  1635→     * ```ts
+  1636→     * const beginDrag = editor.markHistoryStoppingPoint()
+  1637→     * // ... some changes
+  1638→     * editor.bailToMark(beginDrag)
+  1639→     * ```
+  1640→     *
+  1641→     * @public
+  1642→     */
+  1643→    bailToMark(id: string): this;
+  1644→    private _shouldIgnoreShapeLock;
+  1645→    /**
+  1646→     * Run a function in a transaction with optional options for context.
+  1647→     * You can use the options to change the way that history is treated
+  1648→     * or allow changes to locked shapes.
+  1649→     *
+  1650→     * @example
+  1651→     * ```ts
+  1652→     * // updating with
+  1653→     * editor.run(() => {
+  1654→     *  editor.updateShape({ ...myShape, x: 100 })
+  1655→     * }, { history: "ignore" })
+  1656→     *
+  1657→     * // forcing changes / deletions for locked shapes
+  1658→     * editor.toggleLock([myShape])
+  1659→     * editor.run(() => {
+  1660→     *  editor.updateShape({ ...myShape, x: 100 })
+  1661→     *  editor.deleteShape(myShape)
+  1662→     * }, { ignoreShapeLock: true }, )
+  1663→     * ```
+  1664→     *
+  1665→     * @param fn - The callback function to run.
+  1666→     * @param opts - The options for the batch.
+  1667→     *
+  1668→     *
+  1669→     * @public
+  1670→     */
+  1671→    run(fn: () => void, opts?: TLEditorRunOptions): this;
+  1672→    /* Excluded from this release type: annotateError */
+  1673→    /* Excluded from this release type: createErrorAnnotations */
+  1674→    /* Excluded from this release type: _crashingError */
+  1675→    /* Excluded from this release type: getCrashingError */
+  1676→    /* Excluded from this release type: crash */
+  1677→    /**
+  1678→     * The editor's current path of active states.
+  1679→     *
+  1680→     * @example
+  1681→     * ```ts
+  1682→     * editor.getPath() // "select.idle"
+  1683→     * ```
+  1684→     *
+  1685→     * @public
+  1686→     */
+  1687→    getPath(): string;
+  1688→    /**
+  1689→     * Get whether a certain tool (or other state node) is currently active.
+  1690→     *
+  1691→     * @example
+  1692→     * ```ts
+  1693→     * editor.isIn('select')
+  1694→     * editor.isIn('select.brushing')
+  1695→     * ```
+  1696→     *
+  1697→     * @param path - The path of active states, separated by periods.
+  1698→     *
+  1699→     * @public
+  1700→     */
+  1701→    isIn(path: string): boolean;
+  1702→    /**
+  1703→     * Get whether the state node is in any of the given active paths.
+  1704→     *
+  1705→     * @example
+  1706→     * ```ts
+  1707→     * state.isInAny('select', 'erase')
+  1708→     * state.isInAny('select.brushing', 'erase.idle')
+  1709→     * ```
+  1710→     *
+  1711→     * @public
+  1712→     */
+  1713→    isInAny(...paths: string[]): boolean;
+  1714→    /**
+  1715→     * Set the selected tool.
+  1716→     *
+  1717→     * @example
+  1718→     * ```ts
+  1719→     * editor.setCurrentTool('hand')
+  1720→     * editor.setCurrentTool('hand', { date: Date.now() })
+  1721→     * ```
+  1722→     *
+  1723→     * @param id - The id of the tool to select.
+  1724→     * @param info - Arbitrary data to pass along into the transition.
+  1725→     *
+  1726→     * @public
+  1727→     */
+  1728→    setCurrentTool(id: string, info?: {}): this;
+  1729→    /**
+  1730→     * The current selected tool.
+  1731→     *
+  1732→     * @public
+  1733→     */
+  1734→    getCurrentTool(): StateNode;
+  1735→    /**
+  1736→     * The id of the current selected tool.
+  1737→     *
+  1738→     * @public
+  1739→     */
+  1740→    getCurrentToolId(): string;
+  1741→    /**
+  1742→     * Get a descendant by its path.
+  1743→     *
+  1744→     * @example
+  1745→     * ```ts
+  1746→     * editor.getStateDescendant('select')
+  1747→     * editor.getStateDescendant('select.brushing')
+  1748→     * ```
+  1749→     *
+  1750→     * @param path - The descendant's path of state ids, separated by periods.
+  1751→     *
+  1752→     * @public
+  1753→     */
+  1754→    getStateDescendant<T extends StateNode>(path: string): T | undefined;
+  1755→    /**
+  1756→     * The global document settings that apply to all users.
+  1757→     *
+  1758→     * @public
+  1759→     **/
+  1760→    getDocumentSettings(): TLDocument;
+  1761→    /**
+  1762→     * Update the global document settings that apply to all users.
+  1763→     *
+  1764→     * @public
+  1765→     **/
+  1766→    updateDocumentSettings(settings: Partial<TLDocument>): this;
+  1767→    /**
+  1768→     * The current instance's state.
+  1769→     *
+  1770→     * @public
+  1771→     */
+  1772→    getInstanceState(): TLInstance;
+  1773→    /**
+  1774→     * Update the instance's state.
+  1775→     *
+  1776→     * @param partial - A partial object to update the instance state with.
+  1777→     * @param historyOptions - History batch options.
+  1778→     *
+  1779→     * @public
+  1780→     */
+  1781→    updateInstanceState(partial: Partial<Omit<TLInstance, 'currentPageId'>>, historyOptions?: TLHistoryBatchOptions): this;
+  1782→    /* Excluded from this release type: _updateInstanceState */
+  1783→    /* Excluded from this release type: _isChangingStyleTimeout */
+  1784→    menus: {
+  1785→        addOpenMenu: (id: string) => void;
+  1786→        clearOpenMenus: () => void;
+  1787→        deleteOpenMenu: (id: string) => void;
+  1788→        getOpenMenus: () => string[];
+  1789→        hasAnyOpenMenus: () => boolean;
+  1790→        hasOpenMenus: () => boolean;
+  1791→        isMenuOpen: (id: string) => boolean;
+  1792→    };
+  1793→    /**
+  1794→     * Set the cursor.
+  1795→     *
+  1796→     * No-op when the partial wouldn't change the current cursor — `setCursor`
+  1797→     * is called from pointer-move hot paths (see `updateHoveredOverlayId`,
+  1798→     * various tool states) and skipping redundant writes avoids needlessly
+  1799→     * dirtying instance state.
+  1800→     *
+  1801→     * @param cursor - The cursor to set.
+  1802→     * @public
+  1803→     */
+  1804→    setCursor(cursor: Partial<TLCursor>): this;
+  1805→    /**
+  1806→     * Page states.
+  1807→     *
+  1808→     * @public
+  1809→     */
+  1810→    getPageStates(): TLInstancePageState[];
+  1811→    private _getPageStatesQuery;
+  1812→    /**
+  1813→     * The current page state.
+  1814→     *
+  1815→     * @public
+  1816→     */
+  1817→    getCurrentPageState(): TLInstancePageState;
+  1818→    private _getCurrentPageStateId;
+  1819→    /**
+  1820→     * Update this instance's page state.
+  1821→     *
+  1822→     * @example
+  1823→     * ```ts
+  1824→     * editor.updateCurrentPageState({ id: 'page1', editingShapeId: 'shape:123' })
+  1825→     * ```
+  1826→     *
+  1827→     * @param partial - The partial of the page state object containing the changes.
+  1828→     *
+  1829→     * @public
+  1830→     */
+  1831→    updateCurrentPageState(partial: Partial<Omit<TLInstancePageState, 'editingShapeId' | 'focusedGroupId' | 'pageId' | 'selectedShapeIds'>>): this;
+  1832→    _updateCurrentPageState(partial: Partial<Omit<TLInstancePageState, 'selectedShapeIds'>>): void;
+  1833→    /**
+  1834→     * The current selected ids.
+  1835→     *
+  1836→     * @public
+  1837→     */
+  1838→    getSelectedShapeIds(): TLShapeId[];
+  1839→    /**
+  1840→     * An array containing all of the currently selected shapes.
+  1841→     *
+  1842→     * @public
+  1843→     * @readonly
+  1844→     */
+  1845→    getSelectedShapes(): TLShape[];
+  1846→    /**
+  1847→     * Select one or more shapes.
+  1848→     *
+  1849→     * @example
+  1850→     * ```ts
+  1851→     * editor.setSelectedShapes(['id1'])
+  1852→     * editor.setSelectedShapes(['id1', 'id2'])
+  1853→     * ```
+  1854→     *
+  1855→     * @param shapes - The shape (or shape ids) to select.
+  1856→     *
+  1857→     * @public
+  1858→     */
+  1859→    setSelectedShapes(shapes: TLShape[] | TLShapeId[]): this;
+  1860→    /**
+  1861→     * Determine whether or not any of a shape's ancestors are selected.
+  1862→     *
+  1863→     * @param shape - The shape (or shape id) of the shape to check.
+  1864→     *
+  1865→     * @public
+  1866→     */
+  1867→    isAncestorSelected(shape: TLShape | TLShapeId): boolean;
+  1868→    /**
+  1869→     * Select one or more shapes.
+  1870→     *
+  1871→     * @example
+  1872→     * ```ts
+  1873→     * editor.select('id1')
+  1874→     * editor.select('id1', 'id2')
+  1875→     * ```
+  1876→     *
+  1877→     * @param shapes - The shape (or the shape ids) to select.
+  1878→     *
+  1879→     * @public
+  1880→     */
+  1881→    select(...shapes: TLShape[] | TLShapeId[]): this;
+  1882→    /**
+  1883→     * Remove a shape from the existing set of selected shapes.
+  1884→     *
+  1885→     * @example
+  1886→     * ```ts
+  1887→     * editor.deselect(shape.id)
+  1888→     * ```
+  1889→     *
+  1890→     * @public
+  1891→     */
+  1892→    deselect(...shapes: TLShape[] | TLShapeId[]): this;
+  1893→    /**
+  1894→     * Select all shapes. If the user has selected shapes that share a parent,
+  1895→     * select all shapes within that parent. If the user has not selected any shapes,
+  1896→     * or if the shapes shapes are only on select all shapes on the current page.
+  1897→     *
+  1898→     * @example
+  1899→     * ```ts
+  1900→     * editor.selectAll()
+  1901→     * ```
+  1902→     *
+  1903→     * @public
+  1904→     */
+  1905→    selectAll(): this;
+  1906→    /**
+  1907→     * Select the next shape in the reading order or in cardinal order.
+  1908→     *
+  1909→     * @example
+  1910→     * ```ts
+  1911→     * editor.selectAdjacentShape('next')
+  1912→     * ```
+  1913→     *
+  1914→     * @public
+  1915→     */
+  1916→    selectAdjacentShape(direction: TLAdjacentDirection): void;
+  1917→    /**
+  1918→     * Generates a reading order for shapes based on rows grouping.
+  1919→     * Tries to keep a natural reading order (left-to-right, top-to-bottom).
+  1920→     *
+  1921→     * @public
+  1922→     */
+  1923→    getCurrentPageShapesInReadingOrder(): TLShape[];
+  1924→    private _getShapesInReadingOrder;
+  1925→    /**
+  1926→     * Find the nearest adjacent shape in a specific direction.
+  1927→     *
+  1928→     * @public
+  1929→     */
+  1930→    getNearestAdjacentShape(shapes: TLShape[], currentShapeId: TLShapeId, direction: 'down' | 'left' | 'right' | 'up'): TLShapeId;
+  1931→    selectParentShape(): void;
+  1932→    selectFirstChildShape(): void;
+  1933→    private _selectShapesAndZoom;
+  1934→    /**
+  1935→     * Clear the selection.
+  1936→     *
+  1937→     * @example
+  1938→     * ```ts
+  1939→     * editor.selectNone()
+  1940→     * ```
+  1941→     *
+  1942→     * @public
+  1943→     */
+  1944→    selectNone(): this;
+  1945→    /**
+  1946→     * The id of the editor's only selected shape.
+  1947→     *
+  1948→     * @returns Null if there is no shape or more than one selected shape, otherwise the selected shape's id.
+  1949→     *
+  1950→     * @public
+  1951→     * @readonly
+  1952→     */
+  1953→    getOnlySelectedShapeId(): null | TLShapeId;
+  1954→    /**
+  1955→     * The editor's only selected shape.
+  1956→     *
+  1957→     * @returns Null if there is no shape or more than one selected shape, otherwise the selected shape.
+  1958→     *
+  1959→     * @public
+  1960→     * @readonly
+  1961→     */
+  1962→    getOnlySelectedShape(): null | TLShape;
+  1963→    /**
+  1964→     * Get the page bounds of all the provided shapes.
+  1965→     *
+  1966→     * @public
+  1967→     */
+  1968→    getShapesPageBounds(shapeIds: TLShapeId[]): Box | null;
+  1969→    /**
+  1970→     * The current page bounds of all the selected shapes. If the
+  1971→     * selection is rotated, then these bounds are the axis-aligned
+  1972→     * box that the rotated bounds would fit inside of.
+  1973→     *
+  1974→     * @readonly
+  1975→     *
+  1976→     * @public
+  1977→     */
+  1978→    getSelectionPageBounds(): Box | null;
+  1979→    /**
+  1980→     * The bounds of the selection bounding box in the current page space.
+  1981→     *
+  1982→     * @readonly
+  1983→     * @public
+  1984→     */
+  1985→    getSelectionScreenBounds(): Box | undefined;
+  1986→    /* Excluded from this release type: getShapesSharedRotation */
+  1987→    /**
+  1988→     * The rotation of the selection bounding box in the current page space.
+  1989→     *
+  1990→     * @readonly
+  1991→     * @public
+  1992→     */
+  1993→    getSelectionRotation(): number;
+  1994→    /* Excluded from this release type: getShapesRotatedPageBounds */
+  1995→    /**
+  1996→     * The bounds of the selection bounding box in the current page space.
+  1997→     *
+  1998→     * @readonly
+  1999→     * @public
+  2000→     */
+  2001→    getSelectionRotatedPageBounds(): Box | undefined;
+  2002→    /**
+  2003→     * The bounds of the selection bounding box in the current page space.
+  2004→     *
+  2005→     * @readonly
+  2006→     * @public
+  2007→     */
+  2008→    getSelectionRotatedScreenBounds(): Box | undefined;
+  2009→    /**
+  2010→     * The current focused group id.
+  2011→     *
+  2012→     * @public
+  2013→     */
+  2014→    getFocusedGroupId(): TLPageId | TLShapeId;
+  2015→    /**
+  2016→     * The current focused group.
+  2017→     *
+  2018→     * @public
+  2019→     */
+  2020→    getFocusedGroup(): TLShape | undefined;
+  2021→    /**
+  2022→     * Set the current focused group shape.
+  2023→     *
+  2024→     * @param shape - The group shape id (or group shape's id) to set as the focused group shape.
+  2025→     *
+  2026→     * @public
+  2027→     */
+  2028→    setFocusedGroup(shape: null | TLGroupShape | TLShapeId): this;
+  2029→    /**
+  2030→     * Exit the current focused group, moving up to the next parent group if there is one.
+  2031→     *
+  2032→     * @public
+  2033→     */
+  2034→    popFocusedGroupId(): this;
+  2035→    /**
+  2036→     * The current editing shape's id.
+  2037→     *
+  2038→     * @public
+  2039→     */
+  2040→    getEditingShapeId(): null | TLShapeId;
+  2041→    /**
+  2042→     * The current editing shape.
+  2043→     *
+  2044→     * @public
+  2045→     */
+  2046→    getEditingShape(): TLShape | undefined;
+  2047→    /**
+  2048→     * Whether the shape can be edited.
+  2049→     *
+  2050→     * @param shape - The shape (or shape id) to check if it can be edited.
+  2051→     * @param info - The info about the edit start.
+  2052→     *
+  2053→     * @public
+  2054→     * @returns true if the shape can be edited, false otherwise.
+  2055→     */
+  2056→    canEditShape<T extends TLShape | TLShapeId>(shape: null | T, info?: TLEditStartInfo): shape is T;
+  2057→    /**
+  2058→     * Set the current editing shape.
+  2059→     *
+  2060→     * @example
+  2061→     * ```ts
+  2062→     * editor.setEditingShape(myShape)
+  2063→     * editor.setEditingShape(myShape.id)
+  2064→     * ```
+  2065→     *
+  2066→     * @param shape - The shape (or shape id) to set as editing.
+  2067→     *
+  2068→     * @public
+  2069→     */
+  2070→    setEditingShape(shape: null | TLShape | TLShapeId): this;
+  2071→    private _currentRichTextEditor;
+  2072→    /**
+  2073→     * The current editing shape's text editor.
+  2074→     *
+  2075→     * @public
+  2076→     */
+  2077→    getRichTextEditor(): null | TiptapEditor;
+  2078→    /**
+  2079→     * Set the current editing shape's rich text editor.
+  2080→     *
+  2081→     * @example
+  2082→     * ```ts
+  2083→     * editor.setRichTextEditor(richTextEditorView)
+  2084→     * ```
+  2085→     *
+  2086→     * @param textEditor - The text editor to set as the current editing shape's text editor.
+  2087→     *
+  2088→     * @public
+  2089→     */
+  2090→    setRichTextEditor(textEditor: null | TiptapEditor): this;
+  2091→    /**
+  2092→     * The current hovered shape id.
+  2093→     *
+  2094→     * @readonly
+  2095→     * @public
+  2096→     */
+  2097→    getHoveredShapeId(): null | TLShapeId;
+  2098→    /**
+  2099→     * The current hovered shape.
+  2100→     *
+  2101→     * @public
+  2102→     */
+  2103→    getHoveredShape(): TLShape | undefined;
+  2104→    /**
+  2105→     * Set the editor's current hovered shape.
+  2106→     *
+  2107→     * @example
+  2108→     * ```ts
+  2109→     * editor.setHoveredShape(myShape)
+  2110→     * editor.setHoveredShape(myShape.id)
+  2111→     * ```
+  2112→     *
+  2113→     * @param shape - The shape (or shape id) to set as hovered.
+  2114→     *
+  2115→     * @public
+  2116→     */
+  2117→    setHoveredShape(shape: null | TLShape | TLShapeId): this;
+  2118→    /**
+  2119→     * The editor's current hinting shape ids.
+  2120→     *
+  2121→     * @public
+  2122→     */
+  2123→    getHintingShapeIds(): TLShapeId[];
+  2124→    /**
+  2125→     * The editor's current hinting shapes.
+  2126→     *
+  2127→     * @public
+  2128→     */
+  2129→    getHintingShape(): NonNullable<TLShape | undefined>[];
+  2130→    /**
+  2131→     * Set the editor's current hinting shapes.
+  2132→     *
+  2133→     * @example
+  2134→     * ```ts
+  2135→     * editor.setHintingShapes([myShape])
+  2136→     * editor.setHintingShapes([myShape.id])
+  2137→     * ```
+  2138→     *
+  2139→     * @param shapes - The shapes (or shape ids) to set as hinting.
+  2140→     *
+  2141→     * @public
+  2142→     */
+  2143→    setHintingShapes(shapes: TLShape[] | TLShapeId[]): this;
+  2144→    /**
+  2145→     * The editor's current erasing ids.
+  2146→     *
+  2147→     * @public
+  2148→     */
+  2149→    getErasingShapeIds(): TLShapeId[];
+  2150→    /**
+  2151→     * The editor's current erasing shapes.
+  2152→     *
+  2153→     * @public
+  2154→     */
+  2155→    getErasingShapes(): NonNullable<TLShape | undefined>[];
+  2156→    /**
+  2157→     * Set the editor's current erasing shapes.
+  2158→     *
+  2159→     * @example
+  2160→     * ```ts
+  2161→     * editor.setErasingShapes([myShape])
+  2162→     * editor.setErasingShapes([myShape.id])
+  2163→     * ```
+  2164→     *
+  2165→     * @param shapes - The shapes (or shape ids) to set as hinting.
+  2166→     *
+  2167→     * @public
+  2168→     */
+  2169→    setErasingShapes(shapes: TLShape[] | TLShapeId[]): this;
+  2170→    /**
+  2171→     * The current cropping shape's id.
+  2172→     *
+  2173→     * @public
+  2174→     */
+  2175→    getCroppingShapeId(): null | TLShapeId;
+  2176→    /**
+  2177→     * Whether the shape can be cropped.
+  2178→     *
+  2179→     * @param shape - The shape (or shape id) to check if it can be cropped.
+  2180→     *
+  2181→     * @public
+  2182→     * @returns true if the shape can be cropped, false otherwise.
+  2183→     */
+  2184→    canCropShape<T extends TLShape | TLShapeId>(shape: null | T): shape is T;
+  2185→    /**
+  2186→     * Set the current cropping shape.
+  2187→     *
+  2188→     * @example
+  2189→     * ```ts
+  2190→     * editor.setCroppingShape(myShape)
+  2191→     * editor.setCroppingShape(myShape.id)
+  2192→     * ```
+  2193→     *
+  2194→     *
+  2195→     * @param shape - The shape (or shape id) to set as cropping.
+  2196→     *
+  2197→     * @public
+  2198→     */
+  2199→    setCroppingShape(shape: null | TLShape | TLShapeId): this;
+  2200→    private _textOptions;
+  2201→    /**
+  2202→     * Get the current text options.
+  2203→     *
+  2204→     * @example
+  2205→     * ```ts
+  2206→     * editor.getTextOptions()
+  2207→     * ```
+  2208→     *
+  2209→     *  @public */
+  2210→    getTextOptions(): TLTextOptions;
+  2211→    private _unsafe_getCameraId;
+  2212→    /**
+  2213→     * The current camera.
+  2214→     *
+  2215→     * @public
+  2216→     */
+  2217→    getCamera(): TLCamera;
+  2218→    private _getFollowingPresence;
+  2219→    private getViewportPageBoundsForFollowing;
+  2220→    private getCameraForFollowing;
+  2221→    /**
+  2222→     * The current camera zoom level.
+  2223→     *
+  2224→     * @public
+  2225→     */
+  2226→    getZoomLevel(): number;
+  2227→    /**
+  2228→     * Get the scale factor used when creating or resizing shapes in dynamic size mode.
+  2229→     *
+  2230→     * @public
+  2231→     */
+  2232→    getResizeScaleFactor(): number;
+  2233→    private _debouncedZoomLevel;
+  2234→    /**
+  2235→     * Get the debounced zoom level. When the camera is moving, this returns the zoom level
+  2236→     * from when the camera started moving rather than the current zoom level. This can be
+  2237→     * used to avoid expensive re-renders during camera movements.
+  2238→     *
+  2239→     * This behavior is controlled by the `useDebouncedZoom` option. When `useDebouncedZoom`
+  2240→     * is `false`, this method always returns the current zoom level.
+  2241→     *
+  2242→     * @public
+  2243→     */
+  2244→    getDebouncedZoomLevel(): number;
+  2245→    private _getAboveDebouncedZoomThreshold;
+  2246→    /**
+  2247→     * Get the efficient zoom level. This returns the current zoom level if there are less than a certain number of shapes on the page,
+  2248→     * otherwise it returns the debounced zoom level. This can be used to avoid expensive re-renders during camera movements.
+  2249→     *
+  2250→     * @public
+  2251→     * @example
+  2252→     * ```ts
+  2253→     * editor.getEfficientZoomLevel()
+  2254→     * ```
+  2255→     *
+  2256→     * @public
+  2257→     */
+  2258→    getEfficientZoomLevel(): number;
+  2259→    /**
+  2260→     * Get the camera's initial or reset zoom level.
+  2261→     *
+  2262→     * @example
+  2263→     * ```ts
+  2264→     * editor.getInitialZoom()
+  2265→     * ```
+  2266→     *
+  2267→     * @public */
+  2268→    getInitialZoom(): number;
+  2269→    /**
+  2270→     * Get the camera's base level for calculating actual zoom levels based on the zoom steps.
+  2271→     *
+  2272→     * @example
+  2273→     * ```ts
+  2274→     * editor.getBaseZoom()
+  2275→     * ```
+  2276→     *
+  2277→     * @public */
+  2278→    getBaseZoom(): number;
+  2279→    private _cameraOptions;
+  2280→    /**
+  2281→     * Get the current camera options.
+  2282→     *
+  2283→     * @example
+  2284→     * ```ts
+  2285→     * editor.getCameraOptions()
+  2286→     * ```
+  2287→     *
+  2288→     *  @public */
+  2289→    getCameraOptions(): TLCameraOptions;
+  2290→    /**
+  2291→     * Set the camera options. Changing the options won't immediately change the camera itself, so you may want to call `setCamera` after changing the options.
+  2292→     *
+  2293→     * @example
+  2294→     * ```ts
+  2295→     * editor.setCameraOptions(myCameraOptions)
+  2296→     * editor.setCamera(editor.getCamera())
+  2297→     * ```
+  2298→     *
+  2299→     * @param opts - The camera options to set.
+  2300→     *
+  2301→     * @public */
+  2302→    setCameraOptions(opts: Partial<TLCameraOptions>): this;
+  2303→    /* Excluded from this release type: getConstrainedCamera */
+  2304→    /* Excluded from this release type: _setCamera */
+  2305→    /**
+  2306→     * Set the current camera.
+  2307→     *
+  2308→     * @example
+  2309→     * ```ts
+  2310→     * editor.setCamera({ x: 0, y: 0})
+  2311→     * editor.setCamera({ x: 0, y: 0, z: 1.5})
+  2312→     * editor.setCamera({ x: 0, y: 0, z: 1.5}, { animation: { duration: 1000, easing: (t) => t * t } })
+  2313→     * ```
+  2314→     *
+  2315→     * @param point - The new camera position.
+  2316→     * @param opts - The camera move options.
+  2317→     *
+  2318→     * @public
+  2319→     */
+  2320→    setCamera(point: VecLike, opts?: TLCameraMoveOptions): this;
+  2321→    /**
+  2322→     * Center the camera on a point (in the current page space).
+  2323→     *
+  2324→     * @example
+  2325→     * ```ts
+  2326→     * editor.centerOnPoint({ x: 100, y: 100 })
+  2327→     * editor.centerOnPoint({ x: 100, y: 100 }, { animation: { duration: 200 } })
+  2328→     * ```
+  2329→     *
+  2330→     * @param point - The point in the current page space to center on.
+  2331→     * @param opts - The camera move options.
+  2332→     *
+  2333→     * @public
+  2334→     */
+  2335→    centerOnPoint(point: VecLike, opts?: TLCameraMoveOptions): this;
+  2336→    /**
+  2337→     * Zoom the camera to fit the current page's content in the viewport.
+  2338→     *
+  2339→     * @example
+  2340→     * ```ts
+  2341→     * editor.zoomToFit()
+  2342→     * editor.zoomToFit({ animation: { duration: 200 } })
+  2343→     * ```
+  2344→     *
+  2345→     * @param opts - The camera move options.
+  2346→     *
+  2347→     * @public
+  2348→     */
+  2349→    zoomToFit(opts?: TLCameraMoveOptions): this;
+  2350→    /**
+  2351→     * Set the zoom back to 100%.
+  2352→     *
+  2353→     * @example
+  2354→     * ```ts
+  2355→     * editor.resetZoom()
+  2356→     * editor.resetZoom(editor.getViewportScreenCenter(), { animation: { duration: 200 } })
+  2357→     * editor.resetZoom(editor.getViewportScreenCenter(), { animation: { duration: 200 } })
+  2358→     * ```
+  2359→     *
+  2360→     * @param point - The screen point to zoom out on. Defaults to the viewport screen center.
+  2361→     * @param opts - The camera move options.
+  2362→     *
+  2363→     * @public
+  2364→     */
+  2365→    resetZoom(point?: Vec, opts?: TLCameraMoveOptions): this;
+  2366→    /**
+  2367→     * Zoom the camera in.
+  2368→     *
+  2369→     * @example
+  2370→     * ```ts
+  2371→     * editor.zoomIn()
+  2372→     * editor.zoomIn(editor.getViewportScreenCenter(), { animation: { duration: 200 } })
+  2373→     * editor.zoomIn(editor.inputs.getCurrentScreenPoint(), { animation: { duration: 200 } })
+  2374→     * ```
+  2375→     *
+  2376→     * @param point - The screen point to zoom in on. Defaults to the screen center
+  2377→     * @param opts - The camera move options.
+  2378→     *
+  2379→     * @public
+  2380→     */
+  2381→    zoomIn(point?: Vec, opts?: TLCameraMoveOptions): this;
+  2382→    /**
+  2383→     * Zoom the camera out.
+  2384→     *
+  2385→     * @example
+  2386→     * ```ts
+  2387→     * editor.zoomOut()
+  2388→     * editor.zoomOut(editor.getViewportScreenCenter(), { animation: { duration: 120 } })
+  2389→     * editor.zoomOut(editor.inputs.getCurrentScreenPoint(), { animation: { duration: 120 } })
+  2390→     * ```
+  2391→     *
+  2392→     * @param point - The point to zoom out on. Defaults to the viewport screen center.
+  2393→     * @param opts - The camera move options.
+  2394→     *
+  2395→     * @public
+  2396→     */
+  2397→    zoomOut(point?: Vec, opts?: TLCameraMoveOptions): this;
+  2398→    /**
+  2399→     * Zoom the camera to fit the current selection in the viewport.
+  2400→     *
+  2401→     * @example
+  2402→     * ```ts
+  2403→     * editor.zoomToSelection()
+  2404→     * editor.zoomToSelection({ animation: { duration: 200 } })
+  2405→     * ```
+  2406→     *
+  2407→     * @param opts - The camera move options.
+  2408→     *
+  2409→     * @public
+  2410→     */
+  2411→    zoomToSelection(opts?: TLCameraMoveOptions): this;
+  2412→    /**
+  2413→     * Zoom the camera to the current selection if offscreen.
+  2414→     *
+  2415→     * @public
+  2416→     */
+  2417→    zoomToSelectionIfOffscreen(padding?: number, opts?: {
+  2418→        inset?: number;
+  2419→        targetZoom?: number;
+  2420→    } & TLCameraMoveOptions): void;
+  2421→    /**
+  2422→     * Zoom the camera to fit a bounding box (in the current page space).
+  2423→     *
+  2424→     * @example
+  2425→     * ```ts
+  2426→     * editor.zoomToBounds(myBounds)
+  2427→     * editor.zoomToBounds(myBounds, { animation: { duration: 200 } })
+  2428→     * editor.zoomToBounds(myBounds, { animation: { duration: 200 }, inset: 0, targetZoom: 1 })
+  2429→     * ```
+  2430→     *
+  2431→     * @param bounds - The bounding box.
+  2432→     * @param opts - The camera move options, target zoom, or custom inset amount.
+  2433→     *
+  2434→     * @public
+  2435→     */
+  2436→    zoomToBounds(bounds: BoxLike, opts?: {
+  2437→        inset?: number;
+  2438→        targetZoom?: number;
+  2439→    } & TLCameraMoveOptions): this;
+  2440→    /**
+  2441→     * Stop the current camera animation, if any.
+  2442→     *
+  2443→     * @example
+  2444→     * ```ts
+  2445→     * editor.stopCameraAnimation()
+  2446→     * ```
+  2447→     *
+  2448→     * @public
+  2449→     */
+  2450→    stopCameraAnimation(): this;
+  2451→    /* Excluded from this release type: _viewportAnimation */
+  2452→    /* Excluded from this release type: _animateViewport */
+  2453→    /* Excluded from this release type: _animateToViewport */
+  2454→    /**
+  2455→     * Slide the camera in a certain direction.
+  2456→     *
+  2457→     * @example
+  2458→     * ```ts
+  2459→     * editor.slideCamera({ speed: 1, direction: { x: 1, y: 0 }, friction: 0.1 })
+  2460→     * ```
+  2461→     *
+  2462→     * @param opts - Options for the slide
+  2463→     * @public
+  2464→     */
+  2465→    slideCamera(opts?: {
+  2466→        direction: VecLike;
+  2467→        force?: boolean | undefined;
+  2468→        friction?: number | undefined;
+  2469→        speed: number;
+  2470→        speedThreshold?: number | undefined;
+  2471→    }): this;
+  2472→    /**
+  2473→     * Animate the camera to a user's cursor position. This also briefly show the user's cursor if it's not currently visible.
+  2474→     *
+  2475→     * @example
+  2476→     * ```ts
+  2477→     * editor.zoomToUser(myUserId)
+  2478→     * editor.zoomToUser(myUserId, { animation: { duration: 200 } })
+  2479→     * ```
+  2480→     *
+  2481→     * @param userId - The id of the user to animate to.
+  2482→     * @param opts - The camera move options.
+  2483→     * @public
+  2484→     */
+  2485→    zoomToUser(userId: TLUserId, opts?: TLCameraMoveOptions): this;
+  2486→    /* Excluded from this release type: _willSetInitialBounds */
+  2487→    /**
+  2488→     * Update the viewport. The viewport will measure the size and screen position of its container
+  2489→     * element. This should be done whenever the container's position on the screen changes.
+  2490→     *
+  2491→     * @example
+  2492→     * ```ts
+  2493→     * editor.updateViewportScreenBounds(new Box(0, 0, 1280, 1024))
+  2494→     * editor.updateViewportScreenBounds(new Box(0, 0, 1280, 1024), true)
+  2495→     * ```
+  2496→     *
+  2497→     * @param screenBounds - The new screen bounds of the viewport.
+  2498→     * @param center - Whether to preserve the viewport page center as the viewport changes.
+  2499→     *
+  2500→     * @public
+  2501→     */
+  2502→    updateViewportScreenBounds(screenBounds: Box | HTMLElement, center?: boolean): this;
+  2503→    /**
+  2504→     * The bounds of the editor's viewport in screen space.
+  2505→     *
+  2506→     * @public
+  2507→     */
+  2508→    getViewportScreenBounds(): Box;
+  2509→    /**
+  2510→     * The center of the editor's viewport in screen space.
+  2511→     *
+  2512→     * @public
+  2513→     */
+  2514→    getViewportScreenCenter(): Vec;
+  2515→    /**
+  2516→     * The current viewport in the current page space.
+  2517→     *
+  2518→     * @public
+  2519→     */
+  2520→    getViewportPageBounds(): Box;
+  2521→    /**
+  2522→     * Convert a point in screen space to a point in the current page space.
+  2523→     *
+  2524→     * @example
+  2525→     * ```ts
+  2526→     * editor.screenToPage({ x: 100, y: 100 })
+  2527→     * ```
+  2528→     *
+  2529→     * @param point - The point in screen space.
+  2530→     *
+  2531→     * @public
+  2532→     */
+  2533→    screenToPage(point: VecLike): Vec;
+  2534→    /**
+  2535→     * Convert a point in the current page space to a point in current screen space.
+  2536→     *
+  2537→     * @example
+  2538→     * ```ts
+  2539→     * editor.pageToScreen({ x: 100, y: 100 })
+  2540→     * ```
+  2541→     *
+  2542→     * @param point - The point in page space.
+  2543→     *
+  2544→     * @public
+  2545→     */
+  2546→    pageToScreen(point: VecLike): Vec;
+  2547→    /**
+  2548→     * Convert a point in the current page space to a point in current viewport space.
+  2549→     *
+  2550→     * @example
+  2551→     * ```ts
+  2552→     * editor.pageToViewport({ x: 100, y: 100 })
+  2553→     * ```
+  2554→     *
+  2555→     * @param point - The point in page space.
+  2556→     *
+  2557→     * @public
+  2558→     */
+  2559→    pageToViewport(point: VecLike): Vec;
+  2560→    /**
+  2561→     * Returns a list of presence records for all peer collaborators.
+  2562→     * This will return the latest presence record for each connected user.
+  2563→     *
+  2564→     * Convenience wrapper for {@link CollaboratorsManager.getCollaborators}.
+  2565→     *
+  2566→     * @public
+  2567→     */
+  2568→    getCollaborators(): TLInstancePresence[];
+  2569→    /**
+  2570→     * Returns a list of presence records for all peer collaborators on the current page.
+  2571→     * This will return the latest presence record for each connected user.
+  2572→     *
+  2573→     * Convenience wrapper for {@link CollaboratorsManager.getCollaboratorsOnCurrentPage}.
+  2574→     *
+  2575→     * @public
+  2576→     */
+  2577→    getCollaboratorsOnCurrentPage(): TLInstancePresence[];
+  2578→    /**
+  2579→     * Returns a list of presence records for peer collaborators who should currently be
+  2580→     * shown in the UI. Filters {@link Editor.getCollaborators} by activity state
+  2581→     * (active / idle / inactive) and visibility rules such as following and highlighted
+  2582→     * users. Re-evaluates on the collaborator visibility clock, so callers don't need to
+  2583→     * drive their own activity timer.
+  2584→     *
+  2585→     * Convenience wrapper for {@link CollaboratorsManager.getVisibleCollaborators}.
+  2586→     *
+  2587→     * @public
+  2588→     */
+  2589→    getVisibleCollaborators(): TLInstancePresence[];
+  2590→    /**
+  2591→     * Returns a list of presence records for peer collaborators who should currently be
+  2592→     * shown in the UI, filtered to those on the current page.
+  2593→     *
+  2594→     * Convenience wrapper for {@link CollaboratorsManager.getVisibleCollaboratorsOnCurrentPage}.
+  2595→     *
+  2596→     * @public
+  2597→     */
+  2598→    getVisibleCollaboratorsOnCurrentPage(): TLInstancePresence[];
+  2599→    /**
+  2600→     * Get the current user's ID for attribution purposes.
+  2601→     * Also ensures a `user:` record exists in the store for the current user.
+  2602→     * Returns `null` when the user store has no current user.
+  2603→     *
+  2604→     * @public
+  2605→     */
+  2606→    getAttributionUserId(): null | string;
+  2607→    /* Excluded from this release type: _ensureUserRecord */
+  2608→    /**
+  2609→     * Resolve a display name for a user ID. Asks the
+  2610→     * {@link @tldraw/tlschema#TLUserStore} first (the app's source of truth),
+  2611→     * falling back to the `user:` record in the store.
+  2612→     *
+  2613→     * @public
+  2614→     */
+  2615→    getAttributionDisplayName(userId: null | string): null | string;
+  2616→    /**
+  2617→     * Resolve a user record by ID. Asks the
+  2618→     * {@link @tldraw/tlschema#TLUserStore} first (the app's source of truth),
+  2619→     * falling back to the `user:` record in the store.
+  2620→     *
+  2621→     * @public
+  2622→     */
+  2623→    getAttributionUser(userId: null | string): null | TLUser;
+  2624→    /* Excluded from this release type: _getReferencedUserIds */
+  2625→    private _isLockedOnFollowingUser;
+  2626→    /**
+  2627→     * Start viewport-following a user.
+  2628→     *
+  2629→     * @example
+  2630→     * ```ts
+  2631→     * editor.startFollowingUser(myUserId)
+  2632→     * ```
+  2633→     *
+  2634→     * @param userId - The id of the user to follow.
+  2635→     *
+  2636→     * @public
+  2637→     */
+  2638→    startFollowingUser(userId: TLUserId): this;
+  2639→    /**
+  2640→     * Stop viewport-following a user.
+  2641→     *
+  2642→     * @example
+  2643→     * ```ts
+  2644→     * editor.stopFollowingUser()
+  2645→     * ```
+  2646→     * @public
+  2647→     */
+  2648→    stopFollowingUser(): this;
+  2649→    /* Excluded from this release type: getUnorderedRenderingShapes */
+  2650→    private _cameraStateTimeoutRemaining;
+  2651→    private _decayCameraStateTimeout;
+  2652→    private _tickCameraState;
+  2653→    private _setCameraState;
+  2654→    /**
+  2655→     * Whether the camera is moving or idle.
+  2656→     *
+  2657→     * @example
+  2658→     * ```ts
+  2659→     * editor.getCameraState()
+  2660→     * ```
+  2661→     *
+  2662→     * @public
+  2663→     */
+  2664→    getCameraState(): "idle" | "moving";
+  2665→    /**
+  2666→     * Get the shapes that should be displayed in the current viewport.
+  2667→     *
+  2668→     * @example
+  2669→     * ```ts
+  2670→     * editor.getRenderingShapes()
+  2671→     * ```
+  2672→     *
+  2673→     * @public
+  2674→     */
+  2675→    getRenderingShapes(): TLRenderingShape[];
+  2676→    private _renderingShapesSortCache;
+  2677→    private _getAllPagesQuery;
+  2678→    /**
+  2679→     * Info about the project's current pages.
+  2680→     *
+  2681→     * @example
+  2682→     * ```ts
+  2683→     * editor.getPages()
+  2684→     * ```
+  2685→     *
+  2686→     * @public
+  2687→     */
+  2688→    getPages(): TLPage[];
+  2689→    /**
+  2690→     * The current page.
+  2691→     *
+  2692→     * @example
+  2693→     * ```ts
+  2694→     * editor.getCurrentPage()
+  2695→     * ```
+  2696→     *
+  2697→     * @public
+  2698→     */
+  2699→    getCurrentPage(): TLPage;
+  2700→    /**
+  2701→     * The current page id.
+  2702→     *
+  2703→     * @example
+  2704→     * ```ts
+  2705→     * editor.getCurrentPageId()
+  2706→     * ```
+  2707→     *
+  2708→     * @public
+  2709→     */
+  2710→    getCurrentPageId(): TLPageId;
+  2711→    /**
+  2712→     * Get a page.
+  2713→     *
+  2714→     * @example
+  2715→     * ```ts
+  2716→     * editor.getPage(myPage.id)
+  2717→     * editor.getPage(myPage)
+  2718→     * ```
+  2719→     *
+  2720→     * @param page - The page (or the page id) to get.
+  2721→     *
+  2722→     * @public
+  2723→     */
+  2724→    getPage(page: TLPage | TLPageId): TLPage | undefined;
+  2725→    private readonly _currentPageShapeIds;
+  2726→    /**
+  2727→     * An array of all of the shapes on the current page.
+  2728→     *
+  2729→     * @example
+  2730→     * ```ts
+  2731→     * editor.getCurrentPageIds()
+  2732→     * ```
+  2733→     *
+  2734→     * @public
+  2735→     */
+  2736→    getCurrentPageShapeIds(): Set<TLShapeId>;
+  2737→    /* Excluded from this release type: getCurrentPageShapeIdsSorted */
+  2738→    /**
+  2739→     * Get the ids of shapes on a page.
+  2740→     *
+  2741→     * @example
+  2742→     * ```ts
+  2743→     * const idsOnPage1 = editor.getPageShapeIds('page1')
+  2744→     * const idsOnPage2 = editor.getPageShapeIds(myPage2)
+  2745→     * ```
+  2746→     *
+  2747→     * @param page - The page (or the page id) to get the shape ids for.
+  2748→     *
+  2749→     * @public
+  2750→     **/
+  2751→    getPageShapeIds(page: TLPage | TLPageId): Set<TLShapeId>;
+  2752→    /**
+  2753→     * Set the current page.
+  2754→     *
+  2755→     * @example
+  2756→     * ```ts
+  2757→     * editor.setCurrentPage('page1')
+  2758→     * editor.setCurrentPage(myPage1)
+  2759→     * ```
+  2760→     *
+  2761→     * @param page - The page (or the page id) to set as the current page.
+  2762→     *
+  2763→     * @public
+  2764→     */
+  2765→    setCurrentPage(page: TLPage | TLPageId): this;
+  2766→    /**
+  2767→     * Update a page.
+  2768→     *
+  2769→     * @example
+  2770→     * ```ts
+  2771→     * editor.updatePage({ id: 'page2', name: 'Page 2' })
+  2772→     * ```
+  2773→     *
+  2774→     * @param partial - The partial of the shape to update.
+  2775→     *
+  2776→     * @public
+  2777→     */
+  2778→    updatePage(partial: RequiredKeys<Partial<TLPage>, 'id'>): this;
+  2779→    /**
+  2780→     * Create a page whilst ensuring that the page name is unique.
+  2781→     *
+  2782→     * @example
+  2783→     * ```ts
+  2784→     * editor.createPage(myPage)
+  2785→     * editor.createPage({ name: 'Page 2' })
+  2786→     * ```
+  2787→     *
+  2788→     * @param page - The page (or page partial) to create.
+  2789→     *
+  2790→     * @public
+  2791→     */
+  2792→    createPage(page: Partial<TLPage>): this;
+  2793→    /**
+  2794→     * Delete a page.
+  2795→     *
+  2796→     * @example
+  2797→     * ```ts
+  2798→     * editor.deletePage('page1')
+  2799→     * ```
+  2800→     *
+  2801→     * @param page - The page (or the page id) to delete.
+  2802→     *
+  2803→     * @public
+  2804→     */
+  2805→    deletePage(page: TLPage | TLPageId): this;
+  2806→    /**
+  2807→     * Duplicate a page.
+  2808→     *
+  2809→     * @param page - The page (or the page id) to duplicate. Defaults to the current page.
+  2810→     * @param createId - The id of the new page. Defaults to a new id.
+  2811→     *
+  2812→     * @public
+  2813→     */
+  2814→    duplicatePage(page: TLPage | TLPageId, createId?: TLPageId): this;
+  2815→    /**
+  2816→     * Rename a page.
+  2817→     *
+  2818→     * @example
+  2819→     * ```ts
+  2820→     * editor.renamePage('page1', 'My Page')
+  2821→     * ```
+  2822→     *
+  2823→     * @param page - The page (or the page id) to rename.
+  2824→     * @param name - The new name.
+  2825→     *
+  2826→     * @public
+  2827→     */
+  2828→    renamePage(page: TLPage | TLPageId, name: string): this;
+  2829→    private _getAllAssetsQuery;
+  2830→    /**
+  2831→     * Get all assets in the editor.
+  2832→     *
+  2833→     * @public
+  2834→     */
+  2835→    getAssets(): (TLBookmarkAsset | TLImageAsset | TLVideoAsset)[];
+  2836→    /**
+  2837→     * Create one or more assets.
+  2838→     *
+  2839→     * @example
+  2840→     * ```ts
+  2841→     * editor.createAssets([...myAssets])
+  2842→     * ```
+  2843→     *
+  2844→     * @param assets - The assets to create.
+  2845→     *
+  2846→     * @public
+  2847→     */
+  2848→    createAssets(assets: TLAsset[]): this;
+  2849→    /**
+  2850→     * Update one or more assets.
+  2851→     *
+  2852→     * @example
+  2853→     * ```ts
+  2854→     * editor.updateAssets([{ id: 'asset1', name: 'New name' }])
+  2855→     * ```
+  2856→     *
+  2857→     * @param assets - The assets to update.
+  2858→     *
+  2859→     * @public
+  2860→     */
+  2861→    updateAssets(assets: TLAssetPartial[]): this;
+  2862→    /**
+  2863→     * Delete one or more assets.
+  2864→     *
+  2865→     * @example
+  2866→     * ```ts
+  2867→     * editor.deleteAssets(['asset1', 'asset2'])
+  2868→     * ```
+  2869→     *
+  2870→     * @param assets - The assets (or asset ids) to delete.
+  2871→     *
+  2872→     * @public
+  2873→     */
+  2874→    deleteAssets(assets: TLAsset[] | TLAssetId[]): this;
+  2875→    /**
+  2876→     * Get an asset by its id.
+  2877→     *
+  2878→     * @example
+  2879→     * ```ts
+  2880→     * editor.getAsset('asset1')
+  2881→     * ```
+  2882→     *
+  2883→     * @param asset - The asset (or asset id) to get.
+  2884→     *
+  2885→     * @public
+  2886→     */
+  2887→    getAsset<T extends TLAsset>(asset: T | T['id']): T | undefined;
+  2888→    resolveAssetUrl(assetId: null | TLAssetId, context: {
+  2889→        dpr?: number;
+  2890→        screenScale?: number;
+  2891→        shouldResolveToOriginal?: boolean;
+  2892→    }): Promise<null | string>;
+  2893→    /**
+  2894→     * Upload an asset to the store's asset service, returning a URL that can be used to resolve the
+  2895→     * asset.
+  2896→     */
+  2897→    uploadAsset(asset: TLAsset, file: File, abortSignal?: AbortSignal): Promise<{
+  2898→        meta?: JsonObject;
+  2899→        src: string;
+  2900→    }>;
+  2901→    private _shapeGeometryCaches;
+  2902→    /**
+  2903→     * Get the geometry of a shape in shape-space.
+  2904→     *
+  2905→     * @example
+  2906→     * ```ts
+  2907→     * editor.getShapeGeometry(myShape)
+  2908→     * editor.getShapeGeometry(myShapeId)
+  2909→     * editor.getShapeGeometry(myShapeId, { context: "arrow" })
+  2910→     * ```
+  2911→     *
+  2912→     * @param shape - The shape (or shape id) to get the geometry for.
+  2913→     * @param opts - Additional options about the request for geometry. Passed to {@link ShapeUtil.getGeometry}.
+  2914→     *
+  2915→     * @public
+  2916→     */
+  2917→    getShapeGeometry<T extends Geometry2d>(shape: TLShape | TLShapeId, opts?: TLGeometryOpts): T;
+  2918→    private _getShapeHandlesCache;
+  2919→    /**
+  2920→     * Get the handles (if any) for a shape.
+  2921→     *
+  2922→     * @example
+  2923→     * ```ts
+  2924→     * editor.getShapeHandles(myShape)
+  2925→     * editor.getShapeHandles(myShapeId)
+  2926→     * ```
+  2927→     *
+  2928→     * @param shape - The shape (or shape id) to get the handles for.
+  2929→     * @public
+  2930→     */
+  2931→    getShapeHandles<T extends TLShape>(shape: T | T['id']): TLHandle[] | undefined;
+  2932→    /**
+  2933→     * Get the local transform for a shape as a matrix model. This transform reflects both its
+  2934→     * translation (x, y) from from either its parent's top left corner, if the shape's parent is
+  2935→     * another shape, or else from the 0,0 of the page, if the shape's parent is the page; and the
+  2936→     * shape's rotation.
+  2937→     *
+  2938→     * @example
+  2939→     * ```ts
+  2940→     * editor.getShapeLocalTransform(myShape)
+  2941→     * ```
+  2942→     *
+  2943→     * @param shape - The shape to get the local transform for.
+  2944→     *
+  2945→     * @public
+  2946→     */
+  2947→    getShapeLocalTransform(shape: TLShape | TLShapeId): Mat;
+  2948→    private _getShapePageTransformCache;
+  2949→    /**
+  2950→     * Get the local transform of a shape's parent as a matrix model.
+  2951→     *
+  2952→     * @example
+  2953→     * ```ts
+  2954→     * editor.getShapeParentTransform(myShape)
+  2955→     * ```
+  2956→     *
+  2957→     * @param shape - The shape (or shape id) to get the parent transform for.
+  2958→     *
+  2959→     * @public
+  2960→     */
+  2961→    getShapeParentTransform(shape: TLShape | TLShapeId): Mat;
+  2962→    /**
+  2963→     * Get the transform of a shape in the current page space.
+  2964→     *
+  2965→     * @example
+  2966→     * ```ts
+  2967→     * editor.getShapePageTransform(myShape)
+  2968→     * editor.getShapePageTransform(myShapeId)
+  2969→     * ```
+  2970→     *
+  2971→     * @param shape - The shape (or shape id) to get the page transform for.
+  2972→     *
+  2973→     * @public
+  2974→     */
+  2975→    getShapePageTransform(shape: TLShape | TLShapeId): Mat;
+  2976→    private _getShapePageBoundsCache;
+  2977→    /**
+  2978→     * Get the bounds of a shape in the current page space.
+  2979→     *
+  2980→     * @example
+  2981→     * ```ts
+  2982→     * editor.getShapePageBounds(myShape)
+  2983→     * editor.getShapePageBounds(myShapeId)
+  2984→     * ```
+  2985→     *
+  2986→     * @param shape - The shape (or shape id) to get the bounds for.
+  2987→     *
+  2988→     * @public
+  2989→     */
+  2990→    getShapePageBounds(shape: TLShape | TLShapeId): Box | undefined;
+  2991→    private _getShapeClipPathCache;
+  2992→    /**
+  2993→     * Get the clip path for a shape.
+  2994→     *
+  2995→     * @example
+  2996→     * ```ts
+  2997→     * const clipPath = editor.getShapeClipPath(shape)
+  2998→     * const clipPath = editor.getShapeClipPath(shape.id)
+  2999→     * ```
+  3000→     *
+  3001→     * @param shape - The shape (or shape id) to get the clip path for.
+  3002→     *
+  3003→     * @returns The clip path or undefined.
+  3004→     *
+
+[showing lines 1005-3004 of 10202; use offset=3005 with limit to continue reading]

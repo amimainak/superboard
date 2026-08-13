@@ -1,0 +1,2002 @@
+  2830→    /**
+  2831→     * Get all assets in the editor.
+  2832→     *
+  2833→     * @public
+  2834→     */
+  2835→    getAssets(): (TLBookmarkAsset | TLImageAsset | TLVideoAsset)[];
+  2836→    /**
+  2837→     * Create one or more assets.
+  2838→     *
+  2839→     * @example
+  2840→     * ```ts
+  2841→     * editor.createAssets([...myAssets])
+  2842→     * ```
+  2843→     *
+  2844→     * @param assets - The assets to create.
+  2845→     *
+  2846→     * @public
+  2847→     */
+  2848→    createAssets(assets: TLAsset[]): this;
+  2849→    /**
+  2850→     * Update one or more assets.
+  2851→     *
+  2852→     * @example
+  2853→     * ```ts
+  2854→     * editor.updateAssets([{ id: 'asset1', name: 'New name' }])
+  2855→     * ```
+  2856→     *
+  2857→     * @param assets - The assets to update.
+  2858→     *
+  2859→     * @public
+  2860→     */
+  2861→    updateAssets(assets: TLAssetPartial[]): this;
+  2862→    /**
+  2863→     * Delete one or more assets.
+  2864→     *
+  2865→     * @example
+  2866→     * ```ts
+  2867→     * editor.deleteAssets(['asset1', 'asset2'])
+  2868→     * ```
+  2869→     *
+  2870→     * @param assets - The assets (or asset ids) to delete.
+  2871→     *
+  2872→     * @public
+  2873→     */
+  2874→    deleteAssets(assets: TLAsset[] | TLAssetId[]): this;
+  2875→    /**
+  2876→     * Get an asset by its id.
+  2877→     *
+  2878→     * @example
+  2879→     * ```ts
+  2880→     * editor.getAsset('asset1')
+  2881→     * ```
+  2882→     *
+  2883→     * @param asset - The asset (or asset id) to get.
+  2884→     *
+  2885→     * @public
+  2886→     */
+  2887→    getAsset<T extends TLAsset>(asset: T | T['id']): T | undefined;
+  2888→    resolveAssetUrl(assetId: null | TLAssetId, context: {
+  2889→        dpr?: number;
+  2890→        screenScale?: number;
+  2891→        shouldResolveToOriginal?: boolean;
+  2892→    }): Promise<null | string>;
+  2893→    /**
+  2894→     * Upload an asset to the store's asset service, returning a URL that can be used to resolve the
+  2895→     * asset.
+  2896→     */
+  2897→    uploadAsset(asset: TLAsset, file: File, abortSignal?: AbortSignal): Promise<{
+  2898→        meta?: JsonObject;
+  2899→        src: string;
+  2900→    }>;
+  2901→    private _shapeGeometryCaches;
+  2902→    /**
+  2903→     * Get the geometry of a shape in shape-space.
+  2904→     *
+  2905→     * @example
+  2906→     * ```ts
+  2907→     * editor.getShapeGeometry(myShape)
+  2908→     * editor.getShapeGeometry(myShapeId)
+  2909→     * editor.getShapeGeometry(myShapeId, { context: "arrow" })
+  2910→     * ```
+  2911→     *
+  2912→     * @param shape - The shape (or shape id) to get the geometry for.
+  2913→     * @param opts - Additional options about the request for geometry. Passed to {@link ShapeUtil.getGeometry}.
+  2914→     *
+  2915→     * @public
+  2916→     */
+  2917→    getShapeGeometry<T extends Geometry2d>(shape: TLShape | TLShapeId, opts?: TLGeometryOpts): T;
+  2918→    private _getShapeHandlesCache;
+  2919→    /**
+  2920→     * Get the handles (if any) for a shape.
+  2921→     *
+  2922→     * @example
+  2923→     * ```ts
+  2924→     * editor.getShapeHandles(myShape)
+  2925→     * editor.getShapeHandles(myShapeId)
+  2926→     * ```
+  2927→     *
+  2928→     * @param shape - The shape (or shape id) to get the handles for.
+  2929→     * @public
+  2930→     */
+  2931→    getShapeHandles<T extends TLShape>(shape: T | T['id']): TLHandle[] | undefined;
+  2932→    /**
+  2933→     * Get the local transform for a shape as a matrix model. This transform reflects both its
+  2934→     * translation (x, y) from from either its parent's top left corner, if the shape's parent is
+  2935→     * another shape, or else from the 0,0 of the page, if the shape's parent is the page; and the
+  2936→     * shape's rotation.
+  2937→     *
+  2938→     * @example
+  2939→     * ```ts
+  2940→     * editor.getShapeLocalTransform(myShape)
+  2941→     * ```
+  2942→     *
+  2943→     * @param shape - The shape to get the local transform for.
+  2944→     *
+  2945→     * @public
+  2946→     */
+  2947→    getShapeLocalTransform(shape: TLShape | TLShapeId): Mat;
+  2948→    private _getShapePageTransformCache;
+  2949→    /**
+  2950→     * Get the local transform of a shape's parent as a matrix model.
+  2951→     *
+  2952→     * @example
+  2953→     * ```ts
+  2954→     * editor.getShapeParentTransform(myShape)
+  2955→     * ```
+  2956→     *
+  2957→     * @param shape - The shape (or shape id) to get the parent transform for.
+  2958→     *
+  2959→     * @public
+  2960→     */
+  2961→    getShapeParentTransform(shape: TLShape | TLShapeId): Mat;
+  2962→    /**
+  2963→     * Get the transform of a shape in the current page space.
+  2964→     *
+  2965→     * @example
+  2966→     * ```ts
+  2967→     * editor.getShapePageTransform(myShape)
+  2968→     * editor.getShapePageTransform(myShapeId)
+  2969→     * ```
+  2970→     *
+  2971→     * @param shape - The shape (or shape id) to get the page transform for.
+  2972→     *
+  2973→     * @public
+  2974→     */
+  2975→    getShapePageTransform(shape: TLShape | TLShapeId): Mat;
+  2976→    private _getShapePageBoundsCache;
+  2977→    /**
+  2978→     * Get the bounds of a shape in the current page space.
+  2979→     *
+  2980→     * @example
+  2981→     * ```ts
+  2982→     * editor.getShapePageBounds(myShape)
+  2983→     * editor.getShapePageBounds(myShapeId)
+  2984→     * ```
+  2985→     *
+  2986→     * @param shape - The shape (or shape id) to get the bounds for.
+  2987→     *
+  2988→     * @public
+  2989→     */
+  2990→    getShapePageBounds(shape: TLShape | TLShapeId): Box | undefined;
+  2991→    private _getShapeClipPathCache;
+  2992→    /**
+  2993→     * Get the clip path for a shape.
+  2994→     *
+  2995→     * @example
+  2996→     * ```ts
+  2997→     * const clipPath = editor.getShapeClipPath(shape)
+  2998→     * const clipPath = editor.getShapeClipPath(shape.id)
+  2999→     * ```
+  3000→     *
+  3001→     * @param shape - The shape (or shape id) to get the clip path for.
+  3002→     *
+  3003→     * @returns The clip path or undefined.
+  3004→     *
+  3005→     * @public
+  3006→     */
+  3007→    getShapeClipPath(shape: TLShape | TLShapeId): string | undefined;
+  3008→    private _getShapeMaskCache;
+  3009→    /**
+  3010→     * Get the mask (in the current page space) for a shape.
+  3011→     *
+  3012→     * @example
+  3013→     * ```ts
+  3014→     * const pageMask = editor.getShapeMask(shape.id)
+  3015→     * ```
+  3016→     *
+  3017→     * @param shape - The shape (or the shape id) of the shape to get the mask for.
+  3018→     *
+  3019→     * @returns The mask for the shape.
+  3020→     *
+  3021→     * @public
+  3022→     */
+  3023→    getShapeMask(shape: TLShape | TLShapeId): undefined | VecLike[];
+  3024→    /**
+  3025→     * Get the bounds of a shape in the current page space, incorporating any masks. For example, if the
+  3026→     * shape were the child of a frame and was half way out of the frame, the bounds would be the half
+  3027→     * of the shape that was in the frame.
+  3028→     *
+  3029→     * @example
+  3030→     * ```ts
+  3031→     * editor.getShapeMaskedPageBounds(myShape)
+  3032→     * editor.getShapeMaskedPageBounds(myShapeId)
+  3033→     * ```
+  3034→     *
+  3035→     * @param shape - The shape to get the masked bounds for.
+  3036→     *
+  3037→     * @public
+  3038→     */
+  3039→    getShapeMaskedPageBounds(shape: TLShape | TLShapeId): Box | undefined;
+  3040→    private _getShapeMaskedPageBoundsCache;
+  3041→    /**
+  3042→     * Get the ancestors of a shape.
+  3043→     *
+  3044→     * @example
+  3045→     * ```ts
+  3046→     * const ancestors = editor.getShapeAncestors(myShape)
+  3047→     * const ancestors = editor.getShapeAncestors(myShapeId)
+  3048→     * ```
+  3049→     *
+  3050→     * @param shape - The shape (or shape id) to get the ancestors for.
+  3051→     * @param acc - The accumulator.
+  3052→     *
+  3053→     * @public
+  3054→     */
+  3055→    getShapeAncestors(shape: TLShape | TLShapeId, acc?: TLShape[]): TLShape[];
+  3056→    /**
+  3057→     * Find the first ancestor matching the given predicate
+  3058→     *
+  3059→     * @example
+  3060→     * ```ts
+  3061→     * const ancestor = editor.findShapeAncestor(myShape)
+  3062→     * const ancestor = editor.findShapeAncestor(myShape.id)
+  3063→     * const ancestor = editor.findShapeAncestor(myShape.id, (shape) => shape.type === 'frame')
+  3064→     * ```
+  3065→     *
+  3066→     * @param shape - The shape to check the ancestors for.
+  3067→     * @param predicate - The predicate to match.
+  3068→     *
+  3069→     * @public
+  3070→     */
+  3071→    findShapeAncestor(shape: TLShape | TLShapeId, predicate: (parent: TLShape) => boolean): TLShape | undefined;
+  3072→    /**
+  3073→     * Returns true if the the given shape has the given ancestor.
+  3074→     *
+  3075→     * @param shape - The shape.
+  3076→     * @param ancestorId - The id of the ancestor.
+  3077→     *
+  3078→     * @public
+  3079→     */
+  3080→    hasAncestor(shape: TLShape | TLShapeId | undefined, ancestorId: TLShapeId): boolean;
+  3081→    /**
+  3082→     * Get the common ancestor of two or more shapes that matches a predicate.
+  3083→     *
+  3084→     * @param shapes - The shapes (or shape ids) to check.
+  3085→     * @param predicate - The predicate to match.
+  3086→     */
+  3087→    findCommonAncestor(shapes: TLShape[] | TLShapeId[], predicate?: (shape: TLShape) => boolean): TLShapeId | undefined;
+  3088→    /**
+  3089→     * Check whether a shape or its parent is locked.
+  3090→     *
+  3091→     * @param shape - The shape (or shape id) to check.
+  3092→     *
+  3093→     * @public
+  3094→     */
+  3095→    isShapeOrAncestorLocked(shape?: TLShape | TLShapeId): boolean;
+  3096→    /**
+  3097→     * Get shapes that are outside of the viewport.
+  3098→     *
+  3099→     * @public
+  3100→     */
+  3101→    getNotVisibleShapes(): Set<TLShapeId>;
+  3102→    private _notVisibleShapes;
+  3103→    private _culledShapesCache;
+  3104→    /**
+  3105→     * Get culled shapes (those that should not render), taking into account which shapes are selected or editing.
+  3106→     *
+  3107→     * @public
+  3108→     */
+  3109→    getCulledShapes(): Set<TLShapeId>;
+  3110→    /**
+  3111→     * The bounds of the current page (the common bounds of all of the shapes on the page).
+  3112→     *
+  3113→     * @public
+  3114→     */
+  3115→    getCurrentPageBounds(): Box | undefined;
+  3116→    /**
+  3117→     * Get the hit-test margin in page space—the distance in page units within which a pointer is
+  3118→     * considered to be touching a shape. This resolves to {@link TldrawOptions.hitTestMargin} (or
+  3119→     * {@link TldrawOptions.coarseHitTestMargin} when using a coarse pointer) divided by the current
+  3120→     * zoom level, so it stays a constant distance in screen space.
+  3121→     *
+  3122→     * @returns The hit-test margin in page space.
+  3123→     *
+  3124→     * @public
+  3125→     */
+  3126→    getHitTestMargin(): number;
+  3127→    /**
+  3128→     * Get the top-most selected shape at the given point, ignoring groups.
+  3129→     *
+  3130→     * @param point - The point to check.
+  3131→     *
+  3132→     * @returns The top-most selected shape at the given point, or undefined if there is no shape at the point.
+  3133→     */
+  3134→    getSelectedShapeAtPoint(point: VecLike): TLShape | undefined;
+  3135→    /**
+  3136→     * Get the shape at the current point.
+  3137→     *
+  3138→     * @param point - The point to check.
+  3139→     * @param opts - Options for the check: `hitInside` to check if the point is inside the shape, `margin` to check if the point is within a margin of the shape, `hitFrameInside` to check if the point is inside the frame, and `filter` to filter the shapes to check.
+  3140→     *
+  3141→     * @returns The shape at the given point, or undefined if there is no shape at the point.
+  3142→     */
+  3143→    getShapeAtPoint(point: VecLike, opts?: TLGetShapeAtPointOptions): TLShape | undefined;
+  3144→    /**
+  3145→     * Get the shapes, if any, at a given page point.
+  3146→     *
+  3147→     * @example
+  3148→     * ```ts
+  3149→     * editor.getShapesAtPoint({ x: 100, y: 100 })
+  3150→     * editor.getShapesAtPoint({ x: 100, y: 100 }, { hitInside: true, margin: 8 })
+  3151→     * ```
+  3152→     *
+  3153→     * @param point - The page point to test.
+  3154→     * @param opts - The options for the hit point testing.
+  3155→     *
+  3156→     * @returns An array of shapes at the given point, sorted in reverse order of their absolute z-index (top-most shape first).
+  3157→     *
+  3158→     * @public
+  3159→     */
+  3160→    getShapesAtPoint(point: VecLike, opts?: {
+  3161→        hitInside?: boolean | undefined;
+  3162→        margin?: number | undefined;
+  3163→    }): TLShape[];
+  3164→    /**
+  3165→     * Get shape IDs within the given bounds.
+  3166→     *
+  3167→     * Note: Uses shape page bounds only. Frames with labels outside their bounds
+  3168→     * may not be included even if the label is within the search bounds.
+  3169→     *
+  3170→     * Note: Results are unordered. If you need z-order, combine with sorted shapes:
+  3171→     * ```ts
+  3172→     * const candidates = editor.getShapeIdsInsideBounds(bounds)
+  3173→     * const sorted = editor.getCurrentPageShapesSorted().filter(s => candidates.has(s.id))
+  3174→     * ```
+  3175→     *
+  3176→     * @param bounds - The bounds to search within.
+  3177→     * @returns Unordered set of shape IDs within the given bounds.
+  3178→     *
+  3179→     * @public
+  3180→     */
+  3181→    getShapeIdsInsideBounds(bounds: Box): Set<TLShapeId>;
+  3182→    /**
+  3183→     * Test whether a point (in the current page space) will will a shape. This method takes into account masks,
+  3184→     * such as when a shape is the child of a frame and is partially clipped by the frame.
+  3185→     *
+  3186→     * @example
+  3187→     * ```ts
+  3188→     * editor.isPointInShape({ x: 100, y: 100 }, myShape)
+  3189→     * ```
+  3190→     *
+  3191→     * @param shape - The shape to test against.
+  3192→     * @param point - The page point to test (in the current page space).
+  3193→     * @param opts - The options for the hit point testing.
+  3194→     *
+  3195→     * @public
+  3196→     */
+  3197→    isPointInShape(shape: TLShape | TLShapeId, point: VecLike, opts?: {
+  3198→        hitInside?: boolean | undefined;
+  3199→        margin?: number | undefined;
+  3200→    }): boolean;
+  3201→    /**
+  3202→     * Convert a point in the current page space to a point in the local space of a shape. For example, if a
+  3203→     * shape's page point were `{ x: 100, y: 100 }`, a page point at `{ x: 110, y: 110 }` would be at
+  3204→     * `{ x: 10, y: 10 }` in the shape's local space.
+  3205→     *
+  3206→     * @example
+  3207→     * ```ts
+  3208→     * editor.getPointInShapeSpace(myShape, { x: 100, y: 100 })
+  3209→     * ```
+  3210→     *
+  3211→     * @param shape - The shape to get the point in the local space of.
+  3212→     * @param point - The page point to get in the local space of the shape.
+  3213→     *
+  3214→     * @public
+  3215→     */
+  3216→    getPointInShapeSpace(shape: TLShape | TLShapeId, point: VecLike): Vec;
+  3217→    /**
+  3218→     * Convert a delta in the current page space to a point in the local space of a shape's parent.
+  3219→     *
+  3220→     * @example
+  3221→     * ```ts
+  3222→     * editor.getPointInParentSpace(myShape.id, { x: 100, y: 100 })
+  3223→     * ```
+  3224→     *
+  3225→     * @param shape - The shape to get the point in the local space of.
+  3226→     * @param point - The page point to get in the local space of the shape.
+  3227→     *
+  3228→     * @public
+  3229→     */
+  3230→    getPointInParentSpace(shape: TLShape | TLShapeId, point: VecLike): Vec;
+  3231→    /**
+  3232→     * An array containing all of the shapes in the current page.
+  3233→     *
+  3234→     * @public
+  3235→     */
+  3236→    getCurrentPageShapes(): TLShape[];
+  3237→    /**
+  3238→     * An array containing all of the shapes in the current page, sorted in z-index order (accounting
+  3239→     * for nested shapes): e.g. A, B, BA, BB, C.
+  3240→     *
+  3241→     * @public
+  3242→     */
+  3243→    getCurrentPageShapesSorted(): TLShape[];
+  3244→    /**
+  3245→     * An array containing all of the rendering shapes in the current page, sorted in z-index order (accounting
+  3246→     * for nested shapes): e.g. A, B, BA, BB, C.
+  3247→     *
+  3248→     * @public
+  3249→     */
+  3250→    getCurrentPageRenderingShapesSorted(): TLShape[];
+  3251→    /**
+  3252→     * Get whether a shape matches the type of a TLShapeUtil.
+  3253→     *
+  3254→     * @example
+  3255→     * ```ts
+  3256→     * const isArrowShape = isShapeOfType(someShape, 'arrow')
+  3257→     * ```
+  3258→     *
+  3259→     * @param util - the TLShapeUtil constructor to test against
+  3260→     * @param shape - the shape to test
+  3261→     *
+  3262→     * @public
+  3263→     */
+  3264→    isShapeOfType<K extends TLShape['type']>(shape: TLShape, type: K): shape is Extract<TLShape, {
+  3265→        type: K;
+  3266→    }>;
+  3267→    isShapeOfType<T extends TLShape>(shape: TLShape, type: T['type']): shape is Extract<TLShape, {
+  3268→        type: T['type'];
+  3269→    }>;
+  3270→    isShapeOfType<T extends TLShape = TLShape>(shapeId: TLShapeId, type: T['type']): boolean;
+  3271→    /**
+  3272→     * Get whether a shape behaves like a frame — a container that has child
+  3273→     * shapes, requires full-brush selection, blocks erasure from inside, etc.
+  3274→     *
+  3275→     * @example
+  3276→     * ```ts
+  3277→     * const isFrameLike = editor.isShapeFrameLike(someShape)
+  3278→     * ```
+  3279→     *
+  3280→     * @param shape - The shape (or shape id) to test.
+  3281→     *
+  3282→     * @public
+  3283→     */
+  3284→    isShapeFrameLike(shape: TLShape | TLShapeId): boolean;
+  3285→    /**
+  3286→     * Get a shape by its id.
+  3287→     *
+  3288→     * @example
+  3289→     * ```ts
+  3290→     * editor.getShape('box1')
+  3291→     * ```
+  3292→     *
+  3293→     * @param shape - The shape (or the id of the shape) to get.
+  3294→     *
+  3295→     * @public
+  3296→     */
+  3297→    getShape<T extends TLShape = TLShape>(shape: TLParentId | TLShape): T | undefined;
+  3298→    /**
+  3299→     * Get the parent shape for a given shape. Returns undefined if the shape is the direct child of
+  3300→     * the page.
+  3301→     *
+  3302→     * @example
+  3303→     * ```ts
+  3304→     * editor.getShapeParent(myShape)
+  3305→     * ```
+  3306→     *
+  3307→     * @public
+  3308→     */
+  3309→    getShapeParent(shape?: TLShape | TLShapeId): TLShape | undefined;
+  3310→    /* Excluded from this release type: getShapeNearestSibling */
+  3311→    /**
+  3312→     * Get whether the given shape is the descendant of the given page.
+  3313→     *
+  3314→     * @example
+  3315→     * ```ts
+  3316→     * editor.isShapeInPage(myShape)
+  3317→     * editor.isShapeInPage(myShape, 'page1')
+  3318→     * ```
+  3319→     *
+  3320→     * @param shape - The shape to check.
+  3321→     * @param pageId - The id of the page to check against. Defaults to the current page.
+  3322→     *
+  3323→     * @public
+  3324→     */
+  3325→    isShapeInPage(shape: TLShape | TLShapeId, pageId?: TLPageId): boolean;
+  3326→    /**
+  3327→     * Get the id of the containing page for a given shape.
+  3328→     *
+  3329→     * @param shape - The shape to get the page id for.
+  3330→     *
+  3331→     * @returns The id of the page that contains the shape, or undefined if the shape is undefined.
+  3332→     *
+  3333→     * @public
+  3334→     */
+  3335→    getAncestorPageId(shape?: TLShape | TLShapeId): TLPageId | undefined;
+  3336→    /* Excluded from this release type: _parentIdsToChildIds */
+  3337→    /**
+  3338→     * Reparent shapes to a new parent. This operation preserves the shape's current page positions /
+  3339→     * rotations.
+  3340→     *
+  3341→     * @example
+  3342→     * ```ts
+  3343→     * editor.reparentShapes([box1, box2], 'frame1')
+  3344→     * editor.reparentShapes([box1.id, box2.id], 'frame1')
+  3345→     * editor.reparentShapes([box1.id, box2.id], 'frame1', 4)
+  3346→     * ```
+  3347→     *
+  3348→     * @param shapes - The shapes (or shape ids) of the shapes to reparent.
+  3349→     * @param parentId - The id of the new parent shape.
+  3350→     * @param insertIndex - The index to insert the children.
+  3351→     *
+  3352→     * @public
+  3353→     */
+  3354→    reparentShapes(shapes: TLShape[] | TLShapeId[], parentId: TLParentId, insertIndex?: IndexKey): this;
+  3355→    /**
+  3356→     * Get the index above the highest child of a given parent.
+  3357→     *
+  3358→     * @param parent - The parent (or the id) of the parent.
+  3359→     *
+  3360→     * @returns The index.
+  3361→     *
+  3362→     * @public
+  3363→     */
+  3364→    getHighestIndexForParent(parent: TLPage | TLParentId | TLShape): IndexKey;
+  3365→    /**
+  3366→     * Get an array of all the children of a shape.
+  3367→     *
+  3368→     * @example
+  3369→     * ```ts
+  3370→     * editor.getSortedChildIdsForParent('frame1')
+  3371→     * ```
+  3372→     *
+  3373→     * @param parent - The parent (or the id) of the parent shape.
+  3374→     *
+  3375→     * @public
+  3376→     */
+  3377→    getSortedChildIdsForParent(parent: TLPage | TLParentId | TLShape): TLShapeId[];
+  3378→    /**
+  3379→     * Run a visitor function for all descendants of a shape.
+  3380→     *
+  3381→     * @example
+  3382→     * ```ts
+  3383→     * editor.visitDescendants('frame1', myCallback)
+  3384→     * ```
+  3385→     *
+  3386→     * @param parent - The parent (or the id) of the parent shape.
+  3387→     * @param visitor - The visitor function.
+  3388→     *
+  3389→     * @public
+  3390→     */
+  3391→    visitDescendants(parent: TLPage | TLParentId | TLShape, visitor: (id: TLShapeId) => false | void): this;
+  3392→    /**
+  3393→     * Get the shape ids of all descendants of the given shapes (including the shapes themselves). IDs are returned in z-index order.
+  3394→     *
+  3395→     * @param ids - The ids of the shapes to get descendants of.
+  3396→     *
+  3397→     * @returns The descendant ids.
+  3398→     *
+  3399→     * @public
+  3400→     */
+  3401→    getShapeAndDescendantIds(ids: TLShapeId[]): Set<TLShapeId>;
+  3402→    /**
+  3403→     * Get the shape that some shapes should be dropped on at a given point.
+  3404→     *
+  3405→     * @param point - The point to find the parent for.
+  3406→     * @param droppingShapes - The shapes that are being dropped.
+  3407→     *
+  3408→     * @returns The shape to drop on.
+  3409→     *
+  3410→     * @public
+  3411→     */
+  3412→    getDraggingOverShape(point: Vec, droppingShapes: TLShape[]): TLShape | undefined;
+  3413→    /**
+  3414→     * Get the shape that should be selected when you click on a given shape, assuming there is
+  3415→     * nothing already selected. It will not return anything higher than or including the current
+  3416→     * focus layer.
+  3417→     *
+  3418→     * @param shape - The shape to get the outermost selectable shape for.
+  3419→     * @param filter - A function to filter the selectable shapes.
+  3420→     *
+  3421→     * @returns The outermost selectable shape.
+  3422→     *
+  3423→     * @public
+  3424→     */
+  3425→    getOutermostSelectableShape(shape: TLShape | TLShapeId, filter?: (shape: TLShape) => boolean): TLShape;
+  3426→    private _getBindingsIndexCache;
+  3427→    /**
+  3428→     * Get a binding from the store by its ID if it exists.
+  3429→     */
+  3430→    getBinding(id: TLBindingId): TLBinding | undefined;
+  3431→    /**
+  3432→     * Get all bindings of a certain type _from_ a particular shape. These are the bindings whose
+  3433→     * `fromId` matched the shape's ID.
+  3434→     */
+  3435→    getBindingsFromShape<K extends TLBinding['type']>(shape: TLShape | TLShapeId, type: K): Extract<TLBinding, {
+  3436→        type: K;
+  3437→    }>[];
+  3438→    getBindingsFromShape<Binding extends TLBinding = TLBinding>(shape: TLShape | TLShapeId, type: Binding['type']): Binding[];
+  3439→    /**
+  3440→     * Get all bindings of a certain type _to_ a particular shape. These are the bindings whose
+  3441→     * `toId` matches the shape's ID.
+  3442→     */
+  3443→    getBindingsToShape<K extends TLBinding['type']>(shape: TLShape | TLShapeId, type: K): Extract<TLBinding, {
+  3444→        type: K;
+  3445→    }>[];
+  3446→    getBindingsToShape<Binding extends TLBinding = TLBinding>(shape: TLShape | TLShapeId, type: Binding['type']): Binding[];
+  3447→    /**
+  3448→     * Get all bindings involving a particular shape. This includes bindings where the shape is the
+  3449→     * `fromId` or `toId`. If a type is provided, only bindings of that type are returned.
+  3450→     */
+  3451→    getBindingsInvolvingShape<K extends TLBinding['type']>(shape: TLShape | TLShapeId, type: K): Extract<TLBinding, {
+  3452→        type: K;
+  3453→    }>[];
+  3454→    getBindingsInvolvingShape<Binding extends TLBinding = TLBinding>(shape: TLShape | TLShapeId, type?: Binding['type']): Binding[];
+  3455→    /**
+  3456→     * Create bindings from a list of partial bindings. You can omit the ID and most props of a
+  3457→     * binding, but the `type`, `toId`, and `fromId` must all be provided.
+  3458→     */
+  3459→    createBindings<B extends TLBinding = TLBinding>(partials: TLBindingCreate<B>[]): this;
+  3460→    /**
+  3461→     * Create a single binding from a partial. You can omit the ID and most props of a binding, but
+  3462→     * the `type`, `toId`, and `fromId` must all be provided.
+  3463→     */
+  3464→    createBinding<B extends TLBinding = TLBinding>(partial: TLBindingCreate<B>): this;
+  3465→    /**
+  3466→     * Update bindings from a list of partial bindings. Each partial must include an ID, which will
+  3467→     * be used to match the binding to it's existing record. If there is no existing record, that
+  3468→     * binding is skipped. The changes from the partial are merged into the existing record.
+  3469→     */
+  3470→    updateBindings(partials: (null | TLBindingUpdate | undefined)[]): this;
+  3471→    /**
+  3472→     * Update a binding from a partial binding. Each partial must include an ID, which will be used
+  3473→     * to match the binding to it's existing record. If there is no existing record, that binding is
+  3474→     * skipped. The changes from the partial are merged into the existing record.
+  3475→     */
+  3476→    updateBinding<B extends TLBinding = TLBinding>(partial: TLBindingUpdate<B>): this;
+  3477→    /**
+  3478→     * Delete several bindings by their IDs. If a binding ID doesn't exist, it's ignored.
+  3479→     */
+  3480→    deleteBindings(bindings: (TLBinding | TLBindingId)[], { isolateShapes }?: {
+  3481→        isolateShapes?: boolean | undefined;
+  3482→    }): this;
+  3483→    /**
+  3484→     * Delete a binding by its ID. If the binding doesn't exist, it's ignored.
+  3485→     */
+  3486→    deleteBinding(binding: TLBinding | TLBindingId, opts?: Parameters<this['deleteBindings']>[1]): this;
+  3487→    canBindShapes({ fromShape, toShape, binding }: {
+  3488→        binding: {
+  3489→            type: TLBinding['type'];
+  3490→        } | TLBinding | TLBinding['type'];
+  3491→        fromShape: {
+  3492→            type: TLShape['type'];
+  3493→        } | TLShape | TLShape['type'];
+  3494→        toShape: {
+  3495→            type: TLShape['type'];
+  3496→        } | TLShape | TLShape['type'];
+  3497→    }): boolean;
+  3498→    /**
+  3499→     * Rotate shapes by a delta in radians.
+  3500→     *
+  3501→     * @example
+  3502→     * ```ts
+  3503→     * editor.rotateShapesBy(editor.getSelectedShapeIds(), Math.PI)
+  3504→     * editor.rotateShapesBy(editor.getSelectedShapeIds(), Math.PI / 2)
+  3505→     * ```
+  3506→     *
+  3507→     * @param shapes - The shapes (or shape ids) of the shapes to move.
+  3508→     * @param delta - The delta in radians to apply to the selection rotation.
+  3509→     * @param opts - The options for the rotation.
+  3510→     */
+  3511→    rotateShapesBy(shapes: TLShape[] | TLShapeId[], delta: number, opts?: {
+  3512→        center?: VecLike;
+  3513→    }): this;
+  3514→    private getChangesToTranslateShape;
+  3515→    /**
+  3516→     * Move shapes by a delta.
+  3517→     *
+  3518→     * @example
+  3519→     * ```ts
+  3520→     * editor.nudgeShapes(['box1', 'box2'], { x: 8, y: 8 })
+  3521→     * ```
+  3522→     *
+  3523→     * @param shapes - The shapes (or shape ids) to move.
+  3524→     * @param offset - The offset to apply to the shapes.
+  3525→     */
+  3526→    nudgeShapes(shapes: TLShape[] | TLShapeId[], offset: VecLike): this;
+  3527→    /**
+  3528→     * Duplicate shapes.
+  3529→     *
+  3530→     * @example
+  3531→     * ```ts
+  3532→     * editor.duplicateShapes(['box1', 'box2'], { x: 8, y: 8 })
+  3533→     * editor.duplicateShapes(editor.getSelectedShapes(), { x: 8, y: 8 })
+  3534→     * ```
+  3535→     *
+  3536→     * @param shapes - The shapes (or shape ids) to duplicate.
+  3537→     * @param offset - The offset (in pixels) to apply to the duplicated shapes.
+  3538→     *
+  3539→     * @public
+  3540→     */
+  3541→    duplicateShapes(shapes: TLShape[] | TLShapeId[], offset?: VecLike): this;
+  3542→    /**
+  3543→     * Move shapes to page.
+  3544→     *
+  3545→     * @example
+  3546→     * ```ts
+  3547→     * editor.moveShapesToPage(['box1', 'box2'], 'page1')
+  3548→     * ```
+  3549→     *
+  3550→     * @param shapes - The shapes (or shape ids) of the shapes to move.
+  3551→     * @param pageId - The id of the page where the shapes will be moved.
+  3552→     *
+  3553→     * @public
+  3554→     */
+  3555→    moveShapesToPage(shapes: TLShape[] | TLShapeId[], pageId: TLPageId): this;
+  3556→    /**
+  3557→     * Toggle the lock state of one or more shapes. If there is a mix of locked and unlocked shapes, all shapes will be locked.
+  3558→     *
+  3559→     * @param shapes - The shapes (or shape ids) to toggle.
+  3560→     *
+  3561→     * @public
+  3562→     */
+  3563→    toggleLock(shapes: TLShape[] | TLShapeId[]): this;
+  3564→    /**
+  3565→     * Send shapes to the back of the page's object list.
+  3566→     *
+  3567→     * @example
+  3568→     * ```ts
+  3569→     * editor.sendToBack(['id1', 'id2'])
+  3570→     * editor.sendToBack(box1, box2)
+  3571→     * ```
+  3572→     *
+  3573→     * @param shapes - The shapes (or shape ids) to move.
+  3574→     *
+  3575→     * @public
+  3576→     */
+  3577→    sendToBack(shapes: TLShape[] | TLShapeId[]): this;
+  3578→    /**
+  3579→     * Send shapes backward in the page's object list.
+  3580→     *
+  3581→     * @example
+  3582→     * ```ts
+  3583→     * editor.sendBackward(['id1', 'id2'])
+  3584→     * editor.sendBackward([box1, box2])
+  3585→     * ```
+  3586→     *
+  3587→     * By default, the operation will only consider overlapping shapes.
+  3588→     * To consider all shapes, pass `{ considerAllShapes: true }` in the options.
+  3589→     *
+  3590→     * @example
+  3591→     * ```ts
+  3592→     * editor.sendBackward(['id1', 'id2'], { considerAllShapes: true })
+  3593→     * ```
+  3594→     *
+  3595→     * @param shapes - The shapes (or shape ids) to move.
+  3596→     * @param opts - The options for the backward operation.
+  3597→     *
+  3598→     * @public
+  3599→     */
+  3600→    sendBackward(shapes: TLShape[] | TLShapeId[], opts?: {
+  3601→        considerAllShapes?: boolean;
+  3602→    }): this;
+  3603→    /**
+  3604→     * Bring shapes forward in the page's object list.
+  3605→     *
+  3606→     * @example
+  3607→     * ```ts
+  3608→     * editor.bringForward(['id1', 'id2'])
+  3609→     * editor.bringForward(box1,  box2)
+  3610→     * ```
+  3611→     *
+  3612→     * By default, the operation will only consider overlapping shapes.
+  3613→     * To consider all shapes, pass `{ considerAllShapes: true }` in the options.
+  3614→     *
+  3615→     * @example
+  3616→     * ```ts
+  3617→     * editor.bringForward(['id1', 'id2'], { considerAllShapes: true })
+  3618→     * ```
+  3619→     *
+  3620→     * @param shapes - The shapes (or shape ids) to move.
+  3621→     * @param opts - The options for the forward operation.
+  3622→     *
+  3623→     * @public
+  3624→     */
+  3625→    bringForward(shapes: TLShape[] | TLShapeId[], opts?: {
+  3626→        considerAllShapes?: boolean;
+  3627→    }): this;
+  3628→    /**
+  3629→     * Bring shapes to the front of the page's object list.
+  3630→     *
+  3631→     * @example
+  3632→     * ```ts
+  3633→     * editor.bringToFront(['id1', 'id2'])
+  3634→     * editor.bringToFront([box1, box2])
+  3635→     * ```
+  3636→     *
+  3637→     * @param shapes - The shapes (or shape ids) to move.
+  3638→     *
+  3639→     * @public
+  3640→     */
+  3641→    bringToFront(shapes: TLShape[] | TLShapeId[]): this;
+  3642→    /* Excluded from this release type: getShapeClusters */
+  3643→    /* Excluded from this release type: collectShapesViaArrowBindings */
+  3644→    /**
+  3645→     * Flip shape positions.
+  3646→     *
+  3647→     * @example
+  3648→     * ```ts
+  3649→     * editor.flipShapes([box1, box2], 'horizontal', 32)
+  3650→     * editor.flipShapes(editor.getSelectedShapeIds(), 'horizontal', 32)
+  3651→     * ```
+  3652→     *
+  3653→     * @param shapes - The ids of the shapes to flip.
+  3654→     * @param operation - Whether to flip horizontally or vertically.
+  3655→     *
+  3656→     * @public
+  3657→     */
+  3658→    flipShapes(shapes: TLShape[] | TLShapeId[], operation: 'horizontal' | 'vertical'): this;
+  3659→    /**
+  3660→     * Stack shape.
+  3661→     *
+  3662→     * @example
+  3663→     * ```ts
+  3664→     * editor.stackShapes([box1, box2], 'horizontal')
+  3665→     * editor.stackShapes(editor.getSelectedShapeIds(), 'horizontal')
+  3666→     * ```
+  3667→     *
+  3668→     * @param shapes - The shapes (or shape ids) to stack.
+  3669→     * @param operation - Whether to stack horizontally or vertically.
+  3670→     * @param gap - The gap to leave between shapes. By default, uses the editor's `adjacentShapeMargin` option.
+  3671→     *
+  3672→     * @public
+  3673→     */
+  3674→    stackShapes(shapes: TLShape[] | TLShapeId[], operation: 'horizontal' | 'vertical', gap?: number): this;
+  3675→    /**
+  3676→     * Pack shapes into a grid centered on their current position. Based on potpack (https://github.com/mapbox/potpack).
+  3677→     *
+  3678→     * @example
+  3679→     * ```ts
+  3680→     * editor.packShapes([box1, box2])
+  3681→     * editor.packShapes(editor.getSelectedShapeIds(), 32)
+  3682→     * ```
+  3683→     *
+  3684→     *
+  3685→     * @param shapes - The shapes (or shape ids) to pack.
+  3686→     * @param gap - The padding to apply to the packed shapes. Defaults to the editor's `adjacentShapeMargin` option.
+  3687→     */
+  3688→    packShapes(shapes: TLShape[] | TLShapeId[], _gap?: number): this;
+  3689→    /**
+  3690→     * Align shape positions.
+  3691→     *
+  3692→     * @example
+  3693→     * ```ts
+  3694→     * editor.alignShapes([box1, box2], 'left')
+  3695→     * editor.alignShapes(editor.getSelectedShapeIds(), 'left')
+  3696→     * ```
+  3697→     *
+  3698→     * @param shapes - The shapes (or shape ids) to align.
+  3699→     * @param operation - The align operation to apply.
+  3700→     *
+  3701→     * @public
+  3702→     */
+  3703→    alignShapes(shapes: TLShape[] | TLShapeId[], operation: 'bottom' | 'center-horizontal' | 'center-vertical' | 'left' | 'right' | 'top'): this;
+  3704→    /**
+  3705→     * Distribute shape positions.
+  3706→     *
+  3707→     * @example
+  3708→     * ```ts
+  3709→     * editor.distributeShapes([box1, box2], 'horizontal')
+  3710→     * editor.distributeShapes(editor.getSelectedShapeIds(), 'horizontal')
+  3711→     * ```
+  3712→     *
+  3713→     * @param shapes - The shapes (or shape ids) to distribute.
+  3714→     * @param operation - Whether to distribute shapes horizontally or vertically.
+  3715→     *
+  3716→     * @public
+  3717→     */
+  3718→    distributeShapes(shapes: TLShape[] | TLShapeId[], operation: 'horizontal' | 'vertical'): this;
+  3719→    /**
+  3720→     * Stretch shape sizes and positions to fill their common bounding box.
+  3721→     *
+  3722→     * @example
+  3723→     * ```ts
+  3724→     * editor.stretchShapes([box1, box2], 'horizontal')
+  3725→     * editor.stretchShapes(editor.getSelectedShapeIds(), 'horizontal')
+  3726→     * ```
+  3727→     *
+  3728→     * @param shapes - The shapes (or shape ids) to stretch.
+  3729→     * @param operation - Whether to stretch shapes horizontally or vertically.
+  3730→     *
+  3731→     * @public
+  3732→     */
+  3733→    stretchShapes(shapes: TLShape[] | TLShapeId[], operation: 'horizontal' | 'vertical'): this;
+  3734→    /**
+  3735→     * Resize and reposition a set of shapes so that their combined page bounds matches the given
+  3736→     * target bounds.
+  3737→     *
+  3738→     * @example
+  3739→     * ```ts
+  3740→     * editor.resizeToBounds([box1, box2], { x: 0, y: 0, w: 500, h: 500 })
+  3741→     * editor.resizeToBounds(editor.getSelectedShapeIds(), new Box(0, 0, 500, 500))
+  3742→     * ```
+  3743→     *
+  3744→     * @param shapes - The shapes (or shape ids) to resize.
+  3745→     * @param bounds - The target bounding box.
+  3746→     *
+  3747→     * @public
+  3748→     */
+  3749→    resizeToBounds(shapes: TLShape[] | TLShapeId[], bounds: BoxLike): this;
+  3750→    /**
+  3751→     * Resize a shape.
+  3752→     *
+  3753→     * @param shape - The shape (or the shape id of the shape) to resize.
+  3754→     * @param scale - The scale factor to apply to the shape.
+  3755→     * @param opts - Additional options.
+  3756→     *
+  3757→     * @public
+  3758→     */
+  3759→    resizeShape(shape: TLShape | TLShapeId, scale: VecLike, opts?: TLResizeShapeOptions): this;
+  3760→    /* Excluded from this release type: getResizeShapePartial */
+  3761→    /* Excluded from this release type: _scalePagePoint */
+  3762→    /* Excluded from this release type: _resizeUnalignedShape */
+  3763→    /**
+  3764→     * Get the initial meta value for a shape.
+  3765→     *
+  3766→     * @example
+  3767→     * ```ts
+  3768→     * editor.getInitialMetaForShape = (shape) => {
+  3769→     *   if (shape.type === 'note') {
+  3770→     *     return { createdBy: myCurrentUser.id }
+  3771→     *   }
+  3772→     * }
+  3773→     * ```
+  3774→     *
+  3775→     * @param shape - The shape to get the initial meta for.
+  3776→     *
+  3777→     * @public
+  3778→     */
+  3779→    getInitialMetaForShape(_shape: TLShape): JsonObject;
+  3780→    /**
+  3781→     * Get whether the provided shape can be created.
+  3782→     *
+  3783→     * @param shape - The shape or shape IDs to check.
+  3784→     *
+  3785→     * @public
+  3786→     */
+  3787→    canCreateShape(shape: OptionalKeys<TLShapePartial<TLShape>, 'id'> | TLShape['id']): boolean;
+  3788→    /**
+  3789→     * Get whether the provided shapes can be created.
+  3790→     *
+  3791→     * @param shapes - The shapes or shape IDs to create.
+  3792→     *
+  3793→     * @public
+  3794→     */
+  3795→    canCreateShapes(shapes: (OptionalKeys<TLShapePartial<TLShape>, 'id'> | TLShape['id'])[]): boolean;
+  3796→    /**
+  3797→     * Create a single shape.
+  3798→     *
+  3799→     * @example
+  3800→     * ```ts
+  3801→     * editor.createShape(myShape)
+  3802→     * editor.createShape({ id: 'box1', type: 'text', props: { richText: toRichText("ok") } })
+  3803→     * ```
+  3804→     *
+  3805→     * @param shape - The shape (or shape partial) to create.
+  3806→     *
+  3807→     * @public
+  3808→     */
+  3809→    createShape<TShape extends TLShape>(shape: TLCreateShapePartial<TShape>): this;
+  3810→    /**
+  3811→     * Create shapes.
+  3812→     *
+  3813→     * @example
+  3814→     * ```ts
+  3815→     * editor.createShapes([myShape])
+  3816→     * editor.createShapes([{ id: 'box1', type: 'text', props: { richText: toRichText("ok") } }])
+  3817→     * ```
+  3818→     *
+  3819→     * @param shapes - The shapes (or shape partials) to create.
+  3820→     *
+  3821→     * @public
+  3822→     */
+  3823→    createShapes<TShape extends TLShape = TLShape>(shapes: TLCreateShapePartial<TShape>[]): this;
+  3824→    private animatingShapes;
+  3825→    /**
+  3826→     * Animate a shape.
+  3827→     *
+  3828→     * @example
+  3829→     * ```ts
+  3830→     * editor.animateShape({ id: 'box1', type: 'box', x: 100, y: 100 })
+  3831→     * editor.animateShape({ id: 'box1', type: 'box', x: 100, y: 100 }, { animation: { duration: 100, ease: t => t*t } })
+  3832→     * ```
+  3833→     *
+  3834→     * @param partial - The shape partial to update.
+  3835→     * @param opts - The animation's options.
+  3836→     *
+  3837→     * @public
+  3838→     */
+  3839→    animateShape(partial: null | TLShapePartial | undefined, opts?: TLCameraMoveOptions): this;
+  3840→    /**
+  3841→     * Animate shapes.
+  3842→     *
+  3843→     * @example
+  3844→     * ```ts
+  3845→     * editor.animateShapes([{ id: 'box1', type: 'box', x: 100, y: 100 }])
+  3846→     * editor.animateShapes([{ id: 'box1', type: 'box', x: 100, y: 100 }], { animation: { duration: 100, ease: t => t*t } })
+  3847→     * ```
+  3848→     *
+  3849→     * @param partials - The shape partials to update.
+  3850→     * @param opts - The animation's options.
+  3851→     *
+  3852→     * @public
+  3853→     */
+  3854→    animateShapes(partials: (null | TLShapePartial | undefined)[], opts?: TLCameraMoveOptions): this;
+  3855→    /**
+  3856→     * Create a group containing the provided shapes.
+  3857→     *
+  3858→     * @example
+  3859→     * ```ts
+  3860→     * editor.groupShapes([myShape, myOtherShape])
+  3861→     * editor.groupShapes([myShape, myOtherShape], { groupId: myGroupId, select: false })
+  3862→     * ```
+  3863→     *
+  3864→     * @param shapes - The shapes (or shape ids) to group. Defaults to the selected shapes.
+  3865→     * @param opts - An options object.
+  3866→     *
+  3867→     * @public
+  3868→     */
+  3869→    groupShapes(shapes: TLShape[], opts?: Partial<{
+  3870→        groupId: TLShapeId;
+  3871→        select: boolean;
+  3872→    }>): this;
+  3873→    groupShapes(ids: TLShapeId[], opts?: Partial<{
+  3874→        groupId: TLShapeId;
+  3875→        select: boolean;
+  3876→    }>): this;
+  3877→    /**
+  3878→     * Ungroup some shapes.
+  3879→     *
+  3880→     * @example
+  3881→     * ```ts
+  3882→     * editor.ungroupShapes([myGroup, myOtherGroup])
+  3883→     * editor.ungroupShapes([myGroup], { select: false })
+  3884→     * ```
+  3885→     *
+  3886→     * @param shapes - The group shapes (or shape ids) to ungroup.
+  3887→     * @param opts - An options object.
+  3888→     *
+  3889→     * @public
+  3890→     */
+  3891→    ungroupShapes(ids: TLShapeId[], opts?: Partial<{
+  3892→        select: boolean;
+  3893→    }>): this;
+  3894→    ungroupShapes(shapes: TLShape[], opts?: Partial<{
+  3895→        select: boolean;
+  3896→    }>): this;
+  3897→    /**
+  3898→     * Update a shape using a partial of the shape.
+  3899→     *
+  3900→     * @example
+  3901→     * ```ts
+  3902→     * editor.updateShape({ id: 'box1', type: 'geo', props: { w: 100, h: 100 } })
+  3903→     * ```
+  3904→     *
+  3905→     * @param partial - The shape partial to update.
+  3906→     *
+  3907→     * @public
+  3908→     */
+  3909→    updateShape<T extends TLShape = TLShape>(partial: null | TLShapePartial<T> | undefined): this;
+  3910→    /**
+  3911→     * Update shapes using partials of each shape.
+  3912→     *
+  3913→     * @example
+  3914→     * ```ts
+  3915→     * editor.updateShapes([{ id: 'box1', type: 'geo', props: { w: 100, h: 100 } }])
+  3916→     * ```
+  3917→     *
+  3918→     * @param partials - The shape partials to update.
+  3919→     *
+  3920→     * @public
+  3921→     */
+  3922→    updateShapes<T extends TLShape>(partials: (null | TLShapePartial<T> | undefined)[]): this;
+  3923→    /* Excluded from this release type: _updateShapes */
+  3924→    /* Excluded from this release type: _getUnlockedShapeIds */
+  3925→    /**
+  3926→     * Delete shapes.
+  3927→     *
+  3928→     * @example
+  3929→     * ```ts
+  3930→     * editor.deleteShapes(['box1', 'box2'])
+  3931→     * ```
+  3932→     *
+  3933→     * @param ids - The ids of the shapes to delete.
+  3934→     *
+  3935→     * @public
+  3936→     */
+  3937→    deleteShapes(ids: TLShapeId[]): this;
+  3938→    deleteShapes(shapes: TLShape[]): this;
+  3939→    /**
+  3940→     * Delete a shape.
+  3941→     *
+  3942→     * @example
+  3943→     * ```ts
+  3944→     * editor.deleteShape(shape.id)
+  3945→     * ```
+  3946→     *
+  3947→     * @param id - The id of the shape to delete.
+  3948→     *
+  3949→     * @public
+  3950→     */
+  3951→    deleteShape(id: TLShapeId): this;
+  3952→    deleteShape(shape: TLShape): this;
+  3953→    /* Excluded from this release type: _extractSharedStyles */
+  3954→    private _getSelectionSharedStyles;
+  3955→    /**
+  3956→     * Get the style for the next shape.
+  3957→     *
+  3958→     * @example
+  3959→     * ```ts
+  3960→     * const color = editor.getStyleForNextShape(DefaultColorStyle)
+  3961→     * ```
+  3962→     *
+  3963→     * @param style - The style to get.
+  3964→     *
+  3965→     * @public */
+  3966→    getStyleForNextShape<T>(style: StyleProp<T>): T;
+  3967→    getShapeStyleIfExists<T>(shape: TLShape, style: StyleProp<T>): T | undefined;
+  3968→    /**
+  3969→     * A map of all the current styles either in the current selection, or that are relevant to the
+  3970→     * current tool.
+  3971→     *
+  3972→     * @example
+  3973→     * ```ts
+  3974→     * const color = editor.getSharedStyles().get(DefaultColorStyle)
+  3975→     * if (color && color.type === 'shared') {
+  3976→     *   print('All selected shapes have the same color:', color.value)
+  3977→     * }
+  3978→     * ```
+  3979→     *
+  3980→     * @public
+  3981→     */
+  3982→    getSharedStyles(): ReadonlySharedStyleMap;
+  3983→    /**
+  3984→     * Get the currently selected shared opacity.
+  3985→     * If any shapes are selected, this returns the shared opacity of the selected shapes.
+  3986→     * Otherwise, this returns the chosen opacity for the next shape.
+  3987→     *
+  3988→     * @public
+  3989→     */
+  3990→    getSharedOpacity(): SharedStyle<number>;
+  3991→    /**
+  3992→     * Set the opacity for the next shapes. This will effect subsequently created shapes.
+  3993→     *
+  3994→     * @example
+  3995→     * ```ts
+  3996→     * editor.setOpacityForNextShapes(0.5)
+  3997→     * ```
+  3998→     *
+  3999→     * @param opacity - The opacity to set. Must be a number between 0 and 1 inclusive.
+  4000→     * @param historyOptions - The history options for the change.
+  4001→     */
+  4002→    setOpacityForNextShapes(opacity: number, historyOptions?: TLHistoryBatchOptions): this;
+  4003→    /**
+  4004→     * Set the current opacity. This will effect any selected shapes.
+  4005→     *
+  4006→     * @example
+  4007→     * ```ts
+  4008→     * editor.setOpacityForSelectedShapes(0.5)
+  4009→     * ```
+  4010→     *
+  4011→     * @param opacity - The opacity to set. Must be a number between 0 and 1 inclusive.
+  4012→     */
+  4013→    setOpacityForSelectedShapes(opacity: number): this;
+  4014→    /**
+  4015→     * Set the value of a {@link @tldraw/tlschema#StyleProp} for the next shapes. This change will be applied to subsequently created shapes.
+  4016→     *
+  4017→     * @example
+  4018→     * ```ts
+  4019→     * editor.setStyleForNextShapes(DefaultColorStyle, 'red')
+  4020→     * editor.setStyleForNextShapes(DefaultColorStyle, 'red', { ephemeral: true })
+  4021→     * ```
+  4022→     *
+  4023→     * @param style - The style to set.
+  4024→     * @param value - The value to set.
+  4025→     * @param historyOptions - The history options for the change.
+  4026→     *
+  4027→     * @public
+  4028→     */
+  4029→    setStyleForNextShapes<T>(style: StyleProp<T>, value: T, historyOptions?: TLHistoryBatchOptions): this;
+  4030→    /**
+  4031→     * Set the value of a {@link @tldraw/tlschema#StyleProp}. This change will be applied to the currently selected shapes.
+  4032→     *
+  4033→     * @example
+  4034→     * ```ts
+  4035→     * editor.setStyleForSelectedShapes(DefaultColorStyle, 'red')
+  4036→     * ```
+  4037→     *
+  4038→     * @param style - The style to set.
+  4039→     * @param value - The value to set.
+  4040→     *
+  4041→     * @public
+  4042→     */
+  4043→    setStyleForSelectedShapes<S extends StyleProp<any>>(style: S, value: StylePropValue<S>): this;
+  4044→    /* Excluded from this release type: externalAssetContentHandlers */
+  4045→    /* Excluded from this release type: temporaryAssetPreview */
+  4046→    /**
+  4047→     * Register an external asset handler. This handler will be called when the editor needs to
+  4048→     * create an asset for some external content, like an image/video file or a bookmark URL. For
+  4049→     * example, the 'file' type handler will be called when a user drops an image onto the canvas.
+  4050→     *
+  4051→     * The handler should extract any relevant metadata for the asset, upload it to blob storage
+  4052→     * using {@link Editor.uploadAsset} if needed, and return the asset with the metadata & uploaded
+  4053→     * URL.
+  4054→     *
+  4055→     * @example
+  4056→     * ```ts
+  4057→     * editor.registerExternalAssetHandler('file', myHandler)
+  4058→     * ```
+  4059→     *
+  4060→     * @param type - The type of external content.
+  4061→     * @param handler - The handler to use for this content type.
+  4062→     *
+  4063→     * @public
+  4064→     */
+  4065→    registerExternalAssetHandler<T extends TLExternalAsset['type']>(type: T, handler: ((info: TLExternalAsset & {
+  4066→        type: T;
+  4067→    }) => Promise<TLAsset>) | null): this;
+  4068→    /**
+  4069→     * Register a temporary preview of an asset. This is useful for showing a ghost image of
+  4070→     * something that is being uploaded. Retrieve the placeholder with
+  4071→     * {@link Editor.getTemporaryAssetPreview}. Placeholders last for 3 minutes by default, but this
+  4072→     * can be configured using
+  4073→     *
+  4074→     * @example
+  4075→     * ```ts
+  4076→     * editor.createTemporaryAssetPreview(assetId, file)
+  4077→     * ```
+  4078→     *
+  4079→     * @param assetId - The asset's id.
+  4080→     * @param file - The raw file.
+  4081→     *
+  4082→     * @public
+  4083→     */
+  4084→    createTemporaryAssetPreview(assetId: TLAssetId, file: File): string | undefined;
+  4085→    /**
+  4086→     * Get temporary preview of an asset. This is useful for showing a ghost
+  4087→     * image of something that is being uploaded.
+  4088→     *
+  4089→     * @example
+  4090→     * ```ts
+  4091→     * editor.getTemporaryAssetPreview('someId')
+  4092→     * ```
+  4093→     *
+  4094→     * @param assetId - The asset's id.
+  4095→     *
+  4096→     * @public
+  4097→     */
+  4098→    getTemporaryAssetPreview(assetId: TLAssetId): string | undefined;
+  4099→    /**
+  4100→     * Get an asset for an external asset content type.
+  4101→     *
+  4102→     * @example
+  4103→     * ```ts
+  4104→     * const asset = await editor.getAssetForExternalContent({ type: 'file', file: myFile })
+  4105→     * const asset = await editor.getAssetForExternalContent({ type: 'url', url: myUrl })
+  4106→     * ```
+  4107→     *
+  4108→     * @param info - Info about the external content.
+  4109→     * @returns The asset.
+  4110→     */
+  4111→    getAssetForExternalContent(info: TLExternalAsset): Promise<TLAsset | undefined>;
+  4112→    hasExternalAssetHandler(type: TLExternalAsset['type']): boolean;
+  4113→    /* Excluded from this release type: externalContentHandlers */
+  4114→    /**
+  4115→     * Register an external content handler. This handler will be called when the editor receives
+  4116→     * external content of the provided type. For example, the 'image' type handler will be called
+  4117→     * when a user drops an image onto the canvas.
+  4118→     *
+  4119→     * @example
+  4120→     * ```ts
+  4121→     * editor.registerExternalContentHandler('text', myHandler)
+  4122→     * ```
+  4123→     * @example
+  4124→     * ```ts
+  4125→     * editor.registerExternalContentHandler<'embed', MyEmbedType>('embed', myHandler)
+  4126→     * ```
+  4127→     *
+  4128→     * @param type - The type of external content.
+  4129→     * @param handler - The handler to use for this content type.
+  4130→     *
+  4131→     * @public
+  4132→     */
+  4133→    registerExternalContentHandler<T extends TLExternalContent<E>['type'], E>(type: T, handler: ((info: T extends TLExternalContent<E>['type'] ? Extract<TLExternalContent<E>, {
+  4134→        type: T;
+  4135→    }> : TLExternalContent<E>) => void) | null): this;
+  4136→    /**
+  4137→     * Handle external content, such as files, urls, embeds, or plain text which has been put into the app, for example by pasting external text or dropping external images onto canvas.
+  4138→     *
+  4139→     * @param info - Info about the external content.
+  4140→     * @param opts - Options for handling external content, including force flag to bypass readonly checks.
+  4141→     */
+  4142→    putExternalContent<E>(info: TLExternalContent<E>, opts?: {
+  4143→        force?: boolean | undefined;
+  4144→    }): Promise<void>;
+  4145→    /**
+  4146→     * Handle replacing external content.
+  4147→     *
+  4148→     * @param info - Info about the external content.
+  4149→     * @param opts - Options for handling external content, including force flag to bypass readonly checks.
+  4150→     */
+  4151→    replaceExternalContent<E>(info: TLExternalContent<E>, opts?: {
+  4152→        force?: boolean | undefined;
+  4153→    }): Promise<void>;
+  4154→    /**
+  4155→     * Get content that can be exported for the given shape ids.
+  4156→     *
+  4157→     * @param shapes - The shapes (or shape ids) to get content for.
+  4158→     *
+  4159→     * @returns The exported content.
+  4160→     *
+  4161→     * @public
+  4162→     */
+  4163→    getContentFromCurrentPage(shapes: TLShape[] | TLShapeId[]): TLContent | undefined;
+  4164→    resolveAssetsInContent(content: TLContent | undefined): Promise<TLContent | undefined>;
+  4165→    /**
+  4166→     * Place content into the editor.
+  4167→     *
+  4168→     * @param content - The content.
+  4169→     * @param opts - Options for placing the content.
+  4170→     *
+  4171→     * @public
+  4172→     */
+  4173→    putContentOntoCurrentPage(content: TLContent, opts?: {
+  4174→        point?: VecLike;
+  4175→        preserveIds?: boolean;
+  4176→        preservePosition?: boolean;
+  4177→        select?: boolean;
+  4178→    }): this;
+  4179→    /**
+  4180→     * Get an exported SVG element of the given shapes.
+  4181→     *
+  4182→     * @param shapes - The shapes (or shape ids) to export.
+  4183→     * @param opts - Options for the export.
+  4184→     *
+  4185→     * @returns The SVG element.
+  4186→     *
+  4187→     * @public
+  4188→     */
+  4189→    getSvgElement(shapes: TLShape[] | TLShapeId[], opts?: TLSvgExportOptions): Promise<{
+  4190→        height: number;
+  4191→        svg: SVGSVGElement;
+  4192→        trimPadding: number;
+  4193→        width: number;
+  4194→    } | undefined>;
+  4195→    /**
+  4196→     * Get an exported SVG string of the given shapes.
+  4197→     *
+  4198→     * @param shapes - The shapes (or shape ids) to export.
+  4199→     * @param opts - Options for the export.
+  4200→     *
+  4201→     * @returns The SVG element.
+  4202→     *
+  4203→     * @public
+  4204→     */
+  4205→    getSvgString(shapes: TLShape[] | TLShapeId[], opts?: TLSvgExportOptions): Promise<{
+  4206→        height: number;
+  4207→        svg: string;
+  4208→        trimPadding: number;
+  4209→        width: number;
+  4210→    } | undefined>;
+  4211→    /**
+  4212→     * Get an exported image of the given shapes.
+  4213→     *
+  4214→     * @param shapes - The shapes (or shape ids) to export.
+  4215→     * @param opts - Options for the export.
+  4216→     *
+  4217→     * @returns A blob of the image.
+  4218→     * @public
+  4219→     */
+  4220→    toImage(shapes: TLShape[] | TLShapeId[], opts?: TLImageExportOptions): Promise<{
+  4221→        blob: Blob;
+  4222→        height: number;
+  4223→        width: number;
+  4224→    }>;
+  4225→    /**
+  4226→     * Get an exported image of the given shapes as a data URL.
+  4227→     *
+  4228→     * @param shapes - The shapes (or shape ids) to export.
+  4229→     * @param opts - Options for the export.
+  4230→     *
+  4231→     * @returns A data URL of the image.
+  4232→     * @public
+  4233→     */
+  4234→    toImageDataUrl(shapes: TLShape[] | TLShapeId[], opts?: TLImageExportOptions): Promise<{
+  4235→        height: number;
+  4236→        url: string;
+  4237→        width: number;
+  4238→    }>;
+  4239→    /**
+  4240→     * Dispatch a cancel event.
+  4241→     *
+  4242→     * @example
+  4243→     * ```ts
+  4244→     * editor.cancel()
+  4245→     * ```
+  4246→     *
+  4247→     * @public
+  4248→     */
+  4249→    cancel(): this;
+  4250→    /**
+  4251→     * Dispatch an interrupt event.
+  4252→     *
+  4253→     * @example
+  4254→     * ```ts
+  4255→     * editor.interrupt()
+  4256→     * ```
+  4257→     *
+  4258→     * @public
+  4259→     */
+  4260→    interrupt(): this;
+  4261→    /**
+  4262→     * Dispatch a complete event.
+  4263→     *
+  4264→     * @example
+  4265→     * ```ts
+  4266→     * editor.complete()
+  4267→     * ```
+  4268→     *
+  4269→     * @public
+  4270→     */
+  4271→    complete(): this;
+  4272→    /**
+  4273→     * Dispatch a pointer move event in the current position of the pointer. This is useful when
+  4274→     * external circumstances have changed (e.g. the camera moved or a shape was moved) and you want
+  4275→     * the current interaction to respond to that change.
+  4276→     *
+  4277→     * @example
+  4278→     * ```ts
+  4279→     * editor.updatePointer()
+  4280→     * ```
+  4281→     *
+  4282→     * @param options - The options for updating the pointer.
+  4283→     * @returns The editor instance.
+  4284→     * @public
+  4285→     */
+  4286→    updatePointer(options?: TLUpdatePointerOptions): this;
+  4287→    /**
+  4288→     * Puts the editor into focused mode.
+  4289→     *
+  4290→     * This makes the editor eligible to receive keyboard events and some pointer events (move, wheel).
+  4291→     *
+  4292→     * @example
+  4293→     * ```ts
+  4294→     * editor.focus()
+  4295→     * ```
+  4296→     *
+  4297→     * By default this also dispatches a 'focus' event to the container element. To prevent this, pass `focusContainer: false`.
+  4298→     *
+  4299→     * @example
+  4300→     * ```ts
+  4301→     * editor.focus({ focusContainer: false })
+  4302→     * ```
+  4303→     *
+  4304→     * @public
+  4305→     */
+  4306→    focus({ focusContainer }?: {
+  4307→        focusContainer?: boolean | undefined;
+  4308→    }): this;
+  4309→    /**
+  4310→     * Switches off the editor's focused mode.
+  4311→     *
+  4312→     * This makes the editor ignore keyboard events and some pointer events (move, wheel).
+  4313→     *
+  4314→     * @example
+  4315→     * ```ts
+  4316→     * editor.blur()
+  4317→     * ```
+  4318→     * By default this also dispatches a 'blur' event to the container element. To prevent this, pass `blurContainer: false`.
+  4319→     *
+  4320→     * @example
+  4321→     * ```ts
+  4322→     * editor.blur({ blurContainer: false })
+  4323→     * ```
+  4324→     *
+  4325→     * @public
+  4326→     */
+  4327→    blur({ blurContainer }?: {
+  4328→        blurContainer?: boolean | undefined;
+  4329→    }): this;
+  4330→    /**
+  4331→     * @public
+  4332→     * @returns true if the editor is focused
+  4333→     */
+  4334→    getIsFocused(): boolean;
+  4335→    /**
+  4336→     * @public
+  4337→     * @returns true if the editor is in readonly mode
+  4338→     */
+  4339→    getIsReadonly(): boolean;
+  4340→    /**
+  4341→     * @public
+  4342→     * @returns a snapshot of the store's UI and document state
+  4343→     */
+  4344→    getSnapshot(): TLEditorSnapshot;
+  4345→    /**
+  4346→     * Loads a snapshot into the editor.
+  4347→     * @param snapshot - The snapshot to load.
+  4348→     * @param opts - The options for loading the snapshot.
+  4349→     * @returns
+  4350→     */
+  4351→    loadSnapshot(snapshot: Partial<TLEditorSnapshot> | TLStoreSnapshot, opts?: TLLoadSnapshotOptions): this;
+  4352→    private _zoomToFitPageContentAt100Percent;
+  4353→    private _navigateToDeepLink;
+  4354→    /**
+  4355→     * Handles navigating to the content specified by the query param in the given URL.
+  4356→     *
+  4357→     * Use {@link Editor.createDeepLink} to create a URL with a deep link query param.
+  4358→     *
+  4359→     * If no URL is provided, it will look for the param in the current `window.location.href`.
+  4360→     *
+  4361→     * @example
+  4362→     * ```ts
+  4363→     * editor.navigateToDeepLink()
+  4364→     * ```
+  4365→     *
+  4366→     * The default parameter name is 'd'. You can override this by providing the `param` option.
+  4367→     *
+  4368→     * @example
+  4369→     * ```ts
+  4370→     * // disable page parameter and change viewport parameter to 'c'
+  4371→     * editor.navigateToDeepLink({
+  4372→     *   param: 'x',
+  4373→     *   url: 'https://my-app.com/my-document?x=200.12.454.23.xyz123',
+  4374→     * })
+  4375→     * ```
+  4376→     *
+  4377→     * @param opts - Options for loading the state from the URL.
+  4378→     */
+  4379→    navigateToDeepLink(opts?: {
+  4380→        param?: string;
+  4381→        url?: string | URL;
+  4382→    } | TLDeepLink): Editor;
+  4383→    /**
+  4384→     * Turns the given URL into a deep link by adding a query parameter.
+  4385→     *
+  4386→     * e.g. `https://my-app.com/my-document?d=100.100.200.200.xyz123`
+  4387→     *
+  4388→     * If no URL is provided, it will use the current `window.location.href`.
+  4389→     *
+  4390→     * @example
+  4391→     * ```ts
+  4392→     * // create a deep link to the current page + viewport
+  4393→     * navigator.clipboard.writeText(editor.createDeepLink())
+  4394→     * ```
+  4395→     *
+  4396→     * You can link to a particular set of shapes by providing a `to` parameter.
+  4397→     *
+  4398→     * @example
+  4399→     * ```ts
+  4400→     * // create a deep link to the set of currently selected shapes
+  4401→     * navigator.clipboard.writeText(editor.createDeepLink({
+  4402→     *   to: { type: 'selection', shapeIds: editor.getSelectedShapeIds() }
+  4403→     * }))
+  4404→     * ```
+  4405→     *
+  4406→     * The default query param is 'd'. You can override this by providing a `param` parameter.
+  4407→     *
+  4408→     * @example
+  4409→     * ```ts
+  4410→     * // Use `x` as the param name instead
+  4411→     * editor.createDeepLink({ param: 'x' })
+  4412→     * ```
+  4413→     *
+  4414→     * @param opts - Options for adding the state to the URL.
+  4415→     * @returns the updated URL
+  4416→     */
+  4417→    createDeepLink(opts?: {
+  4418→        param?: string;
+  4419→        to?: TLDeepLink;
+  4420→        url?: string | URL;
+  4421→    }): URL;
+  4422→    /**
+  4423→     * Register a listener for changes to a deep link for the current document.
+  4424→     *
+  4425→     * You'll typically want to use this indirectly via the {@link TldrawEditorBaseProps.deepLinks} prop on the `<Tldraw />` component.
+  4426→     *
+  4427→     * By default this will update `window.location` in place, but you can provide a custom callback
+  4428→     * to handle state changes on your own.
+  4429→     *
+  4430→     * @example
+  4431→     * ```ts
+  4432→     * editor.registerDeepLinkListener({
+  4433→     *   onChange(url) {
+  4434→     *     window.history.replaceState({}, document.title, url.toString())
+  4435→     *   }
+  4436→     * })
+  4437→     * ```
+  4438→     *
+  4439→     * You can also provide a custom URL to update, in which case you must also provide `onChange`.
+  4440→     *
+  4441→     * @example
+  4442→     * ```ts
+  4443→     * editor.registerDeepLinkListener({
+  4444→     *   getUrl: () => `https://my-app.com/my-document`,
+  4445→     *   onChange(url) {
+  4446→     *     setShareUrl(url.toString())
+  4447→     *   }
+  4448→     * })
+  4449→     * ```
+  4450→     *
+  4451→     * By default this will update with a debounce interval of 500ms, but you can provide a custom interval.
+  4452→     *
+  4453→     * @example
+  4454→     * ```ts
+  4455→     * editor.registerDeepLinkListener({ debounceMs: 1000 })
+  4456→     * ```
+  4457→     * The default parameter name is `d`. You can override this by providing a `param` option.
+  4458→     *
+  4459→     * @example
+  4460→     * ```ts
+  4461→     * editor.registerDeepLinkListener({ param: 'x' })
+  4462→     * ```
+  4463→     * @param opts - Options for setting up the listener.
+  4464→     * @returns a function that will stop the listener.
+  4465→     */
+  4466→    registerDeepLinkListener(opts?: TLDeepLinkOptions): () => void;
+  4467→    /* Excluded from this release type: _clickManager */
+  4468→    /**
+  4469→     * Prevent a double click event from firing the next time the user clicks
+  4470→     *
+  4471→     * @public
+  4472→     */
+  4473→    cancelDoubleClick(): void;
+  4474→    /* Excluded from this release type: _prevCursor */
+  4475→    /* Excluded from this release type: _shiftKeyTimeout */
+  4476→    /* Excluded from this release type: _setShiftKeyTimeout */
+  4477→    /* Excluded from this release type: _altKeyTimeout */
+  4478→    /* Excluded from this release type: _setAltKeyTimeout */
+  4479→    /* Excluded from this release type: _ctrlKeyTimeout */
+  4480→    /* Excluded from this release type: _setCtrlKeyTimeout */
+  4481→    /* Excluded from this release type: _metaKeyTimeout */
+  4482→    /* Excluded from this release type: _setMetaKeyTimeout */
+  4483→    /* Excluded from this release type: _restoreToolId */
+  4484→    /* Excluded from this release type: _didPinch */
+  4485→    /* Excluded from this release type: _selectedShapeIdsAtPointerDown */
+  4486→    /* Excluded from this release type: _didCaptureSelectionAtPointerDown */
+  4487→    /* Excluded from this release type: _longPressTimeout */
+  4488→    /* Excluded from this release type: capturedPointerId */
+  4489→    /* Excluded from this release type: performanceTracker */
+  4490→    /* Excluded from this release type: performanceTrackerTimeout */
+  4491→    /* Excluded from this release type: handledEvents */
+  4492→    /**
+  4493→     * In tldraw, events are sometimes handled by multiple components. For example, the shapes might
+  4494→     * have events, but the canvas handles events too. The way that the canvas handles events can
+  4495→     * interfere with the with the shapes event handlers - for example, it calls `.preventDefault()`
+  4496→     * on `pointerDown`, which also prevents `click` events from firing on the shapes.
+  4497→     *
+  4498→     * You can use `.stopPropagation()` to prevent the event from propagating to the rest of the
+  4499→     * DOM, but that can impact non-tldraw event handlers set up elsewhere. By using
+  4500→     * `markEventAsHandled`, you'll stop other parts of tldraw from handling the event without
+  4501→     * impacting other, non-tldraw event handlers. See also {@link Editor.wasEventAlreadyHandled}.
+  4502→     *
+  4503→     * @public
+  4504→     */
+  4505→    markEventAsHandled(e: {
+  4506→        nativeEvent: Event;
+  4507→    } | Event): void;
+  4508→    /**
+  4509→     * Checks if an event has already been handled. See {@link Editor.markEventAsHandled}.
+  4510→     *
+  4511→     * @public
+  4512→     */
+  4513→    wasEventAlreadyHandled(e: {
+  4514→        nativeEvent: Event;
+  4515→    } | Event): boolean;
+  4516→    /**
+  4517→     * Dispatch an event to the editor.
+  4518→     *
+  4519→     * @example
+  4520→     * ```ts
+  4521→     * editor.dispatch(myPointerEvent)
+  4522→     * ```
+  4523→     *
+  4524→     * @param info - The event info.
+  4525→     *
+  4526→     * @public
+  4527→     */
+  4528→    dispatch(info: TLEventInfo): this;
+  4529→    private _pendingEventsForNextTick;
+  4530→    private _flushEventsForTick;
+  4531→    _flushEventForTick(info: TLEventInfo): this | undefined;
+  4532→    /* Excluded from this release type: maybeTrackPerformance */
+  4533→}
+  4534→
+  4535→/**
+  4536→ * An Atom that is scoped to the lifetime of an Editor.
+  4537→ *
+  4538→ * This is useful for storing UI state for tldraw applications. Keeping state scoped to an editor
+  4539→ * instead of stored in a global atom can prevent issues with state being shared between editors
+  4540→ * when navigating between pages, or when multiple editor instances are used on the same page.
+  4541→ *
+  4542→ * @public
+  4543→ */
+  4544→export declare class EditorAtom<T> {
+  4545→    private name;
+  4546→    private getInitialState;
+  4547→    private states;
+  4548→    constructor(name: string, getInitialState: (editor: Editor) => T);
+  4549→    getAtom(editor: Editor): Atom<T>;
+  4550→    get(editor: Editor): T;
+  4551→    update(editor: Editor, update: (state: T) => T): T;
+  4552→    set(editor: Editor, state: T): T;
+  4553→}
+  4554→
+  4555→/** @public */
+  4556→export declare const EditorContext: React_3.Context<Editor | null>;
+  4557→
+  4558→/**
+  4559→ * Base class for editor-attached managers that need to clean up after themselves.
+  4560→ *
+  4561→ * Extending `EditorManager` gives a manager one consistent teardown contract: register
+  4562→ * anything that needs undoing, and it runs automatically on `dispose()`. This keeps
+  4563→ * subscription lifecycle symmetric — whatever sets a thing up is what tears it down — so
+  4564→ * it can't be forgotten (the failure mode behind the strict-mode camera bug, #8892).
+  4565→ *
+  4566→ * Register cleanup by what you're creating:
+  4567→ *
+  4568→ * - Editor bus event (`tick`, `frame`, `change`, …): {@link EditorManager.addEditorEvent}
+  4569→ * - Store side effect (`editor.sideEffects.register…`): `this.register(disposer)`
+  4570→ * - Reaction (`react(...)` from `@tldraw/state`): `this.register(react(...))`
+  4571→ * - DOM listener: `this.register(() => el.removeEventListener(...))`
+  4572→ * - Other resource (cache, index, child manager): `this.register(() => x.dispose())`
+  4573→ *
+  4574→ * For timeouts, intervals, and animation frames prefer `editor.timers` (context-grouped
+  4575→ * and auto-disposed) over raw `setTimeout`. For cleanup on the editor itself rather than a
+  4576→ * manager, use `editor.disposables`.
+  4577→ *
+  4578→ * If a manager needs ordered teardown (e.g. pause a loop before cancelling it), override
+  4579→ * `dispose()` and call `super.dispose()` last — see `TickManager`.
+  4580→ *
+  4581→ * @public
+  4582→ */
+  4583→export declare abstract class EditorManager {
+  4584→    protected readonly editor: Editor;
+  4585→    protected readonly disposables: Set<() => void>;
+  4586→    constructor(editor: Editor);
+  4587→    /**
+  4588→     * Register a teardown function to run on `dispose()`. The universal way for a manager to
+  4589→     * make a resource "see itself out". Returns the same function for convenience.
+  4590→     */
+  4591→    protected register(dispose: () => void): () => void;
+  4592→    /**
+  4593→     * Subscribe to an editor bus event and register the matching unsubscribe, so the listener
+  4594→     * is removed automatically on `dispose()`.
+  4595→     */
+  4596→    protected addEditorEvent<E extends keyof TLEventMap>(event: E, fn: (...args: TLEventMap[E]) => void): void;
+  4597→    /* Excluded from this release type: dispose */
+  4598→}
+  4599→
+  4600→/**
+  4601→ * Renders its children into the end of the editor's container, escaping the canvas layer.
+  4602→ *
+  4603→ * Use this for anything anchored to canvas coordinates that also has to draw over the UI — a
+  4604→ * popover on a shape, a comment thread, an annotation panel. The `OnTheCanvas` and
+  4605→ * `InFrontOfTheCanvas` slots are fixed layers, each its own stacking context, so content mounted
+  4606→ * there can't paint above whatever outranks its layer whatever z-index it asks for. Mount in
+  4607→ * whichever slot suits your data flow, wrap the part that needs its own layer in this, and give
+  4608→ * that part a z-index.
+  4609→ *
+  4610→ * This package's own layers stop at 250 (`--tl-layer-canvas-in-front`); above that belongs to
+  4611→ * whatever renders the UI. In `tldraw` that's `--tl-layer-panels` (300) and `--tl-layer-menus`
+  4612→ * (400), defined by `tldraw`'s stylesheet rather than this one.
+  4613→ *
+  4614→ * Positioning still resolves against the editor's container, so a `position: absolute` child uses
+  4615→ * ordinary container coordinates.
+  4616→ *
+  4617→ * Prefer this over `createPortal(children, useContainer())`, which picks its DOM position from the
+  4618→ * commit that mounts it — landing the node ahead of the UI and of the "skip to main content" link
+  4619→ * that only works while nothing precedes it. This host is a real element placed last, so ordering
+  4620→ * is fixed rather than dependent on mount timing.
+  4621→ *
+  4622→ * @example
+  4623→ * ```tsx
+  4624→ * // 400 clears tldraw's menus layer; the bare editor's own layers stop at 250.
+  4625→ * function ShapeAnnotation({ point }: { point: VecLike }) {
+  4626→ *      return (
+  4627→ *              <EditorPortal>
+  4628→ *                      <div style={{ position: 'absolute', left: point.x, top: point.y, zIndex: 400 }}>
+  4629→ *                              Above the UI
+  4630→ *                      </div>
+  4631→ *              </EditorPortal>
+  4632→ *      )
+  4633→ * }
+  4634→ * ```
+  4635→ *
+  4636→ * @public
+  4637→ * @react
+  4638→ */
+  4639→export declare function EditorPortal({ children }: EditorPortalProps): ReactPortal | null;
+  4640→
+  4641→/** @public */
+  4642→export declare interface EditorPortalProps {
+  4643→    children: ReactNode;
+  4644→}
+  4645→
+  4646→/** @public @react */
+  4647→export declare function EditorProvider({ editor, children }: EditorProviderProps): JSX.Element;
+  4648→
+  4649→/** @public */
+  4650→export declare interface EditorProviderProps {
+  4651→    editor: Editor;
+  4652→    children: React_3.ReactNode;
+  4653→}
+  4654→
+  4655→/* Excluded from this release type: elementShouldCaptureKeys */
+  4656→
+  4657→/** @public */
+  4658→export declare class Ellipse2d extends Geometry2d {
+  4659→    config: Omit<Geometry2dOptions, 'isClosed'> & {
+  4660→        height: number;
+  4661→        width: number;
+  4662→    };
+  4663→    private _w;
+  4664→    private _h;
+  4665→    private _edges?;
+  4666→    constructor(config: Omit<Geometry2dOptions, 'isClosed'> & {
+  4667→        height: number;
+  4668→        width: number;
+  4669→    });
+  4670→    get edges(): Edge2d[];
+  4671→    getVertices(): any[];
+  4672→    nearestPoint(A: VecLike): Vec;
+  4673→    distanceToPoint(point: VecLike, hitInside?: boolean): number;
+  4674→    hitTestLineSegment(A: VecLike, B: VecLike): boolean;
+  4675→    getBounds(): Box;
+  4676→    getLength(): number;
+  4677→    getSvgPathData(first?: boolean): string;
+  4678→}
+  4679→
+  4680→/** @public */
+  4681→export declare class ErrorBoundary extends React_2.Component<React_2.PropsWithChildren<TLErrorBoundaryProps>, {
+  4682→    error: Error | null;
+  4683→}> {
+  4684→    static getDerivedStateFromError(error: Error): {
+  4685→        error: Error;
+  4686→    };
+  4687→    state: {
+  4688→        error: null;
+  4689→    };
+  4690→    componentDidCatch(error: unknown): void;
+  4691→    render(): bigint | boolean | JSX.Element | Iterable<React_2.ReactNode> | null | number | Promise<bigint | boolean | Iterable<React_2.ReactNode> | null | number | React_2.ReactElement<unknown, React_2.JSXElementConstructor<any> | string> | React_2.ReactPortal | string | undefined> | string | undefined;
+  4692→}
+  4693→
+  4694→/** @public @react */
+  4695→export declare function ErrorScreen({ children }: LoadingScreenProps): JSX.Element;
+  4696→
+  4697→/** @public */
+  4698→export declare const EVENT_NAME_MAP: Record<Exclude<TLEventName, TLPinchEventName>, keyof TLEventHandlers>;
+  4699→
+  4700→/* Excluded from this release type: extractSessionStateFromLegacySnapshot */
+  4701→
+  4702→/* Excluded from this release type: featureFlags */
+  4703→
+  4704→/** @public */
+  4705→export declare class FontManager {
+  4706→    private readonly editor;
+  4707→    private readonly assetUrls?;
+  4708→    constructor(editor: Editor, assetUrls?: {
+  4709→        [key: string]: string | undefined;
+  4710→    } | undefined);
+  4711→    dispose(): void;
+  4712→    private shapeFontFacesCache;
+  4713→    private shapeFontLoadStateCache;
+  4714→    getShapeFontFaces(shape: TLShape | TLShapeId): TLFontFace[];
+  4715→    trackFontsForShape(shape: TLShape | TLShapeId): void;
+  4716→    loadRequiredFontsForCurrentPage(limit?: number): Promise<void>;
+  4717→    private readonly fontStates;
+  4718→    private getFontState;
+  4719→    ensureFontIsLoaded(font: TLFontFace): Promise<void>;
+  4720→    private fontsToLoad;
+  4721→    requestFonts(fonts: TLFontFace[]): void;
+  4722→    private findOrCreateFontFace;
+  4723→    toEmbeddedCssDeclaration(font: TLFontFace): Promise<string>;
+  4724→}
+  4725→
+  4726→/** @public */
+  4727→export declare interface GapsSnapIndicator {
+  4728→    id: string;
+  4729→    type: 'gaps';
+  4730→    direction: 'horizontal' | 'vertical';
+  4731→    gaps: Array<{
+  4732→        endEdge: [VecLike, VecLike];
+  4733→        startEdge: [VecLike, VecLike];
+  4734→    }>;
+  4735→}
+  4736→
+  4737→/** @public */
+  4738→export declare abstract class Geometry2d {
+  4739→    isFilled: boolean;
+  4740→    isClosed: boolean;
+  4741→    isLabel: boolean;
+  4742→    isEmptyLabel: boolean;
+  4743→    isInternal: boolean;
+  4744→    excludeFromShapeBounds: boolean;
+  4745→    debugColor?: string;
+  4746→    ignore?: boolean;
+  4747→    constructor(opts: Geometry2dOptions);
+  4748→    isExcludedByFilter(filters?: Geometry2dFilters): boolean;
+  4749→    abstract getVertices(filters: Geometry2dFilters): Vec[];
+  4750→    abstract nearestPoint(point: VecLike, _filters?: Geometry2dFilters): Vec;
+  4751→    hitTestPoint(point: VecLike, margin?: number, hitInside?: boolean, _filters?: Geometry2dFilters): boolean;
+  4752→    distanceToPoint(point: VecLike, hitInside?: boolean, filters?: Geometry2dFilters): number;
+  4753→    distanceToLineSegment(A: VecLike, B: VecLike, filters?: Geometry2dFilters): number;
+  4754→    hitTestLineSegment(A: VecLike, B: VecLike, distance?: number, filters?: Geometry2dFilters): boolean;
+  4755→    intersectLineSegment(A: VecLike, B: VecLike, _filters?: Geometry2dFilters): VecLike[];
+  4756→    intersectCircle(center: VecLike, radius: number, _filters?: Geometry2dFilters): VecLike[];
+  4757→    intersectPolygon(polygon: VecLike[], _filters?: Geometry2dFilters): VecLike[];
+  4758→    intersectPolyline(polyline: VecLike[], _filters?: Geometry2dFilters): VecLike[];
+  4759→    /**
+  4760→     * Find a point along the edge of the geometry that is a fraction `t` along the entire way round.
+  4761→     */
+  4762→    interpolateAlongEdge(t: number, _filters?: Geometry2dFilters): Vec;
+  4763→    /**
+  4764→     * Take `point`, find the closest point to it on the edge of the geometry, and return how far
+  4765→     * along the edge it is as a fraction of the total length.
+  4766→     */
+  4767→    uninterpolateAlongEdge(point: VecLike, _filters?: Geometry2dFilters): number;
+  4768→    isPointInBounds(point: VecLike, margin?: number): boolean;
+  4769→    overlapsPolygon(_polygon: VecLike[]): boolean;
+  4770→    transform(transform: MatModel, opts?: TransformedGeometry2dOptions): Geometry2d;
+  4771→    private _vertices;
+  4772→    get vertices(): Vec[];
+  4773→    getBoundsVertices(): Vec[];
+  4774→    private _boundsVertices;
+  4775→    get boundsVertices(): Vec[];
+  4776→    getBounds(): Box;
+  4777→    private _bounds;
+  4778→    get bounds(): Box;
+  4779→    get center(): Vec;
+  4780→    private _area;
+  4781→    get area(): number;
+  4782→    getArea(): number;
+  4783→    toSimpleSvgPath(): string;
+  4784→    private _length?;
+  4785→    get length(): number;
+  4786→    getLength(_filters?: Geometry2dFilters): number;
+  4787→    /**
+  4788→     * Called after a hit test succeeds. Return `true` to reject the hit and allow
+  4789→     * shapes behind this one to be selected instead (e.g. transparent image pixels).
+  4790→     */
+  4791→    ignoreHit(_point: VecLike): boolean;
+  4792→    abstract getSvgPathData(first: boolean): string;
+  4793→}
+  4794→
+  4795→/**
+  4796→ * Filter geometry within a group.
+  4797→ *
+  4798→ * Filters are ignored when called directly on primitive geometries, but can be used to narrow down
+  4799→ * the results of an operation on `Group2d` geometries.
+  4800→ *
+  4801→ * @public
+  4802→ */
+  4803→export declare interface Geometry2dFilters {
+  4804→    readonly includeLabels?: boolean;
+  4805→    readonly includeInternal?: boolean;
+  4806→}
+  4807→
+  4808→/** @public */
+  4809→export declare const Geometry2dFilters: {
+  4810→    EXCLUDE_INTERNAL: Geometry2dFilters;
+  4811→    EXCLUDE_LABELS: Geometry2dFilters;
+  4812→    EXCLUDE_NON_STANDARD: Geometry2dFilters;
+  4813→    INCLUDE_ALL: Geometry2dFilters;
+  4814→};
+  4815→
+  4816→/** @public */
+  4817→export declare interface Geometry2dOptions extends TransformedGeometry2dOptions {
+  4818→    isFilled: boolean;
+  4819→    isClosed: boolean;
+  4820→}
+  4821→
+  4822→/**
+  4823→ * Get the measure of an arc.
+  4824→ *
+  4825→ * @param A - The angle from center to arc's start point (A) on the circle
+  4826→ * @param B - The angle from center to arc's end point (B) on the circle
+  4827→ * @param sweepFlag - 1 if the arc is clockwise, 0 if counter-clockwise
+  4828→ * @param largeArcFlag - 1 if the arc is greater than 180 degrees, 0 if less than 180 degrees
+  4829→ *
+
+[showing lines 2830-4829 of 10202; use offset=4830 with limit to continue reading]
