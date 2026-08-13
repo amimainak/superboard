@@ -254,7 +254,7 @@ export function StylePanel() {
             <StrokeOptions
               isDark={isDark}
               strokeWidth={style.strokeWidth}
-              dash={style.dash}
+              dash={style.dash || []}
               onWidthChange={(w) => setStyle({ strokeWidth: w })}
               onDashChange={(d) => setStyle({ dash: d })}
             />
@@ -286,7 +286,13 @@ export function StylePanel() {
           <Popup isDark={isDark} onClose={() => setOpenPocket(null)}>
             <TextOptions
               isDark={isDark}
-              style={style}
+              style={{
+                fontFamily: style.fontFamily || 'inherit',
+                fontSize: style.fontSize || 20,
+                textAlign: (style.textAlign as 'left' | 'center' | 'right') || 'left',
+                fontWeight: style.fontWeight || 'normal',
+                fontStyle: style.fontStyle || 'normal',
+              }}
               setStyle={setStyle}
             />
           </Popup>
@@ -574,16 +580,10 @@ function TextOptions({
   setStyle,
 }: {
   isDark: boolean
-  style: Record<string, unknown>
-  setStyle: (s: Record<string, unknown>) => void
+  style: { fontFamily: string; fontSize: number; textAlign: 'left' | 'center' | 'right'; fontWeight: string; fontStyle: string }
+  setStyle: (s: Partial<{ fontFamily: string; fontSize: number; textAlign: 'left' | 'center' | 'right'; fontWeight: string; fontStyle: string }>) => void
 }) {
-  const s = style as {
-    fontFamily: string
-    fontSize: number
-    textAlign: 'left' | 'center' | 'right'
-    fontWeight: string
-    fontStyle: string
-  }
+  const s = style
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
