@@ -163,20 +163,23 @@ export function WhiteboardCanvas() {
     return () => observer.disconnect()
   }, [])
 
-  // Get canvas coordinates from pointer event
+  // Get canvas coordinates from pointer event (includes real stylus pressure)
   const getCanvasPoint = useCallback(
-    (e: React.PointerEvent | PointerEvent): Point => {
+    (e: React.PointerEvent | PointerEvent): Point & { pressure: number } => {
       const container = containerRef.current
-      if (!container) return { x: 0, y: 0 }
+      if (!container) return { x: 0, y: 0, pressure: 0.5 }
       const rect = container.getBoundingClientRect()
       const point = screenToCanvas(e.clientX, e.clientY, camera, rect)
+      // Mouse reports pressure as 0 or 0.5; only 0 < pressure < 1 indicates real stylus input
+      const pressure = e.pressure > 0 && e.pressure < 1 ? e.pressure : 0.5
       if (snapToGrid) {
         return {
           x: Math.round(point.x / gridSize) * gridSize,
           y: Math.round(point.y / gridSize) * gridSize,
+          pressure,
         }
       }
-      return point
+      return { ...point, pressure }
     },
     [camera, snapToGrid, gridSize]
   )

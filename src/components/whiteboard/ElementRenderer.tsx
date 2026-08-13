@@ -162,7 +162,9 @@ export function ElementRenderer({
               lineHeight: 1.4,
               whiteSpace: 'pre-wrap',
               overflow: 'hidden',
-              textAlign: ((element as { textAlign?: string }).textAlign || 'left') as React.CSSProperties['textAlign'],
+              textAlign: element.textAlign || 'left',
+              fontWeight: (element as { fontWeight?: string }).fontWeight || 'normal',
+              fontStyle: (element as { fontStyle?: string }).fontStyle || 'normal',
               cursor: 'text',
               caretColor: element.strokeColor,
             }}
@@ -252,8 +254,9 @@ function FreehandSvg({ element, commonProps }: { element: FreehandElement; commo
 
   const pathD = useMemo(() => {
     if (element.points.length < 2) return ''
-    const pts = element.points.map(p => ({ ...p, pressure: 0.5 }))
+    // Highlighter always uses flat pressure
     if (isHighlighter) {
+      const pts = element.points.map(p => ({ ...p, pressure: 0.5 }))
       return getFreehandPath(pts, {
         size: 16,
         thinning: 0,
@@ -263,12 +266,16 @@ function FreehandSvg({ element, commonProps }: { element: FreehandElement; commo
         end: { cap: true } as const,
       })
     }
-    // Use constant pressure for consistent pen-like line thickness.
-    // thinning=0 disables pressure-based width variation,
-    // and round caps without taper give clean start/end.
+    // Pen: detect real stylus pressure for adaptive thinning.
+    // Mouse users get all-0.5 pressure → thinning=0 (consistent lines).
+    // Stylus users get real varying pressure → thinning=0.3 (subtle natural variation).
+    const hasRealPressure = element.points.some(p => p.pressure && p.pressure !== 0.5)
+    const pts = hasRealPressure
+      ? element.points.map(p => ({ ...p, pressure: p.pressure || 0.5 }))
+      : element.points.map(p => ({ ...p, pressure: 0.5 }))
     return getFreehandPath(pts, {
       size: element.strokeWidth * 2,
-      thinning: 0,
+      thinning: hasRealPressure ? 0.3 : 0,
       smoothing: 0.5,
       streamline: 0.5,
       start: { cap: true } as const,

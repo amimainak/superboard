@@ -26,6 +26,9 @@ export interface ElementStyle {
   dash?: number[] // e.g. [8, 4] for dashed
   fontSize?: number
   fontFamily?: string
+  textAlign?: 'left' | 'center' | 'right'
+  fontWeight?: string
+  fontStyle?: string
 }
 
 /** Tool identifiers */
@@ -109,6 +112,8 @@ export interface TextElement extends BaseElement {
   fontSize: number
   fontFamily: string
   textAlign: 'left' | 'center' | 'right'
+  fontWeight?: string
+  fontStyle?: string
   autoSize: boolean
 }
 

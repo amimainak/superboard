@@ -25,6 +25,9 @@ export const DEFAULT_STYLE: ElementStyle = {
   dash: [],
   fontSize: 20,
   fontFamily: 'inherit',
+  textAlign: 'left' as const,
+  fontWeight: 'normal',
+  fontStyle: 'normal',
 }
 
 const DEFAULT_CAMERA: Camera = { x: 0, y: 0, zoom: 1 }
@@ -433,28 +436,28 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
           const el: WhiteboardElement = {
             ...base,
             type: 'freehand',
-            points: [{ ...point, pressure: 0.5 }],
+            points: [{ ...point, pressure: point.pressure || 0.5 }],
             x: point.x,
             y: point.y,
             width: 0,
             height: 0,
             isHighlighter: false,
           }
-          set({ isDrawing: true, currentElement: el, drawingPoints: [{ ...point, pressure: 0.5 }] })
+          set({ isDrawing: true, currentElement: el, drawingPoints: [{ ...point, pressure: point.pressure || 0.5 }] })
           break
         }
         case 'highlighter': {
           const el: WhiteboardElement = {
             ...base,
             type: 'freehand',
-            points: [{ ...point, pressure: 0.5 }],
+            points: [{ ...point, pressure: point.pressure || 0.5 }],
             x: point.x,
             y: point.y,
             width: 0,
             height: 0,
             isHighlighter: true,
           }
-          set({ isDrawing: true, currentElement: el, drawingPoints: [{ ...point, pressure: 0.5 }] })
+          set({ isDrawing: true, currentElement: el, drawingPoints: [{ ...point, pressure: point.pressure || 0.5 }] })
           break
         }
         case 'rectangle': {
@@ -533,7 +536,9 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
             text: '',
             fontSize: style.fontSize || 20,
             fontFamily: style.fontFamily || 'inherit',
-            textAlign: 'left',
+            textAlign: style.textAlign || 'left',
+            fontWeight: style.fontWeight || 'normal',
+            fontStyle: style.fontStyle || 'normal',
             autoSize: true,
           } as WhiteboardElement
           set({ isDrawing: true, currentElement: el, drawingPoints: [] })
@@ -590,7 +595,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
       switch (currentElement.type) {
         case 'freehand': {
-          const pts = [...get().drawingPoints, { ...point, pressure: 0.5 }]
+          const pts = [...get().drawingPoints, { ...point, pressure: point.pressure || 0.5 }]
           set({
             currentElement: {
               ...currentElement,

@@ -241,6 +241,102 @@ export function StylePanel() {
 
       <Divider />
 
+      {/* Text Alignment */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 11, color: isDark ? '#9ca3af' : '#6b7280', fontWeight: 500 }}>
+          Align
+        </span>
+        {[
+          { value: 'left', icon: 'left' },
+          { value: 'center', icon: 'center' },
+          { value: 'right', icon: 'right' },
+        ].map((a) => (
+          <button
+            key={a.value}
+            onClick={() => setStyle({ textAlign: a.value as 'left' | 'center' | 'right' })}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 6,
+              border: 'none',
+              background:
+                style.textAlign === a.value
+                  ? isDark ? 'rgba(5,150,105,0.2)' : 'rgba(5,150,105,0.1)'
+                  : 'transparent',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: style.textAlign === a.value ? '#059669' : isDark ? '#d1d5db' : '#4b5563',
+            }}
+          >
+            <svg width={16} height={16} viewBox="0 0 16 16">
+              {a.value === 'left' && <>
+                <line x1={2} y1={3} x2={14} y2={3} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+                <line x1={2} y1={8} x2={10} y2={8} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+                <line x1={2} y1={13} x2={12} y2={13} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+              </>}
+              {a.value === 'center' && <>
+                <line x1={1} y1={3} x2={15} y2={3} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+                <line x1={3} y1={8} x2={13} y2={8} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+                <line x1={2} y1={13} x2={14} y2={13} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+              </>}
+              {a.value === 'right' && <>
+                <line x1={2} y1={3} x2={14} y2={3} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+                <line x1={6} y1={8} x2={14} y2={8} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+                <line x1={4} y1={13} x2={14} y2={13} stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"/>
+              </>}
+            </svg>
+          </button>
+        ))}
+      </div>
+
+      <Divider />
+
+      {/* Bold */}
+      <button
+        onClick={() => setStyle({ fontWeight: style.fontWeight === 'bold' ? 'normal' : 'bold' })}
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 6,
+          border: 'none',
+          background: style.fontWeight === 'bold' ? (isDark ? 'rgba(5,150,105,0.2)' : 'rgba(5,150,105,0.1)') : 'transparent',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 'bold',
+          fontSize: 14,
+          color: style.fontWeight === 'bold' ? '#059669' : isDark ? '#d1d5db' : '#4b5563',
+        }}
+      >
+        B
+      </button>
+
+      {/* Italic */}
+      <button
+        onClick={() => setStyle({ fontStyle: style.fontStyle === 'italic' ? 'normal' : 'italic' })}
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 6,
+          border: 'none',
+          background: style.fontStyle === 'italic' ? (isDark ? 'rgba(5,150,105,0.2)' : 'rgba(5,150,105,0.1)') : 'transparent',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontStyle: 'italic',
+          fontSize: 14,
+          color: style.fontStyle === 'italic' ? '#059669' : isDark ? '#d1d5db' : '#4b5563',
+        }}
+      >
+        I
+      </button>
+
+      <Divider />
+
       {/* Opacity */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 11, color: isDark ? '#9ca3af' : '#6b7280', fontWeight: 500 }}>
