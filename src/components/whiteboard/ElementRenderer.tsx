@@ -242,12 +242,17 @@ export function ElementRenderer({
 function FreehandSvg({ element, commonProps }: { element: FreehandElement; commonProps: Record<string, unknown> }) {
   const pathD = useMemo(() => {
     if (element.points.length < 2) return ''
-    const pts = simulatePressure(element.points)
+    // Use constant pressure for consistent pen-like line thickness.
+    // thinning=0 disables pressure-based width variation,
+    // and round caps without taper give clean start/end.
+    const pts = element.points.map(p => ({ ...p, pressure: 0.5 }))
     return getFreehandPath(pts, {
       size: element.strokeWidth * 2,
-      thinning: 0.5,
+      thinning: 0,
       smoothing: 0.5,
       streamline: 0.5,
+      start: { cap: true } as const,
+      end: { cap: true } as const,
     })
   }, [element.points, element.strokeWidth])
 
