@@ -150,6 +150,32 @@ export interface WhiteboardStore {
   clearLaser: () => void
 }
 
+// ---- Smooth Camera Animation Helper ----
+
+function animateCamera(
+  get: () => WhiteboardStore,
+  set: (partial: Partial<WhiteboardStore>) => void,
+  target: Partial<Camera>,
+  duration = 200
+) {
+  const startCam = { ...get().camera }
+  const startTime = Date.now()
+  const animate = () => {
+    const elapsed = Date.now() - startTime
+    const t = Math.min(elapsed / duration, 1)
+    // Ease-out cubic
+    const ease = 1 - Math.pow(1 - t, 3)
+    const cam = {
+      x: startCam.x + ((target.x ?? startCam.x) - startCam.x) * ease,
+      y: startCam.y + ((target.y ?? startCam.y) - startCam.y) * ease,
+      zoom: startCam.zoom + ((target.zoom ?? startCam.zoom) - startCam.zoom) * ease,
+    }
+    set({ camera: cam })
+    if (t < 1) requestAnimationFrame(animate)
+  }
+  requestAnimationFrame(animate)
+}
+
 // ---- Create Store ----
 
 export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
@@ -200,18 +226,22 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     zoomTo: (zoom) =>
       set((s) => ({ camera: { ...s.camera, zoom: Math.max(0.1, Math.min(5, zoom)) } })),
 
-    zoomIn: () =>
-      set((s) => ({ camera: { ...s.camera, zoom: Math.min(5, s.camera.zoom * 1.2) } })),
+    zoomIn: () => {
+      const target = { ...get().camera, zoom: Math.min(5, get().camera.zoom * 1.2) }
+      animateCamera(get, set, target)
+    },
 
-    zoomOut: () =>
-      set((s) => ({ camera: { ...s.camera, zoom: Math.max(0.1, s.camera.zoom / 1.2) } })),
+    zoomOut: () => {
+      const target = { ...get().camera, zoom: Math.max(0.1, get().camera.zoom / 1.2) }
+      animateCamera(get, set, target)
+    },
 
-    zoomReset: () => set({ camera: { ...DEFAULT_CAMERA } }),
+    zoomReset: () => animateCamera(get, set, { ...DEFAULT_CAMERA }),
 
     zoomToFit: () => {
       const elements = get().getCurrentPageElements()
       if (!elements.length) {
-        set({ camera: { ...DEFAULT_CAMERA } })
+        animateCamera(get, set, { ...DEFAULT_CAMERA })
         return
       }
       let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
@@ -229,12 +259,10 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
       const vh = typeof window !== 'undefined' ? window.innerHeight - 44 : 800
       const zoom = Math.min(vw / contentW, vh / contentH, 2)
-      set({
-        camera: {
-          x: vw / 2 - (minX + (maxX - minX) / 2) * zoom,
-          y: (vh / 2 + 22) - (minY + (maxY - minY) / 2) * zoom,
-          zoom,
-        },
+      animateCamera(get, set, {
+        x: vw / 2 - (minX + (maxX - minX) / 2) * zoom,
+        y: (vh / 2 + 22) - (minY + (maxY - minY) / 2) * zoom,
+        zoom,
       })
     },
 
@@ -875,7 +903,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
           width: 0,
           height: 0,
           rotation: 0,
-          opacity: 1,
+          opacity: 0.8,
           strokeColor: '#ef4444',
           fillColor: 'transparent',
           strokeWidth: 3,
@@ -886,6 +914,24 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         set({ currentElement: el })
       }
     },
-    clearLaser: () => set({ currentElement: null }),
+    clearLaser: () => {
+      const { currentElement } = get()
+      if (!currentElement) return
+      // Fade out by animating opacity
+      const start = Date.now()
+      const duration = 800
+      const fade = () => {
+        const elapsed = Date.now() - start
+        const t = Math.min(elapsed / duration, 1)
+        const opacity = 0.8 * (1 - t * t) // ease-out quadratic
+        if (t >= 1) {
+          set({ currentElement: null })
+          return
+        }
+        set({ currentElement: { ...get().currentElement!, opacity } as WhiteboardElement })
+        requestAnimationFrame(fade)
+      }
+      requestAnimationFrame(fade)
+    },
   }
 })

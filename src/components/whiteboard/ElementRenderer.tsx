@@ -401,7 +401,7 @@ function StickySvg({
   )
 }
 
-function LaserSvg({ element }: { element: { points: { x: number; y: number }[]; strokeWidth: number } }) {
+function LaserSvg({ element }: { element: { points: { x: number; y: number }[]; strokeWidth: number; opacity: number } }) {
   if (element.points.length < 2) return null
 
   const pathD = element.points
@@ -417,7 +417,7 @@ function LaserSvg({ element }: { element: { points: { x: number; y: number }[]; 
         strokeWidth={element.strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={0.8}
+        opacity={element.opacity}
       />
       {/* Glow effect */}
       <path
@@ -427,7 +427,7 @@ function LaserSvg({ element }: { element: { points: { x: number; y: number }[]; 
         strokeWidth={element.strokeWidth + 6}
         strokeLinecap="round"
         strokeLinejoin="round"
-        opacity={0.15}
+        opacity={element.opacity * 0.19}
       />
     </g>
   )
