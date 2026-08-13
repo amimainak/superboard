@@ -164,7 +164,12 @@ function VDiv({ isDark }: { isDark: boolean }) {
 // ---- Main Style Panel ----
 
 export function StylePanel() {
-  const { style, setStyle, isDark, tool, eraserSize, setEraserSize } = useWhiteboardStore()
+  const style = useWhiteboardStore((s) => s.style)
+  const setStyle = useWhiteboardStore((s) => s.setStyle)
+  const isDark = useWhiteboardStore((s) => s.isDark)
+  const tool = useWhiteboardStore((s) => s.tool)
+  const eraserSize = useWhiteboardStore((s) => s.eraserSize)
+  const setEraserSize = useWhiteboardStore((s) => s.setEraserSize)
   const [openPocket, setOpenPocket] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 

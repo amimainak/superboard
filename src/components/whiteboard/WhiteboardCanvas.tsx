@@ -72,71 +72,69 @@ export function WhiteboardCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
-  const {
-    camera,
-    tool,
-    elements,
-    selectedIds,
-    currentElement,
-    isDrawing,
-    isPanning,
-    spaceHeld,
-    showGrid,
-    gridSize,
-    gridType,
-    isDark,
-    snapToGrid,
-    currentPageIndex,
-    style,
-    // Actions
-    setCamera,
-    panBy,
-    zoomTo,
-    setTool,
-    selectElements,
-    clearSelection,
-    addElement,
-    updateElement,
-    startDrawing,
-    continueDrawing,
-    finishDrawing,
-    startPanning,
-    stopPanning,
-    setSpaceHeld,
-    setShiftHeld,
-    pushHistory,
-    moveSelected,
-    removeElements,
-    eraseAtPoint,
-    eraserSize,
-    setEraserActive,
-    addLaserPoint,
-    clearLaser,
-    undo,
-    redo,
-    copySelected,
-    cutSelected,
-    pasteClipboard,
-    duplicateSelected,
-    selectAll,
-    setShortcutsOpen,
-    zoomIn,
-    zoomOut,
-    zoomReset,
-    zoomToFit,
-    bringToFront,
-    sendToBack,
-    toggleLock,
-    groupSelected,
-    ungroupSelected,
-    toggleDark,
-    toggleGrid,
-    toggleSnap,
-    togglePresentationMode,
-    deletePage,
-    switchPage,
-    addPage,
-  } = useWhiteboardStore()
+  const tool = useWhiteboardStore((s) => s.tool)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const elements = useWhiteboardStore((s) => s.elements)
+  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const currentElement = useWhiteboardStore((s) => s.currentElement)
+  const isDrawing = useWhiteboardStore((s) => s.isDrawing)
+  const isPanning = useWhiteboardStore((s) => s.isPanning)
+  const spaceHeld = useWhiteboardStore((s) => s.spaceHeld)
+  const showGrid = useWhiteboardStore((s) => s.showGrid)
+  const gridSize = useWhiteboardStore((s) => s.gridSize)
+  const gridType = useWhiteboardStore((s) => s.gridType)
+  const isDark = useWhiteboardStore((s) => s.isDark)
+  const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const style = useWhiteboardStore((s) => s.style)
+  const eraserSize = useWhiteboardStore((s) => s.eraserSize)
+
+  const setCamera = useWhiteboardStore((s) => s.setCamera)
+  const panBy = useWhiteboardStore((s) => s.panBy)
+  const zoomTo = useWhiteboardStore((s) => s.zoomTo)
+  const setTool = useWhiteboardStore((s) => s.setTool)
+  const selectElements = useWhiteboardStore((s) => s.selectElements)
+  const clearSelection = useWhiteboardStore((s) => s.clearSelection)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const updateElement = useWhiteboardStore((s) => s.updateElement)
+  const startDrawing = useWhiteboardStore((s) => s.startDrawing)
+  const continueDrawing = useWhiteboardStore((s) => s.continueDrawing)
+  const finishDrawing = useWhiteboardStore((s) => s.finishDrawing)
+  const startPanning = useWhiteboardStore((s) => s.startPanning)
+  const stopPanning = useWhiteboardStore((s) => s.stopPanning)
+  const setSpaceHeld = useWhiteboardStore((s) => s.setSpaceHeld)
+  const setShiftHeld = useWhiteboardStore((s) => s.setShiftHeld)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const moveSelected = useWhiteboardStore((s) => s.moveSelected)
+  const removeElements = useWhiteboardStore((s) => s.removeElements)
+  const eraseAtPoint = useWhiteboardStore((s) => s.eraseAtPoint)
+  const setEraserActive = useWhiteboardStore((s) => s.setEraserActive)
+  const addLaserPoint = useWhiteboardStore((s) => s.addLaserPoint)
+  const clearLaser = useWhiteboardStore((s) => s.clearLaser)
+  const undo = useWhiteboardStore((s) => s.undo)
+  const redo = useWhiteboardStore((s) => s.redo)
+  const copySelected = useWhiteboardStore((s) => s.copySelected)
+  const cutSelected = useWhiteboardStore((s) => s.cutSelected)
+  const pasteClipboard = useWhiteboardStore((s) => s.pasteClipboard)
+  const duplicateSelected = useWhiteboardStore((s) => s.duplicateSelected)
+  const selectAll = useWhiteboardStore((s) => s.selectAll)
+  const setShortcutsOpen = useWhiteboardStore((s) => s.setShortcutsOpen)
+  const zoomIn = useWhiteboardStore((s) => s.zoomIn)
+  const zoomOut = useWhiteboardStore((s) => s.zoomOut)
+  const zoomReset = useWhiteboardStore((s) => s.zoomReset)
+  const zoomToFit = useWhiteboardStore((s) => s.zoomToFit)
+  const bringToFront = useWhiteboardStore((s) => s.bringToFront)
+  const sendToBack = useWhiteboardStore((s) => s.sendToBack)
+  const toggleLock = useWhiteboardStore((s) => s.toggleLock)
+  const groupSelected = useWhiteboardStore((s) => s.groupSelected)
+  const ungroupSelected = useWhiteboardStore((s) => s.ungroupSelected)
+  const toggleDark = useWhiteboardStore((s) => s.toggleDark)
+  const toggleGrid = useWhiteboardStore((s) => s.toggleGrid)
+  const toggleSnap = useWhiteboardStore((s) => s.toggleSnap)
+  const togglePresentationMode = useWhiteboardStore((s) => s.togglePresentationMode)
+  const deletePage = useWhiteboardStore((s) => s.deletePage)
+  const switchPage = useWhiteboardStore((s) => s.switchPage)
+  const addPage = useWhiteboardStore((s) => s.addPage)
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 })
   const [alignGuides, setAlignGuides] = useState<{ axis: 'x' | 'y'; pos: number; start: number; end: number }[]>([])
@@ -790,26 +788,53 @@ export function WhiteboardCanvas() {
         <g transform={`translate(${camera.x}, ${camera.y}) scale(${camera.zoom})`}>
           {/* Page elements */}
           {pageElements.map((el) => (
-            <ElementRenderer
-              key={el.id}
-              element={el}
-              isSelected={selectedIds.includes(el.id)}
-              onPointerDown={() => {}}
-              onDoubleClick={(id) => {
-                // For text/sticky, focus the content editable
-                const svgEl = svgRef.current?.querySelector(
-                  `[data-element-id="${id}"]`
-                )
-                const editable = svgEl?.querySelector('[contenteditable]')
-                if (editable) {
-                  ;(editable as HTMLElement).focus()
-                }
-              }}
-              onTextChange={(id, text) => {
-                updateElement(id, { text } as Partial<WhiteboardElement>)
-              }}
-              cameraZoom={camera.zoom}
-            />
+            <g key={el.id} data-element-id={el.id}>
+              <ElementRenderer
+                element={el}
+                isSelected={selectedIds.includes(el.id)}
+                onPointerDown={(e, id) => {
+                  if (tool === 'select') {
+                    if (e.shiftKey) {
+                      selectElements(
+                        selectedIds.includes(id)
+                          ? selectedIds.filter((sid) => sid !== id)
+                          : [...selectedIds, id]
+                      )
+                    } else if (!selectedIds.includes(id)) {
+                      selectElements([id])
+                    }
+                    pushHistory()
+                    lastMovePoint.current = getCanvasPoint(e)
+                  }
+                }}
+                onDoubleClick={(id) => {
+                  // For text/sticky, focus the content editable div inside the foreignObject
+                  const groupEl = svgRef.current?.querySelector(
+                    `[data-element-id=\"${id}\"]`
+                  )
+                  const editable = groupEl?.querySelector('[contenteditable]') as HTMLElement | null
+                  if (editable) {
+                    editable.focus()
+                    // Place cursor at end of text
+                    const range = document.createRange()
+                    const sel = window.getSelection()
+                    if (editable.childNodes.length > 0) {
+                      range.selectNodeContents(editable)
+                      range.collapse(false)
+                    } else {
+                      range.setStart(editable, 0)
+                      range.collapse(true)
+                    }
+                    sel?.removeAllRanges()
+                    sel?.addRange(range)
+                  }
+                }}
+                onTextChange={(id, text) => {
+                  updateElement(id, { text } as Partial<WhiteboardElement>)
+                }}
+                cameraZoom={camera.zoom}
+              />
+            </g>
           ))}
 
           {/* Current drawing preview */}

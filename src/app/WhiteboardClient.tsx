@@ -24,40 +24,39 @@ import {
 } from '@/lib/whiteboard/export'
 
 export default function WhiteboardClient() {
-  const {
-    isDark,
-    tool,
-    camera,
-    pages,
-    currentPageIndex,
-    elements,
-    shortcutsOpen,
-    selectedIds,
-    showGrid,
-    snapToGrid,
-    gridType,
-    isPresentationMode,
-    setShortcutsOpen,
-    zoomIn,
-    zoomOut,
-    zoomReset,
-    zoomToFit,
-    groupSelected,
-    ungroupSelected,
-    toggleLock,
-    selectAll,
-    bringToFront,
-    sendToBack,
-    addElement,
-    pushHistory,
-    toggleDark,
-    toggleGrid,
-    toggleSnap,
-    setGridType,
-    togglePresentationMode,
-    undo,
-    redo,
-  } = useWhiteboardStore()
+  const isDark = useWhiteboardStore((s) => s.isDark)
+  const tool = useWhiteboardStore((s) => s.tool)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const pages = useWhiteboardStore((s) => s.pages)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const elements = useWhiteboardStore((s) => s.elements)
+  const shortcutsOpen = useWhiteboardStore((s) => s.shortcutsOpen)
+  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const showGrid = useWhiteboardStore((s) => s.showGrid)
+  const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
+  const gridType = useWhiteboardStore((s) => s.gridType)
+  const isPresentationMode = useWhiteboardStore((s) => s.isPresentationMode)
+
+  const setShortcutsOpen = useWhiteboardStore((s) => s.setShortcutsOpen)
+  const zoomIn = useWhiteboardStore((s) => s.zoomIn)
+  const zoomOut = useWhiteboardStore((s) => s.zoomOut)
+  const zoomReset = useWhiteboardStore((s) => s.zoomReset)
+  const zoomToFit = useWhiteboardStore((s) => s.zoomToFit)
+  const groupSelected = useWhiteboardStore((s) => s.groupSelected)
+  const ungroupSelected = useWhiteboardStore((s) => s.ungroupSelected)
+  const toggleLock = useWhiteboardStore((s) => s.toggleLock)
+  const selectAll = useWhiteboardStore((s) => s.selectAll)
+  const bringToFront = useWhiteboardStore((s) => s.bringToFront)
+  const sendToBack = useWhiteboardStore((s) => s.sendToBack)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const toggleDark = useWhiteboardStore((s) => s.toggleDark)
+  const toggleGrid = useWhiteboardStore((s) => s.toggleGrid)
+  const toggleSnap = useWhiteboardStore((s) => s.toggleSnap)
+  const setGridType = useWhiteboardStore((s) => s.setGridType)
+  const togglePresentationMode = useWhiteboardStore((s) => s.togglePresentationMode)
+  const undo = useWhiteboardStore((s) => s.undo)
+  const redo = useWhiteboardStore((s) => s.redo)
 
   const canvasContainerRef = useRef<HTMLDivElement>(null)
 
@@ -100,9 +99,9 @@ export default function WhiteboardClient() {
   const handleExportSvg = useCallback(() => {
     const container = canvasContainerRef.current
     if (!container) return
-    const svg = exportAsSvg(elements, container.clientWidth, container.clientHeight, isDark)
+    const svg = exportAsSvg(elements, container.clientWidth, container.clientHeight, isDark, camera)
     downloadString(svg, `whiteboard-${Date.now()}.svg`, 'image/svg+xml')
-  }, [elements, isDark])
+  }, [elements, camera, isDark])
 
   const handleExportJson = useCallback(() => {
     const json = exportAsJson(elements)

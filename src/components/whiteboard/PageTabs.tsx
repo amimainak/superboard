@@ -10,15 +10,13 @@ import { Plus, X } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 export function PageTabs() {
-  const {
-    pages,
-    currentPageIndex,
-    isDark,
-    switchPage,
-    addPage,
-    deletePage,
-    renamePage,
-  } = useWhiteboardStore()
+  const pages = useWhiteboardStore((s) => s.pages)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const isDark = useWhiteboardStore((s) => s.isDark)
+  const switchPage = useWhiteboardStore((s) => s.switchPage)
+  const addPage = useWhiteboardStore((s) => s.addPage)
+  const deletePage = useWhiteboardStore((s) => s.deletePage)
+  const renamePage = useWhiteboardStore((s) => s.renamePage)
 
   if (pages.length <= 1) return null
 

@@ -215,7 +215,22 @@ export function TopBar({
             >
               {/* File */}
               <MenuSection label="File" isDark={isDark}>
-                <MenuItem label="Upload Image" isDark={isDark} onClick={() => { /* trigger file input via ref workaround */ }} />
+                <MenuItem label="Upload Image" isDark={isDark} onClick={() => {
+                  const input = document.createElement('input')
+                  input.type = 'file'
+                  input.accept = 'image/*'
+                  input.onchange = (ev) => {
+                    const file = (ev.target as HTMLInputElement).files?.[0]
+                    if (file && onFileUpload) {
+                      const dt = new DataTransfer()
+                      dt.items.add(file)
+                      input.files = dt.files
+                      onFileUpload({ target: input } as React.ChangeEvent<HTMLInputElement>)
+                    }
+                    setMenuOpen(false)
+                  }
+                  input.click()
+                }} />
                 <MenuItem label="Export as PNG" isDark={isDark} onClick={() => { onExportPng(); setMenuOpen(false) }} />
                 <MenuItem label="Export as JPEG" isDark={isDark} onClick={() => { onExportJpg(); setMenuOpen(false) }} />
                 <MenuItem label="Export as SVG" isDark={isDark} onClick={() => { onExportSvg(); setMenuOpen(false) }} />

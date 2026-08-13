@@ -17,15 +17,13 @@ interface SelectionHandlesProps {
 const HANDLE_SIZE = 8
 
 export function SelectionHandles({ containerRef }: SelectionHandlesProps) {
-  const {
-    elements,
-    selectedIds,
-    camera,
-    updateElement,
-    removeElements,
-    pushHistory,
-    isDark,
-  } = useWhiteboardStore()
+  const elements = useWhiteboardStore((s) => s.elements)
+  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const updateElement = useWhiteboardStore((s) => s.updateElement)
+  const removeElements = useWhiteboardStore((s) => s.removeElements)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const isDark = useWhiteboardStore((s) => s.isDark)
 
   const [dragInfo, setDragInfo] = useState<{
     type: 'move' | 'resize'

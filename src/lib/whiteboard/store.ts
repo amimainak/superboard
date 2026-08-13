@@ -767,13 +767,22 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     },
 
     deletePage: (index) => {
-      const { pages, currentPageIndex } = get()
+      const { pages, currentPageIndex, elements } = get()
       if (pages.length <= 1) return
       const newPages = pages.filter((_, i) => i !== index).map((p, i) => ({ ...p, index: i }))
       const newIndex = Math.min(currentPageIndex, newPages.length - 1)
+      // Remove orphaned elements that belonged to the deleted page
+      const deletedPageIndex = index
+      const survivingElements = elements.filter((el) => el.pageIndex !== deletedPageIndex)
+      // Re-index elements: elements on pages after the deleted one shift down by 1
+      const reIndexedElements = survivingElements.map((el) =>
+        el.pageIndex > deletedPageIndex ? { ...el, pageIndex: el.pageIndex - 1 } : el
+      )
       set({
         pages: newPages,
         currentPageIndex: newIndex,
+        elements: reIndexedElements,
+        selectedIds: [],
       })
     },
 

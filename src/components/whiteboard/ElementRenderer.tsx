@@ -7,6 +7,16 @@
 
 import React, { useMemo } from 'react'
 import type { WhiteboardElement, FreehandElement, LineElement, ArrowElement } from '@/lib/whiteboard/types'
+
+/** Sanitize text to prevent XSS — strip all HTML tags */
+function sanitizeText(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 import {
   getFreehandPath,
   diamondPath,
@@ -35,7 +45,8 @@ export function ElementRenderer({
   onTextChange,
   cameraZoom,
 }: ElementRendererProps) {
-  const { tool, isDark } = useWhiteboardStore()
+  const tool = useWhiteboardStore((s) => s.tool)
+  const isDark = useWhiteboardStore((s) => s.isDark)
 
   const commonProps = {
     opacity: element.opacity,
@@ -173,7 +184,7 @@ export function ElementRenderer({
             }}
             dangerouslySetInnerHTML={{
               __html: hasText
-                ? element.text.replace(/\n/g, '<br>')
+                ? sanitizeText(element.text).replace(/\n/g, '<br>')
                 : '<span style="color:inherit">Type here...</span>',
             }}
           />
@@ -312,7 +323,7 @@ function FreehandSvg({ element, commonProps }: { element: FreehandElement; commo
   )
 }
 
-const STICKY_COLOR_OPTIONS = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fecaca', '#e9d5ff']
+const STICKY_COLOR_OPTIONS = ['#fef08a', '#bbf7d0', '#bfdbfe', '#fecaca', '#e9d5ff', '#fed7aa']
 
 function StickySvg({
   element,
@@ -401,7 +412,7 @@ function StickySvg({
           onBlur={(e) => {
             onTextChange?.(element.id, e.currentTarget.textContent || '')
           }}
-          dangerouslySetInnerHTML={{ __html: (element.text || '').replace(/\n/g, '<br>') }}
+          dangerouslySetInnerHTML={{ __html: sanitizeText(element.text || '').replace(/\n/g, '<br>') }}
         />
       </foreignObject>
     </g>

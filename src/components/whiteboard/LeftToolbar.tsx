@@ -185,7 +185,9 @@ function Sep({ isDark }: { isDark: boolean }) {
 // ---- Main Toolbar ----
 
 export function LeftToolbar() {
-  const { tool, setTool, isDark } = useWhiteboardStore()
+  const tool = useWhiteboardStore((s) => s.tool)
+  const setTool = useWhiteboardStore((s) => s.setTool)
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [openFlyout, setOpenFlyout] = useState<'shapes' | 'more' | null>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
 
