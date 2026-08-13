@@ -8,6 +8,7 @@
 import React from 'react'
 import { Plus, X } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import './whiteboard.css'
 
 export function PageTabs() {
   const pages = useWhiteboardStore((s) => s.pages)
@@ -20,24 +21,13 @@ export function PageTabs() {
 
   if (pages.length <= 1) return null
 
+  const d = isDark ? 'dark' : 'light'
+
   return (
     <div
-      style={{
-        position: 'absolute',
-        bottom: 48,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        padding: '4px',
-        borderRadius: 10,
-        background: isDark ? 'rgba(17,24,39,0.9)' : 'rgba(255,255,255,0.9)',
-        border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-        backdropFilter: 'blur(8px)',
-        zIndex: 50,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-      }}
+      className={`wb-page-tabs wb-page-tabs-${d}`}
+      role="tablist"
+      aria-label="Whiteboard pages"
     >
       {pages.map((page, i) => (
         <button
@@ -47,30 +37,14 @@ export function PageTabs() {
             const name = prompt('Page name:', page.name)
             if (name) renamePage(i, name)
           }}
-          style={{
-            padding: '4px 14px',
-            borderRadius: 6,
-            border: 'none',
-            background:
-              i === currentPageIndex
-                ? isDark
-                  ? 'rgba(5,150,105,0.15)'
-                  : 'rgba(5,150,105,0.08)'
-                : 'transparent',
-            color:
-              i === currentPageIndex
-                ? '#059669'
-                : isDark
-                  ? '#9ca3af'
-                  : '#6b7280',
-            cursor: 'pointer',
-            fontSize: 12,
-            fontWeight: i === currentPageIndex ? 600 : 400,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            transition: 'all 0.15s',
-          }}
+          role="tab"
+          aria-selected={i === currentPageIndex}
+          aria-label={`${page.name}${i === currentPageIndex ? ' (active)' : ''}`}
+          className={[
+            'wb-page-tab',
+            `wb-page-tab-${d}`,
+            i === currentPageIndex ? `wb-page-tab-active wb-page-tab-active-${d}` : '',
+          ].join(' ')}
         >
           <span>{page.name}</span>
           {pages.length > 1 && i === currentPageIndex && (
@@ -80,6 +54,9 @@ export function PageTabs() {
                 deletePage(i)
               }}
               style={{ display: 'flex', alignItems: 'center' }}
+              role="button"
+              aria-label={`Delete page ${page.name}`}
+              tabIndex={0}
             >
               <X size={12} />
             </span>
@@ -89,18 +66,8 @@ export function PageTabs() {
       <button
         onClick={addPage}
         title="Add page"
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 6,
-          border: 'none',
-          background: 'transparent',
-          color: isDark ? '#6b7280' : '#9ca3af',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        aria-label="Add new page"
+        className={`wb-page-add-btn wb-page-add-btn-${d}`}
       >
         <Plus size={14} />
       </button>

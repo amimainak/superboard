@@ -8,6 +8,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { ChevronUp, Palette, Minus, Type } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import './whiteboard.css'
 
 const COLORS = [
   '#000000', '#1e293b', '#374151', '#6b7280',
@@ -50,32 +51,18 @@ function Popup({
     <>
       {/* Backdrop — catches all clicks outside */}
       <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 10000,
-        }}
+        className="wb-flyout-backdrop"
         onMouseDown={(e) => {
           e.stopPropagation()
           onClose()
         }}
+        aria-hidden="true"
       />
       <div
         ref={ref}
-        style={{
-          position: 'absolute',
-          bottom: 'calc(100% + 8px)',
-          left: 0,
-          background: isDark ? '#1e293b' : '#ffffff',
-          border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-          borderRadius: 12,
-          padding: '10px 12px',
-          zIndex: 10001,
-          boxShadow: isDark
-            ? '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
-            : '0 12px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04)',
-          opacity: 1,
-        }}
+        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'} wb-popup-up`}
+        role="dialog"
+        aria-label="Style options"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {children}
@@ -102,45 +89,22 @@ function PocketBtn({
   return (
     <button
       onClick={onClick}
-      onMouseEnter={(e) => {
-        if (!isOpen) {
-          e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-          e.currentTarget.style.color = isDark ? '#e2e8f0' : '#1e293b'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isOpen) {
-          e.currentTarget.style.background = isOpen
-            ? isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)'
-            : 'transparent'
-          e.currentTarget.style.color = isOpen
-            ? '#10b981'
-            : isDark ? '#64748b' : '#94a3b8'
-        }
-      }}
-      style={{
-        height: 30,
-        padding: '0 10px',
-        borderRadius: 8,
-        border: 'none',
-        background: isOpen
-          ? isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)'
-          : 'transparent',
-        color: isOpen ? '#10b981' : isDark ? '#64748b' : '#94a3b8',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        fontSize: 11,
-        fontWeight: 500,
-        transition: 'all 0.12s ease',
-        whiteSpace: 'nowrap',
-        flexShrink: 0,
-      }}
+      aria-label={`${label} options`}
+      aria-expanded={isOpen}
+      aria-haspopup="dialog"
+      className={[
+        'wb-pocket-btn',
+        `wb-pocket-btn-${isDark ? 'dark' : 'light'}`,
+        isOpen ? `wb-pocket-btn-active wb-pocket-btn-active-${isDark ? 'dark' : 'light'}` : '',
+      ].join(' ')}
     >
       {icon}
       {label}
-      <ChevronUp size={12} style={{ opacity: isOpen ? 1 : 0.4, transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+      <ChevronUp
+        size={12}
+        style={{ opacity: isOpen ? 1 : 0.4, transition: 'transform 0.15s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        aria-hidden="true"
+      />
     </button>
   )
 }
@@ -148,17 +112,7 @@ function PocketBtn({
 // ---- Thin divider ----
 
 function VDiv({ isDark }: { isDark: boolean }) {
-  return (
-    <div
-      style={{
-        width: 1,
-        height: 20,
-        background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-        margin: '0 4px',
-        flexShrink: 0,
-      }}
-    />
-  )
+  return <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 }
 
 // ---- Main Style Panel ----
@@ -194,19 +148,9 @@ export function StylePanel() {
   return (
     <div
       ref={panelRef}
-      style={{
-        height: 42,
-        minHeight: 42,
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 12px',
-        gap: 6,
-        borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-        background: isDark ? '#0f172a' : '#ffffff',
-        overflowX: 'auto',
-        overflowY: 'visible',
-        zIndex: 200,
-      }}
+      className={`wb-style-panel wb-style-panel-${isDark ? 'dark' : 'light'}`}
+      role="toolbar"
+      aria-label="Style options"
     >
       {/* ---- Stroke Color Pocket ---- */}
       <div style={{ position: 'relative' }}>
@@ -217,14 +161,8 @@ export function StylePanel() {
           onClick={() => togglePocket('color')}
           icon={
             <div
-              style={{
-                width: 14,
-                height: 14,
-                borderRadius: 4,
-                border: `1.5px solid ${isDark ? '#475569' : '#cbd5e1'}`,
-                background: activeColor,
-                flexShrink: 0,
-              }}
+              className={`wb-color-indicator wb-color-indicator-${isDark ? 'dark' : 'light'}`}
+              style={{ background: activeColor }}
             />
           }
         />
@@ -267,7 +205,7 @@ export function StylePanel() {
         )}
       </div>
 
-      {/* ---- Text Pocket (only when text tool or always) ---- */}
+      {/* ---- Text Pocket ---- */}
       <div style={{ position: 'relative' }}>
         <PocketBtn
           label="Text"
@@ -308,7 +246,7 @@ export function StylePanel() {
 
       {/* ---- Opacity — always visible (compact) ---- */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <span style={{ fontSize: 11, color: isDark ? '#475569' : '#94a3b8', fontWeight: 500 }}>
+        <span className={`wb-opacity-label wb-opacity-label-${isDark ? 'dark' : 'light'}`}>
           {Math.round(style.opacity * 100)}%
         </span>
         <input
@@ -319,6 +257,7 @@ export function StylePanel() {
           value={style.opacity}
           onChange={(e) => setStyle({ opacity: parseFloat(e.target.value) })}
           style={{ width: 56, accentColor: '#10b981', height: 3 }}
+          aria-label="Opacity"
         />
       </div>
 
@@ -326,28 +265,21 @@ export function StylePanel() {
       {tool === 'eraser' && (
         <>
           <VDiv isDark={isDark} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-            <span style={{ fontSize: 11, color: isDark ? '#475569' : '#94a3b8', fontWeight: 500 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }} role="group" aria-label="Eraser size">
+            <span className={`wb-eraser-label wb-eraser-label-${isDark ? 'dark' : 'light'}`}>
               Eraser
             </span>
             {ERASER_SIZES.map((s) => (
               <button
                 key={s}
                 onClick={() => setEraserSize(s)}
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  border: 'none',
-                  background: eraserSize === s
-                    ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                    : 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: eraserSize === s ? '#10b981' : isDark ? '#64748b' : '#94a3b8',
-                }}
+                aria-label={`Eraser size ${s}`}
+                aria-pressed={eraserSize === s}
+                className={[
+                  'wb-eraser-btn',
+                  `wb-eraser-btn-${isDark ? 'dark' : 'light'}`,
+                  eraserSize === s ? `wb-eraser-btn-active wb-eraser-btn-active-${isDark ? 'dark' : 'light'}` : '',
+                ].join(' ')}
               >
                 <svg width={14} height={14} viewBox="0 0 14 14">
                   <circle cx={7} cy={7} r={Math.min(s / 2, 5)} fill="none" stroke="currentColor" strokeWidth={1.5} />
@@ -380,7 +312,7 @@ function ColorPicker({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Stroke color row */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Stroke
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -395,23 +327,18 @@ function ColorPicker({
               value={strokeColor === 'transparent' ? '#000000' : strokeColor}
               onChange={(e) => onStrokeChange(e.target.value)}
               style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
+              aria-label="Custom stroke color"
             />
             <div
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: 6,
-                border: `1.5px solid ${isDark ? '#475569' : '#cbd5e1'}`,
-                background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-                cursor: 'pointer',
-              }}
+              className={`wb-color-custom wb-color-custom-${isDark ? 'dark' : 'light'}`}
+              style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
             />
           </label>
         </div>
       </div>
       {/* Fill color row */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Fill
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -423,21 +350,9 @@ function ColorPicker({
           />
           <button
             onClick={() => onFillChange('transparent')}
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: 6,
-              border: `1.5px solid ${isDark ? '#475569' : '#cbd5e1'}`,
-              background: 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50%/8px 8px',
-              cursor: 'pointer',
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: isDark ? '#64748b' : '#94a3b8',
-              fontSize: 12,
-              fontWeight: 700,
-            }}
+            className={`wb-color-transparent wb-color-transparent-${isDark ? 'dark' : 'light'}`}
+            style={{ background: 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50%/8px 8px' }}
+            aria-label="No fill"
           >
             /0
           </button>
@@ -451,7 +366,6 @@ function ColorSwatchRow({
   isDark,
   value,
   onChange,
-  includeTransparent,
 }: {
   isDark: boolean
   value: string
@@ -459,27 +373,22 @@ function ColorSwatchRow({
   includeTransparent?: boolean
 }) {
   return (
-    <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 240 }}>
+    <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', maxWidth: 240 }} role="listbox" aria-label="Color swatches">
       {COLORS.map((c) => {
         const isActive = value === c
         return (
           <button
             key={c}
             onClick={() => onChange(c)}
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 5,
-              border: isActive
-                ? '2px solid #10b981'
-                : c === '#ffffff'
-                  ? `1px solid ${isDark ? '#475569' : '#cbd5e1'}`
-                  : '1px solid transparent',
-              background: c,
-              cursor: 'pointer',
-              outline: 'none',
-              boxShadow: isActive ? '0 0 0 1px rgba(16,185,129,0.3)' : 'none',
-            }}
+            role="option"
+            aria-selected={isActive}
+            aria-label={`Color ${c}`}
+            className={[
+              'wb-swatch',
+              isActive ? 'wb-swatch-active' : '',
+              c === '#ffffff' ? `wb-swatch-white-${isDark ? 'dark' : 'light'}` : '',
+            ].join(' ')}
+            style={{ background: c }}
           />
         )
       })}
@@ -504,28 +413,22 @@ function StrokeOptions({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Width */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Width
         </div>
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div style={{ display: 'flex', gap: 3 }} role="radiogroup" aria-label="Stroke width">
           {STROKE_WIDTHS.map((w) => (
             <button
               key={w}
               onClick={() => onWidthChange(w)}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                border: 'none',
-                background: strokeWidth === w
-                  ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                  : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: strokeWidth === w ? '#10b981' : isDark ? '#64748b' : '#94a3b8',
-              }}
+              role="radio"
+              aria-checked={strokeWidth === w}
+              aria-label={`Width ${w}`}
+              className={[
+                'wb-opt-btn',
+                `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+                strokeWidth === w ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
+              ].join(' ')}
             >
               <svg width={20} height={20} viewBox="0 0 20 20">
                 <line x1={3} y1={10} x2={17} y2={10} stroke="currentColor" strokeWidth={Math.min(w, 6)} strokeLinecap="round" />
@@ -536,10 +439,10 @@ function StrokeOptions({
       </div>
       {/* Dash pattern */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Dash Style
         </div>
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div style={{ display: 'flex', gap: 3 }} role="radiogroup" aria-label="Dash style">
           {DASH_PATTERNS.map((p) => {
             const isActive = JSON.stringify(dash) === JSON.stringify(p.value)
             return (
@@ -547,19 +450,14 @@ function StrokeOptions({
                 key={p.label}
                 onClick={() => onDashChange(p.value)}
                 title={p.label}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  border: 'none',
-                  background: isActive
-                    ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                    : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                role="radio"
+                aria-checked={isActive}
+                aria-label={p.label}
+                className={[
+                  'wb-opt-btn',
+                  `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+                  isActive ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
+                ].join(' ')}
               >
                 <svg width={22} height={4} viewBox="0 0 22 4">
                   <line
@@ -594,31 +492,25 @@ function TextOptions({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Font family + size in one row */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Font
         </div>
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div style={{ display: 'flex', gap: 3 }} role="radiogroup" aria-label="Font family">
           {FONT_FAMILIES.map((f) => (
             <button
               key={f.value}
               onClick={() => setStyle({ fontFamily: f.value })}
               title={f.label}
-              style={{
-                width: 40,
-                height: 32,
-                borderRadius: 8,
-                border: 'none',
-                background: s.fontFamily === f.value
-                  ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                  : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: s.fontFamily === f.value ? '#10b981' : isDark ? '#cbd5e1' : '#334155',
-              }}
+              role="radio"
+              aria-checked={s.fontFamily === f.value}
+              aria-label={f.label}
+              className={[
+                'wb-font-btn',
+                `wb-font-btn-${isDark ? 'dark' : 'light'}`,
+                s.fontFamily === f.value ? `wb-font-btn-active wb-font-btn-active-${isDark ? 'dark' : 'light'}` : '',
+              ].join(' ')}
             >
-              <span style={{ fontFamily: f.value, fontSize: 14, fontWeight: 500 }}>{f.preview}</span>
+              <span style={{ fontFamily: f.value }}>{f.preview}</span>
             </button>
           ))}
         </div>
@@ -626,30 +518,22 @@ function TextOptions({
 
       {/* Size */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Size
         </div>
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div style={{ display: 'flex', gap: 3 }} role="radiogroup" aria-label="Font size">
           {[14, 20, 28, 36, 48].map((sz) => (
             <button
               key={sz}
               onClick={() => setStyle({ fontSize: sz })}
-              style={{
-                width: 40,
-                height: 32,
-                borderRadius: 8,
-                border: 'none',
-                background: s.fontSize === sz
-                  ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                  : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                fontWeight: 500,
-                color: s.fontSize === sz ? '#10b981' : isDark ? '#cbd5e1' : '#334155',
-              }}
+              role="radio"
+              aria-checked={s.fontSize === sz}
+              aria-label={`Size ${sz}`}
+              className={[
+                'wb-size-btn',
+                `wb-size-btn-${isDark ? 'dark' : 'light'}`,
+                s.fontSize === sz ? `wb-size-btn-active wb-size-btn-active-${isDark ? 'dark' : 'light'}` : '',
+              ].join(' ')}
             >
               {sz}
             </button>
@@ -659,28 +543,22 @@ function TextOptions({
 
       {/* Alignment + Bold + Italic */}
       <div>
-        <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: isDark ? '#475569' : '#94a3b8', marginBottom: 6 }}>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Format
         </div>
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div style={{ display: 'flex', gap: 3 }} role="group" aria-label="Text format">
           {(['left', 'center', 'right'] as const).map((a) => (
             <button
               key={a}
               onClick={() => setStyle({ textAlign: a })}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                border: 'none',
-                background: s.textAlign === a
-                  ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                  : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: s.textAlign === a ? '#10b981' : isDark ? '#64748b' : '#94a3b8',
-              }}
+              role="radio"
+              aria-checked={s.textAlign === a}
+              aria-label={`Align ${a}`}
+              className={[
+                'wb-opt-btn',
+                `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+                s.textAlign === a ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
+              ].join(' ')}
             >
               <svg width={14} height={14} viewBox="0 0 14 14">
                 {a === 'left' && <>
@@ -703,41 +581,29 @@ function TextOptions({
           ))}
           <button
             onClick={() => setStyle({ fontWeight: s.fontWeight === 'bold' ? 'normal' : 'bold' })}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: 'none',
-              background: s.fontWeight === 'bold' ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)' : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
-              fontSize: 13,
-              color: s.fontWeight === 'bold' ? '#10b981' : isDark ? '#64748b' : '#94a3b8',
-            }}
+            role="radio"
+            aria-checked={s.fontWeight === 'bold'}
+            aria-label="Bold"
+            className={[
+              'wb-opt-btn',
+              `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+              s.fontWeight === 'bold' ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
+            ].join(' ')}
           >
-            B
+            <span style={{ fontWeight: 'bold', fontSize: 13 }}>B</span>
           </button>
           <button
             onClick={() => setStyle({ fontStyle: s.fontStyle === 'italic' ? 'normal' : 'italic' })}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: 'none',
-              background: s.fontStyle === 'italic' ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)' : isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontStyle: 'italic',
-              fontSize: 13,
-              color: s.fontStyle === 'italic' ? '#10b981' : isDark ? '#64748b' : '#94a3b8',
-            }}
+            role="radio"
+            aria-checked={s.fontStyle === 'italic'}
+            aria-label="Italic"
+            className={[
+              'wb-opt-btn',
+              `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+              s.fontStyle === 'italic' ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
+            ].join(' ')}
           >
-            I
+            <span style={{ fontStyle: 'italic', fontSize: 13 }}>I</span>
           </button>
         </div>
       </div>

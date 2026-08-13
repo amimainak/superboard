@@ -7,16 +7,6 @@
 
 import React, { useMemo } from 'react'
 import type { WhiteboardElement, FreehandElement, LineElement, ArrowElement } from '@/lib/whiteboard/types'
-
-/** Sanitize text to prevent XSS — strip all HTML tags */
-function sanitizeText(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
 import {
   getFreehandPath,
   diamondPath,
@@ -182,12 +172,17 @@ export function ElementRenderer({
             onBlur={(e) => {
               onTextChange?.(element.id, e.currentTarget.textContent || '')
             }}
-            dangerouslySetInnerHTML={{
-              __html: hasText
-                ? sanitizeText(element.text).replace(/\n/g, '<br>')
-                : '<span style="color:inherit">Type here...</span>',
-            }}
-          />
+            data-placeholder="Type here..."
+          >
+            {hasText
+              ? element.text.split('\n').map((line, i, arr) => (
+                <React.Fragment key={i}>
+                  {line}{i < arr.length - 1 && <br />}
+                </React.Fragment>
+              ))
+              : null
+            }
+          </div>
         </foreignObject>
       )
     }
@@ -412,8 +407,14 @@ function StickySvg({
           onBlur={(e) => {
             onTextChange?.(element.id, e.currentTarget.textContent || '')
           }}
-          dangerouslySetInnerHTML={{ __html: sanitizeText(element.text || '').replace(/\n/g, '<br>') }}
-        />
+          aria-label="Sticky note text"
+        >
+          {(element.text || '').split('\n').map((line, i, arr) => (
+            <React.Fragment key={i}>
+              {line}{i < arr.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </div>
       </foreignObject>
     </g>
   )

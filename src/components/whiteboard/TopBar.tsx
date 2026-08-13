@@ -16,6 +16,7 @@ import {
   ZoomOut,
   Maximize,
 } from 'lucide-react'
+import './whiteboard.css'
 
 interface TopBarProps {
   isDark: boolean
@@ -101,46 +102,24 @@ export function TopBar({
 
   return (
     <header
-      className="top-bar"
-      style={{
-        height: '40px',
-        minHeight: '40px',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 10px',
-        gap: 2,
-        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-        background: isDark ? '#0d1117' : '#ffffff',
-        zIndex: 1000,
-        overflow: 'hidden',
-      }}
+      className={`wb-top-bar wb-top-bar-${isDark ? 'dark' : 'light'}`}
+      role="banner"
     >
       {/* Logo — minimal */}
-      <div
-        style={{
-          width: 26,
-          height: 26,
-          borderRadius: 7,
-          background: 'linear-gradient(135deg, #059669, #0891b2)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}
-      >
+      <div className="wb-logo" aria-label="Superboard logo">
         <Pen size={13} color="white" />
       </div>
 
       {/* Thin divider */}
-      <div style={{ width: 1, height: 18, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '0 6px', flexShrink: 0 }} />
+      <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 
       {/* Tool name — subtle */}
-      <span style={{ fontSize: 12, fontWeight: 500, color: isDark ? '#9ca3af' : '#9ca3af', flexShrink: 0 }}>
+      <span className={`wb-tool-label wb-tool-label-${isDark ? 'dark' : 'light'}`}>
         {ToolLabel[currentTool] || currentTool}
       </span>
 
       {/* Page name */}
-      <span style={{ fontSize: 11, color: isDark ? '#4b5563' : '#c0c4cc', flexShrink: 0, marginLeft: 4 }}>
+      <span className={`wb-page-name wb-page-name-${isDark ? 'dark' : 'light'}`}>
         {currentPage}
       </span>
 
@@ -149,113 +128,105 @@ export function TopBar({
 
       {/* Zoom — compact */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-        <Ico title="Zoom Out" isDark={isDark} onClick={onZoomOut}>
+        <Ico title="Zoom Out" isDark={isDark} onClick={onZoomOut} ariaLabel="Zoom out">
           <ZoomOut size={14} />
         </Ico>
         <button
           onClick={onZoomReset}
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '0 4px',
-            borderRadius: 4,
-            fontSize: 11,
-            fontWeight: 600,
-            color: isDark ? '#9ca3af' : '#6b7280',
-            minWidth: 36,
-            textAlign: 'center',
-            lineHeight: '20px',
-          }}
+          className={`wb-zoom-btn wb-zoom-btn-${isDark ? 'dark' : 'light'}`}
+          aria-label={`Zoom ${zoom}%, click to reset`}
         >
           {zoom}%
         </button>
-        <Ico title="Zoom In" isDark={isDark} onClick={onZoomIn}>
+        <Ico title="Zoom In" isDark={isDark} onClick={onZoomIn} ariaLabel="Zoom in">
           <ZoomIn size={14} />
         </Ico>
       </div>
 
       {/* Thin divider */}
-      <div style={{ width: 1, height: 18, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', margin: '0 4px', flexShrink: 0 }} />
+      <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 
       {/* Right actions — minimal icons */}
-      <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation}>
+      <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation} ariaLabel="Toggle presentation mode">
         <Maximize size={14} />
       </Ico>
 
-      <Ico title={isDark ? 'Light mode' : 'Dark mode'} isDark={isDark} onClick={onToggleDark}>
+      <Ico
+        title={isDark ? 'Light mode' : 'Dark mode'}
+        isDark={isDark}
+        onClick={onToggleDark}
+        ariaLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      >
         {isDark ? <Sun size={14} /> : <Moon size={14} />}
       </Ico>
 
       {/* More menu — groups all secondary actions */}
       <div style={{ position: 'relative' }}>
-        <Ico title="More" isDark={isDark} onClick={() => setMenuOpen(!menuOpen)}>
+        <Ico
+          title="More"
+          isDark={isDark}
+          onClick={() => setMenuOpen(!menuOpen)}
+          ariaLabel="More options"
+          ariaExpanded={menuOpen}
+          ariaHaspopup="menu"
+        >
           <MoreHorizontal size={14} />
         </Ico>
         {menuOpen && (
           <>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 999 }} onClick={() => setMenuOpen(false)} />
+            <div className="wb-menu-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
             <div
-              style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: 6,
-                background: isDark ? '#1f2937' : '#ffffff',
-                border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
-                borderRadius: 10,
-                padding: 6,
-                zIndex: 1001,
-                boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.5)' : '0 8px 24px rgba(0,0,0,0.12)',
-                minWidth: 200,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1,
-              }}
+              className={`wb-menu-panel wb-menu-panel-${isDark ? 'dark' : 'light'}`}
+              role="menu"
+              aria-label="Actions menu"
             >
               {/* File */}
-              <MenuSection label="File" isDark={isDark}>
-                <MenuItem label="Upload Image" isDark={isDark} onClick={() => {
-                  const input = document.createElement('input')
-                  input.type = 'file'
-                  input.accept = 'image/*'
-                  input.onchange = (ev) => {
-                    const file = (ev.target as HTMLInputElement).files?.[0]
-                    if (file && onFileUpload) {
-                      const dt = new DataTransfer()
-                      dt.items.add(file)
-                      input.files = dt.files
-                      onFileUpload({ target: input } as React.ChangeEvent<HTMLInputElement>)
-                    }
-                    setMenuOpen(false)
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                File
+              </div>
+              <MenuItem label="Upload Image" isDark={isDark} onClick={() => {
+                const input = document.createElement('input')
+                input.type = 'file'
+                input.accept = 'image/*'
+                input.onchange = (ev) => {
+                  const file = (ev.target as HTMLInputElement).files?.[0]
+                  if (file && onFileUpload) {
+                    const dt = new DataTransfer()
+                    dt.items.add(file)
+                    input.files = dt.files
+                    onFileUpload({ target: input } as React.ChangeEvent<HTMLInputElement>)
                   }
-                  input.click()
-                }} />
-                <MenuItem label="Export as PNG" isDark={isDark} onClick={() => { onExportPng(); setMenuOpen(false) }} />
-                <MenuItem label="Export as JPEG" isDark={isDark} onClick={() => { onExportJpg(); setMenuOpen(false) }} />
-                <MenuItem label="Export as SVG" isDark={isDark} onClick={() => { onExportSvg(); setMenuOpen(false) }} />
-                <MenuItem label="Export as JSON" isDark={isDark} onClick={() => { onExportJson(); setMenuOpen(false) }} />
-              </MenuSection>
+                  setMenuOpen(false)
+                }
+                input.click()
+              }} />
+              <MenuItem label="Export as PNG" isDark={isDark} onClick={() => { onExportPng(); setMenuOpen(false) }} />
+              <MenuItem label="Export as JPEG" isDark={isDark} onClick={() => { onExportJpg(); setMenuOpen(false) }} />
+              <MenuItem label="Export as SVG" isDark={isDark} onClick={() => { onExportSvg(); setMenuOpen(false) }} />
+              <MenuItem label="Export as JSON" isDark={isDark} onClick={() => { onExportJson(); setMenuOpen(false) }} />
               {/* Edit */}
-              <MenuSection label="Edit" isDark={isDark}>
-                <MenuItem label="Select All" isDark={isDark} shortcut="Ctrl+A" onClick={() => { onSelectAll(); setMenuOpen(false) }} />
-                <MenuItem label="Group" isDark={isDark} shortcut="Ctrl+G" onClick={() => { onGroup(); setMenuOpen(false) }} />
-                <MenuItem label="Ungroup" isDark={isDark} shortcut="Ctrl+⇧G" onClick={() => { onUngroup(); setMenuOpen(false) }} />
-                <MenuItem label="Lock / Unlock" isDark={isDark} shortcut="⇧L" onClick={() => { onToggleLock(); setMenuOpen(false) }} />
-                <MenuItem label="Bring to Front" isDark={isDark} onClick={() => { onBringToFront(); setMenuOpen(false) }} />
-                <MenuItem label="Send to Back" isDark={isDark} onClick={() => { onSendToBack(); setMenuOpen(false) }} />
-              </MenuSection>
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                Edit
+              </div>
+              <MenuItem label="Select All" isDark={isDark} shortcut="Ctrl+A" onClick={() => { onSelectAll(); setMenuOpen(false) }} />
+              <MenuItem label="Group" isDark={isDark} shortcut="Ctrl+G" onClick={() => { onGroup(); setMenuOpen(false) }} />
+              <MenuItem label="Ungroup" isDark={isDark} shortcut="Ctrl+⇧G" onClick={() => { onUngroup(); setMenuOpen(false) }} />
+              <MenuItem label="Lock / Unlock" isDark={isDark} shortcut="⇧L" onClick={() => { onToggleLock(); setMenuOpen(false) }} />
+              <MenuItem label="Bring to Front" isDark={isDark} onClick={() => { onBringToFront(); setMenuOpen(false) }} />
+              <MenuItem label="Send to Back" isDark={isDark} onClick={() => { onSendToBack(); setMenuOpen(false) }} />
               {/* View */}
-              <MenuSection label="View" isDark={isDark}>
-                <MenuItem label={showGrid ? 'Hide Grid' : 'Show Grid'} isDark={isDark} onClick={() => { onToggleGrid(); setMenuOpen(false) }} />
-                <MenuItem label={snapToGrid ? 'Disable Snap' : 'Enable Snap'} isDark={isDark} onClick={() => { onToggleSnap(); setMenuOpen(false) }} />
-                <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
-                <MenuItem label="Zoom to Fit" isDark={isDark} shortcut="⇧1" onClick={() => { onZoomFit(); setMenuOpen(false) }} />
-              </MenuSection>
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                View
+              </div>
+              <MenuItem label={showGrid ? 'Hide Grid' : 'Show Grid'} isDark={isDark} onClick={() => { onToggleGrid(); setMenuOpen(false) }} />
+              <MenuItem label={snapToGrid ? 'Disable Snap' : 'Enable Snap'} isDark={isDark} onClick={() => { onToggleSnap(); setMenuOpen(false) }} />
+              <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
+              <MenuItem label="Zoom to Fit" isDark={isDark} shortcut="⇧1" onClick={() => { onZoomFit(); setMenuOpen(false) }} />
               {/* Help */}
-              <MenuSection label="Help" isDark={isDark}>
-                <MenuItem label="Keyboard Shortcuts" isDark={isDark} shortcut="Ctrl+/" onClick={() => { onShowShortcuts(); setMenuOpen(false) }} />
-              </MenuSection>
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                Help
+              </div>
+              <MenuItem label="Keyboard Shortcuts" isDark={isDark} shortcut="Ctrl+/" onClick={() => { onShowShortcuts(); setMenuOpen(false) }} />
             </div>
           </>
         )}
@@ -271,79 +242,34 @@ function Ico({
   isDark,
   onClick,
   active,
+  ariaLabel,
+  ariaExpanded,
+  ariaHaspopup,
 }: {
   children: React.ReactNode
   title: string
   isDark: boolean
   onClick?: () => void
   active?: boolean
+  ariaLabel: string
+  ariaExpanded?: boolean
+  ariaHaspopup?: 'menu' | 'dialog' | 'true' | 'false'
 }) {
   return (
     <button
       title={title}
       onClick={onClick}
-      style={{
-        width: 28,
-        height: 28,
-        borderRadius: 6,
-        border: 'none',
-        background: active
-          ? isDark ? 'rgba(5,150,105,0.15)' : 'rgba(5,150,105,0.08)'
-          : 'transparent',
-        color: active
-          ? '#059669'
-          : isDark ? '#9ca3af' : '#6b7280',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.12s ease',
-        flexShrink: 0,
-      }}
-      onMouseEnter={(e) => {
-        if (!active) {
-          e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-          e.currentTarget.style.color = isDark ? '#e5e7eb' : '#374151'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!active) {
-          e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = isDark ? '#9ca3af' : '#6b7280'
-        }
-      }}
+      aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
+      aria-haspopup={ariaHaspopup}
+      className={[
+        'wb-ico',
+        `wb-ico-${isDark ? 'dark' : 'light'}`,
+        active ? `wb-ico-active wb-ico-active-${isDark ? 'dark' : 'light'}` : '',
+      ].join(' ')}
     >
       {children}
     </button>
-  )
-}
-
-// ---- Menu Section ----
-function MenuSection({
-  label,
-  isDark,
-  children,
-}: {
-  label: string
-  isDark: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <>
-      <div
-        style={{
-          fontSize: 10,
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-          color: isDark ? '#4b5563' : '#9ca3af',
-          padding: '6px 10px 3px',
-        }}
-      >
-        {label}
-      </div>
-      {children}
-    </>
   )
 }
 
@@ -362,31 +288,13 @@ function MenuItem({
   return (
     <button
       onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '100%',
-        padding: '5px 10px',
-        borderRadius: 6,
-        border: 'none',
-        background: 'transparent',
-        color: isDark ? '#d1d5db' : '#374151',
-        cursor: 'pointer',
-        fontSize: 12,
-        fontWeight: 400,
-        transition: 'background 0.1s',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = 'transparent'
-      }}
+      role="menuitem"
+      aria-label={shortcut ? `${label} (${shortcut})` : label}
+      className={`wb-menu-item wb-menu-item-${isDark ? 'dark' : 'light'}`}
     >
       <span>{label}</span>
       {shortcut && (
-        <span style={{ fontSize: 10, fontFamily: 'monospace', color: isDark ? '#4b5563' : '#9ca3af' }}>
+        <span className={`wb-menu-shortcut wb-menu-shortcut-${isDark ? 'dark' : 'light'}`}>
           {shortcut}
         </span>
       )}

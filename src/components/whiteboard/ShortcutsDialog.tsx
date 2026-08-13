@@ -3,6 +3,7 @@
 import React from 'react'
 import { X } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import './whiteboard.css'
 
 interface ShortcutsDialogProps {
   onClose: () => void
@@ -74,104 +75,55 @@ const shortcutSections = [
 
 export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
-
-  const colors = isDark
-    ? { bg: '#1e293b', border: '#334155', headerBorder: '#374151', text: '#e5e7eb', subtext: '#9ca3af', sectionTitle: '#10b981', kbdBg: '#0f172a', kbdBorder: '#475569', kbdText: '#d1d5db', closeBg: '#0f172a', closeBorder: '#475569', closeColor: '#9ca3af' }
-    : { bg: '#ffffff', border: '#e5e7eb', headerBorder: '#e5e7eb', text: '#111827', subtext: '#6b7280', sectionTitle: '#059669', kbdBg: '#f9fafb', kbdBorder: '#d1d5db', kbdText: '#374151', closeBg: '#f9fafb', closeBorder: '#e5e7eb', closeColor: '#6b7280' }
+  const d = isDark ? 'dark' : 'light'
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 10000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.5)',
-        backdropFilter: 'blur(4px)',
-      }}
+      className="wb-shortcuts-overlay"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Keyboard shortcuts"
     >
       <div
+        className={`wb-shortcuts-card wb-shortcuts-card-${d}`}
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: colors.bg,
-          borderRadius: 16,
-          width: 520,
-          maxHeight: '80vh',
-          overflow: 'auto',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-          display: 'flex',
-          flexDirection: 'column',
-          border: `1px solid ${colors.border}`,
-        }}
       >
         {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '20px 24px 12px',
-            borderBottom: `1px solid ${colors.headerBorder}`,
-          }}
-        >
+        <div className={`wb-shortcuts-header wb-shortcuts-header-${d}`}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: colors.text }}>
+            <h2 className={`wb-shortcuts-title wb-shortcuts-title-${d}`}>
               Keyboard Shortcuts
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: colors.subtext }}>
+            <p className={`wb-shortcuts-subtitle wb-shortcuts-subtitle-${d}`}>
               Press Ctrl + / to toggle this dialog
             </p>
           </div>
           <button
             onClick={onClose}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: `1px solid ${colors.closeBorder}`,
-              background: colors.closeBg,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colors.closeColor,
-            }}
+            className={`wb-shortcuts-close wb-shortcuts-close-${d}`}
+            aria-label="Close shortcuts dialog"
           >
             <X size={16} />
           </button>
         </div>
 
         {/* Shortcuts List */}
-        <div style={{ padding: '16px 24px 24px', overflow: 'auto' }}>
+        <div className="wb-shortcuts-body">
           {shortcutSections.map((section) => (
             <div key={section.title} style={{ marginBottom: 20 }}>
-              <h3
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  color: colors.sectionTitle,
-                  marginBottom: 8,
-                }}
-              >
+              <h3 className={`wb-shortcuts-section-title wb-shortcuts-section-title-${d}`}>
                 {section.title}
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {section.shortcuts.map((s) => (
                   <div
                     key={s.keys}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '4px 0',
-                    }}
+                    className="wb-shortcuts-row"
                   >
-                    <span style={{ fontSize: 13, color: colors.text }}>{s.action}</span>
+                    <span className={`wb-shortcuts-action-${d}`}>
+                      {s.action}
+                    </span>
                     <div
                       style={{
                         display: 'flex',
@@ -182,23 +134,11 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
                     >
                       {s.keys.split(' + ').map((key, i) => (
                         <React.Fragment key={i}>
-                          <kbd
-                            style={{
-                              display: 'inline-block',
-                              padding: '2px 6px',
-                              borderRadius: 4,
-                              border: `1px solid ${colors.kbdBorder}`,
-                              background: colors.kbdBg,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: colors.kbdText,
-                              fontFamily: 'monospace',
-                            }}
-                          >
+                          <kbd className={`wb-shortcuts-kbd wb-shortcuts-kbd-${d}`}>
                             {key.trim()}
                           </kbd>
                           {i < s.keys.split(' + ').length - 1 && (
-                            <span style={{ color: colors.subtext, fontSize: 11 }}>+</span>
+                            <span className={`wb-shortcuts-plus wb-shortcuts-plus-${d}`}>+</span>
                           )}
                         </React.Fragment>
                       ))}

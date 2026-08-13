@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import type { ToolId } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import './whiteboard.css'
 
 // ---- Tool definitions ----
 
@@ -67,34 +68,16 @@ function Flyout({
     <>
       {/* Click-away backdrop */}
       <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 10000,
-        }}
+        className="wb-flyout-backdrop"
         onMouseDown={(e) => {
           e.stopPropagation()
           onClose()
         }}
+        aria-hidden="true"
       />
       <div
-        style={{
-          position: 'absolute',
-          left: 'calc(100% + 8px)',
-          top: -6,
-          background: isDark ? '#1e293b' : '#ffffff',
-          border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-          borderRadius: 12,
-          padding: '6px 4px',
-          zIndex: 10001,
-          boxShadow: isDark
-            ? '0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)'
-            : '0 12px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.04)',
-          minWidth: 180,
-          opacity: 1,
-          transform: 'scale(1)',
-          transition: 'opacity 0.15s ease, transform 0.15s ease',
-        }}
+        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'} wb-flyout-right`}
+        role="menu"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {children}
@@ -117,49 +100,20 @@ function FlyoutItem({
   return (
     <button
       onClick={onClick}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        width: '100%',
-        padding: '7px 12px',
-        borderRadius: 8,
-        border: 'none',
-        background: isActive
-          ? isDark ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)'
-          : 'transparent',
-        color: isActive
-          ? '#10b981'
-          : isDark ? '#cbd5e1' : '#334155',
-        cursor: 'pointer',
-        fontSize: 13,
-        fontWeight: isActive ? 600 : 400,
-        transition: 'background 0.1s',
-        textAlign: 'left',
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.background = 'transparent'
-        }
-      }}
+      role="menuitem"
+      aria-label={`${tool.label} (${tool.shortcut})`}
+      aria-pressed={isActive}
+      className={[
+        'wb-flyout-item',
+        `wb-flyout-item-${isDark ? 'dark' : 'light'}`,
+        isActive ? `wb-flyout-item-active wb-flyout-item-active-${isDark ? 'dark' : 'light'}` : '',
+      ].join(' ')}
     >
-      <span style={{ display: 'flex', width: 20, justifyContent: 'center', opacity: isActive ? 1 : 0.6 }}>
+      <span className="wb-flyout-item-icon">
         {tool.icon}
       </span>
       <span style={{ flex: 1 }}>{tool.label}</span>
-      <span
-        style={{
-          fontSize: 10,
-          fontFamily: 'ui-monospace, monospace',
-          color: isDark ? '#475569' : '#94a3b8',
-          fontWeight: 400,
-        }}
-      >
+      <span className={`wb-flyout-item-shortcut wb-flyout-item-shortcut-${isDark ? 'dark' : 'light'}`}>
         {tool.shortcut}
       </span>
     </button>
@@ -169,17 +123,7 @@ function FlyoutItem({
 // ---- Separator ----
 
 function Sep({ isDark }: { isDark: boolean }) {
-  return (
-    <div
-      style={{
-        width: 22,
-        height: 1,
-        margin: '4px auto',
-        background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-        borderRadius: 1,
-      }}
-    />
-  )
+  return <div className={`wb-sep-h wb-sep-h-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 }
 
 // ---- Main Toolbar ----
@@ -231,23 +175,11 @@ export function LeftToolbar() {
   ]
 
   return (
-    <div
+    <nav
       ref={toolbarRef}
-      style={{
-        width: 48,
-        minWidth: 48,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '8px 6px',
-        gap: 2,
-        borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-        background: isDark ? '#0f172a' : '#ffffff',
-        overflowY: 'auto',
-        overflowX: 'visible',
-        zIndex: 200,
-      }}
+      className={`wb-toolbar wb-toolbar-${isDark ? 'dark' : 'light'}`}
+      role="toolbar"
+      aria-label="Drawing tools"
     >
       {/* ---- Core tools (always visible) ---- */}
       {directTools.map((t) => {
@@ -256,54 +188,19 @@ export function LeftToolbar() {
           <button
             key={t.id}
             onClick={() => handleSelect(t.id)}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-                e.currentTarget.style.color = isDark ? '#e2e8f0' : '#1e293b'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = isDark ? '#64748b' : '#94a3b8'
-              }
-            }}
             title={`${t.label} (${t.shortcut})`}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              border: 'none',
-              background: isActive
-                ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-                : 'transparent',
-              color: isActive
-                ? '#10b981'
-                : isDark ? '#64748b' : '#94a3b8',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.15s ease',
-              position: 'relative',
-              flexShrink: 0,
-            }}
+            aria-label={`${t.label} (${t.shortcut})`}
+            aria-pressed={isActive}
+            className={[
+              'wb-tool-btn',
+              `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
+              isActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+            ].join(' ')}
           >
             {t.icon}
             {/* Active indicator — subtle left bar */}
             {isActive && (
-              <div
-                style={{
-                  position: 'absolute',
-                  left: -1,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: 3,
-                  height: 16,
-                  borderRadius: 2,
-                  background: '#10b981',
-                }}
-              />
+              <div className="wb-tool-indicator" aria-hidden="true" />
             )}
           </button>
         )
@@ -316,41 +213,23 @@ export function LeftToolbar() {
       <div style={{ position: 'relative' }}>
         <button
           onClick={() => toggleFlyout('shapes')}
-          onMouseEnter={(e) => {
-            if (!isShapeActive && !openFlyout) {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isShapeActive && !openFlyout) {
-              e.currentTarget.style.background = isDark
-                ? isShapeActive ? 'rgba(16,185,129,0.15)' : 'transparent'
-                : isShapeActive ? 'rgba(16,185,129,0.1)' : 'transparent'
-            }
-          }}
           title="Shapes"
+          aria-label="Shapes tools"
+          aria-expanded={openFlyout === 'shapes'}
+          aria-haspopup="menu"
+          className={[
+            'wb-tool-btn',
+            `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
+            isShapeActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+          ].join(' ')}
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            border: 'none',
+            flexDirection: 'column',
+            gap: 0,
             background: isShapeActive
               ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
               : openFlyout === 'shapes'
                 ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-                : 'transparent',
-            color: isShapeActive
-              ? '#10b981'
-              : isDark ? '#64748b' : '#94a3b8',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s ease',
-            position: 'relative',
-            flexShrink: 0,
-            gap: 0,
+                : undefined,
           }}
         >
           {/* Show active shape icon, or default shapes icon */}
@@ -364,37 +243,18 @@ export function LeftToolbar() {
               marginTop: -1,
               opacity: 0.5,
             }}
+            aria-hidden="true"
           />
           {/* Active indicator */}
           {isShapeActive && (
-            <div
-              style={{
-                position: 'absolute',
-                left: -1,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 3,
-                height: 16,
-                borderRadius: 2,
-                background: '#10b981',
-              }}
-            />
+            <div className="wb-tool-indicator" aria-hidden="true" />
           )}
         </button>
 
         {/* Shapes flyout */}
         {openFlyout === 'shapes' && (
           <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: isDark ? '#475569' : '#94a3b8',
-                padding: '4px 12px 6px',
-              }}
-            >
+            <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
               Shapes
             </div>
             {SHAPES.map((t) => (
@@ -414,41 +274,23 @@ export function LeftToolbar() {
       <div style={{ position: 'relative' }}>
         <button
           onClick={() => toggleFlyout('more')}
-          onMouseEnter={(e) => {
-            if (!isMoreActive && !openFlyout) {
-              e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isMoreActive && !openFlyout) {
-              e.currentTarget.style.background = isDark
-                ? isMoreActive ? 'rgba(16,185,129,0.15)' : 'transparent'
-                : isMoreActive ? 'rgba(16,185,129,0.1)' : 'transparent'
-            }
-          }}
           title="More tools"
+          aria-label="More tools"
+          aria-expanded={openFlyout === 'more'}
+          aria-haspopup="menu"
+          className={[
+            'wb-tool-btn',
+            `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
+            isMoreActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+          ].join(' ')}
           style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            border: 'none',
+            flexDirection: 'column',
+            gap: 0,
             background: isMoreActive
               ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
               : openFlyout === 'more'
                 ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-                : 'transparent',
-            color: isMoreActive
-              ? '#10b981'
-              : isDark ? '#64748b' : '#94a3b8',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s ease',
-            position: 'relative',
-            flexShrink: 0,
-            gap: 0,
+                : undefined,
           }}
         >
           <span style={{ lineHeight: 1, display: 'flex' }}>
@@ -460,36 +302,17 @@ export function LeftToolbar() {
               marginTop: -1,
               opacity: 0.5,
             }}
+            aria-hidden="true"
           />
           {isMoreActive && (
-            <div
-              style={{
-                position: 'absolute',
-                left: -1,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: 3,
-                height: 16,
-                borderRadius: 2,
-                background: '#10b981',
-              }}
-            />
+            <div className="wb-tool-indicator" aria-hidden="true" />
           )}
         </button>
 
         {/* More tools flyout */}
         {openFlyout === 'more' && (
           <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)}>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.08em',
-                color: isDark ? '#475569' : '#94a3b8',
-                padding: '4px 12px 6px',
-              }}
-            >
+            <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
               More
             </div>
             {MORE_TOOLS.map((t) => (
@@ -507,6 +330,6 @@ export function LeftToolbar() {
 
       {/* Bottom spacer */}
       <div style={{ flex: 1 }} />
-    </div>
+    </nav>
   )
 }
