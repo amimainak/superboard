@@ -436,6 +436,10 @@ export function WhiteboardCanvas() {
         case 'eraser-object': {
           // Object eraser: tap on an element to delete the whole thing
           isErasing.current = true
+          if (!eraserHistoryPushed.current) {
+            eraserHistoryPushed.current = true
+            pushHistory()
+          }
           let hitId: string | null = null
           for (let i = pageElements.length - 1; i >= 0; i--) {
             const el = pageElements[i]
@@ -445,7 +449,6 @@ export function WhiteboardCanvas() {
             }
           }
           if (hitId) {
-            pushHistory()
             removeElements([hitId])
           }
           break
@@ -464,7 +467,7 @@ export function WhiteboardCanvas() {
     [
       tool, camera, spaceHeld, pageElements, selectedIds, currentPageIndex,
       getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
-      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool,
+      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool, removeElements,
     ]
   )
 
@@ -554,7 +557,6 @@ export function WhiteboardCanvas() {
           }
         }
         if (hitId) {
-          pushHistory()
           removeElements([hitId])
         }
       }
@@ -884,7 +886,7 @@ export function WhiteboardCanvas() {
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
       onPointerLeave={() => {
-        if (tool === 'eraser') setEraserCursor(null)
+        if (tool === 'eraser' || tool === 'eraser-object') setEraserCursor(null)
         // Cancel laser on pointer leave
         if (tool === 'laser' && isLaserActive.current) {
           isLaserActive.current = false
@@ -1009,25 +1011,56 @@ export function WhiteboardCanvas() {
       </svg>
 
       {/* Eraser cursor visual */}
-      {(tool === 'eraser' || tool === 'eraser-object') && eraserCursor && containerRef.current && (
+      {tool === 'eraser' && eraserCursor && containerRef.current && (
         <div
           style={{
             position: 'absolute',
-            left: tool === 'eraser'
-              ? eraserCursor.x - containerRef.current.getBoundingClientRect().left - eraserSize / 2
-              : eraserCursor.x - containerRef.current.getBoundingClientRect().left - 12,
-            top: tool === 'eraser'
-              ? eraserCursor.y - containerRef.current.getBoundingClientRect().top - eraserSize / 2
-              : eraserCursor.y - containerRef.current.getBoundingClientRect().top - 12,
-            width: tool === 'eraser' ? eraserSize : 24,
-            height: tool === 'eraser' ? eraserSize : 24,
+            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - eraserSize / 2,
+            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - eraserSize / 2,
+            width: eraserSize,
+            height: eraserSize,
             borderRadius: '50%',
-            border: tool === 'eraser' ? '2px solid #059669' : '2px solid #ef4444',
-            backgroundColor: tool === 'eraser' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(239, 68, 68, 0.06)',
+            border: '2px solid #059669',
+            backgroundColor: 'rgba(5, 150, 105, 0.08)',
             pointerEvents: 'none',
             zIndex: 1000,
           }}
         />
+      )}
+      {/* Object eraser pen cursor */}
+      {tool === 'eraser-object' && eraserCursor && containerRef.current && (
+        <svg
+          style={{
+            position: 'absolute',
+            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - 6,
+            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - 6,
+            width: 24,
+            height: 24,
+            pointerEvents: 'none',
+            zIndex: 1000,
+            filter: isDark ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+          }}
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Pen nib pointing down-left */}
+          <path
+            d="M17 3l4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+            stroke={isDark ? '#f87171' : '#ef4444'}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill={isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)'}
+          />
+          {/* Small dot at tip for precision */}
+          <circle
+            cx="3.25"
+            cy="20.75"
+            r="1.2"
+            fill={isDark ? '#f87171' : '#ef4444'}
+          />
+        </svg>
       )}
 
       {/* Zoom indicator */}
