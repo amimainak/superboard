@@ -94,11 +94,7 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
 
   setActiveTab: (id) => set({ activeTab: id }),
 
-  closePanel: () => set({
-    openWidgets: [],
-    activeTab: null,
-    panelVisible: false,
-  }),
+  closePanel: () => get().resetWidgets(),
 
   resetWidgets: () => set({
     openWidgets: [],

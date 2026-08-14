@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 interface ChatMessage {
@@ -20,7 +20,7 @@ interface ChatWidgetProps {
 }
 
 export function ChatWidget({ roomId }: ChatWidgetProps) {
-  const supabase = getSupabaseBrowserClient()
+  const supabase = useMemo(() => getSupabaseBrowserClient(), [])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [senderName, setSenderName] = useState('')
