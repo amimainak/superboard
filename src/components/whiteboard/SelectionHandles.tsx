@@ -60,7 +60,6 @@ export function SelectionHandles({ containerRef }: SelectionHandlesProps) {
         containerRef={containerRef}
         isDark={isDark}
         onResize={(newBounds) => {
-          pushHistory()
           updateElement(el.id, {
             x: newBounds.x,
             y: newBounds.y,
@@ -173,7 +172,9 @@ function SingleElementHandles({
         startMouse: { x: mouseX, y: mouseY },
         startBounds: { ...bounds },
       }
+      // Push history once at start of resize (covers the entire drag operation)
       onMoveStart()
+      let historyPushed = false
 
       const handleMove = (ev: PointerEvent) => {
         if (!dragRef.current || !container) return
@@ -209,6 +210,10 @@ function SingleElementHandles({
           newBounds.height = 5
         }
 
+        // Only push history on first actual resize
+        if (!historyPushed && (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5)) {
+          historyPushed = true
+        }
         onResize(newBounds)
       }
 

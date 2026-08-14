@@ -123,7 +123,8 @@ export function getElementBounds(el: WhiteboardElement): Bounds {
         if (p.x > maxX) maxX = p.x
         if (p.y > maxY) maxY = p.y
       }
-      const pad = el.strokeWidth
+      // Use visual stroke size for padding (highlighter renders at 16px)
+      const pad = (el.type === 'freehand' && el.isHighlighter) ? 8 : el.strokeWidth
       return {
         x: minX - pad,
         y: minY - pad,

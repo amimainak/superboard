@@ -297,9 +297,9 @@ export function WhiteboardCanvas() {
             } else if (!selectedIds.includes(hitId)) {
               selectElements([hitId])
             }
-            // Start move
-            pushHistory()
+            // Start move — don't push history until actual movement happens
             lastMovePoint.current = point
+            lastPanPoint.current = { x: e.clientX, y: e.clientY }
           } else if (!e.shiftKey) {
             clearSelection()
             // Start box select
@@ -329,11 +329,7 @@ export function WhiteboardCanvas() {
         }
         case 'eraser': {
           isErasing.current = true
-          // Push history once at the start of the eraser stroke
-          if (!eraserHistoryPushed.current) {
-            pushHistory()
-            eraserHistoryPushed.current = true
-          }
+          // Push history once at the start of the eraser stroke (lazy — on first actual erase)
           eraseAtPoint(point, camera.zoom)
           break
         }
@@ -437,14 +433,16 @@ export function WhiteboardCanvas() {
       if (tool === 'select' && lastMovePoint.current && selectedIds.length) {
         const dx = point.x - lastMovePoint.current.x
         const dy = point.y - lastMovePoint.current.y
-        moveSelected(dx, dy)
-        lastMovePoint.current = point
-        setAlignGuides(calcAlignGuides(selectedIds, pageElements, 8 / camera.zoom))
+        if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+          moveSelected(dx, dy)
+          lastMovePoint.current = point
+          setAlignGuides(calcAlignGuides(selectedIds, pageElements, 8 / camera.zoom))
+        }
         return
       }
 
       // Box select
-      if (tool === 'select' && boxSelectStart.current && !selectedIds.length) {
+      if (tool === 'select' && boxSelectStart.current) {
         const sx = boxSelectStart.current.x
         const sy = boxSelectStart.current.y
         setBoxSelect({
@@ -499,11 +497,19 @@ export function WhiteboardCanvas() {
         return
       }
 
+      // Finish element move — push history only if we actually moved
       if (lastMovePoint.current) {
+        // Check if we moved from the original start point
+        const startClient = lastPanPoint.current
+        if (startClient && (Math.abs(e.clientX - startClient.x) > 1 || Math.abs(e.clientY - startClient.y) > 1)) {
+          pushHistory()
+        }
         lastMovePoint.current = null
+        lastPanPoint.current = null
         setAlignGuides([])
       }
 
+      // Finish box select
       if (boxSelectStart.current && boxSelect) {
         // Select elements within box
         const ids: string[] = []
@@ -516,10 +522,35 @@ export function WhiteboardCanvas() {
         if (ids.length) selectElements(ids)
         boxSelectStart.current = null
         setBoxSelect(null)
+      } else if (boxSelectStart.current) {
+        // Clicked on empty space with no drag — just clear box select start
+        boxSelectStart.current = null
+        setBoxSelect(null)
       }
 
       if (isDrawing) {
-        finishDrawing()
+        const el = finishDrawing()
+        // Auto-focus text/sticky after placement
+        if (el && (el.type === 'text' || el.type === 'sticky')) {
+          // Use double-rAF to ensure the DOM has rendered the new element
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const groupEl = svgRef.current?.querySelector(
+                `[data-element-id="${el.id}"]`
+              )
+              const editable = groupEl?.querySelector('[contenteditable]') as HTMLElement | null
+              if (editable) {
+                editable.focus()
+                const range = document.createRange()
+                const sel = window.getSelection()
+                range.setStart(editable, 0)
+                range.collapse(true)
+                sel?.removeAllRanges()
+                sel?.addRange(range)
+              }
+            })
+          })
+        }
       }
 
       // Laser: stop drawing on pointer up, trigger fade
@@ -532,6 +563,8 @@ export function WhiteboardCanvas() {
       if (tool === 'eraser') {
         isErasing.current = false
         eraserHistoryPushed.current = false
+        // Reset eraser history tracking for next stroke
+        useWhiteboardStore.getState().setEraserActive(false)
       }
 
       // ---- Stylus barrel button release: restore previous tool ----
@@ -878,12 +911,12 @@ export function WhiteboardCanvas() {
       </svg>
 
       {/* Eraser cursor visual */}
-      {tool === 'eraser' && eraserCursor && (
+      {tool === 'eraser' && eraserCursor && containerRef.current && (
         <div
           style={{
             position: 'absolute',
-            left: eraserCursor.x - containerRef.current!.getBoundingClientRect().left - eraserSize / 2,
-            top: eraserCursor.y - containerRef.current!.getBoundingClientRect().top - eraserSize / 2,
+            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - eraserSize / 2,
+            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - eraserSize / 2,
             width: eraserSize,
             height: eraserSize,
             borderRadius: '50%',

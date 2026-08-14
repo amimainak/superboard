@@ -112,7 +112,7 @@ export interface WhiteboardStore {
   // Drawing
   startDrawing: (point: Point) => void
   continueDrawing: (point: Point) => void
-  finishDrawing: () => void
+  finishDrawing: () => WhiteboardElement | null
   setCurrentElement: (el: WhiteboardElement | null) => void
 
   // Pan/Zoom interaction
@@ -225,7 +225,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     redoStack: [],
 
     // ---- Tool & Style ----
-    setTool: (tool) => set({ tool, selectedIds: tool === 'select' ? get().selectedIds : [] }),
+    setTool: (tool) => set({ tool }),
 
     setStyle: (style) => set((s) => ({ style: { ...s.style, ...style } })),
 
@@ -321,6 +321,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     duplicateSelected: () => {
       const { elements, selectedIds } = get()
       const selected = elements.filter((e) => selectedIds.includes(e.id))
+      if (!selected.length) return
       const newIds: string[] = []
       const newElements = selected.map((el) => {
         const newEl = {
@@ -332,29 +333,35 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         newIds.push(newEl.id)
         return newEl
       })
+      get().pushHistory()
       set((s) => ({ elements: [...s.elements, ...newElements], selectedIds: newIds }))
     },
 
-    bringToFront: (id) =>
+    bringToFront: (id) => {
+      const el = get().elements.find((e) => e.id === id)
+      if (!el) return
+      get().pushHistory()
       set((s) => {
-        const el = s.elements.find((e) => e.id === id)
-        if (!el) return s
         const others = s.elements.filter((e) => e.id !== id)
         return { elements: [...others, el] }
-      }),
+      })
+    },
 
-    sendToBack: (id) =>
+    sendToBack: (id) => {
+      const el = get().elements.find((e) => e.id === id)
+      if (!el) return
+      get().pushHistory()
       set((s) => {
-        const el = s.elements.find((e) => e.id === id)
-        if (!el) return s
         const others = s.elements.filter((e) => e.id !== id)
         return { elements: [el, ...others] }
-      }),
+      })
+    },
 
     toggleLock: () => {
       const { elements, selectedIds } = get()
       const ids = selectedIds.length ? selectedIds : []
       if (!ids.length) return
+      get().pushHistory()
       set({
         elements: elements.map((el) =>
           ids.includes(el.id) ? { ...el, locked: !el.locked } : el
@@ -365,6 +372,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     groupSelected: () => {
       const { elements, selectedIds } = get()
       if (selectedIds.length < 2) return
+      get().pushHistory()
       const groupId = generateId()
       set({
         elements: elements.map((el) =>
@@ -375,6 +383,8 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
     ungroupSelected: () => {
       const { elements, selectedIds } = get()
+      if (!selectedIds.length) return
+      get().pushHistory()
       set({
         elements: elements.map((el) =>
           selectedIds.includes(el.id) ? { ...el, groupId: undefined } : el
@@ -650,9 +660,9 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       }
     },
 
-    finishDrawing: () => {
+    finishDrawing: (): WhiteboardElement | null => {
       const { currentElement, isDrawing } = get()
-      if (!isDrawing || !currentElement) return
+      if (!isDrawing || !currentElement) return null
 
       // Don't add empty elements
       let shouldAdd = true
@@ -666,7 +676,13 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       ) {
         shouldAdd = false
       }
+      if (currentElement.type === 'line' || currentElement.type === 'arrow') {
+        const dx = Math.abs((currentElement as { x2: number }).x2 - currentElement.x)
+        const dy = Math.abs((currentElement as { y2: number }).y2 - currentElement.y)
+        if (dx < 2 && dy < 2) shouldAdd = false
+      }
 
+      let addedElement: WhiteboardElement | null = null
       if (shouldAdd) {
         // For freehand, compute bounding box
         if (currentElement.type === 'freehand' && currentElement.points.length > 0) {
@@ -677,7 +693,8 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
             if (p.x > maxX) maxX = p.x
             if (p.y > maxY) maxY = p.y
           }
-          const pad = currentElement.strokeWidth
+          // Use visual stroke size for padding (highlighter renders at 16px)
+          const pad = currentElement.isHighlighter ? 8 : currentElement.strokeWidth
           const finalEl = {
             ...currentElement,
             x: minX - pad,
@@ -689,15 +706,18 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
           set((s) => ({
             elements: [...s.elements, finalEl],
           }))
+          addedElement = finalEl
         } else {
           get().pushHistory()
           set((s) => ({
             elements: [...s.elements, currentElement],
           }))
+          addedElement = currentElement
         }
       }
 
       set({ isDrawing: false, currentElement: null, drawingPoints: [] })
+      return addedElement
     },
 
     setCurrentElement: (el) => set({ currentElement: el }),
@@ -813,6 +833,8 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     cutSelected: () => {
       const { elements, selectedIds } = get()
       const selected = elements.filter((e) => selectedIds.includes(e.id))
+      if (!selected.length) return
+      get().pushHistory()
       set({
         clipboard: JSON.parse(JSON.stringify(selected)),
         elements: elements.filter((e) => !selectedIds.includes(e.id)),
@@ -834,6 +856,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         newIds.push(newEl.id)
         return newEl
       })
+      get().pushHistory()
       set((s) => ({
         elements: [...s.elements, ...newElements],
         selectedIds: newIds,
@@ -895,8 +918,15 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       }
 
       if (changed) {
+        if (!get().eraserActive) {
+          // First actual erase in this stroke — push history
+          get().pushHistory()
+          set({ eraserActive: true })
+        }
         set({ elements: updatedElements })
+        return true
       }
+      return false
     },
 
     // ---- Bulk ----
