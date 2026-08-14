@@ -40,12 +40,40 @@ function Popup({
   isDark,
   onClose,
   children,
+  anchorRef,
 }: {
   isDark: boolean
   onClose: () => void
   children: React.ReactNode
+  anchorRef: React.RefObject<HTMLButtonElement | null>
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+
+  useEffect(() => {
+    const anchor = anchorRef.current
+    const panel = ref.current
+    if (!anchor || !panel) return
+
+    const anchorRect = anchor.getBoundingClientRect()
+    const panelWidth = panel.offsetWidth
+    const panelHeight = panel.offsetHeight
+
+    // Position above the anchor
+    let left = anchorRect.left
+    if (left + panelWidth > window.innerWidth - 8) {
+      left = window.innerWidth - panelWidth - 8
+    }
+    if (left < 8) left = 8
+
+    let top = anchorRect.top - panelHeight - 8
+    if (top < 8) {
+      // Not enough room above — place below
+      top = anchorRect.bottom + 8
+    }
+
+    setPos({ top, left })
+  }, [anchorRef])
 
   return (
     <>
@@ -60,10 +88,11 @@ function Popup({
       />
       <div
         ref={ref}
-        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'} wb-popup-up`}
+        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
         role="dialog"
         aria-label="Style options"
         onMouseDown={(e) => e.stopPropagation()}
+        style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 10001, padding: '10px 12px' }}
       >
         {children}
       </div>
@@ -79,15 +108,18 @@ function PocketBtn({
   isOpen,
   isDark,
   onClick,
+  ref,
 }: {
   label: string
   icon: React.ReactNode
   isOpen: boolean
   isDark: boolean
   onClick: () => void
+  ref?: React.RefObject<HTMLButtonElement | null>
 }) {
   return (
     <button
+      ref={ref}
       onClick={onClick}
       aria-label={`${label} options`}
       aria-expanded={isOpen}
@@ -126,6 +158,9 @@ export function StylePanel() {
   const setEraserSize = useWhiteboardStore((s) => s.setEraserSize)
   const [openPocket, setOpenPocket] = useState<string | null>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+  const colorBtnRef = useRef<HTMLButtonElement>(null)
+  const strokeBtnRef = useRef<HTMLButtonElement>(null)
+  const textBtnRef = useRef<HTMLButtonElement>(null)
 
   // Close on outside click
   useEffect(() => {
@@ -155,6 +190,7 @@ export function StylePanel() {
       {/* ---- Stroke Color Pocket ---- */}
       <div style={{ position: 'relative' }}>
         <PocketBtn
+          ref={colorBtnRef}
           label="Color"
           isOpen={openPocket === 'color'}
           isDark={isDark}
@@ -167,7 +203,7 @@ export function StylePanel() {
           }
         />
         {openPocket === 'color' && (
-          <Popup isDark={isDark} onClose={() => setOpenPocket(null)}>
+          <Popup isDark={isDark} onClose={() => setOpenPocket(null)} anchorRef={colorBtnRef}>
             <ColorPicker
               isDark={isDark}
               strokeColor={style.strokeColor}
@@ -184,6 +220,7 @@ export function StylePanel() {
       {/* ---- Stroke Width + Dash Pocket ---- */}
       <div style={{ position: 'relative' }}>
         <PocketBtn
+          ref={strokeBtnRef}
           label="Stroke"
           isOpen={openPocket === 'stroke'}
           isDark={isDark}
@@ -193,7 +230,7 @@ export function StylePanel() {
           }
         />
         {openPocket === 'stroke' && (
-          <Popup isDark={isDark} onClose={() => setOpenPocket(null)}>
+          <Popup isDark={isDark} onClose={() => setOpenPocket(null)} anchorRef={strokeBtnRef}>
             <StrokeOptions
               isDark={isDark}
               strokeWidth={style.strokeWidth}
@@ -208,6 +245,7 @@ export function StylePanel() {
       {/* ---- Text Pocket ---- */}
       <div style={{ position: 'relative' }}>
         <PocketBtn
+          ref={textBtnRef}
           label="Text"
           isOpen={openPocket === 'text'}
           isDark={isDark}
@@ -226,7 +264,7 @@ export function StylePanel() {
           }
         />
         {openPocket === 'text' && (
-          <Popup isDark={isDark} onClose={() => setOpenPocket(null)}>
+          <Popup isDark={isDark} onClose={() => setOpenPocket(null)} anchorRef={textBtnRef}>
             <TextOptions
               isDark={isDark}
               style={{

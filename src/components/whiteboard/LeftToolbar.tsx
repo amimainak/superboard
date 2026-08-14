@@ -59,11 +59,41 @@ function Flyout({
   children,
   isDark,
   onClose,
+  anchorRef,
 }: {
   children: React.ReactNode
   isDark: boolean
   onClose: () => void
+  anchorRef: React.RefObject<HTMLButtonElement | null>
 }) {
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
+
+  useEffect(() => {
+    const anchor = anchorRef.current
+    const panel = panelRef.current
+    if (!anchor || !panel) return
+
+    const anchorRect = anchor.getBoundingClientRect()
+    const panelWidth = panel.offsetWidth
+    const panelHeight = panel.offsetHeight
+
+    // Position to the right of the anchor
+    let left = anchorRect.right + 8
+    // If would overflow right edge, flip to left
+    if (left + panelWidth > window.innerWidth - 8) {
+      left = anchorRect.left - panelWidth - 8
+    }
+    // Vertical: align with anchor top, clamped to viewport
+    let top = anchorRect.top - 6
+    if (top + panelHeight > window.innerHeight - 8) {
+      top = window.innerHeight - panelHeight - 8
+    }
+    if (top < 8) top = 8
+
+    setPos({ top, left })
+  }, [anchorRef])
+
   return (
     <>
       {/* Click-away backdrop */}
@@ -76,9 +106,11 @@ function Flyout({
         aria-hidden="true"
       />
       <div
-        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'} wb-flyout-right`}
+        ref={panelRef}
+        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
         role="menu"
         onMouseDown={(e) => e.stopPropagation()}
+        style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 10001 }}
       >
         {children}
       </div>
@@ -134,6 +166,8 @@ export function LeftToolbar() {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const [openFlyout, setOpenFlyout] = useState<'shapes' | 'more' | null>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const shapesBtnRef = useRef<HTMLButtonElement>(null)
+  const moreBtnRef = useRef<HTMLButtonElement>(null)
 
   // Close flyout on outside click
   useEffect(() => {
@@ -212,6 +246,7 @@ export function LeftToolbar() {
       {/* ---- Shapes Pocket ---- */}
       <div style={{ position: 'relative' }}>
         <button
+          ref={shapesBtnRef}
           onClick={() => toggleFlyout('shapes')}
           title="Shapes"
           aria-label="Shapes tools"
@@ -253,7 +288,7 @@ export function LeftToolbar() {
 
         {/* Shapes flyout */}
         {openFlyout === 'shapes' && (
-          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)}>
+          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={shapesBtnRef}>
             <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
               Shapes
             </div>
@@ -273,6 +308,7 @@ export function LeftToolbar() {
       {/* ---- More Tools Pocket ---- */}
       <div style={{ position: 'relative' }}>
         <button
+          ref={moreBtnRef}
           onClick={() => toggleFlyout('more')}
           title="More tools"
           aria-label="More tools"
@@ -311,7 +347,7 @@ export function LeftToolbar() {
 
         {/* More tools flyout */}
         {openFlyout === 'more' && (
-          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)}>
+          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={moreBtnRef}>
             <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
               More
             </div>

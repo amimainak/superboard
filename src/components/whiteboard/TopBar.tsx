@@ -5,7 +5,7 @@
 
 'use client'
 
-import React from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Sun,
   Moon,
@@ -80,6 +80,22 @@ export function TopBar({
   onTogglePresentation,
 }: TopBarProps) {
   const [menuOpen, setMenuOpen] = React.useState(false)
+  const moreBtnRef = useRef<HTMLButtonElement>(null)
+  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
+
+  useEffect(() => {
+    if (!menuOpen || !moreBtnRef.current) return
+    const rect = moreBtnRef.current.getBoundingClientRect()
+    let top = rect.bottom + 6
+    let right = window.innerWidth - rect.right
+    // Clamp to viewport
+    if (top + 400 > window.innerHeight) {
+      top = rect.top - 6 - Math.min(400, window.innerHeight - 16)
+      if (top < 8) top = 8
+    }
+    if (right < 8) right = 8
+    setMenuPos({ top, right })
+  }, [menuOpen])
 
   const ToolLabel: Record<string, string> = {
     select: 'Select',
@@ -162,16 +178,20 @@ export function TopBar({
 
       {/* More menu — groups all secondary actions */}
       <div style={{ position: 'relative' }}>
-        <Ico
+        <button
+          ref={moreBtnRef}
           title="More"
-          isDark={isDark}
           onClick={() => setMenuOpen(!menuOpen)}
-          ariaLabel="More options"
-          ariaExpanded={menuOpen}
-          ariaHaspopup="menu"
+          aria-label="More options"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+          className={[
+            'wb-ico',
+            `wb-ico-${isDark ? 'dark' : 'light'}`,
+          ].join(' ')}
         >
           <MoreHorizontal size={14} />
-        </Ico>
+        </button>
         {menuOpen && (
           <>
             <div className="wb-menu-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
@@ -179,6 +199,7 @@ export function TopBar({
               className={`wb-menu-panel wb-menu-panel-${isDark ? 'dark' : 'light'}`}
               role="menu"
               aria-label="Actions menu"
+              style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
             >
               {/* File */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
