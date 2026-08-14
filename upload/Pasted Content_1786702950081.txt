@@ -1,0 +1,450 @@
+please check this attached final blueprint: # MASTER TECHNICAL BLUEPRINT: K-12 AI SUPERBOARD
+**Version 14.0 FINAL — Self-Sustained, Zero-Clarification Required**
+**Target Audience: Lead Development Team / CTO**
+
+---
+
+## CORE DIRECTIVES
+
+1. **AI ASSISTS THE TEACHER, NOT THE STUDENT.** Every AI feature is triggered by and serves the tutor. Students never see AI controls, prompts, or results.
+
+2. **ZERO PII COLLECTED FROM STUDENTS.** Students are assigned anonymous numerical identifiers (Student 1, Student 2) via Yjs awareness protocol. No name input, no name display, no name persistence. This eliminates COPPA/GDPR-K verifiable parental consent requirements entirely.
+
+3. **Lean whiteboard SaaS, NOT an LMS.** No homework, scheduling, invoicing, or native recordings in V1. Tutors use third-party tools (Loom, QuickTime, OBS) if they wish to record sessions.
+
+4. **Absolute license compliance.** MIT/Apache only. Excalidraw (MIT). Fabric.js is architecturally incompatible with CRDT sync. Tldraw is AGPL and would require open-sourcing the application.
+
+5. **Absolute budget compliance.** AI inference uses only GPT-4o-mini or Gemini 1.5 Flash. No Claude Sonnet, no GPT-4o, no expensive models at any tier.
+
+6. **K-12 Network Resilience.** LiveKit TURN server falls back to TCP port 443 on a dedicated subdomain (turn.yourdomain.com) to bypass school firewalls that block UDP traffic. Hocuspocus whiteboard sync includes y-indexeddb for offline resilience during WiFi interruptions.
+
+7. **Zero-cost recordings.** No native recording in V1. This eliminates browser memory crashes, Safari incompatibility, chunked upload logic, and an entire test matrix. The recording feature space is delegated to third-party tools the tutor already knows.
+
+---
+
+## 1. SYSTEM ARCHITECTURE & TECH STACK
+
+### 1.1 Architecture Overview
+
+The system uses a split-infrastructure model. Stateless frontend and fast API routes run on Vercel Hobby (free). Stateful real-time services (LiveKit, Hocuspocus) run on a single VPS ($15/month). AI inference is proxied through a lightweight Express container on the VPS to bypass Vercel's 10-second serverless function timeout. Database, authentication, and file storage run on Supabase Free tier.
+
+### 1.2 Final Tech Stack
+
+| Layer | Technology | Hosting | Monthly Cost |
+|-------|-----------|---------|-------------|
+| Frontend Framework | Next.js 16 (App Router) + React + TypeScript | Vercel Hobby | $0 |
+| UI / Styling | Tailwind CSS + Shadcn UI (touch-optimized for iPad/Chromebook) | Vercel (bundled) | $0 |
+| Whiteboard Engine | @excalidraw/excalidraw (MIT) | Vercel (bundled) | $0 |
+| Real-Time Sync | Yjs + Hocuspocus Server + y-indexeddb | VPS Docker container | $0 (included in VPS) |
+| Audio / Video | LiveKit (Self-Hosted SFU) | VPS Docker container | $0 (included in VPS) |
+| Reverse Proxy | Caddy (HTTPS for WSS + L4 TCP pass-through for TURN) | VPS Docker container | $0 (included in VPS) |
+| AI Proxy | Express.js (validates JWT, routes to AI APIs, checks credits) | VPS Docker container | $0 (included in VPS) |
+| Database | Supabase PostgreSQL + Row Level Security | Supabase Cloud (Free) | $0 |
+| Authentication | Supabase Auth (email/password, JWT) | Supabase Cloud (Free) | $0 |
+| File Storage | Supabase Storage (uploads, PDF exports, agency logos) | Supabase Cloud (Free) | $0 |
+| Validation | Zod v3 (stable, strict mode on all endpoints) | Vercel (bundled) | $0 |
+| Monitoring | Sentry (error tracking) | Sentry Cloud (Free) | $0 |
+| Payments | Stripe (monthly subscriptions, no metered billing) | Stripe (no monthly fee) | $0 |
+| AI Text | Gemini 1.5 Flash OR GPT-4o-mini | Google/OpenAI (pay-per-use) | ~$0.50-1.00/user/mo |
+| AI Vision | GPT-4o-mini (with confirmation modal) | OpenAI (pay-per-use) | ~$0.20-0.50/user/mo |
+| Math OCR | Mathpix API (Premium only) | Mathpix (pay-per-use) | ~$0.30/user/mo |
+| Math $0 Fallback | Tutor manually types equation into text box | Client-side | $0 |
+| Shape Perfection | Local JS geometry algorithms | Client-side | $0 |
+| Math Rendering | KaTeX | Vercel (bundled) | $0 |
+| Graphing | GeoGebra Graphing Calculator API (geogebra-applet-js) | Vercel (bundled) | $0 |
+| Offline Sync | y-indexeddb (persists Yjs doc to browser IndexedDB) | Client-side | $0 |
+| Anti-Fraud | FingerprintJS (open-source) | Vercel (bundled) | $0 |
+| **VPS** | **4-core / 8GB (Hetzner CX22 or equivalent)** | **Hetzner/DigitalOcean** | **$15/mo** |
+
+**Total production infrastructure cost: $15/month.**
+
+### 1.3 Why Not Railway
+
+Railway was evaluated as a potential Vercel replacement. It cannot replace the VPS because LiveKit's TURN server requires a dedicated IP address with raw TCP/UDP port control for the turn.yourdomain.com subdomain. Railway does not provide dedicated IPs or reliable L4 TCP passthrough. Railway could replace Vercel ($5/month) but Vercel Hobby is free, has superior Next.js developer experience (automatic deployments, preview URLs, edge CDN), and avoids Railway's 2-5 second container cold starts that would hurt the student join experience.
+
+---
+
+## 2. DNS ARCHITECTURE (THREE SUBDOMAINS)
+
+Three DNS records are required. Each serves a distinct purpose. Misconfiguring any one breaks a core feature.
+
+| Subdomain | DNS Record | Points To | Protocol | Purpose |
+|-----------|-----------|-----------|----------|---------|
+| app.yourdomain.com | CNAME to Vercel | Vercel edge network | HTTPS (443) | Next.js frontend, fast API routes (Stripe webhook, LiveKit token, room end, video heartbeat) |
+| ws.yourdomain.com | A record to VPS IP | VPS | WSS (443, Caddy terminates TLS, proxies to Hocuspocus:3001) | Hocuspocus WebSocket connections for whiteboard sync |
+| turn.yourdomain.com | A record to VPS IP | VPS | Raw TCP (443, Caddy L4 pass-through to LiveKit:5349) | LiveKit TURN TCP 443 fallback for K-12 school firewalls |
+
+**Important:** app.yourdomain.com is the ONLY custom domain on Vercel Hobby (which allows 1 custom domain). Agency custom domains (e.g., brand1.com) require Vercel Pro ($20/mo) and are therefore a V2 feature, activated once the business has sufficient revenue to absorb the cost.
+
+---
+
+## 3. NON-NEGOTIABLE ARCHITECTURE RULES
+
+### 3.1 Hocuspocus on Persistent Docker, Never Serverless
+
+Hocuspocus MUST run as a persistent Docker container on the VPS. It must NOT be deployed on serverless infrastructure (Vercel, Lambda, Cloudflare Workers). WebSocket connections require long-lived TCP connections that remain open for the duration of a tutoring session (30-90 minutes). Serverless platforms terminate connections after their timeout window (10-60 seconds), causing whiteboard desynchronization and data loss.
+
+### 3.2 Hocuspocus Authentication via JWT
+
+Every WebSocket connection to Hocuspocus MUST be authenticated. The browser passes the Supabase JWT as a query parameter in the WebSocket URL. The Hocuspocus onAuthenticate hook validates this JWT against the Supabase JWT secret before allowing the connection.
+
+**Connection flow:**
+1. Frontend retrieves Supabase JWT from the client-side session.
+2. Frontend opens WebSocket to `wss://ws.yourdomain.com/rooms/{roomId}?token={jwt}`.
+3. Hocuspocus onAuthenticate hook extracts the token.
+4. Hook calls `supabaseAdmin.auth.getUser(jwt)` to verify the JWT signature and retrieve the user.
+5. Hook checks that the room exists and `isActive = true`.
+6. Hook verifies authorization using a three-tier check:
+   - Is the connecting user the room's tutor? Allow.
+   - Is the connecting user the agency owner (via parentAgencyId chain)? Allow.
+   - Does the connecting user have an accepted AgencyInvite (status = ACCEPTED) where the agencyId matches the tutor's agency? Allow.
+   - Otherwise: terminate the connection with an error.
+
+**Students do NOT authenticate.** Student connections are unauthenticated. The Yjs awareness protocol assigns them anonymous identifiers (Student 1, Student 2) based on connection order. Students cannot mutate activePageIndex, clear the board, or access any server-side resource. Their drawing operations sync through Yjs CRDT merge, which is inherently permission-less (any connected peer can modify the shared document). This is acceptable because the only destructive operations (page switch, board clear, file upload) are enforced client-side on student views and are not available in the student UI.
+
+### 3.3 LiveKit TURN TCP 443 Fallback
+
+LiveKit's integrated TURN server MUST be configured to accept TCP connections on port 443 via the turn.yourdomain.com subdomain. Many K-12 school networks block outbound UDP traffic, which is the default transport for WebRTC. Without TCP 443 fallback, video calls silently fail for students connecting from school. The dedicated subdomain is necessary because Caddy must perform raw L4 TCP pass-through to the LiveKit container without attempting TLS termination or HTTP parsing.
+
+### 3.4 AI Requests Routed Through VPS Proxy
+
+The AI action endpoint is NOT hosted on Vercel. A lightweight Express.js container runs on the VPS alongside Hocuspocus and proxies AI requests to OpenAI/Google/Mathpix. This bypasses Vercel Hobby's 10-second serverless function timeout. The Vercel frontend sends AI requests to `https://ws.yourdomain.com/api/ai/action` (routed by Caddy to the AI proxy container on an internal port). All other API routes (Stripe webhook, LiveKit token, room end, video heartbeat) remain on Vercel and complete well within the 10-second limit.
+
+---
+
+## 4. USER FLOWS
+
+### 4.1 Tutor Flow (Authenticated via Supabase)
+
+1. **Login.** Tutor enters email/password via Supabase Auth. System returns a JWT access token. The JWT is stored in a secure httpOnly cookie (for Vercel API routes) and in memory (for Supabase client-side queries and Hocuspocus WebSocket auth).
+
+2. **Subject Selection.** Tutor selects a subject: Math, Science, Language, or General. This determines which subject-specific toolkit loads in the toolbar. The subject is stored on the Room record and cannot be changed after room creation.
+
+3. **Agency Branding (Optional).** If the tutor belongs to an Agency tier, they select their agency's branding preset. Branding colors, logo, and agency name are snapshotted at room creation so subsequent agency setting changes do not affect active rooms.
+
+4. **Room Generation.** System generates a UUID v4 Room ID and creates a Room record (isActive = true, subject, branding snapshot). Tutor is redirected to /room/{roomId}.
+
+5. **Whiteboard Entry.** Client initializes: Yjs provider (connects to wss://ws.yourdomain.com), Excalidraw canvas (with subject toolkit), and waits for student connections.
+
+### 4.2 Student Flow (Unauthenticated, Anonymous, COPPA-Safe)
+
+**There is no Student database model. Student state is purely ephemeral via Yjs awareness.**
+
+1. **Click Link.** Student clicks the room URL. Browser loads the Next.js application at /room/{roomId}.
+
+2. **Branded Waiting Room.** Student sees a waiting room with the tutor's name (or agency name), the subject, and a loading indicator. The waiting room theme matches agency branding if applicable. Client establishes a Yjs connection to Hocuspocus and monitors awareness for the tutor's presence.
+
+3. **Tutor Detection.** When the Yjs awareness protocol detects the tutor's client ID with `isTutor: true`, the student is automatically transitioned to the main whiteboard view.
+
+4. **No Name Entry.** The Yjs awareness protocol automatically assigns the student an anonymous identifier based on connection order: "Student 1", "Student 2", etc. A random cursor color is assigned from a predefined palette. No text input is shown. No name is collected, displayed, persisted, or logged.
+
+5. **Permissions.** Students CAN: draw on the active page, use basic drawing tools, see the tutor's cursor. Students CANNOT: change pages, clear the board, upload files, access AI, record, or modify room settings. These restrictions are enforced client-side (the UI does not render the controls) since Yjs CRDT sync is inherently permission-less for drawing operations.
+
+### 4.3 Session Termination
+
+1. Tutor clicks "End Lesson."
+2. Frontend sends `POST /api/room/{roomId}/end` to Vercel.
+3. Backend verifies tutor's JWT, confirms the user is the room's tutor.
+4. Backend sets `room.isActive = false`, `room.endedAt = now()`, `room.durationMinutes = (endedAt - startedAt) / 60`.
+5. Frontend severs Yjs WebSocket and LiveKit connections.
+6. Room URL becomes inert: visitors see "This session has ended."
+7. All student ephemeral data (anonymous IDs, cursor positions, awareness state) evaporates.
+8. Room record and BoardPage snapshots remain in PostgreSQL until the pg_cron auto-purge job deletes them after 7 days.
+
+---
+
+## 5. THREE-TIER MONETIZATION MODEL
+
+Server-side feature gating is implemented via a `hasFeature(featureName, userTier)` function in `/lib/usage.ts`. Every premium feature check passes through this function, which returns a boolean. The frontend mirrors this logic client-side to hide/disable UI elements, but the server-side check is authoritative.
+
+| Feature | FREE | PRO ($19/mo) | AGENCY ($39/mo) |
+|---------|------|-------------|----------------|
+| Video Calling | 120 min/week | Unlimited | Unlimited |
+| AI Credits | 10/week | 100/month | 100/month |
+| Basic Drawing Tools | Yes | Yes | Yes |
+| Subject Toolkits | Current subject only | All subjects | All subjects |
+| File Uploads | No | Yes | Yes |
+| Save / Load Boards | No | Yes | Yes |
+| Templates | No | Yes | Yes |
+| GeoGebra Panel | No | Yes | Yes |
+| Mathpix OCR | No | Yes | Yes |
+| Math $0 Fallback (type equation) | Yes | Yes | Yes |
+| PDF Export | No | Yes (branded) | Yes (white-label) |
+| Deep White-Labeling | No | No | Yes (CSS, waiting room, PDF, header) |
+| Custom Domains | No | No | Yes (requires Vercel Pro upgrade — V2 feature) |
+| Sub-Tutor Invites | No | No | Yes |
+| AI Soft Throttle Limit | N/A | $3.00/month estimated spend | $15.00/month estimated spend |
+
+### 5.1 COGS Analysis (Per Pro User, Worst Case)
+
+| Cost Component | Per-Unit Cost | Max Monthly Usage | Monthly COGS |
+|---------------|--------------|-------------------|-------------|
+| VPS (shared across all users) | $15/month flat | Shared | ~$0.15/user (at 100 users) |
+| Supabase (Free tier) | $0 | Within free limits | $0 |
+| Vercel Hobby | $0 | Within free limits | $0 |
+| GPT-4o-mini / Gemini Flash Text | ~$0.15/1M input tokens | ~50 requests | ~$0.50-1.00 |
+| GPT-4o-mini Vision | ~$0.30/1M input tokens | ~10 requests | ~$0.20-0.50 |
+| Mathpix OCR | ~$0.01/image | ~30 images | ~$0.30 |
+| Stripe Fees | 2.9% + $0.30 | 1 transaction | ~$0.85 |
+| **Total Estimated COGS** | | | **~$2.00-2.80/month** |
+| **Contribution Margin** | | | **~$16.20-17.00 (85-89%)** |
+
+The soft throttle mechanism at $3.00/month (Pro) and $15.00/month (Agency) provides an additional safeguard against runaway costs from malicious actors or unexpected usage patterns.
+
+---
+
+## 6. FEATURE SPECIFICATIONS
+
+### 6.1 Subject-Specific Toolkits
+
+The toolbar dynamically changes based on the room's subject. Base tools (pen, rectangle, ellipse, line, arrow, text, eraser, selection) are always available. Subject tools are loaded as separate React components in `/components/toolkits/`.
+
+| Subject | Extra Tools | Backgrounds | AI Features |
+|---------|-----------|-----------|------------|
+| Math | Graph paper toggle, protractor/compass SVG stamps, GeoGebra trigger, Mathpix trigger | Graph paper (variable grid), isometric dot, blank | Equation recognition + confirm modal, answer key generation, step-by-step solutions |
+| Science | Vector arrows (adjustable angle/magnitude), lab equipment SVGs, AI diagram generator | Periodic table, lab notebook lines | AI Diagram Generator (creates labeled diagrams from descriptions) |
+| Language | 4 translucent highlighters, mind map node creator, sentence structure builder | Lined paper, handwriting guide, blank | AI Grammar Check, AI Vocab Quiz, AI Reading Comprehension |
+| General | Standard tools, timeline builder, sticky notes | Blank, dot grid, ruled | AI Summary, AI Quiz (generic) |
+
+### 6.2 Excalidraw Multi-Page Architecture
+
+Standard Excalidraw handles a single canvas. Multi-page support uses a custom Yjs data structure.
+
+**Yjs Data Structure:**
+- `Y.Map<Y.Array<ExcalidrawElement>>` where the key is the page index string ("0", "1", "2") and the value is the array of drawing elements for that page.
+- A shared `activePageIndex: Y.Number` in Yjs. Only the tutor's client can mutate this variable.
+
+**Page Switch Protocol (executed in order when tutor changes page):**
+
+1. **Flush in-progress strokes.** Before changing the page, the client checks if a stroke is being drawn (pointer is down). If so, it either dispatches a pointerUp event to complete the stroke programmatically, or temporarily disables the page switch UI for 100ms until the stroke completes. This prevents orphaned strokes that could appear on the wrong page or be lost entirely.
+
+2. **Clear the undo/redo stack.** Excalidraw's undo/redo history is global and tied to internal state, not to individual pages. If a tutor draws on Page 1, switches to Page 2, and presses Ctrl+Z, the global undo could attempt to remove an element that no longer exists in the current view. The solution: clear Excalidraw's undo/redo stack on every page switch by resetting the initialData prop. Undo/redo works within the current page only. This matches how most multi-page whiteboard applications behave.
+
+3. **Mutate shared state.** The tutor's client sets `activePageIndex.value = newIndex` on the shared Y.Number. This triggers Yjs observers on all connected clients.
+
+4. **Reset local AppState.** All observing clients manually reset Excalidraw's local AppState to defaults before rendering the new page: scrollX = 0, scrollY = 0, zoom = { value: 1 }, selectedElementIds = {}, editingGroupId = null. Without this reset, switching from a zoomed-in page would preserve the zoom and scroll position, causing the new page to appear incorrectly framed.
+
+5. **Swap elements.** Each client reads the Y.Array corresponding to the new activePageIndex from the Y.Map and passes it as the initialData.elements prop to the Excalidraw component.
+
+### 6.3 GeoGebra Slide-Out Panel
+
+Clicking "Graph" opens a resizable panel on the right side (35% viewport width). The Excalidraw canvas automatically shrinks to 65% width. This DOM separation is mandatory because both Excalidraw and GeoGebra listen for mouse/touch events; overlapping them would cause drawing actions to accidentally manipulate GeoGebra elements and vice versa. GeoGebra state (equations, points, constructions) is saved as a stringified JSON snapshot in a dedicated Yjs shared type. State persists when the panel is closed and reopened, and persists independently across Excalidraw page switches.
+
+### 6.4 AI Graphing Confirm Step
+
+When AI vision reads handwritten math to plot a graph, the system does NOT plot automatically. It opens a modal: "Did you write: y = 2x + 5?" The tutor must click "Yes" before the graph is plotted. This confirmation exists because GPT-4o-mini has a 5-15% error rate on handwritten mathematical expressions. Plotting an incorrect equation during a live tutoring session would actively harm the lesson. The one-second confirmation delay is an acceptable trade-off.
+
+### 6.5 Math OCR: Two-Tier Approach
+
+**Tier 1 ($0): Tutor types the equation.** A text input box in the AI panel allows the tutor to manually type or paste an equation (e.g., "y = 2x + 5"). This is parsed and rendered via KaTeX, or sent to GeoGebra for graphing. No OCR, no API cost, zero error rate.
+
+**Tier 2 (Premium): Mathpix API.** The tutor clicks the "Scan" button, which captures a screenshot of the selected whiteboard area and sends it to the Mathpix API. Mathpix returns LaTeX, which is rendered via KaTeX. This is available only on Pro and Agency tiers and consumes one AI credit.
+
+**Tesseract.js is banned for math.** Tesseract is a general-purpose text OCR engine with less than 40% accuracy on handwritten mathematical expressions (fractions, exponents, integrals, matrices). Tesseract may optionally be used as a free fallback for basic text recognition in the Language toolkit only, but must never be used for mathematical content.
+
+### 6.6 Native Picture-in-Picture Video
+
+LiveKit video renders as a draggable, floating panel overlaying the canvas (bottom-right default). The panel can be dragged to any screen position, resized, and minimized to a thumbnail. It uses absolute positioning with pointer event handling to ensure dragging does not trigger Excalidraw drawing actions. The UI is touch-optimized for iPad and Chromebook (larger drag handles, touch-friendly resize corners). There is NO native record button in the UI. Tutors who wish to record are informed via a help tooltip: "To record this session, use Loom, QuickTime, or OBS."
+
+### 6.7 Deep White-Labeling (Agency Tier)
+
+Agency users customize the visual identity of their sessions. A `useTheme()` hook reads the room's brandingColor, brandingLogoUrl, and agencyName (snapshotted at room creation) and applies them as CSS custom properties. Branded elements include: the header bar (logo + agency name), the waiting room (background color, logo, welcome text), and PDF exports (header/footer with agency branding).
+
+### 6.8 Offline Resilience (y-indexeddb)
+
+The client includes `y-indexeddb` as a persistence layer for the Yjs document. When a student's WiFi drops for 5-10 seconds (common in K-12 environments), the student can continue drawing. Changes are stored locally in IndexedDB. When the WebSocket reconnects, y-indexeddb automatically syncs the local changes to the Hocuspocus server and merges them with any changes made by other peers during the disconnection. This is a one-line integration with the existing Yjs provider setup.
+
+---
+
+## 7. SECURITY AND DATA PRIVACY
+
+### 7.1 CSRF Protection (Double-Submit Cookie)
+
+Implemented in `middleware.ts`. For all POST, PUT, PATCH, DELETE requests: the middleware generates a cryptographically random token (crypto.randomUUID()), sets it as an `httpOnly=false, secure, sameSite=lax` cookie named `csrf_token`, and requires the client to echo the same value in the `X-CSRF-Token` header. The middleware compares the cookie and header values using `crypto.timingSafeEqual()` to prevent timing attacks. Exempted endpoints: `/api/stripe/webhook` and `/api/livekit/webhook` (these are authenticated via webhook signature verification).
+
+### 7.2 Content Security Policy (CSP)
+
+Dynamically generated per request in `middleware.ts`. Each response includes a CSP header with a cryptographic nonce (crypto.randomUUID()) for the `script-src` directive. The nonce is injected into the HTML response. The CSP allows connections only to approved domains: the application itself (app.yourdomain.com), Supabase (project URL), Stripe (js.stripe.com), LiveKit (VPS domain), OpenAI/Google AI APIs, Mathpix (api.mathpix.com), Hocuspocus (ws.yourdomain.com), and GeoGebra (geogebra.org). For API routes, `default-src` is set to `'none'`.
+
+### 7.3 Input Validation (Zod v3)
+
+100% of API endpoints use a `validateInput()` helper with strict Zod v3 schemas. Every schema enforces: string length limits (min/max), UUID format validation, regex patterns for emails and color codes, enum validation for tier and subject fields, and `.strict()` mode to reject unknown properties. No raw `req.body` access is permitted outside the validateInput wrapper.
+
+### 7.4 AI Prompt Sanitization
+
+Every AI prompt passes through `sanitizePrompt()` before being sent to any external API. The function: (1) truncates the prompt to 50,000 characters, (2) scans against 10+ known injection patterns ("ignore previous instructions", "you are now", "jailbreak", "DAN mode", "system prompt", etc.) using case-insensitive regex, (3) replaces all matches with `[FILTERED]`, (4) logs the sanitization event to Sentry without the original prompt content.
+
+### 7.5 AI Soft Throttle
+
+The system tracks estimated AI API spend in cents on `UsageLog.estimatedAiSpendCents`, incremented after each AI call based on actual token usage from the API response. If a Pro user reaches $3.00/month estimated spend, the AI endpoint returns a warning: "You have reached your monthly AI spend limit." If an Agency user reaches $15.00/month, the same throttle activates. This prevents runaway costs regardless of the credit system.
+
+### 7.6 COPPA / GDPR-K Compliance
+
+**Compliance strategy: Zero PII Collection.**
+
+The application does not ask for, display, or collect any student personal information. Students are identified solely by anonymous numerical labels (Student 1, Student 2) assigned automatically via the Yjs awareness protocol. No text input is presented to students. No student data is written to any database, log, or storage system. Student state exists only in the volatile memory of connected WebSocket clients and is permanently destroyed when the session ends.
+
+This design eliminates COPPA's verifiable parental consent requirement because no personal information is collected from children. The FTC's COPPA FAQ explicitly states that the regulation applies to operators that "collect personal information from children." If no personal information is collected, COPPA's requirements do not trigger.
+
+**Supporting compliance measures:**
+- **Auto-purge:** pg_cron job runs daily at 3 AM UTC, permanently deleting all rooms, board pages, and associated data where `isActive = false` AND `endedAt` is older than 7 days.
+- **Right to deletion:** The Stripe webhook listens for `customer.subscription.deleted` and triggers a hard delete of all that tutor's rooms, templates, usage logs, and agency invites.
+- **Privacy policy:** A publicly accessible privacy policy page must be published before launch, stating: what data is collected (tutor account data only), what data is NOT collected (no student data), and how data is retained (7-day auto-purge after session end).
+
+**Legal disclaimer:** This is a product design recommendation based on publicly available FTC guidance, not legal advice. The founder should consult a K-12 privacy attorney ($500-2,000 initial consultation) before a US market launch. However, the zero-PII approach represents the lowest-risk compliance position available without legal counsel.
+
+---
+
+## 8. DATABASE SCHEMA (PRISMA)
+
+**What is deliberately absent:** No Student model. No Homework model. No Scheduling model. No Invoice model. No Recording model. The schema contains only what the whiteboard SaaS core requires.
+
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  name                  String?
+  tier                  String    @default("FREE")
+  isAdmin               Boolean   @default(false)
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?
+  fingerprintHash       String?
+  customDomain          String?   @unique
+  brandingLogoUrl       String?
+  brandingColor         String?
+  agencyName            String?
+  parentAgencyId        String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  rooms                 Room[]
+  usageLogs             UsageLog[]
+  sentInvites           AgencyInvite[]
+}
+
+model UsageLog {
+  id                    String   @id @default(uuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodStartDate       DateTime
+  videoMinutesUsed      Int      @default(0)
+  aiCreditsUsed         Int      @default(0)
+  estimatedAiSpendCents Int      @default(0)
+  @@unique([userId, periodStartDate])
+}
+
+model Room {
+  id               String       @id @default(uuid())
+  tutorId          String
+  tutor            User         @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  subject          String       @default("GENERAL")
+  isActive         Boolean      @default(true)
+  startedAt        DateTime?
+  endedAt          DateTime?
+  durationMinutes  Int          @default(0)
+  brandingLogo     String?
+  brandingColor    String?
+  pages            BoardPage[]
+  createdAt        DateTime     @default(now())
+}
+
+model BoardPage {
+  id        String  @id @default(uuid())
+  roomId    String
+  room      Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  pageIndex Int
+  snapshot  Json
+}
+
+model Template {
+  id        String   @id @default(uuid())
+  tutorId   String
+  tutor     User     @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  name      String
+  subject   String
+  snapshot  Json
+  createdAt DateTime @default(now())
+}
+
+model AgencyInvite {
+  id           String   @id @default(uuid())
+  agencyId     String
+  agency       User     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  code         String   @unique
+  invitedEmail String?
+  recipientId  String?
+  status       String   @default("PENDING")
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+```
+
+**Auto-purge (Supabase pg_cron, runs daily at 3 AM UTC):**
+
+```sql
+SELECT cron.schedule('purge-old-rooms', '0 3 * * *', $$
+  DELETE FROM "BoardPage" WHERE "roomId" IN (
+    SELECT id FROM "Room" WHERE "isActive" = false
+    AND "endedAt" < NOW() - INTERVAL '7 days'
+  );
+  DELETE FROM "Room" WHERE "isActive" = false
+  AND "endedAt" < NOW() - INTERVAL '7 days';
+$$);
+```
+
+---
+
+## 9. PROJECT DIRECTORY STRUCTURE
+
+```
+k12-superboard/
+  src/
+    middleware.ts                          # CSRF, CSP nonces
+    app/
+      layout.tsx                          # Global wrapper, Sentry, CSS vars
+      page.tsx                            # Landing / Dashboard
+      room/[roomId]/page.tsx              # Main whiteboard / waiting room
+      api/
+        stripe/webhook/route.ts           # Subscription events, right-to-deletion
+        livekit/token/route.ts            # Generate LiveKit token + check video limits
+        room/[roomId]/
+          end/route.ts                    # Terminate session
+          video-heartbeat/route.ts        # 60-second heartbeat, enforce 120 min/week
+    components/
+      ui/                                 # Shadcn UI components
+      canvas/
+        Whiteboard.tsx                    # Excalidraw wrapper
+        ExcalidrawSync.tsx                # Custom Yjs Y.Map multi-page binding + y-indexeddb
+        Toolbar.tsx                       # Dynamic subject toolbar switcher
+        PageSidebar.tsx                   # Page nav, clears undo stack on switch, 100ms lockout
+        ImageCompressor.ts               # Bounding box crop + JPEG compression
+        ShapePerfecter.ts                 # Local JS geometry math (zero AI cost)
+      toolkits/                           # MathToolkit, ScienceToolkit, LanguageToolkit, GeneralToolkit
+      video/
+        PipVideoPanel.tsx                 # Draggable floating LiveKit video (NO record button)
+      ai/
+        AIControlPanel.tsx                # AI action buttons + credit display
+        EquationConfirmModal.tsx          # "Did you write: y = 2x + 5?"
+        AnswerKeyModal.tsx                # AI-generated answer key display
+      geogebra/
+        GeoGebraSlideOutPanel.tsx         # 35% panel, GeoGebra state in Yjs
+      student/
+        WaitingRoom.tsx                   # Branded waiting room (NO name input)
+        AnonymousCursor.tsx               # Random color, "Student N" label via awareness
+      premium/
+        PaywallModal.tsx                  # Upgrade prompt for locked features
+        UsageBar.tsx                      # Credits remaining + soft throttle warning
+      branding/
+        BrandedHeader.tsx                 # Dynamic logo/agency name from room snapshot
+        BrandedPdfExport.tsx              # PDF with agency header/footer
+    lib/
+      validations.ts                      # Zod v3 schemas (strict mode, all endpoints)
+      security.ts                         # CSR
