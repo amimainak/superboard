@@ -722,6 +722,114 @@ div[data-placeholder]:empty::before {
   color: #6b7280;
 }
 
+/* ---- Help dialog tabs ---- */
+.wb-help-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  border-bottom: 1px solid;
+}
+
+.wb-help-tabs-dark {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.wb-help-tabs-light {
+  border-color: #e5e7eb;
+}
+
+.wb-help-tab {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 7px 7px 0 0;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+}
+
+.wb-help-tab-dark {
+  color: #6b7a94;
+}
+
+.wb-help-tab-light {
+  color: #94a3b8;
+}
+
+.wb-help-tab-dark:hover {
+  color: #c8d1e0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.wb-help-tab-light:hover {
+  color: #374151;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.wb-help-tab-active {
+  font-weight: 600;
+}
+
+.wb-help-tab-active-dark {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+  box-shadow: inset 0 -2px 0 #34d399;
+}
+
+.wb-help-tab-active-light {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.06);
+  box-shadow: inset 0 -2px 0 #059669;
+}
+
+/* ---- Help tip cards ---- */
+.wb-help-tip {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid;
+  transition: background 0.15s ease;
+}
+
+.wb-help-tip-dark {
+  border-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.wb-help-tip-light {
+  border-color: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.01);
+}
+
+.wb-help-tip-title {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+
+.wb-help-tip-title-dark {
+  color: #e8ecf4;
+}
+
+.wb-help-tip-title-light {
+  color: #1e293b;
+}
+
+.wb-help-tip-desc {
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.wb-help-tip-desc-dark {
+  color: #8892a8;
+}
+
+.wb-help-tip-desc-light {
+  color: #6b7280;
+}
+
 /* ---- Color swatches ---- */
 .wb-swatch {
   width: 20px;
