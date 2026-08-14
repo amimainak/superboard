@@ -6,7 +6,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useWhiteboardStore, STICKY_COLORS } from '@/lib/whiteboard/store'
 import { ElementRenderer } from './ElementRenderer'
 import { SelectionHandles } from './SelectionHandles'
 import { GridBackground } from './GridBackground'
@@ -395,9 +395,36 @@ export function WhiteboardCanvas() {
         case 'line':
         case 'arrow':
         case 'text':
-        case 'sticky':
         case 'frame': {
           startDrawing(point)
+          break
+        }
+        case 'sticky': {
+          // Sticky note: immediately place at click position, then revert to select
+          pushHistory()
+          const color = STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)]
+          const el: WhiteboardElement = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            type: 'sticky',
+            x: point.x - 100,
+            y: point.y - 100,
+            width: 200,
+            height: 200,
+            rotation: 0,
+            opacity: 1,
+            strokeColor: '#00000020',
+            fillColor: color,
+            strokeWidth: 1,
+            locked: false,
+            pageIndex: currentPageIndex,
+            text: '',
+            fontSize: 16,
+            noteColor: color,
+          } as WhiteboardElement
+          addElement(el)
+          // Select the new sticky and switch to select tool
+          selectElements([el.id])
+          setTool('select')
           break
         }
         case 'eraser': {

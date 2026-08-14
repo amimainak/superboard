@@ -32,7 +32,7 @@ export const DEFAULT_STYLE: ElementStyle = {
 
 const DEFAULT_CAMERA: Camera = { x: 0, y: 0, zoom: 1 }
 
-const STICKY_COLORS = [
+export const STICKY_COLORS = [
   '#fef08a', // yellow
   '#bbf7d0', // green
   '#bfdbfe', // blue
@@ -563,22 +563,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
           break
         }
         case 'sticky': {
-          const color = STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)]
-          const el: WhiteboardElement = {
-            ...base,
-            type: 'sticky',
-            x: point.x,
-            y: point.y,
-            width: 200,
-            height: 200,
-            text: '',
-            fontSize: 16,
-            noteColor: color,
-            fillColor: color,
-            strokeColor: '#00000020',
-            strokeWidth: 1,
-          } as WhiteboardElement
-          set({ isDrawing: true, currentElement: el, drawingPoints: [] })
+          // Sticky notes are now handled directly in handlePointerDown — no drawing flow needed
           break
         }
         case 'frame': {

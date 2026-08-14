@@ -188,7 +188,7 @@ export function ElementRenderer({
     }
 
     case 'sticky':
-      return <StickySvg element={element} commonProps={commonProps} onTextChange={onTextChange} tool={tool} />
+      return <StickySvg element={element} commonProps={commonProps} onTextChange={onTextChange} tool={tool} isSelected={isSelected} />
 
     case 'image':
       return (
@@ -325,13 +325,17 @@ function StickySvg({
   commonProps,
   onTextChange,
   tool,
+  isSelected,
 }: {
   element: { id: string; x: number; y: number; width: number; height: number; noteColor: string; text: string; fontSize: number; locked: boolean }
   commonProps: Record<string, unknown>
   onTextChange?: (id: string, text: string) => void
   tool: string
+  isSelected: boolean
 }) {
   const updateElement = useWhiteboardStore((s) => s.updateElement)
+  const removeElements = useWhiteboardStore((s) => s.removeElements)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
 
   return (
     <g>
@@ -355,11 +359,51 @@ function StickySvg({
         stroke={commonProps.stroke as string || '#00000020'}
         strokeWidth={1}
         onPointerDown={(e: React.PointerEvent) => {
-          if (tool === 'select') e.stopPropagation()
+          // Always stop propagation on sticky body to prevent creating new stickies
+          e.stopPropagation()
           ;(commonProps.onPointerDown as (e: React.PointerEvent) => void)?.(e)
         }}
         style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
       />
+      {/* Close button — visible when selected */}
+      {isSelected && !element.locked && (
+        <g
+          style={{ cursor: 'pointer' }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            pushHistory()
+            removeElements([element.id])
+          }}
+        >
+          <circle
+            cx={element.x + element.width - 12}
+            cy={element.y + 12}
+            r={8}
+            fill="#ef4444"
+            opacity={0.85}
+          />
+          {/* × icon */}
+          <line
+            x1={element.x + element.width - 15}
+            y1={element.y + 9}
+            x2={element.x + element.width - 9}
+            y2={element.y + 15}
+            stroke="white"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+          />
+          <line
+            x1={element.x + element.width - 9}
+            y1={element.y + 9}
+            x2={element.x + element.width - 15}
+            y2={element.y + 15}
+            stroke="white"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+          />
+        </g>
+      )}
       {/* Color picker dots */}
       {!element.locked && (
         <g style={{ cursor: 'pointer' }}>
@@ -367,7 +411,7 @@ function StickySvg({
             <circle
               key={color}
               cx={element.x + element.width - 12 - (STICKY_COLOR_OPTIONS.length - 1 - i) * 16}
-              cy={element.y + 12}
+              cy={isSelected ? element.y + 28 : element.y + 12}
               r={5}
               fill={color}
               stroke="#00000020"
@@ -376,6 +420,7 @@ function StickySvg({
                 e.stopPropagation()
                 updateElement(element.id, { noteColor: color, fillColor: color } as Partial<WhiteboardElement>)
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               style={{ opacity: 0.6 }}
               onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}
               onMouseOut={(e) => (e.currentTarget.style.opacity = '0.6')}
@@ -386,9 +431,10 @@ function StickySvg({
       {/* Text area */}
       <foreignObject
         x={element.x + 12}
-        y={element.y + 12}
+        y={element.y + (isSelected ? 28 : 12)}
         width={element.width - 24}
-        height={element.height - 24}
+        height={element.height - (isSelected ? 40 : 24)}
+        onPointerDown={(e) => e.stopPropagation()}
       >
         <div
           contentEditable={!element.locked}
