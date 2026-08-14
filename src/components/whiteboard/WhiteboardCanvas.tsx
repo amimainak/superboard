@@ -153,6 +153,79 @@ export function WhiteboardCanvas() {
   const prevToolRef = useRef<ToolId | null>(null) // for stylus barrel-button eraser
   const palmRejectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ---- Image tool: open file picker immediately on tool select ----
+  useEffect(() => {
+    if (tool !== 'image') return
+
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    let cancelled = false
+
+    input.onchange = (ev) => {
+      if (cancelled) return
+      const file = (ev.target as HTMLInputElement).files?.[0]
+      if (!file) {
+        setTool('select')
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (re) => {
+        if (cancelled) return
+        const img = new Image()
+        img.onload = () => {
+          if (cancelled) return
+          const maxW = 400
+          const scale = Math.min(1, maxW / img.width)
+          // Place image at center of the current viewport
+          const cx = -camera.x + containerSize.width / 2 / camera.zoom
+          const cy = -camera.y + containerSize.height / 2 / camera.zoom
+          pushHistory()
+          const el: WhiteboardElement = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            type: 'image',
+            x: cx - (img.width * scale) / 2,
+            y: cy - (img.height * scale) / 2,
+            width: img.width * scale,
+            height: img.height * scale,
+            rotation: 0,
+            opacity: 1,
+            strokeColor: 'transparent',
+            fillColor: 'transparent',
+            strokeWidth: 0,
+            locked: false,
+            pageIndex: currentPageIndex,
+            src: re.target?.result as string,
+            naturalWidth: img.width,
+            naturalHeight: img.height,
+          }
+          addElement(el)
+          setTool('select')
+        }
+        img.src = re.target?.result as string
+      }
+      reader.readAsDataURL(file)
+    }
+
+    // If user cancels the file dialog (no onchange fires), still revert tool
+    const onCancel = () => {
+      // Small delay to let onchange fire first if a file was selected
+      setTimeout(() => {
+        if (!cancelled) {
+          setTool('select')
+        }
+      }, 300)
+    }
+    input.addEventListener('cancel', onCancel)
+
+    input.click()
+
+    return () => {
+      cancelled = true
+      input.removeEventListener('cancel', onCancel)
+    }
+  }, [tool]) // intentionally minimal deps — runs once per tool switch to 'image'
+
   // Observe container size
   useEffect(() => {
     const container = containerRef.current
@@ -339,45 +412,7 @@ export function WhiteboardCanvas() {
           break
         }
         case 'image': {
-          // Image tool: trigger file input
-          const input = document.createElement('input')
-          input.type = 'file'
-          input.accept = 'image/*'
-          input.onchange = (ev) => {
-            const file = (ev.target as HTMLInputElement).files?.[0]
-            if (!file) return
-            const reader = new FileReader()
-            reader.onload = (re) => {
-              const img = new Image()
-              img.onload = () => {
-                const maxW = 400
-                const scale = Math.min(1, maxW / img.width)
-                pushHistory()
-                const el: WhiteboardElement = {
-                  id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                  type: 'image',
-                  x: point.x,
-                  y: point.y,
-                  width: img.width * scale,
-                  height: img.height * scale,
-                  rotation: 0,
-                  opacity: 1,
-                  strokeColor: 'transparent',
-                  fillColor: 'transparent',
-                  strokeWidth: 0,
-                  locked: false,
-                  pageIndex: currentPageIndex,
-                  src: re.target?.result as string,
-                  naturalWidth: img.width,
-                  naturalHeight: img.height,
-                }
-                addElement(el)
-              }
-              img.src = re.target?.result as string
-            }
-            reader.readAsDataURL(file)
-          }
-          input.click()
+          // Image file picker is handled by the useEffect — no-op here
           break
         }
       }
