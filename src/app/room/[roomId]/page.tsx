@@ -153,7 +153,7 @@ export default function RoomPage() {
   const [room, setRoom] = useState<RoomInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeWidgets, setActiveWidgets] = useState<string[]>([])
-  const [saveStatus, setSaveStatus] = useState<string>('')
+  const [saveTrigger, setSaveTrigger] = useState(0)
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -175,24 +175,9 @@ export default function RoomPage() {
     )
   }
 
-  const handleSave = useCallback(async () => {
-    setSaveStatus('Saving...')
-    try {
-      const res = await fetch(`/api/rooms/${roomId}/pages`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pages: [] }), // Will be filled by whiteboard store
-      })
-      if (res.ok) {
-        setSaveStatus('Saved')
-        setTimeout(() => setSaveStatus(''), 2000)
-      } else {
-        setSaveStatus('Save failed')
-      }
-    } catch {
-      setSaveStatus('Save failed')
-    }
-  }, [roomId])
+  const handleSave = useCallback(() => {
+    setSaveTrigger(prev => prev + 1)
+  }, [])
 
   const handleEndSession = async () => {
     if (!confirm('End this session? The room will be deactivated.')) return
@@ -219,7 +204,7 @@ export default function RoomPage() {
     }}>
       {/* Main whiteboard area */}
       <div style={{ flex: 1, position: 'relative', minWidth: 0 }}>
-        <WhiteboardClient roomId={roomId} onSave={handleSave} saveStatus={saveStatus} />
+        <WhiteboardClient roomId={roomId} onSaveRequest={handleSave} saveStatus={saveTrigger > 0 ? `Save #${saveTrigger}` : ''} />
 
         {/* Widget Toggle Bar — floating on right side */}
         <div style={{

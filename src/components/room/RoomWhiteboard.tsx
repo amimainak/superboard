@@ -15,8 +15,9 @@ import {
 
 interface RoomWhiteboardProps {
   roomId: string
-  onSave?: () => void
+  onSaveRequest?: () => void
   saveStatus?: string
+  onSaved?: (success: boolean) => void
 }
 
 // BoardPage snapshot stored in Supabase
@@ -28,7 +29,7 @@ interface PageSnapshot {
   }
 }
 
-export default function RoomWhiteboard({ roomId, onSave, saveStatus }: RoomWhiteboardProps) {
+export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSaved }: RoomWhiteboardProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const tool = useWhiteboardStore((s) => s.tool)
   const camera = useWhiteboardStore((s) => s.camera)
@@ -69,6 +70,7 @@ export default function RoomWhiteboard({ roomId, onSave, saveStatus }: RoomWhite
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadedRef = useRef(false)
+  const saveRequestRef = useRef(false)
 
   // Load board pages from Supabase on mount
   useEffect(() => {
@@ -154,6 +156,27 @@ export default function RoomWhiteboard({ roomId, onSave, saveStatus }: RoomWhite
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
   }, [elements, pages, saveToSupabase])
+
+  // Immediate save when parent requests it
+  useEffect(() => {
+    if (saveRequestRef.current) {
+      saveRequestRef.current = false
+      let cancelled = false
+      saveToSupabase().then(() => {
+        if (!cancelled) onSaved?.(true)
+      }).catch(() => {
+        if (!cancelled) onSaved?.(false)
+      })
+      return () => { cancelled = true }
+    }
+  }, [elements, pages, saveToSupabase, onSaved])
+
+  // Listen for save requests from parent
+  useEffect(() => {
+    if (onSaveRequest) {
+      saveRequestRef.current = true
+    }
+  }, [onSaveRequest])
 
   // ---- Export Handlers ----
   const handleExportPng = useCallback(async () => {
@@ -333,7 +356,7 @@ export default function RoomWhiteboard({ roomId, onSave, saveStatus }: RoomWhite
               zIndex: 100, display: 'flex', gap: 4,
             }}>
               <button
-                onClick={onSave}
+                onClick={() => { saveRequestRef.current = true }}
                 title="Save now"
                 style={{
                   padding: '4px 10px', borderRadius: 4,
@@ -341,7 +364,7 @@ export default function RoomWhiteboard({ roomId, onSave, saveStatus }: RoomWhite
                   color: '#34d399', fontSize: 11, cursor: 'pointer',
                 }}
               >
-                Save
+                {saveStatus || 'Save'}
               </button>
               <button
                 onClick={handleSaveAsTemplate}
