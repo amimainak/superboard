@@ -133,6 +133,8 @@ export interface WhiteboardStore {
   switchPage: (index: number) => void
   renamePage: (index: number, name: string) => void
   getCurrentPageElements: () => WhiteboardElement[]
+  setPages: (pages: WhiteboardPage[]) => void
+  setCurrentPageIndex: (index: number) => void
 
   // Clipboard
   copySelected: () => void
@@ -816,6 +818,21 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const { elements, pages, currentPageIndex } = get()
       const pageId = pages[currentPageIndex]?.id
       return elements.filter((el) => el.pageIndex === currentPageIndex)
+    },
+
+    setPages: (newPages) => {
+      // WhiteboardPage only has { id, name, index } — elements are global
+      set({
+        pages: newPages,
+        currentPageIndex: 0,
+        selectedIds: [],
+        undoStack: [],
+        redoStack: [],
+      })
+    },
+
+    setCurrentPageIndex: (index) => {
+      set({ currentPageIndex: index, selectedIds: [] })
     },
 
     // ---- Clipboard ----

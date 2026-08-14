@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+  let supabaseResponse = NextResponse.next()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +16,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
-          supabaseResponse = NextResponse.next({ request })
+          supabaseResponse = NextResponse.next()
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -25,16 +25,10 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // If no user and not on a public route, redirect to home
-  // (Public routes: /, /room/[roomId] for students)
   const publicRoutes = ['/', '/login', '/signup']
   const isPublicRoute = publicRoutes.some(route =>
     request.nextUrl.pathname === route
@@ -42,13 +36,12 @@ export async function updateSession(request: NextRequest) {
   const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
 
   if (!user && !isPublicRoute && !isRoomRoute) {
-    const url = request.nextUrl.clone(new URL('/login', request.url))
+    const url = new URL('/login', request.url)
     return NextResponse.redirect(url)
   }
 
-  // If user is authenticated and on login/signup, redirect to dashboard
   if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-    const url = request.nextUrl.clone(new URL('/dashboard', request.url))
+    const url = new URL('/dashboard', request.url)
     return NextResponse.redirect(url)
   }
 
