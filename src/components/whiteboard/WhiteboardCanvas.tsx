@@ -561,8 +561,8 @@ export function WhiteboardCanvas() {
         }
       }
 
-      // Eraser cursor position (shown on hover too)
-      if (tool === 'eraser' || tool === 'eraser-object') {
+      // Custom cursor position (shown on hover too)
+      if (tool === 'eraser' || tool === 'eraser-object' || tool === 'draw' || tool === 'highlighter') {
         setEraserCursor({ x: e.clientX, y: e.clientY })
       }
 
@@ -873,7 +873,7 @@ export function WhiteboardCanvas() {
             ? isPanning
               ? 'grabbing'
               : 'grab'
-            : tool === 'eraser' || tool === 'eraser-object'
+            : tool === 'eraser' || tool === 'eraser-object' || tool === 'draw' || tool === 'highlighter'
               ? 'none'
               : tool === 'select'
                 ? 'default'
@@ -886,7 +886,7 @@ export function WhiteboardCanvas() {
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
       onPointerLeave={() => {
-        if (tool === 'eraser' || tool === 'eraser-object') setEraserCursor(null)
+        if (tool === 'eraser' || tool === 'eraser-object' || tool === 'draw' || tool === 'highlighter') setEraserCursor(null)
         // Cancel laser on pointer leave
         if (tool === 'laser' && isLaserActive.current) {
           isLaserActive.current = false
@@ -1027,8 +1027,25 @@ export function WhiteboardCanvas() {
           }}
         />
       )}
-      {/* Object eraser pen cursor */}
+      {/* Object eraser cursor — red circle */}
       {tool === 'eraser-object' && eraserCursor && containerRef.current && (
+        <div
+          style={{
+            position: 'absolute',
+            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - 12,
+            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - 12,
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            border: '2px solid #ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.06)',
+            pointerEvents: 'none',
+            zIndex: 1000,
+          }}
+        />
+      )}
+      {/* Draw / Highlighter pen cursor */}
+      {(tool === 'draw' || tool === 'highlighter') && eraserCursor && containerRef.current && (
         <svg
           style={{
             position: 'absolute',
@@ -1038,27 +1055,25 @@ export function WhiteboardCanvas() {
             height: 24,
             pointerEvents: 'none',
             zIndex: 1000,
-            filter: isDark ? 'drop-shadow(0 0 4px rgba(239, 68, 68, 0.5))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+            filter: isDark ? 'drop-shadow(0 0 3px rgba(52, 211, 153, 0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
           }}
           viewBox="0 0 24 24"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Pen nib pointing down-left */}
           <path
             d="M17 3l4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
-            stroke={isDark ? '#f87171' : '#ef4444'}
+            stroke={isDark ? '#34d399' : '#059669'}
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            fill={isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)'}
+            fill={isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(5, 150, 105, 0.08)'}
           />
-          {/* Small dot at tip for precision */}
           <circle
             cx="3.25"
             cy="20.75"
             r="1.2"
-            fill={isDark ? '#f87171' : '#ef4444'}
+            fill={isDark ? '#34d399' : '#059669'}
           />
         </svg>
       )}
