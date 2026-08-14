@@ -138,3 +138,19 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ---- Room Layout ---- */
+
+.room-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.room-main {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+}

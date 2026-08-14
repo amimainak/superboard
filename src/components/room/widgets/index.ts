@@ -1,0 +1,8 @@
+// Barrel export for all widget components
+export { ChatWidget } from './ChatWidget'
+export { ParticipantsWidget } from './ParticipantsWidget'
+export { VideoWidget } from './VideoWidget'
+export { SessionControls } from './SessionControls'
+export { WidgetToggleBar } from './WidgetToggleBar'
+export { WidgetPanel } from './WidgetPanel'
+export { RoomInfoBar } from './RoomInfoBar'
