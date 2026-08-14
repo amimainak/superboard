@@ -433,6 +433,23 @@ export function WhiteboardCanvas() {
           eraseAtPoint(point, camera.zoom)
           break
         }
+        case 'eraser-object': {
+          // Object eraser: tap on an element to delete the whole thing
+          isErasing.current = true
+          let hitId: string | null = null
+          for (let i = pageElements.length - 1; i >= 0; i--) {
+            const el = pageElements[i]
+            if (hitTestElement(point, el, camera.zoom)) {
+              hitId = el.id
+              break
+            }
+          }
+          if (hitId) {
+            pushHistory()
+            removeElements([hitId])
+          }
+          break
+        }
         case 'laser': {
           isLaserActive.current = true
           addLaserPoint(point)
@@ -526,8 +543,24 @@ export function WhiteboardCanvas() {
         eraseAtPoint(point, camera.zoom)
       }
 
+      // Object eraser: continuously erase objects under cursor while dragging
+      if (tool === 'eraser-object' && isErasing.current) {
+        let hitId: string | null = null
+        for (let i = pageElements.length - 1; i >= 0; i--) {
+          const el = pageElements[i]
+          if (hitTestElement(point, el, camera.zoom)) {
+            hitId = el.id
+            break
+          }
+        }
+        if (hitId) {
+          pushHistory()
+          removeElements([hitId])
+        }
+      }
+
       // Eraser cursor position (shown on hover too)
-      if (tool === 'eraser') {
+      if (tool === 'eraser' || tool === 'eraser-object') {
         setEraserCursor({ x: e.clientX, y: e.clientY })
       }
 
@@ -622,7 +655,7 @@ export function WhiteboardCanvas() {
       }
 
       // Eraser stroke ended
-      if (tool === 'eraser') {
+      if (tool === 'eraser' || tool === 'eraser-object') {
         isErasing.current = false
         eraserHistoryPushed.current = false
         // Reset eraser history tracking for next stroke
@@ -630,7 +663,7 @@ export function WhiteboardCanvas() {
       }
 
       // ---- Stylus barrel button release: restore previous tool ----
-      if (e.pointerType === 'pen' && tool === 'eraser' && prevToolRef.current) {
+      if (e.pointerType === 'pen' && (tool === 'eraser' || tool === 'eraser-object') && prevToolRef.current) {
         setTool(prevToolRef.current)
         prevToolRef.current = null
       }
@@ -723,6 +756,9 @@ export function WhiteboardCanvas() {
       }
       if (shift && e.key.toLowerCase() === 'd') {
         setTool('highlighter'); return
+      }
+      if (shift && e.key.toLowerCase() === 'e') {
+        setTool('eraser-object'); return
       }
       if (shift && e.key.toLowerCase() === 'r') {
         setTool('diamond'); return
@@ -973,17 +1009,21 @@ export function WhiteboardCanvas() {
       </svg>
 
       {/* Eraser cursor visual */}
-      {tool === 'eraser' && eraserCursor && containerRef.current && (
+      {(tool === 'eraser' || tool === 'eraser-object') && eraserCursor && containerRef.current && (
         <div
           style={{
             position: 'absolute',
-            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - eraserSize / 2,
-            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - eraserSize / 2,
-            width: eraserSize,
-            height: eraserSize,
+            left: tool === 'eraser'
+              ? eraserCursor.x - containerRef.current.getBoundingClientRect().left - eraserSize / 2
+              : eraserCursor.x - containerRef.current.getBoundingClientRect().left - 12,
+            top: tool === 'eraser'
+              ? eraserCursor.y - containerRef.current.getBoundingClientRect().top - eraserSize / 2
+              : eraserCursor.y - containerRef.current.getBoundingClientRect().top - 12,
+            width: tool === 'eraser' ? eraserSize : 24,
+            height: tool === 'eraser' ? eraserSize : 24,
             borderRadius: '50%',
-            border: '2px solid #059669',
-            backgroundColor: 'rgba(5, 150, 105, 0.08)',
+            border: tool === 'eraser' ? '2px solid #059669' : '2px solid #ef4444',
+            backgroundColor: tool === 'eraser' ? 'rgba(5, 150, 105, 0.08)' : 'rgba(239, 68, 68, 0.06)',
             pointerEvents: 'none',
             zIndex: 1000,
           }}

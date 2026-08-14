@@ -106,7 +106,8 @@ export function TopBar({
     hand: 'Hand',
     draw: 'Pen',
     highlighter: 'Highlight',
-    eraser: 'Eraser',
+    eraser: 'Stroke Eraser',
+    'eraser-object': 'Object Eraser',
     arrow: 'Arrow',
     text: 'Text',
     sticky: 'Sticky',
@@ -205,6 +206,12 @@ export function TopBar({
               aria-label="Actions menu"
               style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
             >
+              {/* Page — most visible at top */}
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                Page
+              </div>
+              <MenuItem label="Add Page" isDark={isDark} onClick={() => { onAddPage(); setMenuOpen(false) }} />
+              <MenuItem label="Clear Page" isDark={isDark} shortcut="Del" onClick={() => { onClearPage(); setMenuOpen(false) }} />
               {/* File */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 File
@@ -239,12 +246,6 @@ export function TopBar({
               <MenuItem label="Lock / Unlock" isDark={isDark} shortcut="⇧L" onClick={() => { onToggleLock(); setMenuOpen(false) }} />
               <MenuItem label="Bring to Front" isDark={isDark} onClick={() => { onBringToFront(); setMenuOpen(false) }} />
               <MenuItem label="Send to Back" isDark={isDark} onClick={() => { onSendToBack(); setMenuOpen(false) }} />
-              {/* Page */}
-              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
-                Page
-              </div>
-              <MenuItem label="Add Page" isDark={isDark} onClick={() => { onAddPage(); setMenuOpen(false) }} />
-              <MenuItem label="Clear Page" isDark={isDark} onClick={() => { onClearPage(); setMenuOpen(false) }} />
               {/* View */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 View

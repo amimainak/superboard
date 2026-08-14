@@ -12,6 +12,7 @@ import {
   Pencil,
   Highlighter,
   Eraser,
+  Trash2,
   Square,
   Circle,
   Diamond,
@@ -51,6 +52,11 @@ const SHAPES: ToolDef[] = [
 const MORE_TOOLS: ToolDef[] = [
   { id: 'sticky', label: 'Sticky Note', shortcut: 'N', icon: <StickyNote size={16} /> },
   { id: 'image', label: 'Image', shortcut: 'U', icon: <ImagePlus size={16} /> },
+]
+
+const ERASER_TOOLS: ToolDef[] = [
+  { id: 'eraser', label: 'Stroke Eraser', shortcut: 'E', icon: <Eraser size={16} /> },
+  { id: 'eraser-object', label: 'Object Eraser', shortcut: '⇧E', icon: <Trash2 size={16} /> },
 ]
 
 // ---- Flyout menu component ----
@@ -164,10 +170,11 @@ export function LeftToolbar() {
   const tool = useWhiteboardStore((s) => s.tool)
   const setTool = useWhiteboardStore((s) => s.setTool)
   const isDark = useWhiteboardStore((s) => s.isDark)
-  const [openFlyout, setOpenFlyout] = useState<'shapes' | 'more' | null>(null)
+  const [openFlyout, setOpenFlyout] = useState<'shapes' | 'more' | 'eraser' | null>(null)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const shapesBtnRef = useRef<HTMLButtonElement>(null)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
+  const eraserBtnRef = useRef<HTMLButtonElement>(null)
 
   // Close flyout on outside click
   useEffect(() => {
@@ -188,7 +195,7 @@ export function LeftToolbar() {
     [setTool]
   )
 
-  const toggleFlyout = useCallback((id: 'shapes' | 'more') => {
+  const toggleFlyout = useCallback((id: 'shapes' | 'more' | 'eraser') => {
     setOpenFlyout((prev) => (prev === id ? null : id))
   }, [])
 
@@ -196,14 +203,15 @@ export function LeftToolbar() {
   const activeShape = SHAPES.find((s) => s.id === tool)
   const isShapeActive = !!activeShape
   const isMoreActive = MORE_TOOLS.some((t) => t.id === tool)
+  const isEraserActive = ERASER_TOOLS.some((t) => t.id === tool)
+  const activeEraser = ERASER_TOOLS.find((t) => t.id === tool)
 
-  // Core direct tools (always visible)
+  // Core direct tools (always visible) — eraser removed, now a pocket
   const directTools: ToolDef[] = [
     { id: 'select', label: 'Select', shortcut: 'V', icon: <MousePointer2 size={18} /> },
     { id: 'hand', label: 'Hand', shortcut: 'H', icon: <Hand size={18} /> },
     { id: 'draw', label: 'Pen', shortcut: 'D', icon: <Pencil size={18} /> },
     { id: 'highlighter', label: 'Highlighter', shortcut: '⇧D', icon: <Highlighter size={18} /> },
-    { id: 'eraser', label: 'Eraser', shortcut: 'E', icon: <Eraser size={18} /> },
     { id: 'laser', label: 'Laser', shortcut: 'K', icon: <Zap size={18} /> },
     { id: 'text', label: 'Text', shortcut: 'T', icon: <Type size={18} /> },
   ]
@@ -239,6 +247,68 @@ export function LeftToolbar() {
           </button>
         )
       })}
+
+      {/* ---- Separator ---- */}
+      <Sep isDark={isDark} />
+
+      {/* ---- Eraser Pocket ---- */}
+      <div style={{ position: 'relative' }}>
+        <button
+          ref={eraserBtnRef}
+          onClick={() => toggleFlyout('eraser')}
+          title="Eraser"
+          aria-label="Eraser tools"
+          aria-expanded={openFlyout === 'eraser'}
+          aria-haspopup="menu"
+          className={[
+            'wb-tool-btn',
+            `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
+            isEraserActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+          ].join(' ')}
+          style={{
+            flexDirection: 'column',
+            gap: 0,
+            background: isEraserActive
+              ? isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)'
+              : openFlyout === 'eraser'
+                ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                : undefined,
+          }}
+        >
+          <span style={{ lineHeight: 1, display: 'flex' }}>
+            {activeEraser ? activeEraser.icon : <Eraser size={16} />}
+          </span>
+          <ChevronDown
+            size={8}
+            style={{
+              marginTop: -1,
+              opacity: 0.5,
+            }}
+            aria-hidden="true"
+          />
+          {isEraserActive && (
+            <div className="wb-tool-indicator" aria-hidden="true" style={{ background: '#ef4444', boxShadow: '0 0 6px rgba(239, 68, 68, 0.5)' }} />
+          )}
+        </button>
+
+        {/* Eraser flyout */}
+        {openFlyout === 'eraser' && (
+          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={eraserBtnRef}>
+            <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
+              Eraser
+            </div>
+            {ERASER_TOOLS.map((t) => (
+              <FlyoutItem
+                key={t.id}
+                tool={t}
+                isActive={tool === t.id}
+                isDark={isDark}
+                onClick={() => handleSelect(t.id)}
+              />
+            ))}
+          </Flyout>
+        )}
+      </div>
 
       {/* ---- Separator ---- */}
       <Sep isDark={isDark} />

@@ -38,6 +38,7 @@ export type ToolId =
   | 'draw'
   | 'highlighter'
   | 'eraser'
+  | 'eraser-object'
   | 'rectangle'
   | 'ellipse'
   | 'diamond'
