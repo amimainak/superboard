@@ -37,6 +37,8 @@ interface TopBarProps {
   onBringToFront: () => void
   onSendToBack: () => void
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onClearPage: () => void
+  onAddPage: () => void
   currentTool: string
   currentPage: string
   zoom: number
@@ -68,6 +70,8 @@ export function TopBar({
   onBringToFront,
   onSendToBack,
   onFileUpload,
+  onClearPage,
+  onAddPage,
   currentTool,
   currentPage,
   zoom,
@@ -235,6 +239,12 @@ export function TopBar({
               <MenuItem label="Lock / Unlock" isDark={isDark} shortcut="⇧L" onClick={() => { onToggleLock(); setMenuOpen(false) }} />
               <MenuItem label="Bring to Front" isDark={isDark} onClick={() => { onBringToFront(); setMenuOpen(false) }} />
               <MenuItem label="Send to Back" isDark={isDark} onClick={() => { onSendToBack(); setMenuOpen(false) }} />
+              {/* Page */}
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                Page
+              </div>
+              <MenuItem label="Add Page" isDark={isDark} onClick={() => { onAddPage(); setMenuOpen(false) }} />
+              <MenuItem label="Clear Page" isDark={isDark} onClick={() => { onClearPage(); setMenuOpen(false) }} />
               {/* View */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 View

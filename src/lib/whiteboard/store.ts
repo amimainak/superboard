@@ -129,6 +129,7 @@ export interface WhiteboardStore {
   // Pages
   addPage: () => void
   deletePage: (index: number) => void
+  clearCurrentPage: () => void
   switchPage: (index: number) => void
   renamePage: (index: number, name: string) => void
   getCurrentPageElements: () => WhiteboardElement[]
@@ -787,6 +788,15 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         pages: newPages,
         currentPageIndex: newIndex,
         elements: reIndexedElements,
+        selectedIds: [],
+      })
+    },
+
+    clearCurrentPage: () => {
+      const { currentPageIndex, elements } = get()
+      get().pushHistory()
+      set({
+        elements: elements.filter((el) => el.pageIndex !== currentPageIndex),
         selectedIds: [],
       })
     },

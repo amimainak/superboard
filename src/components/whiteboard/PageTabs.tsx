@@ -19,8 +19,7 @@ export function PageTabs() {
   const deletePage = useWhiteboardStore((s) => s.deletePage)
   const renamePage = useWhiteboardStore((s) => s.renamePage)
 
-  if (pages.length <= 1) return null
-
+  // Always show the tab bar so users can always add pages
   const d = isDark ? 'dark' : 'light'
 
   return (

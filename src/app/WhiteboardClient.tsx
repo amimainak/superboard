@@ -55,6 +55,8 @@ export default function WhiteboardClient() {
   const toggleSnap = useWhiteboardStore((s) => s.toggleSnap)
   const setGridType = useWhiteboardStore((s) => s.setGridType)
   const togglePresentationMode = useWhiteboardStore((s) => s.togglePresentationMode)
+  const clearCurrentPage = useWhiteboardStore((s) => s.clearCurrentPage)
+  const addPage = useWhiteboardStore((s) => s.addPage)
   const undo = useWhiteboardStore((s) => s.undo)
   const redo = useWhiteboardStore((s) => s.redo)
 
@@ -204,6 +206,8 @@ export default function WhiteboardClient() {
           onBringToFront={handleBringToFront}
           onSendToBack={handleSendToBack}
           onFileUpload={handleFileUpload}
+          onClearPage={clearCurrentPage}
+          onAddPage={addPage}
           onTogglePresentation={togglePresentationMode}
           currentTool={tool}
           currentPage={currentPageName}
