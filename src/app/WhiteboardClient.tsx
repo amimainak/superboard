@@ -189,6 +189,8 @@ export default function WhiteboardClient() {
         <div style={{ gridColumn: '1 / -1' }}>
         <TopBar
           isDark={isDark}
+          onUndo={undo}
+          onRedo={redo}
           onToggleDark={toggleDark}
           onExportPng={handleExportPng}
           onExportSvg={handleExportSvg}

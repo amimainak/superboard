@@ -138,6 +138,7 @@ function FlyoutItem({
   return (
     <button
       onClick={onClick}
+      onPointerDown={(e) => e.stopPropagation()}
       role="menuitem"
       aria-label={`${tool.label} (${tool.shortcut})`}
       aria-pressed={isActive}
@@ -229,6 +230,7 @@ export function LeftToolbar() {
         return (
           <button
             key={t.id}
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={() => handleSelect(t.id)}
             title={`${t.label} (${t.shortcut})`}
             aria-label={`${t.label} (${t.shortcut})`}

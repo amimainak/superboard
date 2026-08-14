@@ -871,7 +871,7 @@ export function WhiteboardCanvas() {
             ? isPanning
               ? 'grabbing'
               : 'grab'
-            : tool === 'eraser'
+            : tool === 'eraser' || tool === 'eraser-object'
               ? 'none'
               : tool === 'select'
                 ? 'default'

@@ -11,6 +11,8 @@ import {
   Moon,
   Download,
   Pen,
+  Undo2,
+  Redo2,
   MoreHorizontal,
   ZoomIn,
   ZoomOut,
@@ -20,6 +22,8 @@ import './whiteboard.css'
 
 interface TopBarProps {
   isDark: boolean
+  onUndo: () => void
+  onRedo: () => void
   onToggleDark: () => void
   onExportPng: () => void
   onExportSvg: () => void
@@ -53,6 +57,8 @@ interface TopBarProps {
 
 export function TopBar({
   isDark,
+  onUndo,
+  onRedo,
   onToggleDark,
   onExportPng,
   onExportSvg,
@@ -130,6 +136,17 @@ export function TopBar({
       <div className="wb-logo" aria-label="Superboard logo">
         <Pen size={13} color="white" />
       </div>
+
+      {/* Thin divider */}
+      <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
+
+      {/* Undo / Redo — always visible, prominent */}
+      <Ico title="Undo" isDark={isDark} onClick={onUndo} ariaLabel="Undo">
+        <Undo2 size={14} />
+      </Ico>
+      <Ico title="Redo" isDark={isDark} onClick={onRedo} ariaLabel="Redo">
+        <Redo2 size={14} />
+      </Ico>
 
       {/* Thin divider */}
       <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
