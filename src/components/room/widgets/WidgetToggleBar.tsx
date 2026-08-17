@@ -7,8 +7,10 @@
 'use client'
 
 import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 export function WidgetToggleBar() {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const openWidgets = useWidgetStore((s) => s.openWidgets)
   const toggleWidget = useWidgetStore((s) => s.toggleWidget)
 
@@ -16,10 +18,10 @@ export function WidgetToggleBar() {
   const toolWidgets = AVAILABLE_WIDGETS.filter((w) => w.section === 'tools')
 
   return (
-    <div className="widget-toggle-bar" role="toolbar" aria-label="Toggle widgets">
+    <div className={`widget-toggle-bar ${isDark ? '' : 'widget-toggle-bar-light'}`} role="toolbar" aria-label="Toggle widgets">
       {/* Communication section */}
       <div className="widget-toggle-group">
-        <span className="widget-toggle-group-label">Collaborate</span>
+        <span className={`widget-toggle-group-label ${isDark ? '' : 'widget-toggle-group-label-light'}`}>Collaborate</span>
         {commWidgets.map((widget) => (
           <ToggleBtn
             key={widget.id}
@@ -31,7 +33,7 @@ export function WidgetToggleBar() {
       </div>
       {/* Tools section */}
       <div className="widget-toggle-group">
-        <span className="widget-toggle-group-label">Tools</span>
+        <span className={`widget-toggle-group-label ${isDark ? '' : 'widget-toggle-group-label-light'}`}>Tools</span>
         {toolWidgets.map((widget) => (
           <ToggleBtn
             key={widget.id}
@@ -54,6 +56,7 @@ function ToggleBtn({
   isOpen: boolean
   onToggle: () => void
 }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   return (
     <button
       onClick={onToggle}
@@ -61,7 +64,7 @@ function ToggleBtn({
       aria-pressed={isOpen}
       aria-label={widget.label}
       className={[
-        'widget-toggle-btn',
+        `widget-toggle-btn ${isDark ? '' : 'widget-toggle-btn-light'}`,
         isOpen ? 'widget-toggle-btn-active' : '',
       ].join(' ')}
     >

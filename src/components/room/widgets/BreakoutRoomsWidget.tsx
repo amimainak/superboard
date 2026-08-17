@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useMemo } from 'react'
 import { useCollabStore, type RemoteUser } from '@/lib/collab/store'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface BreakoutRoom {
   id: string
@@ -36,6 +37,7 @@ function shuffleArray<T>(arr: T[]): T[] {
 }
 
 export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const remoteUsers = useCollabStore((s) => s.remoteUsers)
   const [rooms, setRooms] = useState<BreakoutRoom[]>([])
   const [numRooms, setNumRooms] = useState(3)

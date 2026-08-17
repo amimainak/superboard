@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface MathToolkitProps {
   roomId?: string
 }
 
 export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [equation, setEquation] = useState('')
   const [graphType, setGraphType] = useState<'none' | 'line' | 'grid'>('none')
 

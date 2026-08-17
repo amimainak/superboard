@@ -7,6 +7,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -41,6 +42,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function SchedulingWidget({ roomId }: { roomId: string }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [slots, setSlots] = useState<ScheduleSlot[]>([])
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)

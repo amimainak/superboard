@@ -17,6 +17,7 @@
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface ChatMessage {
   id: string
@@ -52,6 +53,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const supabase = useMemo(() => getSupabaseBrowserClient(), [])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -273,13 +275,13 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   const canSend = input.trim().length > 0 && !uploading && !isMuted
 
   return (
-    <div className="widget-content widget-chat">
+    <div className={`widget-content widget-chat ${isDark ? '' : 'widget-chat-light'}`}>
       {/* Mute banner */}
       {isMuted && (
         <div style={{
           padding: '6px 12px',
           background: 'rgba(239, 68, 68, 0.12)',
-          borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+          borderBottom: `1px solid rgba(239, 68, 68, 0.2)`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           fontSize: 12, color: '#fca5a5', flexShrink: 0,
         }}>
@@ -297,19 +299,19 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
           </button>
         </div>
       )}
-      <div className="widget-messages" ref={messagesContainerRef} onScroll={handleScroll}>
+      <div className={`widget-messages ${isDark ? '' : 'widget-messages-light'}`} ref={messagesContainerRef} onScroll={handleScroll}>
         {messages.map((msg) => {
           const isOwn = senderId ? msg.senderId === senderId : msg.senderLabel === senderLabel
           return (
             <div
               key={msg.id}
               className={[
-                'chat-bubble',
-                isOwn ? 'chat-bubble-self' : 'chat-bubble-other',
+                `chat-bubble ${isDark ? '' : 'chat-bubble-light'}`,
+                isOwn ? 'chat-bubble-self' : `chat-bubble-other ${isDark ? '' : 'chat-bubble-other-light'}`,
               ].join(' ')}
             >
-              <div className="chat-bubble-header">
-                <span className="chat-bubble-sender">{msg.senderLabel}</span>
+              <div className={`chat-bubble-header ${isDark ? '' : 'chat-bubble-sender-light'}`}>
+                <span className={`chat-bubble-sender ${isDark ? '' : 'chat-bubble-sender-light'}`}>{msg.senderLabel}</span>
                 <span style={{ fontSize: 10, color: '#475569', marginLeft: 4 }}>
                   {timeAgo(msg.createdAt)}
                 </span>
@@ -350,10 +352,10 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
                   </button>
                 )}
                 {msg.isPinned && (
-                  <span className="chat-pinned-badge">Pinned</span>
+                  <span className={`chat-pinned-badge ${isDark ? '' : 'chat-pinned-badge-light'}`}>Pinned</span>
                 )}
               </div>
-              <div className="chat-bubble-text">
+              <div className={`chat-bubble-text ${isDark ? '' : 'chat-bubble-text-light'}`}>
                 {msg.content}
                 {msg.fileUrl && (
                   <div style={{ marginTop: 6 }}>
@@ -375,7 +377,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
         })}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={handleSend} className="chat-input-form">
+      <form onSubmit={handleSend} className={`chat-input-form ${isDark ? '' : 'chat-input-form-light'}`}>
         <button
           type="button"
           onClick={handleMuteToggle}
@@ -395,7 +397,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="chat-file-btn"
+          className={`chat-file-btn ${isDark ? '' : 'chat-file-btn-light'}`}
           title="Attach image (max 10MB)"
           disabled={uploading || isMuted}
           style={{
@@ -429,10 +431,10 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={uploading ? 'Uploading...' : isMuted ? 'You are muted...' : 'Type a message...'}
-          className="chat-input"
+          className={`chat-input ${isDark ? '' : 'chat-input-light'}`}
           disabled={uploading || isMuted}
         />
-        <button type="submit" className="chat-send-btn" disabled={!canSend}>
+        <button type="submit" className={`chat-send-btn ${isDark ? '' : 'chat-send-btn-light'}`} disabled={!canSend}>
           Send
         </button>
       </form>

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface AIAssistantWidgetProps {
   roomId?: string
 }
 
 export function AIAssistantWidget({ roomId: _roomId }: AIAssistantWidgetProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const [input, setInput] = useState('')
   const [isThinking, setIsThinking] = useState(false)

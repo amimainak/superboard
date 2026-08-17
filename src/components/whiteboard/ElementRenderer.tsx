@@ -165,7 +165,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               height: '100%',
               fontSize: element.fontSize,
               fontFamily: element.fontFamily,
-              color: hasText ? element.strokeColor : (isDark ? '#6b7280' : '#9ca3af'),
+              color: hasText ? element.strokeColor : (isDark ? '#b4c0d4' : '#4b5563'),
               outline: 'none',
               lineHeight: 1.4,
               whiteSpace: 'pre-wrap',

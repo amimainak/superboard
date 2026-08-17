@@ -10,11 +10,12 @@ import { ChevronUp, Palette, Minus, Type } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import './whiteboard.css'
 
+// Vibrant palette — ordered for visual appeal, grays at end (not start)
 const COLORS = [
-  '#000000', '#1e293b', '#374151', '#6b7280',
   '#ef4444', '#f97316', '#eab308', '#22c55e',
   '#059669', '#0ea5e9', '#3b82f6', '#8b5cf6',
-  '#ec4899', '#f43f5e', '#78716c', '#ffffff',
+  '#ec4899', '#f43f5e', '#e2e8f0', '#374151',
+  '#1e293b', '#000000', '#78716c', '#ffffff',
 ]
 
 const STROKE_WIDTHS = [1, 2, 3, 5, 8, 12]

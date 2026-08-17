@@ -18,6 +18,7 @@ import {
 } from '@livekit/components-react'
 import { Track, ConnectionState } from 'livekit-client'
 import '@/components/room/widgets/widgets.css'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface VideoWidgetProps {
   roomId: string
@@ -26,6 +27,7 @@ interface VideoWidgetProps {
 
 // Inner component that uses LiveKit hooks
 function VideoRoomContent({ roomId }: { roomId: string }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -40,34 +42,34 @@ function VideoRoomContent({ roomId }: { roomId: string }) {
 
   if (connectionState === ConnectionState.Disconnected) {
     return (
-      <div className="video-placeholder">
-        <div className="video-placeholder-icon" style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
+      <div className={`video-placeholder ${isDark ? '' : 'video-placeholder-light'}`}>
+        <div className={`video-placeholder-icon ${isDark ? '' : 'video-placeholder-icon-light'}`} style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
             <line x1="2" y1="2" x2="22" y2="22" strokeWidth="2" />
           </svg>
         </div>
-        <div className="video-placeholder-title">Disconnected</div>
-        <div className="video-placeholder-desc">Click "Join Call" to reconnect</div>
+        <div className={`video-placeholder-title ${isDark ? '' : 'video-placeholder-title-light'}`}>Disconnected</div>
+        <div className={`video-placeholder-desc ${isDark ? '' : 'video-placeholder-desc-light'}`}>Click "Join Call" to reconnect</div>
       </div>
     )
   }
 
   return (
-    <div className="video-content">
+    <div className={`video-content ${isDark ? '' : 'video-content-light'}`}>
       <div className="video-grid">
         {tracks.map((track) => (
-          <div key={track.participant.identity} className="video-tile">
+          <div key={track.participant.identity} className={`video-tile ${isDark ? '' : 'video-tile-light'}`}>
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <VideoTrack trackRef={track as any} className="video-track" />
-            <div className="video-tile-name">
+            <div className={`video-tile-name ${isDark ? '' : 'video-tile-name-light'}`}>
               {track.participant.name || track.participant.identity}
               {track.participant.isLocal && ' (You)'}
             </div>
           </div>
         ))}
       </div>
-      <div className="video-info">
+      <div className={`video-info ${isDark ? '' : 'video-info-light'}`}>
         {participants.length} participant{participants.length !== 1 ? 's' : ''}
       </div>
     </div>
@@ -76,6 +78,7 @@ function VideoRoomContent({ roomId }: { roomId: string }) {
 
 // Controls component
 function VideoControls() {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ctx = useRoomContext() as any
   const room = ctx?.room
@@ -106,14 +109,14 @@ function VideoControls() {
   }, [room])
 
   return (
-    <div className="video-controls">
-      <button className="video-ctrl-btn" onClick={toggleMic} title={isMuted ? 'Unmute' : 'Mute'}>
+    <div className={`video-controls ${isDark ? '' : 'video-controls-light'}`}>
+      <button className={`video-ctrl-btn ${isDark ? '' : 'video-ctrl-btn-light'}`} onClick={toggleMic} title={isMuted ? 'Unmute' : 'Mute'}>
         {isMuted ? '🔇' : '🎤'}
       </button>
-      <button className="video-ctrl-btn" onClick={toggleCamera} title={isCameraOff ? 'Turn on camera' : 'Turn off camera'}>
+      <button className={`video-ctrl-btn ${isDark ? '' : 'video-ctrl-btn-light'}`} onClick={toggleCamera} title={isCameraOff ? 'Turn on camera' : 'Turn off camera'}>
         {isCameraOff ? '📷' : '📹'}
       </button>
-      <button className="video-ctrl-btn video-ctrl-btn-danger" onClick={leave} title="Leave call">
+      <button className={`video-ctrl-btn video-ctrl-btn-danger ${isDark ? '' : 'video-ctrl-btn-light'}`} onClick={leave} title="Leave call">
         📞
       </button>
     </div>
@@ -121,6 +124,7 @@ function VideoControls() {
 }
 
 export function VideoWidget({ roomId, userName }: VideoWidgetProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -160,17 +164,17 @@ export function VideoWidget({ roomId, userName }: VideoWidgetProps) {
 
   if (!LIVEKIT_URL) {
     return (
-      <div className="video-placeholder">
-        <div className="video-placeholder-icon">
+      <div className={`video-placeholder ${isDark ? '' : 'video-placeholder-light'}`}>
+        <div className={`video-placeholder-icon ${isDark ? '' : 'video-placeholder-icon-light'}`}>
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
           </svg>
         </div>
-        <div className="video-placeholder-title">Video Call</div>
-        <div className="video-placeholder-desc">
+        <div className={`video-placeholder-title ${isDark ? '' : 'video-placeholder-title-light'}`}>Video Call</div>
+        <div className={`video-placeholder-desc ${isDark ? '' : 'video-placeholder-desc-light'}`}>
           Live video, audio &amp; screen sharing via LiveKit
         </div>
-        <div className="video-placeholder-status">
+        <div className={`video-placeholder-status ${isDark ? '' : 'video-placeholder-status-light'}`}>
           Requires VPS setup (LiveKit Server)
         </div>
         <button className="video-placeholder-btn" disabled>
@@ -183,7 +187,7 @@ export function VideoWidget({ roomId, userName }: VideoWidgetProps) {
   // Joined — render LiveKit room
   if (isJoined && token) {
     return (
-      <div className="widget-content widget-video">
+      <div className={`widget-content widget-video ${isDark ? '' : 'widget-video-light'}`}>
         <LiveKitRoom
           token={token}
           serverUrl={LIVEKIT_URL}
@@ -202,18 +206,18 @@ export function VideoWidget({ roomId, userName }: VideoWidgetProps) {
 
   // Pre-join state
   return (
-    <div className="video-placeholder">
-      <div className="video-placeholder-icon">
+    <div className={`video-placeholder ${isDark ? '' : 'video-placeholder-light'}`}>
+      <div className={`video-placeholder-icon ${isDark ? '' : 'video-placeholder-icon-light'}`}>
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
         </svg>
       </div>
-      <div className="video-placeholder-title">Video Call</div>
-      <div className="video-placeholder-desc">
+      <div className={`video-placeholder-title ${isDark ? '' : 'video-placeholder-title-light'}`}>Video Call</div>
+      <div className={`video-placeholder-desc ${isDark ? '' : 'video-placeholder-desc-light'}`}>
         Join with camera and microphone
       </div>
       <button
-        className="video-join-btn"
+        className={`video-join-btn ${isDark ? '' : 'video-join-btn-light'}`}
         onClick={joinCall}
         disabled={loading}
         style={{

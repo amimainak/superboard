@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface AgencyInfo {
   id: string
@@ -50,6 +51,7 @@ function timeAgo(dateStr: string): string {
 }
 
 export function AgencyWidget({ roomId }: { roomId: string }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [data, setData] = useState<AgencyData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

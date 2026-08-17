@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface GeoGebraPanelProps {
   roomId?: string
 }
 
 export function GeoGebraPanel({ roomId: _roomId }: GeoGebraPanelProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [graphExpression, setGraphExpression] = useState('')
 
   const presets = [

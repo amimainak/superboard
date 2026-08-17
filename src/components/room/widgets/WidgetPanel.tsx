@@ -8,6 +8,7 @@
 
 import dynamic from 'next/dynamic'
 import { useWidgetStore, type WidgetId, type PanelMode, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { ChatWidget } from './ChatWidget'
 import { ParticipantsWidget } from './ParticipantsWidget'
 import { VideoWidget } from './VideoWidget'
@@ -34,6 +35,7 @@ interface WidgetPanelProps {
 const MODE_CYCLE: PanelMode[] = ['dock', 'float', 'minimized']
 
 export function WidgetPanel({ roomId }: WidgetPanelProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const panelVisible = useWidgetStore((s) => s.panelVisible)
   const openWidgets = useWidgetStore((s) => s.openWidgets)
   const activeTab = useWidgetStore((s) => s.activeTab)
@@ -52,7 +54,7 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
   const isFloat = panelMode === 'float'
 
   const panelClassName = [
-    'widget-panel',
+    `widget-panel ${isDark ? '' : 'widget-panel-light'}`,
     isFloat ? 'widget-panel-float' : '',
     isMinimized ? 'widget-panel-minimized' : '',
   ].filter(Boolean).join(' ')
@@ -105,7 +107,7 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
   return (
     <div className={panelClassName}>
       {/* Tab bar */}
-      <div className="widget-tab-bar" role="tablist">
+      <div className={`widget-tab-bar ${isDark ? '' : 'widget-tab-bar-light'}`} role="tablist">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -113,13 +115,13 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id as WidgetId)}
             className={[
-              'widget-tab',
-              activeTab === tab.id ? 'widget-tab-active' : '',
+              `widget-tab ${isDark ? '' : 'widget-tab-light'}`,
+              activeTab === tab.id ? `widget-tab-active ${isDark ? '' : 'widget-tab-active-light'}` : '',
             ].join(' ')}
           >
             <span className="widget-tab-label">{tab.label}</span>
             <button
-              className="widget-tab-close"
+              className={`widget-tab-close ${isDark ? '' : 'widget-tab-close-light'}`}
               onClick={(e) => {
                 e.stopPropagation()
                 closeWidget(tab.id as WidgetId)
@@ -134,7 +136,7 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
           </button>
         ))}
         <button
-          className="widget-mode-toggle"
+          className={`widget-mode-toggle ${isDark ? '' : 'widget-mode-toggle-light'}`}
           onClick={handleModeToggle}
           title={`Panel mode: ${panelMode} (click to switch)`}
         >

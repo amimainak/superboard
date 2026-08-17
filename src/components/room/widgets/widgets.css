@@ -2291,3 +2291,633 @@
   background: rgba(56, 189, 248, 0.18);
   border-color: rgba(56, 189, 248, 0.35);
 }
+
+/* ============================================================
+   LIGHT MODE VARIANTS
+   All widget classes above are dark-mode defaults.
+   Add `-light` suffix class names for light mode rendering.
+   ============================================================ */
+
+/* ---- Widget Toggle Bar (Light) ---- */
+
+.widget-toggle-bar-light {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
+
+.widget-toggle-bar-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.widget-toggle-group-label-light {
+  color: #475569;
+}
+
+.widget-toggle-btn-light {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+
+.widget-toggle-btn-light:hover {
+  background: rgba(241, 245, 249, 1);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #1e293b;
+  transform: translateX(-2px);
+}
+
+/* ---- Room Info Bar (Light) ---- */
+
+.room-info-bar-light {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.room-info-subject-light {
+  color: #475569;
+}
+
+.room-info-dot-inactive + .room-info-subject-light + .room-info-status {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.1);
+}
+
+/* ---- Session Controls (Light) ---- */
+
+.session-ended-badge-light {
+  background: rgba(100, 116, 139, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  color: #475569;
+}
+
+/* ---- Widget Panel (Light) ---- */
+
+.widget-panel-light {
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(12px);
+}
+
+.widget-panel-float-light {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.widget-panel-minimized-light {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Widget Tab Bar (Light) ---- */
+
+.widget-tab-bar-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.widget-tab-light {
+  color: #64748b;
+}
+
+.widget-tab-light:hover {
+  color: #1e293b;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.widget-tab-active-light {
+  color: #1e293b !important;
+  border-bottom-color: #059669 !important;
+}
+
+.widget-tab-close-light {
+  color: #64748b;
+}
+
+.widget-tab-close-light:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.widget-mode-toggle-light {
+  color: #64748b;
+}
+
+.widget-mode-toggle-light:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+
+/* ---- Chat Widget (Light) ---- */
+
+.widget-messages-light {
+  background: transparent;
+}
+
+.widget-messages-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.chat-bubble-other-light {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.chat-bubble-sender-light {
+  color: #475569;
+}
+
+.chat-bubble-text-light {
+  color: #1e293b;
+}
+
+.chat-input-form-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.chat-input-light {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+}
+
+.chat-input-light:focus {
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+.chat-input-light::placeholder {
+  color: #94a3b8;
+}
+
+.chat-file-btn-light:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #334155 !important;
+}
+
+/* ---- Participants Widget (Light) ---- */
+
+.participants-divider-light {
+  color: #475569;
+}
+
+.participant-item-light:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.participant-avatar-empty-light {
+  background: rgba(0, 0, 0, 0.06);
+  color: #64748b;
+}
+
+.participant-name-light {
+  color: #1e293b;
+}
+
+.participant-name-empty-light {
+  color: #64748b;
+}
+
+.participants-footer-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  color: #64748b;
+}
+
+.participants-footer-sub-light {
+  color: #94a3b8;
+}
+
+/* ---- Video Widget (Light) ---- */
+
+.video-tile-light {
+  background: #e2e8f0;
+}
+
+.video-info-light {
+  color: #64748b;
+}
+
+.video-controls-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.video-ctrl-btn-light {
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.video-ctrl-btn-light:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Video Placeholder (Light) */
+
+.video-placeholder-title-light {
+  color: #1e293b;
+}
+
+.video-placeholder-desc-light {
+  color: #64748b;
+}
+
+.video-placeholder-status-light {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ---- Toolkits (Light) ---- */
+
+.toolkit-section-title-light {
+  color: #475569;
+}
+
+.toolkit-chip-light:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ---- AI Assistant (Light) ---- */
+
+.ai-empty-title-light {
+  color: #1e293b;
+}
+
+.ai-empty-desc-light {
+  color: #64748b;
+}
+
+.ai-bubble-user-light {
+  background: rgba(56, 189, 248, 0.08);
+  color: #0369a1;
+}
+
+.ai-bubble-assistant-light {
+  background: rgba(0, 0, 0, 0.03);
+  color: #1e293b;
+}
+
+.ai-thinking-light {
+  color: #64748b;
+}
+
+/* ---- GeoGebra Panel (Light) ---- */
+
+.geogebra-header-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.geogebra-input-group-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.geogebra-canvas-placeholder-light {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* ---- Recording Widget (Light) ---- */
+
+.recording-header-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.recording-header-icon-light {
+  color: #64748b;
+}
+
+.recording-header-title-light {
+  color: #1e293b;
+}
+
+.recording-idle-desc-light {
+  color: #64748b;
+}
+
+.recording-option-light {
+  color: #475569;
+}
+
+.recording-timer-light {
+  color: #1e293b;
+}
+
+.recording-done-duration-light,
+.recording-done-size-light {
+  color: #64748b;
+}
+
+.recording-discard-btn-light {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #64748b;
+}
+
+.recording-discard-btn-light:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+.recording-tutor-remind-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Session Notes (Light) ---- */
+
+.notes-format-bar-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.notes-format-btn-light {
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #475569;
+}
+
+.notes-format-btn-light:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #1e293b;
+}
+
+.notes-editor-light {
+  color: #1e293b;
+}
+
+.notes-editor-light:empty::before {
+  color: #94a3b8;
+}
+
+.notes-editor-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.notes-editor-light b,
+.notes-editor-light strong {
+  color: #0f172a;
+}
+
+.notes-editor-light i,
+.notes-editor-light em {
+  color: #334155;
+}
+
+.notes-footer-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.notes-save-status-light {
+  color: #64748b;
+}
+
+/* ---- Templates Library (Light) ---- */
+
+.templates-search-input-light {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+}
+
+.templates-search-input-light:focus {
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+.templates-search-input-light::placeholder {
+  color: #94a3b8;
+}
+
+.templates-list-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.template-card-light {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1e293b;
+}
+
+.template-card-light:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(5, 150, 105, 0.2);
+}
+
+.template-card-name-light {
+  color: #1e293b;
+}
+
+.template-card-meta-light {
+  color: #64748b;
+}
+
+/* ---- Analytics Dashboard (Light) ---- */
+
+.analytics-widget-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.analytics-loading-light {
+  color: #64748b;
+}
+
+.analytics-stat-card-light {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.analytics-stat-value-light {
+  color: #0f172a;
+}
+
+.analytics-stat-label-light {
+  color: #475569;
+}
+
+.analytics-section-title-light {
+  color: #475569;
+}
+
+.analytics-trend-label-light {
+  color: #475569;
+}
+
+.analytics-trend-count-light {
+  color: #64748b;
+}
+
+.analytics-trend-total-light {
+  color: #64748b;
+}
+
+.analytics-subject-name-light {
+  color: #334155;
+}
+
+.analytics-subject-pct-light {
+  color: #64748b;
+}
+
+.analytics-subject-bar-track-light {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.analytics-usage-label-light {
+  color: #334155;
+}
+
+.analytics-usage-value-light {
+  color: #64748b;
+}
+
+.analytics-usage-bar-track-light {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Parent Portal (Light) ---- */
+
+.parent-portal-widget-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.parent-portal-loading-light {
+  color: #64748b;
+}
+
+.parent-portal-info-label-light {
+  color: #64748b;
+}
+
+.parent-portal-info-value-light {
+  color: #1e293b;
+}
+
+.parent-portal-section-title-light {
+  color: #475569;
+}
+
+.parent-portal-empty-light {
+  color: #64748b;
+}
+
+.parent-portal-session-card-light {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.parent-portal-session-card-light:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.parent-portal-session-date-light {
+  color: #334155;
+}
+
+.parent-portal-session-meta-light {
+  color: #64748b;
+}
+
+.parent-portal-summary-label-light {
+  color: #64748b;
+}
+
+.parent-portal-summary-value-light {
+  color: #1e293b;
+}
+
+.parent-portal-billing-plan-light {
+  color: #334155;
+}
+
+.parent-portal-billing-plan-light strong {
+  color: #1e293b;
+}
+
+/* ---- Scheduling Widget (Light) ---- */
+
+.sched-header-light {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sched-header-title-light {
+  color: #0f172a;
+}
+
+.sched-section-label-light {
+  color: #475569;
+}
+
+.sched-day-name-light {
+  color: #475569;
+}
+
+.sched-day-off-light {
+  color: #94a3b8;
+}
+
+.sched-slot-time-light {
+  background: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.15);
+  color: #065f46;
+}
+
+.sched-time-input-light {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+}
+
+.sched-time-input-light:focus {
+  border-color: rgba(5, 150, 105, 0.4);
+}
+
+.sched-time-sep-light {
+  color: #64748b;
+}
+
+.sched-add-slot-btn-light {
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  color: #64748b;
+}
+
+.sched-add-slot-btn-light:hover {
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #059669;
+  background: rgba(5, 150, 105, 0.04);
+}
+
+.sched-empty-light {
+  color: #64748b;
+}
+
+.sched-booking-card-light {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sched-booking-date-light {
+  color: #334155;
+}
+
+.sched-booking-student-light {
+  color: #64748b;
+}
+
+.sched-booking-email-light {
+  color: #64748b;
+}
+
+.sched-booking-notes-light {
+  color: #64748b;
+}
+
+.sched-share-section-light {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.sched-share-label-light {
+  color: #64748b;
+}
+
+/* ---- Responsive: Light mode adjustments ---- */
+
+@media (max-width: 768px) {
+  .widget-panel-float-light {
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  }
+}

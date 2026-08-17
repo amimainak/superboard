@@ -102,11 +102,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-tool-btn-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-tool-btn-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .wb-tool-btn-dark:hover {
@@ -226,11 +226,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-flyout-header-dark {
-  color: #6b7a94;
+  color: #8b9ab4;
 }
 
 .wb-flyout-header-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* ---- Flyout menu items ---- */
@@ -301,11 +301,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-flyout-item-shortcut-dark {
-  color: #5a6478;
+  color: #7b8ca6;
 }
 
 .wb-flyout-item-shortcut-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* ---- Style Panel pockets ---- */
@@ -327,11 +327,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-pocket-btn-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-pocket-btn-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .wb-pocket-btn-dark:hover {
@@ -373,11 +373,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-ico-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-ico-light {
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .wb-ico-dark:hover {
@@ -444,11 +444,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-menu-section-label-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-menu-section-label-light {
-  color: #9ca3af;
+  color: #4b5563;
 }
 
 .wb-menu-item {
@@ -490,11 +490,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-menu-shortcut-dark {
-  color: #5a6478;
+  color: #7b8ca6;
 }
 
 .wb-menu-shortcut-light {
-  color: #9ca3af;
+  color: #4b5563;
 }
 
 /* ---- Zoom button ---- */
@@ -513,7 +513,7 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-zoom-btn-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-zoom-btn-dark:hover {
@@ -522,7 +522,7 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-zoom-btn-light {
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .wb-zoom-btn-light:hover {
@@ -611,11 +611,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-shortcuts-subtitle-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-shortcuts-subtitle-light {
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .wb-shortcuts-close {
@@ -634,7 +634,7 @@ div[data-placeholder]:empty::before {
 .wb-shortcuts-close-dark {
   border-color: rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-shortcuts-close-dark:hover {
@@ -646,7 +646,7 @@ div[data-placeholder]:empty::before {
 .wb-shortcuts-close-light {
   border-color: #e5e7eb;
   background: #f9fafb;
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .wb-shortcuts-body {
@@ -715,11 +715,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-shortcuts-plus-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-shortcuts-plus-light {
-  color: #6b7280;
+  color: #4b5563;
 }
 
 /* ---- Help dialog tabs ---- */
@@ -752,11 +752,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-help-tab-dark {
-  color: #6b7a94;
+  color: #8b9ab4;
 }
 
 .wb-help-tab-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .wb-help-tab-dark:hover {
@@ -823,11 +823,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-help-tip-desc-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-help-tip-desc-light {
-  color: #6b7280;
+  color: #4b5563;
 }
 
 /* ---- Color swatches ---- */
@@ -897,12 +897,12 @@ div[data-placeholder]:empty::before {
 
 .wb-color-transparent-dark {
   border-color: rgba(255, 255, 255, 0.15);
-  color: #6b7a94;
+  color: #8b9ab4;
 }
 
 .wb-color-transparent-light {
   border-color: #cbd5e1;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .wb-section-label {
@@ -914,11 +914,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-section-label-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-section-label-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* ---- Stroke / dash / text option buttons ---- */
@@ -936,12 +936,12 @@ div[data-placeholder]:empty::before {
 
 .wb-opt-btn-dark {
   background: rgba(255, 255, 255, 0.05);
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-opt-btn-light {
   background: rgba(0, 0, 0, 0.03);
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .wb-opt-btn-dark:hover {
@@ -1057,11 +1057,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-eraser-btn-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-eraser-btn-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .wb-eraser-btn-dark:hover {
@@ -1129,11 +1129,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-page-tab-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-page-tab-light {
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .wb-page-tab-dark:hover {
@@ -1174,7 +1174,7 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-page-add-btn-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-page-add-btn-dark:hover {
@@ -1183,7 +1183,7 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-page-add-btn-light {
-  color: #9ca3af;
+  color: #4b5563;
 }
 
 .wb-page-add-btn-light:hover {
@@ -1198,11 +1198,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-opacity-label-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-opacity-label-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* ---- Eraser label ---- */
@@ -1212,11 +1212,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-eraser-label-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-eraser-label-light {
-  color: #94a3b8;
+  color: #64748b;
 }
 
 /* ---- Color indicator in pocket ---- */
@@ -1243,11 +1243,11 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-tool-label-dark {
-  color: #8892a8;
+  color: #b4c0d4;
 }
 
 .wb-tool-label-light {
-  color: #9ca3af;
+  color: #4b5563;
 }
 
 .wb-page-name {
@@ -1257,7 +1257,7 @@ div[data-placeholder]:empty::before {
 }
 
 .wb-page-name-dark {
-  color: #5e6b82;
+  color: #8090a8;
 }
 
 .wb-page-name-light {
@@ -1347,7 +1347,7 @@ div[data-placeholder]:empty::before {
   border-radius: 6px;
   border: 1px solid transparent;
   background: transparent;
-  color: #94a3b8;
+  color: #64748b;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;

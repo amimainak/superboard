@@ -5,6 +5,7 @@ interface ScienceToolkitProps {
 }
 
 export function ScienceToolkit({ roomId: _roomId }: ScienceToolkitProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const vectors = [
     { label: 'Arrow →', angle: 0 },
     { label: 'Arrow ↗', angle: 45 },

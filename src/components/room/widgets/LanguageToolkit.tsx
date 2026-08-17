@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface LanguageToolkitProps {
   roomId?: string
 }
 
 export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [highlightColor, setHighlightColor] = useState('#fef08a')
 
   const highlighters = [

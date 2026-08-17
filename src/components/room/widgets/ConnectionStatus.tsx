@@ -1,8 +1,10 @@
 'use client'
 
 import { useCollabStore } from '@/lib/collab/store'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 export function ConnectionStatus() {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const isConnected = useCollabStore((s) => s.isConnected)
   const statusMessage = useCollabStore((s) => s.statusMessage)
   const remoteCount = useCollabStore((s) => s.remoteUsers.length)
@@ -19,9 +21,10 @@ export function ConnectionStatus() {
       padding: '3px 8px',
       borderRadius: 4,
       fontSize: 10,
-      background: 'rgba(15, 23, 42, 0.7)',
+      background: isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.85)',
       backdropFilter: 'blur(4px)',
-      color: '#94a3b8',
+      border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
+      color: isDark ? '#94a3b8' : '#475569',
     }}>
       <span style={{
         width: 6, height: 6, borderRadius: '50%',
@@ -30,7 +33,7 @@ export function ConnectionStatus() {
       }} />
       <span>{statusMessage}</span>
       {remoteCount > 0 && (
-        <span style={{ color: '#64748b' }}>({remoteCount} {remoteCount === 1 ? 'other' : 'others'})</span>
+        <span style={{ color: isDark ? '#64748b' : '#94a3b8' }}>({remoteCount} {remoteCount === 1 ? 'other' : 'others'})</span>
       )}
     </div>
   )

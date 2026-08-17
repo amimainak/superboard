@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react'
 import { getFeatureLimit, getTierLabel } from '@/lib/features'
 import type { Tier } from '@/lib/validations'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface AnalyticsData {
   totalRooms: number
@@ -36,6 +37,7 @@ const SUBJECT_COLORS: Record<string, string> = {
 const FALLBACK_COLOR = '#64748b'
 
 export function AnalyticsWidget({ roomId }: { roomId: string }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -69,8 +71,8 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
 
   if (loading) {
     return (
-      <div className="analytics-widget">
-        <div className="analytics-loading">
+      <div className={`analytics-widget ${isDark ? '' : 'analytics-widget-light'}`}>
+        <div className={`analytics-loading ${isDark ? '' : 'analytics-loading-light'}`}>
           <div className="analytics-spinner" />
           <span>Loading analytics...</span>
         </div>
@@ -80,7 +82,7 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
 
   if (error) {
     return (
-      <div className="analytics-widget">
+      <div className={`analytics-widget ${isDark ? '' : 'analytics-widget-light'}`}>
         <div className="analytics-error">{error}</div>
       </div>
     )
@@ -92,26 +94,26 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
   const hours = Math.round((data.totalMinutes / 60) * 10) / 10
 
   return (
-    <div className="analytics-widget">
+    <div className={`analytics-widget ${isDark ? '' : 'analytics-widget-light'}`}>
       {/* Stats row */}
       <div className="analytics-stats-row">
-        <div className="analytics-stat-card">
-          <div className="analytics-stat-value">{data.totalRooms}</div>
-          <div className="analytics-stat-label">Rooms</div>
+        <div className={`analytics-stat-card ${isDark ? '' : 'analytics-stat-card-light'}`}>
+          <div className={`analytics-stat-value ${isDark ? '' : 'analytics-stat-value-light'}`}>{data.totalRooms}</div>
+          <div className={`analytics-stat-label ${isDark ? '' : 'analytics-stat-label-light'}`}>Rooms</div>
         </div>
-        <div className="analytics-stat-card">
-          <div className="analytics-stat-value">{hours}h</div>
-          <div className="analytics-stat-label">Hours</div>
+        <div className={`analytics-stat-card ${isDark ? '' : 'analytics-stat-card-light'}`}>
+          <div className={`analytics-stat-value ${isDark ? '' : 'analytics-stat-value-light'}`}>{hours}h</div>
+          <div className={`analytics-stat-label ${isDark ? '' : 'analytics-stat-label-light'}`}>Hours</div>
         </div>
-        <div className="analytics-stat-card">
-          <div className="analytics-stat-value">{data.completedSessions}</div>
-          <div className="analytics-stat-label">Sessions</div>
+        <div className={`analytics-stat-card ${isDark ? '' : 'analytics-stat-card-light'}`}>
+          <div className={`analytics-stat-value ${isDark ? '' : 'analytics-stat-value-light'}`}>{data.completedSessions}</div>
+          <div className={`analytics-stat-label ${isDark ? '' : 'analytics-stat-label-light'}`}>Sessions</div>
         </div>
       </div>
 
       {/* This Week Trend */}
       <div className="analytics-section">
-        <div className="analytics-section-title">This Week</div>
+        <div className={`analytics-section-title ${isDark ? '' : 'analytics-section-title-light'}`}>This Week</div>
         <div className="analytics-trend-bars">
           {data.dailyTrend.map((day) => {
             const pct = maxDailySessions > 0 ? (day.count / maxDailySessions) * 100 : 0
@@ -123,19 +125,19 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
                     style={{ height: `${Math.max(pct, 4)}%` }}
                   />
                 </div>
-                <div className="analytics-trend-label">{day.day || day.date.slice(5)}</div>
-                <div className="analytics-trend-count">{day.count}</div>
+                <div className={`analytics-trend-label ${isDark ? '' : 'analytics-trend-label-light'}`}>{day.day || day.date.slice(5)}</div>
+                <div className={`analytics-trend-count ${isDark ? '' : 'analytics-trend-count-light'}`}>{day.count}</div>
               </div>
             )
           })}
         </div>
-        <div className="analytics-trend-total">{totalSessionsThisWeek} sessions this week</div>
+        <div className={`analytics-trend-total ${isDark ? '' : 'analytics-trend-total-light'}`}>{totalSessionsThisWeek} sessions this week</div>
       </div>
 
       {/* Subject Breakdown */}
       {data.subjectBreakdown.length > 0 && (
         <div className="analytics-section">
-          <div className="analytics-section-title">Subjects</div>
+          <div className={`analytics-section-title ${isDark ? '' : 'analytics-section-title-light'}`}>Subjects</div>
           <div className="analytics-subject-list">
             {data.subjectBreakdown.map((s) => {
               const pct = Math.round((s.count / totalSubjectSessions) * 100)
@@ -143,12 +145,12 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
               return (
                 <div key={s.subject} className="analytics-subject-row">
                   <div className="analytics-subject-info">
-                    <span className="analytics-subject-name">
+                    <span className={`analytics-subject-name ${isDark ? '' : 'analytics-subject-name-light'}`}>
                       {s.subject.charAt(0) + s.subject.slice(1).toLowerCase()}
                     </span>
-                    <span className="analytics-subject-pct">{pct}%</span>
+                    <span className={`analytics-subject-pct ${isDark ? '' : 'analytics-subject-pct-light'}`}>{pct}%</span>
                   </div>
-                  <div className="analytics-subject-bar-track">
+                  <div className={`analytics-subject-bar-track ${isDark ? '' : 'analytics-subject-bar-track-light'}`}>
                     <div
                       className="analytics-subject-bar-fill"
                       style={{ width: `${pct}%`, background: color }}
@@ -163,18 +165,18 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
 
       {/* Usage */}
       <div className="analytics-section">
-        <div className="analytics-section-title">
+        <div className={`analytics-section-title ${isDark ? '' : 'analytics-section-title-light'}`}>
           Usage ({getTierLabel(tier)} tier)
         </div>
         <div className="analytics-usage-list">
           <div className="analytics-usage-row">
             <div className="analytics-usage-info">
-              <span className="analytics-usage-label">Video</span>
-              <span className="analytics-usage-value">
+              <span className={`analytics-usage-label ${isDark ? '' : 'analytics-usage-label-light'}`}>Video</span>
+              <span className={`analytics-usage-value ${isDark ? '' : 'analytics-usage-value-light'}`}>
                 {videoUsed}/{videoLimit} min
               </span>
             </div>
-            <div className="analytics-usage-bar-track">
+            <div className={`analytics-usage-bar-track ${isDark ? '' : 'analytics-usage-bar-track-light'}`}>
               <div
                 className="analytics-usage-bar-fill"
                 style={{
@@ -186,12 +188,12 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
           </div>
           <div className="analytics-usage-row">
             <div className="analytics-usage-info">
-              <span className="analytics-usage-label">AI</span>
-              <span className="analytics-usage-value">
+              <span className={`analytics-usage-label ${isDark ? '' : 'analytics-usage-label-light'}`}>AI</span>
+              <span className={`analytics-usage-value ${isDark ? '' : 'analytics-usage-value-light'}`}>
                 {aiUsed}/{aiLimit} credits
               </span>
             </div>
-            <div className="analytics-usage-bar-track">
+            <div className={`analytics-usage-bar-track ${isDark ? '' : 'analytics-usage-bar-track-light'}`}>
               <div
                 className="analytics-usage-bar-fill"
                 style={{

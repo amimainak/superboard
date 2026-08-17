@@ -58,8 +58,13 @@ let laserRafId: number = 0
 
 // ---- Default Values ----
 
+// Adaptive defaults based on theme — prevents invisible strokes
+export function getDefaultStroke(isDark: boolean) {
+  return isDark ? '#e2e8f0' : '#1e293b'
+}
+
 export const DEFAULT_STYLE: ElementStyle = {
-  strokeColor: '#1e293b',
+  strokeColor: '#1e293b', // Overridden by store init based on isDark
   fillColor: 'transparent',
   strokeWidth: 2,
   opacity: 1,
@@ -252,7 +257,14 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     camera: DEFAULT_CAMERA,
     tool: 'draw',
     selectedIds: [],
-    style: { ...DEFAULT_STYLE },
+    style: {
+      ...DEFAULT_STYLE,
+      strokeColor: getDefaultStroke(
+        typeof window !== 'undefined'
+          ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          : false
+      ),
+    },
     pages: [{ id: generateId(), name: 'Page 1', index: 0 }],
     currentPageIndex: 0,
     isDark: typeof window !== 'undefined'
@@ -339,7 +351,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       if (typeof document !== 'undefined') {
         document.documentElement.classList.toggle('dark', isDark)
       }
-      set({ isDark })
+      // Auto-switch stroke color so new drawings are always visible
+      set((s) => ({
+        isDark,
+        style: { ...s.style, strokeColor: getDefaultStroke(isDark) },
+      }))
     },
 
     toggleDark: () => get().setDark(!get().isDark),
