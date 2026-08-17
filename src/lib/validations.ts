@@ -78,6 +78,14 @@ export const usageHeartbeatSchema = z.object({
   minutesUsed: z.number().min(0).max(120).optional(),
 })
 
+// ---- LiveKit Token ----
+export const livekitTokenSchema = z.object({
+  roomName: z.string().min(1).max(200),
+  participantName: z.string().min(1).max(200),
+  participantIdentity: z.string().max(200).optional(),
+  metadata: z.string().max(2000).optional(),
+})
+
 // ---- Helper: parse and validate request body ----
 export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown) {
   const result = schema.safeParse(body)

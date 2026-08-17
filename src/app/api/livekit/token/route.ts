@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
+import { parseBody, livekitTokenSchema } from '@/lib/validations'
 
 // POST /api/livekit/token — generate LiveKit join token
 export async function POST(request: Request) {
@@ -15,15 +16,12 @@ export async function POST(request: Request) {
       )
     }
 
-    const body = await request.json()
-    const { roomName, participantName, participantIdentity, metadata } = body || {}
-
-    if (!roomName || !participantName) {
-      return NextResponse.json(
-        { error: 'roomName and participantName are required' },
-        { status: 400 }
-      )
+    const raw = await request.json()
+    const { data, error } = parseBody(livekitTokenSchema, raw)
+    if (error || !data) {
+      return NextResponse.json({ error: error || 'Invalid request' }, { status: 400 })
     }
+    const { roomName, participantName, participantIdentity, metadata } = data
 
     const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
       identity: participantIdentity || participantName.replace(/\s+/g, '-').toLowerCase(),
