@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import type { WhiteboardElement, FreehandElement, LineElement, ArrowElement } from '@/lib/whiteboard/types'
 import {
   getFreehandPath,
@@ -27,7 +27,7 @@ interface ElementRendererProps {
   cameraZoom: number
 }
 
-export function ElementRenderer({
+export const ElementRenderer = React.memo(function ElementRenderer({
   element,
   isSelected,
   onPointerDown,
@@ -38,24 +38,31 @@ export function ElementRenderer({
   const tool = useWhiteboardStore((s) => s.tool)
   const isDark = useWhiteboardStore((s) => s.isDark)
 
-  const commonProps = {
+  // Stabilize callbacks so they don't defeat React.memo (P-02)
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Only stop propagation in select mode so that drawing/erasing over
+    // existing elements still works.  In select mode the container's
+    // hit-test handles selection, so we prevent double-handling.
+    if (tool === 'select') {
+      e.stopPropagation()
+    }
+    onPointerDown(e, element.id)
+  }, [tool, onPointerDown, element.id])
+
+  const handleDoubleClick = useCallback(() => {
+    onDoubleClick(element.id)
+  }, [onDoubleClick, element.id])
+
+  const commonProps = useMemo(() => ({
     opacity: element.opacity,
     stroke: element.strokeColor,
     fill: element.fillColor || 'none',
     strokeWidth: element.strokeWidth,
     strokeDasharray: element.dash?.length ? element.dash.join(' ') : undefined,
-    onPointerDown: (e: React.PointerEvent) => {
-      // Only stop propagation in select mode so that drawing/erasing over
-      // existing elements still works.  In select mode the container's
-      // hit-test handles selection, so we prevent double-handling.
-      if (tool === 'select') {
-        e.stopPropagation()
-      }
-      onPointerDown(e, element.id)
-    },
-    onDoubleClick: () => onDoubleClick(element.id),
+    onPointerDown: handlePointerDown,
+    onDoubleClick: handleDoubleClick,
     style: { cursor: element.locked ? 'not-allowed' : 'pointer' } as React.CSSProperties,
-  }
+  }), [element.opacity, element.strokeColor, element.fillColor, element.strokeWidth, element.dash, element.locked, handlePointerDown, handleDoubleClick])
 
   switch (element.type) {
     case 'freehand':
@@ -251,7 +258,7 @@ export function ElementRenderer({
     default:
       return null
   }
-}
+})
 
 // ---- Sub-components ----
 

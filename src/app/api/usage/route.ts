@@ -27,12 +27,12 @@ export async function GET() {
       estimatedAiSpendCents: 0,
     })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[GET /api/usage]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST /api/usage/heartbeat — record usage (video minutes, AI credits)
+// POST /api/usage — record usage (video minutes, AI credits)
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
@@ -44,6 +44,11 @@ export async function POST(request: Request) {
     if (parseError) return NextResponse.json({ error: parseError }, { status: 400 })
 
     if (!parsed) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
+
+    // Cap minutesUsed to max 5 per heartbeat to prevent inflation
+    if (parsed.minutesUsed != null) {
+      parsed.minutesUsed = Math.min(parsed.minutesUsed, 5)
+    }
 
     // Upsert usage for current period
     const periodStart = new Date()
@@ -59,7 +64,6 @@ export async function POST(request: Request) {
       .limit(1)
       .single()
 
-    const now = new Date().toISOString()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = {}
 
@@ -89,7 +93,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[POST /api/usage]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

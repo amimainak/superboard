@@ -1,3 +1,4 @@
+// Uses DATABASE_URL env var. Set it in .env.local or your environment.
 // Script: Push Prisma schema to Supabase PostgreSQL
 // Uses the Supabase Session Pooler (port 6543) for DDL operations
 
@@ -5,7 +6,7 @@ import { Client } from 'pg';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const DATABASE_URL = "postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+const DATABASE_URL = process.env.DATABASE_URL;
 
 async function main() {
   const client = new Client({ connectionString: DATABASE_URL });

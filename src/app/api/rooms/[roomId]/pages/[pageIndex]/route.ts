@@ -9,6 +9,8 @@ export async function GET(
   try {
     const { roomId, pageIndex } = await params
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
@@ -22,8 +24,8 @@ export async function GET(
     if (!data) return NextResponse.json({ error: 'Page not found' }, { status: 404 })
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[GET /api/rooms/[roomId]/pages/[pageIndex]]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -34,6 +36,9 @@ export async function PUT(
   try {
     const { roomId, pageIndex } = await params
     const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const body = await request.json()
     const { data: parsed, error: parseError } = parseBody(upsertPageSchema, body)
     if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
@@ -51,7 +56,7 @@ export async function PUT(
     if (error) throw error
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[PUT /api/rooms/[roomId]/pages/[pageIndex]]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

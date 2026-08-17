@@ -33,8 +33,8 @@ export async function GET() {
 
     return NextResponse.json(profile)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[GET /api/user/profile]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -48,8 +48,14 @@ export async function PATCH(request: Request) {
     const { data: parsed, error: parseError } = parseBody(updateProfileSchema, body)
     if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = { ...parsed }
+    // Only allow user-writable fields — tier, isAdmin, subjectExpertise are server-managed
+    const { name, bio, timezone, brandingColor, brandingLogoUrl } = parsed
+    const updates: Record<string, unknown> = {}
+    if (name !== undefined) updates.name = name
+    if (bio !== undefined) updates.bio = bio
+    if (timezone !== undefined) updates.timezone = timezone
+    if (brandingColor !== undefined) updates.brandingColor = brandingColor
+    if (brandingLogoUrl !== undefined) updates.brandingLogoUrl = brandingLogoUrl
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
@@ -62,7 +68,7 @@ export async function PATCH(request: Request) {
     if (error) throw error
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[PATCH /api/user/profile]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

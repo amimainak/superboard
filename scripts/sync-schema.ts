@@ -1,10 +1,11 @@
+// Uses DATABASE_URL env var. Set it in .env.local or your environment.
 // Script: Sync Prisma schema to Supabase PostgreSQL
 // Applies all missing columns via ALTER TABLE statements
 // Uses Supabase transaction pooler (read queries for verification, but DDL via REST)
 
 import { Client } from 'pg';
 
-const DB_URL = "postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+const DB_URL = process.env.DATABASE_URL;
 
 // All DDL statements needed to sync the schema
 const MIGRATIONS: string[] = [

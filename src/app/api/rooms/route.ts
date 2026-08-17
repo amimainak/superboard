@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { parseBody, createRoomSchema } from '@/lib/validations'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
   try {
@@ -27,8 +28,8 @@ export async function GET(request: Request) {
     if (error) throw error
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[GET /api/rooms]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -37,6 +38,10 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Rate limit: 10 room creations per minute per user
+    const { allowed } = rateLimit(`rooms:${user.id}`, 10, 60_000)
+    if (!allowed) return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
 
     const body = await request.json()
     const { data: parsed, error: parseError } = parseBody(createRoomSchema, body)
@@ -66,7 +71,7 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) throw new Error(error.message || JSON.stringify(error))
+    if (error) throw error
 
     await (supabase as any).from('BoardPage').insert({
       roomId: data.id,
@@ -76,8 +81,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data, { status: 201 })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : typeof err === 'string' ? err : JSON.stringify(err)
-    console.error('[POST /api/rooms]', message, err)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[POST /api/rooms]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

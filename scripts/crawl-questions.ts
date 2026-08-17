@@ -365,8 +365,9 @@ async function main() {
   console.log(`Sources to crawl: ${CRAWL_SOURCES.length}`);
   console.log('');
 
+  // Uses DATABASE_URL env var. Set it in .env.local or your environment.
   const client = new Client({
-    connectionString: process.env.DATABASE_URL || 'postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres',
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 10000,
   });

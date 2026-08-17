@@ -15,6 +15,47 @@ import type {
 } from './types'
 import { generateId, getElementBounds, splitFreehandAtPoint } from './utils'
 
+// ---- Path simplification (P-03) ----
+
+function perpendicularDist(
+  point: { x: number; y: number },
+  lineStart: { x: number; y: number },
+  lineEnd: { x: number; y: number }
+): number {
+  const dx = lineEnd.x - lineStart.x
+  const dy = lineEnd.y - lineStart.y
+  const len = Math.sqrt(dx * dx + dy * dy)
+  if (len === 0) return Math.sqrt((point.x - lineStart.x) ** 2 + (point.y - lineStart.y) ** 2)
+  return Math.abs(dy * point.x - dx * point.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / len
+}
+
+function simplifyPoints(
+  points: Array<{ x: number; y: number }>,
+  tolerance: number = 1
+): Array<{ x: number; y: number }> {
+  if (points.length <= 2) return points
+  let maxDist = 0
+  let maxIndex = 0
+  const first = points[0]
+  const last = points[points.length - 1]
+  for (let i = 1; i < points.length - 1; i++) {
+    const dist = perpendicularDist(points[i], first, last)
+    if (dist > maxDist) {
+      maxDist = dist
+      maxIndex = i
+    }
+  }
+  if (maxDist > tolerance) {
+    const left = simplifyPoints(points.slice(0, maxIndex + 1), tolerance)
+    const right = simplifyPoints(points.slice(maxIndex), tolerance)
+    return [...left.slice(0, -1), ...right]
+  }
+  return [first, last]
+}
+
+// ---- Laser rAF tracking (P-10) ----
+let laserRafId: number = 0
+
 // ---- Default Values ----
 
 export const DEFAULT_STYLE: ElementStyle = {
@@ -155,6 +196,7 @@ export interface WhiteboardStore {
   // Laser
   addLaserPoint: (point: Point) => void
   clearLaser: () => void
+  _cancelLaserRaf: () => void
 
   // Presentation Mode
   togglePresentationMode: () => void
@@ -674,8 +716,21 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       if (shouldAdd) {
         // For freehand, compute bounding box
         if (currentElement.type === 'freehand' && currentElement.points.length > 0) {
+          // Apply Ramer-Douglas-Peucker simplification (P-03)
+          const drawingPts = get().drawingPoints
+          const simplifiedPoints = simplifyPoints(drawingPts)
+          // Build a pressure lookup since RDP preserves original points
+          const pressureMap = new Map<string, number>()
+          for (const p of drawingPts) {
+            pressureMap.set(`${p.x.toFixed(2)},${p.y.toFixed(2)}`, p.pressure || 0.5)
+          }
+          const pointsToUse = simplifiedPoints.map(p => ({
+            ...p,
+            pressure: pressureMap.get(`${p.x.toFixed(2)},${p.y.toFixed(2)}`) ?? 0.5
+          }))
+
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
-          for (const p of currentElement.points) {
+          for (const p of pointsToUse) {
             if (p.x < minX) minX = p.x
             if (p.y < minY) minY = p.y
             if (p.x > maxX) maxX = p.x
@@ -685,6 +740,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
           const pad = currentElement.isHighlighter ? 8 : currentElement.strokeWidth
           const finalEl = {
             ...currentElement,
+            points: pointsToUse,
             x: minX - pad,
             y: minY - pad,
             width: maxX - minX + pad * 2,
@@ -723,8 +779,14 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         elements: JSON.parse(JSON.stringify(elements)),
         timestamp: Date.now(),
       }
-      // Limit history to 50 entries
-      const newStack = [...undoStack, entry].slice(-50)
+      // Cap total history memory to 20 entries (P-04)
+      if (undoStack.length >= 20) {
+        const trimmed = undoStack.slice(-19)
+        const newStack = [...trimmed, entry]
+        set({ undoStack: newStack, redoStack: [] })
+        return
+      }
+      const newStack = [...undoStack, entry]
       set({ undoStack: newStack, redoStack: [] })
     },
 
@@ -981,6 +1043,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     clearLaser: () => {
       const { currentElement } = get()
       if (!currentElement) return
+      // Cancel any in-flight laser fade rAF (P-10)
+      if (laserRafId) {
+        cancelAnimationFrame(laserRafId)
+        laserRafId = 0
+      }
       // Fade out by animating opacity
       const start = Date.now()
       const duration = 800
@@ -989,13 +1056,28 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         const t = Math.min(elapsed / duration, 1)
         const opacity = 0.8 * (1 - t * t) // ease-out quadratic
         if (t >= 1) {
+          laserRafId = 0
           set({ currentElement: null })
           return
         }
-        set({ currentElement: { ...get().currentElement!, opacity } as WhiteboardElement })
-        requestAnimationFrame(fade)
+        const el = get().currentElement
+        // Guard: only update if the laser element is still the same (P-10)
+        if (el && el.type === 'laser') {
+          set({ currentElement: { ...el, opacity } as WhiteboardElement })
+          laserRafId = requestAnimationFrame(fade)
+        } else {
+          laserRafId = 0
+        }
       }
-      requestAnimationFrame(fade)
+      laserRafId = requestAnimationFrame(fade)
+    },
+
+    // Cancel laser animation on unmount / cleanup (P-10)
+    _cancelLaserRaf: () => {
+      if (laserRafId) {
+        cancelAnimationFrame(laserRafId)
+        laserRafId = 0
+      }
     },
   }
 })

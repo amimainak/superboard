@@ -1,10 +1,25 @@
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
 import { parseBody, livekitTokenSchema } from '@/lib/validations'
+import { rateLimit } from '@/lib/rate-limit'
 
 // POST /api/livekit/token — generate LiveKit join token
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Rate limit: 5 token requests per minute per user
+    const { allowed, retryAfterMs } = rateLimit(`livekit:${user.id}`, 5, 60_000)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Rate limited', retryAfterMs },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) } }
+      )
+    }
+
     const LIVEKIT_URL = process.env.LIVEKIT_URL
     const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY
     const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET
@@ -21,10 +36,13 @@ export async function POST(request: Request) {
     if (error || !data) {
       return NextResponse.json({ error: error || 'Invalid request' }, { status: 400 })
     }
-    const { roomName, participantName, participantIdentity, metadata } = data
+    const { roomName, participantName, metadata } = data
+
+    // Force participantIdentity to the authenticated user's ID
+    const participantIdentity = user.id
 
     const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
-      identity: participantIdentity || participantName.replace(/\s+/g, '-').toLowerCase(),
+      identity: participantIdentity,
       name: participantName,
       metadata: metadata || '',
     })
@@ -44,8 +62,7 @@ export async function POST(request: Request) {
       url: LIVEKIT_URL,
     })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Failed to generate token'
-    console.error('[LiveKit Token]', message, err)
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[POST /api/livekit/token]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

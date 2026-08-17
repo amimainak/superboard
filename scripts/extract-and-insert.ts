@@ -9,8 +9,8 @@ import { Client } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const DB_URL = process.env.DATABASE_URL || 
-  'postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres';
+// Uses DATABASE_URL env var. Set it in .env.local or your environment.
+const DB_URL = process.env.DATABASE_URL;
 
 interface ExtractedQuestion {
   subject: string;

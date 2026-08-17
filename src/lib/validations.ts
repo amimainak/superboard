@@ -23,7 +23,7 @@ export const updateRoomSchema = z.object({
 
 // ---- Board Page ----
 export const pageSnapshotSchema = z.object({
-  elements: z.array(z.record(z.string(), z.unknown())),
+  elements: z.array(z.record(z.string(), z.unknown())).max(500),
   camera: z.object({
     x: z.number(),
     y: z.number(),
@@ -35,7 +35,7 @@ export const savePagesSchema = z.object({
   pages: z.array(z.object({
     pageIndex: z.number().int().min(0),
     snapshot: pageSnapshotSchema,
-  })),
+  })).max(20),
 })
 
 export const upsertPageSchema = z.object({
@@ -67,15 +67,13 @@ export const updateProfileSchema = z.object({
   timezone: z.string().max(50).optional(),
   brandingColor: z.string().max(7).regex(/^#[0-9a-fA-F]{6}$/).optional(),
   brandingLogoUrl: z.string().max(500).url().optional(),
-  subjectExpertise: z.array(z.enum(SUBJECTS)).optional(),
-  tier: z.enum(TIERS).optional(),
 })
 
 // ---- Usage Tracking ----
 export const usageHeartbeatSchema = z.object({
   roomId: z.string().uuid(),
   type: z.enum(['video', 'ai']),
-  minutesUsed: z.number().min(0).max(120).optional(),
+  minutesUsed: z.number().min(0).max(5).optional(),
 })
 
 // ---- LiveKit Token ----

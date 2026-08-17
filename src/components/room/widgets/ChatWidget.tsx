@@ -55,6 +55,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [senderName, setSenderName] = useState('')
+  const [senderId, setSenderId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [mutedUntil, setMutedUntil] = useState<number | null>(null)
   const [now, setNow] = useState(Date.now())
@@ -80,6 +81,16 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
       setSenderName(finalName)
       localStorage.setItem('superboard-chat-name', finalName)
     }
+  }, [])
+
+  // Get authenticated user ID for senderId
+  useEffect(() => {
+    const getUser = async () => {
+      const sb = getSupabaseBrowserClient()
+      const { data: { user } } = await sb.auth.getUser()
+      if (user) setSenderId(user.id)
+    }
+    getUser()
   }, [])
 
   // Load existing messages
@@ -187,6 +198,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
       roomId,
       senderLabel: senderName,
       content,
+      senderId: senderId ?? null,
     })
   }
 
@@ -226,6 +238,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
         senderLabel: senderName,
         content: `📷 ${file.name}`,
         fileUrl: dataUrl,
+        senderId: senderId ?? null,
       })
     } catch (err) {
       console.error('File upload failed:', err)

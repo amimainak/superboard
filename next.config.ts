@@ -82,6 +82,26 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // SECURITY FIX (I-03): CSP for page routes (must come before API route matchers)
+        source: '/((?!api).*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' blob: data: https://*.supabase.co",
+              "connect-src 'self' wss: https://*.supabase.co https://*.livekit.cloud",
+              "media-src 'self' blob:",
+              "font-src 'self'",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+            ].join('; '),
+          },
+        ],
+      },
+      {
         // Strictest CSP for API routes — no scripts needed
         source: '/api/:path*',
         headers: [

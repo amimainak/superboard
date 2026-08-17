@@ -4,8 +4,14 @@
 # Tests each role with full dashboard screenshots
 # ============================================================
 set -e
-export DATABASE_URL="postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
 P="/home/z/my-project"
+# Uses DATABASE_URL env var. Set it in .env.local or your environment.
+if [ -f "$P/.env.local" ]; then
+  export $(grep -v '^#' "$P/.env.local" | xargs)
+fi
+if [ -z "$DATABASE_URL" ]; then
+  echo "ERROR: DATABASE_URL not set. Create .env.local with DATABASE_URL." >&2; exit 1
+fi
 S="$P/download/screenshots"
 
 pkill -f "next dev" 2>/dev/null || true; sleep 1

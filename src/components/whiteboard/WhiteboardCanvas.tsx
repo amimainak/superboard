@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWhiteboardStore, STICKY_COLORS } from '@/lib/whiteboard/store'
 import { ElementRenderer } from './ElementRenderer'
 import { SelectionHandles } from './SelectionHandles'
@@ -146,6 +146,10 @@ export function WhiteboardCanvas() {
   const isErasing = useRef(false)
   const [boxSelect, setBoxSelect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
+  // ---- rAF batching for pointer move (P-01) ----
+  const pendingPointsRef = useRef<Array<{ x: number; y: number; pressure: number }>>([])
+  const rafIdRef = useRef<number>(0)
+
   // ---- Touch / Stylus / Multi-touch state ----
   const isLaserActive = useRef(false)       // laser only draws when pointer is down
   const activePointers = useRef<Map<number, { x: number; y: number }>>(new Map())  // for pinch/pan
@@ -263,8 +267,11 @@ export function WhiteboardCanvas() {
     [camera, snapToGrid, gridSize]
   )
 
-  // Filter elements for current page
-  const pageElements = elements.filter((el) => el.pageIndex === currentPageIndex)
+  // Filter elements for current page (P-07)
+  const pageElements = useMemo(
+    () => elements.filter((el) => el.pageIndex === currentPageIndex),
+    [elements, currentPageIndex]
+  )
 
   // ---- Palm / Touch Rejection ----
   // Reject non-primary touch pointers (secondary fingers, palm rests).
@@ -471,6 +478,61 @@ export function WhiteboardCanvas() {
     ]
   )
 
+  // ---- rAF flush for batched drawing points (P-01) ----
+  const flushPendingPoints = useCallback(() => {
+    rafIdRef.current = 0
+    const pts = pendingPointsRef.current
+    if (pts.length === 0) return
+    pendingPointsRef.current = []
+
+    const storeState = useWhiteboardStore.getState()
+    if (!storeState.isDrawing || !storeState.currentElement) return
+
+    if (storeState.currentElement.type === 'freehand') {
+      // For freehand, apply all pending points at once via the store
+      for (const pt of pts) {
+        storeState.continueDrawing(pt)
+      }
+    } else {
+      // For shapes, only the last point matters
+      storeState.continueDrawing(pts[pts.length - 1])
+    }
+  }, [])
+
+  // Cancel any pending rAF batch
+  const cancelPendingRaf = useCallback(() => {
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = 0
+    }
+    // Flush any remaining points before cancelling
+    if (pendingPointsRef.current.length > 0) {
+      const pts = pendingPointsRef.current
+      pendingPointsRef.current = []
+      const storeState = useWhiteboardStore.getState()
+      if (storeState.isDrawing && storeState.currentElement) {
+        if (storeState.currentElement.type === 'freehand') {
+          for (const pt of pts) {
+            storeState.continueDrawing(pt)
+          }
+        } else {
+          storeState.continueDrawing(pts[pts.length - 1])
+        }
+      }
+    }
+  }, [])
+
+  // Cleanup rAF on unmount
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current) {
+        cancelAnimationFrame(rafIdRef.current)
+      }
+      // Cancel any in-flight laser fade animation (P-10)
+      useWhiteboardStore.getState()._cancelLaserRaf()
+    }
+  }, [])
+
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       // ---- Palm rejection: skip non-primary touch moves ----
@@ -536,9 +598,13 @@ export function WhiteboardCanvas() {
         return
       }
 
-      // Drawing
+      // Drawing — batch via rAF (P-01)
       if (isDrawing) {
-        continueDrawing(point)
+        pendingPointsRef.current.push({ x: point.x, y: point.y, pressure: point.pressure })
+        if (!rafIdRef.current) {
+          rafIdRef.current = requestAnimationFrame(flushPendingPoints)
+        }
+        return
       }
 
       // Eraser (continuous, only while button is held)
@@ -573,7 +639,8 @@ export function WhiteboardCanvas() {
     },
     [
       isPanning, isDrawing, tool, selectedIds, camera.zoom, camera.x, camera.y,
-      getCanvasPoint, panBy, moveSelected, continueDrawing, eraseAtPoint, addLaserPoint, setCamera,
+      getCanvasPoint, panBy, moveSelected, eraseAtPoint, addLaserPoint, setCamera,
+      flushPendingPoints,
     ]
   )
 
@@ -650,6 +717,9 @@ export function WhiteboardCanvas() {
         }
       }
 
+      // Flush any pending rAF batched points (P-01)
+      cancelPendingRaf()
+
       // Laser: stop drawing on pointer up, trigger fade
       if (tool === 'laser' && isLaserActive.current) {
         isLaserActive.current = false
@@ -673,6 +743,7 @@ export function WhiteboardCanvas() {
     [
       isPanning, isDrawing, tool, boxSelect, pageElements,
       stopPanning, finishDrawing, clearLaser, selectElements, setTool,
+      cancelPendingRaf,
     ]
   )
 
@@ -883,6 +954,7 @@ export function WhiteboardCanvas() {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
       onPointerLeave={() => {
@@ -892,6 +964,12 @@ export function WhiteboardCanvas() {
           isLaserActive.current = false
           clearLaser()
         }
+        // Finish in-progress strokes on pointer leave (P-06)
+        if (isDrawing) {
+          cancelPendingRaf()
+          finishDrawing()
+        }
+        isErasing.current = false
       }}
     >
       {/* Grid Background */}

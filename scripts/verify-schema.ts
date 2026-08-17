@@ -1,10 +1,11 @@
+// Uses DATABASE_URL env var. Set it in .env.local or your environment.
 // Script: Compare Prisma schema with Supabase DB and apply missing changes
 // Uses session-mode pooler for DDL compatibility
 
 import { Client } from 'pg';
 import { readFileSync } from 'fs';
 
-const DB_URL = "postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+const DB_URL = process.env.DATABASE_URL;
 
 async function getColumnDefs(client: Client, tableName: string) {
   const { rows } = await client.query(`
