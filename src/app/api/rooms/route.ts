@@ -44,6 +44,14 @@ export async function POST(request: Request) {
 
     const { subject, brandingLogo, brandingColor } = parsed
 
+    // Ensure User record exists (auto-create on first room creation)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any
+    await sb.from('User').upsert(
+      { id: user.id, email: user.email ?? '', tier: 'FREE', isAdmin: false },
+      { onConflict: 'id' }
+    )
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from('Room')
@@ -58,7 +66,7 @@ export async function POST(request: Request) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) throw new Error(error.message || JSON.stringify(error))
 
     await (supabase as any).from('BoardPage').insert({
       roomId: data.id,
@@ -68,7 +76,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data, { status: 201 })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
+    const message = err instanceof Error ? err.message : typeof err === 'string' ? err : JSON.stringify(err)
+    console.error('[POST /api/rooms]', message, err)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
