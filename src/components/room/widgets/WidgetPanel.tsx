@@ -24,7 +24,9 @@ const BreakoutRoomsWidget = dynamic(() => import('./BreakoutRoomsWidget').then((
 // Lazy-load tool widgets to reduce initial bundle
 const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) => ({ default: m.AIAssistantWidget })), { ssr: false })
 const MathToolkit = dynamic(() => import('./MathToolkit').then((m) => ({ default: m.MathToolkit })), { ssr: false })
-const ScienceToolkit = dynamic(() => import('./ScienceToolkit').then((m) => ({ default: m.ScienceToolkit })), { ssr: false })
+const PhysicsToolkit = dynamic(() => import('./PhysicsToolkit').then((m) => ({ default: m.PhysicsToolkit })), { ssr: false })
+const ChemistryToolkit = dynamic(() => import('./ChemistryToolkit').then((m) => ({ default: m.ChemistryToolkit })), { ssr: false })
+const BiologyToolkit = dynamic(() => import('./BiologyToolkit').then((m) => ({ default: m.BiologyToolkit })), { ssr: false })
 const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({ default: m.LanguageToolkit })), { ssr: false })
 const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false })
 const GeoGebraPanel = dynamic(() => import('./GeoGebraPanel').then((m) => ({ default: m.GeoGebraPanel })), { ssr: false })
@@ -82,8 +84,12 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <AIAssistantWidget roomId={roomId} />
       case 'math':
         return <MathToolkit roomId={roomId} />
-      case 'science':
-        return <ScienceToolkit roomId={roomId} />
+      case 'physics':
+        return <PhysicsToolkit roomId={roomId} />
+      case 'chemistry':
+        return <ChemistryToolkit roomId={roomId} />
+      case 'biology':
+        return <BiologyToolkit roomId={roomId} />
       case 'language':
         return <LanguageToolkit roomId={roomId} />
       case 'statistics':

@@ -15,7 +15,9 @@ export type WidgetId =
   | 'notes'
   | 'ai'
   | 'math'
-  | 'science'
+  | 'physics'
+  | 'chemistry'
+  | 'biology'
   | 'language'
   | 'statistics'
   | 'geogebra'
@@ -45,8 +47,10 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   // Tool widgets
   { id: 'ai', label: 'AI Assistant', icon: 'Sparkles', section: 'tools' },
   { id: 'math', label: 'Math Tools', icon: 'Calculator', section: 'tools' },
-  { id: 'science', label: 'Science Tools', icon: 'Atom', section: 'tools' },
-  { id: 'language', label: 'Language Tools', icon: 'Languages', section: 'tools' },
+  { id: 'physics', label: 'Physics', icon: 'Zap', section: 'tools' },
+  { id: 'chemistry', label: 'Chemistry', icon: 'Atom', section: 'tools' },
+  { id: 'biology', label: 'Biology', icon: 'Leaf', section: 'tools' },
+  { id: 'language', label: 'Language', icon: 'Languages', section: 'tools' },
   { id: 'statistics', label: 'Statistics', icon: 'BarChart3', section: 'tools' },
   { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },

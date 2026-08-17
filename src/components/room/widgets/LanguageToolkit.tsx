@@ -1,80 +1,197 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
-interface LanguageToolkitProps {
-  roomId?: string
+// Lazy-load each tool — only parsed when the grade tab renders it
+const VocabularyFlashcardsLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.VocabularyFlashcards })))
+const ReadingPassageAnalyzerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ReadingPassageAnalyzer })))
+const StoryElementsMapLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.StoryElementsMap })))
+const SentenceStructureBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SentenceStructureBuilder })))
+const FigurativeLanguageFinderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.FigurativeLanguageFinder })))
+
+// Stable wrapper components (no remount on re-render)
+function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><VocabularyFlashcardsLazy isDark={isDark} /></Suspense>
 }
+function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ReadingPassageAnalyzerLazy isDark={isDark} /></Suspense>
+}
+function StoryElementsMapPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><StoryElementsMapLazy isDark={isDark} /></Suspense>
+}
+function SentenceStructureBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><SentenceStructureBuilderLazy isDark={isDark} /></Suspense>
+}
+function FigurativeLanguageFinderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><FigurativeLanguageFinderLazy isDark={isDark} /></Suspense>
+}
+
+// ============================================================
+// Types
+// ============================================================
+
+type GradeBand = 'all' | 'k5' | '68' | '912'
+
+interface LanguageToolkitProps {
+  roomId: string
+}
+
+const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
+  { id: 'all', label: 'All', icon: '#' },
+  { id: 'k5', label: 'K-5', icon: '*' },
+  { id: '68', label: '6-8', icon: '^' },
+  { id: '912', label: '9-12', icon: '!' },
+]
+
+// ============================================================
+// Component
+// ============================================================
 
 export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
-  const [highlightColor, setHighlightColor] = useState('#fef08a')
 
-  const highlighters = [
-    { label: 'Yellow', color: '#fef08a' },
-    { label: 'Green', color: '#bbf7d0' },
-    { label: 'Blue', color: '#bfdbfe' },
-    { label: 'Pink', color: '#fecaca' },
-  ]
+  const [activeBand, setActiveBand] = useState<GradeBand>('all')
+  const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'k5', '68', '912']))
 
-  const tools = [
-    { label: 'Mind Map', icon: '🧠' },
-    { label: 'Vocabulary Card', icon: '📝' },
-    { label: 'Reading Marker', icon: '📖' },
-    { label: 'Grammar Check', icon: '✅' },
-  ]
+  const toggleBand = (band: GradeBand) => {
+    setVisibleBands(prev => {
+      const next = new Set(prev)
+      if (next.has(band)) next.delete(band)
+      else next.add(band)
+      return next
+    })
+  }
+
+  // ---- Style helpers ----
+  const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+  const dkText = isDark ? '#94a3b8' : '#475569'
+  const actBg = 'rgba(5,150,105,0.15)'
+  const actBorder = 'rgba(5,150,105,0.3)'
+  const actText = '#34d399'
+
+  const sectionTitle = (text: string) => (
+    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  )
 
   return (
-    <div className="widget-content toolkit-language">
-      <div className="toolkit-section">
-        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Highlighters</div>
-        <div style={{ display: 'flex', gap: 6, padding: '0 16px 12px' }}>
-          {highlighters.map((h) => (
-            <button
-              key={h.color}
-              onClick={() => setHighlightColor(h.color)}
-              style={{
-                width: 32, height: 32,
-                borderRadius: 6,
-                background: h.color,
-                border: highlightColor === h.color ? '2px solid #fff' : '2px solid transparent',
-                cursor: 'pointer',
-                opacity: highlightColor === h.color ? 1 : 0.5,
-                transition: 'all 0.1s ease',
-              }}
-              title={h.label}
-            />
-          ))}
-        </div>
+    <div className="widget-content toolkit-language" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+      {/* ---- Grade Band Tabs ---- */}
+      <div style={{ display: 'flex', gap: 2, padding: '8px 12px 4px', flexWrap: 'wrap' }}>
+        {GRADE_BANDS.filter(b => b.id === 'all' || visibleBands.has(b.id)).map((band) => {
+          const active = activeBand === band.id
+          return (
+            <button key={band.id} onClick={() => setActiveBand(band.id)}
+              style={{ padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: active ? 700 : 500, background: active ? actBg : dkBg, border: active ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: active ? actText : dkText, cursor: 'pointer', flex: '1 1 auto', textAlign: 'center', minWidth: 0 }}>
+              {band.icon} {band.label}
+            </button>
+          )
+        })}
       </div>
 
-      <div className="toolkit-section">
-        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Tools</div>
-        <div className="toolkit-grid">
-          {tools.map((tool) => (
-            <button
-              key={tool.label}
-              className={`toolkit-chip ${isDark ? '' : 'toolkit-chip-light'}`}
-              style={{
-                padding: '8px 12px',
-                borderRadius: 6,
-                fontSize: 16,
-                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.1)',
-                color: isDark ? '#94a3b8' : '#475569',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <span>{tool.icon}</span>
-              <span style={{ fontSize: 11 }}>{tool.label}</span>
-            </button>
-          ))}
-        </div>
+      {/* ---- Band Visibility Toggles ---- */}
+      <div style={{ display: 'flex', gap: 4, padding: '2px 12px 8px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, opacity: 0.6 }}>Show:</span>
+        {GRADE_BANDS.filter(b => b.id !== 'all').map((band) => (
+          <label key={band.id} style={{ display: 'flex', alignItems: 'center', gap: 3, cursor: 'pointer', fontSize: 10, color: dkText }}>
+            <input type="checkbox" checked={visibleBands.has(band.id)} onChange={() => toggleBand(band.id)} style={{ width: 12, height: 12, cursor: 'pointer' }} />
+            {band.label}
+          </label>
+        ))}
       </div>
+
+      {/* ============================================================ */}
+      {/* ALL TAB — All 5 tools */}
+      {/* ============================================================ */}
+      {activeBand === 'all' && (
+        <>
+          <div className="toolkit-section">
+            {sectionTitle('Vocabulary Flashcards')}
+            <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Reading Passage Analyzer')}
+            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Story Elements Map')}
+            <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Structure Builder')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Figurative Language Finder')}
+            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/* K-5 TAB — Vocabulary Flashcards, Story Elements Map */}
+      {/* ============================================================ */}
+      {activeBand === 'k5' && (
+        <>
+          <div className="toolkit-section">
+            {sectionTitle('Vocabulary Flashcards')}
+            <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Story Elements Map')}
+            <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/* 6-8 TAB — All 5 tools */}
+      {/* ============================================================ */}
+      {activeBand === '68' && (
+        <>
+          <div className="toolkit-section">
+            {sectionTitle('Vocabulary Flashcards')}
+            <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Reading Passage Analyzer')}
+            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Story Elements Map')}
+            <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Structure Builder')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Figurative Language Finder')}
+            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
+          </div>
+        </>
+      )}
+
+      {/* ============================================================ */}
+      {/* 9-12 TAB — Reading Passage Analyzer, Figurative Language Finder, Vocabulary Flashcards */}
+      {/* ============================================================ */}
+      {activeBand === '912' && (
+        <>
+          <div className="toolkit-section">
+            {sectionTitle('Reading Passage Analyzer')}
+            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Figurative Language Finder')}
+            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Vocabulary Flashcards')}
+            <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
