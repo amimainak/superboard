@@ -1,0 +1,56 @@
+[
+  {
+    "url": "https://supabase.com/docs/guides/auth/social-login/auth-google",
+    "name": "Login with Google | Supabase Docs",
+    "snippet": "Using the management API #. Use the PATCH /v1/projects/{ref}/config/ auth Management API endpoint to configure the project's Auth settings programmatically. Read more",
+    "host_name": "supabase.com",
+    "rank": 0,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://supabase.com/docs/guides/auth",
+    "name": "Auth - Docs",
+    "snippet": "Supabase Auth makes it easy to implement authentication and authorization in your app. We provide client SDKs and API endpoints to help you create and manage ...",
+    "host_name": "supabase.com",
+    "rank": 1,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://github.com/orgs/supabase/discussions/20353",
+    "name": "Google OAuth not working locally #20353",
+    "snippet": "I confirm this is a bug with Supabase , The bug comes from how redirect URLs are set up with wildcards in the Supabase Authentication / URL Configuration ...",
+    "host_name": "github.com",
+    "rank": 2,
+    "date": "",
+    "favicon": ""
+  },
+  {
+    "url": "https://supabase.com/blog/oauth2-provider",
+    "name": "Build \"Sign in with Your App\" using Supabase Auth",
+    "snippet": "Dec 4, 2025 — Setting up OAuth 2.1 in your Supabase project starts with registering OAuth clients through the Supabase dashboard or Management API . You'll ... Read more",
+    "host_name": "supabase.com",
+    "rank": 3,
+    "date": "Dec 4, 2025",
+    "favicon": ""
+  },
+  {
+    "url": "https://community.flutterflow.io/ask-the-community/post/supabase-google-apple-auth-providers-missing-in-new-flutterflow-supabase-43KiS854ZkRYubt",
+    "name": "Supabase Google/Apple Auth providers missing in new",
+    "snippet": "May 15, 2026 — For Google , configure the Client ID/Secret and add your redirect URLs in Supabase → Authentication → URL Configuration .",
+    "host_name": "community.flutterflow.io",
+    "rank": 4,
+    "date": "May 15, 2026",
+    "favicon": ""
+  },
+  {
+    "url": "https://nextjsstarter.com/blog/master-supabase-google-auth-with-practical-examples",
+    "name": "Master Supabase Google Auth with Practical Examples",
+    "snippet": "Dec 6, 2023 — In your Supabase project dashboard, click on the \" Authentication \" menu. Then click \" Authentication Providers \" in the sidebar. This is where you ... Read more",
+    "host_name": "nextjsstarter.com",
+    "rank": 5,
+    "date": "Dec 6, 2023",
+    "favicon": ""
+  }
+]

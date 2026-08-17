@@ -51,11 +51,21 @@ export default function LoginPage() {
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
     setLoading(true)
     setError(null)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
-    })
-    if (error) setError(error.message)
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/api/auth/callback`,
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+        },
+      })
+      if (error) {
+        const providerLabel = provider === 'google' ? 'Google' : 'GitHub'
+        setError(`${providerLabel} sign-in is not configured yet. Please use email/password.`)
+      }
+    } catch {
+      setError('An unexpected error occurred. Please try again.')
+    }
     setLoading(false)
   }
 
