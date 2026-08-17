@@ -639,3 +639,35 @@
     right: 8px;
   }
 }
+
+/* ---- Auto Save Indicator ---- */
+.auto-save-indicator {
+  transition: opacity 0.2s ease;
+}
+
+/* ---- Chat Enhancements ---- */
+
+.chat-bubble-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.chat-pinned-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: #facc15;
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+  padding: 0 4px;
+  border-radius: 3px;
+  line-height: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.chat-file-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+}

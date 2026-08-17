@@ -8,9 +8,11 @@ import {
   WidgetToggleBar,
   SessionControls,
   RoomInfoBar,
+  RaiseHandButton,
+  ConnectionStatus,
+  AutoSaveIndicator,
 } from '@/components/room/widgets'
 import '@/components/room/widgets/widgets.css'
-import { useWidgetStore } from '@/lib/room/widget-store'
 
 const WhiteboardClient = dynamic(() => import('@/components/room/RoomWhiteboard'), {
   ssr: false,
@@ -44,6 +46,8 @@ interface RoomInfo {
   isActive: boolean
 }
 
+type AutoSaveStatus = 'saved' | 'saving' | 'error' | 'unsaved'
+
 export default function RoomPage() {
   const params = useParams()
   const router = useRouter()
@@ -51,9 +55,7 @@ export default function RoomPage() {
   const [room, setRoom] = useState<RoomInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [saveTrigger, setSaveTrigger] = useState(0)
-
-  // Widget panel state (from Zustand)
-  const panelVisible = useWidgetStore((s) => s.panelVisible)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('saved')
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -71,6 +73,14 @@ export default function RoomPage() {
 
   const handleSave = useCallback(() => {
     setSaveTrigger(prev => prev + 1)
+  }, [])
+
+  const handleSaved = useCallback((success: boolean) => {
+    if (success) {
+      setAutoSaveStatus('saved')
+    } else {
+      setAutoSaveStatus('error')
+    }
   }, [])
 
   const handleEndSession = async () => {
@@ -93,6 +103,7 @@ export default function RoomPage() {
           roomId={roomId}
           onSaveRequest={handleSave}
           saveStatus={saveTrigger > 0 ? `Save #${saveTrigger}` : ''}
+          onSaved={handleSaved}
         />
 
         {/* Room Info Bar — top-left overlay */}
@@ -101,8 +112,24 @@ export default function RoomPage() {
           isActive={room?.isActive ?? false}
         />
 
+        {/* Connection Status — bottom-left overlay on whiteboard */}
+        <ConnectionStatus />
+
+        {/* Auto-Save Indicator — bottom-center overlay */}
+        <AutoSaveIndicator status={autoSaveStatus} />
+
         {/* Widget Toggle Buttons — top-right overlay */}
         <WidgetToggleBar />
+
+        {/* Raise Hand — below widget toggles */}
+        <div style={{
+          position: 'absolute',
+          top: 168,
+          right: 8,
+          zIndex: 1000,
+        }}>
+          <RaiseHandButton />
+        </div>
 
         {/* Session Controls — bottom-right overlay */}
         <SessionControls
