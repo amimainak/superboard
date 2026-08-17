@@ -1,6 +1,10 @@
 'use client'
 
-export function ScienceToolkit() {
+interface ScienceToolkitProps {
+  roomId?: string
+}
+
+export function ScienceToolkit({ roomId: _roomId }: ScienceToolkitProps) {
   const vectors = [
     { label: 'Arrow →', angle: 0 },
     { label: 'Arrow ↗', angle: 45 },

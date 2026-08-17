@@ -13,34 +13,78 @@
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+}
+
+.widget-toggle-bar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.widget-toggle-bar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+
+.widget-toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.widget-toggle-group-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #475569;
+  padding: 0 10px 2px;
 }
 
 .widget-toggle-btn {
-  width: 36px;
   height: 36px;
+  padding: 0 10px;
   border-radius: 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #94a3b8;
   cursor: pointer;
   backdrop-filter: blur(8px);
   transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.widget-toggle-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
 }
 
 .widget-toggle-btn:hover {
-  background: rgba(30, 41, 59, 0.9);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  transform: translateX(-2px);
 }
 
 .widget-toggle-btn-active {
-  background: rgba(5, 150, 105, 0.2) !important;
-  border-color: rgba(5, 150, 105, 0.4) !important;
+  background: rgba(5, 150, 105, 0.25) !important;
+  border-color: rgba(5, 150, 105, 0.5) !important;
   color: #34d399 !important;
+}
+
+.widget-toggle-btn-active .widget-toggle-label {
+  opacity: 1;
 }
 
 /* ---- Room Info Bar ---- */

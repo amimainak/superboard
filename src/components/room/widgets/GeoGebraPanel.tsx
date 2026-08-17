@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 
-export function GeoGebraPanel() {
+interface GeoGebraPanelProps {
+  roomId?: string
+}
+
+export function GeoGebraPanel({ roomId: _roomId }: GeoGebraPanelProps) {
   const [graphExpression, setGraphExpression] = useState('')
 
   const presets = [

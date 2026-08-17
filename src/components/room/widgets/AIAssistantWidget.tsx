@@ -2,7 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-export function AIAssistantWidget() {
+interface AIAssistantWidgetProps {
+  roomId?: string
+}
+
+export function AIAssistantWidget({ roomId: _roomId }: AIAssistantWidgetProps) {
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([])
   const [input, setInput] = useState('')
   const [isThinking, setIsThinking] = useState(false)

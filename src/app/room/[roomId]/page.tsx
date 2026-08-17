@@ -12,6 +12,7 @@ import {
   ConnectionStatus,
   AutoSaveIndicator,
 } from '@/components/room/widgets'
+import { useWidgetStore } from '@/lib/room/widget-store'
 import '@/components/room/widgets/widgets.css'
 
 const WhiteboardClient = dynamic(() => import('@/components/room/RoomWhiteboard'), {
@@ -67,6 +68,9 @@ export default function RoomPage() {
       }
       setRoom(data)
       setLoading(false)
+      // Auto-open chat widget when room loads
+      const store = useWidgetStore.getState()
+      if (!store.panelVisible) store.openWidget('chat')
     }
     loadRoom()
   }, [roomId, router])

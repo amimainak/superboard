@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 
-export function LanguageToolkit() {
+interface LanguageToolkitProps {
+  roomId?: string
+}
+
+export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const [highlightColor, setHighlightColor] = useState('#fef08a')
 
   const highlighters = [

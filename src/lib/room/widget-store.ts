@@ -7,20 +7,36 @@
 
 import { create } from 'zustand'
 
-export type WidgetId = 'chat' | 'participants' | 'video'
+export type WidgetId =
+  | 'chat'
+  | 'participants'
+  | 'video'
+  | 'ai'
+  | 'math'
+  | 'science'
+  | 'language'
+  | 'geogebra'
 
 export type PanelMode = 'dock' | 'float' | 'minimized'
 
 export interface WidgetDef {
   id: WidgetId
   label: string
-  icon: string // lucide icon name
+  icon: string // icon identifier for rendering
+  section?: 'communication' | 'tools'
 }
 
 export const AVAILABLE_WIDGETS: WidgetDef[] = [
-  { id: 'chat', label: 'Chat', icon: 'MessageCircle' },
-  { id: 'participants', label: 'Participants', icon: 'Users' },
-  { id: 'video', label: 'Video', icon: 'Video' },
+  // Communication widgets
+  { id: 'chat', label: 'Chat', icon: 'MessageCircle', section: 'communication' },
+  { id: 'participants', label: 'Participants', icon: 'Users', section: 'communication' },
+  { id: 'video', label: 'Video', icon: 'Video', section: 'communication' },
+  // Tool widgets
+  { id: 'ai', label: 'AI Assistant', icon: 'Sparkles', section: 'tools' },
+  { id: 'math', label: 'Math Tools', icon: 'Calculator', section: 'tools' },
+  { id: 'science', label: 'Science Tools', icon: 'Atom', section: 'tools' },
+  { id: 'language', label: 'Language Tools', icon: 'Languages', section: 'tools' },
+  { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
 ]
 
 interface WidgetStore {

@@ -6,22 +6,24 @@
 
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useWidgetStore, type WidgetId, type PanelMode, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
 import { ChatWidget } from './ChatWidget'
 import { ParticipantsWidget } from './ParticipantsWidget'
 import { VideoWidget } from './VideoWidget'
+
+// Lazy-load tool widgets to reduce initial bundle
+const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) => ({ default: m.AIAssistantWidget })), { ssr: false })
+const MathToolkit = dynamic(() => import('./MathToolkit').then((m) => ({ default: m.MathToolkit })), { ssr: false })
+const ScienceToolkit = dynamic(() => import('./ScienceToolkit').then((m) => ({ default: m.ScienceToolkit })), { ssr: false })
+const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({ default: m.LanguageToolkit })), { ssr: false })
+const GeoGebraPanel = dynamic(() => import('./GeoGebraPanel').then((m) => ({ default: m.GeoGebraPanel })), { ssr: false })
 
 interface WidgetPanelProps {
   roomId: string
 }
 
 const MODE_CYCLE: PanelMode[] = ['dock', 'float', 'minimized']
-
-const MODE_ICON: Record<PanelMode, string> = {
-  dock: '⬜',
-  float: '🔲',
-  minimized: '➖',
-}
 
 export function WidgetPanel({ roomId }: WidgetPanelProps) {
   const panelVisible = useWidgetStore((s) => s.panelVisible)
@@ -51,6 +53,29 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
     const currentIdx = MODE_CYCLE.indexOf(panelMode)
     const nextIdx = (currentIdx + 1) % MODE_CYCLE.length
     setPanelMode(MODE_CYCLE[nextIdx])
+  }
+
+  const renderWidget = () => {
+    switch (activeTab) {
+      case 'chat':
+        return <ChatWidget roomId={roomId} />
+      case 'participants':
+        return <ParticipantsWidget roomId={roomId} isTutor={true} />
+      case 'video':
+        return <VideoWidget roomId={roomId} />
+      case 'ai':
+        return <AIAssistantWidget roomId={roomId} />
+      case 'math':
+        return <MathToolkit roomId={roomId} />
+      case 'science':
+        return <ScienceToolkit roomId={roomId} />
+      case 'language':
+        return <LanguageToolkit roomId={roomId} />
+      case 'geogebra':
+        return <GeoGebraPanel roomId={roomId} />
+      default:
+        return null
+    }
   }
 
   return (
@@ -100,9 +125,7 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
       {/* Active widget content (hidden in minimized mode) */}
       {!isMinimized && (
         <div className="widget-panel-body" role="tabpanel">
-          {activeTab === 'chat' && <ChatWidget roomId={roomId} />}
-          {activeTab === 'participants' && <ParticipantsWidget roomId={roomId} isTutor={true} />}
-          {activeTab === 'video' && <VideoWidget roomId={roomId} />}
+          {renderWidget()}
         </div>
       )}
     </div>
