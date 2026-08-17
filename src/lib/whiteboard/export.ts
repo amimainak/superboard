@@ -270,3 +270,12 @@ export function downloadString(content: string, filename: string, mimeType: stri
   const blob = new Blob([content], { type: mimeType })
   downloadBlob(blob, filename)
 }
+
+/**
+ * Export the whiteboard as PDF via the browser's built-in print dialog.
+ * The user can select "Save as PDF" as the destination.
+ * This is the most reliable cross-browser approach without adding heavy dependencies.
+ */
+export function exportAsPdfViaPrint() {
+  window.print()
+}
