@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { parseBody, savePagesSchema } from '@/lib/validations'
 
 export async function GET(
   _request: Request,
@@ -33,7 +34,10 @@ export async function PUT(
     const supabase = await createClient()
 
     const body = await request.json()
-    const pages = body.pages
+    const { data: parsed, error: parseError } = parseBody(savePagesSchema, body)
+    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+
+    const pages = parsed.pages
 
     await (supabase as any).from('BoardPage').delete().eq('roomId', roomId)
 

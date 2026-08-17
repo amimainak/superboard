@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { parseBody, updateRoomSchema } from '@/lib/validations'
 
 export async function GET(
   _request: Request,
@@ -36,14 +37,14 @@ export async function PATCH(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
+    const { data: parsed, error: parseError } = parseBody(updateRoomSchema, body)
+    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = {}
-    if (body.subject !== undefined) updates.subject = body.subject
-    if (body.isActive !== undefined) updates.isActive = body.isActive
-    if (body.isActive === false && !body.endedAt) {
+    const updates: any = { ...parsed }
+    if (updates.isActive === false && !updates.endedAt) {
       updates.endedAt = new Date().toISOString()
     }
-    if (body.durationMinutes !== undefined) updates.durationMinutes = body.durationMinutes
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)

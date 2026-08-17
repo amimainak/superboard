@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { parseBody, updateProfileSchema } from '@/lib/validations'
 
 export async function GET() {
   try {
@@ -44,11 +45,11 @@ export async function PATCH(request: Request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
+    const { data: parsed, error: parseError } = parseBody(updateProfileSchema, body)
+    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = {}
-    if (body.name !== undefined) updates.name = body.name
-    if (body.brandingColor !== undefined) updates.brandingColor = body.brandingColor
-    if (body.brandingLogoUrl !== undefined) updates.brandingLogoUrl = body.brandingLogoUrl
+    const updates: any = { ...parsed }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)

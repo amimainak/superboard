@@ -1,0 +1,89 @@
+import { z } from 'zod'
+
+// ---- Enums ----
+export const SUBJECTS = ['GENERAL', 'MATH', 'SCIENCE', 'LANGUAGE', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'ENGLISH'] as const
+export type Subject = (typeof SUBJECTS)[number]
+
+export const TIERS = ['FREE', 'PRO', 'AGENCY'] as const
+export type Tier = (typeof TIERS)[number]
+
+// ---- Room ----
+export const createRoomSchema = z.object({
+  subject: z.enum(SUBJECTS).default('GENERAL'),
+  brandingLogo: z.string().max(500).url().optional(),
+  brandingColor: z.string().max(7).regex(/^#[0-9a-fA-F]{6}$/).optional(),
+})
+
+export const updateRoomSchema = z.object({
+  subject: z.enum(SUBJECTS).optional(),
+  isActive: z.boolean().optional(),
+  endedAt: z.string().datetime().optional(),
+  durationMinutes: z.number().int().min(0).max(480).optional(),
+})
+
+// ---- Board Page ----
+export const pageSnapshotSchema = z.object({
+  elements: z.array(z.record(z.string(), z.unknown())),
+  camera: z.object({
+    x: z.number(),
+    y: z.number(),
+    zoom: z.number().min(0.1).max(10),
+  }),
+})
+
+export const savePagesSchema = z.object({
+  pages: z.array(z.object({
+    pageIndex: z.number().int().min(0),
+    snapshot: pageSnapshotSchema,
+  })),
+})
+
+export const upsertPageSchema = z.object({
+  snapshot: pageSnapshotSchema,
+})
+
+// ---- Template ----
+export const createTemplateSchema = z.object({
+  name: z.string().min(1).max(50),
+  subject: z.enum(SUBJECTS).default('GENERAL'),
+  snapshot: pageSnapshotSchema.extend({
+    pages: z.array(z.object({
+      pageIndex: z.number().int().min(0),
+      elements: z.array(z.record(z.string(), z.unknown())),
+    })),
+  }),
+})
+
+export const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  subject: z.enum(SUBJECTS).optional(),
+  snapshot: z.record(z.string(), z.unknown()).optional(),
+})
+
+// ---- User Profile ----
+export const updateProfileSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  bio: z.string().max(280).optional(),
+  timezone: z.string().max(50).optional(),
+  brandingColor: z.string().max(7).regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  brandingLogoUrl: z.string().max(500).url().optional(),
+  subjectExpertise: z.array(z.enum(SUBJECTS)).optional(),
+  tier: z.enum(TIERS).optional(),
+})
+
+// ---- Usage Tracking ----
+export const usageHeartbeatSchema = z.object({
+  roomId: z.string().uuid(),
+  type: z.enum(['video', 'ai']),
+  minutesUsed: z.number().min(0).max(120).optional(),
+})
+
+// ---- Helper: parse and validate request body ----
+export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown) {
+  const result = schema.safeParse(body)
+  if (!result.success) {
+    const errors = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`)
+    return { data: null, error: errors.join('; ') }
+  }
+  return { data: result.data, error: null }
+}

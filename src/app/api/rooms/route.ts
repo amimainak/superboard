@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { parseBody, createRoomSchema } from '@/lib/validations'
 
 export async function GET(request: Request) {
   try {
@@ -38,7 +39,10 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { subject = 'GENERAL', brandingLogo, brandingColor } = body
+    const { data: parsed, error: parseError } = parseBody(createRoomSchema, body)
+    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+
+    const { subject, brandingLogo, brandingColor } = parsed
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)

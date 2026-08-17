@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { parseBody, upsertPageSchema } from '@/lib/validations'
 
 export async function GET(
   _request: Request,
@@ -33,7 +34,11 @@ export async function PUT(
   try {
     const { roomId, pageIndex } = await params
     const supabase = await createClient()
-    const { snapshot } = await request.json()
+    const body = await request.json()
+    const { data: parsed, error: parseError } = parseBody(upsertPageSchema, body)
+    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+
+    const { snapshot } = parsed
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)

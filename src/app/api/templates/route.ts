@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { parseBody, createTemplateSchema } from '@/lib/validations'
 
 export async function GET(request: Request) {
   try {
@@ -34,14 +35,11 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { name, subject = 'GENERAL', snapshot } = await request.json()
+    const body = await request.json()
+    const { data: parsed, error: parseError } = parseBody(createTemplateSchema, body)
+    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
 
-    if (!name || name.length > 50) {
-      return NextResponse.json({ error: 'Name is required (max 50 chars)' }, { status: 400 })
-    }
-    if (!snapshot) {
-      return NextResponse.json({ error: 'Snapshot is required' }, { status: 400 })
-    }
+    const { name, subject, snapshot } = parsed
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
