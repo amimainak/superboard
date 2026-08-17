@@ -17,6 +17,7 @@ export type WidgetId =
   | 'math'
   | 'science'
   | 'language'
+  | 'statistics'
   | 'geogebra'
   | 'templates'
   | 'analytics'
@@ -46,6 +47,7 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'math', label: 'Math Tools', icon: 'Calculator', section: 'tools' },
   { id: 'science', label: 'Science Tools', icon: 'Atom', section: 'tools' },
   { id: 'language', label: 'Language Tools', icon: 'Languages', section: 'tools' },
+  { id: 'statistics', label: 'Statistics', icon: 'BarChart3', section: 'tools' },
   { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
   // Analytics widgets

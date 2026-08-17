@@ -26,6 +26,7 @@ const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) =
 const MathToolkit = dynamic(() => import('./MathToolkit').then((m) => ({ default: m.MathToolkit })), { ssr: false })
 const ScienceToolkit = dynamic(() => import('./ScienceToolkit').then((m) => ({ default: m.ScienceToolkit })), { ssr: false })
 const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({ default: m.LanguageToolkit })), { ssr: false })
+const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false })
 const GeoGebraPanel = dynamic(() => import('./GeoGebraPanel').then((m) => ({ default: m.GeoGebraPanel })), { ssr: false })
 
 interface WidgetPanelProps {
@@ -85,6 +86,8 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <ScienceToolkit roomId={roomId} />
       case 'language':
         return <LanguageToolkit roomId={roomId} />
+      case 'statistics':
+        return <StatToolkit roomId={roomId} />
       case 'geogebra':
         return <GeoGebraPanel roomId={roomId} />
       case 'templates':
