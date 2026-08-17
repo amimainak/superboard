@@ -49,6 +49,7 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const loadState = useWhiteboardStore((s) => s.loadState)
   const setPages = useWhiteboardStore((s) => s.setPages)
   const elements = useWhiteboardStore((s) => s.elements)
@@ -146,10 +147,10 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
   return (
     <div className="widget-content">
       {/* Search */}
-      <div style={{ padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ padding: '10px 12px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}` }}>
         <div style={{ position: 'relative' }}>
           <svg
-            style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#475569' }}
+            style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: isDark ? '#475569' : '#64748b' }}
             width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           >
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -159,21 +160,21 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
             placeholder="Search templates..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="templates-search-input"
+            className={`templates-search-input ${isDark ? '' : 'templates-search-input-light'}`}
           />
         </div>
       </div>
 
       {/* Template list */}
-      <div className="templates-list">
+      <div className={`templates-list ${isDark ? '' : 'templates-list-light'}`}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0', color: '#475569', fontSize: 13 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0', color: isDark ? '#475569' : '#64748b', fontSize: 13 }}>
             Loading templates...
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', color: '#475569', textAlign: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', color: isDark ? '#475569' : '#64748b', textAlign: 'center', gap: 8 }}>
             <div style={{ fontSize: 28 }}>📋</div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8' }}>No templates found</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: isDark ? '#94a3b8' : '#475569' }}>No templates found</div>
             <div style={{ fontSize: 11 }}>Save your current board as a template to see it here.</div>
           </div>
         ) : (
@@ -183,7 +184,7 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
             return (
               <button
                 key={t.id}
-                className="template-card"
+                className={`template-card ${isDark ? '' : 'template-card-light'}`}
                 onClick={() => handleLoadTemplate(t)}
               >
                 <div className="template-card-header">

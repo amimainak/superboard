@@ -65,13 +65,13 @@ export function AIAssistantWidget({ roomId: _roomId }: AIAssistantWidgetProps) {
   }
 
   return (
-    <div className="widget-content widget-ai">
-      <div className="ai-messages">
+    <div className={`widget-content widget-ai ${isDark ? '' : 'widget-ai-light'}`}>
+      <div className={`ai-messages ${isDark ? '' : 'ai-messages-light'}`}>
         {messages.length === 0 && (
-          <div className="ai-empty">
+          <div className={`ai-empty ${isDark ? '' : 'ai-empty-light'}`}>
             <div className="ai-empty-icon">🤖</div>
-            <div className="ai-empty-title">AI Tutoring Assistant</div>
-            <div className="ai-empty-desc">
+            <div className={`ai-empty-title ${isDark ? '' : 'ai-empty-title-light'}`}>AI Tutoring Assistant</div>
+            <div className={`ai-empty-desc ${isDark ? '' : 'ai-empty-desc-light'}`}>
               Ask me about equations, concepts, or get help explaining topics to your student.
             </div>
           </div>
@@ -79,14 +79,14 @@ export function AIAssistantWidget({ roomId: _roomId }: AIAssistantWidgetProps) {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={['ai-bubble', msg.role === 'user' ? 'ai-bubble-user' : 'ai-bubble-assistant'].join(' ')}
+            className={['ai-bubble', msg.role === 'user' ? `ai-bubble-user ${isDark ? '' : 'ai-bubble-user-light'}` : `ai-bubble-assistant ${isDark ? '' : 'ai-bubble-assistant-light'}`].join(' ')}
           >
             <div className="ai-bubble-content">{msg.content}</div>
           </div>
         ))}
         {isThinking && (
-          <div className="ai-bubble ai-bubble-assistant">
-            <div className="ai-thinking">Thinking...</div>
+          <div className={`ai-bubble ai-bubble-assistant ${isDark ? '' : 'ai-bubble-assistant-light'}`}>
+            <div className={`ai-thinking ${isDark ? '' : 'ai-thinking-light'}`}>Thinking...</div>
           </div>
         )}
         {error && (
@@ -94,15 +94,15 @@ export function AIAssistantWidget({ roomId: _roomId }: AIAssistantWidgetProps) {
         )}
         <div ref={messagesEndRef} />
       </div>
-      <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="chat-input-form">
+      <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className={`chat-input-form ${isDark ? '' : 'chat-input-form-light'}`}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask the AI assistant..."
-          className="chat-input"
+          className={`chat-input ${isDark ? '' : 'chat-input-light'}`}
           disabled={isThinking}
         />
-        <button type="submit" className="chat-send-btn" disabled={!input.trim() || isThinking}>
+        <button type="submit" className={`chat-send-btn ${isDark ? '' : 'chat-send-btn-light'}`} disabled={!input.trim() || isThinking}>
           {isThinking ? '...' : 'Send'}
         </button>
       </form>

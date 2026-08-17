@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface RecordingWidgetProps {
   roomId: string
@@ -30,6 +31,7 @@ function formatFileSize(bytes: number): string {
 const FRAME_INTERVAL = 1000 / 15 // ~66ms for 15fps
 
 export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [isRecording, setIsRecording] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
@@ -316,8 +318,8 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
     <div className="widget-content">
       <div className="recording-widget">
         {/* Header */}
-        <div className="recording-header">
-          <span className="recording-header-icon">
+        <div className={`recording-header ${isDark ? '' : 'recording-header-light'}`}>
+          <span className={`recording-header-icon ${isDark ? '' : 'recording-header-icon-light'}`}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <circle cx="12" cy="12" r="3" />
@@ -327,7 +329,7 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
               <line x1="18" y1="12" x2="22" y2="12" />
             </svg>
           </span>
-          <span className="recording-header-title">Session Recording</span>
+          <span className={`recording-header-title ${isDark ? '' : 'recording-header-title-light'}`}>Session Recording</span>
         </div>
 
         <div className="recording-body">
@@ -352,11 +354,11 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
                   <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                 </svg>
               </div>
-              <p className="recording-idle-desc">
+              <p className={`recording-idle-desc ${isDark ? '' : 'recording-idle-desc-light'}`}>
                 Record the whiteboard session. The recording stays in your browser — nothing is uploaded.
               </p>
               <div className="recording-options">
-                <label className="recording-option">
+                <label className={`recording-option ${isDark ? '' : 'recording-option-light'}`}>
                   <input
                     type="checkbox"
                     checked={includeAudio}
@@ -381,7 +383,7 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
                 <span className="recording-timer-label">
                   {isPaused ? 'Paused' : 'Recording...'}
                 </span>
-                <span className="recording-timer">
+                <span className={`recording-timer ${isDark ? '' : 'recording-timer-light'}`}>
                   {formatTime(recordingTime)}
                 </span>
               </div>
@@ -427,8 +429,8 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
                 </svg>
               </div>
               <div className="recording-done-info">
-                <span className="recording-done-duration">Duration: {formatTime(recordingTime)}</span>
-                <span className="recording-done-size">Size: {formatFileSize(recordingBlob.size)}</span>
+                <span className={`recording-done-duration ${isDark ? '' : 'recording-done-duration-light'}`}>Duration: {formatTime(recordingTime)}</span>
+                <span className={`recording-done-size ${isDark ? '' : 'recording-done-size-light'}`}>Size: {formatFileSize(recordingBlob.size)}</span>
               </div>
               <div className="recording-done-warning">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -447,7 +449,7 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
                   </svg>
                   Download
                 </button>
-                <button className="recording-discard-btn" onClick={discardRecording}>
+                <button className={`recording-discard-btn ${isDark ? '' : 'recording-discard-btn-light'}`} onClick={discardRecording}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3,6 5,6 21,6" />
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -460,7 +462,7 @@ export function RecordingWidget({ roomId: _roomId }: RecordingWidgetProps) {
 
           {/* Tutor: remind student to download */}
           {isTutor && !isRecording && (
-            <div className="recording-tutor-remind">
+            <div className={`recording-tutor-remind ${isDark ? '' : 'recording-tutor-remind-light'}`}>
               <button
                 className="recording-remind-btn"
                 onClick={() => {

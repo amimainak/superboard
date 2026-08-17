@@ -7,6 +7,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface SessionNotesWidgetProps {
   roomId: string
@@ -26,6 +27,7 @@ function timeAgoShort(ms: number): string {
 }
 
 export function SessionNotesWidget({ roomId }: SessionNotesWidgetProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const storageKey = `sb-notes-${roomId}`
   const editorRef = useRef<HTMLDivElement>(null)
   const lastSavedRef = useRef<number | null>(null)
@@ -115,11 +117,11 @@ export function SessionNotesWidget({ roomId }: SessionNotesWidgetProps) {
     : 'Not yet saved'
 
   return (
-    <div className="widget-content widget-notes">
+    <div className={`widget-content widget-notes ${isDark ? '' : 'widget-notes-light'}`}>
       {/* Format toolbar */}
-      <div className="notes-format-bar">
+      <div className={`notes-format-bar ${isDark ? '' : 'notes-format-bar-light'}`}>
         <button
-          className="notes-format-btn"
+          className={`notes-format-btn ${isDark ? '' : 'notes-format-btn-light'}`}
           onClick={() => handleFormat('bold')}
           title="Bold (Ctrl+B)"
           type="button"
@@ -127,7 +129,7 @@ export function SessionNotesWidget({ roomId }: SessionNotesWidgetProps) {
           <strong>B</strong>
         </button>
         <button
-          className="notes-format-btn"
+          className={`notes-format-btn ${isDark ? '' : 'notes-format-btn-light'}`}
           onClick={() => handleFormat('italic')}
           title="Italic (Ctrl+I)"
           type="button"
@@ -139,7 +141,7 @@ export function SessionNotesWidget({ roomId }: SessionNotesWidgetProps) {
       {/* Editable area */}
       <div
         ref={editorRef}
-        className="notes-editor"
+        className={`notes-editor ${isDark ? '' : 'notes-editor-light'}`}
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
@@ -151,11 +153,10 @@ export function SessionNotesWidget({ roomId }: SessionNotesWidgetProps) {
       />
 
       {/* Footer status */}
-      <div className="notes-footer">
-        <span className="notes-save-status">
+      <div className={`notes-footer ${isDark ? '' : 'notes-footer-light'}`}>
+        <span className={`notes-save-status ${isDark ? '' : 'notes-save-status-light'}`}>
           {savedAt !== null ? '💾' : '📝'} {saveLabel}
         </span>
       </div>
-    </div>
   )
 }

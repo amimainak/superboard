@@ -187,21 +187,21 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
   return (
     <div className="widget-content">
       {/* Header */}
-      <div className="sched-header">
+      <div className={`sched-header ${isDark ? '' : 'sched-header-light'}`}>
         <span className="sched-header-icon">📅</span>
-        <span className="sched-header-title">Availability</span>
+        <span className={`sched-header-title ${isDark ? '' : 'sched-header-title-light'}`}>Availability</span>
       </div>
 
       {/* Weekly slots */}
-      <div className="sched-section-label">Set your weekly hours:</div>
+      <div className={`sched-section-label ${isDark ? '' : 'sched-section-label-light'}`}>Set your weekly hours:</div>
       <div className="sched-slots-list">
         {[0, 1, 2, 3, 4, 5, 6].map((day) => (
           <div key={day} className="sched-day-row">
-            <span className="sched-day-name">{DAY_NAMES[day]}</span>
+            <span className={`sched-day-name ${isDark ? '' : 'sched-day-name-light'}`}>{DAY_NAMES[day]}</span>
             {slotsByDay[day].length > 0 ? (
               slotsByDay[day].map((slot) => (
                 <div key={slot.id} className="sched-slot">
-                  <span className="sched-slot-time">{slot.startTime} – {slot.endTime}</span>
+                  <span className={`sched-slot-time ${isDark ? '' : 'sched-slot-time-light'}`}>{slot.startTime} – {slot.endTime}</span>
                   <button
                     className="sched-slot-remove"
                     onClick={() => handleDeleteSlot(slot.id)}
@@ -216,14 +216,14 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
               <div className="sched-add-form">
                 <input
                   type="time"
-                  className="sched-time-input"
+                  className={`sched-time-input ${isDark ? '' : 'sched-time-input-light'}`}
                   value={newStart}
                   onChange={(e) => setNewStart(e.target.value)}
                 />
                 <span className="sched-time-sep">–</span>
                 <input
                   type="time"
-                  className="sched-time-input"
+                  className={`sched-time-input ${isDark ? '' : 'sched-time-input-light'}`}
                   value={newEnd}
                   onChange={(e) => setNewEnd(e.target.value)}
                 />
