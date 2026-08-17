@@ -19,6 +19,11 @@ export type WidgetId =
   | 'language'
   | 'geogebra'
   | 'templates'
+  | 'analytics'
+  | 'parents'
+  | 'scheduling'
+  | 'agency'
+  | 'breakout'
 
 export type PanelMode = 'dock' | 'float' | 'minimized'
 
@@ -43,6 +48,12 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'language', label: 'Language Tools', icon: 'Languages', section: 'tools' },
   { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
+  // Analytics widgets
+  { id: 'analytics', label: 'Analytics', icon: 'BarChart3', section: 'tools' },
+  { id: 'parents', label: 'Parent Portal', icon: 'UsersRound', section: 'tools' },
+  { id: 'scheduling', label: 'Scheduling', icon: 'Calendar', section: 'tools' },
+  { id: 'agency', label: 'Agency', icon: 'Building2', section: 'tools' },
+  { id: 'breakout', label: 'Breakout Rooms', icon: 'LayoutGrid', section: 'tools' },
 ]
 
 interface WidgetStore {

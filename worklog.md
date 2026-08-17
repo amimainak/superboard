@@ -301,3 +301,194 @@ Stage Summary:
 - 2 packages upgraded: nanoid (transitive fix), fabric (v6→v7)
 - 2 packages UNFIXABLE: tar (deep transitive, server-only), js-yaml (no upstream fix)
 - Fabric v7 now uses canvas@3.2.3 (no @mapbox/node-pre-gyp), but pdfjs-dist still pulls in vulnerable canvas@2.11.2
+
+---
+Task ID: b2b
+Agent: Main Agent
+Task: Analytics Dashboard Widget — API + Component + Widget System Integration
+
+Work Log:
+- Created `src/app/api/analytics/route.ts` — GET handler with auth guard via getAuthenticatedUser()
+  - Queries Room table: total rooms, completed sessions (isActive=false, endedAt not null), total teaching minutes (sum of durationMinutes)
+  - Sessions per subject breakdown (aggregated from completed rooms)
+  - Recent 7 days session trend (day-by-day room creation counts)
+  - Current period usage from UsageLog (videoMinutesUsed, aiCreditsUsed) with PGRST116 handling for empty table
+  - User tier from User table for frontend limit display
+  - Returns JSON with all analytics data
+- Created `src/components/room/widgets/AnalyticsWidget.tsx`
+  - Auto-fetches /api/analytics on mount with cleanup
+  - 3 stat cards (Rooms, Hours, Sessions)
+  - CSS-only vertical bar chart for 7-day trend (green gradient bars, day labels, counts)
+  - CSS-only horizontal bar chart for subject breakdown (color-coded per subject)
+  - Usage section with video/AI progress bars (turns amber at 80%+ usage)
+  - Tier label from features.ts, shows current limits via getFeatureLimit()
+  - "Upgrade for more →" link to /pricing (only shown for FREE tier)
+- Added `'analytics'` to WidgetId union in widget-store.ts
+- Added `{ id: 'analytics', label: 'Analytics', icon: 'BarChart3', section: 'tools' }` to AVAILABLE_WIDGETS
+- Added `BarChart3` inline SVG icon to WidgetToggleBar.tsx
+- Added `case 'analytics'` to WidgetPanel.tsx, imported AnalyticsWidget
+- Added AnalyticsWidget export to widgets/index.ts
+- Added ~250 lines of CSS to widgets.css for analytics widget
+
+Stage Summary:
+- 1 new file (AnalyticsWidget.tsx), 1 new API route (analytics/route.ts), 4 modified files
+- Zero new lint errors from changes
+- Analytics widget fully integrated into widget system (toggle bar → panel → tab)
+
+---
+Task ID: b3a
+Agent: Main Agent
+Task: Parent Portal Widget — Session History, Progress Summary, Billing
+
+Work Log:
+- Created `src/components/room/widgets/ParentPortalWidget.tsx`
+  - Fetches completed sessions from /api/rooms?status=inactive
+  - Fetches tutor profile from /api/user/profile
+  - Fetches current room info (subject, tutorId) from Supabase browser client
+  - Resolves tutor name from User table by tutorId
+  - Checks localStorage (key: `sb-notes-${roomId}`) for session notes availability
+  - Info header: Student name, Tutor name, Subject
+  - Scrollable session cards (up to 10): date, subject, duration, page count, notes availability
+  - Summary section: total sessions/hours, 100% attendance (completed only), avg session duration
+  - Billing section: current plan with tier label + price, "Manage Billing" link to /pricing
+  - Uses getTierLabel and getTierPrice from features.ts
+- Added `'parents'` to WidgetId union in widget-store.ts
+- Added `{ id: 'parents', label: 'Parent Portal', icon: 'UsersRound', section: 'tools' }` to AVAILABLE_WIDGETS
+- Added `UsersRound` inline SVG icon to WidgetToggleBar.tsx
+- Added `case 'parents'` to WidgetPanel.tsx, imported ParentPortalWidget
+- Added ParentPortalWidget export to widgets/index.ts
+- Added ~210 lines of CSS to widgets.css for parent portal widget
+
+Stage Summary:
+- 1 new file (ParentPortalWidget.tsx), 4 modified files
+- Zero new lint errors from changes
+- Parent portal widget fully integrated into widget system (toggle bar → panel → tab)
+- Reads from existing API endpoints, no new backend needed
+
+---
+Task ID: b1a
+Agent: Stripe Subscription Agent
+Task: Build complete Stripe subscription flow (checkout, webhook, billing, portal, pricing page, feature gates)
+
+Work Log:
+- Verified all 7 existing Stripe files: stripe.ts, checkout/route.ts, webhook/route.ts, billing/route.ts, portal/route.ts, pricing/page.tsx, dashboard/billing/page.tsx
+- All core Stripe infrastructure was already implemented by prior agents
+- Enhanced billing API (GET /api/stripe/billing): masked stripeCustomerId (shows first 4 + last 4 chars with bullet masking for IDs > 8 chars)
+- Enhanced dashboard (src/app/dashboard/page.tsx): added UpgradeSuccessBanner component that displays when ?upgraded=true query param is present after Stripe checkout redirect
+- Added useSearchParams to dashboard for detecting ?upgraded=true, with automatic URL cleanup via history.replaceState
+- Verified: lint passes with zero new errors (all 28 errors are pre-existing in whiteboard components)
+- Verified: all Stripe files compile correctly
+
+Stage Summary:
+- 0 new files created (all Stripe infrastructure already existed)
+- 2 files modified (billing/route.ts, dashboard/page.tsx)
+- stripeCustomerId now masked in billing API response
+- Dashboard shows success banner after successful Stripe checkout redirect
+- No regressions, no new lint errors
+
+---
+Task ID: b1b
+Agent: Main Agent
+Task: Board Search (Direct in Board)
+
+Work Log:
+- Verified all b1b requirements were already implemented in prior work:
+  - SearchOverlay.tsx already existed with full search functionality (text, sticky, frame, page search; filter tabs; keyboard nav; camera centering on click)
+  - TopBar.tsx already had Search icon button (lucide `Search`) and `onSearch` prop wired
+  - WhiteboardClient.tsx already imported SearchOverlay and toggled it via `searchKey` state + Ctrl+K shortcut
+  - RoomWhiteboard.tsx already imported SearchOverlay and toggled it via `searchKey` state + Ctrl+K shortcut
+  - whiteboard.css already had all search overlay styles (backdrop, panel, input, filters, results, highlight)
+- No changes needed — feature was fully complete
+
+Stage Summary:
+- 0 files modified (all components already in place)
+- Board search fully functional: Ctrl+K / click icon → search overlay → filter tabs → click result navigates to element
+- Search across text elements, sticky notes, frame labels, and page names across all pages
+
+---
+Task ID: b2a
+Agent: Main Agent
+Task: Scheduling Widget
+
+Work Log:
+- Verified existing infrastructure:
+  - Database migration v3 already existed (migration_v3.sql + run_migration_v3.js)
+  - API routes already existed (schedule/route.ts, schedule/[slotId]/route.ts, bookings/route.ts)
+  - SchedulingWidget.tsx already existed with full UI (weekly grid, add/remove slots, bookings list, copy link)
+- Ran migration v3 against Supabase — confirmed tables and RLS policies created:
+  - ScheduleSlot: 0 rows, 4 RLS policies (ss_view_own, ss_insert_own, ss_update_own, ss_delete_own)
+  - Booking: 0 rows, 3 RLS policies (bk_view_own, bk_insert, bk_update_own)
+- Integrated SchedulingWidget into widget system (the only missing piece):
+  - Added `'scheduling'` to WidgetId union type in widget-store.ts
+  - Added `{ id: 'scheduling', label: 'Scheduling', icon: 'Calendar', section: 'tools' }` to AVAILABLE_WIDGETS
+  - Added `Calendar` inline SVG icon to WidgetToggleBar.tsx icon map
+  - Imported SchedulingWidget in WidgetPanel.tsx, added `case 'scheduling'` in renderWidget switch
+  - Added SchedulingWidget export to widgets/index.ts barrel
+  - Added ~210 lines of CSS to widgets.css for scheduling widget styles
+- Fixed lint error in SchedulingWidget.tsx: refactored useEffect to avoid synchronous setState in effect body (async function pattern with cancelled flag)
+
+Stage Summary:
+- 4 files modified (widget-store.ts, WidgetPanel.tsx, WidgetToggleBar.tsx, widgets/index.ts, widgets.css, SchedulingWidget.tsx)
+- Zero new lint errors from changes
+- Scheduling widget fully integrated into widget system (toggle bar → panel → tab)
+- Database tables verified live with RLS policies active
+
+---
+Task ID: b3b
+Agent: Main Agent
+Task: Agency Dashboard + Multi-Tutor Management
+
+Work Log:
+- Created `src/app/api/agency/route.ts` with GET (list members + invites), POST (invite tutor with 7-day code), DELETE (remove member / revoke invite)
+- Created `src/app/api/agency/invite/[code]/route.ts` with GET (invite details) and POST (accept invite — inserts AgencyMember, updates User.parentAgencyId)
+- Created `src/components/room/widgets/AgencyWidget.tsx` — full agency management UI: member list with session counts, invite form, pending invites with revoke, invite link copy
+- Added `'agency'` and `'breakout'` to WidgetId union type in widget-store.ts
+- Added agency and breakout entries to AVAILABLE_WIDGETS array
+- Added Building2 and LayoutGrid icon SVGs to WidgetToggleBar.tsx
+- Added dynamic imports and render cases in WidgetPanel.tsx for both new widgets
+- Added barrel exports to widgets/index.ts
+
+Stage Summary:
+- 3 new files (2 API routes, 1 widget component)
+- 4 existing files modified (widget-store, WidgetPanel, WidgetToggleBar, index.ts)
+- Agency API follows existing Supabase + rate-limit patterns
+- No pre-existing features broken
+
+---
+Task ID: b4a
+Agent: Main Agent
+Task: Breakout Rooms for Group Tutoring
+
+Work Log:
+- Created `src/components/room/widgets/BreakoutRoomsWidget.tsx` — UI-only breakout rooms widget
+- Uses `useCollabStore` to read remote participants
+- Configurable room count (2-10) with +/- controls
+- Two assignment strategies: Random (Fisher-Yates shuffle) and Auto (round-robin)
+- Per-room broadcast sends to ChatMessage table with `[Breakout - Group X]` prefix
+- Global broadcast sends with `[Broadcast to All]` prefix
+- "End Breakout" and "Bring All Back" both reset state
+- Color-coded room cards with member chips
+
+Stage Summary:
+- 1 new file (BreakoutRoomsWidget.tsx)
+- Widget already integrated into system from b3b work
+- Actual room splitting deferred to Hocuspocus server
+
+---
+Task ID: b4c
+Agent: Main Agent
+Task: API for LMS Integration
+
+Work Log:
+- Created `src/lib/api-key.ts` — validates x-api-key header, reads SUPERBOARD_API_KEYS env var, dev fallback
+- Created `src/app/api/v1/route.ts` — GET returns full API documentation JSON (endpoints, auth, rate limits, LMS notes)
+- Created `src/app/api/v1/rooms/route.ts` — GET list rooms (filter + paginate), POST create room (validates subject, creates BoardPage)
+- Created `src/app/api/v1/rooms/[roomId]/route.ts` — GET room details (with pageCount + whiteboardUrl), PATCH update room (validates all fields)
+- All v1 endpoints require x-api-key header, use requireApiKey() helper
+- Rate limited: 60 req/min for reads, 20 req/min for writes
+
+Stage Summary:
+- 4 new files (1 lib, 3 API routes)
+- Skeleton API ready for LMS integration (Moodle, Canvas, Google Classroom)
+- Zero new actual lint errors (only pre-existing warnings in scripts/)
+- All three tasks (b3b, b4a, b4c) completed together in single session

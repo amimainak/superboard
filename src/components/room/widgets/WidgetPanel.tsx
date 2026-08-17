@@ -14,6 +14,11 @@ import { VideoWidget } from './VideoWidget'
 import { RecordingWidget } from './RecordingWidget'
 import { TemplatesWidget } from './TemplatesWidget'
 import { SessionNotesWidget } from './SessionNotesWidget'
+import { AnalyticsWidget } from './AnalyticsWidget'
+import { ParentPortalWidget } from './ParentPortalWidget'
+import { SchedulingWidget } from './SchedulingWidget'
+const AgencyWidget = dynamic(() => import('./AgencyWidget').then((m) => ({ default: m.AgencyWidget })), { ssr: false })
+const BreakoutRoomsWidget = dynamic(() => import('./BreakoutRoomsWidget').then((m) => ({ default: m.BreakoutRoomsWidget })), { ssr: false })
 
 // Lazy-load tool widgets to reduce initial bundle
 const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) => ({ default: m.AIAssistantWidget })), { ssr: false })
@@ -82,6 +87,16 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <GeoGebraPanel roomId={roomId} />
       case 'templates':
         return <TemplatesWidget roomId={roomId} />
+      case 'analytics':
+        return <AnalyticsWidget roomId={roomId} />
+      case 'parents':
+        return <ParentPortalWidget roomId={roomId} />
+      case 'scheduling':
+        return <SchedulingWidget roomId={roomId} />
+      case 'agency':
+        return <AgencyWidget roomId={roomId} />
+      case 'breakout':
+        return <BreakoutRoomsWidget roomId={roomId} />
       default:
         return null
     }

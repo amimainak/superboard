@@ -17,6 +17,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize,
+  Search,
 } from 'lucide-react'
 import './whiteboard.css'
 
@@ -54,6 +55,9 @@ interface TopBarProps {
   onToggleSnap: () => void
   onToggleGridType: () => void
   onTogglePresentation: () => void
+  onSearch: () => void
+  /** When false, export menu items (PNG, JPEG, SVG, JSON) are disabled with a tooltip */
+  canExport?: boolean
 }
 
 export function TopBar({
@@ -90,6 +94,8 @@ export function TopBar({
   onToggleSnap,
   onToggleGridType,
   onTogglePresentation,
+  onSearch,
+  canExport = true,
 }: TopBarProps) {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
@@ -188,6 +194,10 @@ export function TopBar({
       <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 
       {/* Right actions — minimal icons */}
+      <Ico title="Search board (Ctrl+K)" isDark={isDark} onClick={onSearch} ariaLabel="Search board">
+        <Search size={14} />
+      </Ico>
+
       <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation} ariaLabel="Toggle presentation mode">
         <Maximize size={14} />
       </Ico>
@@ -256,10 +266,10 @@ export function TopBar({
                 onPdfUpload()
                 setMenuOpen(false)
               }} />
-              <MenuItem label="Export as PNG" isDark={isDark} onClick={() => { onExportPng(); setMenuOpen(false) }} />
-              <MenuItem label="Export as JPEG" isDark={isDark} onClick={() => { onExportJpg(); setMenuOpen(false) }} />
-              <MenuItem label="Export as SVG" isDark={isDark} onClick={() => { onExportSvg(); setMenuOpen(false) }} />
-              <MenuItem label="Export as JSON" isDark={isDark} onClick={() => { onExportJson(); setMenuOpen(false) }} />
+              <MenuItem label={canExport ? 'Export as PNG' : 'Export as PNG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportPng(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
+              <MenuItem label={canExport ? 'Export as JPEG' : 'Export as JPEG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportJpg(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
+              <MenuItem label={canExport ? 'Export as SVG' : 'Export as SVG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportSvg(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
+              <MenuItem label={canExport ? 'Export as JSON' : 'Export as JSON (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportJson(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
               {/* Edit */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 Edit
@@ -335,18 +345,23 @@ function MenuItem({
   isDark,
   shortcut,
   onClick,
+  disabled,
 }: {
   label: string
   isDark: boolean
   shortcut?: string
   onClick: () => void
+  disabled?: boolean
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       role="menuitem"
       aria-label={shortcut ? `${label} (${shortcut})` : label}
+      aria-disabled={disabled || undefined}
+      title={disabled ? 'Upgrade to Pro to unlock exports' : undefined}
       className={`wb-menu-item wb-menu-item-${isDark ? 'dark' : 'light'}`}
+      style={disabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
     >
       <span>{label}</span>
       {shortcut && (

@@ -1,18 +1,21 @@
 'use client'
 
-import React, { useEffect, useRef, useCallback } from 'react'
+import React, { useEffect, useRef, useCallback, useState } from 'react'
 import { TopBar } from '@/components/whiteboard/TopBar'
 import { ShortcutsDialog } from '@/components/whiteboard/ShortcutsDialog'
 import { LeftToolbar } from '@/components/whiteboard/LeftToolbar'
 import { WhiteboardCanvas } from '@/components/whiteboard/WhiteboardCanvas'
 import { StylePanel } from '@/components/whiteboard/StylePanel'
 import { PageTabs } from '@/components/whiteboard/PageTabs'
+import { SearchOverlay } from '@/components/whiteboard/SearchOverlay'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import {
   exportAsPng, exportAsJpg, exportAsSvg, exportAsJson,
   downloadBlob, downloadString,
 } from '@/lib/whiteboard/export'
 import { initRealtimeSync } from '@/lib/collab/realtime-sync'
+import { hasFeature } from '@/lib/features'
+import type { Tier } from '@/lib/validations'
 
 interface RoomWhiteboardProps {
   roomId: string
@@ -71,11 +74,24 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
   const setPages = useWhiteboardStore((s) => s.setPages)
   const setCurrentPageIndex = useWhiteboardStore((s) => s.setCurrentPageIndex)
 
+  const [searchKey, setSearchKey] = useState(0)
+  const searchOpen = searchKey > 0
+  const [userTier, setUserTier] = useState<Tier>('FREE')
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadedRef = useRef(false)
   const saveRequestRef = useRef(false)
   const realtimeCleanupRef = useRef<(() => void) | null>(null)
+
+  // Fetch user tier for feature gating
+  useEffect(() => {
+    fetch('/api/user/profile')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((p) => { if (p?.tier) setUserTier(p.tier as Tier) })
+      .catch(() => { /* not logged in */ })
+  }, [])
+
+  const canExport = hasFeature('pdf_export', userTier)
 
   // Load board pages from Supabase on mount
   useEffect(() => {
@@ -314,6 +330,18 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
     }
   }, [pages, elements])
 
+  // Ctrl+K / Cmd+K shortcut for search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchKey((k) => (k > 0 ? 0 : 1))
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
   return (
     <div
       className="whiteboard-root"
@@ -356,6 +384,8 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
             onClearPage={clearCurrentPage}
             onAddPage={addPage}
             onTogglePresentation={togglePresentationMode}
+            onSearch={() => setSearchKey((k) => k + 1)}
+            canExport={canExport}
             currentTool={tool}
             currentPage={currentPageName}
             zoom={Math.round(camera.zoom * 100)}
@@ -420,6 +450,9 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
       {shortcutsOpen && (
         <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />
       )}
+
+      {/* Search Overlay */}
+      {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} />}
 
       {/* Presentation Mode */}
       {isPresentationMode && (

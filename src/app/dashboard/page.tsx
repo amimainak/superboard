@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 interface Room {
   id: string
@@ -29,8 +29,86 @@ interface Profile {
   createdAt: string
 }
 
-export default function DashboardPage() {
+const FREE_ROOM_LIMIT = 3
+
+function UpgradePrompt() {
+  return (
+    <div style={{
+      padding: 20, borderRadius: 12, marginBottom: 32,
+      border: '1px solid rgba(5,150,105,0.3)',
+      background: 'linear-gradient(135deg, rgba(5,150,105,0.08), rgba(8,145,178,0.08))',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: 12,
+    }}>
+      <div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>
+          Unlock more with Pro
+        </div>
+        <div style={{ fontSize: 13, color: '#94a3b8' }}>
+          Get PDF exports, templates, file uploads, GeoGebra, and more for $19/mo.
+        </div>
+      </div>
+      <button
+        onClick={() => window.location.href = '/pricing'}
+        style={{
+          padding: '10px 20px', borderRadius: 8,
+          background: 'linear-gradient(135deg, #059669, #0891b2)',
+          color: 'white', fontSize: 13, fontWeight: 600,
+          border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
+        }}
+      >
+        View Plans
+      </button>
+    </div>
+  )
+}
+
+function UpgradeSuccessBanner({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div style={{
+      padding: 20, borderRadius: 12, marginBottom: 32,
+      border: '1px solid rgba(34,197,94,0.4)',
+      background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(5,150,105,0.1))',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      flexWrap: 'wrap', gap: 12,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{
+          width: 28, height: 28, borderRadius: '50%',
+          background: 'rgba(34,197,94,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f5f9', marginBottom: 2 }}>
+            Welcome to Pro! 🎉
+          </div>
+          <div style={{ fontSize: 13, color: '#94a3b8' }}>
+            Your upgrade is active. All premium features are now unlocked.
+          </div>
+        </div>
+      </div>
+      <button
+        onClick={onDismiss}
+        style={{
+          padding: '8px 16px', borderRadius: 8,
+          background: 'rgba(255,255,255,0.06)',
+          color: '#94a3b8', fontSize: 12, fontWeight: 500,
+          border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+        }}
+      >
+        Dismiss
+      </button>
+    </div>
+  )
+}
+
+function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = getSupabaseBrowserClient()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [rooms, setRooms] = useState<Room[]>([])
@@ -39,6 +117,7 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false)
   const [showNewRoom, setShowNewRoom] = useState(false)
   const [subject, setSubject] = useState('GENERAL')
+  const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false)
 
   const loadData = useCallback(async () => {
     try {
@@ -59,6 +138,17 @@ export default function DashboardPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  // Show success banner when redirected from Stripe checkout
+  useEffect(() => {
+    if (searchParams.get('upgraded') === 'true') {
+      setShowUpgradeSuccess(true)
+      // Clean up URL without re-render
+      const url = new URL(window.location.href)
+      url.searchParams.delete('upgraded')
+      window.history.replaceState({}, '', url.toString())
+    }
+  }, [searchParams])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push('/login')
@@ -66,6 +156,14 @@ export default function DashboardPage() {
 
   const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Enforce room limit for FREE tier
+    if (profile?.tier === 'FREE' && rooms.length >= FREE_ROOM_LIMIT) {
+      if (!confirm(`Free accounts are limited to ${FREE_ROOM_LIMIT} active rooms. Upgrade to Pro for unlimited rooms.\n\nGo to pricing page?`)) return
+      router.push('/pricing')
+      return
+    }
+
     setCreating(true)
     try {
       const res = await fetch('/api/rooms', {
@@ -142,6 +240,17 @@ export default function DashboardPage() {
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => router.push('/dashboard/billing')}
+            style={{
+              padding: '6px 14px', borderRadius: 6, fontSize: 12,
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(255,255,255,0.05)',
+              color: '#94a3b8', cursor: 'pointer',
+            }}
+          >
+            Billing
+          </button>
           <span style={{ fontSize: 13, color: '#94a3b8' }}>
             {profile?.name || profile?.email}
           </span>
@@ -161,6 +270,14 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
+        {/* Upgrade success banner (after Stripe checkout) */}
+        {showUpgradeSuccess && (
+          <UpgradeSuccessBanner onDismiss={() => setShowUpgradeSuccess(false)} />
+        )}
+
+        {/* Upgrade prompt for FREE users */}
+        {profile?.tier === 'FREE' && <UpgradePrompt />}
+
         {/* Hero */}
         <div style={{ marginBottom: 40 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: '#f1f5f9', margin: '0 0 8px' }}>
@@ -389,5 +506,13 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function DashboardPageWithSuspense() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading dashboard...</div>}>
+      <DashboardPage />
+    </Suspense>
   )
 }
