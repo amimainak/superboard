@@ -51,6 +51,19 @@ export type ToolId =
   | 'pdf'
   | 'frame'
   | 'laser'
+  // Math toolkit canvas tools
+  | 'math-fraction-circle'
+  | 'math-fraction-bar'
+  | 'math-number-line'
+  | 'math-angle'
+  | 'math-polygon'
+  | 'math-coordinate-plane'
+  | 'math-venn'
+  | 'math-measure'
+  | 'math-ruler'
+  | 'math-protractor'
+  | 'math-bar-chart'
+  | 'math-pie-chart'
 
 // ---- Element Types ----
 
@@ -151,6 +164,90 @@ export interface LaserElement extends BaseElement {
   points: Point[]
 }
 
+// ---- Math Element Types ----
+
+export interface FractionCircleElement extends BaseElement {
+  type: 'math-fraction-circle'
+  divisions: number
+  shaded: number[]
+  label: string
+}
+
+export interface FractionBarElement extends BaseElement {
+  type: 'math-fraction-bar'
+  divisions: number
+  shaded: number[]
+  label: string
+  orientation: 'horizontal' | 'vertical'
+}
+
+export interface NumberLineElement extends BaseElement {
+  type: 'math-number-line'
+  min: number
+  max: number
+  step: number
+  ticks: number[]
+  labels: string[]
+  plottedPoints: Array<{ value: number; label?: string; above: boolean }>
+}
+
+export interface AngleElement extends BaseElement {
+  type: 'math-angle'
+  x2: number
+  y2: number
+  degrees: number
+  showArc: boolean
+  showLabel: boolean
+}
+
+export interface PolygonElement extends BaseElement {
+  type: 'math-polygon'
+  sides: number
+  showAngleMeasures: boolean
+  showSideLengths: boolean
+}
+
+export interface CoordinatePlaneElement extends BaseElement {
+  type: 'math-coordinate-plane'
+  xMin: number
+  xMax: number
+  yMin: number
+  yMax: number
+  step: number
+  plottedPoints: Array<{ x: number; y: number; label?: string }>
+}
+
+export interface VennElement extends BaseElement {
+  type: 'math-venn'
+  circles: 2 | 3
+  shadedRegions: number[]
+  labels: string[]
+  setLabels: [string, string] | [string, string, string]
+}
+
+export interface MeasureElement extends BaseElement {
+  type: 'math-measure'
+  measureType: 'length' | 'angle' | 'area'
+  x2: number
+  y2: number
+  value: number
+  unit: string
+}
+
+export interface BarChartElement extends BaseElement {
+  type: 'math-bar-chart'
+  title: string
+  categories: string[]
+  values: number[]
+  color: string
+}
+
+export interface PieChartElement extends BaseElement {
+  type: 'math-pie-chart'
+  title: string
+  slices: Array<{ label: string; value: number; color: string }>
+}
+
 export type WhiteboardElement =
   | FreehandElement
   | RectangleElement
@@ -165,6 +262,16 @@ export type WhiteboardElement =
   | PdfBackgroundElement
   | FrameElement
   | LaserElement
+  | FractionCircleElement
+  | FractionBarElement
+  | NumberLineElement
+  | AngleElement
+  | PolygonElement
+  | CoordinatePlaneElement
+  | VennElement
+  | MeasureElement
+  | BarChartElement
+  | PieChartElement
 
 /** A page in the whiteboard */
 export interface WhiteboardPage {

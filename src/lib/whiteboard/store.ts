@@ -15,6 +15,36 @@ import type {
 } from './types'
 import { generateId, getElementBounds, splitFreehandAtPoint } from './utils'
 
+// ---- Math Tool Config (set by MathToolkit, consumed by canvas) ----
+
+export interface MathToolConfig {
+  /** For fraction-circle / fraction-bar: how many divisions */
+  divisions?: number
+  /** For fraction-circle / fraction-bar: which slices are shaded (0-indexed) */
+  shaded?: number[]
+  /** For polygon: number of sides */
+  sides?: number
+  /** For number-line: min, max, step */
+  numberLineMin?: number
+  numberLineMax?: number
+  numberLineStep?: number
+  /** For coordinate-plane: axis ranges */
+  coordXMin?: number
+  coordXMax?: number
+  coordYMin?: number
+  coordYMax?: number
+  coordStep?: number
+  /** For venn: 2 or 3 circles */
+  vennCircles?: 2 | 3
+  /** For charts */
+  chartTitle?: string
+  chartCategories?: string[]
+  chartValues?: number[]
+  chartColors?: string[]
+}
+
+const DEFAULT_MATH_TOOL_CONFIG: MathToolConfig = {}
+
 // ---- Path simplification (P-03) ----
 
 function perpendicularDist(
@@ -124,6 +154,11 @@ export interface WhiteboardStore {
   // Permission
   canDraw: boolean
   userRole: 'host' | 'guest'
+
+  // Math tool config (set by MathToolkit widget, consumed by canvas)
+  mathToolConfig: MathToolConfig
+  setMathToolConfig: (config: Partial<MathToolConfig>) => void
+  clearMathToolConfig: () => void
 
   // Actions
   setTool: (tool: ToolId) => void
@@ -292,6 +327,12 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
     canDraw: true,
     userRole: 'host' as const,
+    mathToolConfig: DEFAULT_MATH_TOOL_CONFIG,
+
+    // ---- Math Tool Config ----
+    setMathToolConfig: (config) =>
+      set((s) => ({ mathToolConfig: { ...s.mathToolConfig, ...config } })),
+    clearMathToolConfig: () => set({ mathToolConfig: DEFAULT_MATH_TOOL_CONFIG }),
 
     // ---- Tool & Style ----
     setTool: (tool) => set({ tool }),

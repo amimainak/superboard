@@ -266,6 +266,25 @@ export function hitTestElement(
       const b = getElementBounds(el)
       return isPointInBounds(point, b, threshold)
     }
+    // Math element types — use bounding box for most
+    case 'math-fraction-circle':
+    case 'math-fraction-bar':
+    case 'math-number-line':
+    case 'math-polygon':
+    case 'math-coordinate-plane':
+    case 'math-venn':
+    case 'math-bar-chart':
+    case 'math-pie-chart': {
+      const b = getElementBounds(el)
+      return isPointInBounds(point, b, threshold)
+    }
+    case 'math-angle': {
+      // Hit test: check near either ray or near the vertex
+      const vertexDist = Math.sqrt((point.x - el.x) ** 2 + (point.y - el.y) ** 2)
+      if (vertexDist < threshold * 2) return true
+      return isPointNearLine(point, { x: el.x, y: el.y }, { x: el.x + 150, y: el.y }, threshold)
+        || isPointNearLine(point, { x: el.x, y: el.y }, { x: el.x2, y: el.y2 }, threshold)
+    }
     default:
       return false
   }

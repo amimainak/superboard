@@ -16,6 +16,7 @@ import {
   HIGHLIGHT_OPTIONS,
   hexToRgba,
 } from '@/lib/whiteboard/utils'
+import { MathElementRenderers } from './MathElementRenderers'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface ElementRendererProps {
@@ -284,6 +285,18 @@ export const ElementRenderer = React.memo(function ElementRenderer({
 
     case 'laser':
       return <LaserSvg element={element} />
+
+    // Math element types
+    case 'math-fraction-circle':
+    case 'math-fraction-bar':
+    case 'math-number-line':
+    case 'math-angle':
+    case 'math-polygon':
+    case 'math-coordinate-plane':
+    case 'math-venn':
+    case 'math-bar-chart':
+    case 'math-pie-chart':
+      return <MathElementRenderers element={element} isSelected={isSelected} />
 
     default:
       return null

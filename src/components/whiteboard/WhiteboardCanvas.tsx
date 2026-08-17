@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useWhiteboardStore, STICKY_COLORS } from '@/lib/whiteboard/store'
+import { createMathElement } from '@/lib/whiteboard/math-elements'
 import { ElementRenderer } from './ElementRenderer'
 import { SelectionHandles } from './SelectionHandles'
 import { GridBackground } from './GridBackground'
@@ -137,6 +138,8 @@ export function WhiteboardCanvas() {
   const addPage = useWhiteboardStore((s) => s.addPage)
   const canDraw = useWhiteboardStore((s) => s.canDraw)
   const userRole = useWhiteboardStore((s) => s.userRole)
+  const mathToolConfig = useWhiteboardStore((s) => s.mathToolConfig)
+  const clearMathToolConfig = useWhiteboardStore((s) => s.clearMathToolConfig)
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 })
   const [alignGuides, setAlignGuides] = useState<{ axis: 'x' | 'y'; pos: number; start: number; end: number }[]>([])
@@ -613,13 +616,28 @@ export function WhiteboardCanvas() {
           // PDF file picker is handled by the useEffect — no-op here
           break
         }
+        default: {
+          // Math tools and any future tools — create element directly on click
+          if (tool.startsWith('math-')) {
+            const el = createMathElement(tool, point, mathToolConfig, currentPageIndex)
+            if (el) {
+              pushHistory()
+              addElement(el)
+              selectElements([el.id])
+              // Revert to select after placing
+              setTool('select')
+              clearMathToolConfig()
+            }
+          }
+          break
+        }
       }
     },
     [
       tool, camera, spaceHeld, pageElements, selectedIds, currentPageIndex,
       getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
       pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool, removeElements,
-      userRole, canDraw,
+      userRole, canDraw, mathToolConfig, clearMathToolConfig,
     ]
   )
 
