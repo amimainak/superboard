@@ -23,13 +23,8 @@ export function validateApiKey(apiKey: string | null): {
   if (envKeys) {
     const allowedKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean)
     if (allowedKeys.includes(apiKey)) {
-      return { valid: true, userId: 'api-key-user' }
+      return { valid: true, userId: 'api-key-' + apiKey.slice(0, 8) }
     }
-  }
-
-  // If no env keys configured, allow a default dev key
-  if (!envKeys && apiKey === 'dev-api-key') {
-    return { valid: true, userId: 'dev-user' }
   }
 
   return { valid: false, error: 'Invalid API key' }

@@ -1,12 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { parseBody, updateTemplateSchema } from '@/lib/validations'
+import { getAuthenticatedUser } from '@/lib/auth-guard'
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
+    const { response } = await getAuthenticatedUser()
+    if (response) return response
+
     const { templateId } = await params
     const supabase = await createClient()
 
@@ -20,8 +24,8 @@ export async function GET(
     if (error) throw error
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('GET /api/templates/[templateId] error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -54,8 +58,8 @@ export async function PATCH(
     if (error) throw error
     return NextResponse.json(data)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('PATCH /api/templates/[templateId] error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -77,7 +81,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('DELETE /api/templates/[templateId] error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

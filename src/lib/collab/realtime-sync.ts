@@ -44,6 +44,7 @@ export function initRealtimeSync(
   roomId: string,
   store: WhiteboardStoreLike
 ): () => void {
+  let syncedOnce = false
   const supabase = getSupabaseBrowserClient()
   const channelName = `room:${roomId}`
 
@@ -122,14 +123,17 @@ export function initRealtimeSync(
       }
       case 'full-sync-response': {
         const { elements, camera, pages, currentPageIndex } = payload.payload
-        if (elements.length > 0) {
-          store.loadState(elements)
-        }
-        if (pages && pages.length > 0) {
-          store.setPages(pages)
-        }
-        if (currentPageIndex !== undefined) {
-          store.setCurrentPageIndex(currentPageIndex)
+        if (!syncedOnce || elements.length > store.elements.length) {
+          if (elements.length > 0) {
+            store.loadState(elements)
+          }
+          if (pages && pages.length > 0) {
+            store.setPages(pages)
+          }
+          if (currentPageIndex !== undefined) {
+            store.setCurrentPageIndex(currentPageIndex)
+          }
+          syncedOnce = true
         }
         break
       }
@@ -176,26 +180,28 @@ export function initRealtimeSync(
       const prevEls: WhiteboardElement[] = JSON.parse(prevElementsJson)
       const currEls: WhiteboardElement[] = els
 
-      // Find added elements
-      for (const el of currEls) {
-        if (!prevEls.some((p) => p.id === el.id)) {
-          broadcastMsg({ type: 'element-add', payload: el })
+      const prevMap = new Map(prevEls.map(el => [el.id, JSON.stringify(el)]))
+      const currMap = new Map(currEls.map(el => [el.id, JSON.stringify(el)]))
+
+      // Added
+      for (const [id] of currMap) {
+        if (!prevMap.has(id)) {
+          broadcastMsg({ type: 'element-add', payload: currEls.find(e => e.id === id)! })
         }
       }
 
-      // Find deleted elements
-      for (const el of prevEls) {
-        if (!currEls.some((c) => c.id === el.id)) {
-          broadcastMsg({ type: 'element-delete', payload: { ids: [el.id] } })
+      // Deleted
+      for (const [id] of prevMap) {
+        if (!currMap.has(id)) {
+          broadcastMsg({ type: 'element-delete', payload: { ids: [id] } })
         }
       }
 
-      // Find updated elements
-      for (const el of currEls) {
-        const prev = prevEls.find((p) => p.id === el.id)
-        if (prev && JSON.stringify(el) !== JSON.stringify(prev)) {
-          // Send full element as update (simplest approach)
-          broadcastMsg({ type: 'element-update', payload: { id: el.id, updates: el } })
+      // Updated
+      for (const [id, currJson] of currMap) {
+        const prevJson = prevMap.get(id)
+        if (prevJson !== undefined && currJson !== prevJson) {
+          broadcastMsg({ type: 'element-update', payload: { id, updates: currEls.find(e => e.id === id)! } })
         }
       }
 

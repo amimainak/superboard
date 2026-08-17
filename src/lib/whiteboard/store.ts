@@ -64,23 +64,31 @@ function simplifyPoints(
   tolerance: number = 1
 ): Array<{ x: number; y: number }> {
   if (points.length <= 2) return points
-  let maxDist = 0
-  let maxIndex = 0
-  const first = points[0]
-  const last = points[points.length - 1]
-  for (let i = 1; i < points.length - 1; i++) {
-    const dist = perpendicularDist(points[i], first, last)
-    if (dist > maxDist) {
-      maxDist = dist
-      maxIndex = i
+  // Iterative Ramer-Douglas-Peucker with explicit stack
+  const stack: Array<{ start: number; end: number }> = [{ start: 0, end: points.length - 1 }]
+  const keep = new Set<number>()
+  keep.add(0)
+  keep.add(points.length - 1)
+  while (stack.length > 0) {
+    const { start, end } = stack.pop()!
+    let maxDist = 0
+    let maxIndex = start
+    const first = points[start]
+    const last = points[end]
+    for (let i = start + 1; i < end; i++) {
+      const dist = perpendicularDist(points[i], first, last)
+      if (dist > maxDist) {
+        maxDist = dist
+        maxIndex = i
+      }
+    }
+    if (maxDist > tolerance) {
+      keep.add(maxIndex)
+      stack.push({ start, end: maxIndex })
+      stack.push({ start: maxIndex, end })
     }
   }
-  if (maxDist > tolerance) {
-    const left = simplifyPoints(points.slice(0, maxIndex + 1), tolerance)
-    const right = simplifyPoints(points.slice(maxIndex), tolerance)
-    return [...left.slice(0, -1), ...right]
-  }
-  return [first, last]
+  return Array.from(keep).sort((a, b) => a - b).map(i => points[i])
 }
 
 // ---- Laser rAF tracking (P-10) ----
@@ -434,12 +442,14 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
     duplicateSelected: () => {
       const { elements, selectedIds } = get()
-      const selected = elements.filter((e) => selectedIds.includes(e.id))
+      const idSet = new Set(selectedIds)
+      const selected = elements.filter((e) => idSet.has(e.id))
       if (!selected.length) return
       const newIds: string[] = []
       const newElements = selected.map((el) => {
         const newEl = {
           ...el,
+          pageIndex: get().currentPageIndex,
           id: generateId(),
           x: el.x + 20,
           y: el.y + 20,
@@ -475,10 +485,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const { elements, selectedIds } = get()
       const ids = selectedIds.length ? selectedIds : []
       if (!ids.length) return
+      const idSet = new Set(ids)
       get().pushHistory()
       set({
         elements: elements.map((el) =>
-          ids.includes(el.id) ? { ...el, locked: !el.locked } : el
+          idSet.has(el.id) ? { ...el, locked: !el.locked } : el
         ),
       })
     },
@@ -488,9 +499,10 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       if (selectedIds.length < 2) return
       get().pushHistory()
       const groupId = generateId()
+      const idSet = new Set(selectedIds)
       set({
         elements: elements.map((el) =>
-          selectedIds.includes(el.id) ? { ...el, groupId } : el
+          idSet.has(el.id) ? { ...el, groupId } : el
         ),
       })
     },
@@ -499,47 +511,54 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const { elements, selectedIds } = get()
       if (!selectedIds.length) return
       get().pushHistory()
+      const idSet = new Set(selectedIds)
       set({
         elements: elements.map((el) =>
-          selectedIds.includes(el.id) ? { ...el, groupId: undefined } : el
+          idSet.has(el.id) ? { ...el, groupId: undefined } : el
         ),
       })
     },
 
     moveSelected: (dx, dy) =>
-      set((s) => ({
-        elements: s.elements.map((el) =>
-          s.selectedIds.includes(el.id) && !el.locked
-            ? ({
-                ...el,
-                x: el.x + dx,
-                y: el.y + dy,
-                // For line/arrow, also move the end point
-                ...(el.type === 'line' || el.type === 'arrow'
-                  ? {
-                      x2: (el as { x2: number }).x2 + dx,
-                      y2: (el as { y2: number }).y2 + dy,
-                    }
-                  : {}),
-              } as WhiteboardElement)
-            : el
-        ),
-      })),
+      set((s) => {
+        const idSet = new Set(s.selectedIds)
+        return {
+          elements: s.elements.map((el) =>
+            idSet.has(el.id) && !el.locked
+              ? ({
+                  ...el,
+                  x: el.x + dx,
+                  y: el.y + dy,
+                  // For line/arrow, also move the end point
+                  ...(el.type === 'line' || el.type === 'arrow'
+                    ? {
+                        x2: (el as { x2: number }).x2 + dx,
+                        y2: (el as { y2: number }).y2 + dy,
+                      }
+                    : {}),
+                } as WhiteboardElement)
+              : el
+          ),
+        }
+      }),
 
     resizeSelected: (newBounds) =>
-      set((s) => ({
-        elements: s.elements.map((el) =>
-          s.selectedIds.includes(el.id) && !el.locked
-            ? ({
-                ...el,
-                x: newBounds.x,
-                y: newBounds.y,
-                width: newBounds.width,
-                height: newBounds.height,
-              } as WhiteboardElement)
-            : el
-        ),
-      })),
+      set((s) => {
+        const idSet = new Set(s.selectedIds)
+        return {
+          elements: s.elements.map((el) =>
+            idSet.has(el.id) && !el.locked
+              ? ({
+                  ...el,
+                  x: newBounds.x,
+                  y: newBounds.y,
+                  width: newBounds.width,
+                  height: newBounds.height,
+                } as WhiteboardElement)
+              : el
+          ),
+        }
+      }),
 
     // ---- Drawing ----
     startDrawing: (point) => {
@@ -694,6 +713,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
             strokeWidth: 1,
             dash: [4, 4],
           } as WhiteboardElement
+          get().pushHistory()
           set({
             isDrawing: false,
             currentElement: null,
@@ -979,18 +999,20 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     // ---- Clipboard ----
     copySelected: () => {
       const { elements, selectedIds } = get()
-      const selected = elements.filter((e) => selectedIds.includes(e.id))
+      const idSet = new Set(selectedIds)
+      const selected = elements.filter((e) => idSet.has(e.id))
       set({ clipboard: structuredClone(selected) })
     },
 
     cutSelected: () => {
       const { elements, selectedIds } = get()
-      const selected = elements.filter((e) => selectedIds.includes(e.id))
+      const idSet = new Set(selectedIds)
+      const selected = elements.filter((e) => idSet.has(e.id))
       if (!selected.length) return
       get().pushHistory()
       set({
         clipboard: structuredClone(selected),
-        elements: elements.filter((e) => !selectedIds.includes(e.id)),
+        elements: elements.filter((e) => !idSet.has(e.id)),
         selectedIds: [],
       })
     },
@@ -1002,6 +1024,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const newElements = clipboard.map((el) => {
         const newEl = {
           ...el,
+          pageIndex: get().currentPageIndex,
           id: generateId(),
           x: el.x + 30,
           y: el.y + 30,
@@ -1088,10 +1111,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     toggleStudentDraw: () => set((s) => ({ canDraw: !s.canDraw })),
 
     // ---- Bulk ----
-    loadState: (elements) => set({ elements }),
+    loadState: (elements) => set({ elements, undoStack: [], redoStack: [], selectedIds: [] }),
     clearCanvas: () => {
+      const { currentPageIndex, elements } = get()
       get().pushHistory()
-      set({ elements: [] })
+      set({ elements: elements.filter(el => el.pageIndex !== currentPageIndex) })
     },
 
     // ---- Laser ----

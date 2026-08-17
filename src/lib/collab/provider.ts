@@ -24,7 +24,7 @@ export function createCollabProvider(options: CreateProviderOptions) {
   // Persist to IndexedDB for offline support
   indexeddbProvider = new IndexeddbPersistence(`superboard-${roomId}`, ydocInstance)
   indexeddbProvider.on('synced', () => {
-    console.log('[Collab] IndexedDB synced')
+    if (process.env.NODE_ENV === 'development') console.log('[Collab] IndexedDB synced')
   })
 
   if (!hocuspocusUrl) {

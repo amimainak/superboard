@@ -21,8 +21,8 @@ export async function GET() {
         .from('User')
         .insert({
           id: user.id,
-          email: user.email!,
-          name: user.user_metadata?.name || user.email!.split('@')[0],
+          email: (user.email ?? ''),
+          name: user.user_metadata?.name || (user.email ?? '').split('@')[0],
         })
         .select()
         .single()

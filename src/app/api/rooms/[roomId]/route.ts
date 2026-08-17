@@ -21,6 +21,7 @@ export async function GET(
 
     if (error) throw error
     if (!data) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (data.tutorId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     return NextResponse.json(data)
   } catch (err: unknown) {
     console.error('[GET /api/rooms/[roomId]]', err)

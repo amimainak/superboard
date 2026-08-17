@@ -36,7 +36,7 @@ export async function POST(request: Request) {
           break
         }
 
-        console.log(`[Webhook] Upgrading user ${userId} to ${tier}`)
+        console.warn(`[Webhook] Upgrading user ${userId} to ${tier}`)
 
         const supabase = await createClient()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
           break
         }
 
-        console.log(`[Webhook] Subscription deleted for customer ${customerId}, reverting to FREE`)
+        console.warn(`[Webhook] Subscription deleted for customer ${customerId}, reverting to FREE`)
 
         const supabase = await createClient()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
       default:
         // Unhandled event type — acknowledge anyway
-        console.log(`[Webhook] Unhandled event type: ${event.type}`)
+        console.warn(`[Webhook] Unhandled event type: ${event.type}`)
     }
 
     return NextResponse.json({ received: true })

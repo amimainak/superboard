@@ -18,6 +18,7 @@ import {
   simulatePressure,
   HIGHLIGHT_OPTIONS,
   getElementBounds,
+  generateId,
 } from '@/lib/whiteboard/utils'
 import type { Point, WhiteboardElement, ToolId } from '@/lib/whiteboard/types'
 
@@ -27,6 +28,7 @@ function calcAlignGuides(
   threshold: number
 ): { axis: 'x' | 'y'; pos: number; start: number; end: number }[] {
   const selected = allElements.filter((el) => selectedIds.includes(el.id))
+  if (selected.length > 5) return []
   const others = allElements.filter((el) => !selectedIds.includes(el.id))
   const guides: { axis: 'x' | 'y'; pos: number; start: number; end: number }[] = []
 
@@ -191,7 +193,7 @@ export function WhiteboardCanvas() {
           const cy = -camera.y + containerSize.height / 2 / camera.zoom
           pushHistory()
           const el: WhiteboardElement = {
-            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            id: generateId(),
             type: 'image',
             x: cx - (img.width * scale) / 2,
             y: cy - (img.height * scale) / 2,
@@ -245,9 +247,8 @@ export function WhiteboardCanvas() {
     import('pdfjs-dist/legacy/build/pdf.mjs').then(async (pdfjsLib) => {
       if (cancelled) return
 
-      // Set worker source to CDN
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs'
+      // Set worker source to local bundle
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString()
 
       const input = document.createElement('input')
       input.type = 'file'
@@ -306,7 +307,7 @@ export function WhiteboardCanvas() {
 
           pushHistory()
           const el: WhiteboardElement = {
-            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            id: generateId(),
             type: 'pdf',
             x: cx - elWidth / 2,
             y: cy - elHeight / 2,
@@ -503,8 +504,9 @@ export function WhiteboardCanvas() {
         case 'select': {
           // Hit test
           let hitId: string | null = null
-          for (let i = pageElements.length - 1; i >= 0; i--) {
-            const el = pageElements[i]
+          const freshPageEls = useWhiteboardStore.getState().getCurrentPageElements()
+          for (let i = freshPageEls.length - 1; i >= 0; i--) {
+            const el = freshPageEls[i]
             if (hitTestElement(point, el, camera.zoom)) {
               hitId = el.id
               break
@@ -554,7 +556,7 @@ export function WhiteboardCanvas() {
           pushHistory()
           const color = STICKY_COLORS[Math.floor(Math.random() * STICKY_COLORS.length)]
           const el: WhiteboardElement = {
-            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            id: generateId(),
             type: 'sticky',
             x: point.x - 100,
             y: point.y - 100,
@@ -591,8 +593,9 @@ export function WhiteboardCanvas() {
             pushHistory()
           }
           let hitId: string | null = null
-          for (let i = pageElements.length - 1; i >= 0; i--) {
-            const el = pageElements[i]
+          const freshPageEls2 = useWhiteboardStore.getState().getCurrentPageElements()
+          for (let i = freshPageEls2.length - 1; i >= 0; i--) {
+            const el = freshPageEls2[i]
             if (hitTestElement(point, el, camera.zoom)) {
               hitId = el.id
               break
@@ -634,7 +637,7 @@ export function WhiteboardCanvas() {
       }
     },
     [
-      tool, camera, spaceHeld, pageElements, selectedIds, currentPageIndex,
+      tool, camera, spaceHeld, selectedIds, currentPageIndex,
       getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
       pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool, removeElements,
       userRole, canDraw, mathToolConfig, clearMathToolConfig,
@@ -828,7 +831,7 @@ export function WhiteboardCanvas() {
       if (lastMovePoint.current) {
         // Check if we moved from the original start point
         const startClient = lastPanPoint.current
-        if (startClient && (Math.abs(e.clientX - startClient.x) > 1 || Math.abs(e.clientY - startClient.y) > 1)) {
+        if (startClient && (Math.abs(e.clientX - startClient.x) > 2 || Math.abs(e.clientY - startClient.y) > 2)) {
           pushHistory()
         }
         lastMovePoint.current = null
@@ -1090,6 +1093,8 @@ export function WhiteboardCanvas() {
         onPointerDown={() => {}}
         onDoubleClick={() => {}}
         cameraZoom={camera.zoom}
+        tool={tool}
+        isDark={isDark}
       />
     )
   }
@@ -1207,6 +1212,8 @@ export function WhiteboardCanvas() {
                   updateElement(id, { text } as Partial<WhiteboardElement>)
                 }}
                 cameraZoom={camera.zoom}
+                tool={tool}
+                isDark={isDark}
               />
             </g>
           ))}

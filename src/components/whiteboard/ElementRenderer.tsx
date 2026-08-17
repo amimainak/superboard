@@ -35,9 +35,9 @@ export const ElementRenderer = React.memo(function ElementRenderer({
   onDoubleClick,
   onTextChange,
   cameraZoom,
-}: ElementRendererProps) {
-  const tool = useWhiteboardStore((s) => s.tool)
-  const isDark = useWhiteboardStore((s) => s.isDark)
+  tool,
+  isDark,
+}: ElementRendererProps & { tool: string; isDark: boolean }) {
 
   // Stabilize callbacks so they don't defeat React.memo (P-02)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -176,6 +176,11 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               fontStyle: (element as { fontStyle?: string }).fontStyle || 'normal',
               cursor: 'text',
               caretColor: element.strokeColor,
+            }}
+            onPaste={(e) => {
+              e.preventDefault()
+              const text = e.clipboardData.getData('text/plain')
+              document.execCommand('insertText', false, text)
             }}
             onBlur={(e) => {
               onTextChange?.(element.id, e.currentTarget.textContent || '')
@@ -499,6 +504,11 @@ function StickySvg({
             whiteSpace: 'pre-wrap',
             overflow: 'auto',
             color: '#1e293b',
+          }}
+          onPaste={(e) => {
+            e.preventDefault()
+            const text = e.clipboardData.getData('text/plain')
+            document.execCommand('insertText', false, text)
           }}
           onBlur={(e) => {
             onTextChange?.(element.id, e.currentTarget.textContent || '')
