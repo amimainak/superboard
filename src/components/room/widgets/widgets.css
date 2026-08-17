@@ -521,6 +521,104 @@
   opacity: 0.6;
 }
 
+/* ---- Video Widget (LiveKit) ---- */
+
+.video-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.video-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  gap: 4px;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.video-tile {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1e293b;
+  aspect-ratio: 16/9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-track {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.video-tile-name {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(0, 0, 0, 0.5);
+  padding: 1px 6px;
+  border-radius: 3px;
+  backdrop-filter: blur(4px);
+}
+
+.video-info {
+  padding: 4px 12px;
+  font-size: 10px;
+  color: #64748b;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.video-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.video-ctrl-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.15s ease;
+}
+
+.video-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.video-ctrl-btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.video-ctrl-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.video-join-btn {
+  cursor: pointer;
+}
+
 /* ---- Responsive: collapse panel on small screens ---- */
 
 @media (max-width: 768px) {
