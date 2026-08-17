@@ -1,12 +1,15 @@
 // ============================================================
 // Superboard — Widget Store (Zustand)
 // Manages room-level widget state: open/close, active tab,
-// panel visibility. Separated from whiteboard store.
+// panel visibility, panel mode (dock/float/minimized).
+// Separated from whiteboard store.
 // ============================================================
 
 import { create } from 'zustand'
 
 export type WidgetId = 'chat' | 'participants' | 'video'
+
+export type PanelMode = 'dock' | 'float' | 'minimized'
 
 export interface WidgetDef {
   id: WidgetId
@@ -27,6 +30,8 @@ interface WidgetStore {
   activeTab: WidgetId | null
   /** Whether the entire widget panel is visible */
   panelVisible: boolean
+  /** Panel display mode: dock (right sidebar), float (floating window), minimized (tab bar only) */
+  panelMode: PanelMode
 
   // Actions
   toggleWidget: (id: WidgetId) => void
@@ -35,12 +40,14 @@ interface WidgetStore {
   setActiveTab: (id: WidgetId | null) => void
   closePanel: () => void
   resetWidgets: () => void
+  setPanelMode: (mode: PanelMode) => void
 }
 
 export const useWidgetStore = create<WidgetStore>((set, get) => ({
   openWidgets: [],
   activeTab: null,
   panelVisible: false,
+  panelMode: 'dock',
 
   toggleWidget: (id) => {
     const { openWidgets, activeTab } = get()
@@ -101,4 +108,6 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
     activeTab: null,
     panelVisible: false,
   }),
+
+  setPanelMode: (mode) => set({ panelMode: mode }),
 }))

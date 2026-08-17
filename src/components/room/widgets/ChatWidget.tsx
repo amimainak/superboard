@@ -2,7 +2,16 @@
 // Superboard — Chat Widget
 // Real-time chat using Supabase ChatMessage table
 // Batch 4: file attachment, pin messages, unread count
+// Batch 5: delete messages, mute indicator, relative timestamps
 // ============================================================
+
+// -- Chat message delete RLS:
+// Add to setup_supabase.js CREATE_RLS:
+// CREATE POLICY "chat_sender_delete" ON "ChatMessage" FOR DELETE USING (
+//   "senderLabel" IN (
+//     SELECT COALESCE(name, 'Tutor') FROM "User" WHERE "id" = auth.uid()::text
+//   )
+// );
 
 'use client'
 
@@ -25,16 +34,40 @@ interface ChatWidgetProps {
 
 const sbAny = (sb: any) => sb as any
 
+/** Convert an ISO date string to a relative time label (e.g. "2m ago", "just now") */
+function timeAgo(dateStr: string): string {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diffMs = now - then
+  if (diffMs < 0) return 'just now'
+  const seconds = Math.floor(diffMs / 1000)
+  if (seconds < 10) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
 export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), [])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [senderName, setSenderName] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [mutedUntil, setMutedUntil] = useState<number | null>(null)
+  const [now, setNow] = useState(Date.now())
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const isAtBottomRef = useRef(true)
+
+  // Tick every 30s so relative timestamps update
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30_000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Prompt for display name once on mount
   useEffect(() => {
@@ -90,6 +123,14 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
           prev.map((m) => (m.id === payload.new.id ? { ...m, isPinned: payload.new.isPinned } : m))
         )
       })
+      .on('postgres_changes' as any, {
+        event: 'DELETE',
+        schema: 'public' as any,
+        table: 'ChatMessage',
+        filter: `roomId=eq.${roomId}`,
+      }, (payload: { old: { id: string } }) => {
+        setMessages((prev) => prev.filter((m) => m.id !== payload.old.id))
+      })
       .subscribe()
 
     return () => {
@@ -116,9 +157,30 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
     }
   }, [messages])
 
+  const isMuted = mutedUntil !== null && Date.now() < mutedUntil
+  const muteRemaining = isMuted ? Math.max(0, Math.ceil((mutedUntil! - Date.now()) / 1000)) : 0
+  const muteDisplay = `${Math.floor(muteRemaining / 60)}:${String(muteRemaining % 60).padStart(2, '0')}`
+
+  // Tick mute timer every second
+  useEffect(() => {
+    if (!isMuted) return
+    const interval = setInterval(() => {
+      setNow(Date.now()) // re-render to update timer
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [isMuted, mutedUntil])
+
+  const handleMuteToggle = () => {
+    if (isMuted) {
+      setMutedUntil(null)
+    } else {
+      setMutedUntil(Date.now() + 5 * 60 * 1000)
+    }
+  }
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || !senderName) return
+    if (!input.trim() || !senderName || isMuted) return
     const content = input.trim()
     setInput('')
     await sbAny(supabase).from('ChatMessage').insert({
@@ -132,6 +194,12 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (isMuted) {
+      alert('You are currently muted and cannot send files.')
+      e.target.value = ''
+      return
+    }
 
     if (!file.type.startsWith('image/')) {
       alert('Only image files are supported for now.')
@@ -181,10 +249,40 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
     )
   }
 
-  const canSend = input.trim().length > 0 && !uploading
+  // Delete own message
+  const handleDeleteMessage = async (msg: ChatMessage) => {
+    if (!confirm('Delete this message?')) return
+    await sbAny(supabase).from('ChatMessage').delete().eq('id', msg.id)
+    setMessages((prev) => prev.filter((m) => m.id !== msg.id))
+  }
+
+  const canSend = input.trim().length > 0 && !uploading && !isMuted
 
   return (
     <div className="widget-content widget-chat">
+      {/* Mute banner */}
+      {isMuted && (
+        <div style={{
+          padding: '6px 12px',
+          background: 'rgba(239, 68, 68, 0.12)',
+          borderBottom: '1px solid rgba(239, 68, 68, 0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontSize: 12, color: '#fca5a5', flexShrink: 0,
+        }}>
+          <span>🔇 You are muted for {muteDisplay}</span>
+          <button
+            onClick={handleMuteToggle}
+            style={{
+              background: 'rgba(239, 68, 68, 0.2)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: 4, padding: '2px 8px', fontSize: 11,
+              color: '#fca5a5', cursor: 'pointer', fontWeight: 600,
+            }}
+          >
+            Unmute
+          </button>
+        </div>
+      )}
       <div className="widget-messages" ref={messagesContainerRef} onScroll={handleScroll}>
         {messages.map((msg) => {
           const isOwn = msg.senderLabel === senderName
@@ -198,6 +296,9 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
             >
               <div className="chat-bubble-header">
                 <span className="chat-bubble-sender">{msg.senderLabel}</span>
+                <span style={{ fontSize: 10, color: '#475569', marginLeft: 4 }}>
+                  {timeAgo(msg.createdAt)}
+                </span>
                 {isOwn && (
                   <button
                     onClick={() => handleTogglePin(msg)}
@@ -212,6 +313,26 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.5' }}
                   >
                     📌
+                  </button>
+                )}
+                {isOwn && (
+                  <button
+                    onClick={() => handleDeleteMessage(msg)}
+                    title="Delete message"
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      padding: '0 2px', opacity: 0.4, transition: 'opacity 0.15s ease',
+                      display: 'flex', alignItems: 'center',
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.4' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
                   </button>
                 )}
                 {msg.isPinned && (
@@ -243,17 +364,33 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
       <form onSubmit={handleSend} className="chat-input-form">
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="chat-file-btn"
-          title="Attach image (max 10MB)"
-          disabled={uploading}
+          onClick={handleMuteToggle}
+          title={isMuted ? 'Unmute' : 'Mute for 5 minutes'}
           style={{
             width: 34, height: 34, borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: uploading ? 'rgba(100,116,139,0.2)' : 'rgba(255,255,255,0.05)',
+            background: isMuted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255,255,255,0.05)',
+            border: `1px solid ${isMuted ? 'rgba(239, 68, 68, 0.3)' : 'rgba(255,255,255,0.1)'}`,
+            color: isMuted ? '#fca5a5' : '#94a3b8',
+            cursor: 'pointer', transition: 'all 0.15s ease', flexShrink: 0,
+            fontSize: 14,
+          }}
+        >
+          {isMuted ? '🔇' : '🔊'}
+        </button>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="chat-file-btn"
+          title="Attach image (max 10MB)"
+          disabled={uploading || isMuted}
+          style={{
+            width: 34, height: 34, borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: (uploading || isMuted) ? 'rgba(100,116,139,0.2)' : 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.1)',
-            color: uploading ? '#64748b' : '#94a3b8',
-            cursor: uploading ? 'not-allowed' : 'pointer',
+            color: (uploading || isMuted) ? '#64748b' : '#94a3b8',
+            cursor: (uploading || isMuted) ? 'not-allowed' : 'pointer',
             transition: 'all 0.15s ease', flexShrink: 0,
           }}
         >
@@ -277,9 +414,9 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={uploading ? 'Uploading...' : 'Type a message...'}
+          placeholder={uploading ? 'Uploading...' : isMuted ? 'You are muted...' : 'Type a message...'}
           className="chat-input"
-          disabled={uploading}
+          disabled={uploading || isMuted}
         />
         <button type="submit" className="chat-send-btn" disabled={!canSend}>
           Send

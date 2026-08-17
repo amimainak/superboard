@@ -1,11 +1,12 @@
 // ============================================================
 // Superboard — Widget Panel (Right Side)
 // Tabbed panel that hosts active widgets
+// Supports dock, float, and minimized modes
 // ============================================================
 
 'use client'
 
-import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
+import { useWidgetStore, type WidgetId, type PanelMode, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
 import { ChatWidget } from './ChatWidget'
 import { ParticipantsWidget } from './ParticipantsWidget'
 import { VideoWidget } from './VideoWidget'
@@ -14,12 +15,22 @@ interface WidgetPanelProps {
   roomId: string
 }
 
+const MODE_CYCLE: PanelMode[] = ['dock', 'float', 'minimized']
+
+const MODE_ICON: Record<PanelMode, string> = {
+  dock: '⬜',
+  float: '🔲',
+  minimized: '➖',
+}
+
 export function WidgetPanel({ roomId }: WidgetPanelProps) {
   const panelVisible = useWidgetStore((s) => s.panelVisible)
   const openWidgets = useWidgetStore((s) => s.openWidgets)
   const activeTab = useWidgetStore((s) => s.activeTab)
+  const panelMode = useWidgetStore((s) => s.panelMode)
   const setActiveTab = useWidgetStore((s) => s.setActiveTab)
   const closeWidget = useWidgetStore((s) => s.closeWidget)
+  const setPanelMode = useWidgetStore((s) => s.setPanelMode)
 
   if (!panelVisible || openWidgets.length === 0) return null
 
@@ -27,8 +38,23 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
     openWidgets.includes(w.id as WidgetId)
   )
 
+  const isMinimized = panelMode === 'minimized'
+  const isFloat = panelMode === 'float'
+
+  const panelClassName = [
+    'widget-panel',
+    isFloat ? 'widget-panel-float' : '',
+    isMinimized ? 'widget-panel-minimized' : '',
+  ].filter(Boolean).join(' ')
+
+  const handleModeToggle = () => {
+    const currentIdx = MODE_CYCLE.indexOf(panelMode)
+    const nextIdx = (currentIdx + 1) % MODE_CYCLE.length
+    setPanelMode(MODE_CYCLE[nextIdx])
+  }
+
   return (
-    <div className="widget-panel">
+    <div className={panelClassName}>
       {/* Tab bar */}
       <div className="widget-tab-bar" role="tablist">
         {tabs.map((tab) => (
@@ -58,14 +84,27 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
             </button>
           </button>
         ))}
+        <button
+          className="widget-mode-toggle"
+          onClick={handleModeToggle}
+          title={`Panel mode: ${panelMode} (click to switch)`}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {panelMode === 'dock' && <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M15 3v18" /></>}
+            {panelMode === 'float' && <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 3v18" /><path d="M3 9h18" /></>}
+            {panelMode === 'minimized' && <><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></>}
+          </svg>
+        </button>
       </div>
 
-      {/* Active widget content */}
-      <div className="widget-panel-body" role="tabpanel">
-        {activeTab === 'chat' && <ChatWidget roomId={roomId} />}
-        {activeTab === 'participants' && <ParticipantsWidget roomId={roomId} isTutor={true} />}
-        {activeTab === 'video' && <VideoWidget roomId={roomId} />}
-      </div>
+      {/* Active widget content (hidden in minimized mode) */}
+      {!isMinimized && (
+        <div className="widget-panel-body" role="tabpanel">
+          {activeTab === 'chat' && <ChatWidget roomId={roomId} />}
+          {activeTab === 'participants' && <ParticipantsWidget roomId={roomId} isTutor={true} />}
+          {activeTab === 'video' && <VideoWidget roomId={roomId} />}
+        </div>
+      )}
     </div>
   )
 }

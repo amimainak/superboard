@@ -1,9 +1,11 @@
 import * as Y from 'yjs'
 import { HocuspocusProvider } from '@hocuspocus/provider'
+import { IndexeddbPersistence } from 'y-indexeddb'
 import { useCollabStore } from './store'
 
 let providerInstance: HocuspocusProvider | null = null
 let ydocInstance: Y.Doc | null = null
+let indexeddbProvider: IndexeddbPersistence | null = null
 
 interface CreateProviderOptions {
   roomId: string
@@ -19,10 +21,21 @@ export function createCollabProvider(options: CreateProviderOptions) {
   // Create Yjs document
   ydocInstance = new Y.Doc()
 
+  // Persist to IndexedDB for offline support
+  indexeddbProvider = new IndexeddbPersistence(`superboard-${roomId}`, ydocInstance)
+  indexeddbProvider.on('synced', () => {
+    console.log('[Collab] IndexedDB synced')
+  })
+
   if (!hocuspocusUrl) {
     console.warn('[Collab] NEXT_PUBLIC_HOCUSPOCUS_URL not set — running in offline mode')
     onStatusChange?.('disconnected')
-    return { ydoc: ydocInstance, provider: null, destroy: () => {} }
+    return { ydoc: ydocInstance, provider: null, destroy: () => {
+      indexeddbProvider?.destroy()
+      indexeddbProvider = null
+      ydocInstance?.destroy()
+      ydocInstance = null
+    } }
   }
 
   // Create Hocuspocus provider
@@ -85,6 +98,8 @@ export function createCollabProvider(options: CreateProviderOptions) {
     destroy: () => {
       providerInstance?.destroy()
       providerInstance = null
+      indexeddbProvider?.destroy()
+      indexeddbProvider = null
       ydocInstance?.destroy()
       ydocInstance = null
     },
@@ -97,4 +112,12 @@ export function getProvider(): HocuspocusProvider | null {
 
 export function getYDoc(): Y.Doc | null {
   return ydocInstance
+}
+
+export async function getIndexedDBStatus(): Promise<{ synced: boolean; storedUpdates: number }> {
+  if (!indexeddbProvider) return { synced: false, storedUpdates: 0 }
+  return {
+    synced: indexeddbProvider.synced,
+    storedUpdates: (indexeddbProvider as any)._storeUpdate?.() ?? 0,
+  }
 }
