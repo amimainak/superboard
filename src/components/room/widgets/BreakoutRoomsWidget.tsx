@@ -145,9 +145,9 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
       <div style={{ padding: '12px 12px 8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <span style={{ fontSize: 18 }}>{isActive ? '🏠' : '🚪'}</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>Breakout Rooms</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>Breakout Rooms</span>
         </div>
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>
+        <div style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#475569' }}>
           {isActive
             ? `${rooms.length} active rooms · ${allParticipants.length - 1} students`
             : `${allParticipants.length - 1} students in session`
@@ -162,7 +162,7 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
           }}>
-            <label style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+            <label style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#475569', whiteSpace: 'nowrap' }}>
               Number of rooms:
             </label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -170,14 +170,14 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
                 onClick={() => setNumRooms(n => Math.max(2, n - 1))}
                 style={{
                   width: 26, height: 26, borderRadius: 6, fontSize: 14, fontWeight: 700,
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)',
+                  color: isDark ? '#e2e8f0' : '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
                 −
               </button>
               <span style={{
-                width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#f1f5f9',
+                width: 28, textAlign: 'center', fontSize: 14, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a',
               }}>
                 {numRooms}
               </span>
@@ -185,8 +185,8 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
                 onClick={() => setNumRooms(n => Math.min(10, n + 1))}
                 style={{
                   width: 26, height: 26, borderRadius: 6, fontSize: 14, fontWeight: 700,
-                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#e2e8f0', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)',
+                  color: isDark ? '#e2e8f0' : '#1e293b', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
               >
                 +
@@ -233,7 +233,7 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
               key={room.id}
               style={{
                 padding: '10px', borderRadius: 8,
-                background: 'rgba(15,23,42,0.5)',
+                background: isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.8)',
                 border: `1px solid ${room.color}33`,
                 borderLeft: `3px solid ${room.color}`,
               }}
@@ -246,7 +246,7 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
                   }}>
                     Room {idx + 1}
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{room.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b' }}>{room.name}</span>
                 </div>
                 <span style={{ fontSize: 11, color: '#64748b' }}>
                   {room.members.length} student{room.members.length !== 1 ? 's' : ''}
@@ -261,17 +261,17 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
                     key={memberId}
                     style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
-                      fontSize: 11, color: '#cbd5e1',
-                      background: 'rgba(255,255,255,0.04)',
+                      fontSize: 11, color: isDark ? '#cbd5e1' : '#334155',
+                      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                       padding: '3px 8px', borderRadius: 12,
-                      border: '1px solid rgba(255,255,255,0.06)',
+                      border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
                     }}
                   >
                     👤 {getParticipantName(memberId)}
                   </span>
                 ))}
                 {room.members.length === 0 && (
-                  <span style={{ fontSize: 11, color: '#475569', fontStyle: 'italic' }}>No students assigned</span>
+                  <span style={{ fontSize: 11, color: isDark ? '#475569' : '#64748b', fontStyle: 'italic' }}>No students assigned</span>
                 )}
               </div>
 
@@ -301,8 +301,8 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
                     onKeyDown={(e) => { if (e.key === 'Enter') handleRoomBroadcast(room) }}
                     style={{
                       flex: 1, padding: '5px 8px', borderRadius: 5, fontSize: 11,
-                      background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.1)',
-                      color: '#e2e8f0', outline: 'none', minWidth: 0,
+                      background: isDark ? 'rgba(15,23,42,0.6)' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)',
+                      color: isDark ? '#e2e8f0' : '#1e293b', outline: 'none', minWidth: 0,
                     }}
                   />
                   <button
@@ -324,7 +324,7 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
           }
           <div style={{
             padding: '10px', borderRadius: 8,
-            background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(255,255,255,0.06)',
+            background: isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.8)', border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid rgba(0,0,0,0.08)',
           }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
               Broadcast to All Rooms
@@ -337,8 +337,8 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
                 onKeyDown={(e) => { if (e.key === 'Enter') handleBroadcastAll() }}
                 style={{
                   flex: 1, padding: '6px 10px', borderRadius: 6, fontSize: 12,
-                  background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#e2e8f0', outline: 'none', minWidth: 0,
+                  background: isDark ? 'rgba(15,23,42,0.6)' : '#ffffff', border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.12)',
+                  color: isDark ? '#e2e8f0' : '#1e293b', outline: 'none', minWidth: 0,
                 }}
               />
               <button

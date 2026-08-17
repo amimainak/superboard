@@ -33,12 +33,12 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   return (
     <div className="widget-content toolkit-math">
       <div className="toolkit-section">
-        <div className="toolkit-section-title">Quick Equations</div>
+        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Quick Equations</div>
         <div className="toolkit-grid">
           {mathFunctions.map((fn) => (
             <button
               key={fn.eq}
-              className="toolkit-chip"
+              className={`toolkit-chip ${isDark ? '' : 'toolkit-chip-light'}`}
               onClick={() => setEquation(fn.eq)}
               style={{
                 padding: '6px 10px',
@@ -60,7 +60,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
       </div>
 
       <div className="toolkit-section">
-        <div className="toolkit-section-title">Background</div>
+        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Background</div>
         <div style={{ display: 'flex', gap: 6, padding: '0 16px 12px' }}>
           {(['none', 'grid', 'line'] as const).map((type) => (
             <button
@@ -86,19 +86,19 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
       </div>
 
       <div className="toolkit-section">
-        <div className="toolkit-section-title">Stamps</div>
+        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Stamps</div>
         <div className="toolkit-grid">
           {stamps.map((stamp) => (
             <button
               key={stamp.label}
-              className="toolkit-chip"
+              className={`toolkit-chip ${isDark ? '' : 'toolkit-chip-light'}`}
               style={{
                 padding: '8px 12px',
                 borderRadius: 6,
                 fontSize: 16,
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: '#94a3b8',
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.1)',
+                color: isDark ? '#94a3b8' : '#475569',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',

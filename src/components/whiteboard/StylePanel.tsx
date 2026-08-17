@@ -14,8 +14,8 @@ import './whiteboard.css'
 const COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e',
   '#059669', '#0ea5e9', '#3b82f6', '#8b5cf6',
-  '#ec4899', '#f43f5e', '#e2e8f0', '#374151',
-  '#1e293b', '#000000', '#78716c', '#ffffff',
+  '#ec4899', '#f43f5e', '#e2e8f0', '#78716c',
+  '#ffffff', '#374151', '#1e293b', '#000000',
 ]
 
 const STROKE_WIDTHS = [1, 2, 3, 5, 8, 12]
@@ -426,6 +426,7 @@ function ColorSwatchRow({
               'wb-swatch',
               isActive ? 'wb-swatch-active' : '',
               c === '#ffffff' ? `wb-swatch-white-${isDark ? 'dark' : 'light'}` : '',
+              (c === '#000000' || c === '#1e293b' || c === '#374151') && isDark ? 'wb-swatch-dark-dark' : '',
             ].join(' ')}
             style={{ background: c }}
           />

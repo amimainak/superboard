@@ -28,7 +28,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   return (
     <div className="widget-content toolkit-language">
       <div className="toolkit-section">
-        <div className="toolkit-section-title">Highlighters</div>
+        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Highlighters</div>
         <div style={{ display: 'flex', gap: 6, padding: '0 16px 12px' }}>
           {highlighters.map((h) => (
             <button
@@ -50,19 +50,19 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       </div>
 
       <div className="toolkit-section">
-        <div className="toolkit-section-title">Tools</div>
+        <div className={`toolkit-section-title ${isDark ? '' : 'toolkit-section-title-light'}`}>Tools</div>
         <div className="toolkit-grid">
           {tools.map((tool) => (
             <button
               key={tool.label}
-              className="toolkit-chip"
+              className={`toolkit-chip ${isDark ? '' : 'toolkit-chip-light'}`}
               style={{
                 padding: '8px 12px',
                 borderRadius: 6,
                 fontSize: 16,
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: '#94a3b8',
+                background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.1)',
+                color: isDark ? '#94a3b8' : '#475569',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',

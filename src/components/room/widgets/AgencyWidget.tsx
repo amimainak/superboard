@@ -137,7 +137,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
     return (
       <div className="widget-content agency-widget">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200 }}>
-          <div style={{ width: 24, height: 24, border: '3px solid rgba(148,163,184,0.3)', borderTopColor: '#94a3b8', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          <div style={{ width: 24, height: 24, border: '3px solid rgba(148,163,184,0.3)', borderTopColor: isDark ? '#94a3b8' : '#475569', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
@@ -149,8 +149,8 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
       <div className="widget-content agency-widget">
         <div style={{ padding: 16, textAlign: 'center', color: '#f87171' }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>🏢</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Agency Management</div>
-          <div style={{ fontSize: 12, color: '#94a3b8' }}>{error}</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b', marginBottom: 4 }}>Agency Management</div>
+          <div style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#475569' }}>{error}</div>
         </div>
       </div>
     )
@@ -159,6 +159,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
   if (!data) return null
 
   const latestInvite = data.invites.length > 0 ? data.invites[0] : null
+  const dividerBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'
 
   return (
     <div className="widget-content agency-widget">
@@ -166,13 +167,13 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
       <div style={{ padding: '12px 12px 8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
           <span style={{ fontSize: 18 }}>🏢</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>Agency Management</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>Agency Management</span>
         </div>
-        <div style={{ fontSize: 12, color: '#94a3b8' }}>
-          Agency: <span style={{ color: '#e2e8f0', fontWeight: 500 }}>{data.agency.name}</span>
+        <div style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#475569' }}>
+          Agency: <span style={{ color: isDark ? '#e2e8f0' : '#1e293b', fontWeight: 500 }}>{data.agency.name}</span>
         </div>
-        <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-          Members: <span style={{ color: '#e2e8f0', fontWeight: 500 }}>{data.members.length} tutors</span>
+        <div style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#475569', marginTop: 2 }}>
+          Members: <span style={{ color: isDark ? '#e2e8f0' : '#1e293b', fontWeight: 500 }}>{data.members.length} tutors</span>
         </div>
       </div>
 
@@ -203,8 +204,8 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
               required
               style={{
                 flex: 1, padding: '6px 10px', borderRadius: 6, fontSize: 12,
-                background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#e2e8f0', outline: 'none', minWidth: 0,
+                background: isDark ? 'rgba(15,23,42,0.6)' : '#ffffff', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'),
+                color: isDark ? '#e2e8f0' : '#1e293b', outline: 'none', minWidth: 0,
               }}
             />
             <button
@@ -225,7 +226,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
               style={{
                 padding: '6px 8px', borderRadius: 6, fontSize: 12,
                 background: 'rgba(100,116,139,0.2)', border: '1px solid rgba(100,116,139,0.3)',
-                color: '#94a3b8', cursor: 'pointer',
+                color: isDark ? '#94a3b8' : '#475569', cursor: 'pointer',
               }}
             >
               ✕
@@ -235,7 +236,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
       </div>
 
       {/* Divider */}
-      <div style={{ margin: '0 12px', height: 1, background: 'rgba(255,255,255,0.06)' }} />
+      <div style={{ margin: '0 12px', height: 1, background: dividerBg }} />
 
       {/* Team Members */}
       <div style={{ padding: '8px 12px' }}>
@@ -248,7 +249,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
               key={member.id}
               style={{
                 padding: '8px 10px', borderRadius: 8,
-                background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(255,255,255,0.06)',
+                background: isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.8)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'),
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -265,7 +266,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{
-                      fontSize: 12, fontWeight: 600, color: '#e2e8f0',
+                      fontSize: 12, fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b',
                       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                     }}>
                       {member.name}
@@ -299,7 +300,7 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
       {/* Pending Invites */}
       {data.invites.length > 0 && (
         <>
-          <div style={{ margin: '0 12px', height: 1, background: 'rgba(255,255,255,0.06)' }} />
+          <div style={{ margin: '0 12px', height: 1, background: dividerBg }} />
           <div style={{ padding: '8px 12px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
               Pending Invites
@@ -310,14 +311,14 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
                   key={invite.id}
                   style={{
                     padding: '8px 10px', borderRadius: 8,
-                    background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(255,255,255,0.06)',
+                    background: isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.8)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'),
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
                       <span style={{ fontSize: 13 }}>✉</span>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 12, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: 12, color: isDark ? '#e2e8f0' : '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {invite.invitedEmail || 'No email'}
                         </div>
                         <div style={{ fontSize: 11, color: '#64748b' }}>
@@ -346,18 +347,18 @@ export function AgencyWidget({ roomId }: { roomId: string }) {
       {/* Invite Link */}
       {latestInvite && (
         <>
-          <div style={{ margin: '0 12px', height: 1, background: 'rgba(255,255,255,0.06)' }} />
+          <div style={{ margin: '0 12px', height: 1, background: dividerBg }} />
           <div style={{ padding: '8px 12px' }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
               Invite Link
             </div>
             <div style={{
               padding: '8px 10px', borderRadius: 8,
-              background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(255,255,255,0.06)',
+              background: isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.8)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'),
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
               <div style={{
-                fontSize: 11, color: '#94a3b8', flex: 1, overflow: 'hidden',
+                fontSize: 11, color: isDark ? '#94a3b8' : '#475569', flex: 1, overflow: 'hidden',
                 textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace',
               }}>
                 {window.location.origin}/join/{latestInvite.code}
