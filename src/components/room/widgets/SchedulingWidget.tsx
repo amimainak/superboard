@@ -231,13 +231,13 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
                 <button className="sched-add-cancel" onClick={() => setAddingDay(null)} title="Cancel">✕</button>
               </div>
             ) : (
-              <span className="sched-day-off">off</span>
+              <span className={`sched-day-off ${isDark ? '' : 'sched-day-off-light'}`}}>off</span>
             )}
           </div>
         ))}
       </div>
 
-      <button className="sched-add-slot-btn" onClick={() => {
+      <button className={`sched-add-slot-btn ${isDark ? '' : 'sched-add-slot-btn-light'}`}} onClick={() => {
         const emptyDay = [1, 2, 3, 4, 5, 6, 0].find((d) => slotsByDay[d].length === 0)
         setAddingDay(emptyDay ?? 0)
       }}>
@@ -245,20 +245,20 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
       </button>
 
       {/* Upcoming bookings */}
-      <div className="sched-section-label" style={{ marginTop: 12 }}>Upcoming Bookings:</div>
+      <div className={`sched-section-label ${isDark ? '' : 'sched-section-label-light'}`}} style={{ marginTop: 12 }}>Upcoming Bookings:</div>
       <div className="sched-bookings-list">
         {upcomingBookings.length === 0 ? (
-          <div className="sched-empty">No upcoming bookings</div>
+          <div className={`sched-empty ${isDark ? '' : 'sched-empty-light'}`}}>No upcoming bookings</div>
         ) : (
           upcomingBookings.map((booking) => (
-            <div key={booking.id} className="sched-booking-card">
-              <div className="sched-booking-date">
+            <div key={booking.id} className={`sched-booking-card ${isDark ? '' : 'sched-booking-card-light'}`}}>
+              <div className={`sched-booking-date ${isDark ? '' : 'sched-booking-date-light'}`}}>
                 {formatDate(booking.bookingDate)}, {booking.startTime}–{booking.endTime}
               </div>
-              <div className="sched-booking-student">
+              <div className={`sched-booking-student ${isDark ? '' : 'sched-booking-student-light'}`}}>
                 Student: {booking.studentName}
                 {booking.studentEmail && (
-                  <span className="sched-booking-email"> ({booking.studentEmail})</span>
+                  <span className={`sched-booking-email ${isDark ? '' : 'sched-booking-email-light'}`}}> ({booking.studentEmail})</span>
                 )}
               </div>
               {booking.roomId && (
@@ -279,7 +279,7 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
                 </div>
               )}
               {booking.notes && (
-                <div className="sched-booking-notes">{booking.notes}</div>
+                <div className={`sched-booking-notes ${isDark ? '' : 'sched-booking-notes-light'}`}}>{booking.notes}</div>
               )}
             </div>
           ))
@@ -287,8 +287,8 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
       </div>
 
       {/* Share booking link */}
-      <div className="sched-share-section">
-        <div className="sched-share-label">📋 Share booking link:</div>
+      <div className={`sched-share-section ${isDark ? '' : 'sched-share-section-light'}`}}>
+        <div className={`sched-share-label ${isDark ? '' : 'sched-share-label-light'}`}}>📋 Share booking link:</div>
         <button className="sched-copy-btn" onClick={handleCopyLink}>
           {copied ? '✓ Copied!' : 'Copy Link'}
         </button>

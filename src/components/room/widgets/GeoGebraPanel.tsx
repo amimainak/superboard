@@ -20,12 +20,12 @@ export function GeoGebraPanel({ roomId: _roomId }: GeoGebraPanelProps) {
 
   return (
     <div className="widget-content widget-geogebra">
-      <div className="geogebra-header">
+      <div className={`geogebra-header ${isDark ? '' : 'geogebra-header-light'`}>
         <span style={{ fontWeight: 600, fontSize: 13 }}>Graphing Calculator</span>
         <span style={{ fontSize: 10, color: '#64748b' }}>Powered by GeoGebra</span>
       </div>
 
-      <div className="geogebra-input-group">
+      <div className={`geogebra-input-group ${isDark ? '' : 'geogebra-input-group-light'`}>
         <input
           value={graphExpression}
           onChange={(e) => setGraphExpression(e.target.value)}
@@ -47,7 +47,7 @@ export function GeoGebraPanel({ roomId: _roomId }: GeoGebraPanelProps) {
             <button
               key={p.expr}
               onClick={() => setGraphExpression(p.expr)}
-              className="toolkit-chip"
+              className={`toolkit-chip ${isDark ? '' : 'toolkit-chip-light'}`}
               style={{
                 padding: '4px 8px',
                 borderRadius: 4,
@@ -66,7 +66,7 @@ export function GeoGebraPanel({ roomId: _roomId }: GeoGebraPanelProps) {
       </div>
 
       {/* Placeholder for GeoGebra iframe — will be embedded when configured */}
-      <div className="geogebra-canvas-placeholder">
+      <div className={`geogebra-canvas-placeholder ${isDark ? '' : 'geogebra-canvas-placeholder-light'`}>
         <div style={{ fontSize: 48, opacity: 0.3 }}>📈</div>
         <div style={{ fontSize: 11, color: '#475569', marginTop: 8 }}>
           Graph will render here

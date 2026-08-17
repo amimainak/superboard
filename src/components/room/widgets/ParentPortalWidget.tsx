@@ -8,6 +8,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { getTierLabel, getTierPrice } from '@/lib/features'
 import type { Tier } from '@/lib/validations'
 
@@ -32,6 +33,7 @@ interface SessionWithNotes extends SessionRoom {
 }
 
 export function ParentPortalWidget({ roomId }: { roomId: string }) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const [sessions, setSessions] = useState<SessionWithNotes[]>([])
   const [tutor, setTutor] = useState<TutorProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -127,8 +129,8 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
 
   if (loading) {
     return (
-      <div className="parent-portal-widget">
-        <div className="parent-portal-loading">
+      <div className={`parent-portal-widget ${isDark ? '' : 'parent-portal-widget-light'}`}>
+        <div className={`parent-portal-loading ${isDark ? '' : 'parent-portal-loading-light'}`}>
           <div className="analytics-spinner" />
           <span>Loading session history...</span>
         </div>
@@ -138,7 +140,7 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
 
   if (error) {
     return (
-      <div className="parent-portal-widget">
+      <div className={`parent-portal-widget ${isDark ? '' : 'parent-portal-widget-light'}`}>
         <div className="parent-portal-error">{error}</div>
       </div>
     )
@@ -155,20 +157,20 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
   const tier = (tutor?.tier || 'FREE') as Tier
 
   return (
-    <div className="parent-portal-widget">
+    <div className={`parent-portal-widget ${isDark ? '' : 'parent-portal-widget-light'}`}>
       {/* Context info */}
       <div className="parent-portal-info">
         <div className="parent-portal-info-row">
-          <span className="parent-portal-info-label">Student</span>
-          <span className="parent-portal-info-value">{studentName}</span>
+          <span className={`parent-portal-info-label ${isDark ? '' : 'parent-portal-info-label-light'}`}>Student</span>
+          <span className={`parent-portal-info-value ${isDark ? '' : 'parent-portal-info-value-light'}`}>{studentName}</span>
         </div>
         <div className="parent-portal-info-row">
-          <span className="parent-portal-info-label">Tutor</span>
-          <span className="parent-portal-info-value">{tutor?.name || 'Unknown'}</span>
+          <span className={`parent-portal-info-label ${isDark ? '' : 'parent-portal-info-label-light'}`}>Tutor</span>
+          <span className={`parent-portal-info-value ${isDark ? '' : 'parent-portal-info-value-light'}`}>{tutor?.name || 'Unknown'}</span>
         </div>
         <div className="parent-portal-info-row">
-          <span className="parent-portal-info-label">Subject</span>
-          <span className="parent-portal-info-value">
+          <span className={`parent-portal-info-label ${isDark ? '' : 'parent-portal-info-label-light'}`}>Subject</span>
+          <span className={`parent-portal-info-value ${isDark ? '' : 'parent-portal-info-value-light'}`}>
             {currentSubject ? currentSubject.charAt(0) + currentSubject.slice(1).toLowerCase() : 'General'}
           </span>
         </div>
@@ -176,10 +178,10 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
 
       {/* Recent Sessions */}
       <div className="parent-portal-section">
-        <div className="parent-portal-section-title">Recent Sessions</div>
+        <div className={`parent-portal-section-title ${isDark ? '' : 'parent-portal-section-title-light'}`}>Recent Sessions</div>
         <div className="parent-portal-sessions">
           {sessions.length === 0 && (
-            <div className="parent-portal-empty">No completed sessions yet</div>
+            <div className={`parent-portal-empty ${isDark ? '' : 'parent-portal-empty-light'}`}>No completed sessions yet</div>
           )}
           {sessions.slice(0, 10).map((session) => {
             const date = new Date(session.createdAt)
@@ -188,14 +190,14 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
               ? session.pages[0].count
               : 0
             return (
-              <div key={session.id} className="parent-portal-session-card">
+              <div key={session.id} className={`parent-portal-session-card ${isDark ? '' : 'parent-portal-session-card-light'}`}>
                 <div className="parent-portal-session-header">
-                  <span className="parent-portal-session-date">{dateStr}</span>
+                  <span className={`parent-portal-session-date ${isDark ? '' : 'parent-portal-session-date-light'}`}>{dateStr}</span>
                   <span className="parent-portal-session-subject">
                     {session.subject.charAt(0) + session.subject.slice(1).toLowerCase()}
                   </span>
                 </div>
-                <div className="parent-portal-session-meta">
+                <div className={`parent-portal-session-meta ${isDark ? '' : 'parent-portal-session-meta-light'}`}>
                   <span>Duration: {session.durationMinutes || 0} min</span>
                   <span>Pages: {pageCount}</span>
                   <span className={session.hasNotes ? 'parent-portal-notes-available' : ''}>
@@ -211,21 +213,21 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
       {/* Summary */}
       {sessions.length > 0 && (
         <div className="parent-portal-section">
-          <div className="parent-portal-section-title">Summary</div>
+          <div className={`parent-portal-section-title ${isDark ? '' : 'parent-portal-section-title-light'}`}>Summary</div>
           <div className="parent-portal-summary">
             <div className="parent-portal-summary-item">
-              <span className="parent-portal-summary-label">Total</span>
-              <span className="parent-portal-summary-value">
+              <span className={`parent-portal-summary-label ${isDark ? '' : 'parent-portal-summary-label-light'}`}>Total</span>
+              <span className={`parent-portal-summary-value ${isDark ? '' : 'parent-portal-summary-value-light'}`}>
                 {totalSessions} sessions · {totalHours} hours
               </span>
             </div>
             <div className="parent-portal-summary-item">
-              <span className="parent-portal-summary-label">Attendance</span>
-              <span className="parent-portal-summary-value">{attendance}%</span>
+              <span className={`parent-portal-summary-label ${isDark ? '' : 'parent-portal-summary-label-light'}`}>Attendance</span>
+              <span className={`parent-portal-summary-value ${isDark ? '' : 'parent-portal-summary-value-light'}`}>{attendance}%</span>
             </div>
             <div className="parent-portal-summary-item">
-              <span className="parent-portal-summary-label">Avg session</span>
-              <span className="parent-portal-summary-value">{avgMinutes} min</span>
+              <span className={`parent-portal-summary-label ${isDark ? '' : 'parent-portal-summary-label-light'}`}>Avg session</span>
+              <span className={`parent-portal-summary-value ${isDark ? '' : 'parent-portal-summary-value-light'}`}>{avgMinutes} min</span>
             </div>
           </div>
         </div>
@@ -233,9 +235,9 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
 
       {/* Billing */}
       <div className="parent-portal-section">
-        <div className="parent-portal-section-title">Billing</div>
+        <div className={`parent-portal-section-title ${isDark ? '' : 'parent-portal-section-title-light'}`}>Billing</div>
         <div className="parent-portal-billing">
-          <div className="parent-portal-billing-plan">
+          <div className={`parent-portal-billing-plan ${isDark ? '' : 'parent-portal-billing-plan-light'}`}>
             Current plan: <strong>{getTierLabel(tier)} ({getTierPrice(tier)})</strong>
           </div>
           <a href="/pricing" className="parent-portal-billing-btn">

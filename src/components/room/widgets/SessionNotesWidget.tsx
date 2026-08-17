@@ -158,5 +158,6 @@ export function SessionNotesWidget({ roomId }: SessionNotesWidgetProps) {
           {savedAt !== null ? '💾' : '📝'} {saveLabel}
         </span>
       </div>
+    </div>
   )
 }
