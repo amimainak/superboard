@@ -1,17 +1,40 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import type { ToolId } from '@/lib/whiteboard/types'
-import {
-  Calculator,
-  UnitConverter,
-  FormulaReference,
-  MultiplicationGrid,
-  Base10Blocks,
-  Flashcards,
-  ProofBuilder,
-} from './math/MathUtilities'
+
+// Lazy-load panel utilities — only parsed when the grade tab renders them
+const CalculatorLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Calculator })))
+const UnitConverterLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.UnitConverter })))
+const FormulaRefLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.FormulaReference })))
+const MultGridLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.MultiplicationGrid })))
+const Base10Lazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Base10Blocks })))
+const FlashcardsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Flashcards })))
+const ProofBuilderLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.ProofBuilder })))
+
+// Pre-built wrapper components (stable references, no remount on re-render)
+function CalcPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><CalculatorLazy isDark={isDark} /></Suspense>
+}
+function UnitPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><UnitConverterLazy isDark={isDark} /></Suspense>
+}
+function FormulaPanel({ band, isDark }: { band: string; isDark: boolean }) {
+  return <Suspense fallback={null}><FormulaRefLazy band={band} isDark={isDark} /></Suspense>
+}
+function MultGridPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><MultGridLazy isDark={isDark} /></Suspense>
+}
+function Base10Panel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><Base10Lazy isDark={isDark} /></Suspense>
+}
+function FlashcardsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><FlashcardsLazy isDark={isDark} /></Suspense>
+}
+function ProofPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ProofBuilderLazy isDark={isDark} /></Suspense>
+}
 
 interface MathToolkitProps {
   roomId?: string
@@ -279,13 +302,13 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
 
           {/* Multiplication Grid */}
-          <div className="toolkit-section">{sectionTitle('Multiplication Grid')}<MultiplicationGrid isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Multiplication Grid')}<MultGridPanel isDark={isDark} /></div>
 
           {/* Base-10 Blocks */}
-          <div className="toolkit-section">{sectionTitle('Base-10 Blocks')}<Base10Blocks isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Base-10 Blocks')}<Base10Panel isDark={isDark} /></div>
 
           {/* Flashcards */}
-          <div className="toolkit-section">{sectionTitle('Flashcards')}<Flashcards isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Flashcards')}<FlashcardsPanel isDark={isDark} /></div>
 
           {/* Canvas tools for elementary */}
           <div className="toolkit-section">
@@ -344,13 +367,13 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
 
           {/* Calculator */}
-          <div className="toolkit-section">{sectionTitle('Scientific Calculator')}<Calculator isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Scientific Calculator')}<CalcPanel isDark={isDark} /></div>
 
           {/* Unit Converter */}
-          <div className="toolkit-section">{sectionTitle('Unit Converter')}<UnitConverter isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Unit Converter')}<UnitPanel isDark={isDark} /></div>
 
           {/* Formula Reference */}
-          <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaReference band="middle" isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaPanel band="middle" isDark={isDark} /></div>
 
           {/* Canvas tools for middle */}
           <div className="toolkit-section">
@@ -426,10 +449,10 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
 
           {/* Formula Reference */}
-          <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaReference band="highschool" isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaPanel band="highschool" isDark={isDark} /></div>
 
           {/* Proof Builder */}
-          <div className="toolkit-section">{sectionTitle('Proof Builder')}<ProofBuilder isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Proof Builder')}<ProofPanel isDark={isDark} /></div>
 
           {/* Canvas tools for HS */}
           <div className="toolkit-section">

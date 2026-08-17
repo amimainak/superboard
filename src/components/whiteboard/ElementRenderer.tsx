@@ -16,8 +16,14 @@ import {
   HIGHLIGHT_OPTIONS,
   hexToRgba,
 } from '@/lib/whiteboard/utils'
-import { MathElementRenderers } from './MathElementRenderers'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import dynamic from 'next/dynamic'
+
+// Lazy-load math renderers — 27.7 KB only loads when math elements exist on canvas (L-02 fix)
+const LazyMathRenderers = dynamic(
+  () => import('./MathElementRenderers').then(m => ({ default: m.MathElementRenderers })),
+  { ssr: false, loading: () => null }
+)
 
 interface ElementRendererProps {
   element: WhiteboardElement
@@ -301,7 +307,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
     case 'math-venn':
     case 'math-bar-chart':
     case 'math-pie-chart':
-      return <MathElementRenderers element={element} isSelected={isSelected} />
+      return <LazyMathRenderers element={element} isSelected={isSelected} />
 
     default:
       return null
