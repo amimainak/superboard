@@ -11,6 +11,9 @@ import { useWidgetStore, type WidgetId, type PanelMode, AVAILABLE_WIDGETS } from
 import { ChatWidget } from './ChatWidget'
 import { ParticipantsWidget } from './ParticipantsWidget'
 import { VideoWidget } from './VideoWidget'
+import { RecordingWidget } from './RecordingWidget'
+import { TemplatesWidget } from './TemplatesWidget'
+import { SessionNotesWidget } from './SessionNotesWidget'
 
 // Lazy-load tool widgets to reduce initial bundle
 const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) => ({ default: m.AIAssistantWidget })), { ssr: false })
@@ -63,6 +66,10 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <ParticipantsWidget roomId={roomId} isTutor={true} />
       case 'video':
         return <VideoWidget roomId={roomId} />
+      case 'recording':
+        return <RecordingWidget roomId={roomId} />
+      case 'notes':
+        return <SessionNotesWidget roomId={roomId} />
       case 'ai':
         return <AIAssistantWidget roomId={roomId} />
       case 'math':
@@ -73,6 +80,8 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <LanguageToolkit roomId={roomId} />
       case 'geogebra':
         return <GeoGebraPanel roomId={roomId} />
+      case 'templates':
+        return <TemplatesWidget roomId={roomId} />
       default:
         return null
     }

@@ -48,10 +48,12 @@ export async function PATCH(request: Request) {
     const { data: parsed, error: parseError } = parseBody(updateProfileSchema, body)
     if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
 
-    // Only allow user-writable fields — tier, isAdmin, subjectExpertise are server-managed
-    const { name, bio, timezone, brandingColor, brandingLogoUrl } = parsed
+    // A-03: Only extract explicitly-safe fields.
+    // NEVER spread parsed directly — it could include tier, email, id if schema changes.
+    const { displayName, avatarUrl, bio, timezone, brandingColor, brandingLogoUrl } = parsed
     const updates: Record<string, unknown> = {}
-    if (name !== undefined) updates.name = name
+    if (displayName !== undefined) updates.displayName = displayName
+    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl
     if (bio !== undefined) updates.bio = bio
     if (timezone !== undefined) updates.timezone = timezone
     if (brandingColor !== undefined) updates.brandingColor = brandingColor

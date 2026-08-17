@@ -135,6 +135,8 @@ export function WhiteboardCanvas() {
   const deletePage = useWhiteboardStore((s) => s.deletePage)
   const switchPage = useWhiteboardStore((s) => s.switchPage)
   const addPage = useWhiteboardStore((s) => s.addPage)
+  const canDraw = useWhiteboardStore((s) => s.canDraw)
+  const userRole = useWhiteboardStore((s) => s.userRole)
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 })
   const [alignGuides, setAlignGuides] = useState<{ axis: 'x' | 'y'; pos: number; start: number; end: number }[]>([])
@@ -230,6 +232,128 @@ export function WhiteboardCanvas() {
     }
   }, [tool]) // intentionally minimal deps — runs once per tool switch to 'image'
 
+  // ---- PDF tool: open file picker, render first page to image ----
+  useEffect(() => {
+    if (tool !== 'pdf') return
+
+    let cancelled = false
+
+    // Dynamic import of pdfjs-dist (client-side only)
+    import('pdfjs-dist/legacy/build/pdf.mjs').then(async (pdfjsLib) => {
+      if (cancelled) return
+
+      // Set worker source to CDN
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs'
+
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.pdf,application/pdf'
+
+      input.onchange = async (ev) => {
+        if (cancelled) return
+        const file = (ev.target as HTMLInputElement).files?.[0]
+        if (!file) {
+          setTool('select')
+          return
+        }
+
+        try {
+          const arrayBuffer = await file.arrayBuffer()
+          if (cancelled) return
+
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+          if (cancelled) return
+
+          // Render first page
+          const page = await pdf.getPage(1)
+          if (cancelled) return
+
+          const viewport = page.getViewport({ scale: 2 }) // 2x for quality
+
+          const canvas = document.createElement('canvas')
+          canvas.width = viewport.width
+          canvas.height = viewport.height
+          const ctx = canvas.getContext('2d')!
+
+          await page.render({ canvasContext: ctx, viewport }).promise
+          if (cancelled) return
+
+          const pdfDataUrl = canvas.toDataURL('image/png')
+
+          // Calculate placement: fit PDF to viewport with padding
+          const vw = containerSize.width / camera.zoom
+          const vh = containerSize.height / camera.zoom
+          const pdfAspect = viewport.width / viewport.height
+          const viewAspect = vw / vh
+
+          let elWidth: number
+          let elHeight: number
+          if (pdfAspect > viewAspect) {
+            elWidth = vw * 0.9
+            elHeight = elWidth / pdfAspect
+          } else {
+            elHeight = vh * 0.9
+            elWidth = elHeight * pdfAspect
+          }
+
+          // Center in viewport
+          const cx = -camera.x + containerSize.width / 2 / camera.zoom
+          const cy = -camera.y + containerSize.height / 2 / camera.zoom
+
+          pushHistory()
+          const el: WhiteboardElement = {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            type: 'pdf',
+            x: cx - elWidth / 2,
+            y: cy - elHeight / 2,
+            width: elWidth,
+            height: elHeight,
+            rotation: 0,
+            opacity: 1,
+            strokeColor: 'transparent',
+            fillColor: 'transparent',
+            strokeWidth: 0,
+            locked: false,
+            pageIndex: currentPageIndex,
+            pdfDataUrl,
+            pageNumber: 1,
+            naturalWidth: viewport.width,
+            naturalHeight: viewport.height,
+          }
+          addElement(el)
+          setTool('select')
+        } catch (err) {
+          console.error('Failed to load PDF:', err)
+          setTool('select')
+        }
+      }
+
+      // If user cancels the file dialog
+      const onCancel = () => {
+        setTimeout(() => {
+          if (!cancelled) {
+            setTool('select')
+          }
+        }, 300)
+      }
+      input.addEventListener('cancel', onCancel)
+
+      input.click()
+
+      return () => {
+        input.removeEventListener('cancel', onCancel)
+      }
+    }).catch((err) => {
+      console.error('Failed to load pdfjs-dist:', err)
+      if (!cancelled) setTool('select')
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [tool]) // intentionally minimal deps — runs once per tool switch to 'pdf'
+
   // Observe container size
   useEffect(() => {
     const container = containerRef.current
@@ -303,6 +427,22 @@ export function WhiteboardCanvas() {
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
+      // ---- Drawing permission check ----
+      if (userRole === 'guest' && !canDraw && tool !== 'select' && tool !== 'hand') {
+        // Brief visual feedback via a small toast
+        const toast = document.getElementById('draw-permission-toast')
+        if (toast) {
+          toast.style.opacity = '1'
+          toast.style.transform = 'translateX(-50%) translateY(0)'
+          clearTimeout((toast as any)._timer)
+          ;(toast as any)._timer = setTimeout(() => {
+            toast.style.opacity = '0'
+            toast.style.transform = 'translateX(-50%) translateY(8px)'
+          }, 1500)
+        }
+        return
+      }
+
       // ---- Palm rejection for touch ----
       if (shouldRejectPointer(e)) {
         e.preventDefault()
@@ -469,12 +609,17 @@ export function WhiteboardCanvas() {
           // Image file picker is handled by the useEffect — no-op here
           break
         }
+        case 'pdf': {
+          // PDF file picker is handled by the useEffect — no-op here
+          break
+        }
       }
     },
     [
       tool, camera, spaceHeld, pageElements, selectedIds, currentPageIndex,
       getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
       pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool, removeElements,
+      userRole, canDraw,
     ]
   )
 
@@ -1156,6 +1301,31 @@ export function WhiteboardCanvas() {
         </svg>
       )}
 
+      {/* Draw permission toast (for guest when drawing disabled) */}
+      {userRole === 'guest' && !canDraw && (
+        <div
+          id="draw-permission-toast"
+          style={{
+            position: 'absolute',
+            bottom: 80,
+            left: '50%',
+            transform: 'translateX(-50%) translateY(8px)',
+            opacity: 0,
+            padding: '6px 14px',
+            borderRadius: 8,
+            background: 'rgba(239, 68, 68, 0.9)',
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 500,
+            pointerEvents: 'none',
+            zIndex: 2000,
+            transition: 'opacity 0.2s ease, transform 0.2s ease',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          ✏️ Drawing is disabled
+        </div>
+      )}
       {/* Zoom indicator */}
       <div
         style={{

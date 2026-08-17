@@ -11,11 +11,14 @@ export type WidgetId =
   | 'chat'
   | 'participants'
   | 'video'
+  | 'recording'
+  | 'notes'
   | 'ai'
   | 'math'
   | 'science'
   | 'language'
   | 'geogebra'
+  | 'templates'
 
 export type PanelMode = 'dock' | 'float' | 'minimized'
 
@@ -31,12 +34,15 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'chat', label: 'Chat', icon: 'MessageCircle', section: 'communication' },
   { id: 'participants', label: 'Participants', icon: 'Users', section: 'communication' },
   { id: 'video', label: 'Video', icon: 'Video', section: 'communication' },
+  { id: 'recording', label: 'Recording', icon: 'RecordCircle', section: 'communication' },
+  { id: 'notes', label: 'Notes', icon: 'NotebookPen', section: 'tools' },
   // Tool widgets
   { id: 'ai', label: 'AI Assistant', icon: 'Sparkles', section: 'tools' },
   { id: 'math', label: 'Math Tools', icon: 'Calculator', section: 'tools' },
   { id: 'science', label: 'Science Tools', icon: 'Atom', section: 'tools' },
   { id: 'language', label: 'Language Tools', icon: 'Languages', section: 'tools' },
   { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
+  { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
 ]
 
 interface WidgetStore {

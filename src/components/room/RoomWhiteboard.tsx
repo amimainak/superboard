@@ -12,6 +12,7 @@ import {
   exportAsPng, exportAsJpg, exportAsSvg, exportAsJson,
   downloadBlob, downloadString,
 } from '@/lib/whiteboard/export'
+import { initRealtimeSync } from '@/lib/collab/realtime-sync'
 
 interface RoomWhiteboardProps {
   roomId: string
@@ -65,12 +66,16 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
   const addPage = useWhiteboardStore((s) => s.addPage)
   const undo = useWhiteboardStore((s) => s.undo)
   const redo = useWhiteboardStore((s) => s.redo)
+  const setTool = useWhiteboardStore((s) => s.setTool)
   const loadState = useWhiteboardStore((s) => s.loadState)
+  const setPages = useWhiteboardStore((s) => s.setPages)
+  const setCurrentPageIndex = useWhiteboardStore((s) => s.setCurrentPageIndex)
 
   const canvasContainerRef = useRef<HTMLDivElement>(null)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadedRef = useRef(false)
   const saveRequestRef = useRef(false)
+  const realtimeCleanupRef = useRef<(() => void) | null>(null)
 
   // Load board pages from Supabase on mount
   useEffect(() => {
@@ -103,24 +108,45 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
             allElements.push(...pageElements)
           }
 
-          // Load into store
-          // We need to set pages first, then load elements for page 0
-          // Use loadState which replaces all elements
-          // But we need to also set the pages...
-          // Since setPages is limited, let's load state with all elements
-          // The store will show page 0 elements by default
+          // Set up multi-page state properly
+          setPages(storePages)
           loadState(allElements)
-
-          // Note: The store already has a default page. If there are multiple pages
-          // from the snapshot, additional pages need to be created.
-          // For now, the single-page elements are loaded correctly.
         }
       } catch (err) {
         console.error('Failed to load pages:', err)
       }
     }
     loadPages()
-  }, [roomId, loadState])
+  }, [roomId, loadState, setPages])
+
+  // Initialize Supabase Realtime Broadcast sync
+  useEffect(() => {
+    // Small delay to let the store initialize after page load
+    const timer = setTimeout(() => {
+      const store = useWhiteboardStore.getState()
+      realtimeCleanupRef.current = initRealtimeSync(roomId, {
+        elements: store.elements,
+        camera: store.camera,
+        pages: store.pages,
+        currentPageIndex: store.currentPageIndex,
+        addElement: store.addElement,
+        updateElement: store.updateElement,
+        removeElements: store.removeElements,
+        setCamera: store.setCamera,
+        loadState: store.loadState,
+        setPages: store.setPages,
+        setCurrentPageIndex: store.setCurrentPageIndex,
+      })
+    }, 500)
+
+    return () => {
+      clearTimeout(timer)
+      if (realtimeCleanupRef.current) {
+        realtimeCleanupRef.current()
+        realtimeCleanupRef.current = null
+      }
+    }
+  }, [roomId])
 
   // Auto-save to Supabase (debounced 3s)
   const saveToSupabase = useCallback(async () => {
@@ -326,6 +352,7 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
             onBringToFront={handleBringToFront}
             onSendToBack={handleSendToBack}
             onFileUpload={handleFileUpload}
+            onPdfUpload={() => setTool('pdf')}
             onClearPage={clearCurrentPage}
             onAddPage={addPage}
             onTogglePresentation={togglePresentationMode}

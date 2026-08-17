@@ -61,8 +61,10 @@ export const updateTemplateSchema = z.object({
 })
 
 // ---- User Profile ----
+// A-03: Only user-writable fields. NEVER include tier, email, id, isAdmin — those are server-managed.
 export const updateProfileSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
+  displayName: z.string().min(1).max(100).optional(),
+  avatarUrl: z.string().max(500).url().optional(),
   bio: z.string().max(280).optional(),
   timezone: z.string().max(50).optional(),
   brandingColor: z.string().max(7).regex(/^#[0-9a-fA-F]{6}$/).optional(),

@@ -1,18 +1,17 @@
-import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { AccessToken } from 'livekit-server-sdk'
 import { parseBody, livekitTokenSchema } from '@/lib/validations'
 import { rateLimit } from '@/lib/rate-limit'
+import { getAuthenticatedUser } from '@/lib/auth-guard'
 
 // POST /api/livekit/token — generate LiveKit join token
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { user, response } = await getAuthenticatedUser()
+    if (response) return response
 
     // Rate limit: 5 token requests per minute per user
-    const { allowed, retryAfterMs } = rateLimit(`livekit:${user.id}`, 5, 60_000)
+    const { allowed, retryAfterMs } = rateLimit(`livekit:${user!.id}`, 5, 60_000)
     if (!allowed) {
       return NextResponse.json(
         { error: 'Rate limited', retryAfterMs },
@@ -39,7 +38,7 @@ export async function POST(request: Request) {
     const { roomName, participantName, metadata } = data
 
     // Force participantIdentity to the authenticated user's ID
-    const participantIdentity = user.id
+    const participantIdentity = user!.id
 
     const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
       identity: participantIdentity,

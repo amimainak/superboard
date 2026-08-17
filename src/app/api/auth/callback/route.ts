@@ -1,11 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
+// A-11: Only allow relative paths starting with a single /.
+// Reject protocol-relative (//), absolute URLs, backslashes, and encoded tricks.
+const SAFE_REDIRECT_RE = /^\/[a-zA-Z0-9._~:/?#@!$&'()*+,;=%-]*$/
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const rawNext = searchParams.get('next') ?? '/dashboard'
-  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard'
+
+  // A-11: Validate redirect — must be a safe relative path
+  const next = SAFE_REDIRECT_RE.test(rawNext) ? rawNext : '/dashboard'
 
   if (code) {
     const supabase = await createClient()

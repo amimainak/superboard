@@ -116,6 +116,10 @@ export interface WhiteboardStore {
   undoStack: HistoryEntry[]
   redoStack: HistoryEntry[]
 
+  // Permission
+  canDraw: boolean
+  userRole: 'host' | 'guest'
+
   // Actions
   setTool: (tool: ToolId) => void
   setStyle: (style: Partial<ElementStyle>) => void
@@ -188,6 +192,11 @@ export interface WhiteboardStore {
   setEraserSize: (size: number) => void
   eraserActive: boolean
   setEraserActive: (active: boolean) => void
+
+  // Permission
+  setCanDraw: (canDraw: boolean) => void
+  setUserRole: (role: 'host' | 'guest') => void
+  toggleStudentDraw: () => void
 
   // Bulk
   loadState: (elements: WhiteboardElement[]) => void
@@ -268,6 +277,9 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
     undoStack: [],
     redoStack: [],
+
+    canDraw: true,
+    userRole: 'host' as const,
 
     // ---- Tool & Style ----
     setTool: (tool) => set({ tool }),
@@ -772,16 +784,19 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     setSpaceHeld: (held) => set({ spaceHeld: held }),
     setShiftHeld: (held) => set({ shiftHeld: held }),
 
-    // ---- History ----
+    // ---- History (P-04 optimized) ----
     pushHistory: () => {
-      const { elements, undoStack } = get()
+      const { elements, undoStack, currentPageIndex } = get()
+      // Only snapshot current page elements (not all pages)
+      const pageElements = elements.filter(el => el.pageIndex === currentPageIndex)
       const entry: HistoryEntry = {
-        elements: JSON.parse(JSON.stringify(elements)),
+        elements: structuredClone(pageElements),
         timestamp: Date.now(),
+        pageIndex: currentPageIndex,
       }
-      // Cap total history memory to 20 entries (P-04)
-      if (undoStack.length >= 20) {
-        const trimmed = undoStack.slice(-19)
+      // Cap history to 50 entries (P-04)
+      if (undoStack.length >= 50) {
+        const trimmed = undoStack.slice(-49)
         const newStack = [...trimmed, entry]
         set({ undoStack: newStack, redoStack: [] })
         return
@@ -794,12 +809,16 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const { undoStack, elements, redoStack } = get()
       if (!undoStack.length) return
       const prev = undoStack[undoStack.length - 1]
+      const pageIndex = prev.pageIndex
       const currentEntry: HistoryEntry = {
-        elements: JSON.parse(JSON.stringify(elements)),
+        elements: structuredClone(elements.filter(el => el.pageIndex === pageIndex)),
         timestamp: Date.now(),
+        pageIndex,
       }
+      // Keep elements from other pages untouched
+      const otherElements = elements.filter(el => el.pageIndex !== pageIndex)
       set({
-        elements: prev.elements,
+        elements: [...otherElements, ...prev.elements],
         undoStack: undoStack.slice(0, -1),
         redoStack: [...redoStack, currentEntry],
         selectedIds: [],
@@ -810,12 +829,15 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       const { redoStack, elements, undoStack } = get()
       if (!redoStack.length) return
       const next = redoStack[redoStack.length - 1]
+      const pageIndex = next.pageIndex
       const currentEntry: HistoryEntry = {
-        elements: JSON.parse(JSON.stringify(elements)),
+        elements: structuredClone(elements.filter(el => el.pageIndex === pageIndex)),
         timestamp: Date.now(),
+        pageIndex,
       }
+      const otherElements = elements.filter(el => el.pageIndex !== pageIndex)
       set({
-        elements: next.elements,
+        elements: [...otherElements, ...next.elements],
         redoStack: redoStack.slice(0, -1),
         undoStack: [...undoStack, currentEntry],
         selectedIds: [],
@@ -901,7 +923,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     copySelected: () => {
       const { elements, selectedIds } = get()
       const selected = elements.filter((e) => selectedIds.includes(e.id))
-      set({ clipboard: JSON.parse(JSON.stringify(selected)) })
+      set({ clipboard: structuredClone(selected) })
     },
 
     cutSelected: () => {
@@ -910,7 +932,7 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       if (!selected.length) return
       get().pushHistory()
       set({
-        clipboard: JSON.parse(JSON.stringify(selected)),
+        clipboard: structuredClone(selected),
         elements: elements.filter((e) => !selectedIds.includes(e.id)),
         selectedIds: [],
       })
@@ -1002,6 +1024,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       }
       return false
     },
+
+    // ---- Permission ----
+    setCanDraw: (canDraw) => set({ canDraw }),
+    setUserRole: (role) => set({ userRole: role }),
+    toggleStudentDraw: () => set((s) => ({ canDraw: !s.canDraw })),
 
     // ---- Bulk ----
     loadState: (elements) => set({ elements }),

@@ -41,6 +41,7 @@ interface TopBarProps {
   onBringToFront: () => void
   onSendToBack: () => void
   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onPdfUpload: () => void
   onClearPage: () => void
   onAddPage: () => void
   currentTool: string
@@ -76,6 +77,7 @@ export function TopBar({
   onBringToFront,
   onSendToBack,
   onFileUpload,
+  onPdfUpload,
   onClearPage,
   onAddPage,
   currentTool,
@@ -118,6 +120,7 @@ export function TopBar({
     text: 'Text',
     sticky: 'Sticky',
     image: 'Image',
+    pdf: 'PDF',
     frame: 'Frame',
     laser: 'Laser',
     line: 'Line',
@@ -248,6 +251,10 @@ export function TopBar({
                   setMenuOpen(false)
                 }
                 input.click()
+              }} />
+              <MenuItem label="Upload PDF" isDark={isDark} onClick={() => {
+                onPdfUpload()
+                setMenuOpen(false)
               }} />
               <MenuItem label="Export as PNG" isDark={isDark} onClick={() => { onExportPng(); setMenuOpen(false) }} />
               <MenuItem label="Export as JPEG" isDark={isDark} onClick={() => { onExportJpg(); setMenuOpen(false) }} />

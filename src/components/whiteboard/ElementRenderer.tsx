@@ -226,6 +226,36 @@ export const ElementRenderer = React.memo(function ElementRenderer({
         </foreignObject>
       )
 
+    case 'pdf':
+      return (
+        <foreignObject
+          x={element.x}
+          y={element.y}
+          width={element.width}
+          height={element.height}
+          opacity={element.opacity}
+          onPointerDown={(e) => {
+            if (tool === 'select') e.stopPropagation()
+            onPointerDown(e, element.id)
+          }}
+          style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
+        >
+          <img
+            src={(element as { pdfDataUrl: string }).pdfDataUrl}
+            alt={`PDF page ${(element as { pageNumber: number }).pageNumber}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              display: 'block',
+            }}
+            draggable={false}
+          />
+        </foreignObject>
+      )
+
     case 'frame':
       return (
         <g>

@@ -59,6 +59,7 @@ export default function WhiteboardClient() {
   const addPage = useWhiteboardStore((s) => s.addPage)
   const undo = useWhiteboardStore((s) => s.undo)
   const redo = useWhiteboardStore((s) => s.redo)
+  const setTool = useWhiteboardStore((s) => s.setTool)
 
   const canvasContainerRef = useRef<HTMLDivElement>(null)
 
@@ -208,6 +209,7 @@ export default function WhiteboardClient() {
           onBringToFront={handleBringToFront}
           onSendToBack={handleSendToBack}
           onFileUpload={handleFileUpload}
+          onPdfUpload={() => setTool('pdf')}
           onClearPage={clearCurrentPage}
           onAddPage={addPage}
           onTogglePresentation={togglePresentationMode}

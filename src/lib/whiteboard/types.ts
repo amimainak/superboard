@@ -48,6 +48,7 @@ export type ToolId =
   | 'text'
   | 'sticky'
   | 'image'
+  | 'pdf'
   | 'frame'
   | 'laser'
 
@@ -132,6 +133,14 @@ export interface ImageElement extends BaseElement {
   naturalHeight: number
 }
 
+export interface PdfBackgroundElement extends BaseElement {
+  type: 'pdf'
+  pdfDataUrl: string // rendered page as data URL (image)
+  pageNumber: number // 1-based page number from the PDF
+  naturalWidth: number // original PDF page width in pts
+  naturalHeight: number // original PDF page height in pts
+}
+
 export interface FrameElement extends BaseElement {
   type: 'frame'
   name: string
@@ -153,6 +162,7 @@ export type WhiteboardElement =
   | TextElement
   | StickyElement
   | ImageElement
+  | PdfBackgroundElement
   | FrameElement
   | LaserElement
 
@@ -167,4 +177,5 @@ export interface WhiteboardPage {
 export interface HistoryEntry {
   elements: WhiteboardElement[]
   timestamp: number
+  pageIndex: number // which page this snapshot belongs to
 }

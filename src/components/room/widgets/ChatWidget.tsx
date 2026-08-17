@@ -20,6 +20,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 interface ChatMessage {
   id: string
+  senderId: string | null
   senderLabel: string
   content: string
   createdAt: string
@@ -54,8 +55,8 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   const supabase = useMemo(() => getSupabaseBrowserClient(), [])
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [senderName, setSenderName] = useState('')
   const [senderId, setSenderId] = useState<string | null>(null)
+  const [senderLabel, setSenderLabel] = useState('')
   const [uploading, setUploading] = useState(false)
   const [mutedUntil, setMutedUntil] = useState<number | null>(null)
   const [now, setNow] = useState(Date.now())
@@ -70,25 +71,25 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
     return () => clearInterval(interval)
   }, [])
 
-  // Prompt for display name once on mount
-  useEffect(() => {
-    const stored = localStorage.getItem('superboard-chat-name')
-    if (stored) {
-      setSenderName(stored)
-    } else {
-      const name = prompt('Enter your display name:', 'Tutor')
-      const finalName = name?.trim() || 'Tutor'
-      setSenderName(finalName)
-      localStorage.setItem('superboard-chat-name', finalName)
-    }
-  }, [])
-
-  // Get authenticated user ID for senderId
+  // Get authenticated user ID and label on mount
   useEffect(() => {
     const getUser = async () => {
       const sb = getSupabaseBrowserClient()
       const { data: { user } } = await sb.auth.getUser()
-      if (user) setSenderId(user.id)
+      if (user) {
+        setSenderId(user.id)
+        // Try to get the User profile name, fall back to email prefix
+        const { data: profile } = await sbAny(sb)
+          .from('User')
+          .select('name')
+          .eq('id', user.id)
+          .single()
+        const label = profile?.name || user.email?.split('@')[0] || 'User'
+        setSenderLabel(label)
+      } else {
+        // Not authenticated — fall back to anonymous label
+        setSenderLabel('Guest')
+      }
     }
     getUser()
   }, [])
@@ -98,7 +99,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
     const loadMessages = async () => {
       const { data } = await sbAny(supabase)
         .from('ChatMessage')
-        .select('id, senderLabel, content, createdAt, fileUrl, isPinned')
+        .select('id, senderId, senderLabel, content, createdAt, fileUrl, isPinned')
         .eq('roomId', roomId)
         .order('createdAt', { ascending: true })
         .limit(100)
@@ -191,14 +192,14 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || !senderName || isMuted) return
+    if (!input.trim() || !senderLabel || isMuted) return
     const content = input.trim()
     setInput('')
     await sbAny(supabase).from('ChatMessage').insert({
       roomId,
-      senderLabel: senderName,
+      senderLabel,
       content,
-      senderId: senderId ?? null,
+      senderId: senderId,
     })
   }
 
@@ -235,10 +236,10 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
 
       await sbAny(supabase).from('ChatMessage').insert({
         roomId,
-        senderLabel: senderName,
+        senderLabel,
         content: `📷 ${file.name}`,
         fileUrl: dataUrl,
-        senderId: senderId ?? null,
+        senderId: senderId,
       })
     } catch (err) {
       console.error('File upload failed:', err)
@@ -298,7 +299,7 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
       )}
       <div className="widget-messages" ref={messagesContainerRef} onScroll={handleScroll}>
         {messages.map((msg) => {
-          const isOwn = msg.senderLabel === senderName
+          const isOwn = senderId ? msg.senderId === senderId : msg.senderLabel === senderLabel
           return (
             <div
               key={msg.id}

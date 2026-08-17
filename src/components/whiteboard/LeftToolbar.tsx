@@ -22,6 +22,7 @@ import {
   Type,
   StickyNote,
   ImagePlus,
+  FileText,
   Frame,
   Zap,
   ChevronDown,
@@ -52,6 +53,7 @@ const SHAPES: ToolDef[] = [
 const MORE_TOOLS: ToolDef[] = [
   { id: 'sticky', label: 'Sticky Note', shortcut: 'N', icon: <StickyNote size={16} /> },
   { id: 'image', label: 'Image', shortcut: 'U', icon: <ImagePlus size={16} /> },
+  { id: 'pdf', label: 'PDF Background', shortcut: '', icon: <FileText size={16} /> },
 ]
 
 const ERASER_TOOLS: ToolDef[] = [

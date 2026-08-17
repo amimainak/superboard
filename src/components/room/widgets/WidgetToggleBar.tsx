@@ -92,6 +92,12 @@ function WidgetIcon({ name }: { name: string }) {
         <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
       </svg>
     ),
+    RecordCircle: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="3" fill="currentColor" />
+      </svg>
+    ),
     Sparkles: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
@@ -134,6 +140,22 @@ function WidgetIcon({ name }: { name: string }) {
         <circle cx="7.5" cy="7.5" r="4" />
         <rect x="13.5" y="3" width="8" height="9" rx="1" />
         <path d="M7 14l-4 8 8-2Z" />
+      </svg>
+    ),
+    NotebookPen: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M13 4v16" />
+        <path d="M17 4v16" />
+        <path d="M13 4h4" />
+        <path d="M17 20H9.5a4.5 4.5 0 0 1 0-9H13" />
+        <path d="M8 2h8" />
+      </svg>
+    ),
+    LayoutTemplate: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <line x1="3" y1="9" x2="21" y2="9" />
+        <line x1="9" y1="21" x2="9" y2="9" />
       </svg>
     ),
   }

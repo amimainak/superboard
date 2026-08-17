@@ -1,26 +1,28 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { parseBody, usageHeartbeatSchema } from '@/lib/validations'
+import { getAuthenticatedUser } from '@/lib/auth-guard'
 
 // GET /api/usage — fetch current period usage for authenticated user
 export async function GET() {
   try {
+    const { user, response } = await getAuthenticatedUser()
+    if (response) return response
+
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase as any)
       .from('UsageLog')
       .select('*')
-      .eq('userId', user.id)
+      .eq('userId', user!.id)
       .order('periodStartDate', { ascending: false })
       .limit(1)
       .single()
 
     if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows
     return NextResponse.json(data ?? {
-      userId: user.id,
+      userId: user!.id,
       periodStartDate: new Date().toISOString(),
       videoMinutesUsed: 0,
       aiCreditsUsed: 0,
@@ -35,9 +37,10 @@ export async function GET() {
 // POST /api/usage — record usage (video minutes, AI credits)
 export async function POST(request: Request) {
   try {
+    const { user, response } = await getAuthenticatedUser()
+    if (response) return response
+
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
     const { data: parsed, error: parseError } = parseBody(usageHeartbeatSchema, body)
@@ -45,9 +48,11 @@ export async function POST(request: Request) {
 
     if (!parsed) return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
 
-    // Cap minutesUsed to max 5 per heartbeat to prevent inflation
+    // A-05: Don't trust client minutesUsed — cap per-heartbeat to 5 minutes max
+    const MAX_MINUTES_PER_HEARTBEAT = 5
+    const MAX_SESSION_MINUTES = 180
     if (parsed.minutesUsed != null) {
-      parsed.minutesUsed = Math.min(parsed.minutesUsed, 5)
+      parsed.minutesUsed = Math.min(parsed.minutesUsed, MAX_MINUTES_PER_HEARTBEAT)
     }
 
     // Upsert usage for current period
@@ -59,7 +64,7 @@ export async function POST(request: Request) {
     const { data: existing } = await (supabase as any)
       .from('UsageLog')
       .select('*')
-      .eq('userId', user.id)
+      .eq('userId', user!.id)
       .gte('periodStartDate', periodStart.toISOString())
       .limit(1)
       .single()
@@ -76,6 +81,17 @@ export async function POST(request: Request) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
+    // A-05: Reject if total session minutes would exceed 180
+    if (parsed.type === 'video' && parsed.minutesUsed) {
+      const currentTotal = existing?.videoMinutesUsed || 0
+      if (currentTotal + parsed.minutesUsed > MAX_SESSION_MINUTES) {
+        return NextResponse.json(
+          { error: 'Session usage limit exceeded' },
+          { status: 429 }
+        )
+      }
+    }
+
     if (existing) {
       const { error } = await sb
         .from('UsageLog')
@@ -84,7 +100,7 @@ export async function POST(request: Request) {
       if (error) throw error
     } else {
       const { error } = await sb.from('UsageLog').insert({
-        userId: user.id,
+        userId: user!.id,
         periodStartDate: periodStart.toISOString(),
         ...updates,
       })
