@@ -6,44 +6,79 @@
 
 'use client'
 
+import { useEffect } from 'react'
 import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { WidgetBrowseModal } from './WidgetBrowseModal'
 
 export function WidgetToggleBar() {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const openWidgets = useWidgetStore((s) => s.openWidgets)
   const toggleWidget = useWidgetStore((s) => s.toggleWidget)
+  const setBrowseModalOpen = useWidgetStore((s) => s.setBrowseModalOpen)
+  const setInstalledTools = useWidgetStore((s) => s.setInstalledTools)
+
+  // Load installed tools from server on mount
+  useEffect(() => {
+    fetch('/api/user/widgets')
+      .then(res => res.json())
+      .then(data => {
+        if (data.installedTools) setInstalledTools(data.installedTools)
+      })
+      .catch(() => { /* silently fail — will use empty set */ })
+  }, [setInstalledTools])
 
   const commWidgets = AVAILABLE_WIDGETS.filter((w) => w.section === 'communication')
   const toolWidgets = AVAILABLE_WIDGETS.filter((w) => w.section === 'tools')
 
   return (
-    <div className={`widget-toggle-bar ${isDark ? '' : 'widget-toggle-bar-light'}`} role="toolbar" aria-label="Toggle widgets">
-      {/* Communication section */}
-      <div className="widget-toggle-group">
-        <span className={`widget-toggle-group-label ${isDark ? '' : 'widget-toggle-group-label-light'}`}>Collaborate</span>
-        {commWidgets.map((widget) => (
-          <ToggleBtn
-            key={widget.id}
-            widget={widget}
-            isOpen={openWidgets.includes(widget.id as WidgetId)}
-            onToggle={() => toggleWidget(widget.id as WidgetId)}
-          />
-        ))}
+    <>
+      <div className={`widget-toggle-bar ${isDark ? '' : 'widget-toggle-bar-light'}`} role="toolbar" aria-label="Toggle widgets">
+        {/* Communication section */}
+        <div className="widget-toggle-group">
+          <span className={`widget-toggle-group-label ${isDark ? '' : 'widget-toggle-group-label-light'}`}>Collaborate</span>
+          {commWidgets.map((widget) => (
+            <ToggleBtn
+              key={widget.id}
+              widget={widget}
+              isOpen={openWidgets.includes(widget.id as WidgetId)}
+              onToggle={() => toggleWidget(widget.id as WidgetId)}
+            />
+          ))}
+        </div>
+        {/* Tools section */}
+        <div className="widget-toggle-group">
+          <span className={`widget-toggle-group-label ${isDark ? '' : 'widget-toggle-group-label-light'}`}>Tools</span>
+          {toolWidgets.map((widget) => (
+            <ToggleBtn
+              key={widget.id}
+              widget={widget}
+              isOpen={openWidgets.includes(widget.id as WidgetId)}
+              onToggle={() => toggleWidget(widget.id as WidgetId)}
+            />
+          ))}
+          {/* Marketplace browse button */}
+          <button
+            onClick={() => setBrowseModalOpen(true)}
+            title="Browse Widget Library"
+            className={[
+              `widget-toggle-btn ${isDark ? '' : 'widget-toggle-btn-light'}`,
+            ].join(' ')}
+            style={{
+              border: '1px dashed ' + (isDark ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.3)'),
+              background: isDark ? 'rgba(168,85,247,0.06)' : 'rgba(168,85,247,0.04)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.3-4.3" />
+            </svg>
+            <span className="widget-toggle-label" style={{ color: isDark ? '#c084fc' : '#a855f7' }}>Library</span>
+          </button>
+        </div>
       </div>
-      {/* Tools section */}
-      <div className="widget-toggle-group">
-        <span className={`widget-toggle-group-label ${isDark ? '' : 'widget-toggle-group-label-light'}`}>Tools</span>
-        {toolWidgets.map((widget) => (
-          <ToggleBtn
-            key={widget.id}
-            widget={widget}
-            isOpen={openWidgets.includes(widget.id as WidgetId)}
-            onToggle={() => toggleWidget(widget.id as WidgetId)}
-          />
-        ))}
-      </div>
-    </div>
+      <WidgetBrowseModal />
+    </>
   )
 }
 
@@ -136,6 +171,31 @@ function WidgetIcon({ name }: { name: string }) {
         <path d="M7 2h1" />
         <path d="M22 22l-5-10-5 10" />
         <path d="M14 18h6" />
+      </svg>
+    ),
+    Zap: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    ),
+    Leaf: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z" />
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+      </svg>
+    ),
+    Globe: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+    Timer: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="10" y1="2" x2="14" y2="2" />
+        <line x1="12" y1="14" x2="12" y2="8" />
+        <circle cx="12" cy="14" r="8" />
       </svg>
     ),
     Shapes: (

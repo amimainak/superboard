@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { MARKETPLACE_WIDGETS, COMING_SOON_WIDGETS } from '@/lib/room/widget-registry'
 
 interface Room {
   id: string
@@ -30,6 +31,12 @@ interface Profile {
 }
 
 const FREE_ROOM_LIMIT = 3
+
+const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  free: { bg: 'rgba(34,197,94,0.12)', text: '#22c55e', border: 'rgba(34,197,94,0.25)' },
+  pro: { bg: 'rgba(168,85,247,0.12)', text: '#c084fc', border: 'rgba(168,85,247,0.25)' },
+  agency: { bg: 'rgba(245,158,11,0.12)', text: '#fbbf24', border: 'rgba(245,158,11,0.25)' },
+}
 
 function UpgradePrompt() {
   return (
@@ -118,17 +125,22 @@ function DashboardPage() {
   const [showNewRoom, setShowNewRoom] = useState(false)
   const [subject, setSubject] = useState('GENERAL')
   const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(false)
+  const [installedTools, setInstalledTools] = useState<string[]>([])
+  const [widgetsSaving, setWidgetsSaving] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     try {
-      const [profileRes, roomsRes, templatesRes] = await Promise.all([
+      const [profileRes, roomsRes, templatesRes, widgetsRes] = await Promise.all([
         fetch('/api/user/profile'),
         fetch('/api/rooms?status=active'),
         fetch('/api/templates'),
+        fetch('/api/user/widgets'),
       ])
       setProfile(await profileRes.json())
       setRooms(await roomsRes.json())
       setTemplates(await templatesRes.json())
+      const widgetsData = await widgetsRes.json()
+      if (widgetsData.installedTools) setInstalledTools(widgetsData.installedTools)
     } catch (err) {
       console.error('Failed to load data:', err)
     } finally {
@@ -189,6 +201,26 @@ function DashboardPage() {
       body: JSON.stringify({ isActive: false }),
     })
     loadData()
+  }
+
+  const handleToggleWidget = async (toolId: string, isInstalled: boolean) => {
+    setWidgetsSaving(toolId)
+    try {
+      const newTools = isInstalled
+        ? installedTools.filter(id => id !== toolId)
+        : [...installedTools, toolId]
+      setInstalledTools(newTools)
+      await fetch('/api/user/widgets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ installedTools: newTools }),
+      })
+    } catch (err) {
+      console.error('Failed to toggle widget:', err)
+      setInstalledTools(installedTools)
+    } finally {
+      setWidgetsSaving(null)
+    }
   }
 
   const handleDeleteTemplate = async (templateId: string) => {
@@ -375,6 +407,80 @@ function DashboardPage() {
             </button>
           </form>
         )}
+
+        {/* Widget Library — Marketplace */}
+        <div style={{ marginBottom: 40 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#e2e8f0', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            Widget Library
+            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: 'rgba(168,85,247,0.15)', color: '#c084fc', border: '1px solid rgba(168,85,247,0.25)' }}>Marketplace</span>
+          </h2>
+          <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px' }}>
+            Install additional teaching tools. They appear inside subject toolkits during sessions.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
+            {MARKETPLACE_WIDGETS.map((w) => {
+              const isInstalled = installedTools.includes(w.id)
+              const tierColor = TIER_COLORS[w.tier] || TIER_COLORS.free
+              const isSaving = widgetsSaving === w.id
+              return (
+                <div key={w.id} style={{
+                  padding: 14, borderRadius: 10,
+                  border: '1px solid ' + (isInstalled ? 'rgba(5,150,105,0.3)' : 'rgba(255,255,255,0.06)'),
+                  background: isInstalled ? 'rgba(5,150,105,0.04)' : 'rgba(255,255,255,0.02)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{w.label}</span>
+                        <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: tierColor.bg, color: tierColor.text, border: '1px solid ' + tierColor.border, textTransform: 'uppercase', letterSpacing: 0.5 }}>{w.tier}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.4, marginBottom: 6 }}>{w.description}</div>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {w.gradeBands.map(gb => (
+                          <span key={gb} style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748b' }}>{gb}</span>
+                        ))}
+                        <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: w.toolType === 'diagnostic' ? 'rgba(245,158,11,0.1)' : 'rgba(8,145,178,0.1)', border: w.toolType === 'diagnostic' ? 'rgba(245,158,11,0.2)' : 'rgba(8,145,178,0.2)', color: w.toolType === 'diagnostic' ? '#fbbf24' : '#38bdf8' }}>{w.toolType}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleToggleWidget(w.id, isInstalled)}
+                      disabled={isSaving || (w.tier === 'pro' && profile?.tier === 'FREE')}
+                      style={{
+                        padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                        whiteSpace: 'nowrap', cursor: isSaving ? 'not-allowed' : 'pointer', flexShrink: 0,
+                        ...(isInstalled
+                          ? { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#fca5a5' }
+                          : w.tier === 'pro' && profile?.tier === 'FREE'
+                            ? { background: 'rgba(100,116,139,0.1)', border: '1px solid rgba(100,116,139,0.2)', color: '#64748b', cursor: 'not-allowed' }
+                            : { background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }
+                        ),
+                      }}
+                    >
+                      {isSaving ? '...' : isInstalled ? 'Remove' : w.tier === 'pro' && profile?.tier === 'FREE' ? 'Pro Only' : 'Install'}
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+            {/* Coming Soon */}
+            {COMING_SOON_WIDGETS.map((w) => (
+              <div key={w.id} style={{
+                padding: 14, borderRadius: 10, opacity: 0.5,
+                border: '1px dashed rgba(255,255,255,0.1)',
+                background: 'rgba(255,255,255,0.01)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{w.label}</span>
+                  <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: 'rgba(100,116,139,0.15)', color: '#64748b', border: '1px solid rgba(100,116,139,0.2)' }}>Coming Soon</span>
+                </div>
+                <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>{w.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Two Column Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>

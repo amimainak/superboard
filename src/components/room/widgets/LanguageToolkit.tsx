@@ -2,8 +2,9 @@
 
 import { useState, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useWidgetStore } from '@/lib/room/widget-store'
 
-// Lazy-load each tool — only parsed when the grade tab renders it
+// Phase 1 — Core tools
 const VocabularyFlashcardsLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.VocabularyFlashcards })))
 const ReadingPassageAnalyzerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ReadingPassageAnalyzer })))
 const StoryElementsMapLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.StoryElementsMap })))
@@ -15,40 +16,71 @@ const SentenceExpansionToolLazy = lazy(() => import('./language/LanguageUtilitie
 const PunctuationInteractiveLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PunctuationInteractive })))
 const ParagraphOrganizerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ParagraphOrganizer })))
 
-// Stable wrapper components (no remount on re-render)
+// Phase 2 — Marketplace tools
+const RootMorphologyExplorerLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.RootMorphologyExplorer })))
+const ActivePassiveVoiceLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.ActivePassiveVoice })))
+const ReadingComprehensionStrategiesLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.ReadingComprehensionStrategies })))
+const GrammarErrorDiagnosticLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.GrammarErrorDiagnostic })))
+const SpellingPatternsLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.SpellingPatterns })))
+
+// ============================================================
+// Stable wrappers (prevent remount on re-render)
+// ============================================================
+
+function P1Panel({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={null}>{children}</Suspense>
+}
+
 function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><VocabularyFlashcardsLazy isDark={isDark} /></Suspense>
+  return <P1Panel><VocabularyFlashcardsLazy isDark={isDark} /></P1Panel>
 }
 function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ReadingPassageAnalyzerLazy isDark={isDark} /></Suspense>
+  return <P1Panel><ReadingPassageAnalyzerLazy isDark={isDark} /></P1Panel>
 }
 function StoryElementsMapPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><StoryElementsMapLazy isDark={isDark} /></Suspense>
+  return <P1Panel><StoryElementsMapLazy isDark={isDark} /></P1Panel>
 }
 function SentenceStructureBuilderPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SentenceStructureBuilderLazy isDark={isDark} /></Suspense>
+  return <P1Panel><SentenceStructureBuilderLazy isDark={isDark} /></P1Panel>
 }
 function FigurativeLanguageFinderPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FigurativeLanguageFinderLazy isDark={isDark} /></Suspense>
+  return <P1Panel><FigurativeLanguageFinderLazy isDark={isDark} /></P1Panel>
 }
 function PhonicsDecodingBuilderPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PhonicsDecodingBuilderLazy isDark={isDark} /></Suspense>
+  return <P1Panel><PhonicsDecodingBuilderLazy isDark={isDark} /></P1Panel>
 }
 function PartsOfSpeechTaggerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PartsOfSpeechTaggerLazy isDark={isDark} /></Suspense>
+  return <P1Panel><PartsOfSpeechTaggerLazy isDark={isDark} /></P1Panel>
 }
 function SentenceExpansionToolPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SentenceExpansionToolLazy isDark={isDark} /></Suspense>
+  return <P1Panel><SentenceExpansionToolLazy isDark={isDark} /></P1Panel>
 }
 function PunctuationInteractivePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PunctuationInteractiveLazy isDark={isDark} /></Suspense>
+  return <P1Panel><PunctuationInteractiveLazy isDark={isDark} /></P1Panel>
 }
 function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ParagraphOrganizerLazy isDark={isDark} /></Suspense>
+  return <P1Panel><ParagraphOrganizerLazy isDark={isDark} /></P1Panel>
+}
+
+// Phase 2 wrappers
+function RootMorphologyExplorerPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><RootMorphologyExplorerLazy isDark={isDark} /></P1Panel>
+}
+function ActivePassiveVoicePanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><ActivePassiveVoiceLazy isDark={isDark} /></P1Panel>
+}
+function ReadingComprehensionStrategiesPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><ReadingComprehensionStrategiesLazy isDark={isDark} /></P1Panel>
+}
+function GrammarErrorDiagnosticPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><GrammarErrorDiagnosticLazy isDark={isDark} /></P1Panel>
+}
+function SpellingPatternsPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><SpellingPatternsLazy isDark={isDark} /></P1Panel>
 }
 
 // ============================================================
-// Types
+// Types & Constants
 // ============================================================
 
 type GradeBand = 'all' | 'k5' | '68' | '912'
@@ -64,12 +96,22 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
   { id: '912', label: '9-12', icon: '!' },
 ]
 
+// Phase 2 tool IDs and their grade eligibility
+const PHASE2_TOOLS: { id: string; label: string; gradeBands: GradeBand[] }[] = [
+  { id: 'lang-root-morphology', label: 'Root & Morphology Explorer', gradeBands: ['68', '912', 'all'] },
+  { id: 'lang-active-passive', label: 'Active & Passive Voice', gradeBands: ['68', '912', 'all'] },
+  { id: 'lang-reading-strategies', label: 'Reading Comprehension Strategies', gradeBands: ['68', '912', 'all'] },
+  { id: 'lang-grammar-diagnostic', label: 'Grammar Error Diagnostic', gradeBands: ['68', '912', 'all'] },
+  { id: 'lang-spelling-patterns', label: 'Spelling Patterns', gradeBands: ['k5', '68', 'all'] },
+]
+
 // ============================================================
 // Component
 // ============================================================
 
 export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const installedTools = useWidgetStore((s) => s.installedTools)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'k5', '68', '912']))
@@ -83,6 +125,11 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
     })
   }
 
+  // Determine which Phase 2 tools are installed AND visible for current band
+  const visibleP2 = PHASE2_TOOLS.filter(t =>
+    installedTools.has(t.id) && t.gradeBands.includes(activeBand)
+  )
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -91,9 +138,30 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, isMarketplace = false) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+      {isMarketplace && (
+        <span style={{
+          fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3,
+          background: 'rgba(168,85,247,0.15)', color: '#c084fc',
+          border: '1px solid rgba(168,85,247,0.25)', textTransform: 'uppercase', letterSpacing: 0.5,
+        }}>PRO</span>
+      )}
+    </div>
   )
+
+  // Phase 2 component renderers
+  const renderP2Tool = (toolId: string, label: string) => {
+    switch (toolId) {
+      case 'lang-root-morphology': return <div style={{ padding: '0 12px 12px' }}><RootMorphologyExplorerPanel isDark={isDark} /></div>
+      case 'lang-active-passive': return <div style={{ padding: '0 12px 12px' }}><ActivePassiveVoicePanel isDark={isDark} /></div>
+      case 'lang-reading-strategies': return <div style={{ padding: '0 12px 12px' }}><ReadingComprehensionStrategiesPanel isDark={isDark} /></div>
+      case 'lang-grammar-diagnostic': return <div style={{ padding: '0 12px 12px' }}><GrammarErrorDiagnosticPanel isDark={isDark} /></div>
+      case 'lang-spelling-patterns': return <div style={{ padding: '0 12px 12px' }}><SpellingPatternsPanel isDark={isDark} /></div>
+      default: return null
+    }
+  }
 
   return (
     <div className="widget-content toolkit-language" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
@@ -103,7 +171,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           const active = activeBand === band.id
           return (
             <button key={band.id} onClick={() => setActiveBand(band.id)}
-              style={{ padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: active ? 700 : 500, background: active ? actBg : dkBg, border: active ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: active ? actText : dkText, cursor: 'pointer', flex: '1 1 auto', textAlign: 'center', minWidth: 0 }}>
+              style={{ padding: '5px 10px', borderRadius: 6, fontSize: 11, fontWeight: active ? 700 : 500, background: active ? actBg : dkBg, border: active ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: active ? actText : dkText, cursor: 'pointer', flex: '1 1 auto', textAlign: 'center' as const, minWidth: 0 }}>
               {band.icon} {band.label}
             </button>
           )
@@ -122,10 +190,11 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       </div>
 
       {/* ============================================================ */}
-      {/* ALL TAB — All 10 tools */}
+      {/* ALL TAB — All Phase 1 tools + installed Phase 2 tools */}
       {/* ============================================================ */}
       {activeBand === 'all' && (
         <>
+          {/* Phase 1: Core */}
           <div className="toolkit-section">
             {sectionTitle('Phonics & Decoding Builder')}
             <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
@@ -166,11 +235,26 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Figurative Language Finder')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
           </div>
+
+          {/* Phase 2: Marketplace (installed only) */}
+          {visibleP2.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                Marketplace Tools
+              </div>
+              {visibleP2.map(tool => (
+                <div key={tool.id} className="toolkit-section">
+                  {sectionTitle(tool.label, true)}
+                  {renderP2Tool(tool.id, tool.label)}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
       {/* ============================================================ */}
-      {/* K-5 TAB — Phonics, Punctuation, Vocab Flashcards, Story Elements */}
+      {/* K-5 TAB */}
       {/* ============================================================ */}
       {activeBand === 'k5' && (
         <>
@@ -190,11 +274,22 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Story Elements Map')}
             <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
           </div>
+          {visibleP2.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
+              {visibleP2.map(tool => (
+                <div key={tool.id} className="toolkit-section">
+                  {sectionTitle(tool.label, true)}
+                  {renderP2Tool(tool.id, tool.label)}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
       {/* ============================================================ */}
-      {/* 6-8 TAB — All tools except Phonics (9 tools) */}
+      {/* 6-8 TAB */}
       {/* ============================================================ */}
       {activeBand === '68' && (
         <>
@@ -234,11 +329,22 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Figurative Language Finder')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
           </div>
+          {visibleP2.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
+              {visibleP2.map(tool => (
+                <div key={tool.id} className="toolkit-section">
+                  {sectionTitle(tool.label, true)}
+                  {renderP2Tool(tool.id, tool.label)}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
 
       {/* ============================================================ */}
-      {/* 9-12 TAB — POS Tagger, Sentence Expansion, Punctuation, Paragraph, Reading, Figurative, Vocab */}
+      {/* 9-12 TAB */}
       {/* ============================================================ */}
       {activeBand === '912' && (
         <>
@@ -270,6 +376,17 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Vocabulary Flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
           </div>
+          {visibleP2.length > 0 && (
+            <div style={{ marginTop: 4 }}>
+              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
+              {visibleP2.map(tool => (
+                <div key={tool.id} className="toolkit-section">
+                  {sectionTitle(tool.label, true)}
+                  {renderP2Tool(tool.id, tool.label)}
+                </div>
+              ))}
+            </div>
+          )}
         </>
       )}
     </div>

@@ -1,19 +1,25 @@
 ---
 Task ID: 1
-Agent: main
-Task: Full quality audit and 10/10 polish — security, performance, reliability, code quality
+Agent: Main
+Task: Build Widget Library (v1 marketplace) with Phase 2 language tools
 
 Work Log:
-- Ran comprehensive audit via Explore agent across all critical files
-- Found 51 issues: 7 Critical, 9 High, 15 Medium, 20 Low
-- Fixed 25 issues across 13 files in 3 parallel tracks
-- Track 1 (Security): XSS paste handler, authZ on rooms/pages/templates, security headers, API key fix, sync guard, error message sanitization
-- Track 2 (Performance): Set-based selectedIds lookups (8 locations), Map-based sync diffing, ElementRenderer prop-based rendering, alignment guide skip, stale closure fix
-- Track 3 (Reliability+Quality): clearCanvas page fix, frame undo, iterative simplifyPoints, paste pageIdx, generateId consistency, move threshold, console.log cleanup, error boundary, PDF worker local
-- TypeScript: 0 errors, build compiles successfully
-- Deployed: push to main triggers Vercel auto-deploy
+- Created WidgetManifest schema at src/lib/room/widget-registry.ts with full manifest for all 21 core widgets, 5 Phase 2 marketplace widgets, and 5 Phase 3 coming-soon widgets
+- Built 5 Phase 2 language tools in src/components/room/widgets/language/LanguagePhase2Utilities.tsx: Root & Morphology Explorer, Active & Passive Voice, Reading Comprehension Strategies, Grammar Error Diagnostic, Spelling Patterns
+- Updated LanguageToolkit.tsx to lazy-load and conditionally show Phase 2 tools (only if installed via marketplace)
+- Extended widget-store.ts with installedTools Set, install/uninstall actions, browseModalOpen state
+- Created WidgetBrowseModal.tsx — in-session modal for browsing/installing marketplace tools with search, subject/grade filters, tabs (Available/Installed/Coming Soon)
+- Updated WidgetToggleBar.tsx with purple dashed 'Library' button that opens the browse modal, loads installed tools on mount
+- Created API route at src/app/api/user/widgets/route.ts for persisting installed tools to Supabase User table
+- Added Widget Library section to dashboard page with install/remove buttons, tier gating (Pro-only badges), and coming-soon cards
+- Fixed all lint errors in new files (hooks ordering, unused imports, memoization dependencies, numeric object keys)
 
 Stage Summary:
-- 25 fixes committed in a8928e7 across 14 files (184 insertions, 113 deletions)
-- Remaining items noted for future: Redis rate limiter (C-03), Yjs CRDT migration (C-02), image/PDF storage upload (L-07/L-08), bundle size optimization (L-11/L-12/L-13)
-- These require infrastructure changes (Upstash Redis, Hocuspocus server, object storage) and are tracked separately
+- Widget Library is a catalog-with-feature-flags system (not dynamic plugin loading)
+- Phase 2 tools appear in LanguageToolkit under 'Marketplace Tools' section with purple PRO badge
+- In-session: tutors click 'Library' button on toggle bar → modal opens → install/uninstall tools
+- Dashboard: full Widget Library section with cards for all 10 Phase 2+3 tools
+- Tier gating: Phase 2 tools marked as 'pro' tier, FREE users see 'Pro Only' button
+- Persistence: installed tools saved to User.installedWidgets via Supabase
+- Files created: widget-registry.ts, LanguagePhase2Utilities.tsx, WidgetBrowseModal.tsx, api/user/widgets/route.ts
+- Files modified: widget-store.ts, LanguageToolkit.tsx, WidgetToggleBar.tsx, dashboard/page.tsx, widgets/index.ts

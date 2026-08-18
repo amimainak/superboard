@@ -30,6 +30,9 @@ export type WidgetId =
   | 'agency'
   | 'breakout'
 
+/** Marketplace tool IDs — sub-tools installed within core widgets */
+export type MarketplaceToolId = string
+
 export type PanelMode = 'dock' | 'float' | 'minimized'
 
 export interface WidgetDef {
@@ -75,6 +78,10 @@ interface WidgetStore {
   panelVisible: boolean
   /** Panel display mode: dock (right sidebar), float (floating window), minimized (tab bar only) */
   panelMode: PanelMode
+  /** Installed marketplace tools (persisted to Supabase) */
+  installedTools: Set<MarketplaceToolId>
+  /** Whether the browse modal is open */
+  browseModalOpen: boolean
 
   // Actions
   toggleWidget: (id: WidgetId) => void
@@ -84,6 +91,11 @@ interface WidgetStore {
   closePanel: () => void
   resetWidgets: () => void
   setPanelMode: (mode: PanelMode) => void
+  installTool: (id: MarketplaceToolId) => void
+  uninstallTool: (id: MarketplaceToolId) => void
+  isToolInstalled: (id: MarketplaceToolId) => boolean
+  setInstalledTools: (ids: MarketplaceToolId[]) => void
+  setBrowseModalOpen: (open: boolean) => void
 }
 
 export const useWidgetStore = create<WidgetStore>((set, get) => ({
@@ -91,6 +103,8 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   activeTab: null,
   panelVisible: false,
   panelMode: 'dock',
+  installedTools: new Set<MarketplaceToolId>(),
+  browseModalOpen: false,
 
   toggleWidget: (id) => {
     const { openWidgets, activeTab } = get()
@@ -153,4 +167,22 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   }),
 
   setPanelMode: (mode) => set({ panelMode: mode }),
+
+  installTool: (id) => set((state) => {
+    const next = new Set(state.installedTools)
+    next.add(id)
+    return { installedTools: next }
+  }),
+
+  uninstallTool: (id) => set((state) => {
+    const next = new Set(state.installedTools)
+    next.delete(id)
+    return { installedTools: next }
+  }),
+
+  isToolInstalled: (id) => get().installedTools.has(id),
+
+  setInstalledTools: (ids) => set({ installedTools: new Set(ids) }),
+
+  setBrowseModalOpen: (open) => set({ browseModalOpen: open }),
 }))
