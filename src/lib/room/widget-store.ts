@@ -20,6 +20,8 @@ export type WidgetId =
   | 'biology'
   | 'language'
   | 'statistics'
+  | 'earthscience'
+  | 'classroom'
   | 'geogebra'
   | 'templates'
   | 'analytics'
@@ -52,6 +54,8 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'biology', label: 'Biology', icon: 'Leaf', section: 'tools' },
   { id: 'language', label: 'Language', icon: 'Languages', section: 'tools' },
   { id: 'statistics', label: 'Statistics', icon: 'BarChart3', section: 'tools' },
+  { id: 'earthscience', label: 'Earth Science', icon: 'Globe', section: 'tools' },
+  { id: 'classroom', label: 'Classroom', icon: 'Timer', section: 'tools' },
   { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
   // Analytics widgets

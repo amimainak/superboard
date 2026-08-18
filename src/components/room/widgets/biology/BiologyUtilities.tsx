@@ -892,3 +892,661 @@ export function EcologyFoodWeb({ isDark }: { isDark: boolean }) {
     </div>
   )
 }
+
+// ============================================================
+// 6. DNAStructureViewer
+// ============================================================
+
+const BASE_COLORS: Record<string, string> = { A: '#ef4444', T: '#3b82f6', G: '#22c55e', C: '#eab308' }
+const COMPLEMENT: Record<string, string> = { A: 'T', T: 'A', G: 'C', C: 'G' }
+
+export function DNAStructureViewer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [seq, setSeq] = useState('ATGCGATCATAG')
+  const [mode, setMode] = useState<'none' | 'replicate' | 'transcribe'>('none')
+
+  const validSeq = seq.toUpperCase().replace(/[^ATGC]/g, '').slice(0, 20)
+  const complementStrand = validSeq.split('').map(b => COMPLEMENT[b] || 'N').join('')
+  const mrnaStrand = complementStrand.replace(/T/g, 'U')
+
+  const displayStrand = mode === 'none' ? null : mode === 'replicate' ? complementStrand : mrnaStrand
+  const displayLabel = mode === 'replicate' ? 'Complement (3\'→5\')' : mode === 'transcribe' ? 'mRNA (5\'→3\')' : ''
+
+  const maxBases = 16
+  const visibleSeq = validSeq.slice(0, maxBases)
+  const svgW = 480
+  const svgH = 180
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: s.text, fontWeight: 600 }}>Sequence:</span>
+        <input
+          style={s.input}
+          value={seq}
+          onChange={e => setSeq(e.target.value.toUpperCase())}
+          maxLength={20}
+          placeholder="ATGCGATCATAG"
+        />
+        <button style={s.btn(mode === 'replicate')} onClick={() => setMode(mode === 'replicate' ? 'none' : 'replicate')}>Replicate</button>
+        <button style={s.btn(mode === 'transcribe')} onClick={() => setMode(mode === 'transcribe' ? 'none' : 'transcribe')}>Transcribe</button>
+      </div>
+
+      {/* Legend */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 6, fontSize: 9, color: s.text }}>
+        {Object.entries(BASE_COLORS).map(([base, col]) => (
+          <span key={base} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: col, display: 'inline-block' }} />
+            {base}
+          </span>
+        ))}
+      </div>
+
+      {/* SVG Double Helix */}
+      <svg viewBox={'0 0 ' + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }}>
+        {/* Backbone strands as sinusoidal curves */}
+        {visibleSeq.split('').map((base, i) => {
+          const x = 30 + i * (svgW - 60) / Math.max(visibleSeq.length - 1, 1)
+          const yTop = 30 + 10 * Math.sin(i * 0.8)
+          const yBot = 130 - 10 * Math.sin(i * 0.8)
+          const col = BASE_COLORS[base] || '#666'
+          const compBase = COMPLEMENT[base] || 'N'
+          const compCol = BASE_COLORS[compBase] || '#666'
+
+          return (
+            <g key={i}>
+              {/* Hydrogen bond (dashed) */}
+              <line x1={x} y1={yTop + 8} x2={x} y2={yBot - 8} stroke={isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'} strokeWidth={1} strokeDasharray="2 2" />
+              {/* Top base */}
+              <circle cx={x} cy={yTop} r={7} fill={col} opacity={0.85} />
+              <text x={x} y={yTop + 3.5} textAnchor="middle" fontSize={8} fill="#fff" fontWeight={700}>{base}</text>
+              {/* Bottom base */}
+              <circle cx={x} cy={yBot} r={7} fill={compCol} opacity={0.85} />
+              <text x={x} y={yBot + 3.5} textAnchor="middle" fontSize={8} fill="#fff" fontWeight={700}>{compBase}</text>
+              {/* Backbone connectors */}
+              {i < visibleSeq.length - 1 && (
+                <>
+                  <path d={'M' + x + ',' + yTop + ' Q' + (x + (svgW - 60) / Math.max(visibleSeq.length - 1, 1) / 2) + ',' + (yTop - 5) + ' ' + (x + (svgW - 60) / Math.max(visibleSeq.length - 1, 1)) + ',' + (30 + 10 * Math.sin((i + 1) * 0.8))} stroke={isDark ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.3)'} strokeWidth={2} fill="none" />
+                  <path d={'M' + x + ',' + yBot + ' Q' + (x + (svgW - 60) / Math.max(visibleSeq.length - 1, 1) / 2) + ',' + (yBot + 5) + ' ' + (x + (svgW - 60) / Math.max(visibleSeq.length - 1, 1)) + ',' + (130 - 10 * Math.sin((i + 1) * 0.8))} stroke={isDark ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.3)'} strokeWidth={2} fill="none" />
+                </>
+              )}
+              {/* 5' and 3' labels */}
+              {i === 0 && <text x={x - 16} y={yTop + 4} fontSize={8} fill={s.text} fontWeight={600}>5'</text>}
+              {i === 0 && <text x={x - 16} y={yBot + 4} fontSize={8} fill={s.text} fontWeight={600}>3'</text>}
+              {i === visibleSeq.length - 1 && <text x={x + 12} y={yTop + 4} fontSize={8} fill={s.text} fontWeight={600}>3'</text>}
+              {i === visibleSeq.length - 1 && <text x={x + 12} y={yBot + 4} fontSize={8} fill={s.text} fontWeight={600}>5'</text>}
+            </g>
+          )
+        })}
+        {/* Strand labels */}
+        <text x={10} y={14} fontSize={9} fill={s.bright} fontWeight={600}>Sense (5'→3')</text>
+        <text x={10} y={170} fontSize={9} fill={s.bright} fontWeight={600}>Antisense (3'→5')</text>
+        {displayStrand && (
+          <text x={svgW / 2} y={14} fontSize={9} fill="#34d399" fontWeight={600} textAnchor="middle">{displayLabel}: {displayStrand}</text>
+        )}
+      </svg>
+
+      {/* Sequence display */}
+      <div style={{ marginTop: 6, fontSize: 10, color: s.text, lineHeight: 1.6 }}>
+        <div><span style={{ fontWeight: 600, color: s.bright }}>Input:</span> {validSeq}</div>
+        {mode === 'replicate' && <div><span style={{ fontWeight: 600, color: '#34d399' }}>Complement:</span> {complementStrand}</div>}
+        {mode === 'transcribe' && <div><span style={{ fontWeight: 600, color: '#34d399' }}>mRNA:</span> {mrnaStrand}</div>}
+        {mode === 'none' && <div style={{ opacity: 0.5 }}>Click Replicate or Transcribe to see the result</div>}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 7. NaturalSelectionSim
+// ============================================================
+
+interface Bug {
+  id: number
+  hue: number
+  sat: number
+  x: number
+  y: number
+}
+
+function randomBug(id: number, envHue: number): Bug {
+  const hue = (id * 37 + Math.random() * 360) % 360
+  return { id, hue, sat: 60 + Math.random() * 30, x: 10 + Math.random() * 380, y: 20 + Math.random() * 140 }
+}
+
+export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [envHue, setEnvHue] = useState(200)
+  const [gen, setGen] = useState(0)
+  const [bugs, setBugs] = useState<Bug[]>(() => Array.from({ length: 20 }, (_, i) => randomBug(i, 200)))
+
+  const nextGen = () => {
+    const scored = bugs.map(b => {
+      const dist = Math.abs(((b.hue - envHue + 540) % 360) - 180)
+      return { ...b, fitness: 360 - dist }
+    }).sort((a, b) => (b as any).fitness - (a as any).fitness)
+
+    const survivors = scored.slice(0, 15)
+    const offspring: Bug[] = []
+    let nextId = 100 + gen * 20
+    while (offspring.length < 5) {
+      const parent = survivors[Math.floor(Math.random() * survivors.length)]
+      const mutHue = (parent.hue + (Math.random() - 0.5) * 40 + 360) % 360
+      offspring.push({ id: nextId++, hue: mutHue, sat: parent.sat, x: 10 + Math.random() * 380, y: 20 + Math.random() * 140 })
+    }
+    setBugs([...survivors.map(b => ({ ...b, x: 10 + Math.random() * 380, y: 20 + Math.random() * 140 })), ...offspring])
+    setGen(gen + 1)
+  }
+
+  const reset = () => {
+    setGen(0)
+    setBugs(Array.from({ length: 20 }, (_, i) => randomBug(i, envHue)))
+  }
+
+  // Trait distribution bar chart
+  const buckets = Array.from({ length: 12 }, () => 0)
+  bugs.forEach(b => {
+    const idx = Math.min(11, Math.floor(b.hue / 30))
+    buckets[idx]++
+  })
+  const maxBucket = Math.max(...buckets, 1)
+
+  const envColor = 'hsl(' + envHue + ',50%,40%)'
+  const envColorLight = 'hsl(' + envHue + ',50%,30%)'
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+        <button style={s.btn(false)} onClick={nextGen}>Next Generation</button>
+        <button style={s.btn(false)} onClick={reset}>Reset</button>
+        <span style={{ fontSize: 10, color: s.text }}>Gen: {gen}</span>
+      </div>
+
+      {/* Environment slider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <span style={{ fontSize: 9, color: s.text, fontWeight: 600 }}>Environment:</span>
+        <input
+          type="range" min={0} max={360} value={envHue}
+          onChange={e => setEnvHue(Number(e.target.value))}
+          style={{ flex: 1, height: 6, cursor: 'pointer', accentColor: envColor }}
+        />
+        <span style={{ width: 14, height: 14, borderRadius: 3, background: envColor, display: 'inline-block' }} />
+      </div>
+
+      {/* Bug field */}
+      <svg viewBox="0 0 400 180" style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: envColorLight }}>
+        {bugs.map(b => {
+          const dist = Math.abs(((b.hue - envHue + 540) % 360) - 180)
+          const fitness = 360 - dist
+          const opacity = 0.4 + (fitness / 360) * 0.6
+          const bugColor = 'hsl(' + b.hue + ',' + b.sat + '%,55%)'
+          return (
+            <g key={b.id}>
+              <circle cx={b.x} cy={b.y} r={6} fill={bugColor} stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'} strokeWidth={0.5} opacity={opacity} />
+              {/* Little legs */}
+              <line x1={b.x - 3} y1={b.y + 5} x2={b.x - 6} y2={b.y + 10} stroke={bugColor} strokeWidth={1} opacity={opacity} />
+              <line x1={b.x + 3} y1={b.y + 5} x2={b.x + 6} y2={b.y + 10} stroke={bugColor} strokeWidth={1} opacity={opacity} />
+              <line x1={b.x - 2} y1={b.y + 5} x2={b.x - 5} y2={b.y + 11} stroke={bugColor} strokeWidth={1} opacity={opacity} />
+              <line x1={b.x + 2} y1={b.y + 5} x2={b.x + 5} y2={b.y + 11} stroke={bugColor} strokeWidth={1} opacity={opacity} />
+            </g>
+          )
+        })}
+        <text x={10} y={174} fontSize={8} fill={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'}>Opacity = camouflage fitness</text>
+      </svg>
+
+      {/* Trait distribution bar chart */}
+      <div style={{ marginTop: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 600, color: s.bright, marginBottom: 3 }}>Trait Distribution (hue)</div>
+        <svg viewBox="0 0 400 50" style={{ width: '100%' }}>
+          {buckets.map((count, i) => {
+            const barH = Math.max(2, (count / maxBucket) * 40)
+            const x = i * 33 + 2
+            const barColor = 'hsl(' + (i * 30 + 15) + ',70%,55%)'
+            return (
+              <g key={i}>
+                <rect x={x} y={46 - barH} width={28} height={barH} fill={barColor} rx={2} opacity={0.8} />
+                {count > 0 && <text x={x + 14} y={44 - barH} textAnchor="middle" fontSize={7} fill={s.text}>{count}</text>}
+              </g>
+            )
+          })}
+          {/* Environment indicator */}
+          <line x1={envHue / 360 * 400} y1={0} x2={envHue / 360 * 400} y2={50} stroke={isDark ? '#f87171' : '#dc2626'} strokeWidth={1.5} strokeDasharray="3 2" />
+          <text x={envHue / 360 * 400} y={8} textAnchor="middle" fontSize={7} fill={isDark ? '#f87171' : '#dc2626'}>ENV</text>
+        </svg>
+      </div>
+      <div style={{ fontSize: 8, color: s.text, opacity: 0.6, marginTop: 4 }}>Red dashed line = environment hue. Bugs closer in hue survive better.</div>
+    </div>
+  )
+}
+
+// ============================================================
+// 8. CellDivisionAnimator
+// ============================================================
+
+interface PhaseInfo {
+  name: string
+  desc: string
+  chromosomes: number
+  split: boolean
+  splitPhase2: boolean
+  nucleusShape: string
+  spindleVisible: boolean
+  paired: boolean
+}
+
+const MITOSIS_PHASES: PhaseInfo[] = [
+  { name: 'Interphase', desc: 'DNA replicates. Cell grows and prepares for division. Chromosomes are duplicated but not yet visible as distinct structures.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'circle', spindleVisible: false, paired: false },
+  { name: 'Prophase', desc: 'Chromatin condenses into visible chromosomes. Spindle fibers begin to form. Nuclear envelope starts to break down.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'circle', spindleVisible: true, paired: true },
+  { name: 'Metaphase', desc: 'Chromosomes line up at the cell equator (metaphase plate). Spindle fibers attach to centromeres.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'none', spindleVisible: true, paired: true },
+  { name: 'Anaphase', desc: 'Sister chromatids separate and move to opposite poles. Spindle fibers shorten.', chromosomes: 8, split: false, splitPhase2: false, nucleusShape: 'none', spindleVisible: true, paired: false },
+  { name: 'Telophase', desc: 'Chromatids arrive at poles. Nuclear envelopes reform. Chromosomes decondense.', chromosomes: 8, split: true, splitPhase2: false, nucleusShape: 'circle', spindleVisible: false, paired: false },
+  { name: 'Cytokinesis', desc: 'The cytoplasm divides, producing two genetically identical daughter cells.', chromosomes: 4, split: true, splitPhase2: false, nucleusShape: 'circle', spindleVisible: false, paired: false },
+]
+
+const MEIOSIS_PHASES: PhaseInfo[] = [
+  { name: 'Interphase I', desc: 'DNA replicates. Each chromosome now consists of two sister chromatids.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'circle', spindleVisible: false, paired: false },
+  { name: 'Prophase I', desc: 'Homologous chromosomes pair up (synapsis). Crossing over occurs, exchanging genetic material.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'circle', spindleVisible: true, paired: true },
+  { name: 'Metaphase I', desc: 'Homologous pairs line up at the equator. Spindle fibers attach to centromeres.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'none', spindleVisible: true, paired: true },
+  { name: 'Anaphase I', desc: 'Homologous chromosomes separate and move to opposite poles. Sister chromatids remain together.', chromosomes: 4, split: false, splitPhase2: false, nucleusShape: 'none', spindleVisible: true, paired: false },
+  { name: 'Telophase I', desc: 'Chromosomes arrive at poles. Two haploid cells form. No DNA replication occurs before meiosis II.', chromosomes: 2, split: true, splitPhase2: false, nucleusShape: 'circle', spindleVisible: false, paired: false },
+  { name: 'Prophase II', desc: 'Chromosomes re-condense in both cells. Spindle fibers form again.', chromosomes: 2, split: true, splitPhase2: true, nucleusShape: 'circle', spindleVisible: true, paired: true },
+  { name: 'Metaphase II', desc: 'Chromosomes line up at the equator in both cells.', chromosomes: 2, split: true, splitPhase2: true, nucleusShape: 'none', spindleVisible: true, paired: true },
+  { name: 'Anaphase II', desc: 'Sister chromatids finally separate and move to poles.', chromosomes: 4, split: true, splitPhase2: true, nucleusShape: 'none', spindleVisible: true, paired: false },
+  { name: 'Telophase II', desc: 'Four haploid daughter cells form, each with unique genetic combinations.', chromosomes: 4, split: true, splitPhase2: true, nucleusShape: 'circle', spindleVisible: false, paired: false },
+]
+
+function drawChromosome(x: number, y: number, color: string, paired: boolean, dark: boolean) {
+  const armLen = 10
+  if (paired) {
+    return (
+      <g>
+        {/* Sister chromatid 1 */}
+        <line x1={x - armLen} y1={y - armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+        <line x1={x + armLen} y1={y - armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+        <line x1={x - armLen} y1={y + armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+        <line x1={x + armLen} y1={y + armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+        {/* Sister chromatid 2 (offset) */}
+        <line x1={x - armLen + 2} y1={y - armLen} x2={x + 2} y2={y} stroke={color} strokeWidth={2.5} opacity={0.5} />
+        <line x1={x + armLen + 2} y1={y - armLen} x2={x + 2} y2={y} stroke={color} strokeWidth={2.5} opacity={0.5} />
+        <line x1={x - armLen + 2} y1={y + armLen} x2={x + 2} y2={y} stroke={color} strokeWidth={2.5} opacity={0.5} />
+        <line x1={x + armLen + 2} y1={y + armLen} x2={x + 2} y2={y} stroke={color} strokeWidth={2.5} opacity={0.5} />
+        {/* Centromere */}
+        <circle cx={x + 1} cy={y} r={1.5} fill={dark ? '#e2e8f0' : '#1e293b'} />
+      </g>
+    )
+  }
+  return (
+    <g>
+      <line x1={x - armLen} y1={y - armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+      <line x1={x + armLen} y1={y - armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+      <line x1={x - armLen} y1={y + armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+      <line x1={x + armLen} y1={y + armLen} x2={x} y2={y} stroke={color} strokeWidth={2.5} />
+      <circle cx={x} cy={y} r={1.5} fill={dark ? '#e2e8f0' : '#1e293b'} />
+    </g>
+  )
+}
+
+export function CellDivisionAnimator({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [mode, setMode] = useState<'mitosis' | 'meiosis'>('mitosis')
+  const phases = mode === 'mitosis' ? MITOSIS_PHASES : MEIOSIS_PHASES
+  const [step, setStep] = useState(0)
+  const phase = phases[step]
+
+  const prev = () => setStep(Math.max(0, step - 1))
+  const next = () => setStep(Math.min(phases.length - 1, step + 1))
+
+  const chrColors = ['#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#06b6d4', '#f97316']
+
+  const cellR = 60
+  const svgW = 460
+  const svgH = 160
+
+  return (
+    <div>
+      {/* Mode tabs */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        <button style={s.btn(mode === 'mitosis')} onClick={() => { setMode('mitosis'); setStep(0) }}>Mitosis</button>
+        <button style={s.btn(mode === 'meiosis')} onClick={() => { setMode('meiosis'); setStep(0) }}>Meiosis</button>
+        <span style={{ marginLeft: 'auto', fontSize: 10, color: s.text }}>{phase.name} ({step + 1}/{phases.length})</span>
+      </div>
+
+      {/* SVG visualization */}
+      <svg viewBox={'0 0 ' + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }}>
+        <defs>
+          <marker id="arrowM" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill={isDark ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.4)'} />
+          </marker>
+        </defs>
+
+        {/* Cell 1 (left) */}
+        <g transform={phase.split ? 'translate(-20,0) scale(0.8)' : ''}>
+          <ellipse cx={130} cy={80} rx={cellR} ry={cellR * 0.8} fill={isDark ? 'rgba(56,189,248,0.06)' : 'rgba(14,116,144,0.06)'} stroke={isDark ? 'rgba(56,189,248,0.2)' : 'rgba(14,116,144,0.2)'} strokeWidth={1.5} />
+
+          {/* Nucleus */}
+          {phase.nucleusShape === 'circle' && (
+            <ellipse cx={130} cy={80} rx={35} ry={30} fill={isDark ? 'rgba(56,189,248,0.1)' : 'rgba(14,116,144,0.1)'} stroke={isDark ? 'rgba(56,189,248,0.3)' : 'rgba(14,116,144,0.3)'} strokeWidth={1} strokeDasharray="3 2" />
+          )}
+
+          {/* Spindle fibers */}
+          {phase.spindleVisible && (
+            <>
+              <line x1={130 - 45} y1={80} x2={130 + 45} y2={80} stroke={isDark ? 'rgba(148,163,184,0.2)' : 'rgba(71,85,105,0.2)'} strokeWidth={0.5} />
+              <line x1={80} y1={55} x2={130} y2={75} stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.15)'} strokeWidth={0.5} markerEnd="url(#arrowM)" />
+              <line x1={80} y1={105} x2={130} y2={85} stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.15)'} strokeWidth={0.5} markerEnd="url(#arrowM)" />
+              <line x1={180} y1={55} x2={130} y2={75} stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.15)'} strokeWidth={0.5} markerEnd="url(#arrowM)" />
+              <line x1={180} y1={105} x2={130} y2={85} stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.15)'} strokeWidth={0.5} markerEnd="url(#arrowM)" />
+            </>
+          )}
+
+          {/* Chromosomes */}
+          {Array.from({ length: Math.min(phase.chromosomes, 8) }, (_, i) => {
+            const row = Math.floor(i / 4)
+            const col = i % 4
+            const cx = 110 + col * 14
+            const cy = 70 + row * 20
+            const color = chrColors[i % chrColors.length]
+            return <g key={i}>{drawChromosome(cx, cy, color, phase.paired, isDark)}</g>
+          })}
+        </g>
+
+        {/* Cell 2 (for split / meiosis II) */}
+        {phase.split && (
+          <g transform={phase.splitPhase2 ? 'translate(20,0) scale(0.8)' : ''}>
+            <ellipse cx={330} cy={80} rx={cellR} ry={cellR * 0.8} fill={isDark ? 'rgba(56,189,248,0.06)' : 'rgba(14,116,144,0.06)'} stroke={isDark ? 'rgba(56,189,248,0.2)' : 'rgba(14,116,144,0.2)'} strokeWidth={1.5} />
+            {phase.nucleusShape === 'circle' && (
+              <ellipse cx={330} cy={80} rx={35} ry={30} fill={isDark ? 'rgba(56,189,248,0.1)' : 'rgba(14,116,144,0.1)'} stroke={isDark ? 'rgba(56,189,248,0.3)' : 'rgba(14,116,144,0.3)'} strokeWidth={1} strokeDasharray="3 2" />
+            )}
+            {phase.spindleVisible && (
+              <line x1={285} y1={80} x2={375} y2={80} stroke={isDark ? 'rgba(148,163,184,0.2)' : 'rgba(71,85,105,0.2)'} strokeWidth={0.5} />
+            )}
+            {Array.from({ length: Math.min(Math.ceil(phase.chromosomes / (mode === 'meiosis' && phase.splitPhase2 ? 2 : 2)), 4) }, (_, i) => {
+              const cx = 315 + (i % 4) * 12
+              const cy = 72 + Math.floor(i / 4) * 16
+              const color = chrColors[(i + 2) % chrColors.length]
+              return <g key={i}>{drawChromosome(cx, cy, color, phase.paired, isDark)}</g>
+            })}
+          </g>
+        )}
+
+        {/* Cytokinesis arrow for meiosis showing 4 cells */}
+        {mode === 'meiosis' && step === phases.length - 1 && (
+          <text x={svgW / 2} y={150} textAnchor="middle" fontSize={9} fill="#34d399" fontWeight={600}>4 haploid daughter cells (n)</text>
+        )}
+        {mode === 'mitosis' && step === phases.length - 1 && (
+          <text x={svgW / 2} y={150} textAnchor="middle" fontSize={9} fill="#34d399" fontWeight={600}>2 identical diploid daughter cells (2n)</text>
+        )}
+      </svg>
+
+      {/* Phase info */}
+      <div style={{ marginTop: 6, padding: '6px 8px', background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, fontSize: 10 }}>
+        <div style={{ fontWeight: 600, color: s.bright, marginBottom: 2 }}>{phase.name}</div>
+        <div style={{ color: s.text, lineHeight: 1.5, marginBottom: 4 }}>{phase.desc}</div>
+        <div style={{ display: 'flex', gap: 12, fontSize: 9, color: s.text }}>
+          <span>Chromosomes visible: <strong style={{ color: s.bright }}>{phase.chromosomes}</strong></span>
+          <span>Nucleus: <strong style={{ color: s.bright }}>{phase.nucleusShape}</strong></span>
+          <span>Spindle: <strong style={{ color: s.bright }}>{phase.spindleVisible ? 'visible' : 'not visible'}</strong></span>
+        </div>
+      </div>
+
+      {/* Nav buttons */}
+      <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+        <button style={s.btn(false)} onClick={prev} disabled={step === 0}>Prev</button>
+        <button style={s.btn(false)} onClick={next} disabled={step === phases.length - 1}>Next</button>
+        <div style={{ display: 'flex', gap: 2, flex: 1, alignItems: 'center' }}>
+          {phases.map((_, i) => (
+            <div
+              key={i}
+              onClick={() => setStep(i)}
+              style={{
+                flex: 1, height: 4, borderRadius: 2, cursor: 'pointer',
+                background: i === step ? '#34d399' : i < step ? (isDark ? 'rgba(52,211,153,0.3)' : 'rgba(5,150,105,0.2)') : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 9. PhotosynthesisRespiration
+// ============================================================
+
+const PHOTOSYNTHESIS_PARTS = [
+  { id: 'sun', label: 'Sunlight', x: 30, y: 55, desc: 'The sun provides light energy that drives photosynthesis. Light is absorbed by chlorophyll in the chloroplasts.' },
+  { id: 'co2', label: 'CO2', x: 100, y: 25, desc: 'Carbon dioxide enters the leaf through stomata. It provides the carbon atoms needed to build glucose molecules.' },
+  { id: 'h2o_in', label: 'H2O', x: 100, y: 85, desc: 'Water is absorbed by roots and transported to leaves. It provides electrons and hydrogen ions for the light reactions.' },
+  { id: 'chloroplast', label: 'Chloroplast', x: 170, y: 55, desc: 'The chloroplast is the organelle where photosynthesis occurs. It contains chlorophyll and is the site of both light-dependent and light-independent reactions.' },
+  { id: 'glucose', label: 'C6H12O6', x: 245, y: 35, desc: 'Glucose is the sugar produced by photosynthesis. It stores chemical energy that can be used by the plant or consumed by other organisms.' },
+  { id: 'o2', label: 'O2', x: 245, y: 85, desc: 'Oxygen is released as a byproduct of photosynthesis. It comes from the splitting of water molecules during the light reactions.' },
+]
+
+const RESPIRATION_PARTS = [
+  { id: 'glucose_r', label: 'C6H12O6', x: 100, y: 25, desc: 'Glucose from food is broken down during cellular respiration to release stored chemical energy.' },
+  { id: 'o2_r', label: 'O2', x: 100, y: 85, desc: 'Oxygen is required as the final electron acceptor in the electron transport chain. It combines with hydrogen to form water.' },
+  { id: 'mitochondria', label: 'Mitochondria', x: 170, y: 55, desc: 'The mitochondrion is the powerhouse of the cell. It is where cellular respiration occurs, producing ATP through glycolysis, the Krebs cycle, and electron transport chain.' },
+  { id: 'co2_r', label: 'CO2', x: 245, y: 25, desc: 'Carbon dioxide is produced as a waste product when glucose is broken down. It is exhaled from the lungs.' },
+  { id: 'h2o_r', label: 'H2O', x: 245, y: 65, desc: 'Water is produced when oxygen combines with hydrogen ions at the end of the electron transport chain.' },
+  { id: 'atp', label: 'ATP', x: 245, y: 100, desc: 'ATP (adenosine triphosphate) is the energy currency of the cell. Each glucose molecule produces about 36-38 ATP molecules.' },
+]
+
+export function PhotosynthesisRespiration({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [lightIntensity, setLightIntensity] = useState(70)
+
+  const selPart = [...PHOTOSYNTHESIS_PARTS, ...RESPIRATION_PARTS].find(p => p.id === selected)
+
+  const sunGlow = isDark
+    ? 'rgba(251,191,36,' + (0.1 + lightIntensity / 300) + ')'
+    : 'rgba(245,158,11,' + (0.1 + lightIntensity / 300) + ')'
+  const arrowColor = isDark ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.4)'
+  const arrowActive = '#34d399'
+
+  return (
+    <div>
+      {/* Light intensity slider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <span style={{ fontSize: 9, color: s.text, fontWeight: 600 }}>Light Intensity:</span>
+        <input type="range" min={0} max={100} value={lightIntensity} onChange={e => setLightIntensity(Number(e.target.value))} style={{ flex: 1, height: 6, cursor: 'pointer', accentColor: '#f59e0b' }} />
+        <span style={{ fontSize: 10, color: s.bright }}>{lightIntensity}%</span>
+      </div>
+
+      {/* Side by side SVGs */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        {/* Photosynthesis */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#22c55e', marginBottom: 3, textAlign: 'center' }}>Photosynthesis</div>
+          <svg viewBox="0 0 290 120" style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }}>
+            {/* Sun glow */}
+            <circle cx={30} cy={55} r={20 + lightIntensity / 5} fill={sunGlow} />
+            <circle cx={30} cy={55} r={14} fill="#fbbf24" opacity={0.6 + lightIntensity / 300} />
+            {/* Rays */}
+            {[0, 60, 120, 180, 240, 300].map(angle => {
+              const rad = angle * Math.PI / 180
+              const x1 = 30 + 16 * Math.cos(rad)
+              const y1 = 55 + 16 * Math.sin(rad)
+              const x2 = 30 + (20 + lightIntensity / 5) * Math.cos(rad)
+              const y2 = 55 + (20 + lightIntensity / 5) * Math.sin(rad)
+              return <line key={angle} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fbbf24" strokeWidth={1} opacity={0.4 + lightIntensity / 300} />
+            })}
+
+            {/* Arrows */}
+            <line x1={45} y1={55} x2={85} y2={30} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrPR)" />
+            <line x1={45} y1={55} x2={85} y2={85} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrPR)" />
+            <line x1={120} y1={30} x2={150} y2={50} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrPR)" />
+            <line x1={120} y1={85} x2={150} y2={60} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrPR)" />
+            <line x1={195} y1={50} x2={225} y2={35} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrPR)" />
+            <line x1={195} y1={60} x2={225} y2={85} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrPR)" />
+
+            <defs>
+              <marker id="arrPR" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill={arrowColor} /></marker>
+            </defs>
+
+            {/* Parts */}
+            {PHOTOSYNTHESIS_PARTS.map(p => {
+              const isSun = p.id === 'sun'
+              const isSelected = selected === p.id
+              const isChloroplast = p.id === 'chloroplast'
+              return (
+                <g key={p.id} onClick={() => setSelected(selected === p.id ? null : p.id)} style={{ cursor: 'pointer' }}>
+                  {!isSun && !isChloroplast && (
+                    <rect x={p.x - 20} y={p.y - 10} width={40} height={20} rx={6} fill={isSelected ? 'rgba(34,197,94,0.2)' : s.bg} stroke={isSelected ? '#22c55e' : s.border} strokeWidth={isSelected ? 1.5 : 1} />
+                  )}
+                  {isChloroplast && (
+                    <ellipse cx={p.x} cy={p.y} rx={24} ry={16} fill={isSelected ? 'rgba(34,197,94,0.2)' : 'rgba(34,197,94,0.1)'} stroke={isSelected ? '#22c55e' : 'rgba(34,197,94,0.3)'} strokeWidth={1.5} />
+                  )}
+                  <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={8} fill={isSelected ? '#22c55e' : s.bright} fontWeight={isSelected ? 700 : 500}>{p.label}</text>
+                </g>
+              )
+            })}
+
+            {/* Equation */}
+            <text x={145} y={112} textAnchor="middle" fontSize={7} fill={s.text}>6CO2 + 6H2O + light → C6H12O6 + 6O2</text>
+          </svg>
+        </div>
+
+        {/* Respiration */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: '#f97316', marginBottom: 3, textAlign: 'center' }}>Cellular Respiration</div>
+          <svg viewBox="0 0 290 120" style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }}>
+            {/* Arrows */}
+            <line x1={120} y1={30} x2={148} y2={50} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrRR)" />
+            <line x1={120} y1={85} x2={148} y2={60} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrRR)" />
+            <line x1={195} y1={50} x2={225} y2={28} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrRR)" />
+            <line x1={195} y1={55} x2={225} y2={65} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrRR)" />
+            <line x1={195} y1={60} x2={225} y2={100} stroke={arrowColor} strokeWidth={1.5} markerEnd="url(#arrRR)" />
+
+            <defs>
+              <marker id="arrRR" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto"><polygon points="0 0, 6 2, 0 4" fill={arrowColor} /></marker>
+            </defs>
+
+            {/* Parts */}
+            {RESPIRATION_PARTS.map(p => {
+              const isSelected = selected === p.id
+              const isMito = p.id === 'mitochondria'
+              return (
+                <g key={p.id} onClick={() => setSelected(selected === p.id ? null : p.id)} style={{ cursor: 'pointer' }}>
+                  {!isMito && (
+                    <rect x={p.x - 20} y={p.y - 10} width={40} height={20} rx={6} fill={isSelected ? 'rgba(249,115,22,0.2)' : s.bg} stroke={isSelected ? '#f97316' : s.border} strokeWidth={isSelected ? 1.5 : 1} />
+                  )}
+                  {isMito && (
+                    <ellipse cx={p.x} cy={p.y} rx={24} ry={16} fill={isSelected ? 'rgba(249,115,22,0.2)' : 'rgba(249,115,22,0.1)'} stroke={isSelected ? '#f97316' : 'rgba(249,115,22,0.3)'} strokeWidth={1.5} />
+                  )}
+                  <text x={p.x} y={p.y + 3.5} textAnchor="middle" fontSize={8} fill={isSelected ? '#f97316' : s.bright} fontWeight={isSelected ? 700 : 500}>{p.label}</text>
+                </g>
+              )
+            })}
+
+            {/* Equation */}
+            <text x={145} y={112} textAnchor="middle" fontSize={7} fill={s.text}>C6H12O6 + 6O2 → 6CO2 + 6H2O + ATP</text>
+          </svg>
+        </div>
+      </div>
+
+      {/* Connecting arrows between the two diagrams */}
+      <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0' }}>
+        <svg viewBox="0 0 200 16" style={{ width: 120 }}>
+          <text x={10} y={8} fontSize={7} fill={s.text}>C6H12O6 + O2</text>
+          <line x1={65} y1={8} x2={95} y2={8} stroke={arrowActive} strokeWidth={1} strokeDasharray="3 2" />
+          <text x={98} y={8} fontSize={7} fill={arrowActive}>↔</text>
+          <line x1={112} y1={8} x2={142} y2={8} stroke={arrowActive} strokeWidth={1} strokeDasharray="3 2" />
+          <text x={145} y={8} fontSize={7} fill={s.text}>CO2 + H2O</text>
+        </svg>
+      </div>
+
+      {/* Info panel */}
+      {selPart && (
+        <div style={{ marginTop: 4, padding: '6px 8px', background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, fontSize: 10 }}>
+          <div style={{ fontWeight: 600, color: s.bright, marginBottom: 2 }}>{selPart.label}</div>
+          <div style={{ color: s.text, lineHeight: 1.5 }}>{selPart.desc}</div>
+        </div>
+      )}
+      {!selPart && (
+        <div style={{ marginTop: 4, fontSize: 9, color: s.text, opacity: 0.5, textAlign: 'center' }}>Click on any part to learn more</div>
+      )}
+
+      {/* Light effect note */}
+      <div style={{ marginTop: 4, fontSize: 8, color: s.text, opacity: 0.6 }}>
+        Light intensity affects the rate of photosynthesis. Higher light = more energy for the light reactions.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 10. HumanBodyInteractive
+// ============================================================
+
+const BODY_PARTS = [
+  { id: 'brain', name: 'Brain', system: 'Nervous System', x: 120, y: 28, r: 12, function: 'Controls all body functions, processes sensory information, and is the center of thought, memory, and emotion. Contains ~86 billion neurons.', fact: 'Your brain uses about 20% of your body\'s total energy despite being only 2% of body weight!' },
+  { id: 'heart', name: 'Heart', system: 'Cardiovascular System', x: 132, y: 88, r: 9, function: 'Pumps blood throughout the body, delivering oxygen and nutrients to cells and removing waste products. Beats about 100,000 times per day.', fact: 'Your heart pumps about 2,000 gallons of blood every day — enough to fill a swimming pool in a year!' },
+  { id: 'lungs', name: 'Lungs', system: 'Respiratory System', x: 102, y: 82, r: 10, function: 'Facilitate gas exchange — oxygen enters the blood and carbon dioxide is expelled. Contains about 300 million alveoli.', fact: 'If you spread out all the alveoli in your lungs, they would cover an area the size of a tennis court!' },
+  { id: 'stomach', name: 'Stomach', system: 'Digestive System', x: 128, y: 125, r: 10, function: 'Breaks down food using hydrochloric acid and enzymes. Can hold about 1 liter of food and takes 2-4 hours to empty.', fact: 'Your stomach produces a new lining every 3-4 days to protect itself from its own acid!' },
+  { id: 'liver', name: 'Liver', system: 'Digestive System', x: 148, y: 118, r: 10, function: 'Detoxifies chemicals, produces bile for fat digestion, stores glycogen, and synthesizes proteins. Performs over 500 different functions.', fact: 'Your liver is the only organ that can regenerate itself — it can regrow to full size from just 25%!' },
+  { id: 'kidneys', name: 'Kidneys', system: 'Urinary System', x: 118, y: 155, r: 8, function: 'Filter blood to remove waste products and excess water, producing urine. Regulate electrolyte balance and blood pressure.', fact: 'Your kidneys filter about 200 liters of blood daily but produce only about 1-2 liters of urine!' },
+]
+
+export function HumanBodyInteractive({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [selected, setSelected] = useState<string | null>(null)
+  const selPart = BODY_PARTS.find(p => p.id === selected)
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 6 }}>
+        {/* Body SVG */}
+        <svg viewBox="0 0 240 280" style={{ width: 180, flexShrink: 0, borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }}>
+          {/* Body silhouette - head */}
+          <ellipse cx={120} cy={30} rx={18} ry={22} fill={isDark ? 'rgba(148,163,184,0.08)' : 'rgba(71,85,105,0.06)'} stroke={isDark ? 'rgba(148,163,184,0.2)' : 'rgba(71,85,105,0.15)'} strokeWidth={1.5} />
+          {/* Neck */}
+          <rect x={113} y={50} width={14} height={12} rx={4} fill={isDark ? 'rgba(148,163,184,0.06)' : 'rgba(71,85,105,0.04)'} stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.1)'} strokeWidth={1} />
+          {/* Torso */}
+          <path d="M95,62 L145,62 L150,90 L148,170 L140,175 L100,175 L92,170 L90,90 Z" fill={isDark ? 'rgba(148,163,184,0.06)' : 'rgba(71,85,105,0.04)'} stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.1)'} strokeWidth={1.5} />
+          {/* Arms */}
+          <path d="M95,65 L72,100 L65,150" fill="none" stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.1)'} strokeWidth={6} strokeLinecap="round" />
+          <path d="M145,65 L168,100 L175,150" fill="none" stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.1)'} strokeWidth={6} strokeLinecap="round" />
+          {/* Legs */}
+          <path d="M105,175 L100,240 L95,270" fill="none" stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.1)'} strokeWidth={7} strokeLinecap="round" />
+          <path d="M135,175 L140,240 L145,270" fill="none" stroke={isDark ? 'rgba(148,163,184,0.15)' : 'rgba(71,85,105,0.1)'} strokeWidth={7} strokeLinecap="round" />
+
+          {/* Hotspots */}
+          {BODY_PARTS.map(p => {
+            const isSelected = selected === p.id
+            const pulseR = isSelected ? p.r + 4 + 2 * Math.sin(Date.now() / 300) : p.r
+            return (
+              <g key={p.id} onClick={() => setSelected(selected === p.id ? null : p.id)} style={{ cursor: 'pointer' }}>
+                {isSelected && (
+                  <circle cx={p.x} cy={p.y} r={pulseR + 4} fill={isDark ? 'rgba(52,211,153,0.08)' : 'rgba(5,150,105,0.06)'} />
+                )}
+                <circle cx={p.x} cy={p.y} r={pulseR} fill={isSelected ? 'rgba(52,211,153,0.25)' : 'rgba(52,211,153,0.1)'} stroke={isSelected ? '#34d399' : 'rgba(52,211,153,0.3)'} strokeWidth={isSelected ? 2 : 1} />
+                <text x={p.x} y={p.y + 3} textAnchor="middle" fontSize={7} fill={isSelected ? '#34d399' : s.bright} fontWeight={isSelected ? 700 : 500}>{p.name}</text>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Info panel */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {selPart ? (
+            <div style={{ padding: 8, background: s.bg, borderRadius: 4, border: '1px solid ' + (selected ? 'rgba(52,211,153,0.3)' : s.border), height: '100%' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#34d399', marginBottom: 2 }}>{selPart.name}</div>
+              <div style={{ fontSize: 9, color: s.text, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>{selPart.system}</div>
+              <div style={{ fontSize: 10, color: s.bright, marginBottom: 6, lineHeight: 1.5 }}>{selPart.function}</div>
+              <div style={{ padding: '6px 8px', background: isDark ? 'rgba(52,211,153,0.06)' : 'rgba(5,150,105,0.04)', borderRadius: 4, border: '1px solid rgba(52,211,153,0.15)' }}>
+                <div style={{ fontSize: 8, fontWeight: 700, color: '#34d399', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 }}>Fun Fact</div>
+                <div style={{ fontSize: 10, color: s.text, lineHeight: 1.5 }}>{selPart.fact}</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding: 8, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ fontSize: 10, color: s.text, opacity: 0.5, textAlign: 'center' }}>Click a body part to learn about it</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

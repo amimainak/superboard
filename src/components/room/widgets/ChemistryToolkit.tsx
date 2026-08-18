@@ -9,6 +9,11 @@ const EquationBalancerLazy = lazy(() => import('./chemistry/ChemistryUtilities')
 const PhScaleLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.PhScaleVisualizer })))
 const SciNotationLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.ScientificNotationConverter })))
 const MolarMassLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.MolarMassCalculator })))
+const LewisDotLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.LewisDotStructureBuilder })))
+const VSEPRLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.MolecularGeometryVSEPR })))
+const GasLawsLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.GasLawsSimulator })))
+const TitrationLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.AcidBaseTitration })))
+const IonFormationLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.IonFormationVisualizer })))
 
 // Stable wrapper components (no remount on re-render)
 function PeriodicTablePanel({ isDark }: { isDark: boolean }) {
@@ -25,6 +30,21 @@ function SciNotationPanel({ isDark }: { isDark: boolean }) {
 }
 function MolarMassPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><MolarMassLazy isDark={isDark} /></Suspense>
+}
+function LewisDotPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><LewisDotLazy isDark={isDark} /></Suspense>
+}
+function VSEPRPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><VSEPRLazy isDark={isDark} /></Suspense>
+}
+function GasLawsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><GasLawsLazy isDark={isDark} /></Suspense>
+}
+function TitrationPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TitrationLazy isDark={isDark} /></Suspense>
+}
+function IonFormationPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><IonFormationLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -102,7 +122,7 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
       </div>
 
       {/* ============================================================ */}
-      {/* ALL TAB — ALL 5 tools */}
+      {/* ALL TAB — ALL 10 tools */}
       {/* ============================================================ */}
       {activeBand === 'all' && (
         <>
@@ -131,11 +151,36 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Enter a chemical formula to calculate its molar mass. Supports parentheses and polyatomic groups.</p>
             <div style={{ padding: '0 12px 12px' }}><MolarMassPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Lewis Dot Structure Builder')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build Lewis dot structures for atoms and common molecules. See valence electrons, bonds, and lone pairs.</p>
+            <div style={{ padding: '0 12px 12px' }}><LewisDotPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Molecular Geometry (VSEPR)')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore molecular shapes using VSEPR theory. See bond angles, hybridization, and polarity for common molecules.</p>
+            <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Gas Laws Simulator')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Simulate PV=nRT. Lock 3 variables and adjust the 4th. Includes Boyle’s and Charles’s Law demos.</p>
+            <div style={{ padding: '0 12px 12px' }}><GasLawsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Acid-Base Titration')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Perform a virtual titration. Add base in increments and watch the pH curve and solution color change.</p>
+            <div style={{ padding: '0 12px 12px' }}><TitrationPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Ion Formation Visualizer')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after ionization.</p>
+            <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* K-5 TAB — pH Scale Visualizer only */}
+      {/* K-5 TAB — pH Scale + Ion Formation */}
       {/* ============================================================ */}
       {activeBand === 'elementary' && (
         <>
@@ -144,11 +189,16 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore acids and bases! Click the colorful bar to see if something is acidic, basic, or neutral.</p>
             <div style={{ padding: '0 12px 12px' }}><PhScalePanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Ion Formation Visualizer')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Watch atoms gain or lose electrons to become ions! Pick an element and see the transformation.</p>
+            <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* 6-8 TAB — pH Scale + Scientific Notation + Periodic Table */}
+      {/* 6-8 TAB — pH + SciNotation + PeriodicTable + Ion + Lewis + VSEPR */}
       {/* ============================================================ */}
       {activeBand === 'middle' && (
         <>
@@ -166,11 +216,26 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore the elements! Click any element to learn about its properties, electron configuration, and common charges.</p>
             <div style={{ padding: '0 12px 12px' }}><PeriodicTablePanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Ion Formation Visualizer')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after ionization.</p>
+            <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Lewis Dot Structure Builder')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build Lewis dot structures for atoms and molecules. See valence electrons, bonds, and lone pairs.</p>
+            <div style={{ padding: '0 12px 12px' }}><LewisDotPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Molecular Geometry (VSEPR)')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore 3D molecular shapes using VSEPR theory. See bond angles and polarity.</p>
+            <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* 9-12 TAB — ALL 5 tools */}
+      {/* 9-12 TAB — ALL 10 tools */}
       {/* ============================================================ */}
       {activeBand === 'highschool' && (
         <>
@@ -195,6 +260,31 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             {sectionTitle('Molar Mass Calculator')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Calculate molar mass from chemical formulas. Supports polyatomic ions and nested parentheses.</p>
             <div style={{ padding: '0 12px 12px' }}><MolarMassPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Lewis Dot Structure Builder')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build Lewis dot structures for atoms and molecules. See valence electrons, bonds, and lone pairs.</p>
+            <div style={{ padding: '0 12px 12px' }}><LewisDotPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Molecular Geometry (VSEPR)')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore molecular shapes using VSEPR theory. See bond angles, hybridization, and polarity.</p>
+            <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Gas Laws Simulator')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Simulate PV=nRT with interactive sliders and piston visualization. Includes Boyle’s and Charles’s Law demos.</p>
+            <div style={{ padding: '0 12px 12px' }}><GasLawsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Acid-Base Titration')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Perform a virtual titration. Add base incrementally and watch the pH curve and solution color change.</p>
+            <div style={{ padding: '0 12px 12px' }}><TitrationPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Ion Formation Visualizer')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after.</p>
+            <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
           </div>
         </>
       )}

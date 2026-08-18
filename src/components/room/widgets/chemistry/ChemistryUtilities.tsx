@@ -894,3 +894,643 @@ export function MolarMassCalculator({ isDark }: { isDark: boolean }) {
     </div>
   )
 }
+
+/* ============================================================
+   Lewis Dot Structure Builder (Grades 8-12)
+   ============================================================ */
+const LEWIS_ELEMENTS = [
+  { sym: 'H', name: 'Hydrogen', val: 1, z: 1 },
+  { sym: 'He', name: 'Helium', val: 2, z: 2 },
+  { sym: 'Li', name: 'Lithium', val: 1, z: 3 },
+  { sym: 'Be', name: 'Beryllium', val: 2, z: 4 },
+  { sym: 'B', name: 'Boron', val: 3, z: 5 },
+  { sym: 'C', name: 'Carbon', val: 4, z: 6 },
+  { sym: 'N', name: 'Nitrogen', val: 5, z: 7 },
+  { sym: 'O', name: 'Oxygen', val: 6, z: 8 },
+  { sym: 'F', name: 'Fluorine', val: 7, z: 9 },
+  { sym: 'Ne', name: 'Neon', val: 8, z: 10 },
+  { sym: 'Na', name: 'Sodium', val: 1, z: 11 },
+  { sym: 'Mg', name: 'Magnesium', val: 2, z: 12 },
+  { sym: 'Al', name: 'Aluminum', val: 3, z: 13 },
+  { sym: 'Si', name: 'Silicon', val: 4, z: 14 },
+  { sym: 'P', name: 'Phosphorus', val: 5, z: 15 },
+  { sym: 'S', name: 'Sulfur', val: 6, z: 16 },
+  { sym: 'Cl', name: 'Chlorine', val: 7, z: 17 },
+  { sym: 'Ar', name: 'Argon', val: 8, z: 18 },
+  { sym: 'K', name: 'Potassium', val: 1, z: 19 },
+  { sym: 'Ca', name: 'Calcium', val: 2, z: 20 },
+  { sym: 'Br', name: 'Bromine', val: 7, z: 35 },
+  { sym: 'Kr', name: 'Krypton', val: 8, z: 36 },
+]
+
+interface LewisMolecule {
+  label: string
+  central: string
+  terminals: { sym: string; count: number; bonds: number }[]
+  lonePairsCentral: number
+}
+
+const LEWIS_EXAMPLES: LewisMolecule[] = [
+  { label: 'H2O', central: 'O', terminals: [{ sym: 'H', count: 2, bonds: 1 }], lonePairsCentral: 2 },
+  { label: 'CO2', central: 'C', terminals: [{ sym: 'O', count: 2, bonds: 2 }], lonePairsCentral: 0 },
+  { label: 'NH3', central: 'N', terminals: [{ sym: 'H', count: 3, bonds: 1 }], lonePairsCentral: 1 },
+  { label: 'CH4', central: 'C', terminals: [{ sym: 'H', count: 4, bonds: 1 }], lonePairsCentral: 0 },
+  { label: 'O2', central: 'O', terminals: [{ sym: 'O', count: 1, bonds: 2 }], lonePairsCentral: 2 },
+  { label: 'N2', central: 'N', terminals: [{ sym: 'N', count: 1, bonds: 3 }], lonePairsCentral: 1 },
+]
+
+function getElemData(sym: string) {
+  return LEWIS_ELEMENTS.find(e => e.sym === sym) || LEWIS_ELEMENTS[0]
+}
+
+export function LewisDotStructureBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [element, setElement] = useState('O')
+  const [mode, setMode] = useState<'atom' | 'molecule'>('atom')
+  const [exampleIdx, setExampleIdx] = useState(0)
+
+  const currentElement = getElemData(element)
+  const ex = LEWIS_EXAMPLES[exampleIdx]
+
+  const getDots = (valence: number) => {
+    const positions = [
+      { x: 0, y: -1 },   // top
+      { x: 1, y: 0 },    // right
+      { x: 0, y: 1 },    // bottom
+      { x: -1, y: 0 },   // left
+    ]
+    const dots: { x: number; y: number; paired: boolean }[] = []
+    for (let i = 0; i < valence; i++) {
+      const side = Math.floor(i / 2)
+      const pos = positions[side % 4]
+      const isSecond = i % 2 === 1
+      dots.push({
+        x: pos.x + (isSecond ? pos.x * 0.3 : 0),
+        y: pos.y + (isSecond ? pos.y * 0.3 : 0),
+        paired: isSecond,
+      })
+    }
+    return dots
+  }
+
+  const renderAtomDots = (cx: number, cy: number, sym: string, scale: number, showDots: boolean, lonePairs: number, usedBonds: number) => {
+    const elem = getElemData(sym)
+    const totalDots = elem.val
+    const bondingElectrons = usedBonds * 2
+    const loneElectrons = totalDots - bondingElectrons
+    const dots = getDots(loneElectrons > 0 ? loneElectrons : 0)
+    return (
+      <g key={sym + '-' + cx}>
+        <circle cx={cx} cy={cy} r={18 * scale} fill={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)'} stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'} strokeWidth={1} />
+        <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="central" fontSize={14 * scale} fontWeight={700} fill={s.bright}>{sym}</text>
+        {showDots && dots.map((d, i) => (
+          <circle key={i} cx={cx + d.x * 22 * scale} cy={cy + d.y * 22 * scale} r={2.5 * scale} fill={d.paired ? '#34d399' : '#60a5fa'} />
+        ))}
+      </g>
+    )
+  }
+
+  const renderBond = (x1: number, y1: number, x2: number, y2: number, count: number) => {
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const len = Math.sqrt(dx * dx + dy * dy)
+    const nx = -dy / (len || 1) * 3
+    const ny = dx / (len || 1) * 3
+    const lines = []
+    for (let i = 0; i < count; i++) {
+      const offset = (i - (count - 1) / 2) * 3
+      lines.push(
+        <line key={i} x1={x1 + nx * offset} y1={y1 + ny * offset} x2={x2 + nx * offset} y2={y2 + ny * offset} stroke={isDark ? '#e2e8f0' : '#1e293b'} strokeWidth={1.5} />
+      )
+    }
+    return lines
+  }
+
+  const totalValence = mode === 'molecule'
+    ? getElemData(ex.central).val + ex.terminals.reduce((sum, t) => sum + getElemData(t.sym).val * t.count, 0)
+    : currentElement.val
+
+  const totalBonds = mode === 'molecule'
+    ? ex.terminals.reduce((sum, t) => sum + t.bonds * t.count, 0)
+    : 0
+
+  const lonePairsCount = mode === 'molecule'
+    ? Math.floor((totalValence - totalBonds * 2) / 2)
+    : Math.floor(currentElement.val / 2)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <button onClick={() => setMode('atom')} style={s.btn(mode === 'atom')}>Single Atom</button>
+        <button onClick={() => setMode('molecule')} style={s.btn(mode === 'molecule')}>Molecule</button>
+      </div>
+
+      {mode === 'atom' && (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: s.text }}>Element:</span>
+          <select value={element} onChange={e => setElement(e.target.value)} style={s.input}>
+            {LEWIS_ELEMENTS.map(el => (
+              <option key={el.sym} value={el.sym}>{el.sym} ({el.name}) — {el.val} valence e⁻</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {mode === 'molecule' && (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, color: s.text }}>Example:</span>
+          {LEWIS_EXAMPLES.map((m, i) => (
+            <button key={m.label} onClick={() => setExampleIdx(i)} style={s.btn(i === exampleIdx)}>{m.label}</button>
+          ))}
+        </div>
+      )}
+
+      <svg viewBox="0 0 200 200" width="100%" style={{ maxHeight: 200 }}>
+        {mode === 'atom' ? (
+          renderAtomDots(100, 100, element, 1.5, true, 0, 0)
+        ) : (
+          (() => {
+            const cx = 100
+            const cy = 100
+            const r = 50
+            const tLen = ex.terminals.length === 1 && ex.terminals[0].count === 1
+            const elems = []
+            if (tLen) {
+              const t = ex.terminals[0]
+              elems.push(renderAtomDots(cx, cy, ex.central, 1, true, ex.lonePairsCentral, t.bonds))
+              elems.push(renderBond(cx, cy, cx + r * 1.2, cy, t.bonds))
+              elems.push(renderAtomDots(cx + r * 1.2, cy, t.sym, 1, true, 0, t.bonds))
+            } else {
+              elems.push(renderAtomDots(cx, cy, ex.central, 1, true, ex.lonePairsCentral, ex.terminals.reduce((s2, t2) => s2 + t2.bonds, 0)))
+              let idx = 0
+              const total = ex.terminals.reduce((s2, t2) => s2 + t2.count, 0)
+              ex.terminals.forEach(t => {
+                for (let i = 0; i < t.count; i++) {
+                  const angle = (2 * Math.PI * idx / total) - Math.PI / 2
+                  const tx = cx + r * Math.cos(angle)
+                  const ty = cy + r * Math.sin(angle)
+                  elems.push(renderBond(cx, cy, tx, ty, t.bonds))
+                  elems.push(renderAtomDots(tx, ty, t.sym, 0.85, true, 0, t.bonds))
+                  idx++
+                }
+              })
+            }
+            return elems
+          })()
+        )}
+      </svg>
+
+      <div style={{ background: s.bg, border: '1px solid ' + s.border, borderRadius: 6, padding: '6px 8px', fontSize: 10, color: s.text }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Total valence electrons:</span><span style={{ color: s.bright, fontWeight: 600 }}>{totalValence}</span></div>
+        {mode === 'molecule' && <>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Bonds:</span><span style={{ color: s.bright, fontWeight: 600 }}>{totalBonds}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{lonePairsCount}</span></div>
+        </>}
+        {mode === 'atom' && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{lonePairsCount}</span></div>}
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   Molecular Geometry VSEPR (Grades 9-12)
+   ============================================================ */
+const VSEPR_DATA = [
+  { formula: 'CH4', geometry: 'Tetrahedral', hybridization: 'sp³', lonePairs: 0, bondAngle: '109.5°', polarity: 'Nonpolar', atoms: [{ sym: 'C', x: 100, y: 100, r: 14, color: '#374151' }, { sym: 'H', x: 60, y: 65, r: 10, color: '#9ca3af' }, { sym: 'H', x: 140, y: 65, r: 10, color: '#9ca3af' }, { sym: 'H', x: 60, y: 135, r: 10, color: '#9ca3af' }, { sym: 'H', x: 140, y: 135, r: 10, color: '#9ca3af' }], bonds: [[0,1,1],[0,2,1],[0,3,1],[0,4,1]] },
+  { formula: 'NH3', geometry: 'Trigonal Pyramidal', hybridization: 'sp³', lonePairs: 1, bondAngle: '107°', polarity: 'Polar', atoms: [{ sym: 'N', x: 100, y: 100, r: 14, color: '#2563eb' }, { sym: 'H', x: 60, y: 65, r: 10, color: '#9ca3af' }, { sym: 'H', x: 140, y: 65, r: 10, color: '#9ca3af' }, { sym: 'H', x: 100, y: 145, r: 10, color: '#9ca3af' }], bonds: [[0,1,1],[0,2,1],[0,3,1]] },
+  { formula: 'H2O', geometry: 'Bent', hybridization: 'sp³', lonePairs: 2, bondAngle: '104.5°', polarity: 'Polar', atoms: [{ sym: 'O', x: 100, y: 100, r: 14, color: '#dc2626' }, { sym: 'H', x: 60, y: 80, r: 10, color: '#9ca3af' }, { sym: 'H', x: 140, y: 80, r: 10, color: '#9ca3af' }], bonds: [[0,1,1],[0,2,1]] },
+  { formula: 'CO2', geometry: 'Linear', hybridization: 'sp', lonePairs: 0, bondAngle: '180°', polarity: 'Nonpolar', atoms: [{ sym: 'C', x: 100, y: 100, r: 14, color: '#374151' }, { sym: 'O', x: 35, y: 100, r: 12, color: '#dc2626' }, { sym: 'O', x: 165, y: 100, r: 12, color: '#dc2626' }], bonds: [[0,1,2],[0,2,2]] },
+  { formula: 'BF3', geometry: 'Trigonal Planar', hybridization: 'sp²', lonePairs: 0, bondAngle: '120°', polarity: 'Nonpolar', atoms: [{ sym: 'B', x: 100, y: 100, r: 13, color: '#f59e0b' }, { sym: 'F', x: 100, y: 40, r: 11, color: '#22c55e' }, { sym: 'F', x: 48, y: 130, r: 11, color: '#22c55e' }, { sym: 'F', x: 152, y: 130, r: 11, color: '#22c55e' }], bonds: [[0,1,1],[0,2,1],[0,3,1]] },
+  { formula: 'SF6', geometry: 'Octahedral', hybridization: 'sp³d²', lonePairs: 0, bondAngle: '90° / 180°', polarity: 'Nonpolar', atoms: [{ sym: 'S', x: 100, y: 100, r: 14, color: '#eab308' }, { sym: 'F', x: 100, y: 40, r: 11, color: '#22c55e' }, { sym: 'F', x: 100, y: 160, r: 11, color: '#22c55e' }, { sym: 'F', x: 45, y: 100, r: 11, color: '#22c55e' }, { sym: 'F', x: 155, y: 100, r: 11, color: '#22c55e' }, { sym: 'F', x: 65, y: 60, r: 11, color: '#22c55e' }, { sym: 'F', x: 135, y: 140, r: 11, color: '#22c55e' }], bonds: [[0,1,1],[0,2,1],[0,3,1],[0,4,1],[0,5,1],[0,6,1]] },
+  { formula: 'XeF4', geometry: 'Square Planar', hybridization: 'sp³d²', lonePairs: 2, bondAngle: '90° / 180°', polarity: 'Nonpolar', atoms: [{ sym: 'Xe', x: 100, y: 100, r: 15, color: '#7c3aed' }, { sym: 'F', x: 100, y: 40, r: 11, color: '#22c55e' }, { sym: 'F', x: 100, y: 160, r: 11, color: '#22c55e' }, { sym: 'F', x: 40, y: 100, r: 11, color: '#22c55e' }, { sym: 'F', x: 160, y: 100, r: 11, color: '#22c55e' }], bonds: [[0,1,1],[0,2,1],[0,3,1],[0,4,1]] },
+  { formula: 'PCl5', geometry: 'Trigonal Bipyramidal', hybridization: 'sp³d', lonePairs: 0, bondAngle: '90° / 120° / 180°', polarity: 'Nonpolar', atoms: [{ sym: 'P', x: 100, y: 95, r: 14, color: '#f97316' }, { sym: 'Cl', x: 100, y: 35, r: 12, color: '#22c55e' }, { sym: 'Cl', x: 100, y: 155, r: 12, color: '#22c55e' }, { sym: 'Cl', x: 50, y: 70, r: 12, color: '#22c55e' }, { sym: 'Cl', x: 150, y: 70, r: 12, color: '#22c55e' }, { sym: 'Cl', x: 100, y: 165, r: 12, color: '#22c55e' }], bonds: [[0,1,1],[0,2,1],[0,3,1],[0,4,1],[0,5,1]] },
+]
+
+export function MolecularGeometryVSEPR({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [idx, setIdx] = useState(0)
+  const d = VSEPR_DATA[idx]
+
+  const renderBondLine = (x1: number, y1: number, x2: number, y2: number, count: number, bondIdx: number) => {
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const len = Math.sqrt(dx * dx + dy * dy) || 1
+    const nx = -dy / len * 3
+    const ny = dx / len * 3
+    const lines = []
+    for (let i = 0; i < count; i++) {
+      const off = (i - (count - 1) / 2) * 3
+      lines.push(
+        <line key={bondIdx + '-' + i} x1={x1 + nx * off} y1={y1 + ny * off} x2={x2 + nx * off} y2={y2 + ny * off} stroke={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)'} strokeWidth={2} />
+      )
+    }
+    return lines
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {VSEPR_DATA.map((v, i) => (
+          <button key={v.formula} onClick={() => setIdx(i)} style={s.btn(i === idx)}>{v.formula}</button>
+        ))}
+      </div>
+
+      <svg viewBox="0 0 200 200" width="100%" style={{ maxHeight: 200 }}>
+        {d.bonds.map((b, i) => renderBondLine(d.atoms[b[0]].x, d.atoms[b[0]].y, d.atoms[b[1]].x, d.atoms[b[1]].y, b[2], i))}
+        {d.atoms.map((a, i) => (
+          <g key={i}>
+            <circle cx={a.x} cy={a.y} r={a.r} fill={a.color} opacity={0.85} />
+            <circle cx={a.x} cy={a.y} r={a.r} fill="none" stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'} strokeWidth={0.5} />
+            <text x={a.x} y={a.y + 1} textAnchor="middle" dominantBaseline="central" fontSize={a.r > 13 ? 10 : 8} fontWeight={700} fill="white">{a.sym}</text>
+          </g>
+        ))}
+      </svg>
+
+      <div style={{ background: s.bg, border: '1px solid ' + s.border, borderRadius: 6, padding: '6px 8px', fontSize: 10, color: s.text }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: s.bright, marginBottom: 4 }}>{d.formula} — {d.geometry}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Hybridization:</span><span style={{ color: s.bright, fontWeight: 600 }}>{d.hybridization}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Bond angle(s):</span><span style={{ color: s.bright, fontWeight: 600 }}>{d.bondAngle}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{d.lonePairs}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Polarity:</span><span style={{ color: d.polarity === 'Polar' ? '#f87171' : '#34d399', fontWeight: 600 }}>{d.polarity}</span></div>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   Gas Laws Simulator (Grades 9-12)
+   ============================================================ */
+export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const R = 0.08206
+
+  const [pressure, setPressure] = useState(1.0)
+  const [volume, setVolume] = useState(22.4)
+  const [temperature, setTemperature] = useState(273.15)
+  const [moles, setMoles] = useState(1.0)
+  const [locked, setLocked] = useState<Set<string>>(new Set(['P']))
+
+  const toggleLock = (v: string) => {
+    setLocked(prev => {
+      const next = new Set(prev)
+      if (next.has(v)) {
+        if (next.size <= 3) return prev
+        next.delete(v)
+      } else {
+        next.add(v)
+      }
+      return next
+    })
+  }
+
+  const calcUnlocked = () => {
+    if (locked.size !== 3) return null
+    const unlocked = ['P', 'V', 'T', 'n'].find(v => !locked.has(v))
+    if (!unlocked) return null
+    if (unlocked === 'P') return { key: 'P' as const, val: moles * R * temperature / volume }
+    if (unlocked === 'V') return { key: 'V' as const, val: moles * R * temperature / pressure }
+    if (unlocked === 'T') return { key: 'T' as const, val: pressure * volume / (moles * R) }
+    return { key: 'n' as const, val: pressure * volume / (R * temperature) }
+  }
+
+  const result = calcUnlocked()
+
+  const getDisplayVal = (key: string) => {
+    if (result && result.key === key && result.val > 0 && isFinite(result.val)) {
+      return parseFloat(result.val.toFixed(4))
+    }
+    return key === 'P' ? pressure : key === 'V' ? volume : key === 'T' ? temperature : moles
+  }
+
+  const displayP = getDisplayVal('P')
+  const displayV = getDisplayVal('V')
+  const displayT = getDisplayVal('T')
+  const displayN = getDisplayVal('n')
+
+  const particles = useMemo(() => {
+    const pts: { x: number; y: number; vx: number; vy: number }[] = []
+    const count = Math.min(Math.round(displayN * 15), 60)
+    for (let i = 0; i < count; i++) {
+      pts.push({ x: Math.random() * 160 + 10, y: Math.random() * 100 + 10, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2 })
+    }
+    return pts
+  }, [Math.round(displayN * 15)])
+
+  const tempFrac = Math.min(1, Math.max(0, (displayT - 100) / 800))
+  const particleColor = isDark
+    ? 'rgba(' + Math.round(59 + tempFrac * 196) + ',' + Math.round(130 - tempFrac * 80) + ',' + Math.round(246 - tempFrac * 200) + ',0.8)'
+    : 'rgba(' + Math.round(37 + tempFrac * 200) + ',' + Math.round(99 - tempFrac * 60) + ',' + Math.round(235 - tempFrac * 200) + ',0.7)'
+
+  const pistonY = Math.min(140, Math.max(40, 140 - (displayV - 5) * 2.5))
+
+  const applyScenario = (scenario: string) => {
+    if (scenario === 'boyle') {
+      setPressure(2.0); setVolume(11.2); setTemperature(273.15); setMoles(1.0)
+      setLocked(new Set(['T', 'n', 'V']))
+    } else {
+      setPressure(1.0); setVolume(22.4); setTemperature(546.3); setMoles(1.0)
+      setLocked(new Set(['P', 'n', 'V']))
+    }
+  }
+
+  const sliders: { label: string; key: string; val: number; displayVal: number; min: number; max: number; step: number; unit: string; setter: (v: number) => void }[] = [
+    { label: 'Pressure (P)', key: 'P', val: pressure, displayVal: displayP, min: 0.1, max: 10, step: 0.1, unit: 'atm', setter: setPressure },
+    { label: 'Volume (V)', key: 'V', val: volume, displayVal: displayV, min: 1, max: 100, step: 0.5, unit: 'L', setter: setVolume },
+    { label: 'Temperature (T)', key: 'T', val: temperature, displayVal: displayT, min: 100, max: 1000, step: 5, unit: 'K', setter: setTemperature },
+    { label: 'Moles (n)', key: 'n', val: moles, displayVal: displayN, min: 0.1, max: 5, step: 0.1, unit: 'mol', setter: setMoles },
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button onClick={() => applyScenario('boyle')} style={s.btn(false)}>Boyle’s Law (P↑V↓)</button>
+        <button onClick={() => applyScenario('charles')} style={s.btn(false)}>Charles’s Law (T↑V↑)</button>
+      </div>
+
+      <svg viewBox="0 0 180 160" width="100%" style={{ maxHeight: 160, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(240,240,255,0.3)', borderRadius: 6 }}>
+        {/* Container walls */}
+        <rect x={20} y={pistonY} width={140} height={145 - pistonY} fill={isDark ? 'rgba(255,255,255,0.03)' : 'rgba(200,210,255,0.15)'} stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'} strokeWidth={1.5} />
+        {/* Piston */}
+        <rect x={15} y={pistonY - 6} width={150} height={8} rx={2} fill={isDark ? '#475569' : '#94a3b8'} stroke={isDark ? '#64748b' : '#64748b'} strokeWidth={1} />
+        {/* Piston handle */}
+        <rect x={82} y={pistonY - 18} width={16} height={14} rx={2} fill={isDark ? '#334155' : '#cbd5e1'} stroke={isDark ? '#475569' : '#94a3b8'} strokeWidth={1} />
+        {/* Particles */}
+        {particles.map((p, i) => (
+          <circle key={i} cx={Math.min(155, Math.max(25, p.x))} cy={Math.min(140, Math.max(pistonY + 5, p.y))} r={3} fill={particleColor}>
+            <animate attributeName="cx" values={Math.min(155, Math.max(25, p.x)) + ';' + Math.min(155, Math.max(25, p.x + p.vx * 10)) + ';' + Math.min(155, Math.max(25, p.x))} dur={(2 - tempFrac).toFixed(1) + 's'} repeatCount="indefinite" />
+            <animate attributeName="cy" values={Math.min(140, Math.max(pistonY + 5, p.y)) + ';' + Math.min(140, Math.max(pistonY + 5, p.y + p.vy * 10)) + ';' + Math.min(140, Math.max(pistonY + 5, p.y))} dur={(2 - tempFrac).toFixed(1) + 's'} repeatCount="indefinite" />
+          </circle>
+        ))}
+      </svg>
+
+      {sliders.map(sl => {
+        const isLocked = locked.has(sl.key)
+        const isComputed = result && result.key === sl.key
+        return (
+          <div key={sl.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10 }}>
+            <span style={{ color: s.text, width: 105, flexShrink: 0 }}>{sl.label}</span>
+            <input type="range" min={sl.min} max={sl.max} step={sl.step} value={isLocked ? Math.min(sl.max, Math.max(sl.min, sl.displayVal)) : sl.val}
+              onChange={e => { if (!isLocked) sl.setter(parseFloat(e.target.value)) }}
+              style={{ flex: 1, accentColor: '#34d399', opacity: isLocked ? 0.4 : 1 }} />
+            <span style={{ color: isComputed ? '#34d399' : s.bright, fontWeight: 600, width: 55, textAlign: 'right', fontSize: 10 }}>{parseFloat(sl.displayVal.toFixed(2))} {sl.unit}</span>
+            <button onClick={() => toggleLock(sl.key)} style={{ ...s.btn(isLocked), minWidth: 18, textAlign: 'center', fontSize: 12, fontWeight: 700 }}>{isLocked ? '🔒' : '🔓'}</button>
+          </div>
+        )
+      })}
+
+      <div style={{ fontSize: 9, color: s.text, opacity: 0.7 }}>
+        PV = nRT | R = 0.08206 L·atm/(mol·K) | Lock 3 variables, adjust the 4th
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   Acid-Base Titration (Grades 9-12)
+   ============================================================ */
+export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [acidConc, setAcidConc] = useState(0.1)
+  const [acidVol, setAcidVol] = useState(25)
+  const [baseConc, setBaseConc] = useState(0.1)
+  const [baseAdded, setBaseAdded] = useState(0)
+
+  const equivVol = (acidConc * acidVol) / baseConc
+  const totalVol = acidVol + baseAdded
+  const molesAcidInit = acidConc * acidVol / 1000
+  const molesBaseAdded = baseConc * baseAdded / 1000
+
+  const calcPH = () => {
+    if (baseAdded === 0) {
+      const ha = acidConc
+      return -Math.log10(ha)
+    }
+    if (Math.abs(baseAdded - equivVol) < 0.5) {
+      return 7.0
+    }
+    if (baseAdded < equivVol) {
+      const excess = molesAcidInit - molesBaseAdded
+      const conc = excess / (totalVol / 1000)
+      return -Math.log10(Math.max(1e-14, conc))
+    }
+    const excess = molesBaseAdded - molesAcidInit
+    const conc = excess / (totalVol / 1000)
+    const poh = -Math.log10(Math.max(1e-14, conc))
+    return 14 - poh
+  }
+
+  const pH = calcPH()
+
+  const pHColor = (val: number) => {
+    const clamped = Math.max(0, Math.min(14, val))
+    if (clamped < 3) return '#ef4444'
+    if (clamped < 5) return '#f97316'
+    if (clamped < 6.5) return '#eab308'
+    if (clamped < 7.5) return '#22c55e'
+    if (clamped < 9) return '#06b6d4'
+    if (clamped < 11) return '#3b82f6'
+    return '#7c3aed'
+  }
+
+  const curvePoints = useMemo(() => {
+    const pts: { x: number; y: number }[] = []
+    const steps = 60
+    const maxVol = equivVol * 2
+    for (let i = 0; i <= steps; i++) {
+      const bv = (i / steps) * maxVol
+      let ph: number
+      if (bv === 0) {
+        ph = -Math.log10(acidConc)
+      } else if (Math.abs(bv - equivVol) < maxVol / steps * 0.5) {
+        ph = 7.0
+      } else if (bv < equivVol) {
+        const ma = acidConc * acidVol / 1000
+        const mb = baseConc * bv / 1000
+        const excess = ma - mb
+        const conc = excess / ((acidVol + bv) / 1000)
+        ph = -Math.log10(Math.max(1e-14, conc))
+      } else {
+        const ma = acidConc * acidVol / 1000
+        const mb = baseConc * bv / 1000
+        const excess = mb - ma
+        const conc = excess / ((acidVol + bv) / 1000)
+        ph = 14 + Math.log10(Math.max(1e-14, conc))
+      }
+      ph = Math.max(0, Math.min(14, ph))
+      pts.push({ x: bv, y: ph })
+    }
+    return pts
+  }, [acidConc, acidVol, baseConc])
+
+  const maxX = equivVol * 2
+  const svgW = 280
+  const svgH = 160
+  const pad = { l: 30, r: 10, t: 10, b: 25 }
+  const plotW = svgW - pad.l - pad.r
+  const plotH = svgH - pad.t - pad.b
+
+  const toSVGX = (vol: number) => pad.l + (vol / maxX) * plotW
+  const toSVGY = (ph: number) => pad.t + plotH - (ph / 14) * plotH
+
+  const pathD = curvePoints.map((p, i) => (i === 0 ? 'M' : 'L') + toSVGX(p.x).toFixed(1) + ' ' + toSVGY(p.y).toFixed(1)).join(' ')
+  const currentX = toSVGX(Math.min(baseAdded, maxX))
+  const currentY = toSVGY(Math.max(0, Math.min(14, pH)))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+          <span style={{ color: s.text }}>Acid (M):</span>
+          <input type="number" value={acidConc} onChange={e => setAcidConc(Math.max(0.001, parseFloat(e.target.value) || 0.1))} step={0.01} min={0.001} max={2} style={{ ...s.input, width: 60 }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+          <span style={{ color: s.text }}>Acid vol (mL):</span>
+          <input type="number" value={acidVol} onChange={e => setAcidVol(Math.max(1, parseFloat(e.target.value) || 25))} step={1} min={1} max={100} style={{ ...s.input, width: 50 }} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+          <span style={{ color: s.text }}>Base (M):</span>
+          <input type="number" value={baseConc} onChange={e => setBaseConc(Math.max(0.001, parseFloat(e.target.value) || 0.1))} step={0.01} min={0.001} max={2} style={{ ...s.input, width: 60 }} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <button onClick={() => setBaseAdded(prev => Math.min(prev + 1, equivVol * 2))} style={{ ...s.btn(false), padding: '4px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }}>+ Add 1 mL Base</button>
+        <button onClick={() => setBaseAdded(0)} style={s.btn(false)}>Reset</button>
+        <span style={{ fontSize: 10, color: s.text, marginLeft: 4 }}>Added: <strong style={{ color: s.bright }}>{baseAdded.toFixed(1)} mL</strong> / Equiv: <strong style={{ color: s.bright }}>{equivVol.toFixed(1)} mL</strong></span>
+      </div>
+
+      <svg viewBox={'0 0 ' + svgW + ' ' + svgH} width="100%" style={{ maxHeight: 160 }}>
+        {/* Grid lines */}
+        {[0, 2, 4, 6, 8, 10, 12, 14].map(ph => (
+          <g key={'grid-' + ph}>
+            <line x1={pad.l} y1={toSVGY(ph)} x2={svgW - pad.r} y2={toSVGY(ph)} stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)'} strokeWidth={0.5} />
+            <text x={pad.l - 4} y={toSVGY(ph) + 3} textAnchor="end" fontSize={7} fill={s.text}>{ph}</text>
+          </g>
+        ))}
+        {/* pH 7 line */}
+        <line x1={pad.l} y1={toSVGY(7)} x2={svgW - pad.r} y2={toSVGY(7)} stroke={isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'} strokeWidth={0.5} strokeDasharray="3,3" />
+        {/* Curve */}
+        <path d={pathD} fill="none" stroke="#34d399" strokeWidth={2} />
+        {/* Equivalence point marker */}
+        <line x1={toSVGX(equivVol)} y1={pad.t} x2={toSVGX(equivVol)} y2={pad.t + plotH} stroke={isDark ? 'rgba(251,191,36,0.4)' : 'rgba(217,119,6,0.3)'} strokeWidth={1} strokeDasharray="4,2" />
+        <text x={toSVGX(equivVol)} y={pad.t + plotH + 12} textAnchor="middle" fontSize={7} fill={isDark ? '#fbbf24' : '#d97706'}>eq. pt.</text>
+        {/* Current point */}
+        <circle cx={currentX} cy={currentY} r={4} fill={pHColor(pH)} stroke={isDark ? '#e2e8f0' : '#1e293b'} strokeWidth={1.5} />
+        {/* Axes labels */}
+        <text x={svgW / 2} y={svgH - 2} textAnchor="middle" fontSize={7} fill={s.text}>Volume base (mL)</text>
+      </svg>
+
+      <div style={{ background: s.bg, border: '1px solid ' + s.border, borderRadius: 6, padding: '6px 8px', display: 'flex', gap: 16, alignItems: 'center' }}>
+        <div style={{ width: 36, height: 36, borderRadius: '50%', background: pHColor(pH), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'white', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{parseFloat(pH.toFixed(1))}</div>
+        <div style={{ fontSize: 10, color: s.text, lineHeight: 1.6 }}>
+          <div>pH: <strong style={{ color: s.bright }}>{parseFloat(pH.toFixed(2))}</strong></div>
+          <div>Status: <strong style={{ color: pH < 7 ? '#f87171' : pH > 7 ? '#60a5fa' : '#34d399' }}>{baseAdded < equivVol - 0.5 ? 'Before equivalence' : Math.abs(baseAdded - equivVol) < 0.5 ? 'At equivalence' : 'Past equivalence'}</strong></div>
+          <div>Total volume: <strong style={{ color: s.bright }}>{totalVol.toFixed(1)} mL</strong></div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   Ion Formation Visualizer (Grades 6-8)
+   ============================================================ */
+const ION_ELEMENTS = [
+  { sym: 'Na', z: 11, name: 'Sodium', config: '2-8-1', ionConfig: '2-8', charge: '+1', loses: 1, color: '#f59e0b' },
+  { sym: 'Mg', z: 12, name: 'Magnesium', config: '2-8-2', ionConfig: '2-8', charge: '+2', loses: 2, color: '#a3a3a3' },
+  { sym: 'Al', z: 13, name: 'Aluminum', config: '2-8-3', ionConfig: '2-8', charge: '+3', loses: 3, color: '#a8a29e' },
+  { sym: 'K', z: 19, name: 'Potassium', config: '2-8-8-1', ionConfig: '2-8-8', charge: '+1', loses: 1, color: '#c084fc' },
+  { sym: 'Ca', z: 20, name: 'Calcium', config: '2-8-8-2', ionConfig: '2-8-8', charge: '+2', loses: 2, color: '#86efac' },
+  { sym: 'Fe', z: 26, name: 'Iron', config: '2-8-14-2', ionConfig: '2-8-14', charge: '+2', loses: 2, color: '#fb923c' },
+  { sym: 'Cu', z: 29, name: 'Copper', config: '2-8-18-1', ionConfig: '2-8-18', charge: '+1', loses: 1, color: '#f97316' },
+  { sym: 'Zn', z: 30, name: 'Zinc', config: '2-8-18-2', ionConfig: '2-8-18', charge: '+2', loses: 2, color: '#a1a1aa' },
+  { sym: 'Cl', z: 17, name: 'Chlorine', config: '2-8-7', ionConfig: '2-8-8', charge: '-1', loses: -1, color: '#22c55e' },
+  { sym: 'O', z: 8, name: 'Oxygen', config: '2-6', ionConfig: '2-8', charge: '-2', loses: -2, color: '#ef4444' },
+  { sym: 'N', z: 7, name: 'Nitrogen', config: '2-5', ionConfig: '2-8', charge: '-3', loses: -3, color: '#3b82f6' },
+  { sym: 'F', z: 9, name: 'Fluorine', config: '2-7', ionConfig: '2-8', charge: '-1', loses: -1, color: '#10b981' },
+  { sym: 'S', z: 16, name: 'Sulfur', config: '2-8-6', ionConfig: '2-8-8', charge: '-2', loses: -2, color: '#eab308' },
+]
+
+function drawShell(cx: number, cy: number, maxElectrons: number, totalElectrons: number, highlightCount: number, isGain: boolean, isDark: boolean) {
+  const r = 18 + maxElectrons * 1.5
+  const elements: React.ReactNode[] = []
+  const electronsToShow = Math.min(totalElectrons, 16)
+  const startHighlight = isGain ? totalElectrons - Math.abs(highlightCount) : totalElectrons - Math.abs(highlightCount)
+
+  elements.push(
+    <circle key={'shell-' + cx + '-' + cy} cx={cx} cy={cy} r={r} fill="none" stroke={isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'} strokeWidth={0.8} strokeDasharray="3,2" />
+  )
+
+  for (let i = 0; i < electronsToShow; i++) {
+    const angle = (2 * Math.PI * i / electronsToShow) - Math.PI / 2
+    const ex = cx + r * Math.cos(angle)
+    const ey = cy + r * Math.sin(angle)
+    const isHighlighted = highlightCount !== 0 && ((isGain && i >= startHighlight) || (!isGain && i >= startHighlight))
+    elements.push(
+      <circle key={'e-' + cx + '-' + i} cx={ex} cy={ey} r={3} fill={isHighlighted
+        ? (isGain ? '#34d399' : '#f87171')
+        : (isDark ? '#94a3b8' : '#64748b')
+      } stroke={isHighlighted ? (isGain ? '#059669' : '#dc2626') : 'none'} strokeWidth={isHighlighted ? 1 : 0} />
+    )
+  }
+  return elements
+}
+
+export function IonFormationVisualizer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [elemIdx, setElemIdx] = useState(0)
+  const elem = ION_ELEMENTS[elemIdx]
+  const shells = elem.config.split('-').map(Number)
+  const ionShells = elem.ionConfig.split('-').map(Number)
+  const isGain = elem.loses < 0
+  const electronChange = Math.abs(elem.loses)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {ION_ELEMENTS.map((el, i) => (
+          <button key={el.sym} onClick={() => setElemIdx(i)} style={s.btn(i === elemIdx)}>{el.sym}</button>
+        ))}
+      </div>
+
+      <svg viewBox="0 0 320 140" width="100%" style={{ maxHeight: 160 }}>
+        {/* Neutral atom */}
+        <g>
+          <text x={80} y={12} textAnchor="middle" fontSize={9} fontWeight={600} fill={s.bright}>Neutral Atom</text>
+          <circle cx={80} cy={75} r={14} fill={elem.color} opacity={0.2} stroke={elem.color} strokeWidth={1} />
+          <text x={80} y={76} textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={700} fill={elem.color}>{elem.sym}</text>
+          <text x={80} y={95} textAnchor="middle" fontSize={8} fill={s.text}>{elem.name}</text>
+          {shells.map((count, si) => drawShell(80, 75, si === 0 ? 2 : 8, count, si === shells.length - 1 ? electronChange : 0, isGain, isDark))}
+        </g>
+
+        {/* Arrow */}
+        <g>
+          <line x1={155} y1={75} x2={185} y2={75} stroke={isDark ? '#e2e8f0' : '#1e293b'} strokeWidth={2} markerEnd="url(#arrowIon)" />
+          <defs>
+            <marker id="arrowIon" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill={isDark ? '#e2e8f0' : '#1e293b'} />
+            </marker>
+          </defs>
+          <text x={170} y={65} textAnchor="middle" fontSize={8} fill={s.text}>{isGain ? 'gains ' + electronChange + ' e⁻' : 'loses ' + electronChange + ' e⁻'}</text>
+        </g>
+
+        {/* Ion */}
+        <g>
+          <text x={250} y={12} textAnchor="middle" fontSize={9} fontWeight={600} fill={s.bright}>Ion</text>
+          <circle cx={250} cy={75} r={14} fill={elem.color} opacity={0.35} stroke={elem.color} strokeWidth={1.5} />
+          <text x={250} y={76} textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={700} fill={elem.color}>{elem.sym}</text>
+          <text x={266} y={68} textAnchor="middle" fontSize={10} fontWeight={800} fill={elem.charge.startsWith('+') ? '#f87171' : '#60a5fa'}>{elem.charge}</text>
+          <text x={250} y={95} textAnchor="middle" fontSize={8} fill={s.text}>{elem.sym + elem.charge + ' ion'}</text>
+          {ionShells.map((count, si) => drawShell(250, 75, si === 0 ? 2 : 8, count, 0, false, isDark))}
+        </g>
+      </svg>
+
+      <div style={{ background: s.bg, border: '1px solid ' + s.border, borderRadius: 6, padding: '6px 8px', fontSize: 10, color: s.text }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Electron config (neutral):</span><span style={{ color: s.bright, fontWeight: 600 }}>{elem.config}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Electron config (ion):</span><span style={{ color: s.bright, fontWeight: 600 }}>{elem.ionConfig}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Charge:</span><span style={{ color: elem.charge.startsWith('+') ? '#f87171' : '#60a5fa', fontWeight: 700 }}>{elem.charge}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Process:</span><span style={{ color: s.bright }}>{elem.name} {isGain ? 'gains' : 'loses'} {electronChange} electron{electronChange > 1 ? 's' : ''} to form {elem.sym}{elem.charge}</span></div>
+      </div>
+    </div>
+  )
+}

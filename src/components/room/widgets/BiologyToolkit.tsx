@@ -9,6 +9,11 @@ const CellDiagramLazy = lazy(() => import('./biology/BiologyUtilities').then(m =
 const TaxonomyLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.TaxonomyClassifier })))
 const BodySystemsLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.BodySystemsExplorer })))
 const FoodWebLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.EcologyFoodWeb })))
+const DNAStructureLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.DNAStructureViewer })))
+const NaturalSelectionLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.NaturalSelectionSim })))
+const CellDivisionLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.CellDivisionAnimator })))
+const PhotoRespLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.PhotosynthesisRespiration })))
+const HumanBodyInterLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.HumanBodyInteractive })))
 
 // Stable wrapper components (no remount on re-render)
 function PunnettSquarePanel({ isDark }: { isDark: boolean }) {
@@ -25,6 +30,21 @@ function BodySystemsPanel({ isDark }: { isDark: boolean }) {
 }
 function FoodWebPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><FoodWebLazy isDark={isDark} /></Suspense>
+}
+function DNAStructurePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><DNAStructureLazy isDark={isDark} /></Suspense>
+}
+function NaturalSelectionPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><NaturalSelectionLazy isDark={isDark} /></Suspense>
+}
+function CellDivisionPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><CellDivisionLazy isDark={isDark} /></Suspense>
+}
+function PhotoRespPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PhotoRespLazy isDark={isDark} /></Suspense>
+}
+function HumanBodyInterPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><HumanBodyInterLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -126,18 +146,37 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
             {sectionTitle('Ecology Food Web (6-8)')}
             <div style={{ padding: '0 12px 12px' }}><FoodWebPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('DNA Structure Viewer (6-12)')}
+            <div style={{ padding: '0 12px 12px' }}><DNAStructurePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Natural Selection Sim (6-12)')}
+            <div style={{ padding: '0 12px 12px' }}><NaturalSelectionPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Cell Division Animator (6-12)')}
+            <div style={{ padding: '0 12px 12px' }}><CellDivisionPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Photosynthesis & Respiration (6-12)')}
+            <div style={{ padding: '0 12px 12px' }}><PhotoRespPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Human Body Interactive (K-12)')}
+            <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* ELEMENTARY TAB (K-5) — Body Systems Explorer only */}
+      {/* ELEMENTARY TAB (K-5) — Human Body Interactive only */}
       {/* ============================================================ */}
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Body Systems Explorer')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore the major body systems, their organs, functions, and fun facts.</p>
-            <div style={{ padding: '0 12px 12px' }}><BodySystemsPanel isDark={isDark} /></div>
+            {sectionTitle('Human Body Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -163,11 +202,31 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
             {sectionTitle('Ecology Food Web')}
             <div style={{ padding: '0 12px 12px' }}><FoodWebPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('DNA Structure Viewer')}
+            <div style={{ padding: '0 12px 12px' }}><DNAStructurePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Natural Selection Sim')}
+            <div style={{ padding: '0 12px 12px' }}><NaturalSelectionPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Cell Division Animator')}
+            <div style={{ padding: '0 12px 12px' }}><CellDivisionPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Photosynthesis & Respiration')}
+            <div style={{ padding: '0 12px 12px' }}><PhotoRespPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Human Body Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* HIGH SCHOOL TAB (9-12) — ALL 5 tools */}
+      {/* HIGH SCHOOL TAB (9-12) — ALL tools */}
       {/* ============================================================ */}
       {activeBand === 'highschool' && (
         <>
@@ -190,6 +249,26 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Ecology Food Web')}
             <div style={{ padding: '0 12px 12px' }}><FoodWebPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('DNA Structure Viewer')}
+            <div style={{ padding: '0 12px 12px' }}><DNAStructurePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Natural Selection Sim')}
+            <div style={{ padding: '0 12px 12px' }}><NaturalSelectionPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Cell Division Animator')}
+            <div style={{ padding: '0 12px 12px' }}><CellDivisionPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Photosynthesis & Respiration')}
+            <div style={{ padding: '0 12px 12px' }}><PhotoRespPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Human Body Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
         </>
       )}

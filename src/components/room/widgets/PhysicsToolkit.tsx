@@ -10,6 +10,11 @@ const PendulumSimLazy = lazy(() => import('./physics/PhysicsUtilities').then(m =
 const ConverterLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.ScienceUnitConverter })))
 const ProjectileLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.ProjectileMotionSimulator })))
 const OhmsLawLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.OhmsLawCalculator })))
+const CircuitDiagramLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.CircuitDiagramBuilder })))
+const FreeBodyDiagramLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.FreeBodyDiagramBuilder })))
+const RayDiagramLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.RayDiagramOptics })))
+const EnergyBarChartsLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.EnergyBarCharts })))
+const InteractiveGraphingLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.InteractiveGraphingTool })))
 
 // Stable wrapper components (no remount on re-render)
 function FormulaCalcPanel({ isDark }: { isDark: boolean }) {
@@ -29,6 +34,21 @@ function ProjectilePanel({ isDark }: { isDark: boolean }) {
 }
 function OhmsLawPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><OhmsLawLazy isDark={isDark} /></Suspense>
+}
+function CircuitDiagramPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><CircuitDiagramLazy isDark={isDark} /></Suspense>
+}
+function FreeBodyDiagramPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><FreeBodyDiagramLazy isDark={isDark} /></Suspense>
+}
+function RayDiagramPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><RayDiagramLazy isDark={isDark} /></Suspense>
+}
+function EnergyBarChartsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><EnergyBarChartsLazy isDark={isDark} /></Suspense>
+}
+function InteractiveGraphingPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><InteractiveGraphingLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -140,6 +160,26 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Enter any two of voltage, current, and resistance to auto-calculate the third.</p>
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Circuit Diagram Builder')}
+            <div style={{ padding: '0 12px 12px' }}><CircuitDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Free Body Diagram Builder')}
+            <div style={{ padding: '0 12px 12px' }}><FreeBodyDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Ray Diagram Optics')}
+            <div style={{ padding: '0 12px 12px' }}><RayDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Energy Bar Charts (LOL)')}
+            <div style={{ padding: '0 12px 12px' }}><EnergyBarChartsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Graphing Tool')}
+            <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -181,6 +221,22 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
             {sectionTitle("Ohm's Law Calculator")}
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Circuit Diagram Builder')}
+            <div style={{ padding: '0 12px 12px' }}><CircuitDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Free Body Diagram Builder')}
+            <div style={{ padding: '0 12px 12px' }}><FreeBodyDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Energy Bar Charts (LOL)')}
+            <div style={{ padding: '0 12px 12px' }}><EnergyBarChartsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Graphing Tool')}
+            <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -212,6 +268,26 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle("Ohm's Law Calculator")}
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Circuit Diagram Builder')}
+            <div style={{ padding: '0 12px 12px' }}><CircuitDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Free Body Diagram Builder')}
+            <div style={{ padding: '0 12px 12px' }}><FreeBodyDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Ray Diagram Optics')}
+            <div style={{ padding: '0 12px 12px' }}><RayDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Energy Bar Charts (LOL)')}
+            <div style={{ padding: '0 12px 12px' }}><EnergyBarChartsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Graphing Tool')}
+            <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
           </div>
         </>
       )}
