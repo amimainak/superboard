@@ -9,6 +9,11 @@ const ReadingPassageAnalyzerLazy = lazy(() => import('./language/LanguageUtiliti
 const StoryElementsMapLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.StoryElementsMap })))
 const SentenceStructureBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SentenceStructureBuilder })))
 const FigurativeLanguageFinderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.FigurativeLanguageFinder })))
+const PhonicsDecodingBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PhonicsDecodingBuilder })))
+const PartsOfSpeechTaggerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PartsOfSpeechTagger })))
+const SentenceExpansionToolLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SentenceExpansionTool })))
+const PunctuationInteractiveLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PunctuationInteractive })))
+const ParagraphOrganizerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ParagraphOrganizer })))
 
 // Stable wrapper components (no remount on re-render)
 function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
@@ -25,6 +30,21 @@ function SentenceStructureBuilderPanel({ isDark }: { isDark: boolean }) {
 }
 function FigurativeLanguageFinderPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><FigurativeLanguageFinderLazy isDark={isDark} /></Suspense>
+}
+function PhonicsDecodingBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PhonicsDecodingBuilderLazy isDark={isDark} /></Suspense>
+}
+function PartsOfSpeechTaggerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PartsOfSpeechTaggerLazy isDark={isDark} /></Suspense>
+}
+function SentenceExpansionToolPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><SentenceExpansionToolLazy isDark={isDark} /></Suspense>
+}
+function PunctuationInteractivePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PunctuationInteractiveLazy isDark={isDark} /></Suspense>
+}
+function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ParagraphOrganizerLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -102,11 +122,31 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       </div>
 
       {/* ============================================================ */}
-      {/* ALL TAB — All 5 tools */}
+      {/* ALL TAB — All 10 tools */}
       {/* ============================================================ */}
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
+            {sectionTitle('Phonics & Decoding Builder')}
+            <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Parts of Speech Tagger')}
+            <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Expansion & Variation')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Punctuation Rules Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Paragraph Organizer')}
+            <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
           </div>
@@ -130,11 +170,19 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       )}
 
       {/* ============================================================ */}
-      {/* K-5 TAB — Vocabulary Flashcards, Story Elements Map */}
+      {/* K-5 TAB — Phonics, Punctuation, Vocab Flashcards, Story Elements */}
       {/* ============================================================ */}
       {activeBand === 'k5' && (
         <>
           <div className="toolkit-section">
+            {sectionTitle('Phonics & Decoding Builder')}
+            <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Punctuation Rules Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
           </div>
@@ -146,10 +194,26 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       )}
 
       {/* ============================================================ */}
-      {/* 6-8 TAB — All 5 tools */}
+      {/* 6-8 TAB — All tools except Phonics (9 tools) */}
       {/* ============================================================ */}
       {activeBand === '68' && (
         <>
+          <div className="toolkit-section">
+            {sectionTitle('Parts of Speech Tagger')}
+            <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Expansion & Variation')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Punctuation Rules Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Paragraph Organizer')}
+            <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
+          </div>
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
@@ -174,10 +238,26 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       )}
 
       {/* ============================================================ */}
-      {/* 9-12 TAB — Reading Passage Analyzer, Figurative Language Finder, Vocabulary Flashcards */}
+      {/* 9-12 TAB — POS Tagger, Sentence Expansion, Punctuation, Paragraph, Reading, Figurative, Vocab */}
       {/* ============================================================ */}
       {activeBand === '912' && (
         <>
+          <div className="toolkit-section">
+            {sectionTitle('Parts of Speech Tagger')}
+            <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Expansion & Variation')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Punctuation Rules Interactive')}
+            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Paragraph Organizer')}
+            <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
+          </div>
           <div className="toolkit-section">
             {sectionTitle('Reading Passage Analyzer')}
             <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
