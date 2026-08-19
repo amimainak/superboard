@@ -626,16 +626,37 @@ function CanvasProbabilitySim({ element, isDark }: CanvasWidgetProps) {
 // WIDGET REGISTRY & ROUTER
 // ============================================================
 
+import {
+  CanvasLanguageWidgetRenderer,
+  getLangWidgetDefaultConfig,
+  getLangWidgetDefaultSize,
+  LANG_WIDGET_KIND_LABELS,
+} from './CanvasLanguageWidgets'
+
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
+  // Statistics widgets
   'stat-data-table': CanvasDataTable,
   'stat-histogram': CanvasHistogram,
   'stat-box-plot': CanvasBoxPlot,
   'stat-scatter': CanvasScatterPlot,
   'stat-normal-dist': CanvasNormalDist,
   'stat-probability': CanvasProbabilitySim,
+  // Language widgets
+  'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-story-elements': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-paragraph-organizer': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-vocab-flashcards': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-figurative-language': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-punctuation': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
 }
 
 export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
+  // Language widgets go through their own renderer (avoids double-wrapping)
+  const isLangWidget = element.widgetKind.startsWith('lang-')
+  if (isLangWidget) {
+    return <CanvasLanguageWidgetRenderer element={element} isDark={isDark} />
+  }
   const Component = WIDGET_COMPONENTS[element.widgetKind]
   if (!Component) return <div style={{ padding: 12, color: '#f87171', fontSize: 12 }}>Unknown widget: {element.widgetKind}</div>
   return <Component element={element} isDark={isDark} />
@@ -650,6 +671,14 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'stat-scatter': return { rawX: '1, 2, 3, 4, 5, 6, 7, 8', rawY: '2.1, 3.8, 6.5, 7.2, 9.8, 11.3, 14.1, 15.6', showRegression: true }
     case 'stat-normal-dist': return { mu: 0, sigma: 1, shadeFrom: -1, shadeTo: 1, shading: true }
     case 'stat-probability': return { simType: 'coin', results: {}, totalRuns: 0 }
+    // Language widgets
+    case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
+    case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
+    case 'lang-story-elements': return getLangWidgetDefaultConfig('lang-story-elements')
+    case 'lang-paragraph-organizer': return getLangWidgetDefaultConfig('lang-paragraph-organizer')
+    case 'lang-vocab-flashcards': return getLangWidgetDefaultConfig('lang-vocab-flashcards')
+    case 'lang-figurative-language': return getLangWidgetDefaultConfig('lang-figurative-language')
+    case 'lang-punctuation': return getLangWidgetDefaultConfig('lang-punctuation')
     default: return {}
   }
 }
@@ -663,6 +692,14 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'stat-scatter': return { width: 340, height: 420 }
     case 'stat-normal-dist': return { width: 320, height: 380 }
     case 'stat-probability': return { width: 320, height: 420 }
+    // Language widgets
+    case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
+    case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')
+    case 'lang-story-elements': return getLangWidgetDefaultSize('lang-story-elements')
+    case 'lang-paragraph-organizer': return getLangWidgetDefaultSize('lang-paragraph-organizer')
+    case 'lang-vocab-flashcards': return getLangWidgetDefaultSize('lang-vocab-flashcards')
+    case 'lang-figurative-language': return getLangWidgetDefaultSize('lang-figurative-language')
+    case 'lang-punctuation': return getLangWidgetDefaultSize('lang-punctuation')
     default: return { width: 300, height: 300 }
   }
 }
@@ -675,4 +712,6 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   'stat-scatter': 'Scatter Plot & Regression',
   'stat-normal-dist': 'Normal Distribution',
   'stat-probability': 'Probability Simulator',
+  // Language widgets
+  ...LANG_WIDGET_KIND_LABELS,
 }
