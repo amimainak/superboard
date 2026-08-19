@@ -632,6 +632,14 @@ import {
   getLangWidgetDefaultSize,
   LANG_WIDGET_KIND_LABELS,
 } from './CanvasLanguageWidgets'
+import {
+  CanvasFractionCircle,
+  CanvasFractionBar,
+  CanvasAngleMaker,
+  getMathWidgetDefaultConfig,
+  getMathWidgetDefaultSize,
+  MATH_WIDGET_KIND_LABELS,
+} from './CanvasMathWidgets'
 
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
   // Statistics widgets
@@ -641,6 +649,10 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'stat-scatter': CanvasScatterPlot,
   'stat-normal-dist': CanvasNormalDist,
   'stat-probability': CanvasProbabilitySim,
+  // Math widgets
+  'math-fraction-circle': CanvasFractionCircle,
+  'math-fraction-bar': CanvasFractionBar,
+  'math-angle-maker': CanvasAngleMaker,
   // Language widgets
   'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -658,7 +670,15 @@ export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
     return <CanvasLanguageWidgetRenderer element={element} isDark={isDark} />
   }
   const Component = WIDGET_COMPONENTS[element.widgetKind]
-  if (!Component) return <div style={{ padding: 12, color: '#f87171', fontSize: 12 }}>Unknown widget: {element.widgetKind}</div>
+  if (!Component) {
+    // Fallback: try MathElementRenderers for legacy math-* element types
+    if (element.widgetKind.startsWith('math-')) {
+      return <div style={{ padding: 12, color: isDark ? '#fbbf24' : '#d97706', fontSize: 11 }}>
+        This tool is now available as an interactive board widget. Use &quot;Add to Board&quot; in the Math toolkit panel.
+      </div>
+    }
+    return <div style={{ padding: 12, color: '#f87171', fontSize: 12 }}>Unknown widget: {element.widgetKind}</div>
+  }
   return <Component element={element} isDark={isDark} />
 }
 
@@ -671,6 +691,10 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'stat-scatter': return { rawX: '1, 2, 3, 4, 5, 6, 7, 8', rawY: '2.1, 3.8, 6.5, 7.2, 9.8, 11.3, 14.1, 15.6', showRegression: true }
     case 'stat-normal-dist': return { mu: 0, sigma: 1, shadeFrom: -1, shadeTo: 1, shading: true }
     case 'stat-probability': return { simType: 'coin', results: {}, totalRuns: 0 }
+    // Math widgets
+    case 'math-fraction-circle': return getMathWidgetDefaultConfig('math-fraction-circle')
+    case 'math-fraction-bar': return getMathWidgetDefaultConfig('math-fraction-bar')
+    case 'math-angle-maker': return getMathWidgetDefaultConfig('math-angle-maker')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
@@ -692,6 +716,10 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'stat-scatter': return { width: 340, height: 420 }
     case 'stat-normal-dist': return { width: 320, height: 380 }
     case 'stat-probability': return { width: 320, height: 420 }
+    // Math widgets
+    case 'math-fraction-circle': return getMathWidgetDefaultSize('math-fraction-circle')
+    case 'math-fraction-bar': return getMathWidgetDefaultSize('math-fraction-bar')
+    case 'math-angle-maker': return getMathWidgetDefaultSize('math-angle-maker')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')
@@ -712,6 +740,8 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   'stat-scatter': 'Scatter Plot & Regression',
   'stat-normal-dist': 'Normal Distribution',
   'stat-probability': 'Probability Simulator',
+  // Math widgets
+  ...MATH_WIDGET_KIND_LABELS,
   // Language widgets
   ...LANG_WIDGET_KIND_LABELS,
 }

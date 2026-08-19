@@ -4,6 +4,8 @@ import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import type { ToolId } from '@/lib/whiteboard/types'
 import { generateId } from '@/lib/whiteboard/utils'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load panel utilities — only parsed when the grade tab renders them
 const CalculatorLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Calculator })))
@@ -180,6 +182,38 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
     setTool(toolDef.id)
   }, [setMathToolConfig, setTool])
 
+  // Add interactive widget to board (same pattern as StatToolkit)
+  const addToBoard = useCallback((widgetKind: string, overrides?: Record<string, unknown>) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: { ...getDefaultWidgetConfig(widgetKind), ...overrides },
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1,
+      locked: false,
+      pageIndex: currentPageIndex,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark, currentPageIndex])
+
+  // Shared "Add to Board" button for math widgets
+  const addBoardBtn = (label: string, onClick: () => void) => (
+    <button onClick={onClick} style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: actBg, border: '1px solid ' + actBorder, color: actText, cursor: 'pointer', alignSelf: 'flex-end' }}>+ {label}</button>
+  )
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -350,7 +384,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 </button>
                 <span style={{ fontSize: 12, fontWeight: 700, color: actText }}>{circleShaded.length}/{circleDivisions}</span>
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ divisions: circleDivisions, shaded: circleShaded }); setTool('math-fraction-circle') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-fraction-circle', { divisions: circleDivisions, shaded: circleShaded }))}
             </div>
           </div>
 
@@ -390,7 +424,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   <button key={o} onClick={() => setBarOrientation(o)} style={{ padding: '2px 8px', borderRadius: 3, fontSize: 10, background: barOrientation === o ? actBg : dkBg, border: barOrientation === o ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: barOrientation === o ? actText : dkText, cursor: 'pointer' }}>{o}</button>
                 ))}
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ divisions: barDivisions, shaded: barShaded, orientation: barOrientation }); setTool('math-fraction-bar') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-fraction-bar', { divisions: barDivisions, shaded: barShaded, orientation: barOrientation }))}
             </div>
           </div>
 
@@ -451,10 +485,10 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <button onClick={() => { setAnglePreset(null); setMathToolConfig({ initialDegrees: angleCustomDeg }); setTool('math-angle') }} style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', cursor: 'pointer' }}>Place {angleCustomDeg}°</button>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {anglePreset !== null && placeBtn('Place ' + anglePreset + '°', () => { setMathToolConfig({ initialDegrees: anglePreset }); setTool('math-angle') })}
+                {addBoardBtn('Add to Board', () => addToBoard('math-angle-maker', { degrees: anglePreset !== null ? anglePreset : angleCustomDeg }))}
                 <button onClick={() => { setAnglePreset(null); setMathToolConfig({}); setTool('math-angle') }} style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', alignSelf: 'flex-end' }}>Free drag</button>
               </div>
-              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: 0 }}>Preset/custom places a fixed angle. &quot;Free drag&quot; lets you adjust on canvas.</p>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: 0 }}>"Add to Board" places the angle widget on canvas (interactive). "Free drag" uses legacy canvas placement.</p>
             </div>
           </div>
 
