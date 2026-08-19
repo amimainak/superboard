@@ -3,6 +3,7 @@
 import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import type { ToolId } from '@/lib/whiteboard/types'
+import { generateId } from '@/lib/whiteboard/utils'
 
 // Lazy-load panel utilities — only parsed when the grade tab renders them
 const CalculatorLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Calculator })))
@@ -80,6 +81,13 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const setTool = useWhiteboardStore((s) => s.setTool)
   const setMathToolConfig = useWhiteboardStore((s) => s.setMathToolConfig)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const showGrid = useWhiteboardStore((s) => s.showGrid)
+  const setGridType = useWhiteboardStore((s) => s.setGridType)
+  const toggleGrid = useWhiteboardStore((s) => s.toggleGrid)
 
   // Active grade tab
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
@@ -104,9 +112,52 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   const [chartCategories, setChartCategories] = useState('A,B,C,D')
   const [chartValues, setChartValues] = useState('3,7,5,9')
 
-  // Existing state
-  const [equation, setEquation] = useState('')
-  const [graphType, setGraphType] = useState<'none' | 'line' | 'grid'>('none')
+  // Quick Equations: active equation tracking
+  const [activeEquation, setActiveEquation] = useState('')
+
+  // Background grid type tracking (synced from store on click)
+  const [activeBg, setActiveBg] = useState<'none' | 'line' | 'grid'>(() => {
+    const s = useWhiteboardStore.getState()
+    if (!s.showGrid) return 'none'
+    return s.gridType === 'dot' ? 'grid' : 'line'
+  })
+
+  const handleBackground = useCallback((type: 'none' | 'line' | 'grid') => {
+    setActiveBg(type)
+    if (type === 'none') {
+      if (showGrid) toggleGrid()
+    } else {
+      if (!showGrid) toggleGrid()
+      setGridType(type === 'grid' ? 'dot' : 'line')
+    }
+  }, [showGrid, toggleGrid, setGridType])
+
+  // Stamps: place a sticky note at viewport center
+  const placeStamp = useCallback((icon: string, label: string) => {
+    pushHistory()
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    addElement({
+      id: generateId(),
+      type: 'sticky',
+      x: cx - 60,
+      y: cy - 30,
+      width: 120,
+      height: 60,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: 'transparent',
+      fillColor: '#dbeafe',
+      strokeWidth: 0,
+      locked: false,
+      pageIndex: currentPageIndex,
+      text: icon + ' ' + label,
+      fontSize: 16,
+      noteColor: '#dbeafe',
+    })
+  }, [pushHistory, addElement, camera, currentPageIndex])
 
   const toggleBand = (band: GradeBand) => {
     setVisibleBands(prev => {
@@ -205,8 +256,13 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
             <div className="toolkit-grid">
               {mathFunctions.map((fn) => (
                 <button key={fn.eq} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => setEquation(fn.eq)}
-                  style={{ padding: '6px 10px', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', background: equation === fn.eq ? actBg : dkBg, border: equation === fn.eq ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: equation === fn.eq ? actText : dkText, cursor: 'pointer', textAlign: 'left' }}>
+                  onClick={() => {
+                    setActiveEquation(fn.eq)
+                    pushHistory()
+                    setMathToolConfig({ coordEquation: fn.eq, chartTitle: fn.label })
+                    setTool('math-coordinate-plane')
+                  }}
+                  style={{ padding: '6px 10px', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', background: activeEquation === fn.eq ? actBg : dkBg, border: activeEquation === fn.eq ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: activeEquation === fn.eq ? actText : dkText, cursor: 'pointer' as const, textAlign: 'left' as const }}>
                   {fn.label}
                 </button>
               ))}
@@ -216,7 +272,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
             {sectionTitle('Background')}
             <div style={{ display: 'flex', gap: 6, padding: '0 16px 12px' }}>
               {(['none', 'grid', 'line'] as const).map((type) => (
-                <button key={type} onClick={() => setGraphType(type)} style={{ flex: 1, padding: '6px 0', borderRadius: 6, fontSize: 11, fontWeight: 500, background: graphType === type ? actBg : dkBg, border: graphType === type ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: graphType === type ? actText : dkText, cursor: 'pointer' }}>
+                <button key={type} onClick={() => handleBackground(type)} style={{ flex: 1, padding: '6px 0', borderRadius: 6, fontSize: 11, fontWeight: 500, background: activeBg === type ? actBg : dkBg, border: activeBg === type ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: activeBg === type ? actText : dkText, cursor: 'pointer' as const }}>
                   {type === 'none' ? 'Blank' : type}
                 </button>
               ))}
@@ -227,7 +283,8 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
             <div className="toolkit-grid">
               {stamps.map((stamp) => (
                 <button key={stamp.label} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  style={{ padding: '8px 12px', borderRadius: 6, fontSize: 16, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  onClick={() => placeStamp(stamp.icon, stamp.label)}
+                  style={{ padding: '8px 12px', borderRadius: 6, fontSize: 16, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' as const, display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span>{stamp.icon}</span><span style={{ fontSize: 11 }}>{stamp.label}</span>
                 </button>
               ))}

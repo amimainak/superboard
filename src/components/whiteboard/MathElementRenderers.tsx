@@ -412,13 +412,57 @@ function PolygonSvg({ el, updateElement, isSelected }: {
 
 // ---- Coordinate Plane ----
 
+// Simple equation evaluator for coordinate plane curves
+function evalEquation(eq: string, x: number): number | null {
+  try {
+    const safe = eq
+      .replace(/\^/g, '**')
+      .replace(/sqrt\s*\(/g, 'Math.sqrt(')
+      .replace(/abs\s*\(/g, 'Math.abs(')
+      .replace(/sin\s*\(/g, 'Math.sin(')
+      .replace(/cos\s*\(/g, 'Math.cos(')
+      .replace(/tan\s*\(/g, 'Math.tan(')
+      .replace(/log\s*\(/g, 'Math.log(')
+      .replace(/pi/gi, 'Math.PI')
+    const fn = new Function('x', 'return ' + safe)
+    const y = fn(x)
+    return typeof y === 'number' && isFinite(y) ? y : null
+  } catch {
+    return null
+  }
+}
+
+function buildEquationPath(
+  eq: string, xMin: number, xMax: number, yMin: number, yMax: number,
+  toSvgX: (v: number) => number, toSvgY: (v: number) => number,
+  width: number
+): string {
+  const samples = Math.max(200, Math.round(width * 2))
+  const dx = (xMax - xMin) / samples
+  const segments: string[] = []
+  let currentPath = ''
+  for (let i = 0; i <= samples; i++) {
+    const x = xMin + i * dx
+    const y = evalEquation(eq, x)
+    if (y === null || y < yMin * 3 || y > yMax * 3) {
+      if (currentPath) { segments.push(currentPath); currentPath = '' }
+      continue
+    }
+    const sx = toSvgX(x)
+    const sy = toSvgY(y)
+    currentPath += (currentPath ? ' L ' : 'M ') + sx.toFixed(1) + ',' + sy.toFixed(1)
+  }
+  if (currentPath) segments.push(currentPath)
+  return segments.join(' ')
+}
+
 function CoordinatePlaneSvg({ el, updateElement, isSelected }: {
   el: CoordinatePlaneElement
   updateElement: (id: string, u: Partial<WhiteboardElement>) => void
   isSelected: boolean
 }) {
   const isDark = useWhiteboardStore((s) => s.isDark)
-  const { xMin, xMax, yMin, yMax, step, plottedPoints } = el
+  const { xMin, xMax, yMin, yMax, step, plottedPoints, equations } = el
   const cx = el.x + el.width / 2
   const cy = el.y + el.height / 2
   const xRange = xMax - xMin
@@ -428,6 +472,8 @@ function CoordinatePlaneSvg({ el, updateElement, isSelected }: {
 
   const toSvgX = (v: number) => cx + (v - 0) * pxPerUnitX
   const toSvgY = (v: number) => cy - (v - 0) * pxPerUnitY
+
+  const curveColors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899']
 
   const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
   const axisColor = isDark ? '#64748b' : '#94a3b8'
@@ -504,6 +550,14 @@ function CoordinatePlaneSvg({ el, updateElement, isSelected }: {
           fill={textColor} style={{ pointerEvents: 'none', userSelect: 'none' }}>
           {Number.isInteger(v) ? v : v.toFixed(1)}
         </text>
+      })}
+      {/* Equation curves */}
+      {equations && equations.map((eq, i) => {
+        const d = buildEquationPath(eq, xMin, xMax, yMin, yMax, toSvgX, toSvgY, el.width)
+        if (!d) return null
+        return <path key={'eq-' + i} d={d} fill="none"
+          stroke={curveColors[i % curveColors.length]} strokeWidth={2}
+          style={{ pointerEvents: 'none' }} />
       })}
       {/* Plotted points */}
       {plottedPoints.map((pt, i) => {

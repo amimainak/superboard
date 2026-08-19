@@ -215,6 +215,7 @@ export interface CoordinatePlaneElement extends BaseElement {
   yMax: number
   step: number
   plottedPoints: Array<{ x: number; y: number; label?: string }>
+  equations?: string[]
 }
 
 export interface VennElement extends BaseElement {

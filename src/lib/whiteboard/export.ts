@@ -201,27 +201,43 @@ function buildExportSvg(
       }
 
       case 'text': {
-        const tEl = el as { text: string; fontSize: number; textAlign: string }
-        shapesSvg += `<foreignObject x="${el.x}" y="${el.y}" width="${el.width || 300}" height="${el.height || 100}">
-          <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${tEl.fontSize}px;color:${el.strokeColor};font-family:inherit;line-height:1.4;white-space:pre-wrap;text-align:${tEl.textAlign || 'left'}">${sanitizeText(tEl.text).replace(/\n/g, '<br />')}</div>
-        </foreignObject>\n`
+        const tEl = el as { text: string; fontSize: number; textAlign: string; fontFamily?: string }
+        const fontSize = tEl.fontSize || 20
+        const fontFamily = tEl.fontFamily || 'inherit'
+        const anchor = tEl.textAlign === 'center' ? 'middle' : tEl.textAlign === 'right' ? 'end' : 'start'
+        const textX = tEl.textAlign === 'center' ? el.x + (el.width || 300) / 2 : tEl.textAlign === 'right' ? el.x + (el.width || 300) : el.x
+        const lines = sanitizeText(tEl.text).split('\n')
+        lines.forEach((line, i) => {
+          const y = el.y + fontSize * 1.4 * (i + 1)
+          shapesSvg += '<text x="' + textX + '" y="' + y + '" font-size="' + fontSize + 'px" fill="' + el.strokeColor + '" font-family="' + fontFamily + '" text-anchor="' + anchor + '" dominant-baseline="middle" opacity="' + el.opacity + '">' + line + '</text>\n'
+        })
         break
       }
 
       case 'image': {
+        // Images with data-URLs or external URLs work in SVG when loaded via Image()
+        // Skip images that would break the export (e.g. blob URLs, cross-origin)
         const imgEl = el as { src: string }
-        shapesSvg += `<foreignObject x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}">
-          <img xmlns="http://www.w3.org/1999/xhtml" src="${imgEl.src}" style="width:100%;height:100%;object-fit:contain" />
-        </foreignObject>\n`
+        if (imgEl.src.startsWith('data:')) {
+          shapesSvg += '<image x="' + el.x + '" y="' + el.y + '" width="' + el.width + '" height="' + el.height + '" href="' + imgEl.src + '" preserveAspectRatio="xMidYMid meet" opacity="' + el.opacity + '" />\n'
+        }
         break
       }
 
       case 'sticky': {
         const sEl = el as { text: string; fontSize: number; noteColor: string }
-        shapesSvg += `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" rx="4" fill="${sEl.noteColor}" stroke="rgba(0,0,0,0.12)" stroke-width="1" />\n`
-        shapesSvg += `<foreignObject x="${el.x + 12}" y="${el.y + 12}" width="${el.width - 24}" height="${el.height - 24}">
-          <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${sEl.fontSize}px;color:#1e293b;font-family:inherit;line-height:1.4;white-space:pre-wrap">${sanitizeText(sEl.text).replace(/\n/g, '<br />')}</div>
-        </foreignObject>\n`
+        const stickyFontSize = sEl.fontSize || 14
+        shapesSvg += '<rect x="' + el.x + '" y="' + el.y + '" width="' + el.width + '" height="' + el.height + '" rx="4" fill="' + sEl.noteColor + '" stroke="rgba(0,0,0,0.12)" stroke-width="1" />\n'
+        const stickyLines = sanitizeText(sEl.text).split('\n')
+        const maxW = el.width - 24
+        stickyLines.forEach((line, i) => {
+          if (i >= 6) return // limit lines to prevent overflow
+          const y = el.y + 12 + stickyFontSize * 1.4 * (i + 1)
+          // Truncate line to fit
+          const maxChars = Math.floor(maxW / (stickyFontSize * 0.6))
+          const truncated = line.length > maxChars ? line.slice(0, maxChars) + '...' : line
+          shapesSvg += '<text x="' + (el.x + 12) + '" y="' + y + '" font-size="' + stickyFontSize + 'px" fill="#1e293b" font-family="inherit" dominant-baseline="middle">' + truncated + '</text>\n'
+        })
         break
       }
 

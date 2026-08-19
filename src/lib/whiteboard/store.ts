@@ -36,6 +36,8 @@ export interface MathToolConfig {
   coordStep?: number
   /** For venn: 2 or 3 circles */
   vennCircles?: 2 | 3
+  /** For coordinate-plane: equation string (e.g. 'x^2', 'sin(x)') */
+  coordEquation?: string
   /** For charts */
   chartTitle?: string
   chartCategories?: string[]

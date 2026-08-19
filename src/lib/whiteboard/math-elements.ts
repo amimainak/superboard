@@ -157,6 +157,7 @@ export function createMathElement(
       const yMin = config.coordYMin ?? -10
       const yMax = config.coordYMax ?? 10
       const step = config.coordStep ?? 1
+      const equations = config.coordEquation ? [config.coordEquation] : []
       return {
         ...b,
         x: point.x - 200,
@@ -166,6 +167,7 @@ export function createMathElement(
         type: 'math-coordinate-plane',
         xMin, xMax, yMin, yMax, step,
         plottedPoints: [],
+        equations,
         strokeWidth: 1.5,
       } as CoordinatePlaneElement
     }

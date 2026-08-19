@@ -55,25 +55,32 @@ export default function RoomPage() {
   const roomId = params.roomId as string
   const [room, setRoom] = useState<RoomInfo | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [saveTrigger, setSaveTrigger] = useState(0)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('saved')
 
   useEffect(() => {
     const loadRoom = async () => {
-      const res = await fetch(`/api/rooms/${roomId}`)
-      const data = await res.json()
-      if (data.error) {
-        router.push('/dashboard')
-        return
+      try {
+        const res = await fetch('/api/rooms/' + roomId)
+        const data = await res.json()
+        if (data.error) {
+          setError(data.error)
+          setLoading(false)
+          return
+        }
+        setRoom(data)
+        setLoading(false)
+        // Auto-open chat widget when room loads
+        const store = useWidgetStore.getState()
+        if (!store.panelVisible) store.openWidget('chat')
+      } catch (err) {
+        setError('Failed to load room. Please try again.')
+        setLoading(false)
       }
-      setRoom(data)
-      setLoading(false)
-      // Auto-open chat widget when room loads
-      const store = useWidgetStore.getState()
-      if (!store.panelVisible) store.openWidget('chat')
     }
     loadRoom()
-  }, [roomId, router])
+  }, [roomId])
 
   const handleSave = useCallback(() => {
     setSaveTrigger(prev => prev + 1)
@@ -98,6 +105,23 @@ export default function RoomPage() {
   }
 
   if (loading) return null
+  if (error) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8fafc' }}>
+        <div style={{ textAlign: 'center', padding: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1e293b', marginBottom: 8 }}>Room not found</h2>
+          <p style={{ fontSize: 14, color: '#64748b', marginBottom: 24 }}>{error}</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            style={{ padding: '10px 24px', borderRadius: 8, background: 'linear-gradient(135deg, #059669, #0891b2)', color: 'white', border: 'none', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="room-layout">

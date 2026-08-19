@@ -77,27 +77,16 @@ function Popup({
   }, [anchorRef])
 
   return (
-    <>
-      {/* Backdrop — catches all clicks outside */}
-      <div
-        className="wb-flyout-backdrop"
-        onMouseDown={(e) => {
-          e.stopPropagation()
-          onClose()
-        }}
-        aria-hidden="true"
-      />
-      <div
-        ref={ref}
-        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
-        role="dialog"
-        aria-label="Style options"
-        onMouseDown={(e) => e.stopPropagation()}
-        style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 10001, padding: '10px 12px' }}
-      >
-        {children}
-      </div>
-    </>
+    <div
+      ref={ref}
+      className={"wb-flyout-panel wb-flyout-panel-" + (isDark ? 'dark' : 'light')}
+      role="dialog"
+      aria-label="Style options"
+      onMouseDown={(e) => e.stopPropagation()}
+      style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 10001, padding: '10px 12px' }}
+    >
+      {children}
+    </div>
   )
 }
 
