@@ -512,9 +512,15 @@ export function getWidgetsBySubject(subject: WidgetSubject): WidgetManifest[] {
   return ALL_WIDGETS.filter((w) => w.subject === subject)
 }
 
-/** Backward-compatible AVAILABLE_WIDGETS for existing code */
-export const AVAILABLE_WIDGETS = CORE_WIDGETS.map((w) => ({
-  id: w.id as typeof import('./widget-store').WidgetId,
+// ============================================================
+// Backward-compatible AVAILABLE_WIDGETS for existing code
+// ============================================================
+
+// Re-export the type so downstream imports work
+import type { WidgetId } from './widget-store'
+
+export const AVAILABLE_WIDGETS = CORE_WIDGETS.filter(w => !w.requiresInstall).map((w) => ({
+  id: w.id as WidgetId,
   label: w.label,
   icon: w.icon,
   section: w.section as 'communication' | 'tools' | undefined,

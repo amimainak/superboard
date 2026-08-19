@@ -60,7 +60,7 @@ const COMMON_PREFIXES: Record<string, string> = {
   anti: 'against', auto: 'self', bi: 'two', co: 'together', de: 'down/from',
   ex: 'out of', fore: 'before', il: 'not', im: 'not', in: 'not/into',
   ir: 'not', macro: 'large', micro: 'small', mid: 'middle', non: 'not',
-  post: 'after', pre: 'before', pro: 'for/forward', retro: 'backward',
+  post: 'after', pro: 'for/forward', retro: 'backward',
   tri: 'three', uni: 'one', under: 'below',
 }
 
@@ -158,10 +158,11 @@ export function RootMorphologyExplorer({ isDark }: { isDark: boolean }) {
           <div style={{ fontSize: 11, fontWeight: 600, color: s.text, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>Word Family</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
             {selectedData.examples.map((word) => {
-              // Highlight the root within the word
-              const idx = word.toLowerCase().indexOf(selectedRoot)
+              // selectedRoot is guaranteed non-null here (selectedData exists)
+              const root: string = selectedRoot!
+              const idx = word.toLowerCase().indexOf(root)
               const before = word.slice(0, idx)
-              const after = word.slice(idx + selectedRoot.length)
+              const after = word.slice(idx + root.length)
               return (
                 <span key={word} style={{
                   padding: '3px 8px', borderRadius: 4, fontSize: 12,
@@ -240,7 +241,7 @@ const IRREGULAR_VERBS: Record<string, string> = {
   hear: 'heard', hold: 'held', keep: 'kept', leave: 'left', lose: 'lost',
   meet: 'met', read: 'read', run: 'run', say: 'said', sell: 'sold',
   send: 'sent', sit: 'sat', stand: 'stood', tell: 'told', win: 'won',
-  write: 'written', build: 'built', draw: 'drawn', drive: 'driven', fall: 'fallen',
+  build: 'built', draw: 'drawn', drive: 'driven', fall: 'fallen',
   feel: 'felt', fly: 'flown', forget: 'forgotten', hide: 'hidden', hit: 'hit',
   hurt: 'hurt', lay: 'laid', lend: 'lent', lie: 'lain', pay: 'paid',
   put: 'put', rise: 'risen', set: 'set', show: 'shown', sing: 'sung',
@@ -289,7 +290,7 @@ function analyzeVoice(sentence: string, targetVoice: 'active' | 'passive'): Voic
     const subject = words[0]
     const rest = words.slice(1).join(' ')
     // Find the verb phrase and object
-    const verbMatch = rest.match(/^(will\s+)?(has|have|had)\s+)?(\w+)(.*)/i)
+    const verbMatch = rest.match(/^(will\s+)?(?:(has|have|had)\s+)?(\w+)(.*)/i)
     if (!verbMatch) return null
     const aux = (verbMatch[1] || '') + (verbMatch[2] ? verbMatch[2] + ' ' : '')
     const mainVerb = verbMatch[3]
