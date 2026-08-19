@@ -6,6 +6,22 @@ import { useWidgetStore } from '@/lib/room/widget-store'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import { generateId } from '@/lib/whiteboard/utils'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import {
+  PunctuationPracticeWidget,
+  DEFAULT_PUNCT_CONFIG,
+  type PunctWidgetConfig,
+} from '@/components/whiteboard/PunctuationPracticeWidget'
+import {
+  VocabFlashcardsWidget,
+  DEFAULT_VOCAB_CONFIG,
+  type VocabWidgetConfig,
+} from '@/components/whiteboard/VocabFlashcardsWidget'
+import {
+  POSTaggerWidget,
+  DEFAULT_POS_CONFIG,
+  type POSWidgetConfig,
+} from '@/components/whiteboard/POSTaggerWidget'
+import type { PunctRule } from '@/data/punctuation-exercises'
 
 // Phase 1 — Core tools
 const VocabularyFlashcardsLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.VocabularyFlashcards })))
@@ -16,6 +32,7 @@ const FigurativeLanguageFinderLazy = lazy(() => import('./language/LanguageUtili
 const PhonicsDecodingBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PhonicsDecodingBuilder })))
 const PartsOfSpeechTaggerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PartsOfSpeechTagger })))
 const SentenceExpansionToolLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SentenceExpansionTool })))
+// Punctuation uses the unified canvas-primary component
 const PunctuationInteractiveLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PunctuationInteractive })))
 const ParagraphOrganizerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ParagraphOrganizer })))
 
@@ -35,7 +52,18 @@ function P1Panel({ children }: { children: React.ReactNode }) {
 }
 
 function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><VocabularyFlashcardsLazy isDark={isDark} /></P1Panel>
+  // Panel uses the SAME unified component as canvas, with local state
+  const [config, setConfig] = useState<VocabWidgetConfig>({ ...DEFAULT_VOCAB_CONFIG })
+  return (
+    <P1Panel>
+      <VocabFlashcardsWidget
+        isDark={isDark}
+        config={config}
+        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+        compact
+      />
+    </P1Panel>
+  )
 }
 function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
   return <P1Panel><ReadingPassageAnalyzerLazy isDark={isDark} /></P1Panel>
@@ -53,13 +81,35 @@ function PhonicsDecodingBuilderPanel({ isDark }: { isDark: boolean }) {
   return <P1Panel><PhonicsDecodingBuilderLazy isDark={isDark} /></P1Panel>
 }
 function PartsOfSpeechTaggerPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><PartsOfSpeechTaggerLazy isDark={isDark} /></P1Panel>
+  // Panel uses the SAME unified component as canvas, with local state
+  const [config, setConfig] = useState<POSWidgetConfig>({ ...DEFAULT_POS_CONFIG })
+  return (
+    <P1Panel>
+      <POSTaggerWidget
+        isDark={isDark}
+        config={config}
+        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+        compact
+      />
+    </P1Panel>
+  )
 }
 function SentenceExpansionToolPanel({ isDark }: { isDark: boolean }) {
   return <P1Panel><SentenceExpansionToolLazy isDark={isDark} /></P1Panel>
 }
 function PunctuationInteractivePanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><PunctuationInteractiveLazy isDark={isDark} /></P1Panel>
+  // Panel uses the SAME unified component as canvas, with local state
+  const [config, setConfig] = useState<PunctWidgetConfig>({ ...DEFAULT_PUNCT_CONFIG })
+  return (
+    <P1Panel>
+      <PunctuationPracticeWidget
+        isDark={isDark}
+        config={config}
+        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+        compact
+      />
+    </P1Panel>
+  )
 }
 function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
   return <P1Panel><ParagraphOrganizerLazy isDark={isDark} /></P1Panel>

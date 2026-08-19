@@ -3,6 +3,23 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import {
+  PunctuationPracticeWidget,
+  DEFAULT_PUNCT_CONFIG,
+  type PunctWidgetConfig,
+} from './PunctuationPracticeWidget'
+import {
+  VocabFlashcardsWidget,
+  DEFAULT_VOCAB_CONFIG,
+  type VocabWidgetConfig,
+} from './VocabFlashcardsWidget'
+import {
+  POSTaggerWidget,
+  DEFAULT_POS_CONFIG,
+  type POSWidgetConfig,
+} from './POSTaggerWidget'
+import type { PunctRule, PunctExercise } from '@/data/punctuation-exercises'
+import type { VocabCard, PosTag, CardLevel } from '@/data/vocab-cards'
 
 // ============================================================
 // On-Canvas Language Widgets
@@ -65,156 +82,23 @@ const cs = (isDark: boolean) => ({
 })
 
 // ============================================================
-// 1. PARTS OF SPEECH TAGGER (on-canvas)
+// 1. PARTS OF SPEECH TAGGER (unified, uses compromise)
 // ============================================================
 
-// Inline POS data — avoids importing compromise in canvas context
-const POS_COLORS: Record<string, { bg: string; bd: string; tx: string }> = {
-  Noun: { bg: 'rgba(59,130,246,0.18)', bd: 'rgba(59,130,246,0.5)', tx: '#60a5fa' },
-  Verb: { bg: 'rgba(239,68,68,0.18)', bd: 'rgba(239,68,68,0.5)', tx: '#f87171' },
-  Adjective: { bg: 'rgba(34,197,94,0.18)', bd: 'rgba(34,197,94,0.5)', tx: '#4ade80' },
-  Adverb: { bg: 'rgba(249,115,22,0.18)', bd: 'rgba(249,115,22,0.5)', tx: '#fb923c' },
-  Pronoun: { bg: 'rgba(168,85,247,0.18)', bd: 'rgba(168,85,247,0.5)', tx: '#c084fc' },
-  Preposition: { bg: 'rgba(20,184,166,0.18)', bd: 'rgba(20,184,166,0.5)', tx: '#2dd4bf' },
-  Conjunction: { bg: 'rgba(236,72,153,0.18)', bd: 'rgba(236,72,153,0.5)', tx: '#f472b6' },
-  Interjection: { bg: 'rgba(234,179,8,0.18)', bd: 'rgba(234,179,8,0.5)', tx: '#fbbf24' },
-}
-
-const BEGINNER_POS = ['Noun', 'Verb', 'Adjective', 'Adverb', 'Pronoun', 'Preposition', 'Conjunction', 'Interjection']
-
-// Simple rule-based POS tagger for on-canvas use (no NLP library needed)
-const COMMON_NOUNS = new Set(['cat','dog','boy','girl','man','woman','child','children','teacher','student','school','house','car','book','tree','flower','sun','moon','star','water','food','city','park','ball','game','music','art','world','time','day','night','morning','evening','friend','family','mother','father','sister','brother','baby','bird','fish','horse','river','mountain','ocean','rain','snow','wind','fire','door','window','table','chair','phone','computer','hand','head','eye','heart','story','word','sentence','paragraph','letter','number','problem','question','answer','idea','place','thing','name','home','room','road','street','garden','kitchen','bedroom','bathroom','office','store','restaurant','hospital','library','museum','movie','movie','song','dance','picture','color','shape','size','animal','plant','rock','paper','pencil','pen','bag','box','cup','plate','knife','fork','spoon','shirt','shoe','hat','coat','dress','king','queen','prince','princess','dragon','wizard','knight','castle','sword','shield','treasure','island','ship','boat','train','plane','bicycle','camera','clock','key','light','lamp','wall','floor','ceiling','roof','bridge','tower','fence','gate','path','field','forest','beach','lake','pond','cave','hill','valley','desert','jungle','village','town','country','state','city','earth','planet','space','sky','cloud','storm','thunder','lightning','rainbow','ice','stone','sand','dirt','grass','leaf','root','branch','seed','fruit','vegetable','bread','cake','cookie','candy','milk','juice','water','tea','coffee','rice','meat','chicken','egg','cheese','butter','sugar','salt','pepper','apple','banana','orange','grape','strawberry','tomato','potato','onion','carrot','corn','bean','soup','salad','pizza','pasta','sandwich','burger','fries','ice cream','chocolate','vanilla','strawberry','cookie','brownie','muffin','pancake','waffle','cereal','toast','egg','bacon','sausage','juice','milk','water','tea','coffee'])
-
-const COMMON_VERBS = new Set(['is','am','are','was','were','be','been','being','have','has','had','do','does','did','will','would','shall','should','can','could','may','might','must','run','walk','jump','sit','stand','eat','drink','sleep','wake','read','write','speak','listen','hear','see','look','watch','think','know','feel','want','need','like','love','hate','hope','wish','try','help','give','take','make','create','build','break','fix','open','close','start','stop','begin','end','finish','move','turn','fall','rise','grow','live','die','win','lose','play','work','study','learn','teach','show','tell','ask','answer','call','talk','say','sing','dance','draw','paint','cook','clean','wash','drive','fly','swim','ride','climb','throw','catch','hit','kick','push','pull','carry','hold','keep','put','set','get','got','let','bring','buy','sell','pay','send','receive','find','lose','use','choose','pick','cut','add','change','follow','lead','meet','join','leave','stay','wait','arrive','reach','cross','pass','enter','leave','return','turn','move','shake','touch','pick','drop','fill','empty','cover','hide','share','count','measure','compare','sort','group','list','check','mark','point','click','type','search','save','load','copy','paste','print','send','delete','remove','clear','undo','redo','zoom','scroll','click','drag','drop','hover','focus','blur','submit','cancel','accept','reject','approve','deny','allow','block','report','flag','rate','review','comment','reply','like','share','follow','subscribe','download','upload','install','update','upgrade','setup','configure','connect','disconnect','login','logout','register','sign','verify','confirm','reset','change','edit','delete','archive','restore','export','import','transfer','sync','backup','recover'])
-
-const COMMON_ADJ = new Set(['big','small','large','little','tall','short','long','wide','narrow','thick','thin','heavy','light','fast','slow','hot','cold','warm','cool','new','old','young','good','bad','great','nice','happy','sad','angry','scared','brave','kind','mean','funny','silly','serious','quiet','loud','soft','hard','smooth','rough','wet','dry','clean','dirty','fresh','sweet','sour','bitter','salty','spicy','bright','dark','colorful','plain','pretty','ugly','beautiful','handsome','cute','lovely','wonderful','amazing','incredible','fantastic','terrible','awful','horrible','perfect','simple','complex','easy','hard','difficult','important','special','different','same','similar','various','many','few','several','some','any','all','most','every','each','another','other','first','last','next','final','main','basic','extra','primary','secondary','major','minor','single','double','triple','whole','entire','complete','full','empty','rich','poor','strong','weak','smart','clever','wise','foolish','stupid','lazy','busy','tired','hungry','thirsty','sick','healthy','safe','dangerous','lucky','unlucky','famous','popular','common','rare','usual','unusual','normal','strange','weird','odd','curious','mysterious','magical','ancient','modern','fancy','simple','plain','bright','dim','sharp','dull','fuzzy','clear','cloudy','sunny','rainy','windy','snowy','icy','foggy','stormy','calm','peaceful','wild','gentle','fierce','tiny','huge','enormous','massive','giant','miniature','slender','plump','broad','narrow','deep','shallow','steep','flat','round','square','oval','straight','crooked','bent','broken','fixed','loose','tight','stuck','free','open','closed','locked','hidden','visible','invisible','real','fake','true','false','right','wrong','correct','incorrect','possible','impossible','certain','sure','ready','prepared','afraid','proud','ashamed','guilty','innocent','jealous','grateful','thankful','lonely','comfortable','uncomfortable','nervous','excited','bored','surprised','shocked','confused','disappointed','delighted','thrilled','relieved','worried','annoyed','frustrated','embarrassed','curious','eager','reluctant','willing','unwilling','able','unable','capable','powerful','weak','fit','sick','well','alive','dead','awake','asleep'])
-
-const COMMON_ADV = new Set(['very','really','quite','rather','somewhat','extremely','slightly','almost','nearly','barely','hardly','scarcely','just','only','even','still','already','yet','soon','later','now','then','today','yesterday','tomorrow','always','never','often','sometimes','usually','rarely','seldom','occasionally','frequently','regularly','generally','typically','mostly','mainly','primarily','especially','particularly','specifically','exactly','precisely','carefully','quickly','slowly','quietly','loudly','softly','hard','fast','well','badly','easily','simply','clearly','obviously','apparently','certainly','definitely','probably','possibly','perhaps','maybe','actually','really','truly','honestly','frankly','suddenly','gradually','eventually','finally','recently','immediately','instantly','constantly','continuously','repeatedly','frequently','occasionally','briefly','temporarily','permanently','completely','entirely','fully','partially','totally','absolutely','utterly','thoroughly','deeply','highly','strongly','weakly','gently','fiercely','bravely','kindly','meanly','happily','sadly','angrily','calmly','quietly','loudly','softly','sweetly','bitterly','eagerly','reluctantly','willingly','cheerfully','gratefully','thankfully','carefully','carelessly','thoughtfully','recklessly','deliberately','accidentally','intentionally','purposely','knowingly','unknowingly','together','apart','alone','ahead','behind','above','below','inside','outside','upstairs','downstairs','everywhere','nowhere','somewhere','here','there','far','near','close','away','back','forward','up','down','left','right','north','south','east','west','straight','sideways','backwards','forwards','upwards','downwards','inwards','outwards','onward','homeward','eastward','westward','northward','southward','too','also','as','not','no','yes','please','thank'])
-
-const COMMON_PRONOUNS = new Set(['I','me','my','mine','myself','you','your','yours','yourself','yourselves','he','him','his','himself','she','her','hers','herself','it','its','itself','we','us','our','ours','ourselves','they','them','their','theirs','themselves','this','that','these','those','who','whom','whose','which','what','whoever','whatever','whichever','everyone','everything','someone','something','anyone','anything','nobody','nothing','everybody','somebody','anybody','each','either','neither','one','another','other','others','such','none','both','all','some','many','few','several','most'])
-
-const COMMON_PREPS = new Set(['in','on','at','to','for','with','from','by','about','into','through','during','before','after','above','below','between','under','over','up','down','out','off','around','along','across','behind','beside','beneath','beyond','near','toward','towards','upon','within','without','against','among','throughout','until','since','except','past','despite','regarding','concerning','following','according','instead','besides','unlike','onto','inside','outside','above','below','beneath','nearby','away','ahead','behind','abroad','apart','aside','east','west','north','south','here','there','everywhere','somewhere','nowhere','upstairs','downstairs','downtown','uptown','online','offline','underground','overhead','underneath','alongside','underneath','amid','amidst','amongst','circa','per','via','versus','vs','as','like','than'])
-
-const COMMON_CONJUNCTIONS = new Set(['and','but','or','nor','for','yet','so','because','although','though','while','if','unless','since','until','when','whenever','where','wherever','whether','after','before','once','than','that','as','how','what','whatever','who','whoever','whom','whomever','whose','which','whichever','both','either','neither','not','only','just','whether','rather','instead','however','therefore','moreover','furthermore','nevertheless','nonetheless','meanwhile','otherwise','likewise','similarly','consequently','accordingly','besides','indeed','namely','thus','hence','still','yet','already','even','just','rather','soon','now','then','well','so','then','next','last','finally','first','second','third'])
-
-const COMMON_INTERJECTIONS = new Set(['oh','wow','hey','hi','hello','goodbye','bye','oops','ouch','ugh','ah','aha','oh','well','yes','no','maybe','hmm','huh','yay','boo','hooray','alas','bravo','cheers','congrats','darn','eek','gosh','goodness','gracious','help','horray','hurray','la','laugh','oh','ok','ooh','phew','rats','shh','tsk','uh','uh-oh','um','unbelievable','voila','whew','whoa','yikes','yo'])
-
-function simplePOSTag(word: string): string {
-  const w = word.toLowerCase().replace(/[^a-z'-]/g, '')
-  if (!w) return 'Unknown'
-  if (COMMON_INTERJECTIONS.has(w)) return 'Interjection'
-  if (COMMON_PRONOUNS.has(w)) return 'Pronoun'
-  if (COMMON_PREPS.has(w)) return 'Preposition'
-  if (COMMON_CONJUNCTIONS.has(w)) return 'Conjunction'
-  if (COMMON_VERBS.has(w)) return 'Verb'
-  if (COMMON_ADJ.has(w)) return 'Adjective'
-  if (COMMON_ADV.has(w)) return 'Adverb'
-  if (COMMON_NOUNS.has(w)) return 'Noun'
-  // Heuristic: -ly → Adverb, -tion/-ness → Noun, -ful/-less/-ous → Adjective, -ed/-ing → Verb
-  if (w.endsWith('ly')) return 'Adverb'
-  if (w.endsWith('tion') || w.endsWith('sion') || w.endsWith('ment') || w.endsWith('ness') || w.endsWith('ity') || w.endsWith('ence') || w.endsWith('ance')) return 'Noun'
-  if (w.endsWith('ful') || w.endsWith('less') || w.endsWith('ous') || w.endsWith('ive') || w.endsWith('able') || w.endsWith('ible') || w.endsWith('al') || w.endsWith('ical')) return 'Adjective'
-  if (w.endsWith('ed') || w.endsWith('ing') || w.endsWith('ize') || w.endsWith('ify') || w.endsWith('ate')) return 'Verb'
-  return 'Noun' // default fallback
-}
-
-interface TaggedTerm { text: string; pos: string }
-
 function CanvasPOSTagger({ element, isDark }: CanvasWidgetProps) {
-  const s = cs(isDark)
   const updateConfig = useConfigUpdater(element.id)
   const cfg = element.config
-  const [sentence, setSentence] = useState((cfg.sentence as string) || '')
-  const [tagged, setTagged] = useState<TaggedTerm[]>(() => {
-    const saved = cfg.tagged as TaggedTerm[] | undefined
-    return saved || []
-  })
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null)
+  const widgetConfig: POSWidgetConfig = useMemo(() => ({
+    ...DEFAULT_POS_CONFIG,
+    ...(cfg as Partial<POSWidgetConfig>),
+    tagged: (cfg.tagged as POSWidgetConfig['tagged'] | undefined) || [],
+  }), [cfg])
 
-  const handleTag = useCallback(() => {
-    if (!sentence.trim()) return
-    const words = sentence.split(/\s+/).filter(Boolean)
-    const result: TaggedTerm[] = words.map(w => ({ text: w, pos: simplePOSTag(w) }))
-    setTagged(result)
-    setSelectedIdx(null)
-    updateConfig({ sentence, tagged: result })
-  }, [sentence, updateConfig])
+  const handleChange = useCallback((patch: Partial<POSWidgetConfig>) => {
+    updateConfig(patch)
+  }, [updateConfig])
 
-  const handleSentenceChange = (v: string) => {
-    setSentence(v)
-    if (tagged.length > 0) {
-      setTagged([])
-      updateConfig({ sentence: v, tagged: [] })
-    }
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'inherit' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: s.bright }}>Parts of Speech Tagger</div>
-      <textarea
-        value={sentence}
-        onChange={e => handleSentenceChange(e.target.value)}
-        placeholder="Type a sentence..."
-        rows={2}
-        style={{ ...s.input, width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
-      />
-      <button onClick={handleTag} style={s.btnPrimary}>Tag Sentence</button>
-      {tagged.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <div style={{ lineHeight: 2.2 }}>
-            {tagged.map((t, i) => {
-              const colors = POS_COLORS[t.pos]
-              if (!colors) return <span key={i} style={{ marginRight: 4, color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)', fontSize: 12 }}>{t.text} </span>
-              const isSel = selectedIdx === i
-              return (
-                <span
-                  key={i}
-                  onClick={() => setSelectedIdx(isSel ? null : i)}
-                  style={{
-                    display: 'inline-block', padding: '1px 5px', margin: '1px 1px', borderRadius: 3,
-                    background: isSel ? colors.bd : colors.bg, border: '1px solid ' + colors.bd,
-                    color: colors.tx, fontSize: 12, fontWeight: 600, cursor: 'pointer' as const,
-                  }}
-                >{t.text}</span>
-              )
-            })}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '3px 6px', borderRadius: 4, background: s.surface }}>
-            {BEGINNER_POS.map(pos => {
-              const c = POS_COLORS[pos]
-              if (!c) return null
-              return <div key={pos} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <div style={{ width: 7, height: 7, borderRadius: 2, background: c.tx }} />
-                <span style={{ fontSize: 9, color: s.text }}>{pos}</span>
-              </div>
-            })}
-          </div>
-          {selectedIdx !== null && tagged[selectedIdx] && (
-            <div style={{
-              padding: '5px 8px', borderRadius: 4, fontSize: 10, color: s.text, lineHeight: 1.4,
-              background: s.surface, border: '1px solid ' + s.border,
-            }}>
-              <span style={{ fontWeight: 700, color: (POS_COLORS[tagged[selectedIdx].pos] || {}).tx || s.bright }}>{tagged[selectedIdx].text}</span>
-              {' → '}{tagged[selectedIdx].pos}
-            </div>
-          )}
-          <div style={{
-            padding: '5px 8px', borderRadius: 4, background: s.surface, lineHeight: 2,
-          }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 2 }}>SKELETON (Nouns & Verbs)</div>
-            {tagged.map((t, i) => {
-              const isCore = t.pos === 'Noun' || t.pos === 'Verb'
-              const c = POS_COLORS[t.pos]
-              if (isCore && c) {
-                return <span key={i} style={{ display: 'inline-block', padding: '1px 5px', margin: '1px 1px', borderRadius: 3, background: c.bg, border: '1px solid ' + c.bd, color: c.tx, fontSize: 12, fontWeight: 700, marginRight: 3 }}>{t.text} </span>
-              }
-              return <span key={i} style={{ color: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)', fontSize: 12, marginRight: 5 }}>{t.text} </span>
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
+  return <POSTaggerWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
 }
 
 // ============================================================
@@ -525,78 +409,24 @@ function CanvasParagraphOrganizer({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
-// 5. VOCABULARY FLASHCARDS (on-canvas)
+// 5. VOCABULARY FLASHCARDS (unified component)
 // ============================================================
 
-const SAMPLE_CARDS = [
-  { word: 'Abundant', definition: 'Existing in large amounts; plentiful', pos: 'adj' },
-  { word: 'Curious', definition: 'Eager to know or learn something', pos: 'adj' },
-  { word: 'Persuade', definition: 'To convince someone to do or believe something', pos: 'verb' },
-  { word: 'Enormous', definition: 'Very large in size or amount', pos: 'adj' },
-  { word: 'Narrative', definition: 'A spoken or written account of connected events', pos: 'noun' },
-  { word: 'Beneath', definition: 'Extending or directly underneath', pos: 'prep' },
-  { word: 'Meticulous', definition: 'Showing great attention to detail', pos: 'adj' },
-  { word: 'Giggle', definition: 'To laugh in a silly, high-pitched way', pos: 'verb' },
-]
-
 function CanvasVocabCards({ element, isDark }: CanvasWidgetProps) {
-  const s = cs(isDark)
   const updateConfig = useConfigUpdater(element.id)
   const cfg = element.config
-  const [index, setIndex] = useState((cfg.cardIndex as number) || 0)
-  const [flipped, setFlipped] = useState(false)
+  const widgetConfig: VocabWidgetConfig = useMemo(() => ({
+    ...DEFAULT_VOCAB_CONFIG,
+    ...(cfg as Partial<VocabWidgetConfig>),
+    filterPos: (cfg.filterPos as PosTag[] | undefined) || [],
+    customCards: (cfg.customCards as VocabCard[] | undefined) || [],
+  }), [cfg])
 
-  const current = SAMPLE_CARDS[index]
-  const total = SAMPLE_CARDS.length
+  const handleChange = useCallback((patch: Partial<VocabWidgetConfig>) => {
+    updateConfig(patch)
+  }, [updateConfig])
 
-  const goNext = () => { setFlipped(false); setIndex(Math.min(index + 1, total - 1)); updateConfig({ cardIndex: Math.min(index + 1, total - 1) }) }
-  const goPrev = () => { setFlipped(false); setIndex(Math.max(index - 1, 0)); updateConfig({ cardIndex: Math.max(index - 1, 0) }) }
-
-  const posColors: Record<string, string> = { noun: '#60a5fa', verb: '#f87171', adj: '#4ade80', prep: '#2dd4bf', adv: '#fb923c' }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: 'inherit' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: s.bright }}>Vocabulary Flashcards</div>
-      {/* Card */}
-      <div
-        onClick={() => setFlipped(!flipped)}
-        style={{
-          minHeight: 80, padding: '10px 14px', borderRadius: 8, cursor: 'pointer' as const,
-          background: flipped
-            ? (isDark ? 'rgba(5,150,105,0.08)' : 'rgba(5,150,105,0.05)')
-            : (isDark ? 'rgba(96,165,250,0.08)' : 'rgba(96,165,250,0.05)'),
-          border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
-          display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-          transition: 'background 0.2s',
-        }}
-      >
-        {!flipped ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 20, fontWeight: 700, color: s.bright, marginBottom: 4 }}>{current.word}</div>
-            <div style={{
-              fontSize: 9, fontWeight: 600, padding: '1px 6px', borderRadius: 3, display: 'inline-block',
-              background: (posColors[current.pos] || '#94a3b8') + '20', color: posColors[current.pos] || '#94a3b8',
-            }}>{current.pos}</div>
-          </div>
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: s.bright, lineHeight: 1.5 }}>{current.definition}</div>
-          </div>
-        )}
-      </div>
-      {/* Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <button onClick={goPrev} disabled={index === 0} style={{
-          ...s.btn(false), opacity: index === 0 ? 0.4 : 1,
-        }}>{'< Prev'}</button>
-        <span style={{ fontSize: 10, color: s.text }}>{index + 1} / {total}</span>
-        <button onClick={goNext} disabled={index === total - 1} style={{
-          ...s.btn(false), opacity: index === total - 1 ? 0.4 : 1,
-        }}>{'Next >'}</button>
-      </div>
-      <div style={{ fontSize: 9, color: s.text, textAlign: 'center' }}>Click card to flip</div>
-    </div>
-  )
+  return <VocabFlashcardsWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
 }
 
 // ============================================================
@@ -769,97 +599,29 @@ function CanvasFigLangFinder({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
-// 7. PUNCTUATION INTERACTIVE - PRACTICE MODE (on-canvas)
+// 7. PUNCTUATION PRACTICE (unified component)
 // ============================================================
 
-const PUNCT_EXERCISES = [
-  { sentence: 'The teacher said we have a test tomorrow', options: ['test tomorrow.', 'test, tomorrow.', 'test tomorrow!'], correctIndex: 0, rule: 'Declarative ends with period' },
-  { sentence: 'What time does the movie start', options: ['start.', 'start?', 'start!'], correctIndex: 1, rule: 'Questions end with question mark' },
-  { sentence: 'I cant believe we won the championship', options: ["can't", 'cant', 'can\'t'], correctIndex: 0, rule: 'Apostrophe in contractions' },
-  { sentence: 'The students books are on the desk', options: ["student's", 'students', "students'"], correctIndex: 2, rule: 'Possessive plural apostrophe' },
-  { sentence: 'Wow that was an amazing goal', options: ['Wow, that', 'Wow that', 'Wow. That'], correctIndex: 0, rule: 'Comma after interjection' },
-  { sentence: 'I want to visit Paris London and Rome', options: ['Paris, London, and', 'Paris London and', 'Paris, London and'], correctIndex: 0, rule: 'Commas in a list (Oxford comma)' },
-  { sentence: 'She said I will be there at five', options: ['said, "I', 'said I', 'said: I'], correctIndex: 0, rule: 'Comma before quote' },
-  { sentence: 'The dog who was barking loudly ran away', options: ['dog, who', 'dog who', 'dog (who'], correctIndex: 1, rule: 'No comma for essential clause' },
-]
-
 function CanvasPunctuationPractice({ element, isDark }: CanvasWidgetProps) {
-  const s = cs(isDark)
   const updateConfig = useConfigUpdater(element.id)
   const cfg = element.config
-  const [step, setStep] = useState((cfg.step as number) || 0)
-  const [selected, setSelected] = useState<number | null>(typeof cfg.selected === 'number' ? cfg.selected : null)
-  const [checked, setChecked] = useState((cfg.checked as boolean) || false)
-  const [score, setScore] = useState((cfg.score as number) || 0)
+  // Merge defaults with persisted config
+  const widgetConfig: PunctWidgetConfig = useMemo(() => ({
+    ...DEFAULT_PUNCT_CONFIG,
+    ...(cfg as Partial<PunctWidgetConfig>),
+    // Ensure arrays are not undefined
+    filterRules: (cfg.filterRules as PunctRule[] | undefined) || [],
+    exerciseIds: (cfg.exerciseIds as string[] | undefined) || [],
+    customExercises: (cfg.customExercises as PunctExercise[] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string] | undefined) || ['', '', ''],
+    teacherExplanations: (cfg.teacherExplanations as [string, string, string] | undefined) || ['', '', ''],
+  }), [cfg])
 
-  const exercise = PUNCT_EXERCISES[step % PUNCT_EXERCISES.length]
-  const isCorrect = checked && selected !== null && selected === exercise.correctIndex
+  const handleChange = useCallback((patch: Partial<PunctWidgetConfig>) => {
+    updateConfig(patch)
+  }, [updateConfig])
 
-  const handleSelect = (idx: number) => {
-    if (checked) return
-    setSelected(idx)
-  }
-
-  const handleCheck = () => {
-    if (selected === null) return
-    const correct = selected === exercise.correctIndex
-    const newScore = correct ? score + 1 : score
-    setChecked(true)
- setScore(newScore)
-    updateConfig({ step, selected, checked: true, score: newScore })
-  }
-
-  const handleNext = () => {
-    const newStep = step + 1
-    setStep(newStep)
-    setSelected(null)
-    setChecked(false)
-    updateConfig({ step: newStep, selected: null, checked: false, score })
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'inherit' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: s.bright }}>Punctuation Practice</div>
-        <div style={{ fontSize: 9, color: s.text }}>{step + 1} / {PUNCT_EXERCISES.length} | Score: {score}</div>
-      </div>
-      <div style={{
-        padding: '8px 10px', borderRadius: 6, background: s.surface,
-        border: '1px solid ' + s.border, fontSize: 13, lineHeight: 1.6, color: s.bright,
-      }}>
-        {exercise.sentence}
-        <span style={{ color: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)', fontWeight: 700 }}>___</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {exercise.options.map((opt, i) => {
-          const isSel = selected === i
-          const showCorrect = checked && i === exercise.correctIndex
-          const showWrong = checked && isSel && i !== exercise.correctIndex
-          return (
-            <button key={i} onClick={() => handleSelect(i)} style={{
-              padding: '5px 8px', borderRadius: 5, fontSize: 11, cursor: 'pointer' as const,
-              textAlign: 'left', width: '100%',
-              border: '1px solid ' + (showCorrect ? '#4ade80' : showWrong ? '#f87171' : isSel ? '#34d399' : s.border),
-              background: showCorrect ? 'rgba(34,197,94,0.1)' : showWrong ? 'rgba(239,68,68,0.1)' : isSel ? 'rgba(5,150,105,0.08)' : s.surface,
-              color: showCorrect ? '#4ade80' : showWrong ? '#f87171' : isSel ? '#34d399' : s.bright,
-              fontWeight: isSel ? 600 : 400,
-            }}>
-              {String.fromCharCode(65 + i) + '. ' + opt}
-            </button>
-          )
-        })}
-      </div>
-      <div style={{ display: 'flex', gap: 4 }}>
-        {!checked && <button onClick={handleCheck} disabled={selected === null} style={{ ...s.btnPrimary, opacity: selected === null ? 0.5 : 1 }}>Check</button>}
-        {checked && <button onClick={handleNext} style={s.btnPrimary}>Next</button>}
-      </div>
-      {checked && (
-        <div style={{ padding: '5px 8px', borderRadius: 4, fontSize: 10, lineHeight: 1.4, background: isCorrect ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)', border: '1px solid ' + (isCorrect ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'), color: isCorrect ? '#4ade80' : '#f87171' }}>
-          {isCorrect ? 'Correct!' : 'Not quite.'} {exercise.rule}
-        </div>
-      )}
-    </div>
-  )
+  return <PunctuationPracticeWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
 }
 
 // ============================================================
@@ -884,13 +646,13 @@ export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetPr
 
 export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown> {
   switch (kind) {
-    case 'lang-pos-tagger': return { sentence: '', tagged: [] }
+    case 'lang-pos-tagger': return { ...DEFAULT_POS_CONFIG }
     case 'lang-sentence-structure': return { activeType: 'simple', built: [] }
     case 'lang-story-elements': return { storyData: DEFAULT_STORY, showViz: false }
     case 'lang-paragraph-organizer': return { typeIndex: 0, values: {} }
-    case 'lang-vocab-flashcards': return { cardIndex: 0 }
+    case 'lang-vocab-flashcards': return { ...DEFAULT_VOCAB_CONFIG }
     case 'lang-figurative-language': return { text: '', activeTypes: [] }
-    case 'lang-punctuation': return { step: 0, selected: null, checked: false, score: 0 }
+    case 'lang-punctuation': return { ...DEFAULT_PUNCT_CONFIG }
     default: return {}
   }
 }
@@ -901,9 +663,9 @@ export function getLangWidgetDefaultSize(kind: string): { width: number; height:
     case 'lang-sentence-structure': return { width: 340, height: 380 }
     case 'lang-story-elements': return { width: 360, height: 440 }
     case 'lang-paragraph-organizer': return { width: 340, height: 480 }
-    case 'lang-vocab-flashcards': return { width: 260, height: 300 }
+    case 'lang-vocab-flashcards': return { width: 300, height: 400 }
     case 'lang-figurative-language': return { width: 340, height: 420 }
-    case 'lang-punctuation': return { width: 320, height: 400 }
+    case 'lang-punctuation': return { width: 380, height: 520 }
     default: return { width: 320, height: 360 }
   }
 }
