@@ -133,3 +133,23 @@ Stage Summary:
 - Phonics Decoding, Reading Passage Analyzer, Sentence Expansion kept side-panel only (per prioritization plan)
 - All widgets sync config via debounced updateElement for real-time collaboration
 - Vercel deploying commit e4a976a
+---
+Task ID: 1
+Agent: main
+Task: Make Fraction Circle, Fraction Bar, Angle Maker customizable with Add to Board buttons
+
+Work Log:
+- Read MathToolkit.tsx, CanvasWidgets.tsx, StatToolkit.tsx, ElementRenderer.tsx, types.ts to understand widget architecture
+- Created CanvasMathWidgets.tsx with 3 interactive on-canvas widget components
+- CanvasFractionCircle: SVG circle with 2-36 configurable divisions, click-to-shade slices, center fraction label, quick-select buttons
+- CanvasFractionBar: SVG bar with 2-36 divisions, horizontal/vertical orientation toggle, click-to-shade segments, segment numbering
+- CanvasAngleMaker: SVG angle with 1-359 degree slider, preset buttons (30,45,60,90,120,135,150,180), angle classification (acute/right/obtuse/straight/reflex), right-angle marker
+- Registered all 3 in CanvasWidgets.tsx WIDGET_COMPONENTS, getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS
+- Updated MathToolkit.tsx with addToBoard callback (same pattern as StatToolkit) and replaced Place on Canvas buttons with Add to Board for Fraction Circle, Fraction Bar, and Angle Maker
+- Build passed with zero type errors, pushed to Vercel
+
+Stage Summary:
+- 3 new interactive math widgets: math-fraction-circle, math-fraction-bar, math-angle-maker
+- All support 2-36 divisions, click interaction, real-time sync
+- MathToolkit now has Add to Board buttons for these 3 tools
+- Deployed to https://superboard-three.vercel.app/
