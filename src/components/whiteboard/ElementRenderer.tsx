@@ -25,6 +25,12 @@ const LazyMathRenderers = dynamic(
   { ssr: false, loading: () => null }
 )
 
+// Lazy-load canvas widget renderers
+const LazyCanvasWidgets = dynamic(
+  () => import('./CanvasWidgets').then(m => ({ default: m.CanvasWidgetRenderer })),
+  { ssr: false, loading: () => null }
+)
+
 interface ElementRendererProps {
   element: WhiteboardElement
   isSelected: boolean
@@ -308,6 +314,40 @@ export const ElementRenderer = React.memo(function ElementRenderer({
     case 'math-bar-chart':
     case 'math-pie-chart':
       return <LazyMathRenderers element={element} isSelected={isSelected} />
+
+    case 'widget':
+      return (
+        <foreignObject
+          x={element.x}
+          y={element.y}
+          width={element.width}
+          height={element.height}
+          opacity={element.opacity}
+          onPointerDown={(e) => {
+            if (tool === 'select') e.stopPropagation()
+            onPointerDown(e, element.id)
+          }}
+          style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
+        >
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              background: isDark ? '#0f172a' : '#ffffff',
+              border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+              borderRadius: 8,
+              padding: '10px 12px',
+              overflow: 'auto',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+              fontFamily: 'inherit',
+              boxSizing: 'border-box',
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />
+          </div>
+        </foreignObject>
+      )
 
     default:
       return null

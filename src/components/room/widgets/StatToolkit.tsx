@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, lazy, Suspense, useCallback } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import { generateId } from '@/lib/whiteboard/utils'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load each tool — only parsed when the grade tab renders it
 const DataTableLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.DataTable })))
@@ -54,9 +57,37 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
+
+  const addToBoard = useCallback((widgetKind: string) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: getDefaultWidgetConfig(widgetKind),
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1,
+      locked: false,
+      pageIndex: 0,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark])
 
   const toggleBand = (band: GradeBand) => {
     setVisibleBands(prev => {
@@ -75,8 +106,23 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, widgetKind?: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+      {widgetKind && (
+        <button
+          onClick={() => addToBoard(widgetKind)}
+          style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+        >
+          + Add to Board
+        </button>
+      )}
+    </div>
   )
 
   return (
@@ -111,27 +157,27 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Data Table & Summary Stats')}
+            {sectionTitle('Data Table & Summary Stats', 'stat-data-table')}
             <div style={{ padding: '0 12px 12px' }}><DataTablePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Histogram')}
+            {sectionTitle('Histogram', 'stat-histogram')}
             <div style={{ padding: '0 12px 12px' }}><HistogramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Box & Whisker Plot')}
+            {sectionTitle('Box & Whisker Plot', 'stat-box-plot')}
             <div style={{ padding: '0 12px 12px' }}><BoxPlotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Scatter Plot & Regression')}
+            {sectionTitle('Scatter Plot & Regression', 'stat-scatter')}
             <div style={{ padding: '0 12px 12px' }}><ScatterPlotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Normal Distribution')}
+            {sectionTitle('Normal Distribution', 'stat-normal-dist')}
             <div style={{ padding: '0 12px 12px' }}><NormalDistPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Probability Simulator')}
+            {sectionTitle('Probability Simulator', 'stat-probability')}
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
           </div>
         </>
@@ -143,7 +189,7 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Probability Simulator')}
+            {sectionTitle('Probability Simulator', 'stat-probability')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Flip coins, roll dice, or spin to explore chance. Great for introducing probability concepts.</p>
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
           </div>
@@ -156,19 +202,19 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Data Table & Summary Stats')}
+            {sectionTitle('Data Table & Summary Stats', 'stat-data-table')}
             <div style={{ padding: '0 12px 12px' }}><DataTablePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Histogram')}
+            {sectionTitle('Histogram', 'stat-histogram')}
             <div style={{ padding: '0 12px 12px' }}><HistogramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Box & Whisker Plot')}
+            {sectionTitle('Box & Whisker Plot', 'stat-box-plot')}
             <div style={{ padding: '0 12px 12px' }}><BoxPlotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Probability Simulator')}
+            {sectionTitle('Probability Simulator', 'stat-probability')}
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
           </div>
         </>
@@ -180,27 +226,27 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Data Table & Summary Stats')}
+            {sectionTitle('Data Table & Summary Stats', 'stat-data-table')}
             <div style={{ padding: '0 12px 12px' }}><DataTablePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Histogram')}
+            {sectionTitle('Histogram', 'stat-histogram')}
             <div style={{ padding: '0 12px 12px' }}><HistogramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Box & Whisker Plot')}
+            {sectionTitle('Box & Whisker Plot', 'stat-box-plot')}
             <div style={{ padding: '0 12px 12px' }}><BoxPlotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Scatter Plot & Regression')}
+            {sectionTitle('Scatter Plot & Regression', 'stat-scatter')}
             <div style={{ padding: '0 12px 12px' }}><ScatterPlotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Normal Distribution')}
+            {sectionTitle('Normal Distribution', 'stat-normal-dist')}
             <div style={{ padding: '0 12px 12px' }}><NormalDistPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Probability Simulator')}
+            {sectionTitle('Probability Simulator', 'stat-probability')}
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
           </div>
         </>

@@ -254,7 +254,9 @@ export function hitTestElement(
     case 'triangle':
     case 'sticky':
     case 'frame':
-    case 'image': {
+    case 'image':
+    case 'widget':
+    case 'pdf': {
       const b = getElementBounds(el)
       return isPointInBounds(point, b, threshold)
     }

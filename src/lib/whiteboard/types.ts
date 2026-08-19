@@ -249,6 +249,14 @@ export interface PieChartElement extends BaseElement {
   slices: Array<{ label: string; value: number; color: string }>
 }
 
+// ---- On-Canvas Interactive Widget Element ----
+
+export interface WidgetElement extends BaseElement {
+  type: 'widget'
+  widgetKind: string // e.g. 'stat-data-table', 'stat-histogram', 'stat-scatter', 'stat-box-plot', 'stat-normal-dist', 'stat-probability'
+  config: Record<string, unknown> // widget-specific live state (data, settings, etc.)
+}
+
 export type WhiteboardElement =
   | FreehandElement
   | RectangleElement
@@ -273,6 +281,7 @@ export type WhiteboardElement =
   | MeasureElement
   | BarChartElement
   | PieChartElement
+  | WidgetElement
 
 /** A page in the whiteboard */
 export interface WhiteboardPage {
