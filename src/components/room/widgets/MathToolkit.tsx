@@ -94,11 +94,18 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   // Which grade bands are visible (toggled by tutor)
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
 
-  // Fraction config
-  const [fracDivisions, setFracDivisions] = useState(4)
-  const [fracShaded, setFracShaded] = useState<number[]>([])
+  // Fraction Circle config (separate from bar)
+  const [circleDivisions, setCircleDivisions] = useState(4)
+  const [circleShaded, setCircleShaded] = useState<number[]>([])
+  // Fraction Bar config (separate from circle)
+  const [barDivisions, setBarDivisions] = useState(4)
+  const [barShaded, setBarShaded] = useState<number[]>([])
+  const [barOrientation, setBarOrientation] = useState<'horizontal' | 'vertical'>('horizontal')
   // Polygon config
   const [polySides, setPolySides] = useState(6)
+  // Angle config
+  const [anglePreset, setAnglePreset] = useState<number | null>(null)
+  const [angleCustomDeg, setAngleCustomDeg] = useState(90)
   // Number line config
   const [nlMin, setNlMin] = useState(0)
   const [nlMax, setNlMax] = useState(10)
@@ -216,6 +223,8 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
     { label: 'y = |x|', eq: 'abs(x)' }, { label: 'y = log(x)', eq: 'log(x)' },
   ]
 
+  const ANGLE_PRESETS = [30, 45, 60, 90, 120, 135, 150, 180]
+
   const stamps = [
     { label: 'Protractor', icon: '⚖' }, { label: 'Ruler', icon: '⚔' }, { label: 'Set Square', icon: '▣' }, { label: 'Compass', icon: '⊙' },
   ]
@@ -319,23 +328,29 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText, minWidth: 60 }}>Parts:</span>
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   {[2, 3, 4, 5, 6, 8, 10, 12].map(n => (
-                    <button key={n} onClick={() => { setFracDivisions(n); setFracShaded([]) }} style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, background: fracDivisions === n ? actBg : dkBg, border: fracDivisions === n ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: fracDivisions === n ? actText : dkText, cursor: 'pointer' }}>{n}</button>
+                    <button key={n} onClick={() => { setCircleDivisions(n); setCircleShaded([]) }} style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, background: circleDivisions === n ? actBg : dkBg, border: circleDivisions === n ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: circleDivisions === n ? actText : dkText, cursor: 'pointer' }}>{n}</button>
                   ))}
                 </div>
+                <span style={{ fontSize: 10, color: dkText }}>or</span>
+                {numInput(circleDivisions, (v) => { setCircleDivisions(v); setCircleShaded([]) }, 2, 36, 1, 48)}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 11, color: dkText, minWidth: 60 }}>Shade:</span>
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                  {Array.from({ length: fracDivisions }, (_, i) => (
-                    <button key={i} onClick={() => setFracShaded(prev => prev.includes(i) ? prev.filter(s => s !== i) : [...prev, i])}
-                      style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600, background: fracShaded.includes(i) ? 'rgba(59,130,246,0.25)' : dkBg, border: fracShaded.includes(i) ? '1px solid rgba(59,130,246,0.5)' : '1px solid ' + dkBorder, color: fracShaded.includes(i) ? '#60a5fa' : dkText, cursor: 'pointer' }}>{i + 1}</button>
+                  {Array.from({ length: Math.min(circleDivisions, 20) }, (_, i) => (
+                    <button key={i} onClick={() => setCircleShaded(prev => prev.includes(i) ? prev.filter(s => s !== i) : [...prev, i])}
+                      style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600, background: circleShaded.includes(i) ? 'rgba(59,130,246,0.25)' : dkBg, border: circleShaded.includes(i) ? '1px solid rgba(59,130,246,0.5)' : '1px solid ' + dkBorder, color: circleShaded.includes(i) ? '#60a5fa' : dkText, cursor: 'pointer' }}>{i + 1}</button>
                   ))}
+                  {circleDivisions > 20 && <span style={{ fontSize: 10, color: dkText, fontStyle: 'italic' }}>+{circleDivisions - 20} more (click on canvas to shade)</span>}
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: actText }}>{fracShaded.length}/{fracDivisions}</span>
-                {placeBtn('Place on Canvas', () => { setMathToolConfig({ divisions: fracDivisions, shaded: fracShaded }); setTool('math-fraction-circle') })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={() => setCircleShaded(circleDivisions > 0 ? Array.from({ length: circleDivisions }, (_, i) => i) : [])} style={{ padding: '2px 8px', borderRadius: 3, fontSize: 10, background: circleShaded.length === circleDivisions ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', border: circleShaded.length === circleDivisions ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(59,130,246,0.3)', color: circleShaded.length === circleDivisions ? '#fca5a5' : '#60a5fa', cursor: 'pointer' }}>
+                  {circleShaded.length === circleDivisions ? 'Clear all' : 'Shade all'}
+                </button>
+                <span style={{ fontSize: 12, fontWeight: 700, color: actText }}>{circleShaded.length}/{circleDivisions}</span>
               </div>
+              {placeBtn('Place on Canvas', () => { setMathToolConfig({ divisions: circleDivisions, shaded: circleShaded }); setTool('math-fraction-circle') })}
             </div>
           </div>
 
@@ -347,14 +362,35 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText, minWidth: 60 }}>Parts:</span>
                 <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                   {[2, 3, 4, 5, 6, 8, 10, 12].map(n => (
-                    <button key={n} onClick={() => { setFracDivisions(n); setFracShaded([]) }} style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, background: fracDivisions === n ? actBg : dkBg, border: fracDivisions === n ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: fracDivisions === n ? actText : dkText, cursor: 'pointer' }}>{n}</button>
+                    <button key={n} onClick={() => { setBarDivisions(n); setBarShaded([]) }} style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, background: barDivisions === n ? actBg : dkBg, border: barDivisions === n ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: barDivisions === n ? actText : dkText, cursor: 'pointer' }}>{n}</button>
                   ))}
                 </div>
+                <span style={{ fontSize: 10, color: dkText }}>or</span>
+                {numInput(barDivisions, (v) => { setBarDivisions(v); setBarShaded([]) }, 2, 36, 1, 48)}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: actText }}>{fracShaded.length}/{fracDivisions}</span>
-                {placeBtn('Place on Canvas', () => { setMathToolConfig({ divisions: fracDivisions, shaded: fracShaded }); setTool('math-fraction-bar') })}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 60 }}>Shade:</span>
+                <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                  {Array.from({ length: Math.min(barDivisions, 20) }, (_, i) => (
+                    <button key={i} onClick={() => setBarShaded(prev => prev.includes(i) ? prev.filter(s => s !== i) : [...prev, i])}
+                      style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600, background: barShaded.includes(i) ? 'rgba(59,130,246,0.25)' : dkBg, border: barShaded.includes(i) ? '1px solid rgba(59,130,246,0.5)' : '1px solid ' + dkBorder, color: barShaded.includes(i) ? '#60a5fa' : dkText, cursor: 'pointer' }}>{i + 1}</button>
+                  ))}
+                  {barDivisions > 20 && <span style={{ fontSize: 10, color: dkText, fontStyle: 'italic' }}>+{barDivisions - 20} more (click on canvas)</span>}
+                </div>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button onClick={() => setBarShaded(barDivisions > 0 ? Array.from({ length: barDivisions }, (_, i) => i) : [])} style={{ padding: '2px 8px', borderRadius: 3, fontSize: 10, background: barShaded.length === barDivisions ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)', border: barShaded.length === barDivisions ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(59,130,246,0.3)', color: barShaded.length === barDivisions ? '#fca5a5' : '#60a5fa', cursor: 'pointer' }}>
+                  {barShaded.length === barDivisions ? 'Clear all' : 'Shade all'}
+                </button>
+                <span style={{ fontSize: 12, fontWeight: 700, color: actText }}>{barShaded.length}/{barDivisions}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: dkText }}>Orientation:</span>
+                {(['horizontal', 'vertical'] as const).map(o => (
+                  <button key={o} onClick={() => setBarOrientation(o)} style={{ padding: '2px 8px', borderRadius: 3, fontSize: 10, background: barOrientation === o ? actBg : dkBg, border: barOrientation === o ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: barOrientation === o ? actText : dkText, cursor: 'pointer' }}>{o}</button>
+                ))}
+              </div>
+              {placeBtn('Place on Canvas', () => { setMathToolConfig({ divisions: barDivisions, shaded: barShaded, orientation: barOrientation }); setTool('math-fraction-bar') })}
             </div>
           </div>
 
@@ -401,9 +437,24 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           {/* Angle Maker */}
           <div className="toolkit-section">
             {sectionTitle('Angle Maker')}
-            <div style={{ padding: '4px 16px 12px' }}>
-              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 0 8px' }}>Click &quot;Place&quot; then drag the blue handle to set the angle.</p>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({}); setTool('math-angle') })}
+            <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>Preset:</span>
+                {ANGLE_PRESETS.map(deg => (
+                  <button key={deg} onClick={() => setAnglePreset(deg)} style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, background: anglePreset === deg ? actBg : dkBg, border: anglePreset === deg ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: anglePreset === deg ? actText : dkText, cursor: 'pointer' }}>{deg}°</button>
+                ))}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>Custom:</span>
+                {numInput(angleCustomDeg, setAngleCustomDeg, 1, 359, 1, 52)}
+                <span style={{ fontSize: 11, color: dkText }}>°</span>
+                <button onClick={() => { setAnglePreset(null); setMathToolConfig({ initialDegrees: angleCustomDeg }); setTool('math-angle') }} style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', cursor: 'pointer' }}>Place {angleCustomDeg}°</button>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {anglePreset !== null && placeBtn('Place ' + anglePreset + '°', () => { setMathToolConfig({ initialDegrees: anglePreset }); setTool('math-angle') })}
+                <button onClick={() => { setAnglePreset(null); setMathToolConfig({}); setTool('math-angle') }} style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', alignSelf: 'flex-end' }}>Free drag</button>
+              </div>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: 0 }}>Preset/custom places a fixed angle. &quot;Free drag&quot; lets you adjust on canvas.</p>
             </div>
           </div>
 

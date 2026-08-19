@@ -22,6 +22,8 @@ export interface MathToolConfig {
   divisions?: number
   /** For fraction-circle / fraction-bar: which slices are shaded (0-indexed) */
   shaded?: number[]
+  /** For fraction-bar: orientation */
+  orientation?: 'horizontal' | 'vertical'
   /** For polygon: number of sides */
   sides?: number
   /** For number-line: min, max, step */
@@ -43,6 +45,8 @@ export interface MathToolConfig {
   chartCategories?: string[]
   chartValues?: number[]
   chartColors?: string[]
+  /** For angle: pre-set degrees (0 = free drag) */
+  initialDegrees?: number
 }
 
 const DEFAULT_MATH_TOOL_CONFIG: MathToolConfig = {}

@@ -73,8 +73,10 @@ export function createMathElement(
     }
 
     case 'math-fraction-bar': {
-      const w = 240
-      const h = 60
+      const orientation = config.orientation || 'horizontal'
+      const isH = orientation === 'horizontal'
+      const w = isH ? 240 : 60
+      const h = isH ? 60 : 240
       const label = shaded.length + '/' + divisions
       return {
         ...b,
@@ -86,7 +88,7 @@ export function createMathElement(
         divisions,
         shaded: [...shaded],
         label,
-        orientation: 'horizontal',
+        orientation: orientation as 'horizontal' | 'vertical',
       } as FractionBarElement
     }
 
@@ -118,6 +120,9 @@ export function createMathElement(
     }
 
     case 'math-angle': {
+      const initialDeg = config.initialDegrees ?? 0
+      const rad = (initialDeg * Math.PI) / 180
+      const armLen = 120
       return {
         ...b,
         x: point.x,
@@ -125,9 +130,9 @@ export function createMathElement(
         width: 0,
         height: 0,
         type: 'math-angle',
-        x2: point.x + 120,
-        y2: point.y,
-        degrees: 0,
+        x2: initialDeg > 0 ? point.x + armLen * Math.cos(-rad) : point.x + armLen,
+        y2: initialDeg > 0 ? point.y + armLen * Math.sin(-rad) : point.y,
+        degrees: initialDeg,
         showArc: true,
         showLabel: true,
         strokeWidth: 2,
