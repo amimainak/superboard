@@ -766,6 +766,10 @@ export function WhiteboardCanvas() {
 
       // Drawing — batch via rAF (P-01)
       if (isDrawing) {
+        // Update pen cursor position even while drawing
+        if (tool === 'draw' || tool === 'highlighter') {
+          setEraserCursor({ x: e.clientX, y: e.clientY })
+        }
         pendingPointsRef.current.push({ x: point.x, y: point.y, pressure: point.pressure })
         if (!rafIdRef.current) {
           rafIdRef.current = requestAnimationFrame(flushPendingPoints)
