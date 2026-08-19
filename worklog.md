@@ -84,3 +84,31 @@ Stage Summary:
 - All widgets work on both canvas (Add to Board) and in the side panel
 - Teacher authoring flow implemented for Punctuation Practice
 - Exercise banks organized by rule, difficulty, and grade band
+
+---
+Task ID: 2
+Agent: main
+Task: Build remaining 4 unified language widgets (Sentence Structure, Phonics, Sentence Expansion, Figurative Language)
+
+Work Log:
+- Read existing CanvasLanguageWidgets.tsx, LanguageToolkit.tsx, PunctuationPracticeWidget.tsx, VocabFlashcardsWidget.tsx, POSTaggerWidget.tsx to understand the approved architecture
+- Created 4 data files with exercises organized by category/difficulty/grade band:
+  - src/data/sentence-structure-exercises.ts (48 exercises, 4 types: simple/compound/complex/compound-complex)
+  - src/data/phonics-exercises.ts (40 exercises, 4 categories: word-family/syllable-type/digraph-blend/sound-pattern)
+  - src/data/sentence-expansion-exercises.ts (40 exercises, 5 types: add-adjectives/adverbs/prepositional/combine-sentences/add-clause)
+  - src/data/figurative-language-exercises.ts (42 exercises, 6 types: simile/metaphor/personification/hyperbole/alliteration/onomatopoeia)
+- Built 4 unified widget components with student practice + teacher authoring modes:
+  - src/components/whiteboard/SentenceStructureWidget.tsx
+  - src/components/whiteboard/PhonicsBuilderWidget.tsx
+  - src/components/whiteboard/SentenceExpansionWidget.tsx
+  - src/components/whiteboard/FigurativeLanguageWidget.tsx
+- Updated CanvasLanguageWidgets.tsx: replaced inline SentenceBuilder and FigLangFinder with unified components, added CanvasPhonicsPractice and CanvasSentenceExpansion wrappers, updated registry/config/size/labels for 9 total lang widgets
+- Updated CanvasWidgets.tsx: registered lang-phonics and lang-sentence-expansion in WIDGET_COMPONENTS, getDefaultWidgetConfig, getWidgetDefaultSize
+- Updated LanguageToolkit.tsx: replaced 4 lazy-loaded panel wrappers with unified component wrappers (local state + compact mode), added 'Add to Board' buttons for Phonics and Sentence Expansion, updated section titles
+
+Stage Summary:
+- All 9 language widgets now follow unified canvas-primary architecture
+- 6 exercise-based widgets have student practice + teacher authoring modes
+- 3 interactive tools (POS Tagger, Story Elements Map, Paragraph Organizer) remain as-is
+- Total exercise count: 170+ across all widgets
+- Build passes with zero type errors and zero build errors

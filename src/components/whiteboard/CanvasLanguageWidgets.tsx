@@ -18,8 +18,32 @@ import {
   DEFAULT_POS_CONFIG,
   type POSWidgetConfig,
 } from './POSTaggerWidget'
+import {
+  SentenceStructureWidget,
+  DEFAULT_SENTENCE_CONFIG,
+  type SentenceStructureWidgetConfig,
+} from './SentenceStructureWidget'
+import {
+  PhonicsBuilderWidget,
+  DEFAULT_PHONICS_CONFIG,
+  type PhonicsWidgetConfig,
+} from './PhonicsBuilderWidget'
+import {
+  SentenceExpansionWidget,
+  DEFAULT_EXPANSION_CONFIG,
+  type ExpansionWidgetConfig,
+} from './SentenceExpansionWidget'
+import {
+  FigurativeLanguageWidget,
+  DEFAULT_FIGLANG_CONFIG,
+  type FigLangWidgetConfig,
+} from './FigurativeLanguageWidget'
 import type { PunctRule, PunctExercise } from '@/data/punctuation-exercises'
 import type { VocabCard, PosTag, CardLevel } from '@/data/vocab-cards'
+import type { SentenceType, SentenceExercise } from '@/data/sentence-structure-exercises'
+import type { PhonicsCategory, PhonicsExercise } from '@/data/phonics-exercises'
+import type { ExpansionType, ExpansionExercise } from '@/data/sentence-expansion-exercises'
+import type { FigLangType, FigLangExercise } from '@/data/figurative-language-exercises'
 
 // ============================================================
 // On-Canvas Language Widgets
@@ -102,115 +126,28 @@ function CanvasPOSTagger({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
-// 2. SENTENCE STRUCTURE BUILDER (on-canvas)
+// 2. SENTENCE STRUCTURE PRACTICE (unified component)
 // ============================================================
 
-const STRUCTURE_BANKS: Record<string, { label: string; description: string; words: string[] }> = {
-  simple: { label: 'Simple', description: 'One independent clause.', words: ['The','cat','dog','boy','girl','ran','jumped','sat','ate','read','the','a','ball','book','quickly','happily','yesterday','park','house','big'] },
-  compound: { label: 'Compound', description: 'Two clauses joined by a conjunction.', words: ['The','sun','moon','stars','set','rose','shone','appeared','faded',',','and','but','or','so','the','wind','blew','night','was','beautiful'] },
-  complex: { label: 'Complex', description: 'Independent + dependent clause.', words: ['Because','Although','If','When','While','it','we','they','rained','was','were','tired','stayed','went','inside','outside','the','test','finished','early'] },
-  'compound-complex': { label: 'Comp-Complex', description: '2+ independent + 1 dependent clause.', words: ['Although','Because','When','it','we','they','was','were','late','finished','started','the','project','game','and','but','the','teacher','team','pleased','won'] },
-}
-
-function CanvasSentenceBuilder({ element, isDark }: CanvasWidgetProps) {
-  const s = cs(isDark)
+function CanvasSentenceStructure({ element, isDark }: CanvasWidgetProps) {
   const updateConfig = useConfigUpdater(element.id)
   const cfg = element.config
-  const [activeType, setActiveType] = useState((cfg.activeType as string) || 'simple')
-  const [built, setBuilt] = useState<string[]>((cfg.built as string[]) || [])
+  const widgetConfig: SentenceStructureWidgetConfig = useMemo(() => ({
+    ...DEFAULT_SENTENCE_CONFIG,
+    ...(cfg as Partial<SentenceStructureWidgetConfig>),
+    filterTypes: (cfg.filterTypes as SentenceType[] | undefined) || [],
+    exerciseIds: (cfg.exerciseIds as string[] | undefined) || [],
+    customExercises: (cfg.customExercises as SentenceExercise[] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string] | undefined) || ['', '', ''],
+    teacherExplanations: (cfg.teacherExplanations as [string, string, string] | undefined) || ['', '', ''],
+  }), [cfg])
 
-  const bank = STRUCTURE_BANKS[activeType] || STRUCTURE_BANKS['simple']
-
-  const addWord = useCallback((word: string) => {
-    setBuilt(prev => {
-      const next = [...prev, word]
-      updateConfig({ activeType, built: next })
-      return next
-    })
-  }, [activeType, updateConfig])
-
-  const removeWord = useCallback((idx: number) => {
-    setBuilt(prev => {
-      const next = prev.filter((_, i) => i !== idx)
-      updateConfig({ activeType, built: next })
-      return next
-    })
-  }, [activeType, updateConfig])
-
-  const clearBuilt = useCallback(() => {
-    setBuilt([])
-    updateConfig({ activeType, built: [] })
-  }, [activeType, updateConfig])
-
-  const switchType = useCallback((t: string) => {
-    setActiveType(t)
-    setBuilt([])
-    updateConfig({ activeType: t, built: [] })
+  const handleChange = useCallback((patch: Partial<SentenceStructureWidgetConfig>) => {
+    updateConfig(patch)
   }, [updateConfig])
 
-  const getBreakdown = () => {
-    const sentence = built.join(' ')
-    if (activeType === 'simple') return 'Simple: One subject-verb pair.'
-    if (activeType === 'compound') {
-      const parts = sentence.split(/\b(and|but|or|so)\b/i)
-      if (parts.length >= 3) return 'Compound: "' + parts[0].trim() + '" [' + parts[1] + '] "' + parts[2].trim() + '"'
-      return 'Compound: Add two clauses with and/but/or/so.'
-    }
-    if (activeType === 'complex') {
-      const markers = ['because','although','if','when','while']
-      for (const m of markers) {
-        if (sentence.toLowerCase().indexOf(m) >= 0) return 'Complex: "' + m + '" starts the dependent clause.'
-      }
-      return 'Complex: Use a subordinating conjunction.'
-    }
-    return 'Compound-Complex: 2+ independent + 1 dependent clause.'
-  }
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: 'inherit' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        {Object.keys(STRUCTURE_BANKS).map(key => (
-          <button key={key} onClick={() => switchType(key)} style={s.btn(activeType === key)}>
-            {STRUCTURE_BANKS[key].label}
-          </button>
-        ))}
-      </div>
-      <div style={{ fontSize: 10, color: s.text, lineHeight: 1.3 }}>{bank.description}</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        {bank.words.map((word, i) => (
-          <button key={word + '-' + i} onClick={() => addWord(word)} style={{
-            padding: '2px 5px', borderRadius: 3, fontSize: 10, cursor: 'pointer' as const,
-            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-            border: '1px solid ' + s.border, color: s.bright,
-          }}>{word}</button>
-        ))}
-      </div>
-      <div style={{
-        minHeight: 30, padding: '4px 6px', borderRadius: 4,
-        background: isDark ? 'rgba(5,150,105,0.06)' : 'rgba(5,150,105,0.04)',
-        border: '1px solid ' + (isDark ? 'rgba(5,150,105,0.15)' : 'rgba(5,150,105,0.12)'),
-        display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center',
-      }}>
-        {built.length === 0 && <span style={{ fontSize: 10, color: s.text, opacity: 0.5 }}>Click words to build...</span>}
-        {built.map((w, i) => (
-          <span key={i} onClick={() => removeWord(i)} style={{
-            fontSize: 11, color: '#34d399', cursor: 'pointer' as const, padding: '1px 3px',
-            borderRadius: 2, background: 'rgba(5,150,105,0.12)',
-          }} title="Click to remove">{w}</span>
-        ))}
-      </div>
-      <div style={{ display: 'flex', gap: 4 }}>
-        <button onClick={clearBuilt} style={s.btn(false)}>Clear</button>
-      </div>
-      {built.length > 0 && (
-        <div style={{ padding: '4px 6px', borderRadius: 4, fontSize: 10, color: s.text, lineHeight: 1.4, background: s.surface, border: '1px solid ' + (isDark ? 'rgba(5,150,105,0.15)' : 'rgba(5,150,105,0.12)') }}>
-          {getBreakdown()}
-        </div>
-      )}
-    </div>
-  )
+  return <SentenceStructureWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
 }
-
 // ============================================================
 // 3. STORY ELEMENTS MAP (on-canvas)
 // ============================================================
@@ -430,172 +367,27 @@ function CanvasVocabCards({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
-// 6. FIGURATIVE LANGUAGE FINDER (on-canvas)
+// 6. FIGURATIVE LANGUAGE PRACTICE (unified component)
 // ============================================================
 
-type FigType = 'simile' | 'metaphor' | 'personification' | 'hyperbole' | 'alliteration' | 'onomatopoeia'
-
-const FIG_TYPES: { id: FigType; label: string; color: string }[] = [
-  { id: 'simile', label: 'Simile', color: '#3b82f6' },
-  { id: 'metaphor', label: 'Metaphor', color: '#8b5cf6' },
-  { id: 'personification', label: 'Personif.', color: '#ec4899' },
-  { id: 'hyperbole', label: 'Hyperbole', color: '#f59e0b' },
-  { id: 'alliteration', label: 'Alliter.', color: '#10b981' },
-  { id: 'onomatopoeia', label: 'Onomatop.', color: '#06b6d4' },
-]
-
-const ONOMATOPOEIA = new Set(['bang','crash','buzz','hiss','pop','sizzle','roar','whisper','click','boom','splash','thud','crackle','clang','moo','oink','meow','bark','hoot','chirp'])
-const HUMAN_VERBS = new Set(['whispered','danced','cried','sang','smiled','laughed','spoke','shouted','screamed','watched','listened','breathed','stared','frowned','smirked','grinned','wept','sighed','sleeping','running','walking','thinking','dreaming'])
-const NON_HUMAN = new Set(['wind','sun','moon','tree','trees','river','ocean','mountain','mountains','cloud','clouds','rain','storm','fire','stars','sky','sea','flower','flowers','rock','rocks','wave','waves','forest','house','door','clock','road','city','garden','night','day','shadow','shadows','earth','world','heart','time'])
-
-interface FoundFig { start: number; end: number; type: FigType; text: string }
-
-function findFigurativeLang(text: string, activeTypes: Set<FigType>): FoundFig[] {
-  const results: FoundFig[] = []
-  const lower = text.toLowerCase()
-
-  // Simile: like/as + noun phrase
-  if (activeTypes.has('simile')) {
-    const simileRe = /\b(\w+)\s+(like|as)\s+(a|an|the)?\s*\w+/gi
-    let m
-    while ((m = simileRe.exec(text)) !== null) {
-      results.push({ start: m.index, end: m.index + m[0].length, type: 'simile', text: m[0] })
-    }
-  }
-
-  // Metaphor: is/was/were/are + article + noun (heuristic)
-  if (activeTypes.has('metaphor')) {
-    const metaphorRe = /\b(he|she|it|they|this|that|my|his|her|our)\s+(is|was|were|are)\s+(a|an|the)\s+\w+/gi
-    let m
-    while ((m = metaphorRe.exec(text)) !== null) {
-      // Only add if not already a simile
-      const overlap = results.some(r => m!.index >= r.start && m!.index + m![0].length <= r.end)
-      if (!overlap) results.push({ start: m.index, end: m.index + m[0].length, type: 'metaphor', text: m[0] })
-    }
-  }
-
-  // Personification: non-human noun + human verb
-  if (activeTypes.has('personification')) {
-    const words = text.split(/\s+/)
-    for (let i = 0; i < words.length - 1; i++) {
-      if (NON_HUMAN.has(words[i].toLowerCase()) && HUMAN_VERBS.has(words[i + 1].toLowerCase().replace(/[^a-z]/g, ''))) {
-        const start = text.indexOf(words[i])
-        const end = text.indexOf(words[i + 1]) + words[i + 1].length
-        results.push({ start, end, type: 'personification', text: words[i] + ' ' + words[i + 1] })
-      }
-    }
-  }
-
-  // Hyperbole: extreme words
-  if (activeTypes.has('hyperbole')) {
-    const hyperWords = ['million','billion','infinity','forever','never','always','died','killed','exploded','mountain','ocean','universe','lightning','impossible','every single','the entire','the whole world']
-    for (const hw of hyperWords) {
-      const idx = lower.indexOf(hw)
-      if (idx >= 0) results.push({ start: idx, end: idx + hw.length, type: 'hyperbole', text: text.substr(idx, hw.length) })
-    }
-  }
-
-  // Alliteration: consecutive words starting with same sound
-  if (activeTypes.has('alliteration')) {
-    const words = text.split(/\s+/).filter(Boolean)
-    for (let i = 0; i < words.length - 1; i++) {
-      const w1 = words[i].replace(/[^a-z]/gi, '').toLowerCase()
-      const w2 = words[i + 1].replace(/[^a-z]/gi, '').toLowerCase()
-      if (w1.length > 0 && w2.length > 0 && w1[0] === w2[0] && w1.length > 2 && w2.length > 2) {
-        const start = text.indexOf(words[i])
-        const end = text.indexOf(words[i + 1]) + words[i + 1].length
-        results.push({ start, end, type: 'alliteration', text: words[i] + ' ' + words[i + 1] })
-      }
-    }
-  }
-
-  // Onomatopoeia
-  if (activeTypes.has('onomatopoeia')) {
-    const words = text.split(/\s+/)
-    for (const w of words) {
-      const clean = w.replace(/[^a-z]/gi, '').toLowerCase()
-      if (ONOMATOPOEIA.has(clean)) {
-        const idx = lower.indexOf(clean)
-        results.push({ start: idx, end: idx + clean.length, type: 'onomatopoeia', text: w })
-      }
-    }
-  }
-
-  return results.sort((a, b) => a.start - b.start)
-}
-
-function CanvasFigLangFinder({ element, isDark }: CanvasWidgetProps) {
-  const s = cs(isDark)
+function CanvasFigurativeLanguage({ element, isDark }: CanvasWidgetProps) {
   const updateConfig = useConfigUpdater(element.id)
   const cfg = element.config
-  const [text, setText] = useState((cfg.text as string) || '')
-  const [activeTypes, setActiveTypes] = useState<Set<FigType>>(() => {
-    const saved = cfg.activeTypes as FigType[] | undefined
-    return saved ? new Set(saved) : new Set<FigType>()
-  })
+  const widgetConfig: FigLangWidgetConfig = useMemo(() => ({
+    ...DEFAULT_FIGLANG_CONFIG,
+    ...(cfg as Partial<FigLangWidgetConfig>),
+    filterTypes: (cfg.filterTypes as FigLangType[] | undefined) || [],
+    exerciseIds: (cfg.exerciseIds as string[] | undefined) || [],
+    customExercises: (cfg.customExercises as FigLangExercise[] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string] | undefined) || ['', '', ''],
+    teacherExplanations: (cfg.teacherExplanations as [string, string, string] | undefined) || ['', '', ''],
+  }), [cfg])
 
-  const toggleType = (t: FigType) => {
-    setActiveTypes(prev => {
-      const next = new Set(prev)
-      if (next.has(t)) { next.delete(t) } else { next.add(t) }
-      updateConfig({ text, activeTypes: [...next] as FigType[] })
-      return next
-    })
-  }
+  const handleChange = useCallback((patch: Partial<FigLangWidgetConfig>) => {
+    updateConfig(patch)
+  }, [updateConfig])
 
-  const handleTextChange = (v: string) => {
-    setText(v)
-    updateConfig({ text: v, activeTypes: [...activeTypes] as FigType[] })
-  }
-
-  const found = useMemo(() => {
-    if (!text.trim() || activeTypes.size === 0) return []
-    return findFigurativeLang(text, activeTypes)
-  }, [text, activeTypes])
-
-  const figColorMap: Record<string, string> = {}
-  FIG_TYPES.forEach(f => { figColorMap[f.id] = f.color })
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'inherit' }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: s.bright }}>Figurative Language Finder</div>
-      <textarea
-        value={text}
-        onChange={e => handleTextChange(e.target.value)}
-        placeholder="Paste a passage to find figurative language..."
-        rows={3}
-        style={{ ...s.input, width: '100%', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.5 }}
-      />
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-        {FIG_TYPES.map(f => (
-          <button key={f.id} onClick={() => toggleType(f.id)} style={{
-            ...s.btn(activeTypes.has(f.id)),
-            border: activeTypes.has(f.id) ? '1px solid ' + f.color + '60' : undefined,
-            color: activeTypes.has(f.id) ? f.color : undefined,
-            background: activeTypes.has(f.id) ? f.color + '18' : undefined,
-          }}>{f.label}</button>
-        ))}
-      </div>
-      {found.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: s.text }}>FOUND ({found.length})</div>
-          {found.map((f, i) => (
-            <div key={i} style={{
-              padding: '3px 6px', borderRadius: 3, fontSize: 10, lineHeight: 1.4,
-              background: (figColorMap[f.type] || '#94a3b8') + '15',
-              borderLeft: '3px solid ' + (figColorMap[f.type] || '#94a3b8'),
-              color: s.bright,
-            }}>
-              <span style={{ fontWeight: 600, color: figColorMap[f.type] || s.text, textTransform: 'uppercase', fontSize: 8, marginRight: 4 }}>
-                {f.type}
-              </span>
-              "{f.text}"
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
+  return <FigurativeLanguageWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
 }
 
 // ============================================================
@@ -605,11 +397,9 @@ function CanvasFigLangFinder({ element, isDark }: CanvasWidgetProps) {
 function CanvasPunctuationPractice({ element, isDark }: CanvasWidgetProps) {
   const updateConfig = useConfigUpdater(element.id)
   const cfg = element.config
-  // Merge defaults with persisted config
   const widgetConfig: PunctWidgetConfig = useMemo(() => ({
     ...DEFAULT_PUNCT_CONFIG,
     ...(cfg as Partial<PunctWidgetConfig>),
-    // Ensure arrays are not undefined
     filterRules: (cfg.filterRules as PunctRule[] | undefined) || [],
     exerciseIds: (cfg.exerciseIds as string[] | undefined) || [],
     customExercises: (cfg.customExercises as PunctExercise[] | undefined) || [],
@@ -625,17 +415,67 @@ function CanvasPunctuationPractice({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
+// 8. PHONICS PRACTICE (unified component)
+// ============================================================
+
+function CanvasPhonicsPractice({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: PhonicsWidgetConfig = useMemo(() => ({
+    ...DEFAULT_PHONICS_CONFIG,
+    ...(cfg as Partial<PhonicsWidgetConfig>),
+    filterCategories: (cfg.filterCategories as PhonicsCategory[] | undefined) || [],
+    exerciseIds: (cfg.exerciseIds as string[] | undefined) || [],
+    customExercises: (cfg.customExercises as PhonicsExercise[] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string] | undefined) || ['', '', ''],
+    teacherExplanations: (cfg.teacherExplanations as [string, string, string] | undefined) || ['', '', ''],
+  }), [cfg])
+
+  const handleChange = useCallback((patch: Partial<PhonicsWidgetConfig>) => {
+    updateConfig(patch)
+  }, [updateConfig])
+
+  return <PhonicsBuilderWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 9. SENTENCE EXPANSION PRACTICE (unified component)
+// ============================================================
+
+function CanvasSentenceExpansion({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: ExpansionWidgetConfig = useMemo(() => ({
+    ...DEFAULT_EXPANSION_CONFIG,
+    ...(cfg as Partial<ExpansionWidgetConfig>),
+    filterTypes: (cfg.filterTypes as ExpansionType[] | undefined) || [],
+    exerciseIds: (cfg.exerciseIds as string[] | undefined) || [],
+    customExercises: (cfg.customExercises as ExpansionExercise[] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string] | undefined) || ['', '', ''],
+    teacherExplanations: (cfg.teacherExplanations as [string, string, string] | undefined) || ['', '', ''],
+  }), [cfg])
+
+  const handleChange = useCallback((patch: Partial<ExpansionWidgetConfig>) => {
+    updateConfig(patch)
+  }, [updateConfig])
+
+  return <SentenceExpansionWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
 // Component Registry & Exports
 // ============================================================
 
 const LANG_WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
   'lang-pos-tagger': CanvasPOSTagger,
-  'lang-sentence-structure': CanvasSentenceBuilder,
+  'lang-sentence-structure': CanvasSentenceStructure,
   'lang-story-elements': CanvasStoryMap,
   'lang-paragraph-organizer': CanvasParagraphOrganizer,
   'lang-vocab-flashcards': CanvasVocabCards,
-  'lang-figurative-language': CanvasFigLangFinder,
+  'lang-figurative-language': CanvasFigurativeLanguage,
   'lang-punctuation': CanvasPunctuationPractice,
+  'lang-phonics': CanvasPhonicsPractice,
+  'lang-sentence-expansion': CanvasSentenceExpansion,
 }
 
 export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -647,12 +487,14 @@ export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetPr
 export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown> {
   switch (kind) {
     case 'lang-pos-tagger': return { ...DEFAULT_POS_CONFIG }
-    case 'lang-sentence-structure': return { activeType: 'simple', built: [] }
+    case 'lang-sentence-structure': return { ...DEFAULT_SENTENCE_CONFIG }
     case 'lang-story-elements': return { storyData: DEFAULT_STORY, showViz: false }
     case 'lang-paragraph-organizer': return { typeIndex: 0, values: {} }
     case 'lang-vocab-flashcards': return { ...DEFAULT_VOCAB_CONFIG }
-    case 'lang-figurative-language': return { text: '', activeTypes: [] }
+    case 'lang-figurative-language': return { ...DEFAULT_FIGLANG_CONFIG }
     case 'lang-punctuation': return { ...DEFAULT_PUNCT_CONFIG }
+    case 'lang-phonics': return { ...DEFAULT_PHONICS_CONFIG }
+    case 'lang-sentence-expansion': return { ...DEFAULT_EXPANSION_CONFIG }
     default: return {}
   }
 }
@@ -660,22 +502,26 @@ export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown
 export function getLangWidgetDefaultSize(kind: string): { width: number; height: number } {
   switch (kind) {
     case 'lang-pos-tagger': return { width: 340, height: 420 }
-    case 'lang-sentence-structure': return { width: 340, height: 380 }
+    case 'lang-sentence-structure': return { width: 380, height: 520 }
     case 'lang-story-elements': return { width: 360, height: 440 }
     case 'lang-paragraph-organizer': return { width: 340, height: 480 }
     case 'lang-vocab-flashcards': return { width: 300, height: 400 }
-    case 'lang-figurative-language': return { width: 340, height: 420 }
+    case 'lang-figurative-language': return { width: 380, height: 520 }
     case 'lang-punctuation': return { width: 380, height: 520 }
+    case 'lang-phonics': return { width: 380, height: 520 }
+    case 'lang-sentence-expansion': return { width: 380, height: 520 }
     default: return { width: 320, height: 360 }
   }
 }
 
 export const LANG_WIDGET_KIND_LABELS: Record<string, string> = {
   'lang-pos-tagger': 'Parts of Speech Tagger',
-  'lang-sentence-structure': 'Sentence Structure Builder',
+  'lang-sentence-structure': 'Sentence Structure Practice',
   'lang-story-elements': 'Story Elements Map',
   'lang-paragraph-organizer': 'Paragraph Organizer',
   'lang-vocab-flashcards': 'Vocabulary Flashcards',
-  'lang-figurative-language': 'Figurative Language Finder',
+  'lang-figurative-language': 'Figurative Language Practice',
   'lang-punctuation': 'Punctuation Practice',
+  'lang-phonics': 'Phonics Practice',
+  'lang-sentence-expansion': 'Sentence Expansion Practice',
 }

@@ -661,6 +661,8 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'lang-vocab-flashcards': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-figurative-language': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-punctuation': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-phonics': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  'lang-sentence-expansion': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
 }
 
 export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -703,6 +705,8 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'lang-vocab-flashcards': return getLangWidgetDefaultConfig('lang-vocab-flashcards')
     case 'lang-figurative-language': return getLangWidgetDefaultConfig('lang-figurative-language')
     case 'lang-punctuation': return getLangWidgetDefaultConfig('lang-punctuation')
+    case 'lang-phonics': return getLangWidgetDefaultConfig('lang-phonics')
+    case 'lang-sentence-expansion': return getLangWidgetDefaultConfig('lang-sentence-expansion')
     default: return {}
   }
 }
@@ -728,6 +732,8 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'lang-vocab-flashcards': return getLangWidgetDefaultSize('lang-vocab-flashcards')
     case 'lang-figurative-language': return getLangWidgetDefaultSize('lang-figurative-language')
     case 'lang-punctuation': return getLangWidgetDefaultSize('lang-punctuation')
+    case 'lang-phonics': return getLangWidgetDefaultSize('lang-phonics')
+    case 'lang-sentence-expansion': return getLangWidgetDefaultSize('lang-sentence-expansion')
     default: return { width: 300, height: 300 }
   }
 }
