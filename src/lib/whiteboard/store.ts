@@ -538,6 +538,10 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
                         y2: (el as { y2: number }).y2 + dy,
                       }
                     : {}),
+                  // For freehand, also move all points
+                  ...(el.type === 'freehand' && el.points
+                    ? { points: el.points.map(p => ({ ...p, x: p.x + dx, y: p.y + dy })) }
+                    : {}),
                 } as WhiteboardElement)
               : el
           ),
@@ -837,18 +841,12 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       if (shouldAdd) {
         // For freehand, compute bounding box
         if (currentElement.type === 'freehand' && currentElement.points.length > 0) {
-          // Apply Ramer-Douglas-Peucker simplification (P-03)
-          const drawingPts = get().drawingPoints
-          const simplifiedPoints = simplifyPoints(drawingPts)
-          // Build a pressure lookup since RDP preserves original points
-          const pressureMap = new Map<string, number>()
-          for (const p of drawingPts) {
-            pressureMap.set(`${p.x.toFixed(2)},${p.y.toFixed(2)}`, p.pressure || 0.5)
-          }
-          const pointsToUse = simplifiedPoints.map(p => ({
-            ...p,
-            pressure: pressureMap.get(`${p.x.toFixed(2)},${p.y.toFixed(2)}`) ?? 0.5
-          }))
+          // Use raw drawing points directly — perfect-freehand's built-in
+          // streamline smoothing handles point density optimally.
+          // RDP simplification was causing visible compression/shrinkage
+          // because perfect-freehand produces different outlines with
+          // sparser input points (~5-8% width/height reduction at tolerance=1).
+          const pointsToUse = get().drawingPoints
 
           let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
           for (const p of pointsToUse) {
