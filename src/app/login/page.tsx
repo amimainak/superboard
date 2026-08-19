@@ -11,13 +11,12 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
+    const supabase = getSupabaseBrowserClient()
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
       setError(error.message)
@@ -32,6 +31,7 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
+    const supabase = getSupabaseBrowserClient()
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -52,6 +52,7 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     try {
+      const supabase = getSupabaseBrowserClient()
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {

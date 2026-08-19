@@ -6,7 +6,6 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const supabase = getSupabaseBrowserClient()
 
   const [name, setName] = useState('')
   const [bio, setBio] = useState('')
@@ -18,6 +17,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const loadProfile = async () => {
+      const supabase = getSupabaseBrowserClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         router.push('/login')
@@ -38,7 +38,7 @@ export default function ProfilePage() {
       setLoading(false)
     }
     loadProfile()
-  }, [router, supabase])
+  }, [router])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,6 +65,7 @@ export default function ProfilePage() {
   }
 
   const handleLogout = async () => {
+    const supabase = getSupabaseBrowserClient()
     await supabase.auth.signOut()
     router.push('/login')
   }

@@ -116,7 +116,6 @@ function UpgradeSuccessBanner({ onDismiss }: { onDismiss: () => void }) {
 function DashboardPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = getSupabaseBrowserClient()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [rooms, setRooms] = useState<Room[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
@@ -162,6 +161,7 @@ function DashboardPage() {
   }, [searchParams])
 
   const handleLogout = async () => {
+    const supabase = getSupabaseBrowserClient()
     await supabase.auth.signOut()
     router.push('/login')
   }
