@@ -45,6 +45,7 @@ export function initRealtimeSync(
   store: WhiteboardStoreLike
 ): () => void {
   let syncedOnce = false
+  let isSyncing = false // Suppress outbound broadcasts during incoming sync
   const supabase = getSupabaseBrowserClient()
   const channelName = `room:${roomId}`
 
@@ -124,16 +125,25 @@ export function initRealtimeSync(
       case 'full-sync-response': {
         const { elements, camera, pages, currentPageIndex } = payload.payload
         if (!syncedOnce || elements.length > store.elements.length) {
-          if (elements.length > 0) {
-            store.loadState(elements)
+          isSyncing = true // Suppress outbound broadcasts during sync
+          try {
+            if (elements.length > 0) {
+              store.loadState(elements)
+            }
+            if (pages && pages.length > 0) {
+              store.setPages(pages)
+            }
+            if (currentPageIndex !== undefined) {
+              store.setCurrentPageIndex(currentPageIndex)
+            }
+            syncedOnce = true
+            // Update baseline so the polling diff doesn't re-broadcast synced state
+            prevElementsJson = JSON.stringify(store.elements)
+            prevCameraJson = JSON.stringify(store.camera)
+          } finally {
+            // Use setTimeout to allow any Zustand re-renders to settle before resuming
+            setTimeout(() => { isSyncing = false }, 200)
           }
-          if (pages && pages.length > 0) {
-            store.setPages(pages)
-          }
-          if (currentPageIndex !== undefined) {
-            store.setCurrentPageIndex(currentPageIndex)
-          }
-          syncedOnce = true
         }
         break
       }
@@ -166,6 +176,9 @@ export function initRealtimeSync(
   // Poll store changes at 60ms interval (lightweight approach)
   // This avoids deep store subscriptions and works with Zustand's immutable updates
   const interval = setInterval(() => {
+    // Suppress outbound broadcasts while processing incoming sync
+    if (isSyncing) return
+
     const state = (store as any).getState ? (store as any).getState() : store
     if (!state) return
 

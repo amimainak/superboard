@@ -23,8 +23,6 @@ const SUBJECT_LABELS: Record<WidgetSubject, string> = {
   other: 'Other',
 }
 
-const SUBJECT_ICONS: Partial<Record<WidgetSubject, React.ReactNode>> = {}
-
 const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   free: { bg: 'rgba(34,197,94,0.12)', text: '#22c55e', border: 'rgba(34,197,94,0.25)' },
   pro: { bg: 'rgba(168,85,247,0.12)', text: '#c084fc', border: 'rgba(168,85,247,0.25)' },
@@ -70,22 +68,32 @@ export function WidgetBrowseModal() {
   const handleToggle = async (id: MarketplaceToolId, isInstalled: boolean) => {
     setSaving(id)
     try {
+      // Read latest state from store to avoid stale closure
+      const currentInstalled = useWidgetStore.getState().installedTools
       if (isInstalled) {
         uninstallTool(id)
       } else {
         installTool(id)
       }
-      // Persist to server
-      const newSet = new Set(installedTools)
+      // Persist to server — compute from latest store state
+      const newSet = new Set(currentInstalled)
       if (isInstalled) newSet.delete(id)
       else newSet.add(id)
-      await fetch('/api/user/widgets', {
+      const res = await fetch('/api/user/widgets', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ installedTools: Array.from(newSet) }),
       })
+      if (!res.ok) {
+        // Rollback on failure
+        if (isInstalled) installTool(id)
+        else uninstallTool(id)
+      }
     } catch (err) {
       console.error('Failed to persist widget install:', err)
+      // Rollback on network error
+      if (isInstalled) installTool(id)
+      else uninstallTool(id)
     } finally {
       setSaving(null)
     }

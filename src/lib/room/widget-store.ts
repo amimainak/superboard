@@ -62,7 +62,7 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
   // Analytics widgets
-  { id: 'analytics', label: 'Analytics', icon: 'BarChart3', section: 'tools' },
+  { id: 'analytics', label: 'Analytics', icon: 'Activity', section: 'tools' },
   { id: 'parents', label: 'Parent Portal', icon: 'UsersRound', section: 'tools' },
   { id: 'scheduling', label: 'Scheduling', icon: 'Calendar', section: 'tools' },
   { id: 'agency', label: 'Agency', icon: 'Building2', section: 'tools' },
@@ -169,12 +169,14 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   setPanelMode: (mode) => set({ panelMode: mode }),
 
   installTool: (id) => set((state) => {
+    if (state.installedTools.has(id)) return {} // No-op if already installed
     const next = new Set(state.installedTools)
     next.add(id)
     return { installedTools: next }
   }),
 
   uninstallTool: (id) => set((state) => {
+    if (!state.installedTools.has(id)) return {} // No-op if not installed
     const next = new Set(state.installedTools)
     next.delete(id)
     return { installedTools: next }

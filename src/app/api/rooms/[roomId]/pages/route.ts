@@ -54,15 +54,14 @@ export async function PUT(
 
     const pages = parsed.pages
 
-    await (supabase as any).from('BoardPage').delete().eq('roomId', roomId)
-
+    // Use upsert instead of delete+insert to prevent data loss on failure
     if (pages && pages.length > 0) {
       const rows = pages.map((p: { pageIndex: number; snapshot: any }) => ({
         roomId,
         pageIndex: p.pageIndex,
         snapshot: p.snapshot,
       }))
-      const { error } = await (supabase as any).from('BoardPage').insert(rows)
+      const { error } = await (supabase as any).from('BoardPage').upsert(rows, { onConflict: 'roomId,pageIndex' })
       if (error) throw error
     }
 

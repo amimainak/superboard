@@ -50,11 +50,12 @@ export async function POST(request: Request) {
     const { subject, brandingLogo, brandingColor } = parsed
 
     // Ensure User record exists (auto-create on first room creation)
+    // Only insert if missing — never overwrite existing tier/isAdmin
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
     await sb.from('User').upsert(
-      { id: user.id, email: user.email ?? '', tier: 'FREE', isAdmin: false },
-      { onConflict: 'id' }
+      { id: user.id, email: user.email ?? '' },
+      { onConflict: 'id', defaultToNull: false, ignoreDuplicates: true }
     )
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

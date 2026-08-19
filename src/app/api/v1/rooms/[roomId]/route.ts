@@ -29,6 +29,7 @@ export async function GET(
       .from('Room')
       .select('id, tutorId, subject, isActive, startedAt, endedAt, durationMinutes, brandingLogo, brandingColor, createdAt')
       .eq('id', roomId)
+      .eq('tutorId', auth.userId)
       .single()
 
     if (error || !room) {
@@ -116,6 +117,7 @@ export async function PATCH(
       .from('Room')
       .update(updates)
       .eq('id', roomId)
+      .eq('tutorId', auth.userId)
       .select('id, tutorId, subject, isActive, startedAt, endedAt, durationMinutes, brandingLogo, brandingColor, createdAt')
       .single()
 

@@ -31,6 +31,10 @@ export const HIGHLIGHT_OPTIONS = {
 /** Convert perfect-freehand outline points to an SVG path `d` attribute */
 export function getSvgPathFromStroke(stroke: Point[]): string {
   if (!stroke.length) return ''
+  if (stroke.length === 1) {
+    const p = Array.isArray(stroke[0]) ? { x: stroke[0][0], y: stroke[0][1] } : stroke[0]
+    return 'M ' + p.x + ',' + p.y + ' L ' + p.x + ',' + p.y
+  }
   // perfect-freehand v1.2.x returns points as [x, y] arrays;
   // normalise them to { x, y } objects for the SVG builder.
   const pts = stroke.map((p) =>
@@ -96,6 +100,7 @@ export function rotatePoint(point: Point, origin: Point, angleRad: number): Poin
 
 /** Normalize an angle to [-PI, PI] */
 export function normalizeAngle(a: number): number {
+  if (!Number.isFinite(a)) return 0
   while (a > Math.PI) a -= 2 * Math.PI
   while (a < -Math.PI) a += 2 * Math.PI
   return a

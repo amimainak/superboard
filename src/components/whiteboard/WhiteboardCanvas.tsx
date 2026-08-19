@@ -622,7 +622,7 @@ export function WhiteboardCanvas() {
         default: {
           // Math tools and any future tools — create element directly on click
           if (tool.startsWith('math-')) {
-            const el = createMathElement(tool, point, mathToolConfig, currentPageIndex)
+            const el = createMathElement(tool, point, mathToolConfig, currentPageIndex, isDark)
             if (el) {
               pushHistory()
               addElement(el)
@@ -829,11 +829,9 @@ export function WhiteboardCanvas() {
 
       // Finish element move — push history only if we actually moved
       if (lastMovePoint.current) {
-        // Check if we moved from the original start point
-        const startClient = lastPanPoint.current
-        if (startClient && (Math.abs(e.clientX - startClient.x) > 2 || Math.abs(e.clientY - startClient.y) > 2)) {
-          pushHistory()
-        }
+        // lastMovePoint stores the initial position when move started.
+        // If it's null now (nulled during pan), the move already pushed history.
+        pushHistory()
         lastMovePoint.current = null
         lastPanPoint.current = null
         setAlignGuides([])
@@ -857,6 +855,10 @@ export function WhiteboardCanvas() {
         boxSelectStart.current = null
         setBoxSelect(null)
       }
+
+// Flush any pending rAF batched points BEFORE finishDrawing (P-01)
+      // so no points are lost after isDrawing is set to false.
+      cancelPendingRaf()
 
       if (isDrawing) {
         const el = finishDrawing()
@@ -882,9 +884,6 @@ export function WhiteboardCanvas() {
           })
         }
       }
-
-      // Flush any pending rAF batched points (P-01)
-      cancelPendingRaf()
 
       // Laser: stop drawing on pointer up, trigger fade
       if (tool === 'laser' && isLaserActive.current) {
@@ -1348,7 +1347,7 @@ export function WhiteboardCanvas() {
             whiteSpace: 'nowrap',
           }}
         >
-          ✏️ Drawing is disabled
+          Drawing is disabled
         </div>
       )}
       {/* Zoom indicator */}

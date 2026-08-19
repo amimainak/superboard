@@ -545,18 +545,48 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     resizeSelected: (newBounds) =>
       set((s) => {
         const idSet = new Set(s.selectedIds)
+        // Compute bounding box of current selection
+        const selected = s.elements.filter((el) => idSet.has(el.id) && !el.locked)
+        if (selected.length === 0) return {}
+        let selMinX = Infinity, selMinY = Infinity, selMaxX = -Infinity, selMaxY = -Infinity
+        for (const el of selected) {
+          const b = getElementBounds(el)
+          if (b.x < selMinX) selMinX = b.x
+          if (b.y < selMinY) selMinY = b.y
+          if (b.x + b.width > selMaxX) selMaxX = b.x + b.width
+          if (b.y + b.height > selMaxY) selMaxY = b.y + b.height
+        }
+        const selW = selMaxX - selMinX || 1
+        const selH = selMaxY - selMinY || 1
+        const scaleX = newBounds.width / selW
+        const scaleY = newBounds.height / selH
+
         return {
-          elements: s.elements.map((el) =>
-            idSet.has(el.id) && !el.locked
-              ? ({
-                  ...el,
-                  x: newBounds.x,
-                  y: newBounds.y,
-                  width: newBounds.width,
-                  height: newBounds.height,
-                } as WhiteboardElement)
-              : el
-          ),
+          elements: s.elements.map((el) => {
+            if (!idSet.has(el.id) || el.locked) return el
+            const b = getElementBounds(el)
+            // Position relative to selection bounding box, then scale and offset
+            const relX = b.x - selMinX
+            const relY = b.y - selMinY
+            const newX = newBounds.x + relX * scaleX
+            const newY = newBounds.y + relY * scaleY
+            const newW = b.width * scaleX
+            const newH = b.height * scaleY
+            return {
+              ...el,
+              x: newX,
+              y: newY,
+              width: newW,
+              height: newH,
+              // For line/arrow, also scale the end point
+              ...(el.type === 'line' || el.type === 'arrow'
+                ? {
+                    x2: newBounds.x + ((el as { x2: number }).x2 - selMinX) * scaleX,
+                    y2: newBounds.y + ((el as { y2: number }).y2 - selMinY) * scaleY,
+                  }
+                : {}),
+            } as WhiteboardElement
+          }),
         }
       }),
 

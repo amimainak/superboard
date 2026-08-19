@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     let query = sb
       .from('Room')
       .select('id, tutorId, subject, isActive, startedAt, endedAt, durationMinutes, brandingLogo, brandingColor, createdAt')
+      .eq('tutorId', auth.userId)
       .order('createdAt', { ascending: false })
       .range(offset, offset + limit - 1)
 
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
         subject,
         brandingLogo: brandingLogo || null,
         brandingColor: brandingColor || null,
-        durationMinutes: durationMinutes || 60,
+        durationMinutes: durationMinutes ?? 60,
         isActive: true,
         startedAt: new Date().toISOString(),
       })

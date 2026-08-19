@@ -43,10 +43,8 @@ export async function exportAsPng(
   canvas.height = containerHeight * 2
   const ctx = canvas.getContext('2d')!
 
-  if (isDark) {
-    ctx.fillStyle = '#0f172a'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-  }
+  ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
   URL.revokeObjectURL(url)
@@ -237,6 +235,17 @@ function buildExportSvg(
       case 'laser':
         // Lasers are ephemeral — skip in export
         break
+
+      default: {
+        // Fallback for math elements and any other types: render as labeled bounding box
+        const bounds = getElementBounds(el)
+        if (bounds.width > 0 && bounds.height > 0) {
+          shapesSvg += `<rect x="${bounds.x}" y="${bounds.y}" width="${bounds.width}" height="${bounds.height}" rx="4" fill="${el.fillColor || 'none'}" stroke="${el.strokeColor}" stroke-width="${el.strokeWidth}" opacity="${el.opacity}" stroke-dasharray="4,4" />\n`
+          const typeLabel = el.type.replace('math-', '').replace(/-/g, ' ')
+          shapesSvg += `<text x="${bounds.x + bounds.width / 2}" y="${bounds.y + bounds.height / 2}" font-size="11" fill="${el.strokeColor}" opacity="0.5" text-anchor="middle" dominant-baseline="middle">[${typeLabel}]</text>\n`
+        }
+        break
+      }
     }
   }
 

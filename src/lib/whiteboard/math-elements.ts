@@ -44,9 +44,11 @@ export function createMathElement(
   tool: ToolId,
   point: Point,
   config: MathToolConfig,
-  pageIndex: number
+  pageIndex: number,
+  isDark = false
 ): WhiteboardElement | null {
-  const b = base(pageIndex, point.x, point.y)
+  const stroke = isDark ? '#e2e8f0' : '#1e293b'
+  const b = { ...base(pageIndex, point.x, point.y), strokeColor: stroke }
   const divisions = config.divisions || 4
   const shaded = config.shaded || []
 
@@ -85,9 +87,6 @@ export function createMathElement(
         shaded: [...shaded],
         label,
         orientation: 'horizontal',
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
-        strokeWidth: 2,
       } as FractionBarElement
     }
 
@@ -114,8 +113,6 @@ export function createMathElement(
         ticks,
         labels,
         plottedPoints: [],
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
         strokeWidth: 2,
       } as NumberLineElement
     }
@@ -133,8 +130,6 @@ export function createMathElement(
         degrees: 0,
         showArc: true,
         showLabel: true,
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
         strokeWidth: 2,
       } as AngleElement
     }
@@ -152,8 +147,6 @@ export function createMathElement(
         sides,
         showAngleMeasures: true,
         showSideLengths: false,
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
         strokeWidth: 2,
       } as PolygonElement
     }
@@ -173,8 +166,6 @@ export function createMathElement(
         type: 'math-coordinate-plane',
         xMin, xMax, yMin, yMax, step,
         plottedPoints: [],
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
         strokeWidth: 1.5,
       } as CoordinatePlaneElement
     }
@@ -195,7 +186,6 @@ export function createMathElement(
           ? ['A', 'B']
           : ['A', 'B', 'C'] as [string, string, string],
         strokeColor: '#3b82f6',
-        fillColor: 'transparent',
         strokeWidth: 2,
       } as VennElement
     }
@@ -215,8 +205,6 @@ export function createMathElement(
         categories,
         values,
         color: colors[0],
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
         strokeWidth: 1.5,
       } as BarChartElement
     }
@@ -238,8 +226,6 @@ export function createMathElement(
         type: 'math-pie-chart',
         title: config.chartTitle || '',
         slices,
-        strokeColor: '#1e293b',
-        fillColor: 'transparent',
         strokeWidth: 2,
       } as PieChartElement
     }
