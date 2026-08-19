@@ -114,3 +114,22 @@ Stage Summary:
 - Persistence: installed tools saved to User.installedWidgets via Supabase
 - Files created: widget-registry.ts, LanguagePhase2Utilities.tsx, WidgetBrowseModal.tsx, api/user/widgets/route.ts
 - Files modified: widget-store.ts, LanguageToolkit.tsx, WidgetToggleBar.tsx, dashboard/page.tsx, widgets/index.ts
+---
+Task ID: 1
+Agent: main
+Task: Build language widget-on-canvas placement system (7 ELA tools)
+
+Work Log:
+- Analyzed existing architecture: WidgetElement type, CanvasWidgets.tsx, ElementRenderer.tsx foreignObject, StatToolkit.tsx addToBoard pattern
+- Created CanvasLanguageWidgets.tsx with 7 compact on-canvas widget renderers
+- Registered all lang-* kinds in CanvasWidgets.tsx (config, size, labels, component routing)
+- Added 'Add to Board' buttons to LanguageToolkit.tsx across all grade tabs (All, K-5, 6-8, 9-12)
+- Built rule-based POS tagger (no NLP library dependency for canvas context)
+- Fixed TSX parsing issues (removed unnecessary `as` type assertions, replaced SVG circles with CSS dots)
+- Full build passes, pushed to Vercel
+
+Stage Summary:
+- 7 language widgets now placeable on whiteboard: POS Tagger, Sentence Structure Builder, Story Elements Map, Paragraph Organizer, Vocab Flashcards, Figurative Language Finder, Punctuation Practice
+- Phonics Decoding, Reading Passage Analyzer, Sentence Expansion kept side-panel only (per prioritization plan)
+- All widgets sync config via debounced updateElement for real-time collaboration
+- Vercel deploying commit e4a976a
