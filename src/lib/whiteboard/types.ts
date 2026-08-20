@@ -68,6 +68,7 @@ export type ToolId =
   | 'math-clock'
   | 'math-base-10'
   | 'math-multiplication-array'
+  | 'math-function-plotter'
 
 // ---- Element Types ----
 

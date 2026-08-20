@@ -77,6 +77,7 @@ const CANVAS_TOOLS: CanvasTool[] = [
   { id: 'math-clock', label: 'Clock', bands: ['all', 'elementary'], config: {} },
   { id: 'math-base-10', label: 'Base-10 Blocks', bands: ['all', 'elementary'], config: {} },
   { id: 'math-multiplication-array', label: 'Multiplication Array', bands: ['all', 'elementary'], config: {} },
+  { id: 'math-function-plotter', label: 'Function Plotter', bands: ['all', 'middle', 'highschool'], config: { expression: 'x^2', range: 10 } },
 ]
 
 // ============================================================

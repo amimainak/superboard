@@ -31,7 +31,6 @@ const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({
 const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false })
 const EarthScienceToolkit = dynamic(() => import('./EarthScienceToolkit').then((m) => ({ default: m.EarthScienceToolkit })), { ssr: false })
 const ClassroomToolkit = dynamic(() => import('./ClassroomToolkit').then((m) => ({ default: m.ClassroomToolkit })), { ssr: false })
-const GeoGebraPanel = dynamic(() => import('./GeoGebraPanel').then((m) => ({ default: m.GeoGebraPanel })), { ssr: false })
 
 interface WidgetPanelProps {
   roomId: string
@@ -100,8 +99,6 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <EarthScienceToolkit roomId={roomId} />
       case 'classroom':
         return <ClassroomToolkit roomId={roomId} />
-      case 'geogebra':
-        return <GeoGebraPanel roomId={roomId} />
       case 'templates':
         return <TemplatesWidget roomId={roomId} />
       case 'analytics':

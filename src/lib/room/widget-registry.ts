@@ -311,19 +311,6 @@ export const CORE_WIDGETS: WidgetManifest[] = [
     section: 'tools',
     requiresInstall: false,
   },
-  {
-    id: 'geogebra',
-    label: 'GeoGebra',
-    icon: 'Shapes',
-    description: 'Interactive geometry, algebra, and calculus',
-    subject: 'math',
-    gradeBands: ['6-8', '9-12'],
-    toolType: 'demonstration',
-    tier: 'free',
-    phase: 1,
-    section: 'tools',
-    requiresInstall: false,
-  },
 ]
 
 // ============================================================

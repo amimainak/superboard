@@ -22,7 +22,7 @@ const FEATURE_ROWS: FeatureRow[] = [
   { name: 'File uploads', feature: 'file_uploads', freeDetail: '' },
   { name: 'Save boards', feature: 'save_boards', freeDetail: '' },
   { name: 'Templates', feature: 'templates', freeDetail: '' },
-  { name: 'GeoGebra', feature: 'geogebra', freeDetail: '' },
+  { name: 'Function Plotter', feature: 'function_plotter', freeDetail: 'All tiers' },
   { name: 'AI Math OCR', feature: 'ai_math_ocr', freeDetail: '' },
   { name: 'PDF export', feature: 'pdf_export', freeDetail: '' },
   { name: 'Branded PDF', feature: 'pdf_branded', freeDetail: '' },

@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
+import { Mafs, Coordinates, Plot, Text as MafsText } from 'mafs'
 
 // ============================================================
 // On-Canvas Math Widgets — Interactive fraction & angle tools
@@ -2539,6 +2540,165 @@ export function CanvasMultiplicationArray({ element, isDark }: CanvasWidgetProps
 }
 
 // ============================================================
+// Function Plotter Widget (Mafs-powered)
+// ============================================================
+
+function parseExpression(expr: string): (x: number) => number {
+  try {
+    var safe = expr
+      .replace(/\bsin\b/g, 'Math.sin')
+      .replace(/\bcos\b/g, 'Math.cos')
+      .replace(/\btan\b/g, 'Math.tan')
+      .replace(/\bsqrt\b/g, 'Math.sqrt')
+      .replace(/\babs\b/g, 'Math.abs')
+      .replace(/\blog\b/g, 'Math.log')
+      .replace(/\bln\b/g, 'Math.log')
+      .replace(/\bpi\b/g, 'Math.PI')
+      .replace(/\be\b/g, 'Math.E')
+      .replace(/\^/g, '**')
+    var fn = new Function('x', 'return ' + safe) as (x: number) => number
+    fn(0)
+    return fn
+  } catch(e) {
+    return function() { return NaN }
+  }
+}
+
+var PLOT_PRESETS = [
+  { label: 'y = x', expr: 'x' },
+  { label: 'y = x²', expr: 'x^2' },
+  { label: 'y = x³', expr: 'x^3' },
+  { label: 'y = √x', expr: 'sqrt(x)' },
+  { label: 'y = 1/x', expr: '1/x' },
+  { label: 'y = |x|', expr: 'abs(x)' },
+  { label: 'y = sin(x)', expr: 'sin(x)' },
+  { label: 'y = cos(x)', expr: 'cos(x)' },
+  { label: 'y = 2x+1', expr: '2*x+1' },
+  { label: 'y = -x²+4', expr: '-x^2+4' },
+]
+
+export function CanvasFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
+  var cfg = element.config as { expression?: string; range?: number }
+  var expression = (cfg.expression || 'x^2') as string
+  var range = cfg.range ?? 10
+  var updateConfig = useConfigUpdater(element.id)
+  var s = ws(isDark)
+
+  var setExpression = useCallback(function(e: string) {
+    updateConfig({ expression: e, range: range })
+  }, [range, updateConfig])
+
+  var setRange = useCallback(function(r: number) {
+    updateConfig({ expression: expression, range: Math.max(1, Math.min(50, r)) })
+  }, [expression, updateConfig])
+
+  var fn = useMemo(function() { return parseExpression(expression) }, [expression])
+
+  var curveColor = '#34d399'
+  var gridColor = isDark ? '#334155' : '#e2e8f0'
+  var axisColor = isDark ? '#64748b' : '#94a3b8'
+  var labelColor = isDark ? '#94a3b8' : '#64748b'
+  var inputBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  var inputBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'
+
+  var eqLabel = expression.trim() ? ('y = ' + expression) : 'y = ...'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Function Plotter</span>
+      </div>
+
+      {/* Expression input */}
+      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+        <span style={{ fontSize: 11, color: s.text, alignSelf: 'center' as const, flexShrink: 0 }}>f(x) =</span>
+        <input
+          type="text"
+          value={expression}
+          onChange={function(e) { setExpression(e.target.value) }}
+          placeholder="x^2, sin(x), ..."
+          style={{
+            flex: 1, padding: '4px 8px', borderRadius: 4, fontSize: 12,
+            fontFamily: 'monospace', border: '1px solid ' + inputBorder,
+            background: inputBg, color: isDark ? '#e2e8f0' : '#1e293b',
+            outline: 'none' as const, minWidth: 0,
+          }}
+        />
+      </div>
+
+      {/* Mafs graph */}
+      <div style={{ flex: 1, minHeight: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)') }}>
+        <Mafs
+          viewBox={{ x: [-range, range], y: [-range, range] }}
+          preserveAspectRatio={false}
+        >
+          <Coordinates.Cartesian
+            xAxis={{
+              axis: true,
+              lines: 1,
+              labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) },
+            }}
+            yAxis={{
+              axis: true,
+              lines: 1,
+              labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) },
+            }}
+          />
+          <Plot.OfX
+            y={fn}
+            color={curveColor}
+            weight={2.5}
+            svgPathProps={{
+              strokeLinecap: 'round' as const,
+              strokeLinejoin: 'round' as const,
+            }}
+          />
+          {expression.trim() && (
+            <MafsText
+              x={-range + 0.5}
+              y={range - 0.5}
+              size={11}
+              attach={'nw' as const}
+              color={curveColor}
+            >
+              {eqLabel}
+            </MafsText>
+          )}
+        </Mafs>
+      </div>
+
+      {/* Range control */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <span style={{ fontSize: 9, color: s.text }}>Range</span>
+        <input type="range" min={2} max={20} value={range}
+          onChange={function(e) { setRange(Number(e.target.value)) }}
+          style={{ flex: 1, cursor: 'pointer' as const }} />
+        <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{'[−' + range + ', ' + range + ']'}</span>
+      </div>
+
+      {/* Presets */}
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' as const, flexShrink: 0 }}>
+        {PLOT_PRESETS.map(function(p) {
+          var isActive = p.expr === expression
+          return (
+            <button key={p.expr} onClick={function() { setExpression(p.expr) }}
+              style={{
+                padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
+                fontFamily: 'monospace',
+                background: isActive ? 'rgba(5,150,105,0.15)' : inputBg,
+                border: isActive ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + inputBorder,
+                color: isActive ? '#34d399' : s.text,
+              }}>
+              {p.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
 // Registry helpers (used by CanvasWidgets.tsx)
 // ============================================================
 
@@ -2560,6 +2720,7 @@ export const MATH_WIDGET_KIND_LABELS: Record<string, string> = {
   'math-clock': 'Clock',
   'math-base-10': 'Base-10 Blocks',
   'math-multiplication-array': 'Multiplication Array',
+  'math-function-plotter': 'Function Plotter',
 }
 
 export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown> {
@@ -2581,6 +2742,7 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'math-clock': return { hours: 10, minutes: 30, showDigital: true }
     case 'math-base-10': return { ones: 0, tens: 0, hundreds: 0, thousands: 0 }
     case 'math-multiplication-array': return { rows: 3, columns: 4 }
+    case 'math-function-plotter': return { expression: 'x^2', range: 10 }
     default: return {}
   }
 }
@@ -2604,6 +2766,7 @@ export function getMathWidgetDefaultSize(kind: string): { width: number; height:
     case 'math-clock': return { width: 280, height: 360 }
     case 'math-base-10': return { width: 340, height: 420 }
     case 'math-multiplication-array': return { width: 320, height: 380 }
+    case 'math-function-plotter': return { width: 360, height: 420 }
     default: return { width: 280, height: 300 }
   }
 }

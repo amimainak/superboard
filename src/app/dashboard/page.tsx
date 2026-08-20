@@ -52,7 +52,7 @@ function UpgradePrompt() {
           Unlock more with Pro
         </div>
         <div style={{ fontSize: 13, color: '#94a3b8' }}>
-          Get PDF exports, templates, file uploads, GeoGebra, and more for $19/mo.
+          Get PDF exports, templates, file uploads, and more for $19/mo.
         </div>
       </div>
       <button

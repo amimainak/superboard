@@ -22,7 +22,6 @@ export type WidgetId =
   | 'statistics'
   | 'earthscience'
   | 'classroom'
-  | 'geogebra'
   | 'templates'
   | 'analytics'
   | 'parents'
@@ -59,7 +58,6 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'statistics', label: 'Statistics', icon: 'BarChart3', section: 'tools' },
   { id: 'earthscience', label: 'Earth Science', icon: 'Globe', section: 'tools' },
   { id: 'classroom', label: 'Classroom', icon: 'Timer', section: 'tools' },
-  { id: 'geogebra', label: 'GeoGebra', icon: 'Shapes', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
   // Analytics widgets
   { id: 'analytics', label: 'Analytics', icon: 'Activity', section: 'tools' },

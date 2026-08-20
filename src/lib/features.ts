@@ -9,7 +9,7 @@ export type FeatureName =
   | 'file_uploads'
   | 'save_boards'
   | 'templates'
-  | 'geogebra'
+  | 'function_plotter'
   | 'ai_math_ocr'
   | 'pdf_export'
   | 'pdf_branded'
@@ -36,7 +36,7 @@ const FEATURES: Record<FeatureName, FeatureConfig> = {
   file_uploads:      { free: false, pro: true, agency: true },
   save_boards:       { free: false, pro: true, agency: true },
   templates:         { free: false, pro: true, agency: true },
-  geogebra:          { free: false, pro: true, agency: true },
+  function_plotter:     { free: true, pro: true, agency: true },
   ai_math_ocr:       { free: false, pro: true, agency: true },
   pdf_export:        { free: false, pro: true, agency: true },
   pdf_branded:       { free: false, pro: false, agency: true },
