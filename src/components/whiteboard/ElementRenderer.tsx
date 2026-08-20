@@ -315,7 +315,23 @@ export const ElementRenderer = React.memo(function ElementRenderer({
     case 'math-pie-chart':
       return <LazyMathRenderers element={element} isSelected={isSelected} />
 
-    case 'widget':
+    case 'widget': {
+      // In non-select modes (draw, highlighter, eraser, etc.), make the widget
+      // completely transparent to pointer events so the user can draw/write
+      // over it.  In select mode the widget is interactive (draggable, controls).
+      var widgetPointerEvents = tool === 'select' ? 'auto' : 'none'
+      // Helper: detect if the pointer landed on an interactive control inside
+      // the widget (button, slider, input, etc.).  If so we select the widget
+      // but do NOT start a drag — the control itself needs the pointer.
+      function isWidgetInteractive(e: React.PointerEvent): boolean {
+        var t = e.target as HTMLElement
+        if (!t) return false
+        var tag = t.tagName
+        if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return true
+        if (t.isContentEditable) return true
+        if (t.closest('button, input, select, textarea, label, a, [role="slider"], [role="button"]')) return true
+        return false
+      }
       return (
         <foreignObject
           x={element.x}
@@ -323,31 +339,74 @@ export const ElementRenderer = React.memo(function ElementRenderer({
           width={element.width}
           height={element.height}
           opacity={element.opacity}
-          onPointerDown={(e) => {
-            if (tool === 'select') e.stopPropagation()
-            onPointerDown(e, element.id)
+          style={{
+            cursor: element.locked ? 'not-allowed' : (tool === 'select' ? 'pointer' : 'none'),
+            pointerEvents: widgetPointerEvents as React.CSSProperties['pointerEvents'],
           }}
-          style={{ cursor: element.locked ? 'not-allowed' : 'pointer' }}
+          onPointerDown={(e) => {
+            if (tool === 'select') {
+              e.stopPropagation()
+              if (!isWidgetInteractive(e)) {
+                // Click on widget background → select + enable drag
+                onPointerDown(e, element.id)
+              } else {
+                // Click on interactive control (slider, button, input)
+                // → select widget but do NOT start drag
+                useWhiteboardStore.getState().selectElements([element.id])
+              }
+            }
+            // In non-select modes pointerEvents is 'none' so this never fires
+          }}
         >
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              background: isDark ? '#0f172a' : '#ffffff',
-              border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
-              borderRadius: 8,
-              padding: '10px 12px',
-              overflow: 'auto',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-              fontFamily: 'inherit',
-              boxSizing: 'border-box',
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />
+          <div style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box' }}>
+            {/* Close (X) button — top-right corner */}
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                var store = useWhiteboardStore.getState()
+                store.pushHistory()
+                store.removeElements([element.id])
+                store.clearSelection()
+              }}
+              style={{
+                position: 'absolute', top: 2, right: 2, zIndex: 10,
+                width: 22, height: 22, borderRadius: '50%',
+                border: 'none',
+                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                color: isDark ? '#94a3b8' : '#94a3b8',
+                fontSize: 14, fontWeight: 700, lineHeight: '1',
+                cursor: 'pointer' as const,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 0, opacity: 0.5,
+                transition: 'opacity 0.15s',
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.5' }}
+              title="Remove from board"
+            >
+              x
+            </button>
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                background: isDark ? '#0f172a' : '#ffffff',
+                border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+                borderRadius: 8,
+                padding: '10px 12px',
+                overflow: 'auto',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                fontFamily: 'inherit',
+                boxSizing: 'border-box',
+              }}
+            >
+              <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />
+            </div>
           </div>
         </foreignObject>
       )
+    }
 
     default:
       return null
