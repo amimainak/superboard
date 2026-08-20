@@ -642,6 +642,10 @@ import {
   CanvasVennDiagram,
   CanvasBarChart,
   CanvasPieChart,
+  CanvasProtractor,
+  CanvasRuler,
+  CanvasSetSquare,
+  CanvasCompass,
   getMathWidgetDefaultConfig,
   getMathWidgetDefaultSize,
   MATH_WIDGET_KIND_LABELS,
@@ -665,6 +669,10 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'math-venn-diagram': CanvasVennDiagram,
   'math-bar-chart': CanvasBarChart,
   'math-pie-chart': CanvasPieChart,
+  'math-protractor': CanvasProtractor,
+  'math-ruler': CanvasRuler,
+  'math-set-square': CanvasSetSquare,
+  'math-compass': CanvasCompass,
   // Language widgets
   'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -715,6 +723,10 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'math-venn-diagram': return getMathWidgetDefaultConfig('math-venn-diagram')
     case 'math-bar-chart': return getMathWidgetDefaultConfig('math-bar-chart')
     case 'math-pie-chart': return getMathWidgetDefaultConfig('math-pie-chart')
+    case 'math-protractor': return getMathWidgetDefaultConfig('math-protractor')
+    case 'math-ruler': return getMathWidgetDefaultConfig('math-ruler')
+    case 'math-set-square': return getMathWidgetDefaultConfig('math-set-square')
+    case 'math-compass': return getMathWidgetDefaultConfig('math-compass')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
@@ -748,6 +760,10 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'math-venn-diagram': return getMathWidgetDefaultSize('math-venn-diagram')
     case 'math-bar-chart': return getMathWidgetDefaultSize('math-bar-chart')
     case 'math-pie-chart': return getMathWidgetDefaultSize('math-pie-chart')
+    case 'math-protractor': return getMathWidgetDefaultSize('math-protractor')
+    case 'math-ruler': return getMathWidgetDefaultSize('math-ruler')
+    case 'math-set-square': return getMathWidgetDefaultSize('math-set-square')
+    case 'math-compass': return getMathWidgetDefaultSize('math-compass')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')

@@ -259,8 +259,11 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
 
   const ANGLE_PRESETS = [30, 45, 60, 90, 120, 135, 150, 180]
 
-  const stamps = [
-    { label: 'Protractor', icon: '⚖' }, { label: 'Ruler', icon: '⚔' }, { label: 'Set Square', icon: '▣' }, { label: 'Compass', icon: '⊙' },
+  const measurementTools = [
+    { label: 'Protractor', icon: '⚖', kind: 'math-protractor' },
+    { label: 'Ruler', icon: '⚔', kind: 'math-ruler' },
+    { label: 'Set Square', icon: '▣', kind: 'math-set-square' },
+    { label: 'Compass', icon: '⊙', kind: 'math-compass' },
   ]
 
   return (
@@ -320,15 +323,17 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
             </div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Stamps')}
+            {sectionTitle('Measurement Tools')}
             <div className="toolkit-grid">
-              {stamps.map((stamp) => (
-                <button key={stamp.label} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => placeStamp(stamp.icon, stamp.label)}
-                  style={{ padding: '8px 12px', borderRadius: 6, fontSize: 16, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' as const, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span>{stamp.icon}</span><span style={{ fontSize: 11 }}>{stamp.label}</span>
-                </button>
-              ))}
+              {measurementTools.map(function(mt) {
+                return (
+                  <button key={mt.kind} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
+                    onClick={function() { addToBoard(mt.kind, {}) }}
+                    style={{ padding: '8px 12px', borderRadius: 6, fontSize: 16, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' as const, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>{mt.icon}</span><span style={{ fontSize: 11 }}>{mt.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
           {/* Interactive board widgets for all bands */}
@@ -492,6 +497,22 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 </div>
               </div>
               {addBoardBtn('Add to Board', () => addToBoard('math-polygon', { sides: polySides }))}
+            </div>
+          </div>
+
+          {/* Measurement Tools */}
+          <div className="toolkit-section">
+            {sectionTitle('Measurement Tools')}
+            <div className="toolkit-grid">
+              {measurementTools.map(function(mt) {
+                return (
+                  <button key={mt.kind} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
+                    onClick={function() { addToBoard(mt.kind, {}) }}
+                    style={{ padding: '8px 12px', borderRadius: 6, fontSize: 16, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' as const, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>{mt.icon}</span><span style={{ fontSize: 11 }}>{mt.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
