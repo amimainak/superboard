@@ -2,10 +2,11 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import {
-  PUNCT_EXERCISES, PUNCT_RULES, type PunctExercise, type PunctRule,
+  PUNCT_RULES, type PunctExercise, type PunctRule,
   type Difficulty, type GradeBand,
   getExercisesByFilter, shuffleExercises, generateWrongVariants, getExerciseById,
 } from '@/data/punctuation-exercises'
+import { useSupabaseExercises } from '@/lib/whiteboard/useSupabaseExercises'
 
 // ============================================================
 // Types
@@ -128,36 +129,40 @@ export function PunctuationPracticeWidget({ isDark, config, onConfigChange, comp
 function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
   isDark: boolean; config: PunctWidgetConfig; onConfigChange: (p: Partial<PunctWidgetConfig>) => void; fs: number; s: ReturnType<typeof sh>; compact: boolean
 }) {
-  // Get exercises based on filter + custom exercises
+  // Fetch exercises from Supabase with fallback to static data
+  const { exercises: supabaseExercises, loading: exLoading } = useSupabaseExercises({
+    widgetKind: 'lang-punctuation',
+    discriminator: config.filterRules.length > 0 ? config.filterRules : undefined,
+    difficulty: config.filterDifficulty !== 'all' ? config.filterDifficulty : undefined,
+    band: config.filterBand !== 'all' ? config.filterBand : undefined,
+    staticFallback: () => getExercisesByFilter({ rules: config.filterRules.length > 0 ? config.filterRules : undefined, difficulty: config.filterDifficulty, band: config.filterBand }),
+  })
+
+  // Get exercises based on Supabase results + custom exercises
   const allExercises = useMemo(() => {
-    const filtered = getExercisesByFilter({
-      rules: config.filterRules.length > 0 ? config.filterRules : undefined,
-      difficulty: config.filterDifficulty,
-      band: config.filterBand,
-    })
-    return [...filtered, ...config.customExercises]
-  }, [config.filterRules, config.filterDifficulty, config.filterBand, config.customExercises])
+    return [...supabaseExercises, ...config.customExercises]
+  }, [supabaseExercises, config.customExercises])
 
   // Current exercise list (shuffled IDs)
   const exerciseList = useMemo(() => {
     if (config.exerciseIds.length > 0) {
       // Validate IDs still exist
       const validIds = config.exerciseIds.filter(id =>
-        getExerciseById(id) || config.customExercises.some(e => e.id === id)
+        getExerciseById(id) || supabaseExercises.some(e => e.id === id) || config.customExercises.some(e => e.id === id)
       )
       return validIds
     }
     // Initial shuffle
     return shuffleExercises(allExercises).map(e => e.id)
-  }, [allExercises, config.exerciseIds, config.customExercises])
+  }, [allExercises, config.exerciseIds, config.customExercises, supabaseExercises])
 
   // Current exercise
   const currentExercise = useMemo((): PunctExercise | null => {
     if (exerciseList.length === 0) return null
     const idx = config.currentIndex % exerciseList.length
     const id = exerciseList[idx]
-    return getExerciseById(id) || config.customExercises.find(e => e.id === id) || null
-  }, [exerciseList, config.currentIndex, config.customExercises])
+    return getExerciseById(id) || supabaseExercises.find(e => e.id === id) || config.customExercises.find(e => e.id === id) || null
+  }, [exerciseList, config.currentIndex, config.customExercises, supabaseExercises])
 
   const isCorrect = config.checked && config.selected !== null && currentExercise !== null && config.selected === currentExercise.correctIndex
 
@@ -285,7 +290,11 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
       )}
 
       {/* Exercise */}
-      {!currentExercise ? (
+      {exLoading ? (
+        <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
+          Loading exercises...
+        </div>
+      ) : !currentExercise ? (
         <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
           No exercises match your filters. Try adjusting the rules or difficulty level.
         </div>

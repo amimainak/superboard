@@ -2,10 +2,11 @@
 
 import React, { useMemo, useCallback } from 'react'
 import {
-  EXPANSION_EXERCISES, EXPANSION_TYPES, type ExpansionExercise, type ExpansionType,
+  EXPANSION_TYPES, type ExpansionExercise, type ExpansionType,
   type Difficulty, type GradeBand,
-  getExercisesByFilter, shuffleExercises, generateWrongVariants, getExerciseById,
+  getExercisesByFilter, shuffleExercises, generateWrongVariants,
 } from '@/data/sentence-expansion-exercises'
+import { useSupabaseExercises } from '@/lib/whiteboard/useSupabaseExercises'
 
 // ============================================================
 // Types
@@ -153,34 +154,38 @@ export function SentenceExpansionWidget({ isDark, config, onConfigChange, compac
 function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
   isDark: boolean; config: ExpansionWidgetConfig; onConfigChange: (p: Partial<ExpansionWidgetConfig>) => void; fs: number; s: ReturnType<typeof sh>; compact: boolean
 }) {
-  // Get exercises based on filter + custom exercises
+  // Fetch exercises from Supabase (falls back to static data)
+  const { exercises: supabaseExercises, loading: exLoading, getById, filter: filterExercises } = useSupabaseExercises({
+    widgetKind: 'lang-sentence-expansion',
+    discriminator: config.filterTypes.length > 0 ? config.filterTypes : undefined,
+    difficulty: config.filterDifficulty !== 'all' ? config.filterDifficulty : undefined,
+    band: config.filterBand !== 'all' ? config.filterBand : undefined,
+    staticFallback: () => getExercisesByFilter({ types: config.filterTypes.length > 0 ? config.filterTypes : undefined, difficulty: config.filterDifficulty, band: config.filterBand }),
+  })
+
+  // Get exercises based on Supabase results + custom exercises
   const allExercises = useMemo(() => {
-    const filtered = getExercisesByFilter({
-      types: config.filterTypes.length > 0 ? config.filterTypes : undefined,
-      difficulty: config.filterDifficulty,
-      band: config.filterBand,
-    })
-    return [...filtered, ...config.customExercises]
-  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises])
+    return [...supabaseExercises, ...config.customExercises]
+  }, [supabaseExercises, config.customExercises])
 
   // Current exercise list (shuffled IDs)
   const exerciseList = useMemo(() => {
     if (config.exerciseIds.length > 0) {
       const validIds = config.exerciseIds.filter(id =>
-        getExerciseById(id) || config.customExercises.some(e => e.id === id)
+        getById(id) || config.customExercises.some(e => e.id === id)
       )
       return validIds
     }
     return shuffleExercises(allExercises).map(e => e.id)
-  }, [allExercises, config.exerciseIds, config.customExercises])
+  }, [allExercises, config.exerciseIds, config.customExercises, getById])
 
   // Current exercise
   const currentExercise = useMemo((): ExpansionExercise | null => {
     if (exerciseList.length === 0) return null
     const idx = config.currentIndex % exerciseList.length
     const id = exerciseList[idx]
-    return getExerciseById(id) || config.customExercises.find(e => e.id === id) || null
-  }, [exerciseList, config.currentIndex, config.customExercises])
+    return getById(id) || config.customExercises.find(e => e.id === id) || null
+  }, [exerciseList, config.currentIndex, config.customExercises, getById])
 
   const isCorrect = config.checked && config.selected !== null && currentExercise !== null && config.selected === currentExercise.correctIndex
 
@@ -218,20 +223,20 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
     const next = current.includes(type)
       ? current.filter(t => t !== type)
       : [...current, type]
-    const filtered = getExercisesByFilter({
-      types: next.length > 0 ? next : undefined,
+    const filtered = filterExercises({
+      discriminator: next.length > 0 ? next : undefined,
       difficulty: config.filterDifficulty,
       band: config.filterBand,
     })
     const shuffled = shuffleExercises([...filtered, ...config.customExercises]).map(e => e.id)
     onConfigChange({ filterTypes: next, exerciseIds: shuffled, currentIndex: 0, selected: null, checked: false, score: 0, totalAttempted: 0 })
-  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises, onConfigChange])
+  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises, onConfigChange, filterExercises])
 
   const handleFilterChange = useCallback((key: 'filterDifficulty' | 'filterBand', value: string) => {
     const newDifficulty = key === 'filterDifficulty' ? (value as Difficulty | 'all') : config.filterDifficulty
     const newBand = key === 'filterBand' ? (value as GradeBand | 'all') : config.filterBand
-    const filtered = getExercisesByFilter({
-      types: config.filterTypes.length > 0 ? config.filterTypes : undefined,
+    const filtered = filterExercises({
+      discriminator: config.filterTypes.length > 0 ? config.filterTypes : undefined,
       difficulty: newDifficulty,
       band: newBand,
     })
@@ -240,7 +245,7 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
       [key]: value,
       exerciseIds: shuffled, currentIndex: 0, selected: null, checked: false, score: 0, totalAttempted: 0,
     })
-  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises, onConfigChange])
+  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises, onConfigChange, filterExercises])
 
   const displayIndex = (config.currentIndex % Math.max(exerciseList.length, 1)) + 1
   const totalExercises = exerciseList.length
@@ -307,7 +312,11 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
       )}
 
       {/* Exercise */}
-      {!currentExercise ? (
+      {exLoading ? (
+        <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
+          Loading exercises...
+        </div>
+      ) : !currentExercise ? (
         <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
           No exercises match your filters. Try adjusting the type or difficulty level.
         </div>

@@ -18,7 +18,7 @@ echo "  vercel env add DIRECT_URL production"
 echo '  Paste: postgresql://postgres.ruygzmkqtdogtencjdzg:thephisics1@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
 echo ""
 echo "  vercel env add NEXT_PUBLIC_SUPABASE_URL production"
-echo '  Paste: https://ruygzmkqtdogtencjdzg.supabase.co'
+echo '  Paste: https://sjbxyxallfeyfuplacnn.supabase.co'
 echo ""
 echo "  vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production"
 echo '  Paste: (your Supabase anon key from Settings > API)'

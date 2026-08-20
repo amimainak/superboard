@@ -2,10 +2,11 @@
 
 import React, { useMemo, useCallback } from 'react'
 import {
-  FIGLANG_EXERCISES, FIGLANG_TYPES, type FigLangExercise, type FigLangType,
+  FIGLANG_TYPES, type FigLangExercise, type FigLangType,
   type Difficulty, type GradeBand,
   getExercisesByFilter, shuffleExercises, generateWrongVariants, getExerciseById,
 } from '@/data/figurative-language-exercises'
+import { useSupabaseExercises } from '@/lib/whiteboard/useSupabaseExercises'
 
 // ============================================================
 // Types
@@ -133,15 +134,18 @@ export function FigurativeLanguageWidget({ isDark, config, onConfigChange, compa
 function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
   isDark: boolean; config: FigLangWidgetConfig; onConfigChange: (p: Partial<FigLangWidgetConfig>) => void; fs: number; s: ReturnType<typeof sh>; compact: boolean
 }) {
+  const { exercises: supabaseExercises, loading: exLoading } = useSupabaseExercises({
+    widgetKind: 'lang-figurative-language',
+    discriminator: config.filterTypes.length > 0 ? config.filterTypes : undefined,
+    difficulty: config.filterDifficulty !== 'all' ? config.filterDifficulty : undefined,
+    band: config.filterBand !== 'all' ? config.filterBand : undefined,
+    staticFallback: () => getExercisesByFilter({ types: config.filterTypes.length > 0 ? config.filterTypes : undefined, difficulty: config.filterDifficulty, band: config.filterBand }),
+  })
+
   // Get exercises based on filter + custom exercises
   const allExercises = useMemo(() => {
-    const filtered = getExercisesByFilter({
-      types: config.filterTypes.length > 0 ? config.filterTypes : undefined,
-      difficulty: config.filterDifficulty,
-      band: config.filterBand,
-    })
-    return [...filtered, ...config.customExercises]
-  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises])
+    return [...supabaseExercises, ...config.customExercises]
+  }, [supabaseExercises, config.customExercises])
 
   // Current exercise list (shuffled IDs)
   const exerciseList = useMemo(() => {
@@ -201,29 +205,17 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
       ? current.filter(t => t !== type)
       : [...current, type]
     // Re-shuffle when filter changes
-    const filtered = getExercisesByFilter({
-      types: next.length > 0 ? next : undefined,
-      difficulty: config.filterDifficulty,
-      band: config.filterBand,
-    })
-    const shuffled = shuffleExercises([...filtered, ...config.customExercises]).map(e => e.id)
+    const shuffled = shuffleExercises([...supabaseExercises, ...config.customExercises]).map(e => e.id)
     onConfigChange({ filterTypes: next, exerciseIds: shuffled, currentIndex: 0, selected: null, checked: false, score: 0, totalAttempted: 0 })
-  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises, onConfigChange])
+  }, [config.filterTypes, config.customExercises, supabaseExercises, onConfigChange])
 
   const handleFilterChange = useCallback((key: 'filterDifficulty' | 'filterBand', value: string) => {
-    const newDifficulty = key === 'filterDifficulty' ? (value as Difficulty | 'all') : config.filterDifficulty
-    const newBand = key === 'filterBand' ? (value as GradeBand | 'all') : config.filterBand
-    const filtered = getExercisesByFilter({
-      types: config.filterTypes.length > 0 ? config.filterTypes : undefined,
-      difficulty: newDifficulty,
-      band: newBand,
-    })
-    const shuffled = shuffleExercises([...filtered, ...config.customExercises]).map(e => e.id)
+    const shuffled = shuffleExercises([...supabaseExercises, ...config.customExercises]).map(e => e.id)
     onConfigChange({
       [key]: value,
       exerciseIds: shuffled, currentIndex: 0, selected: null, checked: false, score: 0, totalAttempted: 0,
     })
-  }, [config.filterTypes, config.filterDifficulty, config.filterBand, config.customExercises, onConfigChange])
+  }, [config.customExercises, supabaseExercises, onConfigChange])
 
   const displayIndex = (config.currentIndex % Math.max(exerciseList.length, 1)) + 1
   const totalExercises = exerciseList.length
@@ -292,12 +284,19 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
         </div>
       )}
 
+      {/* Loading indicator */}
+      {exLoading && (
+        <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
+          Loading exercises...
+        </div>
+      )}
+
       {/* Exercise */}
-      {!currentExercise ? (
+      {!currentExercise && !exLoading ? (
         <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
           No exercises match your filters. Try adjusting the type or difficulty level.
         </div>
-      ) : (
+      ) : currentExercise ? (
         <>
           {/* Passage box */}
           <div style={{
@@ -378,7 +377,7 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
             </div>
           )}
         </>
-      )}
+      ) : null}
     </div>
   )
 }

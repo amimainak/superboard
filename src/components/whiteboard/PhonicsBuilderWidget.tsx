@@ -6,6 +6,7 @@ import {
   type Difficulty, type GradeBand,
   getExercisesByFilter, shuffleExercises, generateWrongVariants, getExerciseById,
 } from '@/data/phonics-exercises'
+import { useSupabaseExercises } from '@/lib/whiteboard/useSupabaseExercises'
 
 // ============================================================
 // Types
@@ -129,36 +130,40 @@ export function PhonicsBuilderWidget({ isDark, config, onConfigChange, compact }
 function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
   isDark: boolean; config: PhonicsWidgetConfig; onConfigChange: (p: Partial<PhonicsWidgetConfig>) => void; fs: number; s: ReturnType<typeof sh>; compact: boolean
 }) {
-  // Get exercises based on filter + custom exercises
+  // Fetch exercises from Supabase (with static fallback)
+  const { exercises: supabaseExercises, loading: exLoading } = useSupabaseExercises({
+    widgetKind: 'lang-phonics',
+    discriminator: config.filterCategories.length > 0 ? config.filterCategories : undefined,
+    difficulty: config.filterDifficulty !== 'all' ? config.filterDifficulty : undefined,
+    band: config.filterBand !== 'all' ? config.filterBand : undefined,
+    staticFallback: () => getExercisesByFilter({ categories: config.filterCategories.length > 0 ? config.filterCategories : undefined, difficulty: config.filterDifficulty, band: config.filterBand }),
+  })
+
+  // Get exercises based on Supabase data + custom exercises
   const allExercises = useMemo(() => {
-    const filtered = getExercisesByFilter({
-      categories: config.filterCategories.length > 0 ? config.filterCategories : undefined,
-      difficulty: config.filterDifficulty,
-      band: config.filterBand,
-    })
-    return [...filtered, ...config.customExercises]
-  }, [config.filterCategories, config.filterDifficulty, config.filterBand, config.customExercises])
+    return [...supabaseExercises, ...config.customExercises]
+  }, [supabaseExercises, config.customExercises])
 
   // Current exercise list (shuffled IDs)
   const exerciseList = useMemo(() => {
     if (config.exerciseIds.length > 0) {
-      // Validate IDs still exist
+      // Validate IDs still exist in the available pool
       const validIds = config.exerciseIds.filter(id =>
-        getExerciseById(id) || config.customExercises.some(e => e.id === id)
+        allExercises.some(e => e.id === id)
       )
       return validIds
     }
     // Initial shuffle
     return shuffleExercises(allExercises).map(e => e.id)
-  }, [allExercises, config.exerciseIds, config.customExercises])
+  }, [allExercises, config.exerciseIds])
 
   // Current exercise
   const currentExercise = useMemo((): PhonicsExercise | null => {
     if (exerciseList.length === 0) return null
     const idx = config.currentIndex % exerciseList.length
     const id = exerciseList[idx]
-    return getExerciseById(id) || config.customExercises.find(e => e.id === id) || null
-  }, [exerciseList, config.currentIndex, config.customExercises])
+    return allExercises.find(e => e.id === id) || null
+  }, [exerciseList, config.currentIndex, allExercises])
 
   const isCorrect = config.checked && config.selected !== null && currentExercise !== null && config.selected === currentExercise.correctIndex
 
@@ -287,12 +292,19 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
         </div>
       )}
 
+      {/* Loading indicator */}
+      {exLoading && (
+        <div style={{ padding: '12px 0', textAlign: 'center' as const, color: s.text, fontSize: fs }}>
+          Loading exercises...
+        </div>
+      )}
+
       {/* Exercise */}
-      {!currentExercise ? (
+      {!currentExercise && !exLoading ? (
         <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
           No exercises match your filters. Try adjusting the categories or difficulty level.
         </div>
-      ) : (
+      ) : currentExercise ? (
         <>
           {/* Question */}
           <div style={{
@@ -363,7 +375,7 @@ function StudentMode({ isDark, config, onConfigChange, fs, s, compact }: {
             </div>
           )}
         </>
-      )}
+      ) : null}
     </div>
   )
 }

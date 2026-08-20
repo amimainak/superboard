@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useMemo, useCallback } from 'react'
-import { VOCAB_CARDS, type VocabCard, type PosTag, type CardLevel, getCardsByFilter, shuffleCards } from '@/data/vocab-cards'
+import { type VocabCard, type PosTag, type CardLevel, getCardsByFilter } from '@/data/vocab-cards'
+import { useSupabaseVocab } from '@/lib/whiteboard/useSupabaseExercises'
 
 // ============================================================
 // Types
@@ -169,14 +170,16 @@ export function VocabFlashcardsWidget({ isDark, config, onConfigChange, compact 
   const s = sh(isDark)
   const fs = compact ? 10 : 11
 
+  const { cards: supabaseCards, loading: cardsLoading, shuffle: shuffleCardsFromHook } = useSupabaseVocab({
+    pos: config.filterPos.length > 0 ? config.filterPos : undefined,
+    level: config.filterLevel || undefined,
+    staticFallback: () => getCardsByFilter({ pos: config.filterPos.length > 0 ? config.filterPos : undefined, level: config.filterLevel }),
+  })
+
   // Get cards based on filter + custom
   const allCards = useMemo(() => {
-    const filtered = getCardsByFilter({
-      pos: config.filterPos.length > 0 ? config.filterPos : undefined,
-      level: config.filterLevel,
-    })
-    return [...filtered, ...config.customCards]
-  }, [config.filterPos, config.filterLevel, config.customCards])
+    return [...supabaseCards, ...config.customCards]
+  }, [supabaseCards, config.customCards])
 
   // Sort cards for focus-weak mode: fewer correct answers + older lastSeen first
   const sortedCards = useMemo(() => {
@@ -334,8 +337,15 @@ export function VocabFlashcardsWidget({ isDark, config, onConfigChange, compact 
         </div>
       </div>
 
+      {/* Loading indicator (study/quiz only) */}
+      {cardsLoading && config.mode !== 'create' && (
+        <div style={{ padding: 20, textAlign: 'center' as const, color: s.text, fontSize: fs }}>
+          Loading cards...
+        </div>
+      )}
+
       {/* STUDY MODE */}
-      {config.mode === 'study' && (
+      {!cardsLoading && config.mode === 'study' && (
         <>
           {/* Progress summary */}
           {hasQuizResults && (
@@ -452,7 +462,7 @@ export function VocabFlashcardsWidget({ isDark, config, onConfigChange, compact 
       )}
 
       {/* QUIZ MODE */}
-      {config.mode === 'quiz' && (
+      {!cardsLoading && config.mode === 'quiz' && (
         <>
           {/* Filters (simplified) */}
           {!compact && (

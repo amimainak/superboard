@@ -47,21 +47,20 @@ export function ParentPortalWidget({ roomId }: { roomId: string }) {
       if (!res.ok) throw new Error('Failed to load sessions')
       const data: SessionRoom[] = await res.json()
 
-      // Check localStorage for notes for each session
-      const withNotes: SessionWithNotes[] = data.map((room) => {
-        const notesKey = `sb-notes-${room.id}`
+      // Check Supabase for notes for each session
+      const withNotes: SessionWithNotes[] = await Promise.all(data.map(async function (room) {
         let hasNotes = false
         try {
-          const stored = localStorage.getItem(notesKey)
-          if (stored) {
-            const parsed = JSON.parse(stored)
-            hasNotes = parsed && parsed.content && parsed.content.trim().length > 0
+          const res = await fetch('/api/rooms/' + room.id + '/notes')
+          if (res.ok) {
+            const json = await res.json()
+            hasNotes = json.content && json.content.trim().length > 0
           }
         } catch {
-          // ignore parse errors
+          // ignore
         }
         return { ...room, hasNotes }
-      })
+      }))
 
       setSessions(withNotes)
     } catch (err: unknown) {

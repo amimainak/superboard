@@ -1,10 +1,11 @@
-// localStorage-based performance persistence for whiteboard tutoring
+// Supabase-backed performance persistence for whiteboard tutoring
 // Tracks student answers, computes mastery, and provides spaced-repetition ordering.
+// All data stored in Supabase `student_mastery` table.
 
 export interface ExerciseMastery {
   correct: number
   total: number
-  lastSeen: number // timestamp
+  lastSeen: number
   lastCorrect: boolean
 }
 
@@ -12,153 +13,200 @@ export interface WidgetProgress {
   widgetKind: string
   totalAttempted: number
   totalCorrect: number
-  accuracy: number // 0-1
-  exerciseCount: number // unique exercises attempted
-  masteredCount: number // exercises with 3+ correct and accuracy >= 0.7
+  accuracy: number
+  exerciseCount: number
+  masteredCount: number
 }
 
-type RoomData = Record<string, Record<string, ExerciseMastery>>;
+type RoomMasteryMap = Record<string, Record<string, ExerciseMastery>>
 
-function storageKey(roomId: string): string {
-  return `wb-perf-${roomId}`;
+// Client-side cache to avoid excessive API calls
+const cache = new Map<string, RoomMasteryMap>()
+const CACHE_TTL = 10_000 // 10 seconds
+const cacheTimestamps = new Map<string, number>()
+
+function isCacheValid(roomId: string): boolean {
+  const ts = cacheTimestamps.get(roomId)
+  if (!ts) return false
+  return Date.now() - ts < CACHE_TTL
 }
 
-function loadRoomData(roomId: string): RoomData {
-  if (typeof window === 'undefined') return {};
+function setCache(roomId: string, data: RoomMasteryMap): void {
+  cache.set(roomId, data)
+  cacheTimestamps.set(roomId, Date.now())
+}
+
+function getCache(roomId: string): RoomMasteryMap {
+  return cache.get(roomId) || {}
+}
+
+/**
+ * Load mastery data from Supabase.
+ */
+async function loadMastery(roomId: string, widgetKind?: string): Promise<RoomMasteryMap> {
+  const params = new URLSearchParams({ roomId })
+  if (widgetKind) params.set('widgetKind', widgetKind)
+
   try {
-    const raw = localStorage.getItem(storageKey(roomId));
-    if (!raw) return {};
-    return JSON.parse(raw) as RoomData;
-  } catch {
-    return {};
-  }
-}
+    const res = await fetch('/api/lang/mastery?' + params.toString())
+    if (!res.ok) return {}
+    const json = await res.json()
+    const result: RoomMasteryMap = {}
 
-function saveRoomData(roomId: string, data: RoomData): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(storageKey(roomId), JSON.stringify(data));
+    const rows = json.mastery || []
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i]
+      if (!result[row.widget_kind]) result[row.widget_kind] = {}
+      result[row.widget_kind][row.exercise_id] = {
+        correct: row.correct || 0,
+        total: row.total || 0,
+        lastSeen: row.lastSeen || 0,
+        lastCorrect: row.lastCorrect || false,
+      }
+    }
+    return result
   } catch {
-    // Storage full or unavailable — silently ignore
+    return {}
   }
 }
 
 /**
  * Record a student's answer to an exercise.
  */
-export function recordAnswer(params: {
+export async function recordAnswer(params: {
   roomId: string
   widgetKind: string
   exerciseId: string
   correct: boolean
-}): void {
-  const { roomId, widgetKind, exerciseId, correct } = params;
-  const data = loadRoomData(roomId);
+  userId?: string
+}): Promise<void> {
+  const { roomId, widgetKind, exerciseId, correct, userId } = params
 
-  const widgetData = (data[widgetKind] ??= {});
+  // Fire and forget — POST to API
+  fetch('/api/lang/mastery', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId, widgetKind, exerciseId, correct, userId }),
+  }).catch(function() { /* network error — ignore */ })
 
-  const existing = widgetData[exerciseId];
+  // Update local cache optimistically
+  var cached = getCache(roomId)
+  if (!cached[widgetKind]) cached[widgetKind] = {}
+  var widgetData = cached[widgetKind]
+  var existing = widgetData[exerciseId]
 
   if (existing) {
-    existing.correct += correct ? 1 : 0;
-    existing.total += 1;
-    existing.lastSeen = Date.now();
-    existing.lastCorrect = correct;
+    existing.correct += correct ? 1 : 0
+    existing.total += 1
+    existing.lastSeen = Date.now()
+    existing.lastCorrect = correct
   } else {
     widgetData[exerciseId] = {
       correct: correct ? 1 : 0,
       total: 1,
       lastSeen: Date.now(),
       lastCorrect: correct,
-    };
+    }
   }
-
-  saveRoomData(roomId, data);
+  setCache(roomId, cached)
 }
 
 /**
  * Get mastery data for a specific widget kind.
  */
-export function getMastery(params: {
+export async function getMastery(params: {
   roomId: string
   widgetKind: string
-}): Record<string, ExerciseMastery> {
-  const { roomId, widgetKind } = params;
-  const data = loadRoomData(roomId);
-  return data[widgetKind] ?? {};
+}): Promise<Record<string, ExerciseMastery>> {
+  const { roomId, widgetKind } = params
+
+  if (isCacheValid(roomId)) {
+    var cachedData = getCache(roomId)
+    return cachedData[widgetKind] || {}
+  }
+
+  const data = await loadMastery(roomId, widgetKind)
+  // Merge into cache
+  var existingData = getCache(roomId)
+  var keys = Object.keys(data)
+  for (var i = 0; i < keys.length; i++) {
+    var wk = keys[i]
+    if (!existingData[wk]) existingData[wk] = {}
+    var exercises = data[wk]
+    var exKeys = Object.keys(exercises)
+    for (var j = 0; j < exKeys.length; j++) {
+      existingData[wk][exKeys[j]] = exercises[exKeys[j]]
+    }
+  }
+  setCache(roomId, existingData)
+  return existingData[widgetKind] || {}
 }
 
 /**
  * Get a spaced repetition queue: returns exercise IDs sorted by priority.
- *
- * Priority order:
- *  1. Not-yet-seen items first
- *  2. Wrong items before right
- *  3. Older lastSeen first
- *  4. Lower accuracy first
  */
-export function getSpacedRepetitionQueue(params: {
+export async function getSpacedRepetitionQueue(params: {
   roomId: string
   widgetKind: string
   allExerciseIds: string[]
-}): string[] {
-  const { roomId, widgetKind, allExerciseIds } = params;
-  const mastery = getMastery({ roomId, widgetKind });
+}): Promise<string[]> {
+  const { roomId, widgetKind, allExerciseIds } = params
+  const mastery = await getMastery({ roomId, widgetKind })
 
-  return [...allExerciseIds].sort((a, b) => {
-    const ma = mastery[a];
-    const mb = mastery[b];
+  return [...allExerciseIds].sort(function (a, b) {
+    const ma = mastery[a]
+    const mb = mastery[b]
 
-    // 1) Not-seen items first
-    const aSeen = ma !== undefined ? 1 : 0;
-    const bSeen = mb !== undefined ? 1 : 0;
-    if (aSeen !== bSeen) return aSeen - bSeen;
+    const aSeen = ma !== undefined ? 1 : 0
+    const bSeen = mb !== undefined ? 1 : 0
+    if (aSeen !== bSeen) return aSeen - bSeen
 
-    // If both unseen, maintain original relative order (stable-ish)
-    if (!ma && !mb) return 0;
-    if (!ma) return -1;
-    if (!mb) return 1;
+    if (!ma && !mb) return 0
+    if (!ma) return -1
+    if (!mb) return 1
 
-    // 2) Wrong items before right (last incorrect answer → higher priority)
     if (ma.lastCorrect !== mb.lastCorrect) {
-      return ma.lastCorrect ? 1 : -1; // incorrect first
+      return ma.lastCorrect ? 1 : -1
     }
 
-    // 3) Older lastSeen first
     if (ma.lastSeen !== mb.lastSeen) {
-      return ma.lastSeen - mb.lastSeen;
+      return ma.lastSeen - mb.lastSeen
     }
 
-    // 4) Lower accuracy first
-    const aAcc = ma.total > 0 ? ma.correct / ma.total : 1;
-    const bAcc = mb.total > 0 ? mb.correct / mb.total : 1;
-    return aAcc - bAcc;
-  });
+    const aAcc = ma.total > 0 ? ma.correct / ma.total : 1
+    const bAcc = mb.total > 0 ? mb.correct / mb.total : 1
+    return aAcc - bAcc
+  })
 }
 
 /**
  * Get overall progress summary for all widgets in a room.
  */
-export function getProgressSummary(roomId: string): Record<string, WidgetProgress> {
-  const data = loadRoomData(roomId);
-  const result: Record<string, WidgetProgress> = {};
+export async function getProgressSummary(roomId: string): Promise<Record<string, WidgetProgress>> {
+  const data = await loadMastery(roomId)
+  const result: Record<string, WidgetProgress> = {}
 
-  for (const [widgetKind, exercises] of Object.entries(data)) {
-    let totalAttempted = 0;
-    let totalCorrect = 0;
-    let masteredCount = 0;
+  var wKeys = Object.keys(data)
+  for (var w = 0; w < wKeys.length; w++) {
+    var widgetKind = wKeys[w]
+    var exercises = data[widgetKind]
+    var totalAttempted = 0
+    var totalCorrect = 0
+    var masteredCount = 0
 
-    for (const em of Object.values(exercises)) {
-      totalAttempted += em.total;
-      totalCorrect += em.correct;
-      const acc = em.total > 0 ? em.correct / em.total : 0;
+    var eKeys = Object.keys(exercises)
+    for (var e = 0; e < eKeys.length; e++) {
+      var em = exercises[eKeys[e]]
+      totalAttempted += em.total
+      totalCorrect += em.correct
+      var acc = em.total > 0 ? em.correct / em.total : 0
       if (em.correct >= 3 && acc >= 0.7) {
-        masteredCount++;
+        masteredCount++
       }
     }
 
-    const exerciseCount = Object.keys(exercises).length;
-    const accuracy = totalAttempted > 0 ? totalCorrect / totalAttempted : 0;
+    var exerciseCount = eKeys.length
+    var accuracy = totalAttempted > 0 ? totalCorrect / totalAttempted : 0
 
     result[widgetKind] = {
       widgetKind,
@@ -167,20 +215,20 @@ export function getProgressSummary(roomId: string): Record<string, WidgetProgres
       accuracy,
       exerciseCount,
       masteredCount,
-    };
+    }
   }
 
-  return result;
+  return result
 }
 
 /**
  * Clear all data for a room.
  */
-export function clearRoomData(roomId: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.removeItem(storageKey(roomId));
-  } catch {
-    // silently ignore
-  }
+export async function clearRoomData(roomId: string): Promise<void> {
+  fetch('/api/lang/mastery?roomId=' + roomId, {
+    method: 'DELETE',
+  }).catch(function() { /* ignore */ })
+
+  cache.delete(roomId)
+  cacheTimestamps.delete(roomId)
 }
