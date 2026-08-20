@@ -73,6 +73,10 @@ const CANVAS_TOOLS: CanvasTool[] = [
   { id: 'math-venn', label: 'Venn Diagram', bands: ['all', 'highschool'], config: { vennCircles: 2 } },
   { id: 'math-bar-chart', label: 'Bar Chart', bands: ['all', 'elementary', 'middle'], config: { chartCategories: ['A', 'B', 'C', 'D'], chartValues: [3, 7, 5, 9] } },
   { id: 'math-pie-chart', label: 'Pie Chart', bands: ['all', 'middle', 'highschool'], config: { chartCategories: ['A', 'B', 'C', 'D'], chartValues: [30, 25, 20, 25] } },
+  { id: 'math-place-value', label: 'Place Value Chart', bands: ['all', 'elementary'], config: {} },
+  { id: 'math-clock', label: 'Clock', bands: ['all', 'elementary'], config: {} },
+  { id: 'math-base-10', label: 'Base-10 Blocks', bands: ['all', 'elementary'], config: {} },
+  { id: 'math-multiplication-array', label: 'Multiplication Array', bands: ['all', 'elementary'], config: {} },
 ]
 
 // ============================================================
@@ -123,6 +127,10 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
 
   // Quick Equations: active equation tracking
   const [activeEquation, setActiveEquation] = useState('')
+
+  // Widget size preset
+  const [sizePreset, setSizePreset] = useState<'small' | 'medium' | 'large'>('medium')
+  const SIZE_MULTIPLIER: Record<'small' | 'medium' | 'large', number> = { small: 0.7, medium: 1.0, large: 1.3 }
 
   // Background grid type tracking (synced from store on click)
   const [activeBg, setActiveBg] = useState<'none' | 'line' | 'grid'>(() => {
@@ -185,6 +193,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   // Add interactive widget to board (same pattern as StatToolkit)
   const addToBoard = useCallback((widgetKind: string, overrides?: Record<string, unknown>) => {
     const size = getWidgetDefaultSize(widgetKind)
+    const mult = SIZE_MULTIPLIER[sizePreset]
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800
     const cx = ((vw / 2) - 80 - camera.x) / camera.zoom
@@ -194,10 +203,10 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
       type: 'widget',
       widgetKind,
       config: { ...getDefaultWidgetConfig(widgetKind), ...overrides },
-      x: cx - size.width / 2,
-      y: cy - size.height / 2,
-      width: size.width,
-      height: size.height,
+      x: cx - (size.width * mult) / 2,
+      y: cy - (size.height * mult) / 2,
+      width: size.width * mult,
+      height: size.height * mult,
       rotation: 0,
       opacity: 1,
       strokeColor: isDark ? '#334155' : '#e2e8f0',
@@ -207,7 +216,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
       pageIndex: currentPageIndex,
     }
     addElement(el)
-  }, [addElement, camera, isDark, currentPageIndex])
+  }, [addElement, camera, isDark, currentPageIndex, sizePreset])
 
   // Shared "Add to Board" button for math widgets
   const addBoardBtn = (label: string, onClick: () => void) => (
@@ -297,6 +306,20 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
       {/* ============================================================ */}
       {activeBand === 'all' && (
         <>
+          {/* Size Preset Buttons */}
+          <div style={{ display: 'flex', gap: 4, padding: '4px 12px 8px', alignItems: 'center' }}>
+            <span style={{ fontSize: 9, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, opacity: 0.6, marginRight: 4 }}>Size:</span>
+            {(['small', 'medium', 'large'] as const).map(function(sz) {
+              var labels: Record<'small' | 'medium' | 'large', string> = { small: 'S', medium: 'M', large: 'L' }
+              var isActive = sizePreset === sz
+              return (
+                <button key={sz} onClick={function() { setSizePreset(sz) }}
+                  style={{ padding: '3px 10px', borderRadius: 4, fontSize: 11, fontWeight: isActive ? 700 : 500, background: isActive ? actBg : dkBg, border: isActive ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: isActive ? actText : dkText, cursor: 'pointer' as const, minWidth: 28, textAlign: 'center' as const }}>
+                  {labels[sz]}
+                </button>
+              )
+            })}
+          </div>
           <div className="toolkit-section">
             {sectionTitle('Quick Equations')}
             <div className="toolkit-grid">

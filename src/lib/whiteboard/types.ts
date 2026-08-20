@@ -64,6 +64,10 @@ export type ToolId =
   | 'math-protractor'
   | 'math-bar-chart'
   | 'math-pie-chart'
+  | 'math-place-value'
+  | 'math-clock'
+  | 'math-base-10'
+  | 'math-multiplication-array'
 
 // ---- Element Types ----
 

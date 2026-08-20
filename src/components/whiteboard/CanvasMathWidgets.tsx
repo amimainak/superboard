@@ -643,8 +643,10 @@ export function CanvasNumberLine({ element, isDark }: CanvasWidgetProps) {
                   fill={SHADE_COLORS[i % SHADE_COLORS.length]} opacity={0.85}
                   style={{ cursor: 'pointer' as const }}
                   onClick={function(e) { e.stopPropagation(); togglePoint(v) }} />
-                <text x={x} y={lineY - 16} textAnchor="middle" fontSize={10} fontWeight={600}
-                  fill={SHADE_COLORS[i % SHADE_COLORS.length]}>{formatTick(v)}</text>
+                <rect x={x - 14} y={lineY - 30} width={28} height={14} rx={3}
+                  fill={isDark ? '#1e293b' : '#ffffff'} opacity={0.85} />
+                <text x={x} y={lineY - 18} textAnchor={'middle' as const} fontSize={11} fontWeight={700}
+                  fill={isDark ? '#fbbf24' : '#b45309'}>{formatTick(v)}</text>
               </g>
             )
           })}
@@ -717,6 +719,11 @@ export function CanvasPolygon({ element, isDark }: CanvasWidgetProps) {
   // Interior angle of a regular n-gon: ((n-2) * 180) / n
   const interiorAngle = Math.round(((sides - 2) * 180) / sides * 10) / 10
 
+  // Perimeter and area for regular polygon with circumradius r
+  const sideLength = 2 * r * Math.sin(Math.PI / sides)
+  const perimeter = sides * sideLength
+  const area = 0.5 * sides * r * r * Math.sin(2 * Math.PI / sides)
+
   // Build polygon path
   const polyPath = useMemo(function() {
     if (vertices.length < 3) return ''
@@ -771,6 +778,7 @@ export function CanvasPolygon({ element, isDark }: CanvasWidgetProps) {
           color: showAngles ? '#34d399' : s.text,
         }}>Angles</button>
         <span style={{ fontSize: 11, fontWeight: 600, color: s.accent, marginLeft: 'auto' }}>{interiorAngle} deg</span>
+        <span style={{ fontSize: 10, color: s.text }}>P: {perimeter.toFixed(1)}  A: {area.toFixed(1)}</span>
       </div>
 
       {/* SVG */}
@@ -1604,8 +1612,8 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
                   {tick.label && (
                     <text x={cx + (R + 12) * Math.cos((i - 90) * Math.PI / 180)}
                       y={cy + (R + 12) * Math.sin((i - 90) * Math.PI / 180) + 3}
-                      textAnchor={'middle' as const} fontSize={8}
-                      fill={isDark ? '#94a3b8' : '#475569'}>{tick.label}</text>
+                      textAnchor={'middle' as const} fontSize={10} fontWeight={600}
+                      fill={isDark ? '#e2e8f0' : '#1e293b'}>{tick.label}</text>
                   )}
                 </g>
               )
@@ -1617,8 +1625,8 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
                     stroke={isDark ? 'rgba(248,113,113,0.3)' : 'rgba(239,68,68,0.25)'} strokeWidth={0.5} />
                   <text x={cx + (R + 24) * Math.cos((i * 10 - 90) * Math.PI / 180)}
                     y={cy + (R + 24) * Math.sin((i * 10 - 90) * Math.PI / 180) + 3}
-                    textAnchor={'middle' as const} fontSize={7}
-                    fill={isDark ? 'rgba(248,113,113,0.7)' : 'rgba(239,68,68,0.6)'}>{tick.label}</text>
+                    textAnchor={'middle' as const} fontSize={9} fontWeight={600}
+                    fill={isDark ? '#fca5a5' : '#dc2626'}>{tick.label}</text>
                 </g>
               )
             })}
@@ -1771,8 +1779,8 @@ export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
                     stroke={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}
                     strokeWidth={tick.major ? 1 : 0.5} />
                   {tick.label && tick.major && (
-                    <text x={tick.x} y={oy + tick.h + 10} textAnchor={'middle' as const} fontSize={7}
-                      fill={isDark ? '#94a3b8' : '#475569'}>{tick.label}</text>
+                    <text x={tick.x} y={oy + tick.h + 10} textAnchor={'middle' as const} fontSize={9} fontWeight={600}
+                      fill={isDark ? '#e2e8f0' : '#1e293b'}>{tick.label}</text>
                   )}
                 </g>
               )
@@ -1784,8 +1792,8 @@ export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
                     stroke={isDark ? 'rgba(248,113,113,0.4)' : 'rgba(220,38,38,0.35)'}
                     strokeWidth={tick.label ? 1 : 0.5} />
                   {tick.label && (
-                    <text x={tick.x} y={oy + rulerH - tick.h - 3} textAnchor={'middle' as const} fontSize={7}
-                      fill={isDark ? 'rgba(248,113,113,0.8)' : 'rgba(220,38,38,0.7)'}>{tick.label}</text>
+                    <text x={tick.x} y={oy + rulerH - tick.h - 3} textAnchor={'middle' as const} fontSize={9} fontWeight={600}
+                      fill={isDark ? '#fca5a5' : '#dc2626'}>{tick.label}</text>
                   )}
                 </g>
               )
@@ -2101,6 +2109,436 @@ export function CanvasCompass({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
+// Place Value Chart Widget
+// ============================================================
+
+export function CanvasPlaceValueChart({ element, isDark }: CanvasWidgetProps) {
+  var cfg = element.config as { columns?: string[]; digits?: string[] }
+  var columns = (cfg.columns || ['Ones', 'Tens', 'Hundreds', 'Thousands']) as string[]
+  var digits = (cfg.digits || ['0', '0', '0', '0']) as string[]
+  var updateConfig = useConfigUpdater(element.id)
+  var s = ws(isDark)
+
+  var setDigit = useCallback(function(index: number, value: string) {
+    var ch = value.slice(-1)
+    var d = /^[0-9]$/.test(ch) ? ch : '0'
+    var next = digits.slice()
+    next[index] = d
+    updateConfig({ digits: next, columns: columns })
+  }, [digits, columns, updateConfig])
+
+  var clearAll = useCallback(function() {
+    updateConfig({ digits: columns.map(function() { return '0' }), columns: columns })
+  }, [columns, updateConfig])
+
+  var randomNum = useCallback(function() {
+    var len = 1 + Math.floor(Math.random() * 4)
+    var num = Math.floor(Math.random() * Math.pow(10, len))
+    var str = num.toString().padStart(4, '0')
+    updateConfig({ digits: [str[3], str[2], str[1], str[0]], columns: columns })
+  }, [columns, updateConfig])
+
+  var fullNumber = digits.slice().reverse().join('')
+  var formattedNumber = parseInt(fullNumber, 10).toLocaleString()
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Place Value</span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {columns.map(function(col, i) {
+            return (
+              <div key={i} style={{ width: 50, textAlign: 'center' as const, fontSize: 10, color: s.text, fontWeight: 600 }}>
+                {col}
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {columns.map(function(col, i) {
+            return (
+              <input key={i} type="text" value={digits[i] || '0'} maxLength={1}
+                onChange={function(e) { setDigit(i, e.target.value) }}
+                style={{ width: 50, height: 44, fontSize: 28, textAlign: 'center' as const,
+                  padding: '3px 6px', borderRadius: 4,
+                  border: '1px solid ' + s.border,
+                  background: s.input.background, color: s.input.color, outline: 'none' as const }} />
+            )
+          })}
+        </div>
+      </div>
+      <div style={{ textAlign: 'center' as const, fontSize: 18, fontWeight: 700, color: s.accent }}>
+        {formattedNumber}
+      </div>
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' as const }}>
+        <button onClick={clearAll}
+          style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+            background: s.surface, border: '1px solid ' + s.border, color: s.text }}>Clear All</button>
+        <button onClick={randomNum}
+          style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+            background: s.surface, border: '1px solid ' + s.border, color: s.text }}>Random</button>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// Clock Widget
+// ============================================================
+
+export function CanvasClock({ element, isDark }: CanvasWidgetProps) {
+  var cfg = element.config as { hours?: number; minutes?: number; showDigital?: boolean }
+  var hours = cfg.hours ?? 10
+  var minutes = cfg.minutes ?? 30
+  var showDigital = cfg.showDigital !== false
+  var updateConfig = useConfigUpdater(element.id)
+  var s = ws(isDark)
+
+  var setHours = useCallback(function(h: number) {
+    updateConfig({ hours: h, minutes: minutes, showDigital: showDigital })
+  }, [minutes, showDigital, updateConfig])
+
+  var setMinutes = useCallback(function(m: number) {
+    updateConfig({ hours: hours, minutes: m, showDigital: showDigital })
+  }, [hours, showDigital, updateConfig])
+
+  var toggleDigital = useCallback(function() {
+    updateConfig({ hours: hours, minutes: minutes, showDigital: !showDigital })
+  }, [hours, minutes, showDigital, updateConfig])
+
+  var cxC = 100
+  var cyC = 100
+  var rad = 85
+  var minuteAngle = (minutes / 60) * 360 - 90
+  var hourAngle = ((hours % 12) / 12) * 360 + (minutes / 60) * 30 - 90
+  var minuteRad = minuteAngle * Math.PI / 180
+  var hourRad = hourAngle * Math.PI / 180
+  var minHandLen = 62
+  var hourHandLen = 42
+  var minX = cxC + minHandLen * Math.cos(minuteRad)
+  var minY = cyC + minHandLen * Math.sin(minuteRad)
+  var hourX = cxC + hourHandLen * Math.cos(hourRad)
+  var hourY = cyC + hourHandLen * Math.sin(hourRad)
+
+  var timeStr = String(hours) + ':' + (minutes < 10 ? '0' : '') + String(minutes)
+
+  var hourMarks: Array<{ x1: number; y1: number; x2: number; y2: number; major: boolean; num: number }> = []
+  for (var hi = 1; hi <= 12; hi++) {
+    var hAngle = (hi / 12) * 360 - 90
+    var hRad = hAngle * Math.PI / 180
+    var isMajor = (hi % 3 === 0)
+    var innerR = isMajor ? rad - 10 : rad - 6
+    hourMarks.push({
+      x1: cxC + innerR * Math.cos(hRad), y1: cyC + innerR * Math.sin(hRad),
+      x2: cxC + rad * Math.cos(hRad), y2: cyC + rad * Math.sin(hRad),
+      major: isMajor, num: hi
+    })
+  }
+
+  var minuteTicks: Array<{ x1: number; y1: number; x2: number; y2: number }> = []
+  for (var mi = 0; mi < 60; mi++) {
+    if (mi % 5 !== 0) {
+      var mAngle = (mi / 60) * 360 - 90
+      var mRad = mAngle * Math.PI / 180
+      minuteTicks.push({
+        x1: cxC + (rad - 4) * Math.cos(mRad), y1: cyC + (rad - 4) * Math.sin(mRad),
+        x2: cxC + rad * Math.cos(mRad), y2: cyC + rad * Math.sin(mRad),
+      })
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Clock</span>
+        {showDigital && (
+          <span style={{ fontSize: 14, fontWeight: 700, color: s.accent }}>{timeStr}</span>
+        )}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center' as const }}>
+        <svg width={200} height={200} viewBox={'0 0 200 200'}>
+          <circle cx={cxC} cy={cyC} r={rad} fill={s.surface} stroke={s.border} strokeWidth={2} />
+          {minuteTicks.map(function(m, i) {
+            return <line key={'mt' + i} x1={m.x1} y1={m.y1} x2={m.x2} y2={m.y2}
+              stroke={s.text} strokeWidth={0.5} />
+          })}
+          {hourMarks.map(function(m) {
+            var numAngle = (m.num / 12) * 360 - 90
+            var numRad = numAngle * Math.PI / 180
+            var numR = rad - 20
+            return (
+              <g key={'hm' + m.num}>
+                <line x1={m.x1} y1={m.y1} x2={m.x2} y2={m.y2}
+                  stroke={s.bright} strokeWidth={m.major ? 2.5 : 1.5} />
+                <text x={cxC + numR * Math.cos(numRad)}
+                  y={cyC + numR * Math.sin(numRad) + 3}
+                  textAnchor={'middle' as const} fontSize={m.major ? 13 : 10} fontWeight={m.major ? 700 : 400}
+                  fill={s.bright}>{m.num}</text>
+              </g>
+            )
+          })}
+          <line x1={cxC} y1={cyC} x2={hourX} y2={hourY} stroke={s.bright} strokeWidth={4} strokeLinecap='round' />
+          <line x1={cxC} y1={cyC} x2={minX} y2={minY} stroke={s.accent} strokeWidth={2.5} strokeLinecap='round' />
+          <circle cx={cxC} cy={cyC} r={3} fill={s.bright} />
+        </svg>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 9, color: s.text }}>Hour</span>
+          <input type="range" min={0} max={11} value={hours}
+            onChange={function(e) { setHours(Number(e.target.value)) }}
+            style={{ flex: 1, cursor: 'pointer' as const }} />
+          <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{hours}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 9, color: s.text }}>Min</span>
+          <input type="range" min={0} max={59} value={minutes}
+            onChange={function(e) { setMinutes(Number(e.target.value)) }}
+            style={{ flex: 1, cursor: 'pointer' as const }} />
+          <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{minutes}</span>
+        </div>
+        <button onClick={toggleDigital}
+          style={{ padding: '3px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+            background: s.surface, border: '1px solid ' + s.border, color: s.text, alignSelf: 'center' as const }}>
+          {showDigital ? 'Hide Digital' : 'Show Digital'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// Base-10 Blocks Widget
+// ============================================================
+
+export function CanvasBase10Blocks({ element, isDark }: CanvasWidgetProps) {
+  var cfg = element.config as { ones?: number; tens?: number; hundreds?: number; thousands?: number }
+  var ones = cfg.ones ?? 0
+  var tens = cfg.tens ?? 0
+  var hundreds = cfg.hundreds ?? 0
+  var thousands = cfg.thousands ?? 0
+  var updateConfig = useConfigUpdater(element.id)
+  var s = ws(isDark)
+
+  var setOnes = useCallback(function(v: number) {
+    updateConfig({ ones: Math.max(0, Math.min(9, v)), tens: tens, hundreds: hundreds, thousands: thousands })
+  }, [tens, hundreds, thousands, updateConfig])
+
+  var setTens = useCallback(function(v: number) {
+    updateConfig({ ones: ones, tens: Math.max(0, Math.min(9, v)), hundreds: hundreds, thousands: thousands })
+  }, [ones, hundreds, thousands, updateConfig])
+
+  var setHundreds = useCallback(function(v: number) {
+    updateConfig({ ones: ones, tens: tens, hundreds: Math.max(0, Math.min(9, v)), thousands: thousands })
+  }, [ones, tens, thousands, updateConfig])
+
+  var setThousands = useCallback(function(v: number) {
+    updateConfig({ ones: ones, tens: tens, hundreds: hundreds, thousands: Math.max(0, Math.min(9, v)) })
+  }, [ones, tens, hundreds, updateConfig])
+
+  var clearAll = useCallback(function() {
+    updateConfig({ ones: 0, tens: 0, hundreds: 0, thousands: 0 })
+  }, [updateConfig])
+
+  var total = thousands * 1000 + hundreds * 100 + tens * 10 + ones
+  var totalStr = total.toLocaleString()
+
+  var blockStroke = isDark ? 'rgba(52,211,153,0.6)' : 'rgba(5,150,105,0.6)'
+  var blockFill = isDark ? 'rgba(52,211,153,0.2)' : 'rgba(5,150,105,0.15)'
+
+  function btnStyle() {
+    return { padding: '1px 6px' as const, borderRadius: 3, fontSize: 12, cursor: 'pointer' as const,
+      background: s.surface, border: '1px solid ' + s.border, color: s.text, fontWeight: 700, lineHeight: '16px' as const }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Base-10 Blocks</span>
+      </div>
+
+      {/* Thousands row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, color: s.text, width: 60, flexShrink: 0 }}>Thousands</span>
+        <svg width={70} height={70} style={{ flexShrink: 0 }}>
+          <polygon points={'60,5 65,0 65,65 60,70'} fill={isDark ? 'rgba(52,211,153,0.12)' : 'rgba(5,150,105,0.1)'} stroke={blockStroke} strokeWidth={0.5} />
+          <polygon points={'5,5 10,0 65,0 60,5'} fill={isDark ? 'rgba(52,211,153,0.18)' : 'rgba(5,150,105,0.15)'} stroke={blockStroke} strokeWidth={0.5} />
+          <rect x={5} y={5} width={55} height={55} fill={thousands > 0 ? blockFill : s.surface} stroke={blockStroke} strokeWidth={1} />
+          {Array.from({ length: 10 }, function(_, row) {
+            return Array.from({ length: 10 }, function(_, col) {
+              return <rect key={'t' + row + '-' + col} x={5 + col * 5.5} y={5 + row * 5.5} width={5.5} height={5.5}
+                fill={thousands > 0 ? blockFill : 'transparent'} stroke={blockStroke} strokeWidth={0.3} />
+            })
+          })}
+        </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <button onClick={function() { setThousands(thousands - 1) }} style={btnStyle()}>-</button>
+          <span style={{ fontSize: 14, fontWeight: 700, color: s.accent, width: 20, textAlign: 'center' as const }}>{thousands}</span>
+          <button onClick={function() { setThousands(thousands + 1) }} style={btnStyle()}>+</button>
+        </div>
+      </div>
+
+      {/* Hundreds row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, color: s.text, width: 60, flexShrink: 0 }}>Hundreds</span>
+        <svg width={70} height={70} style={{ flexShrink: 0 }}>
+          <rect x={5} y={5} width={60} height={60} fill={hundreds > 0 ? blockFill : s.surface} stroke={blockStroke} strokeWidth={1} />
+          {Array.from({ length: 10 }, function(_, row) {
+            return Array.from({ length: 10 }, function(_, col) {
+              return <rect key={'h' + row + '-' + col} x={5 + col * 6} y={5 + row * 6} width={6} height={6}
+                fill={hundreds > 0 ? blockFill : 'transparent'} stroke={blockStroke} strokeWidth={0.3} />
+            })
+          })}
+        </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <button onClick={function() { setHundreds(hundreds - 1) }} style={btnStyle()}>-</button>
+          <span style={{ fontSize: 14, fontWeight: 700, color: s.accent, width: 20, textAlign: 'center' as const }}>{hundreds}</span>
+          <button onClick={function() { setHundreds(hundreds + 1) }} style={btnStyle()}>+</button>
+        </div>
+      </div>
+
+      {/* Tens row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, color: s.text, width: 60, flexShrink: 0 }}>Tens</span>
+        <svg width={110} height={24} style={{ flexShrink: 0 }}>
+          <rect x={0} y={0} width={100} height={20} fill={tens > 0 ? blockFill : s.surface} stroke={blockStroke} strokeWidth={1} />
+          {Array.from({ length: 10 }, function(_, i) {
+            return <rect key={'ten' + i} x={i * 10} y={0} width={10} height={20}
+              fill={tens > 0 ? blockFill : 'transparent'} stroke={blockStroke} strokeWidth={0.5} />
+          })}
+        </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <button onClick={function() { setTens(tens - 1) }} style={btnStyle()}>-</button>
+          <span style={{ fontSize: 14, fontWeight: 700, color: s.accent, width: 20, textAlign: 'center' as const }}>{tens}</span>
+          <button onClick={function() { setTens(tens + 1) }} style={btnStyle()}>+</button>
+        </div>
+      </div>
+
+      {/* Ones row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, color: s.text, width: 60, flexShrink: 0 }}>Ones</span>
+        <svg width={200} height={24} style={{ flexShrink: 0 }}>
+          {Array.from({ length: ones }, function(_, i) {
+            return <rect key={'one' + i} x={i * 22} y={2} width={20} height={20}
+              fill={blockFill} stroke={blockStroke} strokeWidth={1} rx={2} />
+          })}
+        </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <button onClick={function() { setOnes(ones - 1) }} style={btnStyle()}>-</button>
+          <span style={{ fontSize: 14, fontWeight: 700, color: s.accent, width: 20, textAlign: 'center' as const }}>{ones}</span>
+          <button onClick={function() { setOnes(ones + 1) }} style={btnStyle()}>+</button>
+        </div>
+      </div>
+
+      {/* Total */}
+      <div style={{ textAlign: 'center' as const, fontSize: 16, fontWeight: 700, color: s.accent, marginTop: 2 }}>
+        {'Total: ' + totalStr}
+      </div>
+      <button onClick={clearAll}
+        style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+          background: s.surface, border: '1px solid ' + s.border, color: s.text, alignSelf: 'center' as const }}>Clear</button>
+    </div>
+  )
+}
+
+// ============================================================
+// Multiplication Array Widget
+// ============================================================
+
+export function CanvasMultiplicationArray({ element, isDark }: CanvasWidgetProps) {
+  var cfg = element.config as { rows?: number; columns?: number }
+  var rows = cfg.rows ?? 3
+  var columns = cfg.columns ?? 4
+  var updateConfig = useConfigUpdater(element.id)
+  var s = ws(isDark)
+
+  var setRows = useCallback(function(r: number) {
+    updateConfig({ rows: r, columns: columns })
+  }, [columns, updateConfig])
+
+  var setColumns = useCallback(function(c: number) {
+    updateConfig({ rows: rows, columns: c })
+  }, [rows, updateConfig])
+
+  var product = rows * columns
+  var svgW = 240
+  var svgH = 200
+  var cellSize = Math.min(180 / columns, 150 / rows)
+  var gridW = cellSize * columns
+  var gridH = cellSize * rows
+  var offsetX = (svgW - gridW) / 2 + 15
+  var offsetY = (svgH - gridH) / 2 + 12
+
+  var quickFacts: Array<[number, number]> = [[2, 3], [3, 4], [5, 5], [6, 7], [8, 8], [9, 9], [10, 10], [12, 12]]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Multiplication Array</span>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
+          <span style={{ fontSize: 9, color: s.text }}>Rows</span>
+          <input type="range" min={1} max={12} value={rows}
+            onChange={function(e) { setRows(Number(e.target.value)) }}
+            style={{ flex: 1, cursor: 'pointer' as const }} />
+          <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{rows}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
+          <span style={{ fontSize: 9, color: s.text }}>Cols</span>
+          <input type="range" min={1} max={12} value={columns}
+            onChange={function(e) { setColumns(Number(e.target.value)) }}
+            style={{ flex: 1, cursor: 'pointer' as const }} />
+          <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{columns}</span>
+        </div>
+      </div>
+      <div style={{ textAlign: 'center' as const, fontSize: 20, fontWeight: 700, color: s.accent }}>
+        {String(rows) + ' \u00D7 ' + String(columns) + ' = ' + String(product)}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center' as const }}>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+          <text x={offsetX + gridW / 2} y={offsetY - 2} textAnchor={'middle' as const} fontSize={9} fill={s.text}>
+            {String(columns) + ' columns'}
+          </text>
+          <text x={offsetX - 4} y={offsetY + gridH / 2} textAnchor={'end' as const} fontSize={9} fill={s.text}
+            transform={'rotate(-90 ' + String(offsetX - 4) + ' ' + String(offsetY + gridH / 2) + ')'}>
+            {String(rows) + ' rows'}
+          </text>
+          {Array.from({ length: rows }, function(_, r) {
+            return Array.from({ length: columns }, function(_, c) {
+              var color = SHADE_COLORS[r % SHADE_COLORS.length]
+              return <rect key={'a' + r + '-' + c}
+                x={offsetX + c * cellSize} y={offsetY + r * cellSize}
+                width={cellSize - 1} height={cellSize - 1} rx={2}
+                fill={isDark ? color + '33' : color + '44'}
+                stroke={isDark ? color + '66' : color + '88'}
+                strokeWidth={0.5} />
+            })
+          })}
+        </svg>
+      </div>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' as const, justifyContent: 'center' as const }}>
+        {quickFacts.map(function(pair) {
+          var isActive = pair[0] === rows && pair[1] === columns
+          return (
+            <button key={String(pair[0]) + 'x' + String(pair[1])}
+              onClick={function() { setRows(pair[0]); setColumns(pair[1]) }}
+              style={{ padding: '2px 5px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
+                background: isActive ? 'rgba(5,150,105,0.15)' : s.surface,
+                border: isActive ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + s.border,
+                color: isActive ? '#34d399' : s.text }}>
+              {String(pair[0]) + '\u00D7' + String(pair[1])}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
 // Registry helpers (used by CanvasWidgets.tsx)
 // ============================================================
 
@@ -2118,6 +2556,10 @@ export const MATH_WIDGET_KIND_LABELS: Record<string, string> = {
   'math-ruler': 'Ruler',
   'math-set-square': 'Set Square',
   'math-compass': 'Compass',
+  'math-place-value': 'Place Value Chart',
+  'math-clock': 'Clock',
+  'math-base-10': 'Base-10 Blocks',
+  'math-multiplication-array': 'Multiplication Array',
 }
 
 export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown> {
@@ -2135,6 +2577,10 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'math-ruler': return { unit: 'cm', lineLen: 10, lineAngle: 0 }
     case 'math-set-square': return { triangleType: '45', showAngles: true, size: 200 }
     case 'math-compass': return { radius: 100, showCircle: true, arcStart: 0, arcEnd: 360 }
+    case 'math-place-value': return { columns: ['Ones', 'Tens', 'Hundreds', 'Thousands'], digits: ['0', '0', '0', '0'] }
+    case 'math-clock': return { hours: 10, minutes: 30, showDigital: true }
+    case 'math-base-10': return { ones: 0, tens: 0, hundreds: 0, thousands: 0 }
+    case 'math-multiplication-array': return { rows: 3, columns: 4 }
     default: return {}
   }
 }
@@ -2154,6 +2600,10 @@ export function getMathWidgetDefaultSize(kind: string): { width: number; height:
     case 'math-ruler': return { width: 440, height: 200 }
     case 'math-set-square': return { width: 340, height: 360 }
     case 'math-compass': return { width: 380, height: 400 }
+    case 'math-place-value': return { width: 360, height: 280 }
+    case 'math-clock': return { width: 280, height: 360 }
+    case 'math-base-10': return { width: 340, height: 420 }
+    case 'math-multiplication-array': return { width: 320, height: 380 }
     default: return { width: 280, height: 300 }
   }
 }

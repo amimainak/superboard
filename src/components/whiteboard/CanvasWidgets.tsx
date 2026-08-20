@@ -646,6 +646,10 @@ import {
   CanvasRuler,
   CanvasSetSquare,
   CanvasCompass,
+  CanvasPlaceValueChart,
+  CanvasClock,
+  CanvasBase10Blocks,
+  CanvasMultiplicationArray,
   getMathWidgetDefaultConfig,
   getMathWidgetDefaultSize,
   MATH_WIDGET_KIND_LABELS,
@@ -673,6 +677,10 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'math-ruler': CanvasRuler,
   'math-set-square': CanvasSetSquare,
   'math-compass': CanvasCompass,
+  'math-place-value': CanvasPlaceValueChart,
+  'math-clock': CanvasClock,
+  'math-base-10': CanvasBase10Blocks,
+  'math-multiplication-array': CanvasMultiplicationArray,
   // Language widgets
   'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -727,6 +735,10 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'math-ruler': return getMathWidgetDefaultConfig('math-ruler')
     case 'math-set-square': return getMathWidgetDefaultConfig('math-set-square')
     case 'math-compass': return getMathWidgetDefaultConfig('math-compass')
+    case 'math-place-value': return getMathWidgetDefaultConfig('math-place-value')
+    case 'math-clock': return getMathWidgetDefaultConfig('math-clock')
+    case 'math-base-10': return getMathWidgetDefaultConfig('math-base-10')
+    case 'math-multiplication-array': return getMathWidgetDefaultConfig('math-multiplication-array')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
@@ -764,6 +776,10 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'math-ruler': return getMathWidgetDefaultSize('math-ruler')
     case 'math-set-square': return getMathWidgetDefaultSize('math-set-square')
     case 'math-compass': return getMathWidgetDefaultSize('math-compass')
+    case 'math-place-value': return getMathWidgetDefaultSize('math-place-value')
+    case 'math-clock': return getMathWidgetDefaultSize('math-clock')
+    case 'math-base-10': return getMathWidgetDefaultSize('math-base-10')
+    case 'math-multiplication-array': return getMathWidgetDefaultSize('math-multiplication-array')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')

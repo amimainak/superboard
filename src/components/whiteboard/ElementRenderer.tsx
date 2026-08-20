@@ -15,6 +15,7 @@ import {
   simulatePressure,
   HIGHLIGHT_OPTIONS,
   hexToRgba,
+  generateId,
 } from '@/lib/whiteboard/utils'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import dynamic from 'next/dynamic'
@@ -319,7 +320,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
       // In non-select modes (draw, highlighter, eraser, etc.), make the widget
       // completely transparent to pointer events so the user can draw/write
       // over it.  In select mode the widget is interactive (draggable, controls).
-      var widgetPointerEvents = tool === 'select' ? 'auto' : 'none'
+      var widgetPointerEvents = tool === 'select' ? 'auto' : 'none' as React.CSSProperties['pointerEvents']
       // Helper: detect if the pointer landed on an interactive control inside
       // the widget (button, slider, input, etc.).  If so we select the widget
       // but do NOT start a drag — the control itself needs the pointer.
@@ -332,79 +333,114 @@ export const ElementRenderer = React.memo(function ElementRenderer({
         if (t.closest('button, input, select, textarea, label, a, [role="slider"], [role="button"]')) return true
         return false
       }
+      var closeBtnCx = element.x + element.width - 14
+      var closeBtnCy = element.y + 14
+      var dupBtnCx = element.x + 14
+      var dupBtnCy = element.y + 14
+      var btnR = 11
+      var btnBg = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+      var btnColor = '#94a3b8'
+      // Grade-band color coding for widget border
+      var gradeBorder = '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')
+      var gradeBorderTop = 'none'
+      var wk = (element as import('@/lib/whiteboard/types').WidgetElement).widgetKind || ''
+      if (wk.startsWith('math-fraction') || wk.startsWith('math-number-line') || wk.startsWith('math-bar-chart') || wk.startsWith('math-pie-chart') || wk === 'math-place-value' || wk === 'math-clock' || wk === 'math-base-10' || wk === 'math-multiplication-array') {
+        gradeBorderTop = '3px solid #22c55e'
+      } else if (wk.startsWith('math-') || wk === 'math-place-value' || wk === 'math-clock' || wk === 'math-base-10' || wk === 'math-multiplication-array') {
+        gradeBorderTop = '3px solid #3b82f6'
+      } else if (wk.startsWith('stat-')) {
+        gradeBorderTop = '3px solid #a855f7'
+      }
       return (
-        <foreignObject
-          x={element.x}
-          y={element.y}
-          width={element.width}
-          height={element.height}
-          opacity={element.opacity}
-          style={{
-            cursor: element.locked ? 'not-allowed' : (tool === 'select' ? 'pointer' : 'none'),
-            pointerEvents: widgetPointerEvents as React.CSSProperties['pointerEvents'],
-          }}
-          onPointerDown={(e) => {
-            if (tool === 'select') {
-              e.stopPropagation()
-              if (!isWidgetInteractive(e)) {
-                // Click on widget background → select + enable drag
-                onPointerDown(e, element.id)
-              } else {
-                // Click on interactive control (slider, button, input)
-                // → select widget but do NOT start drag
-                useWhiteboardStore.getState().selectElements([element.id])
-              }
-            }
-            // In non-select modes pointerEvents is 'none' so this never fires
-          }}
-        >
-          <div style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box' }}>
-            {/* Close (X) button — top-right corner */}
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
+        <g>
+          <foreignObject
+            x={element.x}
+            y={element.y}
+            width={element.width}
+            height={element.height}
+            opacity={element.opacity}
+            style={{
+              cursor: element.locked ? 'not-allowed' : (tool === 'select' ? 'pointer' : 'none'),
+              pointerEvents: widgetPointerEvents as React.CSSProperties['pointerEvents'],
+            }}
+            onPointerDown={(e) => {
+              if (tool === 'select') {
                 e.stopPropagation()
-                var store = useWhiteboardStore.getState()
-                store.pushHistory()
-                store.removeElements([element.id])
-                store.clearSelection()
-              }}
-              style={{
-                position: 'absolute', top: 2, right: 2, zIndex: 10,
-                width: 22, height: 22, borderRadius: '50%',
-                border: 'none',
-                background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                color: isDark ? '#94a3b8' : '#94a3b8',
-                fontSize: 14, fontWeight: 700, lineHeight: '1',
-                cursor: 'pointer' as const,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: 0, opacity: 0.5,
-                transition: 'opacity 0.15s',
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.5' }}
-              title="Remove from board"
-            >
-              x
-            </button>
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: isDark ? '#0f172a' : '#ffffff',
-                border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
-                borderRadius: 8,
-                padding: '10px 12px',
-                overflow: 'auto',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-                fontFamily: 'inherit',
-                boxSizing: 'border-box',
-              }}
-            >
-              <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />
+                if (!isWidgetInteractive(e)) {
+                  // Click on widget background → select + enable drag
+                  onPointerDown(e, element.id)
+                } else {
+                  // Click on interactive control (slider, button, input)
+                  // → select widget but do NOT start drag
+                  useWhiteboardStore.getState().selectElements([element.id])
+                }
+              }
+              // In non-select modes pointerEvents is 'none' so this never fires
+            }}
+          >
+            <div style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box' }}>
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: isDark ? '#0f172a' : '#ffffff',
+                  border: gradeBorder,
+                  borderTop: gradeBorderTop,
+                  borderRadius: 8,
+                  padding: '10px 12px',
+                  overflow: 'auto',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  fontFamily: 'inherit',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />
+              </div>
             </div>
-          </div>
-        </foreignObject>
+          </foreignObject>
+          {/* Close (x) button — SVG, always has pointer events regardless of tool mode */}
+          <g
+            style={{ cursor: 'pointer' as const }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              var store = useWhiteboardStore.getState()
+              store.pushHistory()
+              store.removeElements([element.id])
+              store.clearSelection()
+            }}
+            opacity={0.5}
+            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
+            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.5') }}
+          >
+            <circle cx={closeBtnCx} cy={closeBtnCy} r={btnR} fill={btnBg} />
+            <text x={closeBtnCx} y={closeBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={12} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>x</text>
+          </g>
+          {/* Duplicate button — SVG, always has pointer events regardless of tool mode */}
+          <g
+            style={{ cursor: 'pointer' as const }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              var store = useWhiteboardStore.getState()
+              store.pushHistory()
+              var clone: WhiteboardElement = {
+                ...element,
+                id: generateId(),
+                x: element.x + 20,
+                y: element.y + 20,
+              }
+              store.addElement(clone)
+              store.selectElements([clone.id])
+            }}
+            opacity={0.5}
+            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
+            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.5') }}
+          >
+            <circle cx={dupBtnCx} cy={dupBtnCy} r={btnR} fill={btnBg} />
+            <text x={dupBtnCx} y={dupBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={11} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>⯑</text>
+          </g>
+        </g>
       )
     }
 
