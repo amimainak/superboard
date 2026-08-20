@@ -464,7 +464,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText }}>Max:</span>{numInput(nlMax, setNlMax, 1, 100, 1, 48)}
                 <span style={{ fontSize: 11, color: dkText }}>Step:</span>{numInput(nlStep, setNlStep, 0.1, 10, 0.1, 48)}
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ numberLineMin: nlMin, numberLineMax: nlMax, numberLineStep: nlStep }); setTool('math-number-line') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-number-line', { min: nlMin, max: nlMax, step: nlStep }))}
             </div>
           </div>
 
@@ -504,7 +504,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   ))}
                 </div>
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ sides: polySides }); setTool('math-polygon') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-polygon', { sides: polySides }))}
             </div>
           </div>
 
@@ -544,7 +544,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText }}>Step:</span>{numInput(cpStep, setCpStep, 0.5, 10, 0.5, 48)}
               </div>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: 0 }}>Click on the plane to plot points.</p>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ coordXMin: -cpRange, coordXMax: cpRange, coordYMin: -cpRange, coordYMax: cpRange, coordStep: cpStep }); setTool('math-coordinate-plane') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-coordinate-plane', { range: cpRange, step: cpStep }))}
             </div>
           </div>
 
@@ -558,7 +558,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   <button key={n} onClick={() => setVennCount(n as 2 | 3)} style={{ padding: '3px 10px', borderRadius: 4, fontSize: 11, background: vennCount === n ? actBg : dkBg, border: vennCount === n ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: vennCount === n ? actText : dkText, cursor: 'pointer' }}>{n}</button>
                 ))}
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ vennCircles: vennCount }); setTool('math-venn') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-venn-diagram', { circleCount: vennCount }))}
             </div>
           </div>
 
@@ -572,7 +572,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 11, color: dkText }}>Values:</span>{textInput(chartValues, setChartValues, '3,7,5,9')}
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ chartCategories: chartCategories.split(',').map(s => s.trim()).filter(Boolean), chartValues: chartValues.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n)) }); setTool('math-bar-chart') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-bar-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
             </div>
           </div>
 
@@ -586,7 +586,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 11, color: dkText }}>Values:</span>{textInput(chartValues, setChartValues, '30,25,20,25')}
               </div>
-              {placeBtn('Place on Canvas', () => { setMathToolConfig({ chartCategories: chartCategories.split(',').map(s => s.trim()).filter(Boolean), chartValues: chartValues.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n)) }); setTool('math-pie-chart') })}
+              {addBoardBtn('Add to Board', () => addToBoard('math-pie-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
             </div>
           </div>
 

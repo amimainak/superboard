@@ -636,6 +636,12 @@ import {
   CanvasFractionCircle,
   CanvasFractionBar,
   CanvasAngleMaker,
+  CanvasNumberLine,
+  CanvasPolygon,
+  CanvasCoordinatePlane,
+  CanvasVennDiagram,
+  CanvasBarChart,
+  CanvasPieChart,
   getMathWidgetDefaultConfig,
   getMathWidgetDefaultSize,
   MATH_WIDGET_KIND_LABELS,
@@ -653,6 +659,12 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'math-fraction-circle': CanvasFractionCircle,
   'math-fraction-bar': CanvasFractionBar,
   'math-angle-maker': CanvasAngleMaker,
+  'math-number-line': CanvasNumberLine,
+  'math-polygon': CanvasPolygon,
+  'math-coordinate-plane': CanvasCoordinatePlane,
+  'math-venn-diagram': CanvasVennDiagram,
+  'math-bar-chart': CanvasBarChart,
+  'math-pie-chart': CanvasPieChart,
   // Language widgets
   'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -697,6 +709,12 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'math-fraction-circle': return getMathWidgetDefaultConfig('math-fraction-circle')
     case 'math-fraction-bar': return getMathWidgetDefaultConfig('math-fraction-bar')
     case 'math-angle-maker': return getMathWidgetDefaultConfig('math-angle-maker')
+    case 'math-number-line': return getMathWidgetDefaultConfig('math-number-line')
+    case 'math-polygon': return getMathWidgetDefaultConfig('math-polygon')
+    case 'math-coordinate-plane': return getMathWidgetDefaultConfig('math-coordinate-plane')
+    case 'math-venn-diagram': return getMathWidgetDefaultConfig('math-venn-diagram')
+    case 'math-bar-chart': return getMathWidgetDefaultConfig('math-bar-chart')
+    case 'math-pie-chart': return getMathWidgetDefaultConfig('math-pie-chart')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
@@ -724,6 +742,12 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'math-fraction-circle': return getMathWidgetDefaultSize('math-fraction-circle')
     case 'math-fraction-bar': return getMathWidgetDefaultSize('math-fraction-bar')
     case 'math-angle-maker': return getMathWidgetDefaultSize('math-angle-maker')
+    case 'math-number-line': return getMathWidgetDefaultSize('math-number-line')
+    case 'math-polygon': return getMathWidgetDefaultSize('math-polygon')
+    case 'math-coordinate-plane': return getMathWidgetDefaultSize('math-coordinate-plane')
+    case 'math-venn-diagram': return getMathWidgetDefaultSize('math-venn-diagram')
+    case 'math-bar-chart': return getMathWidgetDefaultSize('math-bar-chart')
+    case 'math-pie-chart': return getMathWidgetDefaultSize('math-pie-chart')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')

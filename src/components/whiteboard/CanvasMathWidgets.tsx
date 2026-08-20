@@ -539,7 +539,7 @@ export function CanvasNumberLine({ element, isDark }: CanvasWidgetProps) {
     return lineStartX + (v - min) / range * lineLen
   }
 
-  const showEvery = 1
+  let showEvery = 1
   if (ticks.length > 20) showEvery = Math.ceil(ticks.length / 20)
 
   return (
@@ -670,7 +670,7 @@ export function CanvasPolygon({ element, isDark }: CanvasWidgetProps) {
   // Build polygon path
   const polyPath = useMemo(function() {
     if (vertices.length < 3) return ''
-    const d = 'M ' + vertices[0].x + ' ' + vertices[0].y
+    let d = 'M ' + vertices[0].x + ' ' + vertices[0].y
     for (let i = 1; i < vertices.length; i++) {
       d = d + ' L ' + vertices[i].x + ' ' + vertices[i].y
     }
@@ -803,7 +803,7 @@ export function CanvasCoordinatePlane({ element, isDark }: CanvasWidgetProps) {
   const addPoint = useCallback(function(px: number, py: number) {
     // Check if point exists
     const exists = points.some(function(p) { return p.x === px && p.y === py })
-    const next: Array<{x: number; y: number}>
+    var next: Array<{x: number; y: number}>
     if (exists) {
       next = points.filter(function(p) { return !(p.x === px && p.y === py) })
     } else {
@@ -830,8 +830,8 @@ export function CanvasCoordinatePlane({ element, isDark }: CanvasWidgetProps) {
     const mathX = (svgX - originX) / scale
     const mathY = (originY - svgY) / scale
     // Snap to step
-    const snappedX = Math.round(mathX / step) * step
-    const snappedY = Math.round(mathY / step) * step
+    var snappedX = Math.round(mathX / step) * step
+    var snappedY = Math.round(mathY / step) * step
     snappedX = Math.round(snappedX * 1000) / 1000
     snappedY = Math.round(snappedY * 1000) / 1000
     if (Math.abs(snappedX) > range || Math.abs(snappedY) > range) return
@@ -856,7 +856,7 @@ export function CanvasCoordinatePlane({ element, isDark }: CanvasWidgetProps) {
   // Tick labels
   const tickLabels = useMemo(function() {
     const labels: Array<{x: number; y: number; text: string}> = []
-    const labelStep = step
+    var labelStep = step
     if ((range * 2) / labelStep > 20) labelStep = step * Math.ceil(((range * 2) / labelStep) / 20) * labelStep
     for (let t = -range; t <= range; t += labelStep) {
       const tv = Math.round(t * 1000) / 1000
@@ -1226,7 +1226,7 @@ export function CanvasBarChart({ element, isDark }: CanvasWidgetProps) {
     const rough = maxVal * 1.15
     const mag = Math.pow(10, Math.floor(Math.log10(rough)))
     const norm = rough / mag
-    const niceNorm: number
+    var niceNorm: number
     if (norm <= 1.5) niceNorm = 2
     else if (norm <= 3) niceNorm = 3
     else if (norm <= 5) niceNorm = 5
@@ -1372,7 +1372,7 @@ export function CanvasPieChart({ element, isDark }: CanvasWidgetProps) {
   const slices = useMemo(function() {
     if (total <= 0) return []
     const result: Array<{d: string; color: string; midAngle: number; pct: string; label: string}> = []
-    const currentAngle = -Math.PI / 2
+    var currentAngle = -Math.PI / 2
     for (let i = 0; i < values.length; i++) {
       const val = values[i]
       const sliceAngle = (val / total) * 2 * Math.PI
