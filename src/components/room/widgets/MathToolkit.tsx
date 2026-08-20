@@ -301,9 +301,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <button key={fn.eq} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
                   onClick={() => {
                     setActiveEquation(fn.eq)
-                    pushHistory()
-                    setMathToolConfig({ coordEquation: fn.eq, chartTitle: fn.label })
-                    setTool('math-coordinate-plane')
+                    addToBoard('math-coordinate-plane', { range: 10, step: 1 })
                   }}
                   style={{ padding: '6px 10px', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', background: activeEquation === fn.eq ? actBg : dkBg, border: activeEquation === fn.eq ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: activeEquation === fn.eq ? actText : dkText, cursor: 'pointer' as const, textAlign: 'left' as const }}>
                   {fn.label}
@@ -333,17 +331,20 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               ))}
             </div>
           </div>
-          {/* Canvas tools for all bands */}
+          {/* Interactive board widgets for all bands */}
           <div className="toolkit-section">
-            {sectionTitle('Canvas Tools')}
+            {sectionTitle('Math Tools')}
             <div className="toolkit-grid">
-              {CANVAS_TOOLS.map((tool) => (
-                <button key={tool.id} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => activateCanvasTool(tool)}
-                  style={{ padding: '6px 10px', borderRadius: 6, fontSize: 11, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', textAlign: 'left' }}>
-                  {tool.label}
-                </button>
-              ))}
+              {CANVAS_TOOLS.map((tool) => {
+                var widgetKind = tool.id === 'math-angle' ? 'math-angle-maker' : tool.id === 'math-venn' ? 'math-venn-diagram' : tool.id
+                return (
+                  <button key={tool.id} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
+                    onClick={function() { addToBoard(widgetKind, tool.config || {}) }}
+                    style={{ padding: '6px 10px', borderRadius: 6, fontSize: 11, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' as const, textAlign: 'left' as const }}>
+                    {tool.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </>
@@ -437,16 +438,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           {/* Flashcards */}
           <div className="toolkit-section">{sectionTitle('Flashcards')}<FlashcardsPanel isDark={isDark} /></div>
 
-          {/* Canvas tools for elementary */}
-          <div className="toolkit-section">
-            {sectionTitle('Quick Canvas Tools')}
-            <div className="toolkit-grid">
-              {getToolsForBand('elementary').map(tool => (
-                <button key={tool.id} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => activateCanvasTool(tool)} style={{ padding: '6px 10px', borderRadius: 6, fontSize: 11, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', textAlign: 'left' }}>{tool.label}</button>
-              ))}
-            </div>
-          </div>
+
         </>
       )}
 
@@ -482,13 +474,8 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>Custom:</span>
                 {numInput(angleCustomDeg, setAngleCustomDeg, 1, 359, 1, 52)}
                 <span style={{ fontSize: 11, color: dkText }}>°</span>
-                <button onClick={() => { setAnglePreset(null); setMathToolConfig({ initialDegrees: angleCustomDeg }); setTool('math-angle') }} style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', cursor: 'pointer' }}>Place {angleCustomDeg}°</button>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {addBoardBtn('Add to Board', () => addToBoard('math-angle-maker', { degrees: anglePreset !== null ? anglePreset : angleCustomDeg }))}
-                <button onClick={() => { setAnglePreset(null); setMathToolConfig({}); setTool('math-angle') }} style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', alignSelf: 'flex-end' }}>Free drag</button>
-              </div>
-              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: 0 }}>"Add to Board" places the angle widget on canvas (interactive). "Free drag" uses legacy canvas placement.</p>
+              {addBoardBtn('Add to Board', () => addToBoard('math-angle-maker', { degrees: anglePreset !== null ? anglePreset : angleCustomDeg }))}
             </div>
           </div>
 
@@ -517,16 +504,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           {/* Formula Reference */}
           <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaPanel band="middle" isDark={isDark} /></div>
 
-          {/* Canvas tools for middle */}
-          <div className="toolkit-section">
-            {sectionTitle('Quick Canvas Tools')}
-            <div className="toolkit-grid">
-              {getToolsForBand('middle').filter(t => !['math-fraction-circle', 'math-fraction-bar'].includes(t.id)).map(tool => (
-                <button key={tool.id} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => activateCanvasTool(tool)} style={{ padding: '6px 10px', borderRadius: 6, fontSize: 11, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', textAlign: 'left' }}>{tool.label}</button>
-              ))}
-            </div>
-          </div>
+
         </>
       )}
 
@@ -596,16 +574,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           {/* Proof Builder */}
           <div className="toolkit-section">{sectionTitle('Proof Builder')}<ProofPanel isDark={isDark} /></div>
 
-          {/* Canvas tools for HS */}
-          <div className="toolkit-section">
-            {sectionTitle('Quick Canvas Tools')}
-            <div className="toolkit-grid">
-              {getToolsForBand('highschool').map(tool => (
-                <button key={tool.id} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => activateCanvasTool(tool)} style={{ padding: '6px 10px', borderRadius: 6, fontSize: 11, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer', textAlign: 'left' }}>{tool.label}</button>
-              ))}
-            </div>
-          </div>
+
         </>
       )}
     </div>
