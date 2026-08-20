@@ -3,10 +3,60 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { generateId } from '@/lib/whiteboard/utils'
 
 // ============================================================
 // On-Canvas Math Widgets — Interactive fraction & angle tools
 // ============================================================
+
+// ---- Canvas stamping helpers ----
+// These let widgets draw real geometry (lines, circles) onto the
+// whiteboard canvas so the teacher can draw over / annotate them.
+
+interface StampCtx {
+  ex: number  // widget element.x on canvas
+  ey: number  // widget element.y on canvas
+}
+
+function useStampToCanvas(element: WidgetElement) {
+  const addEl = useWhiteboardStore((s) => s.addElement)
+  const pushH = useWhiteboardStore((s) => s.pushHistory)
+
+  var stampLine = useCallback(function(ctx: StampCtx, lx1: number, ly1: number, lx2: number, ly2: number, color?: string, sw?: number) {
+    var store = useWhiteboardStore.getState()
+    var style = store.style
+    pushH()
+    addEl({
+      id: generateId(), type: 'line',
+      x: ctx.ex + lx1, y: ctx.ey + ly1,
+      x2: ctx.ex + lx2, y2: ctx.ey + ly2,
+      width: 0, height: 0, rotation: 0,
+      opacity: style.opacity,
+      strokeColor: color || style.strokeColor,
+      fillColor: 'transparent',
+      strokeWidth: sw || Math.max(style.strokeWidth, 2),
+      locked: false, pageIndex: store.currentPageIndex,
+    } as import('@/lib/whiteboard/types').WhiteboardElement)
+  }, [addEl, pushH])
+
+  var stampCircle = useCallback(function(ctx: StampCtx, lcx: number, lcy: number, r: number, color?: string, sw?: number) {
+    var store = useWhiteboardStore.getState()
+    var style = store.style
+    pushH()
+    addEl({
+      id: generateId(), type: 'ellipse',
+      x: ctx.ex + lcx - r, y: ctx.ey + lcy - r,
+      width: r * 2, height: r * 2, rotation: 0,
+      opacity: style.opacity,
+      strokeColor: color || style.strokeColor,
+      fillColor: 'transparent',
+      strokeWidth: sw || Math.max(style.strokeWidth, 2),
+      locked: false, pageIndex: store.currentPageIndex,
+    } as import('@/lib/whiteboard/types').WhiteboardElement)
+  }, [addEl, pushH])
+
+  return { stampLine: stampLine, stampCircle: stampCircle }
+}
 
 interface CanvasWidgetProps {
   element: WidgetElement
@@ -1467,7 +1517,7 @@ export function CanvasPieChart({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
-// Protractor Widget
+// Protractor Widget — Measure & draw angles
 // ============================================================
 
 export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
@@ -1476,38 +1526,13 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
   var measureAngle = cfg.measureAngle ?? 45
   const updateConfig = useConfigUpdater(element.id)
   const s = ws(isDark)
-  const svgRef = useRef<SVGSVGElement>(null)
-  const dragging = useRef(false)
-
-  const setRotation = useCallback(function(r: number) {
-    var norm = ((r % 360) + 360) % 360
-    updateConfig({ rotation: norm, measureAngle: measureAngle })
-  }, [measureAngle, updateConfig])
+  const { stampLine } = useStampToCanvas(element)
+  var ctx: StampCtx = { ex: element.x, ey: element.y }
 
   const setMeasureAngle = useCallback(function(a: number) {
     var clamped = Math.max(0, Math.min(180, Math.round(a)))
     updateConfig({ rotation: rotation, measureAngle: clamped })
   }, [rotation, updateConfig])
-
-  // Drag-to-rotate handler
-  var handlePointerDown = useCallback(function(e: React.PointerEvent) {
-    dragging.current = true
-    ;(e.target as SVGElement).setPointerCapture(e.pointerId)
-  }, [])
-
-  var handlePointerMove = useCallback(function(e: React.PointerEvent) {
-    if (!dragging.current || !svgRef.current) return
-    var rect = svgRef.current.getBoundingClientRect()
-    var cx = rect.left + rect.width / 2
-    var cy = rect.top + rect.height * 0.6
-    var angle = Math.atan2(-(e.clientY - cy), e.clientX - cx) * 180 / Math.PI
-    var norm = ((angle + 90) % 360 + 360) % 360
-    setRotation(norm)
-  }, [setRotation])
-
-  var handlePointerUp = useCallback(function() {
-    dragging.current = false
-  }, [])
 
   // SVG geometry
   var svgW = 320
@@ -1516,81 +1541,61 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
   var cy = svgH * 0.6
   var R = 140
   var innerR = 110
-  var rotRad = (rotation - 90) * Math.PI / 180
 
-  // Build degree tick marks
+  // Draw angle arms on canvas
+  var drawAngleOnCanvas = useCallback(function() {
+    var armLen = 120
+    var rad0 = -Math.PI / 2
+    var radA = (measureAngle - 90) * Math.PI / 180
+    stampLine(ctx, cx, cy, cx + armLen * Math.cos(rad0), cy + armLen * Math.sin(rad0), '#3b82f6', 2)
+    stampLine(ctx, cx, cy, cx + armLen * Math.cos(radA), cy + armLen * Math.sin(radA), '#3b82f6', 2)
+  }, [stampLine, ctx, cx, cy, measureAngle])
+
+  // Build degree ticks
   var ticks: Array<{ x1: number; y1: number; x2: number; y2: number; label: string; major: boolean }> = []
   for (var deg = 0; deg <= 180; deg += 1) {
     var aRad = (deg - 90) * Math.PI / 180
     var isMajor = deg % 10 === 0
     var isMid = deg % 5 === 0
     var outerR = isMajor ? R : isMid ? R - 6 : R - 3
-    var labelR = isMajor ? R + 14 : 0
     ticks.push({
-      x1: cx + innerR * Math.cos(aRad),
-      y1: cy + innerR * Math.sin(aRad),
-      x2: cx + outerR * Math.cos(aRad),
-      y2: cy + outerR * Math.sin(aRad),
-      label: isMajor ? (deg === 0 || deg === 180 ? '' + deg : '' + deg) : '',
-      major: isMajor,
+      x1: cx + innerR * Math.cos(aRad), y1: cy + innerR * Math.sin(aRad),
+      x2: cx + outerR * Math.cos(aRad), y2: cy + outerR * Math.sin(aRad),
+      label: isMajor ? '' + deg : '', major: isMajor,
     })
   }
-
-  // Measure angle needle
-  var needleRad = (measureAngle - 90) * Math.PI / 180
-  var needleX = cx + (R + 20) * Math.cos(needleRad)
-  var needleY = cy + (R + 20) * Math.sin(needleRad)
 
   // Outer scale (180 to 0, reversed)
   var outerTicks: Array<{ x1: number; y1: number; x2: number; y2: number; label: string }> = []
   for (var d = 0; d <= 180; d += 10) {
     var a = (d - 90) * Math.PI / 180
     outerTicks.push({
-      x1: cx + (R + 2) * Math.cos(a),
-      y1: cy + (R + 2) * Math.sin(a),
-      x2: cx + (R + 8) * Math.cos(a),
-      y2: cy + (R + 8) * Math.sin(a),
+      x1: cx + (R + 2) * Math.cos(a), y1: cy + (R + 2) * Math.sin(a),
+      x2: cx + (R + 8) * Math.cos(a), y2: cy + (R + 8) * Math.sin(a),
       label: '' + (180 - d),
     })
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, height: '100%', fontFamily: 'inherit' }}>
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Protractor</span>
-        <span style={{ fontSize: 10, color: s.text }}>Measure:</span>
         <input type="range" min={0} max={180} value={measureAngle}
           onChange={function(e) { setMeasureAngle(Number(e.target.value)) }}
-          style={{ width: 80, cursor: 'pointer' as const }} />
+          style={{ width: 70, cursor: 'pointer' as const }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: s.accent }}>{measureAngle} deg</span>
-        <button onClick={function() { setRotation(0); setMeasureAngle(0) }}
-          style={{
-            padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginLeft: 'auto',
-          }}>Reset</button>
       </div>
-
       {/* Protractor SVG */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg ref={svgRef} width={svgW} height={svgH}
-          viewBox={'0 0 ' + svgW + ' ' + svgH}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          style={{ cursor: 'grab' as const, userSelect: 'none' as const }}>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
           <g transform={'rotate(' + rotation + ' ' + cx + ' ' + cy + ')'}>
-            {/* Protractor body */}
             <path
               d={'M ' + (cx - R) + ' ' + cy + ' A ' + R + ' ' + R + ' 0 0 1 ' + (cx + R) + ' ' + cy + ' L ' + (cx + innerR) + ' ' + cy + ' A ' + innerR + ' ' + innerR + ' 0 0 0 ' + (cx - innerR) + ' ' + cy + ' Z'}
               fill={isDark ? 'rgba(59,130,246,0.08)' : 'rgba(59,130,246,0.05)'}
-              stroke={isDark ? 'rgba(59,130,246,0.4)' : 'rgba(59,130,246,0.6)'}
-              strokeWidth={1.5}
-            />
-            {/* Center line */}
+              stroke={isDark ? 'rgba(59,130,246,0.4)' : 'rgba(59,130,246,0.6)'} strokeWidth={1.5} />
             <line x1={cx} y1={cy} x2={cx} y2={cy - R}
               stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'} strokeWidth={0.5} />
-            {/* Inner ticks and labels */}
             {ticks.map(function(tick, i) {
               return (
                 <g key={'t' + i}>
@@ -1606,13 +1611,11 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
                 </g>
               )
             })}
-            {/* Outer reversed scale */}
             {outerTicks.map(function(tick, i) {
               return (
                 <g key={'o' + i}>
                   <line x1={tick.x1} y1={tick.y1} x2={tick.x2} y2={tick.y2}
-                    stroke={isDark ? 'rgba(248,113,113,0.3)' : 'rgba(239,68,68,0.25)'}
-                    strokeWidth={0.5} />
+                    stroke={isDark ? 'rgba(248,113,113,0.3)' : 'rgba(239,68,68,0.25)'} strokeWidth={0.5} />
                   <text x={cx + (R + 24) * Math.cos((i * 10 - 90) * Math.PI / 180)}
                     y={cy + (R + 24) * Math.sin((i * 10 - 90) * Math.PI / 180) + 3}
                     textAnchor={'middle' as const} fontSize={7}
@@ -1620,159 +1623,149 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
                 </g>
               )
             })}
-            {/* Baseline */}
             <line x1={cx - R - 10} y1={cy} x2={cx + R + 10} y2={cy}
               stroke={isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.2)'} strokeWidth={1} />
-            {/* Center dot */}
             <circle cx={cx} cy={cy} r={3} fill={isDark ? '#60a5fa' : '#3b82f6'} />
           </g>
-          {/* Measure angle needle (not rotated with protractor) */}
-          <line x1={cx} y1={cy} x2={cx + (R + 20) * Math.cos((measureAngle - 90) * Math.PI / 180)}
+          {/* Angle needle */}
+          <line x1={cx} y1={cy}
+            x2={cx + (R + 20) * Math.cos((measureAngle - 90) * Math.PI / 180)}
             y2={cy + (R + 20) * Math.sin((measureAngle - 90) * Math.PI / 180)}
             stroke='#f59e0b' strokeWidth={2} strokeDasharray='4 2' opacity={0.8} />
-          {/* Angle arc indicator */}
           <path d={'M ' + cx + ' ' + cy + ' L ' + (cx + 35) + ' ' + cy + ' A 35 35 0 ' + (measureAngle > 180 ? 1 : 0) + ' 0 ' + (cx + 35 * Math.cos((measureAngle - 90) * Math.PI / 180)) + ' ' + (cy + 35 * Math.sin((measureAngle - 90) * Math.PI / 180)) + ' Z'}
             fill='rgba(245,158,11,0.15)' stroke='#f59e0b' strokeWidth={1} />
         </svg>
       </div>
-
-      {/* Quick angle presets */}
-      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
+      {/* Presets + Draw button */}
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
         {[30, 45, 60, 90, 120, 135, 150, 180].map(function(a) {
           return (
             <button key={a} onClick={function() { setMeasureAngle(a) }}
-              style={{
-                padding: '2px 7px', borderRadius: 3, fontSize: 10, cursor: 'pointer' as const,
+              style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, cursor: 'pointer' as const,
                 background: measureAngle === a ? 'rgba(245,158,11,0.15)' : s.surface,
                 border: measureAngle === a ? '1px solid rgba(245,158,11,0.4)' : '1px solid ' + s.border,
-                color: measureAngle === a ? '#f59e0b' : s.text,
-              }}>{a} deg</button>
+                color: measureAngle === a ? '#f59e0b' : s.text }}>{a} deg</button>
           )
         })}
+        <button onClick={drawAngleOnCanvas}
+          style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+            cursor: 'pointer' as const, background: 'rgba(59,130,246,0.15)',
+            border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa' }}>Draw Angle</button>
       </div>
     </div>
   )
 }
 
 // ============================================================
-// Ruler Widget
+// Ruler Widget — Measure length & draw lines
 // ============================================================
 
 export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
-  const cfg = element.config as { rotation?: number; unit?: string; showInches?: boolean }
-  var rotation = cfg.rotation ?? 0
+  const cfg = element.config as { unit?: string; lineLen?: number; lineAngle?: number }
   var unit = cfg.unit || 'cm'
-  var showInches = cfg.showInches ?? false
+  var lineLen = cfg.lineLen ?? 10
+  var lineAngle = cfg.lineAngle ?? 0
   const updateConfig = useConfigUpdater(element.id)
   const s = ws(isDark)
-  const svgRef = useRef<SVGSVGElement>(null)
-  const dragging = useRef(false)
+  const { stampLine } = useStampToCanvas(element)
+  var ctx: StampCtx = { ex: element.x, ey: element.y }
 
-  var setRotation = useCallback(function(r: number) {
-    var norm = ((r % 360) + 360) % 360
-    updateConfig({ rotation: norm, unit: unit, showInches: showInches })
-  }, [unit, showInches, updateConfig])
+  var setLineLen = useCallback(function(v: number) {
+    updateConfig({ unit: unit, lineLen: Math.max(1, Math.min(30, v)), lineAngle: lineAngle })
+  }, [unit, lineAngle, updateConfig])
+
+  var setLineAngle = useCallback(function(v: number) {
+    updateConfig({ unit: unit, lineLen: lineLen, lineAngle: v })
+  }, [unit, lineLen, updateConfig])
 
   var setUnit = useCallback(function(u: string) {
-    updateConfig({ rotation: rotation, unit: u, showInches: u === 'both' ? true : showInches })
-  }, [rotation, showInches, updateConfig])
+    updateConfig({ unit: u, lineLen: lineLen, lineAngle: lineAngle })
+  }, [lineLen, lineAngle, updateConfig])
 
-  // Drag to rotate
-  var handlePointerDown = useCallback(function(e: React.PointerEvent) {
-    dragging.current = true
-    ;(e.target as SVGElement).setPointerCapture(e.pointerId)
-  }, [])
-
-  var handlePointerMove = useCallback(function(e: React.PointerEvent) {
-    if (!dragging.current || !svgRef.current) return
-    var rect = svgRef.current.getBoundingClientRect()
-    var cxR = rect.left + rect.width / 2
-    var cyR = rect.top + rect.height / 2
-    var angle = Math.atan2(e.clientY - cyR, e.clientX - cxR) * 180 / Math.PI
-    setRotation(angle + 90)
-  }, [setRotation])
-
-  var handlePointerUp = useCallback(function() {
-    dragging.current = false
-  }, [])
-
-  // Ruler geometry
-  var rulerLen = 360
+  // Ruler SVG geometry
+  var rulerW = 360
   var rulerH = 56
-  var svgW = rulerLen + 40
-  var svgH = rulerH + 40
+  var svgW = rulerW + 40
+  var svgH = rulerH + 70
   var ox = 20
-  var oy = 20
+  var oy = 10
   var maxCm = 15
   var maxIn = 6
 
-  // CM ticks
+  // Measurement line overlaid on the ruler
+  var linePixelLen = (lineLen / maxCm) * rulerW
+  var lineRad = (lineAngle - 90) * Math.PI / 180
+  var lineCx = ox + rulerW / 2
+  var lineCy = oy + rulerH / 2
+  var lx1 = lineCx - (linePixelLen / 2) * Math.cos(lineRad)
+  var ly1 = lineCy - (linePixelLen / 2) * Math.sin(lineRad)
+  var lx2 = lineCx + (linePixelLen / 2) * Math.cos(lineRad)
+  var ly2 = lineCy + (linePixelLen / 2) * Math.sin(lineRad)
+
+  // Draw line on canvas
+  var drawLineOnCanvas = useCallback(function() {
+    stampLine(ctx, lx1, ly1, lx2, ly2, '#eab308', 2)
+  }, [stampLine, ctx, lx1, ly1, lx2, ly2])
+
+  // Build cm ticks
   var cmTicks: Array<{ x: number; h: number; label: string; major: boolean }> = []
   for (var cm = 0; cm <= maxCm; cm++) {
-    var x = ox + (cm / maxCm) * rulerLen
+    var x = ox + (cm / maxCm) * rulerW
     cmTicks.push({ x: x, h: cm % 5 === 0 ? 20 : 14, label: '' + cm, major: cm % 5 === 0 })
-    // Half-cm tick
-    if (cm < maxCm) {
-      cmTicks.push({ x: x + rulerLen / maxCm / 2, h: 8, label: '', major: false })
-    }
+    if (cm < maxCm) cmTicks.push({ x: x + rulerW / maxCm / 2, h: 8, label: '', major: false })
   }
-
   // Inch ticks
   var inTicks: Array<{ x: number; h: number; label: string }> = []
   for (var inch = 0; inch <= maxIn; inch++) {
-    var xIn = ox + (inch / maxIn) * rulerLen
+    var xIn = ox + (inch / maxIn) * rulerW
     inTicks.push({ x: xIn, h: 16, label: '' + inch })
     if (inch < maxIn) {
-      // Quarter inch
-      for (var q = 1; q <= 3; q++) {
-        inTicks.push({ x: xIn + (q / 4 / maxIn) * rulerLen, h: q === 2 ? 10 : 6, label: '' })
-      }
+      for (var q = 1; q <= 3; q++) inTicks.push({ x: xIn + (q / 4 / maxIn) * rulerW, h: q === 2 ? 10 : 6, label: '' })
     }
   }
 
+  // Measurement display
+  var displayVal = unit === 'inch' ? (lineLen / 2.54).toFixed(2) : lineLen.toFixed(1)
+  var displayUnit = unit === 'inch' ? 'in' : 'cm'
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, height: '100%', fontFamily: 'inherit' }}>
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Ruler</span>
-        <span style={{ fontSize: 10, color: s.text }}>Unit:</span>
-        {(['cm', 'inch', 'both'] as const).map(function(u) {
+        <span style={{ fontSize: 10, color: s.text }}>Length:</span>
+        <input type="range" min={1} max={30} step={0.5} value={lineLen}
+          onChange={function(e) { setLineLen(Number(e.target.value)) }}
+          style={{ width: 60, cursor: 'pointer' as const }} />
+        <span style={{ fontSize: 10, color: s.text }}>Angle:</span>
+        <input type="range" min={0} max={180} value={lineAngle}
+          onChange={function(e) { setLineAngle(Number(e.target.value)) }}
+          style={{ width: 50, cursor: 'pointer' as const }} />
+        {(['cm', 'inch'] as const).map(function(u) {
           return (
             <button key={u} onClick={function() { setUnit(u) }}
-              style={{
-                padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+              style={{ padding: '1px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
                 background: unit === u ? 'rgba(5,150,105,0.15)' : s.surface,
                 border: unit === u ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + s.border,
-                color: unit === u ? '#34d399' : s.text,
-              }}>{u === 'cm' ? 'Centimeters' : u === 'inch' ? 'Inches' : 'Both'}</button>
+                color: unit === u ? '#34d399' : s.text }}>{u}</button>
           )
         })}
-        <button onClick={function() { setRotation(0) }}
-          style={{
-            padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginLeft: 'auto',
-          }}>Reset</button>
       </div>
-
-      {/* Ruler SVG */}
+      {/* Measurement display */}
+      <div style={{ textAlign: 'center' as const }}>
+        <span style={{ fontSize: 20, fontWeight: 800, color: '#eab308' }}>{displayVal}</span>
+        <span style={{ fontSize: 12, fontWeight: 600, color: s.text, marginLeft: 4 }}>{displayUnit}</span>
+      </div>
+      {/* Ruler SVG with measurement line */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg ref={svgRef} width={svgW} height={svgH}
-          viewBox={'0 0 ' + svgW + ' ' + svgH}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          style={{ cursor: 'grab' as const, userSelect: 'none' as const }}>
-          <g transform={'rotate(' + rotation + ' ' + svgW / 2 + ' ' + svgH / 2 + ')'}>
-            {/* Ruler body */}
-            <rect x={ox} y={oy} width={rulerLen} height={rulerH} rx={3}
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+          <g>
+            <rect x={ox} y={oy} width={rulerW} height={rulerH} rx={3}
               fill={isDark ? 'rgba(234,179,8,0.08)' : 'rgba(234,179,8,0.06)'}
-              stroke={isDark ? 'rgba(234,179,8,0.4)' : 'rgba(180,130,0,0.5)'}
-              strokeWidth={1.5} />
-            {/* Top edge */}
-            <line x1={ox} y1={oy} x2={ox + rulerLen} y2={oy}
+              stroke={isDark ? 'rgba(234,179,8,0.4)' : 'rgba(180,130,0,0.5)'} strokeWidth={1.5} />
+            <line x1={ox} y1={oy} x2={ox + rulerW} y2={oy}
               stroke={isDark ? 'rgba(234,179,8,0.5)' : 'rgba(180,130,0,0.6)'} strokeWidth={2} />
-            {/* CM scale on top */}
-            {(unit === 'cm' || unit === 'both') && cmTicks.map(function(tick, i) {
+            {cmTicks.map(function(tick, i) {
               return (
                 <g key={'cm' + i}>
                   <line x1={tick.x} y1={oy} x2={tick.x} y2={oy + tick.h}
@@ -1785,8 +1778,7 @@ export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
                 </g>
               )
             })}
-            {/* Inch scale on bottom */}
-            {(unit === 'inch' || unit === 'both') && inTicks.map(function(tick, i) {
+            {inTicks.map(function(tick, i) {
               return (
                 <g key={'in' + i}>
                   <line x1={tick.x} y1={oy + rulerH} x2={tick.x} y2={oy + rulerH - tick.h}
@@ -1799,341 +1791,270 @@ export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
                 </g>
               )
             })}
-            {/* Unit labels */}
-            {unit === 'both' && (
-              <text x={ox + 4} y={oy + 14} fontSize={7} fill={isDark ? '#60a5fa' : '#3b82f6'}>cm</text>
-            )}
-            {unit === 'both' && (
-              <text x={ox + 4} y={oy + rulerH - 6} fontSize={7} fill={isDark ? 'rgba(248,113,113,0.8)' : 'rgba(220,38,38,0.7)'}>in</text>
-            )}
           </g>
+          {/* Measurement line overlay */}
+          <line x1={lx1} y1={ly1} x2={lx2} y2={ly2}
+            stroke='#ef4444' strokeWidth={3} strokeLinecap='round' opacity={0.9} />
+          <circle cx={lx1} cy={ly1} r={5} fill='#ef4444' stroke={isDark ? '#0f172a' : '#ffffff'} strokeWidth={1.5} />
+          <circle cx={lx2} cy={ly2} r={5} fill='#ef4444' stroke={isDark ? '#0f172a' : '#ffffff'} strokeWidth={1.5} />
+          {/* Length label on the line */}
+          <text x={(lx1 + lx2) / 2} y={(ly1 + ly2) / 2 - 10} textAnchor={'middle' as const}
+            fontSize={11} fontWeight={700} fill='#ef4444'>{displayVal} {displayUnit}</text>
         </svg>
       </div>
-
-      <div style={{ fontSize: 9, color: s.text, textAlign: 'center' as const }}>
-        Drag to rotate {unit === 'both' ? '(cm top, inches bottom)' : ''}
+      {/* Draw button + quick lengths */}
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        {[2, 5, 10, 15, 20].map(function(l) {
+          return (
+            <button key={l} onClick={function() { setLineLen(l) }}
+              style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, cursor: 'pointer' as const,
+                background: lineLen === l ? 'rgba(234,179,8,0.15)' : s.surface,
+                border: lineLen === l ? '1px solid rgba(234,179,8,0.4)' : '1px solid ' + s.border,
+                color: lineLen === l ? '#eab308' : s.text }}>{l}{unit}</button>
+          )
+        })}
+        <button onClick={drawLineOnCanvas}
+          style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+            cursor: 'pointer' as const, background: 'rgba(234,179,8,0.15)',
+            border: '1px solid rgba(234,179,8,0.4)', color: '#eab308' }}>Draw Line</button>
       </div>
     </div>
   )
 }
 
 // ============================================================
-// Set Square Widget
+// Set Square Widget — Draw triangles
 // ============================================================
 
 export function CanvasSetSquare({ element, isDark }: CanvasWidgetProps) {
-  const cfg = element.config as { rotation?: number; triangleType?: string; showAngles?: boolean }
-  var rotation = cfg.rotation ?? 0
+  const cfg = element.config as { triangleType?: string; showAngles?: boolean; size?: number }
   var triangleType = cfg.triangleType || '45'
   var showAngles = cfg.showAngles ?? true
+  var triSize = cfg.size ?? 200
   const updateConfig = useConfigUpdater(element.id)
   const s = ws(isDark)
-  const svgRef = useRef<SVGSVGElement>(null)
-  const dragging = useRef(false)
-
-  var setRotation = useCallback(function(r: number) {
-    var norm = ((r % 360) + 360) % 360
-    updateConfig({ rotation: norm, triangleType: triangleType, showAngles: showAngles })
-  }, [triangleType, showAngles, updateConfig])
+  const { stampLine } = useStampToCanvas(element)
+  var ctx: StampCtx = { ex: element.x, ey: element.y }
 
   var setTriangleType = useCallback(function(t: string) {
-    updateConfig({ rotation: rotation, triangleType: t, showAngles: showAngles })
-  }, [rotation, showAngles, updateConfig])
+    updateConfig({ triangleType: t, showAngles: showAngles, size: triSize })
+  }, [showAngles, triSize, updateConfig])
 
   var toggleAngles = useCallback(function() {
-    updateConfig({ rotation: rotation, triangleType: triangleType, showAngles: !showAngles })
-  }, [rotation, triangleType, showAngles, updateConfig])
+    updateConfig({ triangleType: triangleType, showAngles: !showAngles, size: triSize })
+  }, [triangleType, triSize, updateConfig])
 
-  // Drag to rotate
-  var handlePointerDown = useCallback(function(e: React.PointerEvent) {
-    dragging.current = true
-    ;(e.target as SVGElement).setPointerCapture(e.pointerId)
-  }, [])
-
-  var handlePointerMove = useCallback(function(e: React.PointerEvent) {
-    if (!dragging.current || !svgRef.current) return
-    var rect = svgRef.current.getBoundingClientRect()
-    var cxS = rect.left + rect.width / 2
-    var cyS = rect.top + rect.height / 2
-    var angle = Math.atan2(e.clientY - cyS, e.clientX - cxS) * 180 / Math.PI
-    setRotation(angle + 90)
-  }, [setRotation])
-
-  var handlePointerUp = useCallback(function() {
-    dragging.current = false
-  }, [])
+  var setSize = useCallback(function(sz: number) {
+    updateConfig({ triangleType: triangleType, showAngles: showAngles, size: Math.max(60, Math.min(280, sz)) })
+  }, [triangleType, showAngles, updateConfig])
 
   // Triangle geometry
   var svgW = 300
   var svgH = 280
   var cxS = svgW / 2
   var cyS = svgH / 2
-  var size = 200
+  var size = triSize
 
-  // Points depend on triangle type
-  var points: string
+  // Compute triangle vertices
+  var verts: Array<{ x: number; y: number }> = []
+  var rightAngleCorner = ''
   var angleLabels: Array<{ x: number; y: number; text: string }> = []
-  var rightAngleCorner: string
 
   if (triangleType === '30') {
-    // 30-60-90 triangle: vertices at right angles
     var ax = cxS - size / 2
     var ay = cyS + size / 2
     var bx = cxS + size / 2
     var by = cyS + size / 2
-    // Hypotenuse slopes up
     var hx = cxS - size / 2 + size * Math.cos(60 * Math.PI / 180)
     var hy = cyS + size / 2 - size * Math.sin(60 * Math.PI / 180)
-    points = ax + ',' + ay + ' ' + bx + ',' + by + ' ' + hx + ',' + hy
+    verts = [{ x: ax, y: ay }, { x: bx, y: by }, { x: hx, y: hy }]
     rightAngleCorner = 'M ' + ax + ' ' + ay + ' L ' + (ax + 15) + ' ' + ay + ' L ' + (ax + 15) + ' ' + (ay - 15) + ' L ' + ax + ' ' + (ay - 15)
     angleLabels = [
-      { x: ax - 12, y: ay - 8, text: '90' },
-      { x: bx + 6, y: by - 8, text: '30' },
-      { x: hx - 14, y: hy - 10, text: '60' },
+      { x: ax - 14, y: ay - 10, text: '90 deg' },
+      { x: bx + 8, y: by - 10, text: '30 deg' },
+      { x: hx - 18, y: hy - 12, text: '60 deg' },
     ]
   } else {
-    // 45-45-90 triangle (default)
     var a1x = cxS - size / 2
     var a1y = cyS + size / 2
     var b1x = cxS + size / 2
     var b1y = cyS + size / 2
     var c1x = cxS - size / 2
     var c1y = cyS - size / 2
-    points = a1x + ',' + a1y + ' ' + b1x + ',' + b1y + ' ' + c1x + ',' + c1y
+    verts = [{ x: a1x, y: a1y }, { x: b1x, y: b1y }, { x: c1x, y: c1y }]
     rightAngleCorner = 'M ' + a1x + ' ' + a1y + ' L ' + (a1x + 18) + ' ' + a1y + ' L ' + (a1x + 18) + ' ' + (a1y - 18) + ' L ' + a1x + ' ' + (a1y - 18)
     angleLabels = [
-      { x: a1x - 12, y: a1y - 8, text: '90' },
-      { x: b1x + 6, y: b1y - 8, text: '45' },
-      { x: c1x - 16, y: c1y + 4, text: '45' },
+      { x: a1x - 14, y: a1y - 10, text: '90 deg' },
+      { x: b1x + 8, y: b1y - 10, text: '45 deg' },
+      { x: c1x - 18, y: c1y + 4, text: '45 deg' },
     ]
   }
 
+  var points = verts.map(function(v) { return v.x + ',' + v.y }).join(' ')
+
+  // Draw triangle on canvas
+  var drawTriangleOnCanvas = useCallback(function() {
+    for (var i = 0; i < verts.length; i++) {
+      var j = (i + 1) % verts.length
+      stampLine(ctx, verts[i].x, verts[i].y, verts[j].x, verts[j].y, '#8b5cf6', 2)
+    }
+  }, [stampLine, ctx, verts])
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, height: '100%', fontFamily: 'inherit' }}>
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Set Square</span>
-        <span style={{ fontSize: 10, color: s.text }}>Type:</span>
         {(['45', '30'] as const).map(function(t) {
           return (
             <button key={t} onClick={function() { setTriangleType(t) }}
-              style={{
-                padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+              style={{ padding: '2px 7px', borderRadius: 3, fontSize: 10, cursor: 'pointer' as const,
                 background: triangleType === t ? 'rgba(5,150,105,0.15)' : s.surface,
                 border: triangleType === t ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + s.border,
-                color: triangleType === t ? '#34d399' : s.text,
-              }}>{t === '45' ? '45-45-90' : '30-60-90'}</button>
+                color: triangleType === t ? '#34d399' : s.text }}>{t === '45' ? '45-45-90' : '30-60-90'}</button>
           )
         })}
         <button onClick={toggleAngles}
-          style={{
-            padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
+          style={{ padding: '2px 5px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
             background: showAngles ? 'rgba(59,130,246,0.12)' : s.surface,
             border: showAngles ? '1px solid rgba(59,130,246,0.3)' : '1px solid ' + s.border,
-            color: showAngles ? '#60a5fa' : s.text,
-          }}>Angles</button>
-        <button onClick={function() { setRotation(0) }}
-          style={{
-            padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginLeft: 'auto',
-          }}>Reset</button>
+            color: showAngles ? '#60a5fa' : s.text }}>Angles</button>
+        <span style={{ fontSize: 10, color: s.text }}>Size:</span>
+        <input type="range" min={60} max={280} value={triSize}
+          onChange={function(e) { setSize(Number(e.target.value)) }}
+          style={{ width: 50, cursor: 'pointer' as const }} />
       </div>
-
-      {/* Set Square SVG */}
+      {/* Triangle SVG */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg ref={svgRef} width={svgW} height={svgH}
-          viewBox={'0 0 ' + svgW + ' ' + svgH}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          style={{ cursor: 'grab' as const, userSelect: 'none' as const }}>
-          <g transform={'rotate(' + rotation + ' ' + cxS + ' ' + cyS + ')'}>
-            {/* Triangle body (transparent) */}
-            <polygon points={points}
-              fill={isDark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.04)'}
-              stroke={isDark ? 'rgba(139,92,246,0.5)' : 'rgba(109,40,217,0.5)'}
-              strokeWidth={2} />
-            {/* Right angle indicator */}
-            <path d={rightAngleCorner} fill='none'
-              stroke={isDark ? 'rgba(139,92,246,0.6)' : 'rgba(109,40,217,0.5)'}
-              strokeWidth={1} />
-            {/* Cutout hole in center */}
-            <circle cx={cxS} cy={cyS} r={18}
-              fill={isDark ? '#0f172a' : '#ffffff'}
-              stroke={isDark ? 'rgba(139,92,246,0.3)' : 'rgba(109,40,217,0.25)'}
-              strokeWidth={1} />
-            {/* Angle labels */}
-            {showAngles && angleLabels.map(function(lbl, i) {
-              return (
-                <text key={'al' + i} x={lbl.x} y={lbl.y}
-                  textAnchor={'middle' as const} fontSize={10} fontWeight={600}
-                  fill={isDark ? '#c4b5fd' : '#7c3aed'}>{lbl.text + ' deg'}</text>
-              )
-            })}
-            {/* Edge labels */}
-            <text x={cxS} y={cyS + size / 2 + 18} textAnchor={'middle' as const} fontSize={8}
-              fill={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.25)'}>
-              {triangleType === '45' ? 'a = b' : 'a : b : c = 1 : sqrt(3) : 2'}
-            </text>
-          </g>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+          <polygon points={points}
+            fill={isDark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.04)'}
+            stroke={isDark ? 'rgba(139,92,246,0.5)' : 'rgba(109,40,217,0.5)'} strokeWidth={2} />
+          <path d={rightAngleCorner} fill='none'
+            stroke={isDark ? 'rgba(139,92,246,0.6)' : 'rgba(109,40,217,0.5)'} strokeWidth={1} />
+          <circle cx={cxS} cy={cyS} r={18}
+            fill={isDark ? '#0f172a' : '#ffffff'}
+            stroke={isDark ? 'rgba(139,92,246,0.3)' : 'rgba(109,40,217,0.25)'} strokeWidth={1} />
+          {showAngles && angleLabels.map(function(lbl, i) {
+            return (
+              <text key={'al' + i} x={lbl.x} y={lbl.y} textAnchor={'middle' as const}
+                fontSize={9} fontWeight={600} fill={isDark ? '#c4b5fd' : '#7c3aed'}>{lbl.text}</text>
+            )
+          })}
         </svg>
       </div>
-
-      <div style={{ fontSize: 9, color: s.text, textAlign: 'center' as const }}>
-        Drag to rotate the set square
+      {/* Draw button */}
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        <button onClick={drawTriangleOnCanvas}
+          style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+            cursor: 'pointer' as const, background: 'rgba(139,92,246,0.15)',
+            border: '1px solid rgba(139,92,246,0.4)', color: '#a78bfa' }}>Draw Triangle</button>
       </div>
     </div>
   )
 }
 
 // ============================================================
-// Compass Widget
+// Compass Widget — Draw circles & arcs
 // ============================================================
 
 export function CanvasCompass({ element, isDark }: CanvasWidgetProps) {
-  const cfg = element.config as { radius?: number; rotation?: number; showCircle?: boolean; arcStart?: number; arcEnd?: number }
+  const cfg = element.config as { radius?: number; showCircle?: boolean; arcStart?: number; arcEnd?: number }
   var radius = cfg.radius ?? 100
-  var rotation = cfg.rotation ?? 0
   var showCircle = cfg.showCircle ?? true
   var arcStart = cfg.arcStart ?? 0
   var arcEnd = cfg.arcEnd ?? 360
   const updateConfig = useConfigUpdater(element.id)
   const s = ws(isDark)
-  const svgRef = useRef<SVGSVGElement>(null)
-  const dragging = useRef(false)
+  const { stampCircle, stampLine } = useStampToCanvas(element)
+  var ctx: StampCtx = { ex: element.x, ey: element.y }
 
   var setRadius = useCallback(function(r: number) {
-    var clamped = Math.max(20, Math.min(160, Math.round(r)))
-    updateConfig({ radius: clamped, rotation: rotation, showCircle: showCircle, arcStart: arcStart, arcEnd: arcEnd })
-  }, [rotation, showCircle, arcStart, arcEnd, updateConfig])
-
-  var setRotation = useCallback(function(r: number) {
-    var norm = ((r % 360) + 360) % 360
-    updateConfig({ radius: radius, rotation: norm, showCircle: showCircle, arcStart: arcStart, arcEnd: arcEnd })
-  }, [radius, showCircle, arcStart, arcEnd, updateConfig])
+    updateConfig({ radius: Math.max(20, Math.min(160, Math.round(r))), showCircle: showCircle, arcStart: arcStart, arcEnd: arcEnd })
+  }, [showCircle, arcStart, arcEnd, updateConfig])
 
   var toggleCircle = useCallback(function() {
-    updateConfig({ radius: radius, rotation: rotation, showCircle: !showCircle, arcStart: arcStart, arcEnd: arcEnd })
-  }, [radius, rotation, showCircle, arcStart, arcEnd, updateConfig])
+    updateConfig({ radius: radius, showCircle: !showCircle, arcStart: arcStart, arcEnd: arcEnd })
+  }, [radius, showCircle, arcStart, arcEnd, updateConfig])
 
   var setArcStart = useCallback(function(a: number) {
-    updateConfig({ radius: radius, rotation: rotation, showCircle: showCircle, arcStart: a, arcEnd: arcEnd })
-  }, [radius, rotation, showCircle, arcEnd, updateConfig])
+    updateConfig({ radius: radius, showCircle: showCircle, arcStart: a, arcEnd: arcEnd })
+  }, [radius, showCircle, arcEnd, updateConfig])
 
   var setArcEnd = useCallback(function(a: number) {
-    updateConfig({ radius: radius, rotation: rotation, showCircle: showCircle, arcStart: arcStart, arcEnd: a })
-  }, [radius, rotation, showCircle, arcStart, updateConfig])
-
-  // Drag to rotate
-  var handlePointerDown = useCallback(function(e: React.PointerEvent) {
-    dragging.current = true
-    ;(e.target as SVGElement).setPointerCapture(e.pointerId)
-  }, [])
-
-  var handlePointerMove = useCallback(function(e: React.PointerEvent) {
-    if (!dragging.current || !svgRef.current) return
-    var rect = svgRef.current.getBoundingClientRect()
-    var cxC = rect.left + rect.width / 2
-    var cyC = rect.top + rect.height / 2
-    var angle = Math.atan2(e.clientY - cyC, e.clientX - cxC) * 180 / Math.PI
-    setRotation(angle + 90)
-  }, [setRotation])
-
-  var handlePointerUp = useCallback(function() {
-    dragging.current = false
-  }, [])
+    updateConfig({ radius: radius, showCircle: showCircle, arcStart: arcStart, arcEnd: a })
+  }, [radius, showCircle, arcStart, updateConfig])
 
   // SVG geometry
   var svgW = 340
-  var svgH = 320
+  var svgH = 280
   var cxC = svgW / 2
-  var cyC = svgH / 2 + 10
-  var armLen = 140
-  var pivotX = cxC
-  var pivotY = cyC + 50
-
-  // Compass arm endpoints
-  var rad1 = ((rotation - 90 - 12) * Math.PI) / 180
-  var rad2 = ((rotation - 90 + 12) * Math.PI) / 180
-  var endX1 = pivotX + armLen * Math.cos(rad1)
-  var endY1 = pivotY + armLen * Math.sin(rad1)
-  var endX2 = pivotX + armLen * Math.cos(rad2)
-  var endY2 = pivotY + armLen * Math.sin(rad2)
-
-  // Needle point (bottom)
-  var needleX = pivotX + 20 * Math.sin(rotation * Math.PI / 180)
-  var needleY = pivotY + 20 * Math.cos(rotation * Math.PI / 180)
+  var cyC = svgH / 2
 
   // Drawn circle/arc
+  var isFullCircle = Math.abs(arcEnd - arcStart) >= 360
   var arcStartRad = (arcStart - 90) * Math.PI / 180
   var arcEndRad = (arcEnd - 90) * Math.PI / 180
+  var largeArc = (arcEnd - arcStart) > 180 ? 1 : 0
   var circleX = cxC + radius * Math.cos(arcStartRad)
   var circleY = cyC + radius * Math.sin(arcStartRad)
   var circleX2 = cxC + radius * Math.cos(arcEndRad)
   var circleY2 = cyC + radius * Math.sin(arcEndRad)
-  var largeArc = (arcEnd - arcStart) > 180 ? 1 : 0
   var arcPath = 'M ' + circleX + ' ' + circleY + ' A ' + radius + ' ' + radius + ' 0 ' + largeArc + ' 1 ' + circleX2 + ' ' + circleY2
 
-  // If full circle
-  var isFullCircle = Math.abs(arcEnd - arcStart) >= 360
-  var fullCirclePath = isFullCircle
-      ? 'M ' + (cxC + radius) + ' ' + cyC + ' A ' + radius + ' ' + radius + ' 1 1 ' + (cxC - radius) + ' ' + cyC + ' A ' + radius + ' ' + radius + ' 1 1 ' + (cxC + radius) + ' ' + cyC
-      : ''
+  // Draw circle/arc on canvas
+  var drawCircleOnCanvas = useCallback(function() {
+    if (isFullCircle) {
+      stampCircle(ctx, cxC, cyC, radius, '#059669', 2)
+    } else {
+      // Approximate arc with line segments
+      var steps = Math.max(8, Math.round(Math.abs(arcEnd - arcStart) / 3))
+      for (var i = 0; i < steps; i++) {
+        var a1 = ((arcStart + (arcEnd - arcStart) * i / steps) - 90) * Math.PI / 180
+        var a2 = ((arcStart + (arcEnd - arcStart) * (i + 1) / steps) - 90) * Math.PI / 180
+        stampLine(ctx, cxC + radius * Math.cos(a1), cyC + radius * Math.sin(a1),
+          cxC + radius * Math.cos(a2), cyC + radius * Math.sin(a2), '#059669', 2)
+      }
+    }
+  }, [stampCircle, stampLine, ctx, cxC, cyC, radius, arcStart, arcEnd, isFullCircle])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, height: '100%', fontFamily: 'inherit' }}>
       {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Compass</span>
         <span style={{ fontSize: 10, color: s.text }}>Radius:</span>
         <input type="range" min={20} max={160} value={radius}
           onChange={function(e) { setRadius(Number(e.target.value)) }}
-          style={{ width: 70, cursor: 'pointer' as const }} />
-        <span style={{ fontSize: 11, fontWeight: 600, color: s.accent }}>{radius}</span>
+          style={{ width: 60, cursor: 'pointer' as const }} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: s.accent }}>{radius}</span>
         <button onClick={toggleCircle}
-          style={{
-            padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
+          style={{ padding: '2px 5px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
             background: showCircle ? 'rgba(59,130,246,0.12)' : s.surface,
             border: showCircle ? '1px solid rgba(59,130,246,0.3)' : '1px solid ' + s.border,
-            color: showCircle ? '#60a5fa' : s.text,
-          }}>{showCircle ? 'Hide' : 'Show'} Circle</button>
-        <button onClick={function() { setRotation(0) }}
-          style={{
-            padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5', marginLeft: 'auto',
-          }}>Reset</button>
+            color: showCircle ? '#60a5fa' : s.text }}>{showCircle ? 'Hide' : 'Show'} Preview</button>
       </div>
-
-      {/* Arc range controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+      {/* Arc range */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 9, color: s.text }}>Arc:</span>
         <input type="range" min={0} max={360} value={arcStart}
           onChange={function(e) { setArcStart(Number(e.target.value)) }}
-          style={{ width: 50, cursor: 'pointer' as const }} />
+          style={{ width: 45, cursor: 'pointer' as const }} />
         <span style={{ fontSize: 9, color: s.text }}>to</span>
         <input type="range" min={0} max={360} value={arcEnd}
           onChange={function(e) { setArcEnd(Number(e.target.value)) }}
-          style={{ width: 50, cursor: 'pointer' as const }} />
-        <span style={{ fontSize: 9, fontWeight: 600, color: s.accent }}>{arcStart} - {arcEnd} deg</span>
+          style={{ width: 45, cursor: 'pointer' as const }} />
+        <span style={{ fontSize: 9, fontWeight: 600, color: s.accent }}>{arcStart}-{arcEnd} deg</span>
         <button onClick={function() { setArcStart(0); setArcEnd(360) }}
-          style={{
-            padding: '1px 5px', borderRadius: 3, fontSize: 8, cursor: 'pointer' as const,
-            background: s.surface, border: '1px solid ' + s.border, color: s.text,
-          }}>Full</button>
+          style={{ padding: '1px 5px', borderRadius: 3, fontSize: 8, cursor: 'pointer' as const,
+            background: s.surface, border: '1px solid ' + s.border, color: s.text }}>Full</button>
       </div>
-
-      {/* Compass SVG */}
+      {/* Circle/compass SVG */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg ref={svgRef} width={svgW} height={svgH}
-          viewBox={'0 0 ' + svgW + ' ' + svgH}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          style={{ cursor: 'grab' as const, userSelect: 'none' as const }}>
-          {/* Drawn circle/arc (appears at center top) */}
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
           {showCircle && isFullCircle && (
-            <circle cx={cxC} cy={cyC} r={radius}
-              fill='none' stroke={isDark ? 'rgba(52,211,153,0.5)' : 'rgba(5,150,105,0.5)'}
+            <circle cx={cxC} cy={cyC} r={radius} fill='none'
+              stroke={isDark ? 'rgba(52,211,153,0.5)' : 'rgba(5,150,105,0.5)'}
               strokeWidth={1.5} strokeDasharray='4 2' />
           )}
           {showCircle && !isFullCircle && (
@@ -2141,42 +2062,40 @@ export function CanvasCompass({ element, isDark }: CanvasWidgetProps) {
               stroke={isDark ? 'rgba(52,211,153,0.5)' : 'rgba(5,150,105,0.5)'}
               strokeWidth={1.5} strokeDasharray='4 2' />
           )}
-          {/* Radius line */}
           {showCircle && (
             <line x1={cxC} y1={cyC} x2={cxC + radius} y2={cyC}
-              stroke={isDark ? 'rgba(52,211,153,0.3)' : 'rgba(5,150,105,0.3)'}
-              strokeWidth={1} strokeDasharray='3 3' />
+              stroke={isDark ? 'rgba(52,211,153,0.3)' : 'rgba(5,150,105,0.3)'} strokeWidth={1} strokeDasharray='3 3' />
           )}
           {showCircle && (
-            <text x={cxC + radius / 2} y={cyC - 6} textAnchor={'middle' as const} fontSize={9}
+            <text x={cxC + radius / 2} y={cyC - 6} textAnchor={'middle' as const} fontSize={10}
               fill={isDark ? '#34d399' : '#059669'}>r = {radius}</text>
           )}
-          {/* Center dot of drawn circle */}
-          {showCircle && (
-            <circle cx={cxC} cy={cyC} r={2.5} fill={isDark ? '#34d399' : '#059669'} />
-          )}
-
-          {/* Compass tool (two arms + pivot) */}
-          {/* Arm 1 */}
-          <line x1={pivotX} y1={pivotY} x2={endX1} y2={endY1}
+          {showCircle && <circle cx={cxC} cy={cyC} r={2.5} fill={isDark ? '#34d399' : '#059669'} />}
+          {/* Compass arms */}
+          <line x1={cxC} y1={cyC + 60} x2={cxC - 15} y2={cyC - 50}
             stroke={isDark ? '#94a3b8' : '#475569'} strokeWidth={3} strokeLinecap='round' />
-          {/* Arm 2 */}
-          <line x1={pivotX} y1={pivotY} x2={endX2} y2={endY2}
+          <line x1={cxC} y1={cyC + 60} x2={cxC + 15} y2={cyC - 50}
             stroke={isDark ? '#94a3b8' : '#475569'} strokeWidth={3} strokeLinecap='round' />
-          {/* Top hinge */}
-          <circle cx={pivotX} y={pivotY} r={5} fill={isDark ? '#475569' : '#94a3b8'} stroke={isDark ? '#94a3b8' : '#475569'} strokeWidth={1.5} />
-          {/* Needle tip */}
-          <circle cx={needleX} cy={needleY} r={2} fill={isDark ? '#f87171' : '#ef4444'} />
-          {/* Pencil tip indicator */}
-          <circle cx={endX1} cy={endY1} r={2.5} fill={isDark ? '#34d399' : '#059669'} />
-          {/* Metal arc at top */}
-          <path d={'M ' + (pivotX - 10) + ' ' + (pivotY - 2) + ' A 10 10 0 0 1 ' + (pivotX + 10) + ' ' + (pivotY - 2)}
-            fill='none' stroke={isDark ? '#64748b' : '#64748b'} strokeWidth={2} />
+          <circle cx={cxC} y1={cyC + 60} r={5} fill={isDark ? '#475569' : '#94a3b8'} stroke={isDark ? '#94a3b8' : '#475569'} strokeWidth={1.5} />
+          <circle cx={cxC - 15} cy={cyC - 50} r={2.5} fill={isDark ? '#f87171' : '#ef4444'} />
+          <circle cx={cxC + 15} cy={cyC - 50} r={2.5} fill={isDark ? '#34d399' : '#059669'} />
         </svg>
       </div>
-
-      <div style={{ fontSize: 9, color: s.text, textAlign: 'center' as const }}>
-        Drag to rotate | Adjust radius and arc with sliders
+      {/* Draw button */}
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+        {[40, 60, 80, 100, 120].map(function(r) {
+          return (
+            <button key={r} onClick={function() { setRadius(r) }}
+              style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, cursor: 'pointer' as const,
+                background: radius === r ? 'rgba(5,150,105,0.15)' : s.surface,
+                border: radius === r ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + s.border,
+                color: radius === r ? '#34d399' : s.text }}>r={r}</button>
+          )
+        })}
+        <button onClick={drawCircleOnCanvas}
+          style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+            cursor: 'pointer' as const, background: 'rgba(5,150,105,0.15)',
+            border: '1px solid rgba(5,150,105,0.4)', color: '#34d399' }}>{isFullCircle ? 'Draw Circle' : 'Draw Arc'}</button>
       </div>
     </div>
   )
@@ -2214,9 +2133,9 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'math-bar-chart': return { categories: ['A', 'B', 'C', 'D'], values: [3, 7, 5, 9], title: '' }
     case 'math-pie-chart': return { categories: ['A', 'B', 'C', 'D'], values: [3, 7, 5, 9], title: '' }
     case 'math-protractor': return { rotation: 0, measureAngle: 45 }
-    case 'math-ruler': return { rotation: 0, unit: 'cm', showInches: false }
-    case 'math-set-square': return { rotation: 0, triangleType: '45', showAngles: true }
-    case 'math-compass': return { radius: 100, rotation: 0, showCircle: true, arcStart: 0, arcEnd: 360 }
+    case 'math-ruler': return { unit: 'cm', lineLen: 10, lineAngle: 0 }
+    case 'math-set-square': return { triangleType: '45', showAngles: true, size: 200 }
+    case 'math-compass': return { radius: 100, showCircle: true, arcStart: 0, arcEnd: 360 }
     default: return {}
   }
 }
