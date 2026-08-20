@@ -888,16 +888,20 @@ export function CanvasCoordinatePlane({ element, isDark }: CanvasWidgetProps) {
     addPoint(snappedX, snappedY)
   }, [originX, originY, scale, step, range, addPoint])
 
+  // Helper — defined before useMemo to avoid TDZ crash
+  function formatCoord(v: number) {
+    if (Number.isInteger(v)) return String(v)
+    return String(Math.round(v * 10) / 10)
+  }
+
   // Grid lines
   const gridLines = useMemo(function() {
     const lines: Array<{x1: number; y1: number; x2: number; y2: number}> = []
-    for (let g = -range; g <= range; g += step) {
-      const gv = Math.round(g * 1000) / 1000
-      const px = originX + gv * scale
-      const py = originY - gv * scale
-      // Vertical grid line
+    for (var g = -range; g <= range; g += step) {
+      var gv = Math.round(g * 1000) / 1000
+      var px = originX + gv * scale
+      var py = originY - gv * scale
       lines.push({ x1: px, y1: originY - range * scale, x2: px, y2: originY + range * scale })
-      // Horizontal grid line
       lines.push({ x1: originX - range * scale, y1: py, x2: originX + range * scale, y2: py })
     }
     return lines
@@ -908,10 +912,10 @@ export function CanvasCoordinatePlane({ element, isDark }: CanvasWidgetProps) {
     const labels: Array<{x: number; y: number; text: string}> = []
     var labelStep = step
     if ((range * 2) / labelStep > 20) labelStep = step * Math.ceil(((range * 2) / labelStep) / 20) * labelStep
-    for (let t = -range; t <= range; t += labelStep) {
-      const tv = Math.round(t * 1000) / 1000
-      const px = originX + tv * scale
-      const py = originY - tv * scale
+    for (var t = -range; t <= range; t += labelStep) {
+      var tv = Math.round(t * 1000) / 1000
+      var px = originX + tv * scale
+      var py = originY - tv * scale
       if (Math.abs(tv) > 0.001) {
         labels.push({ x: px, y: originY + 14, text: formatCoord(tv) })
         labels.push({ x: originX - 10, y: py + 3, text: formatCoord(tv) })
@@ -919,11 +923,6 @@ export function CanvasCoordinatePlane({ element, isDark }: CanvasWidgetProps) {
     }
     return labels
   }, [range, step, originX, originY, scale])
-
-  const formatCoord = function(v: number) {
-    if (Number.isInteger(v)) return String(v)
-    return String(Math.round(v * 10) / 10)
-  }
 
   const axisColor = isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.18)'
   const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'
@@ -1587,8 +1586,8 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
         <span style={{ fontSize: 13, fontWeight: 700, color: s.accent }}>{measureAngle} deg</span>
       </div>
       {/* Protractor SVG */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH} style={{ overflow: 'hidden' as const }}>
           <g transform={'rotate(' + rotation + ' ' + cx + ' ' + cy + ')'}>
             <path
               d={'M ' + (cx - R) + ' ' + cy + ' A ' + R + ' ' + R + ' 0 0 1 ' + (cx + R) + ' ' + cy + ' L ' + (cx + innerR) + ' ' + cy + ' A ' + innerR + ' ' + innerR + ' 0 0 0 ' + (cx - innerR) + ' ' + cy + ' Z'}
@@ -1648,7 +1647,7 @@ export function CanvasProtractor({ element, isDark }: CanvasWidgetProps) {
           )
         })}
         <button onClick={drawAngleOnCanvas}
-          style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+          style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
             cursor: 'pointer' as const, background: 'rgba(59,130,246,0.15)',
             border: '1px solid rgba(59,130,246,0.4)', color: '#60a5fa' }}>Draw Angle</button>
       </div>
@@ -1757,8 +1756,8 @@ export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
         <span style={{ fontSize: 12, fontWeight: 600, color: s.text, marginLeft: 4 }}>{displayUnit}</span>
       </div>
       {/* Ruler SVG with measurement line */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH} style={{ overflow: 'hidden' as const }}>
           <g>
             <rect x={ox} y={oy} width={rulerW} height={rulerH} rx={3}
               fill={isDark ? 'rgba(234,179,8,0.08)' : 'rgba(234,179,8,0.06)'}
@@ -1814,7 +1813,7 @@ export function CanvasRuler({ element, isDark }: CanvasWidgetProps) {
           )
         })}
         <button onClick={drawLineOnCanvas}
-          style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+          style={{ padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
             cursor: 'pointer' as const, background: 'rgba(234,179,8,0.15)',
             border: '1px solid rgba(234,179,8,0.4)', color: '#eab308' }}>Draw Line</button>
       </div>
@@ -1925,8 +1924,8 @@ export function CanvasSetSquare({ element, isDark }: CanvasWidgetProps) {
           style={{ width: 50, cursor: 'pointer' as const }} />
       </div>
       {/* Triangle SVG */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH} style={{ overflow: 'hidden' as const }}>
           <polygon points={points}
             fill={isDark ? 'rgba(139,92,246,0.06)' : 'rgba(139,92,246,0.04)'}
             stroke={isDark ? 'rgba(139,92,246,0.5)' : 'rgba(109,40,217,0.5)'} strokeWidth={2} />
@@ -2050,8 +2049,8 @@ export function CanvasCompass({ element, isDark }: CanvasWidgetProps) {
             background: s.surface, border: '1px solid ' + s.border, color: s.text }}>Full</button>
       </div>
       {/* Circle/compass SVG */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <svg width={svgW} height={svgH} viewBox={'0 0 ' + svgW + ' ' + svgH} style={{ overflow: 'hidden' as const }}>
           {showCircle && isFullCircle && (
             <circle cx={cxC} cy={cyC} r={radius} fill='none'
               stroke={isDark ? 'rgba(52,211,153,0.5)' : 'rgba(5,150,105,0.5)'}

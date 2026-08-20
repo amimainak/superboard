@@ -21,6 +21,8 @@
   backdrop-filter: blur(12px);
   max-height: calc(100vh - 72px);
   overflow-y: auto;
+  /* Let clicks pass through the bar's background/gaps to canvas widgets below */
+  pointer-events: none;
 }
 
 .widget-toggle-bar::-webkit-scrollbar {
@@ -36,6 +38,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+  pointer-events: none; /* container transparent — only buttons catch events */
 }
 
 .widget-toggle-group-label {
@@ -61,6 +64,7 @@
   backdrop-filter: blur(8px);
   transition: all 0.15s ease;
   white-space: nowrap;
+  pointer-events: auto; /* only actual buttons capture pointer events */
 }
 
 .widget-toggle-label {

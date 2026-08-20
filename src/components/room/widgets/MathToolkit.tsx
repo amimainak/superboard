@@ -146,7 +146,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
     pushHistory()
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800
-    const cx = (vw / 2 - camera.x) / camera.zoom
+    const cx = ((vw / 2) - 80 - camera.x) / camera.zoom
     const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
     addElement({
       id: generateId(),
@@ -187,7 +187,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
     const size = getWidgetDefaultSize(widgetKind)
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
     const vh = typeof window !== 'undefined' ? window.innerHeight : 800
-    const cx = (vw / 2 - camera.x) / camera.zoom
+    const cx = ((vw / 2) - 80 - camera.x) / camera.zoom
     const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
     const el: WidgetElement = {
       id: generateId(),
