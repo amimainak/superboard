@@ -41,20 +41,20 @@ import {
   DEFAULT_FIGLANG_CONFIG,
   type FigLangWidgetConfig,
 } from '@/components/whiteboard/FigurativeLanguageWidget'
-import type { PunctRule } from '@/data/punctuation-exercises'
+import {
+  StoryElementsMapWidget,
+  DEFAULT_STORY_MAP_CONFIG,
+  type StoryMapWidgetConfig,
+} from '@/components/whiteboard/StoryElementsMapWidget'
+import {
+  ParagraphOrganizerWidget,
+  DEFAULT_PARAORG_CONFIG,
+  type ParagraphOrganizerWidgetConfig,
+} from '@/components/whiteboard/ParagraphOrganizerWidget'
 
 // Phase 1 — Core tools
-const VocabularyFlashcardsLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.VocabularyFlashcards })))
+// Only lazy-load panel tools that don't have unified components
 const ReadingPassageAnalyzerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ReadingPassageAnalyzer })))
-const StoryElementsMapLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.StoryElementsMap })))
-const SentenceStructureBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SentenceStructureBuilder })))
-const FigurativeLanguageFinderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.FigurativeLanguageFinder })))
-const PhonicsDecodingBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PhonicsDecodingBuilder })))
-const PartsOfSpeechTaggerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PartsOfSpeechTagger })))
-const SentenceExpansionToolLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SentenceExpansionTool })))
-// Punctuation uses the unified canvas-primary component
-const PunctuationInteractiveLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PunctuationInteractive })))
-const ParagraphOrganizerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ParagraphOrganizer })))
 
 // Phase 2 — Marketplace tools
 const RootMorphologyExplorerLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.RootMorphologyExplorer })))
@@ -89,7 +89,17 @@ function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
   return <P1Panel><ReadingPassageAnalyzerLazy isDark={isDark} /></P1Panel>
 }
 function StoryElementsMapPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><StoryElementsMapLazy isDark={isDark} /></P1Panel>
+  const [config, setConfig] = useState<StoryMapWidgetConfig>({ ...DEFAULT_STORY_MAP_CONFIG })
+  return (
+    <P1Panel>
+      <StoryElementsMapWidget
+        isDark={isDark}
+        config={config}
+        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+        compact
+      />
+    </P1Panel>
+  )
 }
 function SentenceStructureBuilderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<SentenceStructureWidgetConfig>({ ...DEFAULT_SENTENCE_CONFIG })
@@ -172,7 +182,17 @@ function PunctuationInteractivePanel({ isDark }: { isDark: boolean }) {
   )
 }
 function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><ParagraphOrganizerLazy isDark={isDark} /></P1Panel>
+  const [config, setConfig] = useState<ParagraphOrganizerWidgetConfig>({ ...DEFAULT_PARAORG_CONFIG })
+  return (
+    <P1Panel>
+      <ParagraphOrganizerWidget
+        isDark={isDark}
+        config={config}
+        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+        compact
+      />
+    </P1Panel>
+  )
 }
 
 // Phase 2 wrappers
@@ -346,56 +366,69 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       </div>
 
       {/* ============================================================ */}
-      {/* ALL TAB — All Phase 1 tools + installed Phase 2 tools */}
+      {/* ALL TAB — Grouped by skill level, curated */}
       {/* ============================================================ */}
       {activeBand === 'all' && (
         <>
-          {/* Phase 1: Core */}
+          {/* --- Foundation Skills --- */}
+          <div style={{ padding: '6px 12px 2px', fontSize: 10, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Foundation Skills
+          </div>
           <div className="toolkit-section">
-            {sectionTitle('Phonics & Decoding Practice', false, 'lang-phonics')}
+            {sectionTitle('Phonics & Decoding', false, 'lang-phonics')}
             <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
-            <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Sentence Expansion Practice', false, 'lang-sentence-expansion')}
-            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Punctuation Rules Interactive', false, 'lang-punctuation')}
-            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Paragraph Organizer', false, 'lang-paragraph-organizer')}
-            <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Reading Passage Analyzer')}
-            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+            {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
+            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
+          </div>
+
+          {/* --- Sentence Level --- */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Sentence Level
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
+            <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Structure', false, 'lang-sentence-structure')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+          </div>
+
+          {/* --- Text Level --- */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Text Level
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
+            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Paragraph Organizer', false, 'lang-paragraph-organizer')}
+            <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Story Elements Map', false, 'lang-story-elements')}
             <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Sentence Structure Practice', false, 'lang-sentence-structure')}
-            <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Figurative Language Practice', false, 'lang-figurative-language')}
-            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
+            {sectionTitle('Reading Passage Analyzer')}
+            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
           </div>
 
           {/* Phase 2: Marketplace (installed only) */}
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
-              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+              <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>
                 Marketplace Tools
               </div>
               {visibleP2.map(tool => (
@@ -410,21 +443,21 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       )}
 
       {/* ============================================================ */}
-      {/* K-5 TAB */}
+      {/* K-5 TAB — Curated: only foundational tools */}
       {/* ============================================================ */}
       {activeBand === 'k5' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Phonics & Decoding Practice', false, 'lang-phonics')}
+            {sectionTitle('Phonics & Decoding', false, 'lang-phonics')}
             <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Punctuation Rules Interactive', false, 'lang-punctuation')}
-            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
+            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Story Elements Map', false, 'lang-story-elements')}
@@ -432,7 +465,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
-              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
+              <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
                   {sectionTitle(tool.label, true)}
@@ -445,20 +478,30 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       )}
 
       {/* ============================================================ */}
-      {/* 6-8 TAB */}
+      {/* 6-8 TAB — Curated: sentence-level focus */}
       {/* ============================================================ */}
       {activeBand === '68' && (
         <>
+          <div style={{ padding: '6px 12px 2px', fontSize: 10, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.8 }}>Word & Sentence</div>
           <div className="toolkit-section">
             {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
             <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Sentence Expansion Practice', false, 'lang-sentence-expansion')}
-            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+            {sectionTitle('Sentence Structure', false, 'lang-sentence-structure')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Punctuation Rules Interactive', false, 'lang-punctuation')}
+            {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+          </div>
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Text & Vocabulary</div>
+          <div className="toolkit-section">
+            {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
+            <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
             <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
@@ -466,28 +509,12 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
-            <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Reading Passage Analyzer')}
-            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Story Elements Map', false, 'lang-story-elements')}
-            <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Sentence Structure Practice', false, 'lang-sentence-structure')}
-            <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Figurative Language Practice', false, 'lang-figurative-language')}
+            {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
-              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
+              <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
                   {sectionTitle(tool.label, true)}
@@ -500,41 +527,39 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
       )}
 
       {/* ============================================================ */}
-      {/* 9-12 TAB */}
+      {/* 9-12 TAB — Curated: text-level analysis & composition */}
       {/* ============================================================ */}
       {activeBand === '912' && (
         <>
+          <div style={{ padding: '6px 12px 2px', fontSize: 10, fontWeight: 700, color: '#60a5fa', textTransform: 'uppercase', letterSpacing: 0.8 }}>Analysis</div>
           <div className="toolkit-section">
             {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
             <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Sentence Expansion Practice', false, 'lang-sentence-expansion')}
-            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+            {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
+            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
           </div>
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: 0.8 }}>Composition</div>
           <div className="toolkit-section">
-            {sectionTitle('Punctuation Rules Interactive', false, 'lang-punctuation')}
-            <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
+            {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
+            <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Paragraph Organizer', false, 'lang-paragraph-organizer')}
             <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Reading Passage Analyzer')}
-            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
-            {sectionTitle('Figurative Language Practice', false, 'lang-figurative-language')}
-            <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
-          </div>
-          <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Reading Passage Analyzer')}
+            <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+          </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
-              <div style={{ padding: '0 12px', margin: '8px 0 4px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
+              <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
                   {sectionTitle(tool.label, true)}

@@ -112,3 +112,38 @@ Stage Summary:
 - 3 interactive tools (POS Tagger, Story Elements Map, Paragraph Organizer) remain as-is
 - Total exercise count: 170+ across all widgets
 - Build passes with zero type errors and zero build errors
+
+---
+Task ID: 3
+Agent: main
+Task: Language teacher evaluation + 6 improvement implementations
+
+Work Log:
+- Evaluated entire whiteboard from a language teacher's perspective
+- Identified 10 issues across pedagogy, architecture, and content depth
+- Proposed 6 priority improvements, all approved by user
+- Launched 11 parallel agents for maximum speed
+- 4 data file agents completed: punctuation (64→200), vocab (33→209), sentence-structure (48→200), phonics (40→200)
+- 2 data file agents deferred (sentence-expansion, figurative-language) per user request
+- Vocab mastery agent: added quiz mode, spaced repetition, mastery dots, progress summary to VocabFlashcardsWidget
+- Story Map agent: created unified StoryElementsMapWidget.tsx with teacher authoring + student practice + story arc visualization
+- Paragraph Organizer agent: created unified ParagraphOrganizerWidget.tsx with drag-to-reorder sentence exercises + teacher authoring
+- POS Tagger agent: added drag-to-rearrange words, subject/predicate highlight toggle, clause identification toggle
+- Persistence agent: created performance-persistence.ts with recordAnswer, getMastery, getSpacedRepetitionQueue, getProgressSummary, clearRoomData
+- Integration: replaced inline CanvasStoryMap and CanvasParagraphOrganizer with unified component bridges
+- Integration: replaced old lazy-loaded panel wrappers for Story Map and Paragraph Organizer with unified component panels
+- Panel curation: grouped All tab into Foundation/Sentence/Text sections; K-5 shows 4 tools; 6-8 shows 7 grouped tools; 9-12 shows 6 tools
+- Fixed truncated sentence-expansion-exercises.ts (restored helper functions)
+- Fixed TypeScript error in StoryElementsMapWidget.tsx (handleFieldChange key type)
+- Final build passes cleanly with zero errors
+
+Stage Summary:
+- All 11 language widgets now follow unified canvas-primary architecture (including Story Map and Paragraph Organizer)
+- 4 exercise banks bulked to 200+ each (punctuation, vocab, sentence-structure, phonics)
+- Vocab Flashcards now has quiz mode with spaced repetition mastery tracking
+- POS Tagger now supports drag-to-rearrange, subject/predicate highlighting, clause identification
+- Story Elements Map now has teacher authoring + student practice modes
+- Paragraph Organizer now has scrambled-sentence exercises + teacher authoring
+- Panel curated by skill level (Foundation → Sentence → Text) with fewer tools per grade tab
+- localStorage persistence utility ready for integration
+- Build passes cleanly
