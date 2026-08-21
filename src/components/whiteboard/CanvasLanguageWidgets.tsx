@@ -621,30 +621,30 @@ export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown
 
 export function getLangWidgetDefaultSize(kind: string): { width: number; height: number } {
   switch (kind) {
-    case 'lang-pos-tagger': return { width: 340, height: 420 }
-    case 'lang-sentence-structure': return { width: 380, height: 520 }
-    case 'lang-story-elements': return { width: 400, height: 560 }
-    case 'lang-paragraph-organizer': return { width: 400, height: 560 }
-    case 'lang-vocab-flashcards': return { width: 340, height: 460 }
-    case 'lang-figurative-language': return { width: 380, height: 520 }
-    case 'lang-punctuation': return { width: 380, height: 520 }
-    case 'lang-phonics': return { width: 380, height: 520 }
-    case 'lang-sentence-expansion': return { width: 380, height: 520 }
-    case 'lang-confused-words': return { width: 380, height: 520 }
-    case 'lang-homophones': return { width: 380, height: 520 }
-    case 'lang-synonym-antonym': return { width: 360, height: 480 }
-    case 'lang-idiom-explorer': return { width: 380, height: 520 }
-    case 'lang-prefix-suffix': return { width: 380, height: 520 }
-    case 'lang-word-sorter': return { width: 360, height: 480 }
-    case 'lang-sentence-combining': return { width: 380, height: 520 }
-    case 'lang-proofreading': return { width: 400, height: 560 }
-    case 'lang-reading-analyzer': return { width: 380, height: 520 }
-    case 'lang-root-morphology': return { width: 380, height: 520 }
-    case 'lang-active-passive': return { width: 380, height: 520 }
-    case 'lang-reading-strategies': return { width: 380, height: 520 }
-    case 'lang-grammar-diagnostic': return { width: 380, height: 520 }
-    case 'lang-spelling-patterns': return { width: 380, height: 520 }
-    default: return { width: 320, height: 360 }
+    case 'lang-pos-tagger': return { width: 440, height: 550 }
+    case 'lang-sentence-structure': return { width: 500, height: 680 }
+    case 'lang-story-elements': return { width: 520, height: 730 }
+    case 'lang-paragraph-organizer': return { width: 520, height: 730 }
+    case 'lang-vocab-flashcards': return { width: 440, height: 600 }
+    case 'lang-figurative-language': return { width: 500, height: 680 }
+    case 'lang-punctuation': return { width: 500, height: 680 }
+    case 'lang-phonics': return { width: 500, height: 680 }
+    case 'lang-sentence-expansion': return { width: 500, height: 680 }
+    case 'lang-confused-words': return { width: 500, height: 680 }
+    case 'lang-homophones': return { width: 500, height: 680 }
+    case 'lang-synonym-antonym': return { width: 470, height: 620 }
+    case 'lang-idiom-explorer': return { width: 500, height: 680 }
+    case 'lang-prefix-suffix': return { width: 500, height: 680 }
+    case 'lang-word-sorter': return { width: 470, height: 620 }
+    case 'lang-sentence-combining': return { width: 500, height: 680 }
+    case 'lang-proofreading': return { width: 520, height: 730 }
+    case 'lang-reading-analyzer': return { width: 500, height: 680 }
+    case 'lang-root-morphology': return { width: 500, height: 680 }
+    case 'lang-active-passive': return { width: 500, height: 680 }
+    case 'lang-reading-strategies': return { width: 500, height: 680 }
+    case 'lang-grammar-diagnostic': return { width: 500, height: 680 }
+    case 'lang-spelling-patterns': return { width: 500, height: 680 }
+    default: return { width: 420, height: 470 }
   }
 }
 

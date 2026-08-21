@@ -2786,30 +2786,30 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
 
 export function getMathWidgetDefaultSize(kind: string): { width: number; height: number } {
   switch (kind) {
-    case 'math-fraction-circle': return { width: 260, height: 310 }
-    case 'math-fraction-bar': return { width: 340, height: 280 }
-    case 'math-angle-maker': return { width: 280, height: 340 }
-    case 'math-number-line': return { width: 420, height: 220 }
-    case 'math-polygon': return { width: 300, height: 320 }
-    case 'math-coordinate-plane': return { width: 380, height: 380 }
-    case 'math-venn-diagram': return { width: 340, height: 320 }
-    case 'math-bar-chart': return { width: 380, height: 340 }
-    case 'math-pie-chart': return { width: 340, height: 400 }
-    case 'math-protractor': return { width: 360, height: 340 }
-    case 'math-ruler': return { width: 440, height: 200 }
-    case 'math-set-square': return { width: 340, height: 360 }
-    case 'math-compass': return { width: 380, height: 400 }
-    case 'math-place-value': return { width: 360, height: 280 }
-    case 'math-clock': return { width: 280, height: 360 }
-    case 'math-base-10': return { width: 340, height: 420 }
-    case 'math-multiplication-array': return { width: 320, height: 380 }
-    case 'math-function-plotter': return { width: 360, height: 420 }
-    case 'math-multiplication-grid': return { width: 340, height: 400 }
-    case 'math-flashcards': return { width: 320, height: 400 }
-    case 'math-calculator': return { width: 280, height: 420 }
-    case 'math-unit-converter': return { width: 320, height: 380 }
-    case 'math-formula-reference': return { width: 360, height: 480 }
-    case 'math-proof-builder': return { width: 380, height: 520 }
-    default: return { width: 280, height: 300 }
+    case 'math-fraction-circle': return { width: 340, height: 400 }
+    case 'math-fraction-bar': return { width: 440, height: 360 }
+    case 'math-angle-maker': return { width: 360, height: 440 }
+    case 'math-number-line': return { width: 550, height: 290 }
+    case 'math-polygon': return { width: 390, height: 420 }
+    case 'math-coordinate-plane': return { width: 490, height: 490 }
+    case 'math-venn-diagram': return { width: 440, height: 420 }
+    case 'math-bar-chart': return { width: 490, height: 440 }
+    case 'math-pie-chart': return { width: 440, height: 520 }
+    case 'math-protractor': return { width: 470, height: 440 }
+    case 'math-ruler': return { width: 570, height: 260 }
+    case 'math-set-square': return { width: 440, height: 470 }
+    case 'math-compass': return { width: 490, height: 520 }
+    case 'math-place-value': return { width: 470, height: 360 }
+    case 'math-clock': return { width: 360, height: 470 }
+    case 'math-base-10': return { width: 440, height: 550 }
+    case 'math-multiplication-array': return { width: 420, height: 490 }
+    case 'math-function-plotter': return { width: 470, height: 550 }
+    case 'math-multiplication-grid': return { width: 440, height: 520 }
+    case 'math-flashcards': return { width: 420, height: 520 }
+    case 'math-calculator': return { width: 360, height: 550 }
+    case 'math-unit-converter': return { width: 420, height: 490 }
+    case 'math-formula-reference': return { width: 470, height: 620 }
+    case 'math-proof-builder': return { width: 490, height: 680 }
+    default: return { width: 360, height: 390 }
   }
 }

@@ -777,12 +777,12 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
 /** Get default size for a widget kind */
 export function getWidgetDefaultSize(kind: string): { width: number; height: number } {
   switch (kind) {
-    case 'stat-data-table': return { width: 320, height: 380 }
-    case 'stat-histogram': return { width: 320, height: 400 }
-    case 'stat-box-plot': return { width: 320, height: 320 }
-    case 'stat-scatter': return { width: 340, height: 420 }
-    case 'stat-normal-dist': return { width: 320, height: 380 }
-    case 'stat-probability': return { width: 320, height: 420 }
+    case 'stat-data-table': return { width: 420, height: 500 }
+    case 'stat-histogram': return { width: 420, height: 520 }
+    case 'stat-box-plot': return { width: 420, height: 420 }
+    case 'stat-scatter': return { width: 440, height: 550 }
+    case 'stat-normal-dist': return { width: 420, height: 500 }
+    case 'stat-probability': return { width: 420, height: 550 }
     // Math widgets
     case 'math-fraction-circle': return getMathWidgetDefaultSize('math-fraction-circle')
     case 'math-fraction-bar': return getMathWidgetDefaultSize('math-fraction-bar')
