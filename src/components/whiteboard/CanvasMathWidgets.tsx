@@ -5,6 +5,7 @@ import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { Mafs, Coordinates, Plot, Text as MafsText } from 'mafs'
+import { MultiplicationGrid, Flashcards, Calculator, UnitConverter, FormulaReference, ProofBuilder } from '@/components/room/widgets/math/MathUtilities'
 
 // ============================================================
 // On-Canvas Math Widgets — Interactive fraction & angle tools
@@ -2445,6 +2446,30 @@ export function CanvasBase10Blocks({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
+// Pass-through wrappers for MathUtilities components
+// These are self-contained utilities that manage their own state.
+// ============================================================
+
+export function CanvasMultiplicationGrid({ element, isDark }: CanvasWidgetProps) {
+  return <MultiplicationGrid isDark={isDark} />
+}
+export function CanvasCalculator({ element, isDark }: CanvasWidgetProps) {
+  return <Calculator isDark={isDark} />
+}
+export function CanvasUnitConverter({ element, isDark }: CanvasWidgetProps) {
+  return <UnitConverter isDark={isDark} />
+}
+export function CanvasFormulaReference({ element, isDark }: CanvasWidgetProps) {
+  return <FormulaReference band={'all'} isDark={isDark} />
+}
+export function CanvasProofBuilder({ element, isDark }: CanvasWidgetProps) {
+  return <ProofBuilder isDark={isDark} />
+}
+export function CanvasFlashcards({ element, isDark }: CanvasWidgetProps) {
+  return <Flashcards isDark={isDark} />
+}
+
+// ============================================================
 // Multiplication Array Widget
 // ============================================================
 
@@ -2721,6 +2746,12 @@ export const MATH_WIDGET_KIND_LABELS: Record<string, string> = {
   'math-base-10': 'Base-10 Blocks',
   'math-multiplication-array': 'Multiplication Array',
   'math-function-plotter': 'Function Plotter',
+  'math-multiplication-grid': 'Multiplication Grid',
+  'math-flashcards': 'Math Flashcards',
+  'math-calculator': 'Scientific Calculator',
+  'math-unit-converter': 'Unit Converter',
+  'math-formula-reference': 'Formula Reference',
+  'math-proof-builder': 'Proof Builder',
 }
 
 export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown> {
@@ -2743,6 +2774,12 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'math-base-10': return { ones: 0, tens: 0, hundreds: 0, thousands: 0 }
     case 'math-multiplication-array': return { rows: 3, columns: 4 }
     case 'math-function-plotter': return { expression: 'x^2', range: 10 }
+    case 'math-multiplication-grid': return {}
+    case 'math-flashcards': return {}
+    case 'math-calculator': return {}
+    case 'math-unit-converter': return {}
+    case 'math-formula-reference': return {}
+    case 'math-proof-builder': return {}
     default: return {}
   }
 }
@@ -2767,6 +2804,12 @@ export function getMathWidgetDefaultSize(kind: string): { width: number; height:
     case 'math-base-10': return { width: 340, height: 420 }
     case 'math-multiplication-array': return { width: 320, height: 380 }
     case 'math-function-plotter': return { width: 360, height: 420 }
+    case 'math-multiplication-grid': return { width: 340, height: 400 }
+    case 'math-flashcards': return { width: 320, height: 400 }
+    case 'math-calculator': return { width: 280, height: 420 }
+    case 'math-unit-converter': return { width: 320, height: 380 }
+    case 'math-formula-reference': return { width: 360, height: 480 }
+    case 'math-proof-builder': return { width: 380, height: 520 }
     default: return { width: 280, height: 300 }
   }
 }

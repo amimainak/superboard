@@ -96,6 +96,14 @@ import {
   DEFAULT_PROOFREADING_CONFIG,
   type ProofreadingConfig,
 } from './ProofreadingWidget'
+import { ReadingPassageAnalyzer } from '@/components/room/widgets/language/LanguageUtilities'
+import {
+  RootMorphologyExplorer,
+  ActivePassiveVoice,
+  ReadingComprehensionStrategies,
+  GrammarErrorDiagnostic,
+  SpellingPatterns,
+} from '@/components/room/widgets/language/LanguagePhase2Utilities'
 
 // ============================================================
 // On-Canvas Language Widgets
@@ -499,6 +507,54 @@ function CanvasProofreading({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
+// 18. READING PASSAGE ANALYZER (self-contained, no config sync)
+// ============================================================
+
+function CanvasReadingAnalyzer({ isDark }: CanvasWidgetProps) {
+  return <ReadingPassageAnalyzer isDark={isDark} />
+}
+
+// ============================================================
+// 19. ROOT & MORPHOLOGY EXPLORER (self-contained, no config sync)
+// ============================================================
+
+function CanvasRootMorphology({ isDark }: CanvasWidgetProps) {
+  return <RootMorphologyExplorer isDark={isDark} />
+}
+
+// ============================================================
+// 20. ACTIVE & PASSIVE VOICE (self-contained, no config sync)
+// ============================================================
+
+function CanvasActivePassive({ isDark }: CanvasWidgetProps) {
+  return <ActivePassiveVoice isDark={isDark} />
+}
+
+// ============================================================
+// 21. READING COMPREHENSION STRATEGIES (self-contained, no config sync)
+// ============================================================
+
+function CanvasReadingStrategies({ isDark }: CanvasWidgetProps) {
+  return <ReadingComprehensionStrategies isDark={isDark} />
+}
+
+// ============================================================
+// 22. GRAMMAR ERROR DIAGNOSTIC (self-contained, no config sync)
+// ============================================================
+
+function CanvasGrammarDiagnostic({ isDark }: CanvasWidgetProps) {
+  return <GrammarErrorDiagnostic isDark={isDark} />
+}
+
+// ============================================================
+// 23. SPELLING PATTERNS (self-contained, no config sync)
+// ============================================================
+
+function CanvasSpellingPatterns({ isDark }: CanvasWidgetProps) {
+  return <SpellingPatterns isDark={isDark} />
+}
+
+// ============================================================
 // Component Registry & Exports
 // ============================================================
 
@@ -520,6 +576,12 @@ const LANG_WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetPro
   'lang-word-sorter': CanvasWordSorter,
   'lang-sentence-combining': CanvasSentenceCombining,
   'lang-proofreading': CanvasProofreading,
+  'lang-reading-analyzer': CanvasReadingAnalyzer,
+  'lang-root-morphology': CanvasRootMorphology,
+  'lang-active-passive': CanvasActivePassive,
+  'lang-reading-strategies': CanvasReadingStrategies,
+  'lang-grammar-diagnostic': CanvasGrammarDiagnostic,
+  'lang-spelling-patterns': CanvasSpellingPatterns,
 }
 
 export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -547,6 +609,12 @@ export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'lang-word-sorter': return { ...DEFAULT_WORD_SORTER_CONFIG }
     case 'lang-sentence-combining': return { ...DEFAULT_SENTENCE_COMBINING_CONFIG }
     case 'lang-proofreading': return { ...DEFAULT_PROOFREADING_CONFIG }
+    case 'lang-reading-analyzer': return {}
+    case 'lang-root-morphology': return {}
+    case 'lang-active-passive': return {}
+    case 'lang-reading-strategies': return {}
+    case 'lang-grammar-diagnostic': return {}
+    case 'lang-spelling-patterns': return {}
     default: return {}
   }
 }
@@ -570,6 +638,12 @@ export function getLangWidgetDefaultSize(kind: string): { width: number; height:
     case 'lang-word-sorter': return { width: 360, height: 480 }
     case 'lang-sentence-combining': return { width: 380, height: 520 }
     case 'lang-proofreading': return { width: 400, height: 560 }
+    case 'lang-reading-analyzer': return { width: 380, height: 520 }
+    case 'lang-root-morphology': return { width: 380, height: 520 }
+    case 'lang-active-passive': return { width: 380, height: 520 }
+    case 'lang-reading-strategies': return { width: 380, height: 520 }
+    case 'lang-grammar-diagnostic': return { width: 380, height: 520 }
+    case 'lang-spelling-patterns': return { width: 380, height: 520 }
     default: return { width: 320, height: 360 }
   }
 }
@@ -592,4 +666,10 @@ export const LANG_WIDGET_KIND_LABELS: Record<string, string> = {
   'lang-word-sorter': 'Word Sorter',
   'lang-sentence-combining': 'Sentence Combining',
   'lang-proofreading': 'Proofreading Practice',
+  'lang-reading-analyzer': 'Reading Passage Analyzer',
+  'lang-root-morphology': 'Root & Morphology Explorer',
+  'lang-active-passive': 'Active & Passive Voice',
+  'lang-reading-strategies': 'Reading Comprehension Strategies',
+  'lang-grammar-diagnostic': 'Grammar Error Diagnostic',
+  'lang-spelling-patterns': 'Spelling Patterns',
 }

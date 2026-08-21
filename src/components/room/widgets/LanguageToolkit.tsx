@@ -421,7 +421,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Reading Passage Analyzer')}
+            {sectionTitle('Reading Passage Analyzer', false, 'lang-reading-analyzer')}
             <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
           </div>
 
@@ -433,7 +433,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
               </div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
-                  {sectionTitle(tool.label, true)}
+                  {sectionTitle(tool.label, true, tool.id)}
                   {renderP2Tool(tool.id, tool.label)}
                 </div>
               ))}
@@ -468,7 +468,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
               <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
-                  {sectionTitle(tool.label, true)}
+                  {sectionTitle(tool.label, true, tool.id)}
                   {renderP2Tool(tool.id, tool.label)}
                 </div>
               ))}
@@ -517,7 +517,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
               <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
-                  {sectionTitle(tool.label, true)}
+                  {sectionTitle(tool.label, true, tool.id)}
                   {renderP2Tool(tool.id, tool.label)}
                 </div>
               ))}
@@ -554,7 +554,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Reading Passage Analyzer')}
+            {sectionTitle('Reading Passage Analyzer', false, 'lang-reading-analyzer')}
             <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
           </div>
           {visibleP2.length > 0 && (
@@ -562,7 +562,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
               <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
               {visibleP2.map(tool => (
                 <div key={tool.id} className="toolkit-section">
-                  {sectionTitle(tool.label, true)}
+                  {sectionTitle(tool.label, true, tool.id)}
                   {renderP2Tool(tool.id, tool.label)}
                 </div>
               ))}

@@ -459,13 +459,19 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
 
           {/* Multiplication Grid */}
-          <div className="toolkit-section">{sectionTitle('Multiplication Grid')}<MultGridPanel isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Multiplication Grid')}
+          <div style={{ padding: '0 12px 12px' }}><MultGridPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-multiplication-grid', {}) })}</div>
 
           {/* Base-10 Blocks */}
-          <div className="toolkit-section">{sectionTitle('Base-10 Blocks')}<Base10Panel isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Base-10 Blocks')}
+          <div style={{ padding: '0 12px 12px' }}><Base10Panel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-base-10', {}) })}</div>
 
           {/* Flashcards */}
-          <div className="toolkit-section">{sectionTitle('Flashcards')}<FlashcardsPanel isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Flashcards')}
+          <div style={{ padding: '0 12px 12px' }}><FlashcardsPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-flashcards', {}) })}</div>
 
 
         </>
@@ -541,13 +547,19 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
 
           {/* Calculator */}
-          <div className="toolkit-section">{sectionTitle('Scientific Calculator')}<CalcPanel isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Scientific Calculator')}
+          <div style={{ padding: '0 12px 12px' }}><CalcPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-calculator', {}) })}</div>
 
           {/* Unit Converter */}
-          <div className="toolkit-section">{sectionTitle('Unit Converter')}<UnitPanel isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Unit Converter')}
+          <div style={{ padding: '0 12px 12px' }}><UnitPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-unit-converter', {}) })}</div>
 
           {/* Formula Reference */}
-          <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaPanel band="middle" isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Formula Reference')}
+          <div style={{ padding: '0 12px 12px' }}><FormulaPanel band="middle" isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-formula-reference', { band: 'middle' }) })}</div>
 
 
         </>
@@ -614,10 +626,14 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
 
           {/* Formula Reference */}
-          <div className="toolkit-section">{sectionTitle('Formula Reference')}<FormulaPanel band="highschool" isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Formula Reference')}
+          <div style={{ padding: '0 12px 12px' }}><FormulaPanel band="highschool" isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-formula-reference', { band: 'highschool' }) })}</div>
 
           {/* Proof Builder */}
-          <div className="toolkit-section">{sectionTitle('Proof Builder')}<ProofPanel isDark={isDark} /></div>
+          <div className="toolkit-section">{sectionTitle('Proof Builder')}
+          <div style={{ padding: '0 12px 12px' }}><ProofPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-proof-builder', {}) })}</div>
 
 
         </>

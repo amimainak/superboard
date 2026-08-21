@@ -651,6 +651,12 @@ import {
   CanvasBase10Blocks,
   CanvasMultiplicationArray,
   CanvasFunctionPlotter,
+  CanvasMultiplicationGrid,
+  CanvasCalculator,
+  CanvasUnitConverter,
+  CanvasFormulaReference,
+  CanvasProofBuilder,
+  CanvasFlashcards,
   getMathWidgetDefaultConfig,
   getMathWidgetDefaultSize,
   MATH_WIDGET_KIND_LABELS,
@@ -683,6 +689,12 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'math-base-10': CanvasBase10Blocks,
   'math-multiplication-array': CanvasMultiplicationArray,
   'math-function-plotter': CanvasFunctionPlotter,
+  'math-multiplication-grid': CanvasMultiplicationGrid,
+  'math-flashcards': CanvasFlashcards,
+  'math-calculator': CanvasCalculator,
+  'math-unit-converter': CanvasUnitConverter,
+  'math-formula-reference': CanvasFormulaReference,
+  'math-proof-builder': CanvasProofBuilder,
   // Language widgets
   'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -742,6 +754,12 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'math-base-10': return getMathWidgetDefaultConfig('math-base-10')
     case 'math-multiplication-array': return getMathWidgetDefaultConfig('math-multiplication-array')
     case 'math-function-plotter': return getMathWidgetDefaultConfig('math-function-plotter')
+    case 'math-multiplication-grid': return getMathWidgetDefaultConfig('math-multiplication-grid')
+    case 'math-flashcards': return getMathWidgetDefaultConfig('math-flashcards')
+    case 'math-calculator': return getMathWidgetDefaultConfig('math-calculator')
+    case 'math-unit-converter': return getMathWidgetDefaultConfig('math-unit-converter')
+    case 'math-formula-reference': return getMathWidgetDefaultConfig('math-formula-reference')
+    case 'math-proof-builder': return getMathWidgetDefaultConfig('math-proof-builder')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
@@ -784,6 +802,12 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'math-base-10': return getMathWidgetDefaultSize('math-base-10')
     case 'math-multiplication-array': return getMathWidgetDefaultSize('math-multiplication-array')
     case 'math-function-plotter': return getMathWidgetDefaultSize('math-function-plotter')
+    case 'math-multiplication-grid': return getMathWidgetDefaultSize('math-multiplication-grid')
+    case 'math-flashcards': return getMathWidgetDefaultSize('math-flashcards')
+    case 'math-calculator': return getMathWidgetDefaultSize('math-calculator')
+    case 'math-unit-converter': return getMathWidgetDefaultSize('math-unit-converter')
+    case 'math-formula-reference': return getMathWidgetDefaultSize('math-formula-reference')
+    case 'math-proof-builder': return getMathWidgetDefaultSize('math-proof-builder')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')
