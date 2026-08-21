@@ -144,6 +144,7 @@
 .room-layout {
   display: flex;
   height: 100vh;
+  height: 100dvh; /* dynamic viewport height — better for mobile browsers */
   width: 100%;
   overflow: hidden;
   background: #09090b;
@@ -153,4 +154,16 @@
   flex: 1;
   position: relative;
   min-width: 0;
+}
+
+/* Mobile: stack layout — panel overlays the canvas */
+@media (max-width: 640px) {
+  .room-layout {
+    flex-direction: column;
+  }
+
+  .room-main {
+    flex: 1;
+    min-height: 0;
+  }
 }

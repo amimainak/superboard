@@ -16,6 +16,7 @@ import {
 import { initRealtimeSync } from '@/lib/collab/realtime-sync'
 import { hasFeature } from '@/lib/features'
 import type { Tier } from '@/lib/validations'
+import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar'
 
 interface RoomWhiteboardProps {
   roomId: string
@@ -344,17 +345,11 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
 
   return (
     <div
-      className="whiteboard-root"
-      style={{
-        display: 'grid',
-        gridTemplateRows: isPresentationMode ? '1fr' : '40px 1fr 40px',
-        gridTemplateColumns: isPresentationMode ? '1fr' : '48px 1fr',
-        height: '100%',
-        width: '100%',
-        overflow: 'hidden',
-        background: isDark ? '#0f172a' : '#f8fafc',
-        color: isDark ? '#e5e7eb' : '#111827',
-      }}
+      className={[
+        'whiteboard-root whiteboard-grid',
+        isDark ? 'wb-grid-dark' : 'wb-grid-light',
+        isPresentationMode ? 'wb-grid-presentation' : '',
+      ].join(' ')}
     >
       {/* Top Bar */}
       {!isPresentationMode && (
@@ -444,6 +439,15 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
         <div style={{ gridColumn: '1 / -1' }}>
           <StylePanel />
         </div>
+      )}
+
+      {/* Mobile Bottom Toolbar (hidden on desktop via CSS) */}
+      {!isPresentationMode && (
+        <MobileBottomToolbar
+          isDark={isDark}
+          currentTool={tool}
+          onToolChange={(t) => setTool(t as any)}
+        />
       )}
 
       {/* Shortcuts Dialog */}

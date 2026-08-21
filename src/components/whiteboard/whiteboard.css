@@ -3,6 +3,48 @@
    Elegant dark theme with rich contrast & polished light theme
    ============================================================ */
 
+/* ---- Whiteboard grid layout ---- */
+.whiteboard-grid {
+  display: grid;
+  grid-template-rows: 40px 1fr 48px;
+  grid-template-columns: 48px 1fr;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.whiteboard-grid.wb-grid-dark {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.whiteboard-grid.wb-grid-light {
+  background: #f8fafc;
+  color: #111827;
+}
+
+.whiteboard-grid.wb-grid-presentation {
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+}
+
+/* Tablet: slightly more compact */
+@media (max-width: 1024px) {
+  .whiteboard-grid {
+    grid-template-rows: 40px 1fr 42px;
+    grid-template-columns: 46px 1fr;
+  }
+}
+
+/* Mobile: no left toolbar, no bottom panel */
+@media (max-width: 640px) {
+  .whiteboard-grid {
+    grid-template-rows: 40px 1fr;
+    grid-template-columns: 1fr;
+    padding-bottom: 56px; /* space for mobile bottom toolbar */
+  }
+}
+
 /* ---- Placeholder for empty text elements ---- */
 div[data-placeholder]:empty::before {
   content: attr(data-placeholder);
@@ -1478,4 +1520,181 @@ div[data-placeholder]:empty::before {
   color: #fef08a;
   border-radius: 2px;
   padding: 0 1px;
+}
+
+/* ============================================================
+   RESPONSIVE — Whiteboard Core
+   Breakpoints: 640px (mobile), 768px (tablet), 1024px (laptop)
+   ============================================================ */
+
+/* ---- Tablet (768px) ---- */
+@media (max-width: 1024px) {
+  .wb-toolbar {
+    width: 46px;
+    min-width: 46px;
+    padding: 8px 5px;
+    gap: 2px;
+  }
+
+  .wb-tool-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .wb-style-panel {
+    height: 42px;
+    min-height: 42px;
+    padding: 0 8px;
+    gap: 4px;
+  }
+}
+
+/* ---- Mobile (640px) ---- */
+@media (max-width: 640px) {
+  /* Hide the left toolbar — tools move to a mobile bottom bar */
+  .wb-toolbar {
+    display: none;
+  }
+
+  /* Show mobile toolbar if present */
+  .wb-mobile-toolbar {
+    display: flex !important;
+  }
+
+  /* Hide the style panel on mobile — accessed via popover */
+  .wb-style-panel {
+    display: none;
+  }
+
+  /* Top bar: more compact */
+  .wb-top-bar {
+    height: 40px;
+    min-height: 40px;
+    padding: 0 6px;
+    gap: 1px;
+  }
+
+  /* Hide less-important top bar items on mobile */
+  .wb-top-bar-hide-mobile {
+    display: none !important;
+  }
+
+  /* Flyout panels: full-width on mobile */
+  .wb-flyout-panel {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 50vh;
+    overflow-y: auto;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Page tabs: compact on mobile */
+  .page-tab-item {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  /* Search overlay: adjust for mobile */
+  .search-overlay-input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* ---- Mobile toolbar (shown only on mobile) ---- */
+.wb-mobile-toolbar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  height: 56px;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  background: rgba(14, 14, 16, 0.95);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.4);
+}
+
+.wb-mobile-toolbar.wb-mobile-toolbar-light {
+  background: rgba(255, 255, 255, 0.97);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.wb-mobile-tool-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #a1a1aa;
+  transition: all 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wb-mobile-tool-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(0.92);
+}
+
+.wb-mobile-tool-btn-active {
+  color: #34d399 !important;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.wb-mobile-tool-btn-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* Mobile style popover */
+.wb-mobile-style-popover {
+  position: fixed;
+  bottom: 64px;
+  left: 8px;
+  right: 8px;
+  z-index: 2001;
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(14, 14, 16, 0.96);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: wb-popover-slide-up 0.2s ease;
+}
+
+.wb-mobile-style-popover-light {
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes wb-popover-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

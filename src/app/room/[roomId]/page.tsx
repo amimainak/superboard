@@ -149,10 +149,11 @@ export default function RoomPage() {
         {/* Widget Toggle Buttons — top-right overlay */}
         <WidgetToggleBar />
 
-        {/* Raise Hand — below widget toggles */}
+        {/* Raise Hand — positioned via CSS (widgets.css responsive) */}
         <div style={{
           position: 'absolute',
-          top: 168,
+          top: 'auto',
+          bottom: 56,
           right: 8,
           zIndex: 1000,
         }}>

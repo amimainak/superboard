@@ -680,24 +680,221 @@
   cursor: pointer;
 }
 
-/* ---- Responsive: collapse panel on small screens ---- */
+/* ---- Responsive: Widget system ---- */
 
-@media (max-width: 768px) {
+/* Tablet: shrink toggle bar buttons */
+@media (max-width: 1024px) {
+  .widget-toggle-bar {
+    top: 48px;
+    right: 4px;
+    padding: 6px;
+    gap: 4px;
+    max-height: calc(100vh - 60px);
+  }
+
+  .widget-toggle-btn {
+    height: 34px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .widget-toggle-label {
+    font-size: 11px;
+  }
+
+  .widget-panel {
+    width: 280px;
+    min-width: 280px;
+  }
+
+  .widget-panel-float {
+    width: 320px !important;
+    min-width: 320px !important;
+    right: 48px;
+  }
+
+  .session-controls {
+    bottom: 56px;
+    right: 4px;
+  }
+
+  .room-info-bar {
+    left: 52px;
+    top: 48px;
+  }
+}
+
+/* Mobile: full overhaul */
+@media (max-width: 640px) {
+  /* Widget toggle bar: icon-only, compact */
+  .widget-toggle-bar {
+    top: 48px;
+    right: 4px;
+    padding: 4px;
+    gap: 2px;
+    border-radius: 10px;
+    max-height: calc(100vh - 120px);
+    max-width: calc(100vw - 16px);
+  }
+
+  .widget-toggle-group-label {
+    font-size: 8px;
+    padding: 1px 8px 2px;
+  }
+
+  /* Hide text labels on toggle buttons — icon only */
+  .widget-toggle-label {
+    display: none;
+  }
+
+  /* Hide section group headers on mobile */
+  .widget-toggle-group-label {
+    display: none;
+  }
+
+  .widget-toggle-btn {
+    height: 36px;
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .widget-toggle-btn:hover {
+    transform: none;
+  }
+
+  .widget-toggle-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Widget panel: full-screen overlay */
   .widget-panel {
     position: absolute;
     right: 0;
     top: 0;
     bottom: 0;
+    left: 0;
+    width: 100% !important;
+    min-width: 100% !important;
     z-index: 999;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    border-left: none;
+    border-radius: 0;
+    animation: none;
   }
 
+  .widget-panel-float {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .widget-panel-minimized {
+    position: absolute !important;
+    bottom: 64px !important;
+    right: 8px !important;
+    border-radius: 10px;
+    min-width: 140px;
+  }
+
+  /* Widget tabs: more compact on mobile */
+  .widget-tab-bar {
+    min-height: 38px;
+  }
+
+  .widget-tab-label {
+    font-size: 11px;
+  }
+
+  .widget-tab-close {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Room info bar: compact */
   .room-info-bar {
-    left: 8px;
+    left: 6px;
+    top: 46px;
+    padding: 4px 10px;
+    gap: 6px;
+    border-radius: 6px;
   }
 
-  .widget-toggle-bar {
-    right: 8px;
+  .room-info-subject {
+    font-size: 11px;
+  }
+
+  /* Session controls: bottom center on mobile */
+  .session-controls {
+    bottom: 64px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .session-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  /* Raise hand button repositioned */
+  .raise-hand-btn {
+    position: fixed;
+    bottom: 64px;
+    right: 8px !important;
+    top: auto !important;
+  }
+
+  /* Toolkit sections: compact padding */
+  .toolkit-section {
+    padding: 12px 0;
+  }
+
+  .toolkit-section-title {
+    padding: 4px 12px 8px;
+    font-size: 10px;
+  }
+
+  .toolkit-grid {
+    padding: 0 12px;
+    gap: 4px;
+  }
+
+  /* Chat input area: prevent overflow */
+  .chat-input-area {
+    padding: 8px 10px !important;
+  }
+
+  .chat-input-field {
+    font-size: 16px; /* Prevent iOS zoom */
+  }
+
+  /* Connection status */
+  .connection-status {
+    bottom: 64px;
+    left: 6px;
+  }
+
+  /* Auto save indicator */
+  .auto-save-indicator {
+    bottom: 68px;
+  }
+}
+
+/* ---- Responsive: Light mode adjustments ---- */
+
+@media (max-width: 640px) {
+  .widget-panel-light,
+  .widget-panel-float-light {
+    box-shadow: none;
+    border-left: none;
   }
 }
 
@@ -2950,10 +3147,6 @@
   color: #64748b;
 }
 
-/* ---- Responsive: Light mode adjustments ---- */
-
-@media (max-width: 768px) {
-  .widget-panel-float-light {
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
-  }
-}
+/* ============================================================
+   Superboard — Widget System Styles (end)
+   ============================================================ */

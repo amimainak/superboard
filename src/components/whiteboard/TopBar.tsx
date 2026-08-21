@@ -157,24 +157,21 @@ export function TopBar({
         <Redo2 size={14} />
       </Ico>
 
-      {/* Thin divider */}
-      <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
-
-      {/* Tool name — subtle */}
-      <span className={`wb-tool-label wb-tool-label-${isDark ? 'dark' : 'light'}`}>
+      {/* Tool name — subtle (hidden on mobile) */}
+      <span className={`wb-tool-label wb-tool-label-${isDark ? 'dark' : 'light'} wb-top-bar-hide-mobile`}>
         {ToolLabel[currentTool] || currentTool}
       </span>
 
-      {/* Page name */}
-      <span className={`wb-page-name wb-page-name-${isDark ? 'dark' : 'light'}`}>
+      {/* Page name (hidden on mobile) */}
+      <span className={`wb-page-name wb-page-name-${isDark ? 'dark' : 'light'} wb-top-bar-hide-mobile`}>
         {currentPage}
       </span>
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
 
-      {/* Zoom — compact */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+      {/* Zoom — compact (hidden on mobile, use pinch) */}
+      <div className="wb-top-bar-hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         <Ico title="Zoom Out" isDark={isDark} onClick={onZoomOut} ariaLabel="Zoom out">
           <ZoomOut size={14} />
         </Ico>
@@ -190,26 +187,27 @@ export function TopBar({
         </Ico>
       </div>
 
-      {/* Thin divider */}
-      <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
-
       {/* Right actions — minimal icons */}
       <Ico title="Search board (Ctrl+K)" isDark={isDark} onClick={onSearch} ariaLabel="Search board">
         <Search size={14} />
       </Ico>
 
-      <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation} ariaLabel="Toggle presentation mode">
-        <Maximize size={14} />
-      </Ico>
+      <div className="wb-top-bar-hide-mobile">
+        <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation} ariaLabel="Toggle presentation mode">
+          <Maximize size={14} />
+        </Ico>
+      </div>
 
-      <Ico
-        title={isDark ? 'Light mode' : 'Dark mode'}
-        isDark={isDark}
-        onClick={onToggleDark}
-        ariaLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-      >
-        {isDark ? <Sun size={14} /> : <Moon size={14} />}
-      </Ico>
+      <div className="wb-top-bar-hide-mobile">
+        <Ico
+          title={isDark ? 'Light mode' : 'Dark mode'}
+          isDark={isDark}
+          onClick={onToggleDark}
+          ariaLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        >
+          {isDark ? <Sun size={14} /> : <Moon size={14} />}
+        </Ico>
+      </div>
 
       {/* More menu — groups all secondary actions */}
       <div style={{ position: 'relative' }}>

@@ -14,6 +14,7 @@ import { WhiteboardCanvas } from '@/components/whiteboard/WhiteboardCanvas'
 import { StylePanel } from '@/components/whiteboard/StylePanel'
 import { PageTabs } from '@/components/whiteboard/PageTabs'
 import { SearchOverlay } from '@/components/whiteboard/SearchOverlay'
+import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import {
   exportAsPng,
@@ -188,17 +189,11 @@ export default function WhiteboardClient() {
 
   return (
     <div
-      className="whiteboard-root"
-      style={{
-        display: 'grid',
-        gridTemplateRows: isPresentationMode ? '1fr' : '40px 1fr 40px',
-        gridTemplateColumns: isPresentationMode ? '1fr' : '48px 1fr',
-        height: '100%',
-        width: '100%',
-        overflow: 'hidden',
-        background: isDark ? '#0f172a' : '#f8fafc',
-        color: isDark ? '#e5e7eb' : '#111827',
-      }}
+      className={[
+        'whiteboard-root whiteboard-grid',
+        isDark ? 'wb-grid-dark' : 'wb-grid-light',
+        isPresentationMode ? 'wb-grid-presentation' : '',
+      ].join(' ')}
     >
       {/* Top Bar — spans full width (hidden in presentation mode) */}
       {!isPresentationMode && (
@@ -256,6 +251,15 @@ export default function WhiteboardClient() {
         <div style={{ gridColumn: '1 / -1' }}>
         <StylePanel />
         </div>
+      )}
+
+      {/* Mobile Bottom Toolbar (hidden on desktop via CSS) */}
+      {!isPresentationMode && (
+        <MobileBottomToolbar
+          isDark={isDark}
+          currentTool={tool}
+          onToolChange={(t) => setTool(t as any)}
+        />
       )}
 
       {/* Shortcuts Dialog */}
