@@ -383,7 +383,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
                 style={{
                   width: '100%',
                   height: '100%',
-                  background: isDark ? '#0f172a' : '#ffffff',
+                  background: isDark ? '#111113' : '#ffffff',
                   border: gradeBorder,
                   borderTop: gradeBorderTop,
                   borderRadius: 8,

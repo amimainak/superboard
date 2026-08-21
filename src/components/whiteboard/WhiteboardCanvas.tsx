@@ -1109,7 +1109,7 @@ export function WhiteboardCanvas() {
         position: 'absolute',
         inset: 0,
         overflow: 'hidden',
-        background: isDark ? '#0f172a' : '#f8fafc',
+        background: isDark ? '#09090b' : '#f8fafc',
         cursor:
           spaceHeld || tool === 'hand'
             ? isPanning

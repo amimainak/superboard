@@ -69,7 +69,7 @@ export function GridBackground({
             cx={gridSize * camera.zoom / 2}
             cy={gridSize * camera.zoom / 2}
             r={camera.zoom > 0.5 ? 1 : 0.5}
-            fill={isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)'}
+            fill={isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'}
           />
         </pattern>
         <rect width="100%" height="100%" fill={`url(#${patternId})`} />
@@ -103,7 +103,7 @@ export function GridBackground({
           <path
             d={`M ${gridSize * camera.zoom} 0 L 0 0 0 ${gridSize * camera.zoom}`}
             fill="none"
-            stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}
+            stroke={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}
             strokeWidth={0.5}
           />
         </pattern>

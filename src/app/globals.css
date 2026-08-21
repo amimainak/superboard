@@ -32,45 +32,45 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #ffffff;
-  --foreground: #111827;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #111827;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #111827;
+  --popover-foreground: #0f172a;
   --primary: #059669;
   --primary-foreground: #ffffff;
-  --secondary: #f0fdfa;
-  --secondary-foreground: #134e4a;
-  --muted: #f9fafb;
-  --muted-foreground: #6b7280;
+  --secondary: #f0fdf4;
+  --secondary-foreground: #14532d;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --accent: #ecfdf5;
   --accent-foreground: #065f46;
   --destructive: #ef4444;
-  --border: #e5e7eb;
-  --input: #e5e7eb;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
   --ring: #059669;
 }
 
 .dark {
-  --background: oklch(0.14 0.015 166);
-  --foreground: oklch(0.965 0.008 166);
-  --card: oklch(0.19 0.02 166);
-  --card-foreground: oklch(0.965 0.008 166);
-  --popover: oklch(0.19 0.02 166);
-  --popover-foreground: oklch(0.965 0.008 166);
-  --primary: oklch(0.718 0.194 166.913);
-  --primary-foreground: oklch(0.14 0.015 166);
-  --secondary: oklch(0.25 0.03 166);
-  --secondary-foreground: oklch(0.965 0.008 166);
-  --muted: oklch(0.25 0.03 166);
-  --muted-foreground: oklch(0.65 0.04 166);
-  --accent: oklch(0.25 0.03 166);
-  --accent-foreground: oklch(0.965 0.008 166);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.718 0.194 166.913);
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card: #111113;
+  --card-foreground: #f4f4f5;
+  --popover: #111113;
+  --popover-foreground: #f4f4f5;
+  --primary: #10b981;
+  --primary-foreground: #022c22;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #e4e4e7;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #1c1c1f;
+  --accent-foreground: #e4e4e7;
+  --destructive: #ef4444;
+  --border: rgba(255,255,255,0.07);
+  --input: rgba(255,255,255,0.10);
+  --ring: #10b981;
 }
 
 * {
@@ -146,7 +146,7 @@
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background: #0f172a;
+  background: #09090b;
 }
 
 .room-main {

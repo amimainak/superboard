@@ -76,7 +76,7 @@ export default function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+      background: 'linear-gradient(135deg, #09090b 0%, #1e293b 100%)',
       padding: 20,
       fontFamily: 'inherit',
     }}>
