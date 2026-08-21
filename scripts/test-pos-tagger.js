@@ -3,9 +3,37 @@
 
 const nlp = require('compromise');
 
-const PRIORITY = ['Noun', 'Verb', 'Adjective', 'Adverb', 'Pronoun', 'Preposition', 'Conjunction', 'Determiner', 'Auxiliary', 'Interjection', 'Particle'];
+const PRIORITY = ['Determiner', 'Pronoun', 'Adjective', 'Verb', 'Noun', 'Adverb', 'Preposition', 'Conjunction', 'Auxiliary', 'Interjection', 'Particle'];
 
-function getPrimaryPOS(tags) {
+function getPrimaryPOS(tags, text, allTerms, idx) {
+  const textLower = text.toLowerCase();
+
+  // Cardinal/Value numbers -> Determiner
+  if (tags.includes('Value') || tags.includes('Cardinal')) return 'Determiner';
+
+  // Demonyms -> Adjective
+  if (tags.includes('Demonym')) return 'Adjective';
+
+  // Possessive pronouns
+  if (tags.includes('Possessive')) {
+    const detForms = ['my', 'your', 'his', 'her', 'its', 'our', 'their'];
+    if (detForms.includes(textLower)) return 'Determiner';
+    return 'Pronoun';
+  }
+
+  // Past participles as adjectives
+  if (tags.includes('PastTense') && tags.includes('Verb')) {
+    if (tags.includes('Adjective')) return 'Adjective';
+    if (idx > 0 && idx + 1 < allTerms.length) {
+      const prevTags = allTerms[idx - 1].tags;
+      const prevIsDet = prevTags.includes('Determiner') || prevTags.includes('Article');
+      if (prevIsDet) {
+        const nextTags = allTerms[idx + 1].tags;
+        if (nextTags.includes('Noun')) return 'Adjective';
+      }
+    }
+  }
+
   for (const p of PRIORITY) {
     if (tags.includes(p)) return p;
   }
@@ -16,9 +44,10 @@ function tagSentence(sentence) {
   const doc = nlp(sentence);
   const data = doc.json();
   if (!data || !data[0] || !data[0].terms) return [];
-  return data[0].terms.map(t => ({
+  const terms = data[0].terms;
+  return terms.map((t, i) => ({
     text: t.text,
-    pos: getPrimaryPOS(t.tags),
+    pos: getPrimaryPOS(t.tags, t.text, terms, i),
     allTags: t.tags,
   }));
 }

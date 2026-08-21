@@ -1235,8 +1235,39 @@ interface TaggedTerm {
   allTags: string[]
 }
 
-function getPrimaryPOS(tags: string[]): string {
-  const priority = ['Noun', 'Verb', 'Adjective', 'Adverb', 'Pronoun', 'Preposition', 'Conjunction', 'Determiner', 'Auxiliary', 'Interjection', 'Particle']
+function getPrimaryPOS(tags: string[], text: string, allTerms: Array<{text: string; tags: string[]}>, idx: number): string {
+  const textLower = text.toLowerCase()
+
+  // Cardinal/Value numbers (seven, ten, twenty) -> Determiner
+  if (tags.indexOf('Value') !== -1 || tags.indexOf('Cardinal') !== -1) return 'Determiner'
+
+  // Demonyms (American, British, Japanese) -> Adjective
+  if (tags.indexOf('Demonym') !== -1) return 'Adjective'
+
+  // Possessive pronouns: before-noun forms -> Determiner, standalone -> Pronoun
+  if (tags.indexOf('Possessive') !== -1) {
+    const detForms: Record<string, boolean> = {}
+    const detList = ['my', 'your', 'his', 'her', 'its', 'our', 'their']
+    for (let d = 0; d < detList.length; d++) detForms[detList[d]] = true
+    if (detForms[textLower]) return 'Determiner'
+    return 'Pronoun'
+  }
+
+  // Past participles as adjectives: if past tense verb appears after determiner and before noun
+  if (tags.indexOf('PastTense') !== -1 && tags.indexOf('Verb') !== -1) {
+    if (tags.indexOf('Adjective') !== -1) return 'Adjective'
+    if (idx > 0 && idx + 1 < allTerms.length) {
+      const prevTags = allTerms[idx - 1].tags
+      const prevIsDet = prevTags.indexOf('Determiner') !== -1 || prevTags.indexOf('Article') !== -1
+      if (prevIsDet) {
+        const nextTags = allTerms[idx + 1].tags
+        if (nextTags.indexOf('Noun') !== -1) return 'Adjective'
+      }
+    }
+  }
+
+  // Main priority: Determiner and Pronoun before Noun
+  const priority = ['Determiner', 'Pronoun', 'Adjective', 'Verb', 'Noun', 'Adverb', 'Preposition', 'Conjunction', 'Auxiliary', 'Interjection', 'Particle']
   for (let i = 0; i < priority.length; i++) {
     for (let j = 0; j < tags.length; j++) {
       if (tags[j] === priority[i]) return priority[i]
@@ -1299,7 +1330,7 @@ export function PartsOfSpeechTagger({ isDark }: { isDark: boolean }) {
     for (let i = 0; i < terms.length; i++) {
       result.push({
         text: terms[i].text,
-        pos: getPrimaryPOS(terms[i].tags),
+        pos: getPrimaryPOS(terms[i].tags, terms[i].text, terms, i),
         allTags: terms[i].tags,
       })
     }

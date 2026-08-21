@@ -72,8 +72,43 @@ const POS_COLORS: Record<string, { bg: string; bd: string; tx: string }> = {
 
 const BEGINNER_POS = ['Noun', 'Verb', 'Adjective', 'Adverb', 'Pronoun', 'Preposition', 'Conjunction', 'Interjection']
 
-function getPrimaryPOS(tags: string[]): string {
-  const priority = ['Noun', 'Verb', 'Adjective', 'Adverb', 'Pronoun', 'Preposition', 'Conjunction', 'Determiner', 'Auxiliary', 'Interjection', 'Particle']
+function getPrimaryPOS(tags: string[], text: string, allTerms: Array<{text: string; tags: string[]}>, idx: number): string {
+  // Pre-processing: handle compromise-specific tags
+  const textLower = text.toLowerCase()
+
+  // Cardinal/Value numbers (seven, ten, twenty) -> Determiner
+  if (tags.indexOf('Value') !== -1 || tags.indexOf('Cardinal') !== -1) return 'Determiner'
+
+  // Demonyms (American, British, Japanese) -> Adjective
+  if (tags.indexOf('Demonym') !== -1) return 'Adjective'
+
+  // Possessive pronouns: before-noun forms (my, your, his, her, its, our, their) -> Determiner
+  // Standalone possessives (mine, yours, his, hers, ours, theirs) -> Pronoun
+  if (tags.indexOf('Possessive') !== -1) {
+    const detForms: Record<string, boolean> = {}
+    const detList = ['my', 'your', 'his', 'her', 'its', 'our', 'their']
+    for (let d = 0; d < detList.length; d++) detForms[detList[d]] = true
+    if (detForms[textLower]) return 'Determiner'
+    return 'Pronoun'
+  }
+
+  // Past participles as adjectives: if past tense verb appears after determiner and before noun
+  if (tags.indexOf('PastTense') !== -1 && tags.indexOf('Verb') !== -1) {
+    const hasAdjTag = tags.indexOf('Adjective') !== -1
+    if (hasAdjTag) return 'Adjective'
+    // Heuristic: check if preceded by article/determiner and followed by a noun
+    if (idx > 0) {
+      const prevTags = allTerms[idx - 1].tags
+      const prevIsDet = prevTags.indexOf('Determiner') !== -1 || prevTags.indexOf('Article') !== -1
+      if (prevIsDet && idx + 1 < allTerms.length) {
+        const nextTags = allTerms[idx + 1].tags
+        if (nextTags.indexOf('Noun') !== -1) return 'Adjective'
+      }
+    }
+  }
+
+  // Main priority: Pronoun and Determiner before Noun
+  const priority = ['Determiner', 'Pronoun', 'Adjective', 'Verb', 'Noun', 'Adverb', 'Preposition', 'Conjunction', 'Auxiliary', 'Interjection', 'Particle']
   for (let i = 0; i < priority.length; i++) {
     for (let j = 0; j < tags.length; j++) {
       if (tags[j] === priority[i]) return priority[i]
@@ -310,7 +345,7 @@ export function POSTaggerWidget({ isDark, config, onConfigChange, compact }: POS
     for (let i = 0; i < terms.length; i++) {
       result.push({
         text: terms[i].text,
-        pos: getPrimaryPOS(terms[i].tags),
+        pos: getPrimaryPOS(terms[i].tags, terms[i].text, terms, i),
         allTags: terms[i].tags,
       })
       wordOrder.push(terms[i].text)
@@ -370,7 +405,7 @@ export function POSTaggerWidget({ isDark, config, onConfigChange, compact }: POS
       for (let ri = 0; ri < terms.length; ri++) {
         newResults.push({
           text: terms[ri].text,
-          pos: getPrimaryPOS(terms[ri].tags),
+          pos: getPrimaryPOS(terms[ri].tags, terms[ri].text, terms, ri),
           allTags: terms[ri].tags,
         })
         newWordOrder.push(terms[ri].text)

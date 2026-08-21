@@ -56,6 +56,46 @@ import {
   type ParagraphOrganizerWidgetConfig,
   type ParaOrgExercise,
 } from './ParagraphOrganizerWidget'
+import {
+  ConfusedWordsWidget,
+  DEFAULT_CONFUSED_WORDS_CONFIG,
+  type ConfusedWordsConfig,
+} from './ConfusedWordsWidget'
+import {
+  HomophonesWidget,
+  DEFAULT_HOMOPHONES_CONFIG,
+  type HomophonesConfig,
+} from './HomophonesWidget'
+import {
+  SynonymAntonymWidget,
+  DEFAULT_SYNONYM_ANTONYM_CONFIG,
+  type SynonymAntonymConfig,
+} from './SynonymAntonymWidget'
+import {
+  IdiomExplorerWidget,
+  DEFAULT_IDIOM_EXPLORER_CONFIG,
+  type IdiomExplorerConfig,
+} from './IdiomExplorerWidget'
+import {
+  PrefixSuffixWidget,
+  DEFAULT_PREFIX_SUFFIX_CONFIG,
+  type PrefixSuffixConfig,
+} from './PrefixSuffixWidget'
+import {
+  WordSorterWidget,
+  DEFAULT_WORD_SORTER_CONFIG,
+  type WordSorterConfig,
+} from './WordSorterWidget'
+import {
+  SentenceCombiningWidget,
+  DEFAULT_SENTENCE_COMBINING_CONFIG,
+  type SentenceCombiningConfig,
+} from './SentenceCombiningWidget'
+import {
+  ProofreadingWidget,
+  DEFAULT_PROOFREADING_CONFIG,
+  type ProofreadingConfig,
+} from './ProofreadingWidget'
 
 // ============================================================
 // On-Canvas Language Widgets
@@ -324,6 +364,141 @@ function CanvasSentenceExpansion({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
+// 10. COMMONLY CONFUSED WORDS
+// ============================================================
+
+function CanvasConfusedWords({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: ConfusedWordsConfig = useMemo(() => ({
+    ...DEFAULT_CONFUSED_WORDS_CONFIG,
+    ...(cfg as Partial<ConfusedWordsConfig>),
+    customExercises: (cfg.customExercises as ConfusedWordsConfig['customExercises'] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string, string] | undefined) || ['', '', '', ''],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<ConfusedWordsConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <ConfusedWordsWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 11. HOMOPHONE PRACTICE
+// ============================================================
+
+function CanvasHomophones({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: HomophonesConfig = useMemo(() => ({
+    ...DEFAULT_HOMOPHONES_CONFIG,
+    ...(cfg as Partial<HomophonesConfig>),
+    customExercises: (cfg.customExercises as HomophonesConfig['customExercises'] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string, string] | undefined) || ['', '', '', ''],
+    teacherMeanings: (cfg.teacherMeanings as [string, string] | undefined) || ['', ''],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<HomophonesConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <HomophonesWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 12. SYNONYM & ANTONYM PRACTICE
+// ============================================================
+
+function CanvasSynonymAntonym({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: SynonymAntonymConfig = useMemo(() => ({
+    ...DEFAULT_SYNONYM_ANTONYM_CONFIG,
+    ...(cfg as Partial<SynonymAntonymConfig>),
+    customExercises: (cfg.customExercises as SynonymAntonymConfig['customExercises'] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string, string] | undefined) || ['', '', '', ''],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<SynonymAntonymConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <SynonymAntonymWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 13. IDIOM EXPLORER
+// ============================================================
+
+function CanvasIdiomExplorer({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: IdiomExplorerConfig = useMemo(() => ({
+    ...DEFAULT_IDIOM_EXPLORER_CONFIG,
+    ...(cfg as Partial<IdiomExplorerConfig>),
+    customExercises: (cfg.customExercises as IdiomExplorerConfig['customExercises'] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string, string] | undefined) || ['', '', '', ''],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<IdiomExplorerConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <IdiomExplorerWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 14. PREFIX & SUFFIX BUILDER
+// ============================================================
+
+function CanvasPrefixSuffix({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: PrefixSuffixConfig = useMemo(() => ({
+    ...DEFAULT_PREFIX_SUFFIX_CONFIG,
+    ...(cfg as Partial<PrefixSuffixConfig>),
+    customExercises: (cfg.customExercises as PrefixSuffixConfig['customExercises'] | undefined) || [],
+    teacherOptions: (cfg.teacherOptions as [string, string, string, string] | undefined) || ['', '', '', ''],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<PrefixSuffixConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <PrefixSuffixWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 15. WORD SORTER
+// ============================================================
+
+function CanvasWordSorter({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: WordSorterConfig = useMemo(() => ({
+    ...DEFAULT_WORD_SORTER_CONFIG,
+    ...(cfg as Partial<WordSorterConfig>),
+    customExercises: (cfg.customExercises as WordSorterConfig['customExercises'] | undefined) || [],
+    selections: (cfg.selections as Record<string, string> | undefined) || {},
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<WordSorterConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <WordSorterWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 16. SENTENCE COMBINING
+// ============================================================
+
+function CanvasSentenceCombining({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: SentenceCombiningConfig = useMemo(() => ({
+    ...DEFAULT_SENTENCE_COMBINING_CONFIG,
+    ...(cfg as Partial<SentenceCombiningConfig>),
+    customExercises: (cfg.customExercises as SentenceCombiningConfig['customExercises'] | undefined) || [],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<SentenceCombiningConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <SentenceCombiningWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
+// 17. PROOFREADING PRACTICE
+// ============================================================
+
+function CanvasProofreading({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config
+  const widgetConfig: ProofreadingConfig = useMemo(() => ({
+    ...DEFAULT_PROOFREADING_CONFIG,
+    ...(cfg as Partial<ProofreadingConfig>),
+    clickedSpans: (cfg.clickedSpans as number[] | undefined) || [],
+  }), [cfg])
+  const handleChange = useCallback((patch: Partial<ProofreadingConfig>) => { updateConfig(patch) }, [updateConfig])
+  return <ProofreadingWidget isDark={isDark} config={widgetConfig} onConfigChange={handleChange} />
+}
+
+// ============================================================
 // Component Registry & Exports
 // ============================================================
 
@@ -337,6 +512,14 @@ const LANG_WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetPro
   'lang-punctuation': CanvasPunctuationPractice,
   'lang-phonics': CanvasPhonicsPractice,
   'lang-sentence-expansion': CanvasSentenceExpansion,
+  'lang-confused-words': CanvasConfusedWords,
+  'lang-homophones': CanvasHomophones,
+  'lang-synonym-antonym': CanvasSynonymAntonym,
+  'lang-idiom-explorer': CanvasIdiomExplorer,
+  'lang-prefix-suffix': CanvasPrefixSuffix,
+  'lang-word-sorter': CanvasWordSorter,
+  'lang-sentence-combining': CanvasSentenceCombining,
+  'lang-proofreading': CanvasProofreading,
 }
 
 export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -356,6 +539,14 @@ export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'lang-punctuation': return { ...DEFAULT_PUNCT_CONFIG }
     case 'lang-phonics': return { ...DEFAULT_PHONICS_CONFIG }
     case 'lang-sentence-expansion': return { ...DEFAULT_EXPANSION_CONFIG }
+    case 'lang-confused-words': return { ...DEFAULT_CONFUSED_WORDS_CONFIG }
+    case 'lang-homophones': return { ...DEFAULT_HOMOPHONES_CONFIG }
+    case 'lang-synonym-antonym': return { ...DEFAULT_SYNONYM_ANTONYM_CONFIG }
+    case 'lang-idiom-explorer': return { ...DEFAULT_IDIOM_EXPLORER_CONFIG }
+    case 'lang-prefix-suffix': return { ...DEFAULT_PREFIX_SUFFIX_CONFIG }
+    case 'lang-word-sorter': return { ...DEFAULT_WORD_SORTER_CONFIG }
+    case 'lang-sentence-combining': return { ...DEFAULT_SENTENCE_COMBINING_CONFIG }
+    case 'lang-proofreading': return { ...DEFAULT_PROOFREADING_CONFIG }
     default: return {}
   }
 }
@@ -371,6 +562,14 @@ export function getLangWidgetDefaultSize(kind: string): { width: number; height:
     case 'lang-punctuation': return { width: 380, height: 520 }
     case 'lang-phonics': return { width: 380, height: 520 }
     case 'lang-sentence-expansion': return { width: 380, height: 520 }
+    case 'lang-confused-words': return { width: 380, height: 520 }
+    case 'lang-homophones': return { width: 380, height: 520 }
+    case 'lang-synonym-antonym': return { width: 360, height: 480 }
+    case 'lang-idiom-explorer': return { width: 380, height: 520 }
+    case 'lang-prefix-suffix': return { width: 380, height: 520 }
+    case 'lang-word-sorter': return { width: 360, height: 480 }
+    case 'lang-sentence-combining': return { width: 380, height: 520 }
+    case 'lang-proofreading': return { width: 400, height: 560 }
     default: return { width: 320, height: 360 }
   }
 }
@@ -385,4 +584,12 @@ export const LANG_WIDGET_KIND_LABELS: Record<string, string> = {
   'lang-punctuation': 'Punctuation Practice',
   'lang-phonics': 'Phonics Practice',
   'lang-sentence-expansion': 'Sentence Expansion Practice',
+  'lang-confused-words': 'Commonly Confused Words',
+  'lang-homophones': 'Homophone Practice',
+  'lang-synonym-antonym': 'Synonym & Antonym Practice',
+  'lang-idiom-explorer': 'Idiom Explorer',
+  'lang-prefix-suffix': 'Prefix & Suffix Builder',
+  'lang-word-sorter': 'Word Sorter',
+  'lang-sentence-combining': 'Sentence Combining',
+  'lang-proofreading': 'Proofreading Practice',
 }

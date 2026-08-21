@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useCallback } from 'react'
+import nlp from 'compromise'
 import { TutorReveal } from '../shared/TutorReveal'
 
 // ============================================================
@@ -616,13 +617,25 @@ function runGrammarChecks(text: string): GrammarIssue[] {
       }
     }
 
-    // 2. Tense consistency
-    const pastVerbs = trimmed.match(/\b(\w+ed)\b/gi) || []
-    const presentVerbs = trimmed.match(/\b(\w+s)\b(?!ed)/gi) || []
-    if (pastVerbs.length > 0 && presentVerbs.length > 0) {
+    // 2. Tense consistency — use compromise to find actual verbs and their tenses
+    try {
+      const doc = nlp(trimmed)
+      const verbs = doc.verbs().json()
+      let hasPastTense = false
+      let hasPresentTense = false
+      for (let vi = 0; vi < verbs.length; vi++) {
+        const vtags = verbs[vi].tags || []
+        if (vtags.indexOf('PastTense') !== -1) hasPastTense = true
+        if (vtags.indexOf('PresentTense') !== -1) hasPresentTense = true
+      }
+      // Also check be-verb tenses
       const hasPastBe = /\b(was|were)\b/i.test(trimmed)
       const hasPresentBe = /\b(is|are|am)\b/i.test(trimmed)
       if (hasPastBe && hasPresentBe) {
+        hasPastTense = true
+        hasPresentTense = true
+      }
+      if (hasPastTense && hasPresentTense) {
         issues.push({
           type: 'Tense Consistency',
           message: 'Mixed tenses detected: past and present tense verbs in the same sentence',
@@ -631,7 +644,7 @@ function runGrammarChecks(text: string): GrammarIssue[] {
           severity: 'warning',
         })
       }
-    }
+    } catch (_e) { /* compromise parse error, skip tense check */ }
 
     // 3. Comma splice detection
     if (/,[\s]*[a-z]/i.test(trimmed) && !/\b(and|but|or|so|yet|for|nor)\b/i.test(trimmed.split(',')[1] || '')) {
@@ -668,8 +681,8 @@ function runGrammarChecks(text: string): GrammarIssue[] {
 
     // 5. Article usage
     const articlePatterns = [
-      { pattern: /\b(a)\s+(\w+[aeiou]\w*)/gi, check: (m: RegExpMatchArray) => !/^(uni|eu|one)/i.test(m[2]), msg: 'Article check: Consider using "an" before words starting with a vowel sound' },
-      { pattern: /\b(an)\s+(\w+)/gi, check: (m: RegExpMatchArray) => /^[bcdfghjklmnpqrstvwxyz]/i.test(m[2]) && !/^(hour|honest|honor)/i.test(m[2]), msg: 'Article check: Consider using "a" before words starting with a consonant sound' },
+      { pattern: /\b(a)\s+([aeiou][a-z]*)/gi, check: (m: RegExpMatchArray) => !/^(uni|eu|one|us|uk)/i.test(m[2]), msg: 'Article check: Consider using "an" before words starting with a vowel sound' },
+      { pattern: /\b(an)\s+([bcdfghjklmnpqrstvwxyz][a-z]*)/gi, check: (m: RegExpMatchArray) => !/^(hour|honest|honor|heir)/i.test(m[2]), msg: 'Article check: Consider using "a" before words starting with a consonant sound' },
     ]
     for (const ap of articlePatterns) {
       const match = trimmed.match(ap.pattern)
