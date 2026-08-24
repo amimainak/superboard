@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { generateId } from '@/lib/whiteboard/utils'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load each tool — only parsed when the grade tab renders it
 const FormulaCalcLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.PhysicsFormulaCalculator })))
@@ -74,6 +77,8 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
@@ -87,6 +92,33 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
     })
   }
 
+  // Add to Board (same pattern as StatToolkit)
+  const addToBoard = useCallback((widgetKind: string) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - 80 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: getDefaultWidgetConfig(widgetKind),
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1,
+      locked: false,
+      pageIndex: 0,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -95,8 +127,23 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, widgetKind?: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+      {widgetKind && (
+        <button
+          onClick={() => addToBoard(widgetKind)}
+          style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+        >
+          + Add to Board
+        </button>
+      )}
+    </div>
   )
 
   return (
@@ -131,53 +178,53 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Physics Formula Calculator')}
+            {sectionTitle('Physics Formula Calculator', 'phys-formula-calc')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Select a formula, choose which variable to solve for, enter the known values, and calculate.</p>
             <div style={{ padding: '0 12px 12px' }}><FormulaCalcPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Wave Simulator')}
+            {sectionTitle('Wave Simulator', 'phys-wave-sim')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore transverse waves with adjustable frequency, amplitude, and wavelength.</p>
             <div style={{ padding: '0 12px 12px' }}><WaveSimPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Pendulum Simulator')}
+            {sectionTitle('Pendulum Simulator', 'phys-pendulum-sim')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Watch a pendulum swing using real physics. Adjust length, gravity, and starting angle.</p>
             <div style={{ padding: '0 12px 12px' }}><PendulumSimPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Science Unit Converter')}
+            {sectionTitle('Science Unit Converter', 'phys-unit-converter')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Convert between physics units: force, energy, power, pressure, temperature, speed.</p>
             <div style={{ padding: '0 12px 12px' }}><ConverterPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Projectile Motion Simulator')}
+            {sectionTitle('Projectile Motion Simulator', 'phys-projectile-sim')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Launch a projectile and watch its parabolic trajectory with real kinematic equations.</p>
             <div style={{ padding: '0 12px 12px' }}><ProjectilePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle("Ohm's Law Calculator")}
+            {sectionTitle("Ohm's Law Calculator", 'phys-ohms-law')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Enter any two of voltage, current, and resistance to auto-calculate the third.</p>
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Circuit Diagram Builder')}
+            {sectionTitle('Circuit Diagram Builder', 'phys-circuit-diagram')}
             <div style={{ padding: '0 12px 12px' }}><CircuitDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Free Body Diagram Builder')}
+            {sectionTitle('Free Body Diagram Builder', 'phys-free-body-diagram')}
             <div style={{ padding: '0 12px 12px' }}><FreeBodyDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ray Diagram Optics')}
+            {sectionTitle('Ray Diagram Optics', 'phys-ray-diagram')}
             <div style={{ padding: '0 12px 12px' }}><RayDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Energy Bar Charts (LOL)')}
+            {sectionTitle('Energy Bar Charts (LOL)', 'phys-energy-bar-charts')}
             <div style={{ padding: '0 12px 12px' }}><EnergyBarChartsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Interactive Graphing Tool')}
+            {sectionTitle('Interactive Graphing Tool', 'phys-interactive-graphing')}
             <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
           </div>
         </>
@@ -189,7 +236,7 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle("Ohm's Law Calculator")}
+            {sectionTitle("Ohm's Law Calculator", 'phys-ohms-law')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>A simple introduction to the relationship between voltage, current, and resistance.</p>
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
           </div>
@@ -202,39 +249,39 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Physics Formula Calculator')}
+            {sectionTitle('Physics Formula Calculator', 'phys-formula-calc')}
             <div style={{ padding: '0 12px 12px' }}><FormulaCalcPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Wave Simulator')}
+            {sectionTitle('Wave Simulator', 'phys-wave-sim')}
             <div style={{ padding: '0 12px 12px' }}><WaveSimPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Pendulum Simulator')}
+            {sectionTitle('Pendulum Simulator', 'phys-pendulum-sim')}
             <div style={{ padding: '0 12px 12px' }}><PendulumSimPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Science Unit Converter')}
+            {sectionTitle('Science Unit Converter', 'phys-unit-converter')}
             <div style={{ padding: '0 12px 12px' }}><ConverterPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle("Ohm's Law Calculator")}
+            {sectionTitle("Ohm's Law Calculator", 'phys-ohms-law')}
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Circuit Diagram Builder')}
+            {sectionTitle('Circuit Diagram Builder', 'phys-circuit-diagram')}
             <div style={{ padding: '0 12px 12px' }}><CircuitDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Free Body Diagram Builder')}
+            {sectionTitle('Free Body Diagram Builder', 'phys-free-body-diagram')}
             <div style={{ padding: '0 12px 12px' }}><FreeBodyDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Energy Bar Charts (LOL)')}
+            {sectionTitle('Energy Bar Charts (LOL)', 'phys-energy-bar-charts')}
             <div style={{ padding: '0 12px 12px' }}><EnergyBarChartsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Interactive Graphing Tool')}
+            {sectionTitle('Interactive Graphing Tool', 'phys-interactive-graphing')}
             <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
           </div>
         </>
@@ -246,47 +293,47 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Physics Formula Calculator')}
+            {sectionTitle('Physics Formula Calculator', 'phys-formula-calc')}
             <div style={{ padding: '0 12px 12px' }}><FormulaCalcPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Wave Simulator')}
+            {sectionTitle('Wave Simulator', 'phys-wave-sim')}
             <div style={{ padding: '0 12px 12px' }}><WaveSimPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Pendulum Simulator')}
+            {sectionTitle('Pendulum Simulator', 'phys-pendulum-sim')}
             <div style={{ padding: '0 12px 12px' }}><PendulumSimPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Science Unit Converter')}
+            {sectionTitle('Science Unit Converter', 'phys-unit-converter')}
             <div style={{ padding: '0 12px 12px' }}><ConverterPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Projectile Motion Simulator')}
+            {sectionTitle('Projectile Motion Simulator', 'phys-projectile-sim')}
             <div style={{ padding: '0 12px 12px' }}><ProjectilePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle("Ohm's Law Calculator")}
+            {sectionTitle("Ohm's Law Calculator", 'phys-ohms-law')}
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Circuit Diagram Builder')}
+            {sectionTitle('Circuit Diagram Builder', 'phys-circuit-diagram')}
             <div style={{ padding: '0 12px 12px' }}><CircuitDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Free Body Diagram Builder')}
+            {sectionTitle('Free Body Diagram Builder', 'phys-free-body-diagram')}
             <div style={{ padding: '0 12px 12px' }}><FreeBodyDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ray Diagram Optics')}
+            {sectionTitle('Ray Diagram Optics', 'phys-ray-diagram')}
             <div style={{ padding: '0 12px 12px' }}><RayDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Energy Bar Charts (LOL)')}
+            {sectionTitle('Energy Bar Charts (LOL)', 'phys-energy-bar-charts')}
             <div style={{ padding: '0 12px 12px' }}><EnergyBarChartsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Interactive Graphing Tool')}
+            {sectionTitle('Interactive Graphing Tool', 'phys-interactive-graphing')}
             <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
           </div>
         </>

@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { generateId } from '@/lib/whiteboard/utils'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load each tool — only parsed when the grade tab renders it
 const PeriodicTableLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.PeriodicTableExplorer })))
@@ -70,6 +73,8 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
@@ -83,6 +88,33 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
     })
   }
 
+  // Add to Board
+  const addToBoard = useCallback((widgetKind: string) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - 80 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: getDefaultWidgetConfig(widgetKind),
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1,
+      locked: false,
+      pageIndex: 0,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -91,8 +123,23 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, widgetKind?: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+      {widgetKind && (
+        <button
+          onClick={() => addToBoard(widgetKind)}
+          style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+        >
+          + Add to Board
+        </button>
+      )}
+    </div>
   )
 
   return (
@@ -127,52 +174,52 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('pH Scale Visualizer')}
+            {sectionTitle('pH Scale Visualizer', 'chem-ph-scale')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore the pH scale from 0 to 14. Click the bar or examples to see acid/base classification and H+ concentration.</p>
             <div style={{ padding: '0 12px 12px' }}><PhScalePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Scientific Notation Converter')}
+            {sectionTitle('Scientific Notation Converter', 'chem-sci-notation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Convert between standard and scientific notation. Perform arithmetic operations with step-by-step explanations.</p>
             <div style={{ padding: '0 12px 12px' }}><SciNotationPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Periodic Table Explorer')}
+            {sectionTitle('Periodic Table Explorer', 'chem-periodic-table')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Interactive periodic table with 118 elements. Click any element for details including electron configuration and common ion charges.</p>
             <div style={{ padding: '0 12px 12px' }}><PeriodicTablePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Chemical Equation Balancer')}
+            {sectionTitle('Chemical Equation Balancer', 'chem-equation-balancer')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Enter reactants and products to automatically balance chemical equations. Shows element counts before and after.</p>
             <div style={{ padding: '0 12px 12px' }}><EquationBalancerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Molar Mass Calculator')}
+            {sectionTitle('Molar Mass Calculator', 'chem-molar-mass')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Enter a chemical formula to calculate its molar mass. Supports parentheses and polyatomic groups.</p>
             <div style={{ padding: '0 12px 12px' }}><MolarMassPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Lewis Dot Structure Builder')}
+            {sectionTitle('Lewis Dot Structure Builder', 'chem-lewis-dot')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build Lewis dot structures for atoms and common molecules. See valence electrons, bonds, and lone pairs.</p>
             <div style={{ padding: '0 12px 12px' }}><LewisDotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Molecular Geometry (VSEPR)')}
+            {sectionTitle('Molecular Geometry (VSEPR)', 'chem-vsepr')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore molecular shapes using VSEPR theory. See bond angles, hybridization, and polarity for common molecules.</p>
             <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Gas Laws Simulator')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Simulate PV=nRT. Lock 3 variables and adjust the 4th. Includes Boyle’s and Charles’s Law demos.</p>
+            {sectionTitle('Gas Laws Simulator', 'chem-gas-laws')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Simulate PV=nRT. Lock 3 variables and adjust the 4th. Includes Boyle's and Charles's Law demos.</p>
             <div style={{ padding: '0 12px 12px' }}><GasLawsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Acid-Base Titration')}
+            {sectionTitle('Acid-Base Titration', 'chem-titration')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Perform a virtual titration. Add base in increments and watch the pH curve and solution color change.</p>
             <div style={{ padding: '0 12px 12px' }}><TitrationPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ion Formation Visualizer')}
+            {sectionTitle('Ion Formation Visualizer', 'chem-ion-formation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after ionization.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
           </div>
@@ -185,12 +232,12 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('pH Scale Visualizer')}
+            {sectionTitle('pH Scale Visualizer', 'chem-ph-scale')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore acids and bases! Click the colorful bar to see if something is acidic, basic, or neutral.</p>
             <div style={{ padding: '0 12px 12px' }}><PhScalePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ion Formation Visualizer')}
+            {sectionTitle('Ion Formation Visualizer', 'chem-ion-formation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Watch atoms gain or lose electrons to become ions! Pick an element and see the transformation.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
           </div>
@@ -203,31 +250,31 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('pH Scale Visualizer')}
+            {sectionTitle('pH Scale Visualizer', 'chem-ph-scale')}
             <div style={{ padding: '0 12px 12px' }}><PhScalePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Scientific Notation Converter')}
+            {sectionTitle('Scientific Notation Converter', 'chem-sci-notation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Convert numbers to and from scientific notation. Great for working with very large or very small numbers in science.</p>
             <div style={{ padding: '0 12px 12px' }}><SciNotationPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Periodic Table Explorer')}
+            {sectionTitle('Periodic Table Explorer', 'chem-periodic-table')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore the elements! Click any element to learn about its properties, electron configuration, and common charges.</p>
             <div style={{ padding: '0 12px 12px' }}><PeriodicTablePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ion Formation Visualizer')}
+            {sectionTitle('Ion Formation Visualizer', 'chem-ion-formation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after ionization.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Lewis Dot Structure Builder')}
+            {sectionTitle('Lewis Dot Structure Builder', 'chem-lewis-dot')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build Lewis dot structures for atoms and molecules. See valence electrons, bonds, and lone pairs.</p>
             <div style={{ padding: '0 12px 12px' }}><LewisDotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Molecular Geometry (VSEPR)')}
+            {sectionTitle('Molecular Geometry (VSEPR)', 'chem-vsepr')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore 3D molecular shapes using VSEPR theory. See bond angles and polarity.</p>
             <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
           </div>
@@ -240,49 +287,49 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('pH Scale Visualizer')}
+            {sectionTitle('pH Scale Visualizer', 'chem-ph-scale')}
             <div style={{ padding: '0 12px 12px' }}><PhScalePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Scientific Notation Converter')}
+            {sectionTitle('Scientific Notation Converter', 'chem-sci-notation')}
             <div style={{ padding: '0 12px 12px' }}><SciNotationPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Periodic Table Explorer')}
+            {sectionTitle('Periodic Table Explorer', 'chem-periodic-table')}
             <div style={{ padding: '0 12px 12px' }}><PeriodicTablePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Chemical Equation Balancer')}
+            {sectionTitle('Chemical Equation Balancer', 'chem-equation-balancer')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Balance chemical reactions using coefficient search. Supports complex formulas with parentheses.</p>
             <div style={{ padding: '0 12px 12px' }}><EquationBalancerPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Molar Mass Calculator')}
+            {sectionTitle('Molar Mass Calculator', 'chem-molar-mass')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Calculate molar mass from chemical formulas. Supports polyatomic ions and nested parentheses.</p>
             <div style={{ padding: '0 12px 12px' }}><MolarMassPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Lewis Dot Structure Builder')}
+            {sectionTitle('Lewis Dot Structure Builder', 'chem-lewis-dot')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build Lewis dot structures for atoms and molecules. See valence electrons, bonds, and lone pairs.</p>
             <div style={{ padding: '0 12px 12px' }}><LewisDotPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Molecular Geometry (VSEPR)')}
+            {sectionTitle('Molecular Geometry (VSEPR)', 'chem-vsepr')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore molecular shapes using VSEPR theory. See bond angles, hybridization, and polarity.</p>
             <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Gas Laws Simulator')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Simulate PV=nRT with interactive sliders and piston visualization. Includes Boyle’s and Charles’s Law demos.</p>
+            {sectionTitle('Gas Laws Simulator', 'chem-gas-laws')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Simulate PV=nRT with interactive sliders and piston visualization. Includes Boyle's and Charles's Law demos.</p>
             <div style={{ padding: '0 12px 12px' }}><GasLawsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Acid-Base Titration')}
+            {sectionTitle('Acid-Base Titration', 'chem-titration')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Perform a virtual titration. Add base incrementally and watch the pH curve and solution color change.</p>
             <div style={{ padding: '0 12px 12px' }}><TitrationPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ion Formation Visualizer')}
+            {sectionTitle('Ion Formation Visualizer', 'chem-ion-formation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
           </div>

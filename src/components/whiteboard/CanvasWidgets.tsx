@@ -661,6 +661,12 @@ import {
   getMathWidgetDefaultSize,
   MATH_WIDGET_KIND_LABELS,
 } from './CanvasMathWidgets'
+import {
+  CanvasScienceWidgetRenderer,
+  getScienceWidgetDefaultConfig,
+  getScienceWidgetDefaultSize,
+  SCIENCE_WIDGET_KIND_LABELS,
+} from './CanvasScienceWidgets'
 
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
   // Statistics widgets
@@ -705,6 +711,47 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'lang-punctuation': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-phonics': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-expansion': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
+  // Physics widgets
+  'phys-formula-calc': CanvasScienceWidgetRenderer,
+  'phys-wave-sim': CanvasScienceWidgetRenderer,
+  'phys-pendulum-sim': CanvasScienceWidgetRenderer,
+  'phys-unit-converter': CanvasScienceWidgetRenderer,
+  'phys-projectile-sim': CanvasScienceWidgetRenderer,
+  'phys-ohms-law': CanvasScienceWidgetRenderer,
+  'phys-circuit-diagram': CanvasScienceWidgetRenderer,
+  'phys-free-body-diagram': CanvasScienceWidgetRenderer,
+  'phys-ray-diagram': CanvasScienceWidgetRenderer,
+  'phys-energy-bar-charts': CanvasScienceWidgetRenderer,
+  'phys-interactive-graphing': CanvasScienceWidgetRenderer,
+  // Chemistry widgets
+  'chem-ph-scale': CanvasScienceWidgetRenderer,
+  'chem-sci-notation': CanvasScienceWidgetRenderer,
+  'chem-periodic-table': CanvasScienceWidgetRenderer,
+  'chem-equation-balancer': CanvasScienceWidgetRenderer,
+  'chem-molar-mass': CanvasScienceWidgetRenderer,
+  'chem-lewis-dot': CanvasScienceWidgetRenderer,
+  'chem-vsepr': CanvasScienceWidgetRenderer,
+  'chem-gas-laws': CanvasScienceWidgetRenderer,
+  'chem-titration': CanvasScienceWidgetRenderer,
+  'chem-ion-formation': CanvasScienceWidgetRenderer,
+  // Biology widgets
+  'bio-punnett-square': CanvasScienceWidgetRenderer,
+  'bio-cell-diagram': CanvasScienceWidgetRenderer,
+  'bio-taxonomy': CanvasScienceWidgetRenderer,
+  'bio-body-systems': CanvasScienceWidgetRenderer,
+  'bio-food-web': CanvasScienceWidgetRenderer,
+  'bio-dna-structure': CanvasScienceWidgetRenderer,
+  'bio-natural-selection': CanvasScienceWidgetRenderer,
+  'bio-cell-division': CanvasScienceWidgetRenderer,
+  'bio-photosynthesis-resp': CanvasScienceWidgetRenderer,
+  'bio-human-body': CanvasScienceWidgetRenderer,
+  // Earth Science widgets
+  'earth-rock-cycle': CanvasScienceWidgetRenderer,
+  'earth-plate-tectonics': CanvasScienceWidgetRenderer,
+  'earth-weather-map': CanvasScienceWidgetRenderer,
+  'earth-water-carbon-cycle': CanvasScienceWidgetRenderer,
+  'earth-solar-system': CanvasScienceWidgetRenderer,
+  'earth-topographic-map': CanvasScienceWidgetRenderer,
 }
 
 export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -712,6 +759,11 @@ export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
   const isLangWidget = element.widgetKind.startsWith('lang-')
   if (isLangWidget) {
     return <CanvasLanguageWidgetRenderer element={element} isDark={isDark} />
+  }
+  // Science widgets go through their own renderer
+  const isScienceWidget = element.widgetKind.startsWith('phys-') || element.widgetKind.startsWith('chem-') || element.widgetKind.startsWith('bio-') || element.widgetKind.startsWith('earth-')
+  if (isScienceWidget) {
+    return <CanvasScienceWidgetRenderer element={element} isDark={isDark} />
   }
   const Component = WIDGET_COMPONENTS[element.widgetKind]
   if (!Component) {
@@ -770,6 +822,44 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'lang-punctuation': return getLangWidgetDefaultConfig('lang-punctuation')
     case 'lang-phonics': return getLangWidgetDefaultConfig('lang-phonics')
     case 'lang-sentence-expansion': return getLangWidgetDefaultConfig('lang-sentence-expansion')
+    // Science widgets
+    case 'phys-formula-calc': return getScienceWidgetDefaultConfig('phys-formula-calc')
+    case 'phys-wave-sim': return getScienceWidgetDefaultConfig('phys-wave-sim')
+    case 'phys-pendulum-sim': return getScienceWidgetDefaultConfig('phys-pendulum-sim')
+    case 'phys-unit-converter': return getScienceWidgetDefaultConfig('phys-unit-converter')
+    case 'phys-projectile-sim': return getScienceWidgetDefaultConfig('phys-projectile-sim')
+    case 'phys-ohms-law': return getScienceWidgetDefaultConfig('phys-ohms-law')
+    case 'phys-circuit-diagram': return getScienceWidgetDefaultConfig('phys-circuit-diagram')
+    case 'phys-free-body-diagram': return getScienceWidgetDefaultConfig('phys-free-body-diagram')
+    case 'phys-ray-diagram': return getScienceWidgetDefaultConfig('phys-ray-diagram')
+    case 'phys-energy-bar-charts': return getScienceWidgetDefaultConfig('phys-energy-bar-charts')
+    case 'phys-interactive-graphing': return getScienceWidgetDefaultConfig('phys-interactive-graphing')
+    case 'chem-ph-scale': return getScienceWidgetDefaultConfig('chem-ph-scale')
+    case 'chem-sci-notation': return getScienceWidgetDefaultConfig('chem-sci-notation')
+    case 'chem-periodic-table': return getScienceWidgetDefaultConfig('chem-periodic-table')
+    case 'chem-equation-balancer': return getScienceWidgetDefaultConfig('chem-equation-balancer')
+    case 'chem-molar-mass': return getScienceWidgetDefaultConfig('chem-molar-mass')
+    case 'chem-lewis-dot': return getScienceWidgetDefaultConfig('chem-lewis-dot')
+    case 'chem-vsepr': return getScienceWidgetDefaultConfig('chem-vsepr')
+    case 'chem-gas-laws': return getScienceWidgetDefaultConfig('chem-gas-laws')
+    case 'chem-titration': return getScienceWidgetDefaultConfig('chem-titration')
+    case 'chem-ion-formation': return getScienceWidgetDefaultConfig('chem-ion-formation')
+    case 'bio-punnett-square': return getScienceWidgetDefaultConfig('bio-punnett-square')
+    case 'bio-cell-diagram': return getScienceWidgetDefaultConfig('bio-cell-diagram')
+    case 'bio-taxonomy': return getScienceWidgetDefaultConfig('bio-taxonomy')
+    case 'bio-body-systems': return getScienceWidgetDefaultConfig('bio-body-systems')
+    case 'bio-food-web': return getScienceWidgetDefaultConfig('bio-food-web')
+    case 'bio-dna-structure': return getScienceWidgetDefaultConfig('bio-dna-structure')
+    case 'bio-natural-selection': return getScienceWidgetDefaultConfig('bio-natural-selection')
+    case 'bio-cell-division': return getScienceWidgetDefaultConfig('bio-cell-division')
+    case 'bio-photosynthesis-resp': return getScienceWidgetDefaultConfig('bio-photosynthesis-resp')
+    case 'bio-human-body': return getScienceWidgetDefaultConfig('bio-human-body')
+    case 'earth-rock-cycle': return getScienceWidgetDefaultConfig('earth-rock-cycle')
+    case 'earth-plate-tectonics': return getScienceWidgetDefaultConfig('earth-plate-tectonics')
+    case 'earth-weather-map': return getScienceWidgetDefaultConfig('earth-weather-map')
+    case 'earth-water-carbon-cycle': return getScienceWidgetDefaultConfig('earth-water-carbon-cycle')
+    case 'earth-solar-system': return getScienceWidgetDefaultConfig('earth-solar-system')
+    case 'earth-topographic-map': return getScienceWidgetDefaultConfig('earth-topographic-map')
     default: return {}
   }
 }
@@ -818,6 +908,44 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'lang-punctuation': return getLangWidgetDefaultSize('lang-punctuation')
     case 'lang-phonics': return getLangWidgetDefaultSize('lang-phonics')
     case 'lang-sentence-expansion': return getLangWidgetDefaultSize('lang-sentence-expansion')
+    // Science widgets
+    case 'phys-formula-calc': return getScienceWidgetDefaultSize('phys-formula-calc')
+    case 'phys-wave-sim': return getScienceWidgetDefaultSize('phys-wave-sim')
+    case 'phys-pendulum-sim': return getScienceWidgetDefaultSize('phys-pendulum-sim')
+    case 'phys-unit-converter': return getScienceWidgetDefaultSize('phys-unit-converter')
+    case 'phys-projectile-sim': return getScienceWidgetDefaultSize('phys-projectile-sim')
+    case 'phys-ohms-law': return getScienceWidgetDefaultSize('phys-ohms-law')
+    case 'phys-circuit-diagram': return getScienceWidgetDefaultSize('phys-circuit-diagram')
+    case 'phys-free-body-diagram': return getScienceWidgetDefaultSize('phys-free-body-diagram')
+    case 'phys-ray-diagram': return getScienceWidgetDefaultSize('phys-ray-diagram')
+    case 'phys-energy-bar-charts': return getScienceWidgetDefaultSize('phys-energy-bar-charts')
+    case 'phys-interactive-graphing': return getScienceWidgetDefaultSize('phys-interactive-graphing')
+    case 'chem-ph-scale': return getScienceWidgetDefaultSize('chem-ph-scale')
+    case 'chem-sci-notation': return getScienceWidgetDefaultSize('chem-sci-notation')
+    case 'chem-periodic-table': return getScienceWidgetDefaultSize('chem-periodic-table')
+    case 'chem-equation-balancer': return getScienceWidgetDefaultSize('chem-equation-balancer')
+    case 'chem-molar-mass': return getScienceWidgetDefaultSize('chem-molar-mass')
+    case 'chem-lewis-dot': return getScienceWidgetDefaultSize('chem-lewis-dot')
+    case 'chem-vsepr': return getScienceWidgetDefaultSize('chem-vsepr')
+    case 'chem-gas-laws': return getScienceWidgetDefaultSize('chem-gas-laws')
+    case 'chem-titration': return getScienceWidgetDefaultSize('chem-titration')
+    case 'chem-ion-formation': return getScienceWidgetDefaultSize('chem-ion-formation')
+    case 'bio-punnett-square': return getScienceWidgetDefaultSize('bio-punnett-square')
+    case 'bio-cell-diagram': return getScienceWidgetDefaultSize('bio-cell-diagram')
+    case 'bio-taxonomy': return getScienceWidgetDefaultSize('bio-taxonomy')
+    case 'bio-body-systems': return getScienceWidgetDefaultSize('bio-body-systems')
+    case 'bio-food-web': return getScienceWidgetDefaultSize('bio-food-web')
+    case 'bio-dna-structure': return getScienceWidgetDefaultSize('bio-dna-structure')
+    case 'bio-natural-selection': return getScienceWidgetDefaultSize('bio-natural-selection')
+    case 'bio-cell-division': return getScienceWidgetDefaultSize('bio-cell-division')
+    case 'bio-photosynthesis-resp': return getScienceWidgetDefaultSize('bio-photosynthesis-resp')
+    case 'bio-human-body': return getScienceWidgetDefaultSize('bio-human-body')
+    case 'earth-rock-cycle': return getScienceWidgetDefaultSize('earth-rock-cycle')
+    case 'earth-plate-tectonics': return getScienceWidgetDefaultSize('earth-plate-tectonics')
+    case 'earth-weather-map': return getScienceWidgetDefaultSize('earth-weather-map')
+    case 'earth-water-carbon-cycle': return getScienceWidgetDefaultSize('earth-water-carbon-cycle')
+    case 'earth-solar-system': return getScienceWidgetDefaultSize('earth-solar-system')
+    case 'earth-topographic-map': return getScienceWidgetDefaultSize('earth-topographic-map')
     default: return { width: 300, height: 300 }
   }
 }
@@ -834,4 +962,6 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...MATH_WIDGET_KIND_LABELS,
   // Language widgets
   ...LANG_WIDGET_KIND_LABELS,
+  // Science widgets
+  ...SCIENCE_WIDGET_KIND_LABELS,
 }

@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { generateId } from '@/lib/whiteboard/utils'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load each tool — only parsed when the grade tab renders it
 const PunnettSquareLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.PunnettSquareCalculator })))
@@ -70,6 +73,8 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
@@ -83,6 +88,33 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
     })
   }
 
+  // Add to Board
+  const addToBoard = useCallback((widgetKind: string) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - 80 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: getDefaultWidgetConfig(widgetKind),
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1,
+      locked: false,
+      pageIndex: 0,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -91,12 +123,27 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, widgetKind?: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+      {widgetKind && (
+        <button
+          onClick={() => addToBoard(widgetKind)}
+          style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+        >
+          + Add to Board
+        </button>
+      )}
+    </div>
   )
 
   return (
-    <div className="widget-content toolkit-stat" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+    <div className="widget-content toolkit-biology" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
       {/* ---- Grade Band Tabs ---- */}
       <div style={{ display: 'flex', gap: 2, padding: '8px 12px 4px', flexWrap: 'wrap' }}>
         {GRADE_BANDS.filter(b => b.id === 'all' || visibleBands.has(b.id)).map((band) => {
@@ -122,48 +169,48 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
       </div>
 
       {/* ============================================================ */}
-      {/* ALL TAB — all 5 tools */}
+      {/* ALL TAB — all 10 tools */}
       {/* ============================================================ */}
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Punnett Square Calculator (6-12)')}
+            {sectionTitle('Punnett Square Calculator', 'bio-punnett-square')}
             <div style={{ padding: '0 12px 12px' }}><PunnettSquarePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Cell Diagram Explorer (6-8)')}
+            {sectionTitle('Cell Diagram Explorer', 'bio-cell-diagram')}
             <div style={{ padding: '0 12px 12px' }}><CellDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Taxonomy Classifier (6-8)')}
+            {sectionTitle('Taxonomy Classifier', 'bio-taxonomy')}
             <div style={{ padding: '0 12px 12px' }}><TaxonomyPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Body Systems Explorer (K-12)')}
+            {sectionTitle('Body Systems Explorer', 'bio-body-systems')}
             <div style={{ padding: '0 12px 12px' }}><BodySystemsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ecology Food Web (6-8)')}
+            {sectionTitle('Ecology Food Web', 'bio-food-web')}
             <div style={{ padding: '0 12px 12px' }}><FoodWebPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('DNA Structure Viewer (6-12)')}
+            {sectionTitle('DNA Structure Viewer', 'bio-dna-structure')}
             <div style={{ padding: '0 12px 12px' }}><DNAStructurePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Natural Selection Sim (6-12)')}
+            {sectionTitle('Natural Selection Sim', 'bio-natural-selection')}
             <div style={{ padding: '0 12px 12px' }}><NaturalSelectionPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Cell Division Animator (6-12)')}
+            {sectionTitle('Cell Division Animator', 'bio-cell-division')}
             <div style={{ padding: '0 12px 12px' }}><CellDivisionPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Photosynthesis & Respiration (6-12)')}
+            {sectionTitle('Photosynthesis & Respiration', 'bio-photosynthesis-resp')}
             <div style={{ padding: '0 12px 12px' }}><PhotoRespPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Human Body Interactive (K-12)')}
+            {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
         </>
@@ -175,7 +222,7 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Human Body Interactive')}
+            {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
         </>
@@ -187,39 +234,39 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Cell Diagram Explorer')}
+            {sectionTitle('Cell Diagram Explorer', 'bio-cell-diagram')}
             <div style={{ padding: '0 12px 12px' }}><CellDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Taxonomy Classifier')}
+            {sectionTitle('Taxonomy Classifier', 'bio-taxonomy')}
             <div style={{ padding: '0 12px 12px' }}><TaxonomyPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Body Systems Explorer')}
+            {sectionTitle('Body Systems Explorer', 'bio-body-systems')}
             <div style={{ padding: '0 12px 12px' }}><BodySystemsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ecology Food Web')}
+            {sectionTitle('Ecology Food Web', 'bio-food-web')}
             <div style={{ padding: '0 12px 12px' }}><FoodWebPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('DNA Structure Viewer')}
+            {sectionTitle('DNA Structure Viewer', 'bio-dna-structure')}
             <div style={{ padding: '0 12px 12px' }}><DNAStructurePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Natural Selection Sim')}
+            {sectionTitle('Natural Selection Sim', 'bio-natural-selection')}
             <div style={{ padding: '0 12px 12px' }}><NaturalSelectionPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Cell Division Animator')}
+            {sectionTitle('Cell Division Animator', 'bio-cell-division')}
             <div style={{ padding: '0 12px 12px' }}><CellDivisionPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Photosynthesis & Respiration')}
+            {sectionTitle('Photosynthesis & Respiration', 'bio-photosynthesis-resp')}
             <div style={{ padding: '0 12px 12px' }}><PhotoRespPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Human Body Interactive')}
+            {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
         </>
@@ -231,43 +278,43 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Punnett Square Calculator')}
+            {sectionTitle('Punnett Square Calculator', 'bio-punnett-square')}
             <div style={{ padding: '0 12px 12px' }}><PunnettSquarePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Cell Diagram Explorer')}
+            {sectionTitle('Cell Diagram Explorer', 'bio-cell-diagram')}
             <div style={{ padding: '0 12px 12px' }}><CellDiagramPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Taxonomy Classifier')}
+            {sectionTitle('Taxonomy Classifier', 'bio-taxonomy')}
             <div style={{ padding: '0 12px 12px' }}><TaxonomyPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Body Systems Explorer')}
+            {sectionTitle('Body Systems Explorer', 'bio-body-systems')}
             <div style={{ padding: '0 12px 12px' }}><BodySystemsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Ecology Food Web')}
+            {sectionTitle('Ecology Food Web', 'bio-food-web')}
             <div style={{ padding: '0 12px 12px' }}><FoodWebPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('DNA Structure Viewer')}
+            {sectionTitle('DNA Structure Viewer', 'bio-dna-structure')}
             <div style={{ padding: '0 12px 12px' }}><DNAStructurePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Natural Selection Sim')}
+            {sectionTitle('Natural Selection Sim', 'bio-natural-selection')}
             <div style={{ padding: '0 12px 12px' }}><NaturalSelectionPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Cell Division Animator')}
+            {sectionTitle('Cell Division Animator', 'bio-cell-division')}
             <div style={{ padding: '0 12px 12px' }}><CellDivisionPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Photosynthesis & Respiration')}
+            {sectionTitle('Photosynthesis & Respiration', 'bio-photosynthesis-resp')}
             <div style={{ padding: '0 12px 12px' }}><PhotoRespPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Human Body Interactive')}
+            {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
         </>

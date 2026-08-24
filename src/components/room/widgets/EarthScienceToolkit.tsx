@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { generateId } from '@/lib/whiteboard/utils'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load each tool — only parsed when the grade tab renders it
 const RockCycleLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.RockCycleDiagram })))
@@ -54,6 +57,8 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
@@ -67,6 +72,33 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
     })
   }
 
+  // Add to Board
+  const addToBoard = useCallback((widgetKind: string) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = (vw / 2 - 80 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: getDefaultWidgetConfig(widgetKind),
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0,
+      opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1,
+      locked: false,
+      pageIndex: 0,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -75,8 +107,23 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, widgetKind?: string) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+      {widgetKind && (
+        <button
+          onClick={() => addToBoard(widgetKind)}
+          style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+          }}
+          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+        >
+          + Add to Board
+        </button>
+      )}
+    </div>
   )
 
   return (
@@ -107,31 +154,31 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
 
       {/* ============================================================ */}
       {/* ALL TAB — show all 6 */}
-      {/* ============================================================ */}
+      {/* ============================================================*/}
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Rock Cycle Diagram (Grades 4-8)')}
+            {sectionTitle('Rock Cycle Diagram', 'earth-rock-cycle')}
             <div style={{ padding: '0 12px 12px' }}><RockCyclePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Plate Tectonics Map (Grades 6-8)')}
+            {sectionTitle('Plate Tectonics Map', 'earth-plate-tectonics')}
             <div style={{ padding: '0 12px 12px' }}><PlateTectonicsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Weather Map Reader (Grades 4-8)')}
+            {sectionTitle('Weather Map Reader', 'earth-weather-map')}
             <div style={{ padding: '0 12px 12px' }}><WeatherMapPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Water & Carbon Cycle (Grades 3-8)')}
+            {sectionTitle('Water & Carbon Cycle', 'earth-water-carbon-cycle')}
             <div style={{ padding: '0 12px 12px' }}><WaterCarbonPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Solar System Scale (Grades 3-8)')}
+            {sectionTitle('Solar System Scale', 'earth-solar-system')}
             <div style={{ padding: '0 12px 12px' }}><SolarSystemPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Topographic Map Tool (Grades 6-8)')}
+            {sectionTitle('Topographic Map Tool', 'earth-topographic-map')}
             <div style={{ padding: '0 12px 12px' }}><TopographicPanel isDark={isDark} /></div>
           </div>
         </>
@@ -143,11 +190,11 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Water & Carbon Cycle (Grades 3-8)')}
+            {sectionTitle('Water & Carbon Cycle', 'earth-water-carbon-cycle')}
             <div style={{ padding: '0 12px 12px' }}><WaterCarbonPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Solar System Scale (Grades 3-8)')}
+            {sectionTitle('Solar System Scale', 'earth-solar-system')}
             <div style={{ padding: '0 12px 12px' }}><SolarSystemPanel isDark={isDark} /></div>
           </div>
         </>
@@ -159,27 +206,27 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Rock Cycle Diagram (Grades 4-8)')}
+            {sectionTitle('Rock Cycle Diagram', 'earth-rock-cycle')}
             <div style={{ padding: '0 12px 12px' }}><RockCyclePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Plate Tectonics Map (Grades 6-8)')}
+            {sectionTitle('Plate Tectonics Map', 'earth-plate-tectonics')}
             <div style={{ padding: '0 12px 12px' }}><PlateTectonicsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Weather Map Reader (Grades 4-8)')}
+            {sectionTitle('Weather Map Reader', 'earth-weather-map')}
             <div style={{ padding: '0 12px 12px' }}><WeatherMapPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Water & Carbon Cycle (Grades 3-8)')}
+            {sectionTitle('Water & Carbon Cycle', 'earth-water-carbon-cycle')}
             <div style={{ padding: '0 12px 12px' }}><WaterCarbonPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Solar System Scale (Grades 3-8)')}
+            {sectionTitle('Solar System Scale', 'earth-solar-system')}
             <div style={{ padding: '0 12px 12px' }}><SolarSystemPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Topographic Map Tool (Grades 6-8)')}
+            {sectionTitle('Topographic Map Tool', 'earth-topographic-map')}
             <div style={{ padding: '0 12px 12px' }}><TopographicPanel isDark={isDark} /></div>
           </div>
         </>
@@ -191,27 +238,27 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Rock Cycle Diagram (Grades 4-8)')}
+            {sectionTitle('Rock Cycle Diagram', 'earth-rock-cycle')}
             <div style={{ padding: '0 12px 12px' }}><RockCyclePanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Plate Tectonics Map (Grades 6-8)')}
+            {sectionTitle('Plate Tectonics Map', 'earth-plate-tectonics')}
             <div style={{ padding: '0 12px 12px' }}><PlateTectonicsPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Weather Map Reader (Grades 4-8)')}
+            {sectionTitle('Weather Map Reader', 'earth-weather-map')}
             <div style={{ padding: '0 12px 12px' }}><WeatherMapPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Water & Carbon Cycle (Grades 3-8)')}
+            {sectionTitle('Water & Carbon Cycle', 'earth-water-carbon-cycle')}
             <div style={{ padding: '0 12px 12px' }}><WaterCarbonPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Solar System Scale (Grades 3-8)')}
+            {sectionTitle('Solar System Scale', 'earth-solar-system')}
             <div style={{ padding: '0 12px 12px' }}><SolarSystemPanel isDark={isDark} /></div>
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Topographic Map Tool (Grades 6-8)')}
+            {sectionTitle('Topographic Map Tool', 'earth-topographic-map')}
             <div style={{ padding: '0 12px 12px' }}><TopographicPanel isDark={isDark} /></div>
           </div>
         </>
