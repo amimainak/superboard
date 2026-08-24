@@ -794,10 +794,15 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
       </div>
 
       <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 6 }}>
-        {btns.map(b => (
+        {btns.slice(0, 2).map(b => (
+          <button key={b.key} onClick={() => { setMode(b.key); setTimeout(handleConvert, 0) }} style={s.btn(mode === b.key)}>{b.label}</button>
+        ))}
+        {btns.slice(2).map(b => (
           <button key={b.key} onClick={() => setMode(b.key)} style={s.btn(mode === b.key)}>{b.label}</button>
         ))}
-        <button style={{ ...s.btn(false), marginLeft: 'auto' }} onClick={handleConvert}>Go</button>
+        {isOp && (
+          <button style={{ ...s.btn(false), marginLeft: 'auto' }} onClick={handleConvert}>Go</button>
+        )}
       </div>
 
       {result && (
@@ -1263,6 +1268,19 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
         ))}
       </svg>
 
+      {/* Real-time PV Diagram */}
+      <svg viewBox='0 0 200 100' width='100%' style={{ borderRadius: 4, background: s.bg, border: '1px solid ' + s.border }}>
+        <line x1='30' y1='10' x2='30' y2='85' stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'} strokeWidth={0.5} />
+        <line x1='30' y1='85' x2='190' y2='85' stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'} strokeWidth={0.5} />
+        <text x='15' y='50' textAnchor='middle' fontSize={8} fill={s.text} transform='rotate(-90,15,50)'>P (atm)</text>
+        <text x='110' y='98' textAnchor='middle' fontSize={8} fill={s.text}>V (L)</text>
+        <text x='3' y='14' fontSize={7} fill={s.text}>{Math.max(0, displayP * 1.2).toFixed(1)}</text>
+        <text x='185' y='83' fontSize={7} fill={s.text} textAlign='end'>{displayV.toFixed(1)}</text>
+        {/* Current state point */
+        <circle cx={30 + (displayV / 100) * 160} cy={85 - (displayP / 10) * 70} r={4} fill='#34d399' stroke={isDark ? '#e2e8f0' : '#1e293b'} strokeWidth={1.5} />
+        <text x='110' y='9' textAnchor='middle' fontSize={8} fill={s.bright} fontWeight={600}>PV Diagram (real-time)</text>
+      </svg>
+
       {sliders.map(sl => {
         const isLocked = locked.has(sl.key)
         const isComputed = result && result.key === sl.key
@@ -1399,7 +1417,7 @@ export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
         <span style={{ fontSize: 10, color: s.text, marginLeft: 4 }}>Added: <strong style={{ color: s.bright }}>{baseAdded.toFixed(1)} mL</strong> / Equiv: <strong style={{ color: s.bright }}>{equivVol.toFixed(1)} mL</strong></span>
       </div>
 
-      <svg viewBox={'0 0 ' + svgW + ' ' + svgH} width="100%" style={{ maxHeight: 160 }}>
+      <svg viewBox={'0 0 ' + svgW + ' ' + svgH} width="100%" style={{ maxHeight: 160, pointerEvents: 'none' as const }}>
         {/* Grid lines */}
         {[0, 2, 4, 6, 8, 10, 12, 14].map(ph => (
           <g key={'grid-' + ph}>

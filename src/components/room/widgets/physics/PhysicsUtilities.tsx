@@ -377,7 +377,7 @@ export function WaveSimulator({ isDark }: { isDark: boolean }) {
       {/* Info */}
       <div style={{ display: 'flex', gap: 12, fontSize: 10, color: s.text }}>
         <span>T = 1/f = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b></span>
-        <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} px/s</b></span>
+        <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} m/s</b> <span style={{ fontSize: 8, opacity: 0.6 }}>(scale: 1 px = 1 m)</span></span>
       </div>
     </div>
   )
@@ -507,9 +507,15 @@ export function PendulumSimulator({ isDark }: { isDark: boolean }) {
         <button onClick={running ? resetSim : startSim} style={{ ...s.btn(!running), padding: '3px 10px', fontWeight: 600 }}>
           {running ? 'Reset' : 'Start'}
         </button>
+        {running && (
+          <button onClick={resetSim} style={{ ...s.btn(false), padding: '3px 10px', color: '#f87171' }}>Stop</button>
+        )}
         <span style={{ fontSize: 10, color: s.text }}>
-          T = 2{'\u03C0'}{'\u221A'}(L/g) = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b>
+          T = 2{'\u03C0'}{'\u221A'}(L/g) = 2{'\u03C0'}{'\u221A'}({length}/{gravity}) = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b>
         </span>
+      </div>
+      <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
+        {'\u03B8'}(t) = {'\u03B8\u2080'} {'\u00B7'} cos({'\u221A'}(g/L) {'\u00B7'} t) &nbsp;|&nbsp; T = 2{'\u03C0'}{'\u221A'}(L/g)
       </div>
     </div>
   )
@@ -828,6 +834,9 @@ export function ProjectileMotionSimulator({ isDark }: { isDark: boolean }) {
           T = <b style={{ color: s.bright }}>{T_flight.toFixed(2)} s</b>
         </span>
       </div>
+      <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
+        y = v₀sin(θ)t - ½gt² &nbsp;|&nbsp; x = v₀cos(θ)t &nbsp;|&nbsp; H = v₀²sin²(θ)/2g &nbsp;|&nbsp; R = v₀²sin(2θ)/g &nbsp;|&nbsp; T = 2v₀sin(θ)/g
+      </div>
     </div>
   )
 }
@@ -1139,7 +1148,11 @@ export function CircuitDiagramBuilder({ isDark }: { isDark: boolean }) {
       {wireStart && <div style={{ fontSize: 9, color: accentColor }}>Wire: click second point</div>}
 
       {/* SVG Canvas */}
-      <svg viewBox="0 0 280 180" style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }} onClick={handleCanvasClick}>
+      <div style={{ fontSize: 9, color: s.text, fontStyle: 'italic', opacity: 0.7, marginBottom: 4 }}>
+        Select a component above, then click on the canvas to place it. Select Wire, click two points to connect.
+      </div>
+
+      <svg viewBox="0 0 280 180" style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg, cursor: selectedTool ? 'crosshair' as const : 'default' as const }} onClick={handleCanvasClick}>
         {/* Grid dots */}
         {Array.from({ length: 15 }).map((_, i) =>
           Array.from({ length: 10 }).map((_, j) => (
@@ -1276,6 +1289,9 @@ export function FreeBodyDiagramBuilder({ isDark }: { isDark: boolean }) {
           {objectShape === 'rect' ? 'Rect' : 'Circle'}
         </button>
         <button onClick={checkBalance} style={{ ...s.btn(false), color: '#34d399' }}>Check Balance</button>
+        {forces.length > 0 && (
+          <button onClick={() => { setForces([]); setBalanced(null) }} style={{ ...s.btn(false), color: '#f87171' }}>Clear All</button>
+        )}
       </div>
 
       <svg viewBox="0 0 280 220" style={{ width: '100%', borderRadius: 4, border: '1px solid ' + s.border, background: s.bg }} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 
 // ============================================================
 // Shared style helper
@@ -604,6 +604,127 @@ function SystemIcon({ icon, isDark, color }: { icon: string; isDark: boolean; co
 
 const SYSTEM_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#f5f5f4', '#f97316', '#14b8a6', '#ec4899']
 
+function SystemDiagram({ systemId, isDark }: { systemId: string; isDark: boolean }) {
+  const c = isDark ? 'rgba(148,163,184,' : 'rgba(71,85,105,'
+  const sw = 1.2
+  const diagrams: Record<string, React.ReactNode> = {
+    circulatory: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(239,68,68,0.03)' : 'rgba(239,68,68,0.02)' }}>
+        <path d='M100 15 L100 105' stroke={c + '0.3)'} strokeWidth={sw} strokeDasharray='4 3' />
+        <ellipse cx={100} cy={60} rx={40} ry={35} fill='none' stroke={c + '0.4)'} strokeWidth={sw} />
+        <path d='M100 25 L65 40' stroke='#ef4444' strokeWidth={2} markerEnd='url(#arrBS)' />
+        <path d='M100 95 L140 75' stroke='#3b82f6' strokeWidth={2} markerEnd='url(#arrBS)' />
+        <circle cx={100} cy={20} r={8} fill='rgba(239,68,68,0.15)' stroke='#ef4444' strokeWidth={1.5} />
+        <text x={100} y={23} textAnchor='middle' fontSize={6} fill='#ef4444' fontWeight={600}>Heart</text>
+        <text x={50} y={38} fontSize={7} fill={c + '0.7)'}>O₂-rich</text>
+        <text x={145} y={72} fontSize={7} fill={c + '0.7)'}>O₂-poor</text>
+        <text x={130} y={65} fontSize={7} fill={c + '0.7)'}>Lungs</text>
+        <text x={55} y={95} fontSize={7} fill={c + '0.7)'}>Body</text>
+        <defs><marker id='arrBS' markerWidth='5' markerHeight='4' refX='4' refY='2' orient='auto'><polygon points='0 0, 5 2, 0 4' fill={c + '0.5)'} /></marker></defs>
+      </svg>
+    ),
+    respiratory: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(59,130,246,0.03)' : 'rgba(59,130,246,0.02)' }}>
+        <path d='M60 15 C60 15 40 30 40 55 C40 80 55 95 60 100' fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
+        <path d='M140 15 C140 15 160 30 160 55 C160 80 145 95 140 100' fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
+        <path d='M60 100 C60 100 80 85 100 85 C120 85 140 100 140 100' fill='none' stroke={c + '0.3)'} strokeWidth={sw} />
+        <path d='M100 15 L100 85' stroke={c + '0.2)'} strokeWidth={sw} strokeDasharray='3 2' />
+        <text x={100} y={110} textAnchor='middle' fontSize={7} fill={c + '0.6)'}>Trachea → Bronchi → Bronchioles → Alveoli</text>
+        <text x={30} y={60} fontSize={7} fill={c + '0.7)'}>O₂ in</text>
+        <text x={150} y={60} fontSize={7} fill={c + '0.7)'}>CO₂ out</text>
+      </svg>
+    ),
+    digestive: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(245,158,11,0.03)' : 'rgba(245,158,11,0.02)' }}>
+        <ellipse cx={45} cy={40} rx={20} ry={25} fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
+        <text x={45} y={43} textAnchor='middle' fontSize={7} fill={c + '0.7)'}>Mouth</text>
+        <rect x={80} y={30} width={12} height={30} rx={4} fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
+        <text x={86} y={48} textAnchor='middle' fontSize={6} fill={c + '0.6)'}>Eso.</text>
+        <ellipse cx={125} cy={45} rx={18} ry={20} fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
+        <text x={125} y={48} textAnchor='middle' fontSize={7} fill={c + '0.7)'}>Stomach</text>
+        <path d='M143 50 C155 50 165 55 170 60 L170 80 C170 90 160 95 150 95' fill='none' stroke={c + '0.3)'} strokeWidth={1.5} />
+        <text x={165} y={75} fontSize={6} fill={c + '0.6)'}>S.I.</text>
+        <rect x={100} y={90} width={60} height={15} rx={4} fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
+        <text x={130} y={101} textAnchor='middle' fontSize={7} fill={c + '0.7)'}>L. Intestine</text>
+        <path d='M57 55 L68 45' stroke={c + '0.3)'} strokeWidth={1} markerEnd='url(#arrBD)'} />
+      </svg>
+    ),
+    nervous: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(139,92,246,0.03)' : 'rgba(139,92,246,0.02)' }}>
+        <ellipse cx={100} cy={25} rx={25} ry={18} fill='rgba(139,92,246,0.08)' stroke='#8b5cf6' strokeWidth={1.5} />
+        <text x={100} y={28} textAnchor='middle' fontSize={8} fill='#8b5cf6' fontWeight={600}>Brain</text>
+        <path d='M100 43 L100 55' stroke='#8b5cf6' strokeWidth={2} />
+        <rect x={85} y={55} width={30} height={8} rx={3} fill='none' stroke={c + '0.4)'} strokeWidth={1} />
+        <text x={100} y={62} textAnchor='middle' fontSize={6} fill={c + '0.6)'}>Spinal Cord</text>
+        <path d='M85 63 L50 80' stroke={c + '0.3)'} strokeWidth={1} />
+        <path d='M115 63 L150 80' stroke={c + '0.3)'} strokeWidth={1} />
+        <circle cx={50} cy={85} r={8} fill='rgba(139,92,246,0.06)' stroke={c + '0.3)'} strokeWidth={1} />
+        <circle cx={150} cy={85} r={8} fill='rgba(139,92,246,0.06)' stroke={c + '0.3)'} strokeWidth={1} />
+        <text x={50} y={100} textAnchor='middle' fontSize={6} fill={c + '0.6)'}>Nerves</text>
+        <text x={150} y={100} textAnchor='middle' fontSize={6} fill={c + '0.6)'}>Nerves</text>
+      </svg>
+    ),
+    skeletal: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(245,245,244,0.03)' : 'rgba(0,0,0,0.01)' }}>
+        <ellipse cx={100} cy={18} rx={15} ry={12} fill='none' stroke={c + '0.3)'} strokeWidth={1.5} />
+        <rect x={88} y={28} width={24} height={10} rx={3} fill='none' stroke={c + '0.3)'} strokeWidth={1.5} />
+        <path d='M88 38 L80 70 L75 110' fill='none' stroke={c + '0.3)'} strokeWidth={4} strokeLinecap='round' />
+        <path d='M112 38 L120 70 L125 110' fill='none' stroke={c + '0.3)'} strokeWidth={4} strokeLinecap='round' />
+        <rect x={75} y={65} width={50} height={40} rx={3} fill='none' stroke={c + '0.3)'} strokeWidth={1.5} />
+        <circle cx={90} cy={78} r={4} fill='none' stroke={c + '0.4)'} strokeWidth={1} />
+        <circle cx={110} cy={78} r={4} fill='none' stroke={c + '0.4)'} strokeWidth={1} />
+        <text x={90} y={95} textAnchor='middle' fontSize={5} fill={c + '0.6)'}>Joints</text>
+      </svg>
+    ),
+    muscular: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(249,115,22,0.03)' : 'rgba(249,115,22,0.02)' }}>
+        <path d='M80 30 L85 60 L75 110' fill='none' stroke={c + '0.4)'} strokeWidth={8} strokeLinecap='round' opacity={0.5} />
+        <path d='M120 30 L115 60 L125 110' fill='none' stroke={c + '0.4)'} strokeWidth={8} strokeLinecap='round' opacity={0.5} />
+        <path d='M80 50 L120 50' fill='none' stroke={c + '0.3)'} strokeWidth={6} strokeLinecap='round' opacity={0.4} />
+        <text x={100} y={80} textAnchor='middle' fontSize={8} fill={c + '0.7)'}>Biceps</text>
+        <path d='M80 90 L120 90' fill='none' stroke={c + '0.3)'} strokeWidth={6} strokeLinecap='round' opacity={0.4} />
+        <text x={100} y={105} textAnchor='middle' fontSize={8} fill={c + '0.7)'}>Quadriceps</text>
+      </svg>
+    ),
+    immune: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(20,184,166,0.03)' : 'rgba(20,184,166,0.02)' }}>
+        <circle cx={60} cy={40} r={12} fill='rgba(20,184,166,0.1)' stroke='#14b8a6' strokeWidth={1.5} />
+        <text x={60} y={43} textAnchor='middle' fontSize={6} fill='#14b8a6' fontWeight={600}>WBC</text>
+        <circle cx={120} cy={40} r={8} fill='rgba(239,68,68,0.15)' stroke='#ef4444' strokeWidth={1} />
+        <text x={120} y={43} textAnchor='middle' fontSize={6} fill='#ef4444'>Path.</text>
+        <path d='M72 40 L112 40' stroke='#14b8a6' strokeWidth={1.5} strokeDasharray='3 2' />
+        <path d='M120 48 L120 70' stroke='#ef4444' strokeWidth={1} strokeDasharray='2 2' />
+        <circle cx={120} cy={80} r={5} fill='none' stroke='#ef4444' strokeWidth={1} opacity={0.5} />
+        <text x={120} y={95} textAnchor='middle' fontSize={6} fill={c + '0.6)'}>Antibodies mark invaders</text>
+        <circle cx={40} cy={70} r={6} fill='rgba(20,184,166,0.08)' stroke={c + '0.3)'} strokeWidth={1} />
+        <text x={40} y={85} textAnchor='middle' fontSize={6} fill={c + '0.5)'}>T-cell</text>
+        <circle cx={160} cy={70} r={6} fill='rgba(20,184,166,0.08)' stroke={c + '0.3)'} strokeWidth={1} />
+        <text x={160} y={85} textAnchor='middle' fontSize={6} fill={c + '0.5)'}>B-cell</text>
+      </svg>
+    ),
+    endocrine: (
+      <svg viewBox='0 0 200 120' style={{ width: '100%', borderRadius: 4, background: isDark ? 'rgba(236,72,153,0.03)' : 'rgba(236,72,153,0.02)' }}>
+        <circle cx={60} cy={30} r={8} fill='rgba(236,72,153,0.1)' stroke='#ec4899' strokeWidth={1} />
+        <text x={60} y={33} textAnchor='middle' fontSize={6} fill='#ec4899'>Hypo.</text>
+        <path d='M68 30 L80 30 L80 50 L90 55' stroke={c + '0.3)'} strokeWidth={1} strokeDasharray='3 2' />
+        <text x={90} y={50} fontSize={6} fill={c + '0.6)'}>TSH</text>
+        <circle cx={100} cy={60} r={8} fill='rgba(236,72,153,0.1)' stroke='#ec4899' strokeWidth={1} />
+        <text x={100} y={63} textAnchor='middle' fontSize={6} fill='#ec4899'>Thyroid</text>
+        <path d='M108 60 L140 60' stroke={c + '0.3)'} strokeWidth={1} strokeDasharray='3 2' />
+        <text x={120} y={57} fontSize={6} fill={c + '0.5)'}>T3/T4</text>
+        <circle cx={150} cy={60} r={6} fill='none' stroke={c + '0.3)'} strokeWidth={1} />
+        <text x={150} y={75} textAnchor='middle' fontSize={6} fill={c + '0.6)'}>Target</text>
+        <circle cx={60} cy={90} r={8} fill='rgba(236,72,153,0.1)' stroke='#ec4899' strokeWidth={1} />
+        <text x={60} y={93} textAnchor='middle' fontSize={6} fill='#ec4899'>Adrenal</text>
+        <circle cx={140} cy={90} r={8} fill='rgba(236,72,153,0.1)' stroke='#ec4899' strokeWidth={1} />
+        <text x={140} y={93} textAnchor='middle' fontSize={6} fill='#ec4899'>Pancreas</text>
+        <text x={100} y={112} textAnchor='middle' fontSize={7} fill={c + '0.6)'}>Hormones = chemical messengers in the blood</text>
+      </svg>
+    ),
+  }
+  return diagrams[systemId] || null
+}
+
 export function BodySystemsExplorer({ isDark }: { isDark: boolean }) {
   const s = styles(isDark)
   const [selected, setSelected] = useState<string | null>(null)
@@ -629,6 +750,7 @@ export function BodySystemsExplorer({ isDark }: { isDark: boolean }) {
       {active && (
         <div style={{ padding: '8px', background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, lineHeight: 1.5 }}>
           <div style={{ fontWeight: 700, fontSize: 12, color: s.bright, marginBottom: 4 }}>{active.name} System</div>
+          {active.id && <SystemDiagram systemId={active.id} isDark={isDark} />}
           <div style={{ marginBottom: 6 }}>
             <span style={{ fontWeight: 600, fontSize: 10, color: s.bright }}>Key Organs: </span>
             <span style={{ fontSize: 10 }}>{active.organs.join(', ')}</span>
@@ -1054,12 +1176,23 @@ export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
   const envColor = 'hsl(' + envHue + ',50%,40%)'
   const envColorLight = 'hsl(' + envHue + ',50%,30%)'
 
+  const meanHue = bugs.length > 0 ? bugs.reduce((s2, b) => s2 + b.hue, 0) / bugs.length : 0
+  const meanFitness = bugs.length > 0 ? bugs.reduce((s2, b) => {
+    const dist = Math.abs(((b.hue - envHue + 540) % 360) - 180)
+    return s2 + (360 - dist)
+  }, 0) / bugs.length : 0
+  const bestFit = bugs.length > 0 ? Math.max(...bugs.map(b => {
+    const dist = Math.abs(((b.hue - envHue + 540) % 360) - 180)
+    return 360 - dist
+  })) : 0
+
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
         <button style={s.btn(false)} onClick={nextGen}>Next Generation</button>
         <button style={s.btn(false)} onClick={reset}>Reset</button>
-        <span style={{ fontSize: 10, color: s.text }}>Gen: {gen}</span>
+        <span style={{ fontSize: 10, color: s.text }}>Generation: <b style={{ color: s.bright }}>{gen}</b></span>
+        <span style={{ fontSize: 9, color: s.text }}>Pop: <b style={{ color: s.bright }}>{bugs.length}</b></span>
       </div>
 
       {/* Environment slider */}
@@ -1113,6 +1246,13 @@ export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
           <line x1={envHue / 360 * 400} y1={0} x2={envHue / 360 * 400} y2={50} stroke={isDark ? '#f87171' : '#dc2626'} strokeWidth={1.5} strokeDasharray="3 2" />
           <text x={envHue / 360 * 400} y={8} textAnchor="middle" fontSize={7} fill={isDark ? '#f87171' : '#dc2626'}>ENV</text>
         </svg>
+      </div>
+
+      {/* Generation statistics */}
+      <div style={{ display: 'flex', gap: 12, fontSize: 9, color: s.text, borderTop: '1px solid ' + s.border, paddingTop: 4, marginTop: 4, flexWrap: 'wrap' }}>
+        <span>Mean trait: <b style={{ color: s.bright }}>{meanHue.toFixed(0)}{'\u00B0'}</b></span>
+        <span>Avg fitness: <b style={{ color: s.bright }}>{meanFitness.toFixed(0)}</b>/360</span>
+        <span>Best fitness: <b style={{ color: '#34d399' }}>{bestFit.toFixed(0)}</b>/360</span>
       </div>
       <div style={{ fontSize: 8, color: s.text, opacity: 0.6, marginTop: 4 }}>Red dashed line = environment hue. Bugs closer in hue survive better.</div>
     </div>
@@ -1191,10 +1331,34 @@ export function CellDivisionAnimator({ isDark }: { isDark: boolean }) {
   const [mode, setMode] = useState<'mitosis' | 'meiosis'>('mitosis')
   const phases = mode === 'mitosis' ? MITOSIS_PHASES : MEIOSIS_PHASES
   const [step, setStep] = useState(0)
+  const [playing, setPlaying] = useState(false)
+  const playRef = useRef<NodeJS.Timeout | null>(null)
   const phase = phases[step]
 
   const prev = () => setStep(Math.max(0, step - 1))
   const next = () => setStep(Math.min(phases.length - 1, step + 1))
+
+  const playAll = () => {
+    if (playing) {
+      if (playRef.current) clearTimeout(playRef.current)
+      setPlaying(false)
+      return
+    }
+    setPlaying(true)
+    setStep(0)
+  }
+
+  React.useEffect(() => {
+    if (!playing) return
+    playRef.current = setTimeout(() => {
+      if (step < phases.length - 1) {
+        setStep(step + 1)
+      } else {
+        setPlaying(false)
+      }
+    }, 1500)
+    return () => { if (playRef.current) clearTimeout(playRef.current) }
+  }, [playing, step, phases.length])
 
   const chrColors = ['#ef4444', '#3b82f6', '#22c55e', '#a855f7', '#f59e0b', '#ec4899', '#06b6d4', '#f97316']
 
@@ -1293,6 +1457,7 @@ export function CellDivisionAnimator({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
         <button style={s.btn(false)} onClick={prev} disabled={step === 0}>Prev</button>
         <button style={s.btn(false)} onClick={next} disabled={step === phases.length - 1}>Next</button>
+        <button style={{ ...s.btn(playing), padding: '3px 10px' }} onClick={playAll}>{playing ? 'Pause' : 'Play All'}</button>
         <div style={{ display: 'flex', gap: 2, flex: 1, alignItems: 'center' }}>
           {phases.map((_, i) => (
             <div
