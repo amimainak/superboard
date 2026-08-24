@@ -949,8 +949,7 @@
 
 .toolkit-section {
   padding: 10px 0;
-  overflow: hidden;
-  transition: max-height 0.2s ease;
+  overflow: visible;
 }
 
 .toolkit-section.expanded {
@@ -977,7 +976,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
   user-select: none;
   border-bottom: 1px solid rgba(255,255,255, 0.04);
   margin-bottom: 2px;
