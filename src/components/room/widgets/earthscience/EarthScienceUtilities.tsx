@@ -550,35 +550,88 @@ export function SolarSystemScale({ isDark }: ToolProps) {
 // 6. Topographic Map Tool (Grades 6-8)
 // ============================================================
 
-const CONTOUR_LINES = [
-  { elevation: 100, rx: 180, ry: 70, color: '#22c55e' },
-  { elevation: 200, rx: 150, ry: 58, color: '#4ade80' },
-  { elevation: 300, rx: 118, ry: 44, color: '#a3e635' },
-  { elevation: 400, rx: 86, ry: 32, color: '#fbbf24' },
-  { elevation: 500, rx: 56, ry: 20, color: '#f59e0b' },
-  { elevation: 600, rx: 28, ry: 10, color: '#92400e' },
-]
+type TerrainPreset = 'mountain' | 'valley' | 'river'
 
-const CONTOUR_CENTER = { x: 280, y: 130 }
-
-function getElevation(px: number, py: number): number {
-  const dx = px - CONTOUR_CENTER.x
-  const dy = (py - CONTOUR_CENTER.y) * (70 / 180) // adjust for ellipse ratio
-  const dist = Math.sqrt(dx * dx + dy * dy)
-  const maxDist = 180
-  if (dist > maxDist) return 50
-  const ratio = dist / maxDist
-  // Interpolate between 650 (center) and 50 (edge)
-  const elev = 650 - ratio * 600
-  return Math.round(elev / 50) * 50
+const PRESET_CONTOURS: Record<TerrainPreset, { elevation: number; rx: number; ry: number; color: string; cx: number; cy: number }[]> = {
+  mountain: [
+    { elevation: 100, rx: 180, ry: 70, color: '#22c55e', cx: 280, cy: 130 },
+    { elevation: 200, rx: 150, ry: 58, color: '#4ade80', cx: 280, cy: 130 },
+    { elevation: 300, rx: 118, ry: 44, color: '#a3e635', cx: 280, cy: 130 },
+    { elevation: 400, rx: 86, ry: 32, color: '#fbbf24', cx: 280, cy: 130 },
+    { elevation: 500, rx: 56, ry: 20, color: '#f59e0b', cx: 280, cy: 130 },
+    { elevation: 600, rx: 28, ry: 10, color: '#92400e', cx: 280, cy: 130 },
+  ],
+  valley: [
+    // Peak 1 (left)
+    { elevation: 100, rx: 120, ry: 55, color: '#22c55e', cx: 170, cy: 130 },
+    { elevation: 200, rx: 95, ry: 42, color: '#4ade80', cx: 170, cy: 130 },
+    { elevation: 300, rx: 70, ry: 30, color: '#a3e635', cx: 170, cy: 130 },
+    { elevation: 400, rx: 45, ry: 18, color: '#fbbf24', cx: 170, cy: 130 },
+    { elevation: 450, rx: 22, ry: 9, color: '#f59e0b', cx: 170, cy: 130 },
+    // Peak 2 (right)
+    { elevation: 100, rx: 120, ry: 55, color: '#22c55e', cx: 390, cy: 130 },
+    { elevation: 200, rx: 95, ry: 42, color: '#4ade80', cx: 390, cy: 130 },
+    { elevation: 300, rx: 70, ry: 30, color: '#a3e635', cx: 390, cy: 130 },
+    { elevation: 400, rx: 45, ry: 18, color: '#fbbf24', cx: 390, cy: 130 },
+    { elevation: 450, rx: 22, ry: 9, color: '#f59e0b', cx: 390, cy: 130 },
+  ],
+  river: [
+    { elevation: 100, rx: 180, ry: 70, color: '#22c55e', cx: 280, cy: 130 },
+    { elevation: 200, rx: 150, ry: 58, color: '#4ade80', cx: 280, cy: 130 },
+    { elevation: 300, rx: 118, ry: 44, color: '#a3e635', cx: 280, cy: 130 },
+    { elevation: 400, rx: 86, ry: 32, color: '#fbbf24', cx: 280, cy: 130 },
+    { elevation: 500, rx: 56, ry: 20, color: '#f59e0b', cx: 280, cy: 130 },
+    { elevation: 600, rx: 28, ry: 10, color: '#92400e', cx: 280, cy: 130 },
+  ],
 }
 
+function getElevationForPreset(px: number, py: number, preset: TerrainPreset): number {
+  if (preset === 'mountain' || preset === 'river') {
+    const cx = 280
+    const cy = 130
+    const dx = px - cx
+    const dy = (py - cy) * (70 / 180)
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const maxDist = 180
+    if (dist > maxDist) return 50
+    const ratio = dist / maxDist
+    const elev = 650 - ratio * 600
+    return Math.round(elev / 50) * 50
+  }
+  // Valley: two peaks
+  const peak1 = { x: 170, y: 130, maxR: 120 }
+  const peak2 = { x: 390, y: 130, maxR: 120 }
+  const d1 = Math.sqrt(Math.pow(px - peak1.x, 2) + Math.pow((py - peak1.y) * (55 / 120), 2))
+  const d2 = Math.sqrt(Math.pow(px - peak2.x, 2) + Math.pow((py - peak2.y) * (55 / 120), 2))
+  const e1 = d1 <= peak1.maxR ? Math.round((500 - (d1 / peak1.maxR) * 450) / 50) * 50 : 50
+  const e2 = d2 <= peak2.maxR ? Math.round((500 - (d2 / peak2.maxR) * 450) / 50) * 50 : 50
+  return Math.max(e1, e2, 50)
+}
+
+const PRESET_LABELS: { id: TerrainPreset; label: string; desc: string }[] = [
+  { id: 'mountain', label: 'Mountain', desc: 'Concentric contours showing a peak. Close contours = steep slope.' },
+  { id: 'valley', label: 'Valley', desc: 'Two ridges with a low saddle between them. Click between peaks to see lower elevation.' },
+  { id: 'river', label: 'River Valley', desc: 'Mountain terrain with a river cutting through. Contours form V-shapes pointing upstream.' },
+]
+
 export function TopographicMapTool({ isDark }: ToolProps) {
+  const [preset, setPreset] = useState<TerrainPreset>('mountain')
   const [clickPoint, setClickPoint] = useState<{ x: number; y: number; elev: number } | null>(null)
   const [crossSection, setCrossSection] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null)
   const [drawing, setDrawing] = useState(false)
   const [startPt, setStartPt] = useState<{ x: number; y: number } | null>(null)
   const v = s(isDark)
+  const contours = PRESET_CONTOURS[preset]
+
+  const handlePresetChange = (p: TerrainPreset) => {
+    setPreset(p)
+    setClickPoint(null)
+    setCrossSection(null)
+    setDrawing(false)
+    setStartPt(null)
+  }
+
+  const getElev = (px: number, py: number) => getElevationForPreset(px, py, preset)
 
   const handleMapClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (drawing) return
@@ -589,7 +642,7 @@ export function TopographicMapTool({ isDark }: ToolProps) {
     const scaleY = viewBox.height / rect.height
     const px = (e.clientX - rect.left) * scaleX
     const py = (e.clientY - rect.top) * scaleY
-    setClickPoint({ x: px, y: py, elev: getElevation(px, py) })
+    setClickPoint({ x: px, y: py, elev: getElev(px, py) })
   }
 
   const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -626,23 +679,58 @@ export function TopographicMapTool({ isDark }: ToolProps) {
       const t = i / steps
       const px = crossSection.x1 + (crossSection.x2 - crossSection.x1) * t
       const py = crossSection.y1 + (crossSection.y2 - crossSection.y1) * t
-      pts.push({ x: px, elev: getElevation(px, py) })
+      pts.push({ x: px, elev: getElev(px, py) })
     }
     return pts
-  }, [crossSection])
+  }, [crossSection, preset])
+
+  const presetInfo = PRESET_LABELS.find(p => p.id === preset)
 
   return (
     <div>
+      {/* Preset buttons */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 8, flexWrap: 'wrap' }}>
+        {PRESET_LABELS.map(p => (
+          <button key={p.id}
+            onClick={() => handlePresetChange(p.id)}
+            style={{
+              padding: '3px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer' as const,
+              background: preset === p.id ? 'rgba(5,150,105,0.15)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+              border: '1px solid ' + (preset === p.id ? 'rgba(5,150,105,0.3)' : v.border),
+              color: preset === p.id ? '#34d399' : v.bright, fontWeight: preset === p.id ? 600 : 400,
+            }}>
+            {p.label}
+          </button>
+        ))}
+      </div>
+      {presetInfo && (
+        <div style={{ fontSize: 9, color: v.text, marginBottom: 6, padding: '4px 8px', borderRadius: 4, background: isDark ? 'rgba(245,158,11,0.06)' : 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)' }}>
+          {presetInfo.desc}
+        </div>
+      )}
+
       <svg viewBox="0 0 560 260" style={{ width: '100%', borderRadius: 8, border: '1px solid ' + v.border, background: v.bg, cursor: drawing ? 'crosshair' : 'pointer' }} onClick={handleMapClick} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
         <text x={280} y={18} fontSize={12} fontWeight={700} fill={v.bright} textAnchor="middle">Topographic Map — Click for elevation, drag for cross-section</text>
 
-        {/* Contour lines (outer to inner) */}
-        {CONTOUR_LINES.map(c => (
-          <g key={c.elevation}>
-            <ellipse cx={CONTOUR_CENTER.x} cy={CONTOUR_CENTER.y} rx={c.rx} ry={c.ry} fill={c.elevation === 100 ? (isDark ? c.color + '10' : c.color + '15') : 'none'} stroke={c.color + (isDark ? '80' : '99')} strokeWidth={1.2} />
-            <text x={CONTOUR_CENTER.x + c.rx - 10} y={CONTOUR_CENTER.y - 4} fontSize={8} fill={c.color + 'bb'}>{c.elevation}m</text>
+        {/* Contour lines */}
+        {contours.map(c => (
+          <g key={c.elevation + '-' + c.cx}>
+            <ellipse cx={c.cx} cy={c.cy} rx={c.rx} ry={c.ry} fill={c.elevation === 100 ? (isDark ? c.color + '10' : c.color + '15') : 'none'} stroke={c.color + (isDark ? '80' : '99')} strokeWidth={1.2} />
+            <text x={c.cx + c.rx - 10} y={c.cy - 4} fontSize={8} fill={c.color + 'bb'}>{c.elevation}m</text>
           </g>
         ))}
+
+        {/* River overlay for river preset */}
+        {preset === 'river' && (
+          <g>
+            <path d="M180 260 C220 200 240 180 260 160 C280 140 300 120 310 100 C320 80 350 50 400 30" fill="none" stroke="#3b82f6" strokeWidth={3} opacity={0.7} />
+            <path d="M180 260 C220 200 240 180 260 160 C280 140 300 120 310 100 C320 80 350 50 400 30" fill="none" stroke="#93c5fd" strokeWidth={1} opacity={0.5} strokeDasharray="4 3" />
+            <text x={340} y={55} fontSize={9} fill="#3b82f6" fontWeight={600} transform="rotate(-30 340 55)">River</text>
+            {/* V-shape contour notches pointing upstream */}
+            <path d="M240 190 L248 183 L256 190" fill="none" stroke="#3b82f6" strokeWidth={1} opacity={0.6} />
+            <path d="M275 155 L283 148 L291 155" fill="none" stroke="#3b82f6" strokeWidth={1} opacity={0.6} />
+          </g>
+        )}
 
         {/* Click point marker */}
         {clickPoint && (

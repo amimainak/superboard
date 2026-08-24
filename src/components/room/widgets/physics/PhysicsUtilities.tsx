@@ -366,18 +366,18 @@ export function WaveSimulator({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Amplitude:</span>
           <input type="range" min={10} max={50} step={1} value={amplitude} onChange={e => setAmplitude(Number(e.target.value))} style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{amplitude}</span>
+          <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{amplitude} m</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>{'Wavelength (\u03BB):'}</span>
           <input type="range" min={20} max={100} step={1} value={wavelength} onChange={e => setWavelength(Number(e.target.value))} style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{wavelength}</span>
+          <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{wavelength} m</span>
         </div>
       </div>
       {/* Info */}
       <div style={{ display: 'flex', gap: 12, fontSize: 10, color: s.text }}>
         <span>T = 1/f = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b></span>
-        <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} m/s</b> <span style={{ fontSize: 8, opacity: 0.6 }}>(scale: 1 px = 1 m)</span></span>
+        <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} m/s</b></span>
       </div>
     </div>
   )

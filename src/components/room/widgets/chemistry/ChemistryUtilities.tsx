@@ -798,7 +798,7 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
           <button key={b.key} onClick={() => { setMode(b.key); setTimeout(handleConvert, 0) }} style={s.btn(mode === b.key)}>{b.label}</button>
         ))}
         {btns.slice(2).map(b => (
-          <button key={b.key} onClick={() => setMode(b.key)} style={s.btn(mode === b.key)}>{b.label}</button>
+          <button key={b.key} onClick={() => { setMode(b.key); setTimeout(handleConvert, 0) }} style={s.btn(mode === b.key)}>{b.label}</button>
         ))}
         {isOp && (
           <button style={{ ...s.btn(false), marginLeft: 'auto' }} onClick={handleConvert}>Go</button>
@@ -1245,6 +1245,7 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
     { label: 'Moles (n)', key: 'n', val: moles, displayVal: displayN, min: 0.1, max: 5, step: 0.1, unit: 'mol', setter: setMoles },
   ]
 
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', gap: 4 }}>
@@ -1269,17 +1270,15 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
       </svg>
 
       {/* Real-time PV Diagram */}
-      <svg viewBox='0 0 200 100' width='100%' style={{ borderRadius: 4, background: s.bg, border: '1px solid ' + s.border }}>
-        <line x1='30' y1='10' x2='30' y2='85' stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'} strokeWidth={0.5} />
-        <line x1='30' y1='85' x2='190' y2='85' stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'} strokeWidth={0.5} />
-        <text x='15' y='50' textAnchor='middle' fontSize={8} fill={s.text} transform='rotate(-90,15,50)'>P (atm)</text>
-        <text x='110' y='98' textAnchor='middle' fontSize={8} fill={s.text}>V (L)</text>
-        <text x='3' y='14' fontSize={7} fill={s.text}>{Math.max(0, displayP * 1.2).toFixed(1)}</text>
-        <text x='185' y='83' fontSize={7} fill={s.text} textAlign='end'>{displayV.toFixed(1)}</text>
-        {/* Current state point */
-        <circle cx={30 + (displayV / 100) * 160} cy={85 - (displayP / 10) * 70} r={4} fill='#34d399' stroke={isDark ? '#e2e8f0' : '#1e293b'} strokeWidth={1.5} />
-        <text x='110' y='9' textAnchor='middle' fontSize={8} fill={s.bright} fontWeight={600}>PV Diagram (real-time)</text>
-      </svg>
+      <div style={{ borderRadius: 4, background: s.bg, border: '1px solid ' + s.border, padding: '6px 8px' }}>
+        <div style={{ fontSize: 10, fontWeight: 600, color: s.bright, marginBottom: 4 }}>{'PV Diagram (real-time)'}</div>
+        <div style={{ display: 'flex', gap: 12, fontSize: 10, color: s.text }}>
+          <span>P = <b style={{ color: s.bright }}>{displayP.toFixed(2)} atm</b></span>
+          <span>V = <b style={{ color: s.bright }}>{displayV.toFixed(2)} L</b></span>
+          <span>PV = <b style={{ color: '#34d399' }}>{(displayP * displayV).toFixed(2)} atm*L</b></span>
+        </div>
+        <div style={{ fontSize: 9, color: s.text, marginTop: 4, opacity: 0.7 }}>Lock 3 variables and adjust the 4th. Green value is auto-calculated.</div>
+      </div>
 
       {sliders.map(sl => {
         const isLocked = locked.has(sl.key)
@@ -1412,7 +1411,8 @@ export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
       </div>
 
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <button onClick={() => setBaseAdded(prev => Math.min(prev + 1, equivVol * 2))} style={{ ...s.btn(false), padding: '4px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }}>+ Add 1 mL Base</button>
+        <button onClick={() => setBaseAdded(prev => Math.min(prev + 1, equivVol * 2))} style={{ ...s.btn(false), padding: '4px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }}>+1 mL</button>
+        <button onClick={() => setBaseAdded(prev => Math.min(prev + 5, equivVol * 2))} style={{ ...s.btn(false), padding: '4px 10px', fontSize: 11, fontWeight: 600, background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }}>+5 mL</button>
         <button onClick={() => setBaseAdded(0)} style={s.btn(false)}>Reset</button>
         <span style={{ fontSize: 10, color: s.text, marginLeft: 4 }}>Added: <strong style={{ color: s.bright }}>{baseAdded.toFixed(1)} mL</strong> / Equiv: <strong style={{ color: s.bright }}>{equivVol.toFixed(1)} mL</strong></span>
       </div>

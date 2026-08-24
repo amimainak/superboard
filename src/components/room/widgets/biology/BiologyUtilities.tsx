@@ -646,7 +646,7 @@ function SystemDiagram({ systemId, isDark }: { systemId: string; isDark: boolean
         <text x={165} y={75} fontSize={6} fill={c + '0.6)'}>S.I.</text>
         <rect x={100} y={90} width={60} height={15} rx={4} fill='none' stroke={c + '0.4)'} strokeWidth={1.5} />
         <text x={130} y={101} textAnchor='middle' fontSize={7} fill={c + '0.7)'}>L. Intestine</text>
-        <path d='M57 55 L68 45' stroke={c + '0.3)'} strokeWidth={1} markerEnd='url(#arrBD)'} />
+        <path d='M57 55 L68 45' stroke={c + '0.3)'} strokeWidth={1} markerEnd='url(#arrBD)' />
       </svg>
     ),
     nervous: (
