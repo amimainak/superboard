@@ -104,7 +104,7 @@ const SCIENCE_PANEL_MAP: Record<string, React.LazyExoticComponent<React.Componen
 
 // ---- Renderer ----
 
-export function CanvasScienceWidgetRenderer({ element, isDark }: CanvasScienceWidgetProps) {
+export const CanvasScienceWidgetRenderer = React.memo(function CanvasScienceWidgetRenderer({ element, isDark }: CanvasScienceWidgetProps) {
   const PanelComponent = SCIENCE_PANEL_MAP[element.widgetKind]
 
   if (!PanelComponent) {
@@ -138,7 +138,7 @@ export function CanvasScienceWidgetRenderer({ element, isDark }: CanvasScienceWi
       </Suspense>
     </div>
   )
-}
+})
 
 // ---- Default configs ----
 

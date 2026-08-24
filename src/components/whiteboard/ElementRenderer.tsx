@@ -392,7 +392,8 @@ export const ElementRenderer = React.memo(function ElementRenderer({
                   boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                   fontFamily: 'inherit',
                   boxSizing: 'border-box',
-                  zoom: 1.3,
+                  transform: 'scale(1.3)',
+                  transformOrigin: 'top left' as const,
                 }}
               >
                 <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />

@@ -754,7 +754,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'earth-topographic-map': CanvasScienceWidgetRenderer,
 }
 
-export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
+export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
   // Language widgets go through their own renderer (avoids double-wrapping)
   const isLangWidget = element.widgetKind.startsWith('lang-')
   if (isLangWidget) {
@@ -776,7 +776,7 @@ export function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
     return <div style={{ padding: 12, color: '#f87171', fontSize: 12 }}>Unknown widget: {element.widgetKind}</div>
   }
   return <Component element={element} isDark={isDark} />
-}
+})
 
 /** Get default config for a widget kind (used when placing on board) */
 export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {

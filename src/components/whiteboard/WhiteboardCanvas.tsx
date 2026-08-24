@@ -148,7 +148,25 @@ export function WhiteboardCanvas() {
   const lastPanPoint = useRef<Point | null>(null)
   const lastMovePoint = useRef<Point | null>(null)
   const boxSelectStart = useRef<Point | null>(null)
-  const [eraserCursor, setEraserCursor] = useState<{ x: number; y: number } | null>(null)
+  // Cursor position stored in ref — updated via direct DOM to avoid re-rendering the entire canvas (perf fix)
+  const eraserCursorRef = useRef<{ x: number; y: number } | null>(null)
+  const cursorOverlayRef = useRef<HTMLDivElement>(null)
+
+  // Show/hide cursor overlay via direct DOM
+  const updateCursorOverlay = useCallback((pos: { x: number; y: number } | null) => {
+    eraserCursorRef.current = pos
+    const el = cursorOverlayRef.current
+    if (!el) return
+    if (!pos) {
+      el.style.display = 'none'
+      return
+    }
+    const rect = containerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    el.style.display = 'block'
+    el.style.left = (pos.x - rect.left) + 'px'
+    el.style.top = (pos.y - rect.top) + 'px'
+  }, [])
   const eraserHistoryPushed = useRef(false)
   const isErasing = useRef(false)
   const [boxSelect, setBoxSelect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -394,6 +412,43 @@ export function WhiteboardCanvas() {
     },
     [camera, snapToGrid, gridSize]
   )
+
+  // ---- Stable callbacks for element .map() to preserve React.memo (perf fix) ----
+  const handleElementPointerDown = useCallback((e: React.PointerEvent, id: string) => {
+    if (tool !== 'select') return
+    var store = useWhiteboardStore.getState()
+    var sel = store.selectedIds
+    if (e.shiftKey) {
+      store.selectElements(sel.includes(id) ? sel.filter(function(s) { return s !== id }) : [...sel, id])
+    } else if (!sel.includes(id)) {
+      store.selectElements([id])
+    }
+    store.pushHistory()
+    lastMovePoint.current = getCanvasPoint(e)
+  }, [tool, getCanvasPoint])
+
+  const handleElementDoubleClick = useCallback((id: string) => {
+    var groupEl = svgRef.current?.querySelector('[data-element-id="' + id + '"]')
+    var editable = groupEl?.querySelector('[contenteditable]') as HTMLElement | null
+    if (editable) {
+      editable.focus()
+      var range = document.createRange()
+      var sel = window.getSelection()
+      if (editable.childNodes.length > 0) {
+        range.selectNodeContents(editable)
+        range.collapse(false)
+      } else {
+        range.setStart(editable, 0)
+        range.collapse(true)
+      }
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+    }
+  }, [])
+
+  const handleTextChange = useCallback((id: string, text: string) => {
+    updateElement(id, { text } as Partial<import('@/lib/whiteboard/types').WhiteboardElement>)
+  }, [updateElement])
 
   // Filter elements for current page (P-07)
   const pageElements = useMemo(
@@ -768,7 +823,7 @@ export function WhiteboardCanvas() {
       if (isDrawing) {
         // Update pen cursor position even while drawing
         if (tool === 'draw' || tool === 'highlighter') {
-          setEraserCursor({ x: e.clientX, y: e.clientY })
+          updateCursorOverlay({ x: e.clientX, y: e.clientY })
         }
         pendingPointsRef.current.push({ x: point.x, y: point.y, pressure: point.pressure })
         if (!rafIdRef.current) {
@@ -799,7 +854,7 @@ export function WhiteboardCanvas() {
 
       // Custom cursor position (shown on hover too)
       if (tool === 'eraser' || tool === 'eraser-object' || tool === 'draw' || tool === 'highlighter') {
-        setEraserCursor({ x: e.clientX, y: e.clientY })
+        updateCursorOverlay({ x: e.clientX, y: e.clientY })
       }
 
       // Laser — ONLY when pointer button is held down (no hover drawing)
@@ -810,7 +865,7 @@ export function WhiteboardCanvas() {
     [
       isPanning, isDrawing, tool, selectedIds, camera.zoom, camera.x, camera.y,
       getCanvasPoint, panBy, moveSelected, eraseAtPoint, addLaserPoint, setCamera,
-      flushPendingPoints,
+      flushPendingPoints, updateCursorOverlay,
     ]
   )
 
@@ -1129,7 +1184,7 @@ export function WhiteboardCanvas() {
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
       onPointerLeave={() => {
-        if (tool === 'eraser' || tool === 'eraser-object' || tool === 'draw' || tool === 'highlighter') setEraserCursor(null)
+        if (tool === 'eraser' || tool === 'eraser-object' || tool === 'draw' || tool === 'highlighter') updateCursorOverlay(null)
         // Cancel laser on pointer leave
         if (tool === 'laser' && isLaserActive.current) {
           isLaserActive.current = false
@@ -1174,46 +1229,9 @@ export function WhiteboardCanvas() {
               <ElementRenderer
                 element={el}
                 isSelected={selectedIds.includes(el.id)}
-                onPointerDown={(e, id) => {
-                  if (tool === 'select') {
-                    if (e.shiftKey) {
-                      selectElements(
-                        selectedIds.includes(id)
-                          ? selectedIds.filter((sid) => sid !== id)
-                          : [...selectedIds, id]
-                      )
-                    } else if (!selectedIds.includes(id)) {
-                      selectElements([id])
-                    }
-                    pushHistory()
-                    lastMovePoint.current = getCanvasPoint(e)
-                  }
-                }}
-                onDoubleClick={(id) => {
-                  // For text/sticky, focus the content editable div inside the foreignObject
-                  const groupEl = svgRef.current?.querySelector(
-                    `[data-element-id=\"${id}\"]`
-                  )
-                  const editable = groupEl?.querySelector('[contenteditable]') as HTMLElement | null
-                  if (editable) {
-                    editable.focus()
-                    // Place cursor at end of text
-                    const range = document.createRange()
-                    const sel = window.getSelection()
-                    if (editable.childNodes.length > 0) {
-                      range.selectNodeContents(editable)
-                      range.collapse(false)
-                    } else {
-                      range.setStart(editable, 0)
-                      range.collapse(true)
-                    }
-                    sel?.removeAllRanges()
-                    sel?.addRange(range)
-                  }
-                }}
-                onTextChange={(id, text) => {
-                  updateElement(id, { text } as Partial<WhiteboardElement>)
-                }}
+                onPointerDown={handleElementPointerDown}
+                onDoubleClick={handleElementDoubleClick}
+                onTextChange={handleTextChange}
                 cameraZoom={camera.zoom}
                 tool={tool}
                 isDark={isDark}
@@ -1261,73 +1279,63 @@ export function WhiteboardCanvas() {
         </g>
       </svg>
 
-      {/* Eraser cursor visual */}
-      {tool === 'eraser' && eraserCursor && containerRef.current && (
-        <div
-          style={{
-            position: 'absolute',
-            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - eraserSize / 2,
-            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - eraserSize / 2,
+      {/* Unified cursor overlay — updated via ref/DOM, no React re-render (perf fix) */}
+      <div
+        ref={cursorOverlayRef}
+        style={{
+          position: 'absolute',
+          display: 'none',
+          pointerEvents: 'none',
+          zIndex: 1000,
+          transform: 'translate(-50%, -50%)',
+        }}
+      >
+        {tool === 'eraser' && (
+          <div style={{
             width: eraserSize,
             height: eraserSize,
             borderRadius: '50%',
             border: '2px solid #059669',
             backgroundColor: 'rgba(5, 150, 105, 0.08)',
-            pointerEvents: 'none',
-            zIndex: 1000,
-          }}
-        />
-      )}
-      {/* Object eraser cursor — red circle */}
-      {tool === 'eraser-object' && eraserCursor && containerRef.current && (
-        <div
-          style={{
-            position: 'absolute',
-            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - 12,
-            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - 12,
+          }} />
+        )}
+        {tool === 'eraser-object' && (
+          <div style={{
             width: 24,
             height: 24,
             borderRadius: '50%',
             border: '2px solid #ef4444',
             backgroundColor: 'rgba(239, 68, 68, 0.06)',
-            pointerEvents: 'none',
-            zIndex: 1000,
-          }}
-        />
-      )}
-      {/* Draw / Highlighter pen cursor */}
-      {(tool === 'draw' || tool === 'highlighter') && eraserCursor && containerRef.current && (
-        <svg
-          style={{
-            position: 'absolute',
-            left: eraserCursor.x - containerRef.current.getBoundingClientRect().left - 6,
-            top: eraserCursor.y - containerRef.current.getBoundingClientRect().top - 6,
-            width: 24,
-            height: 24,
-            pointerEvents: 'none',
-            zIndex: 1000,
-            filter: isDark ? 'drop-shadow(0 0 3px rgba(52, 211, 153, 0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
-          }}
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M17 3l4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
-            stroke={isDark ? '#34d399' : '#059669'}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill={isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(5, 150, 105, 0.08)'}
-          />
-          <circle
-            cx="3.25"
-            cy="20.75"
-            r="1.2"
-            fill={isDark ? '#34d399' : '#059669'}
-          />
-        </svg>
-      )}
+          }} />
+        )}
+        {(tool === 'draw' || tool === 'highlighter') && (
+          <svg
+            style={{
+              width: 24,
+              height: 24,
+              filter: isDark ? 'drop-shadow(0 0 3px rgba(52, 211, 153, 0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))',
+            }}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17 3l4 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+              stroke={isDark ? '#34d399' : '#059669'}
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill={isDark ? 'rgba(52, 211, 153, 0.15)' : 'rgba(5, 150, 105, 0.08)'}
+            />
+            <circle
+              cx="3.25"
+              cy="20.75"
+              r="1.2"
+              fill={isDark ? '#34d399' : '#059669'}
+            />
+          </svg>
+        )}
+      </div>
 
       {/* Draw permission toast (for guest when drawing disabled) */}
       {userRole === 'guest' && !canDraw && (
