@@ -1,6 +1,5 @@
 'use client'
 
-n
 import { useState, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
