@@ -314,6 +314,21 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-y: auto;
+  scrollbar-width: 5px;
+}
+
+.widget-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.widget-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widget-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 3px;
 }
 
 /* ---- Chat Widget ---- */
@@ -933,16 +948,65 @@
 /* ---- Toolkits ---- */
 
 .toolkit-section {
-  padding: 16px 0;
+  padding: 10px 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+
+.toolkit-section.expanded {
+  overflow: visible;
+}
+
+.toolkit-section-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.toolkit-section.expanded .toolkit-section-body {
+  grid-template-rows: 1fr;
 }
 
 .toolkit-section-title {
-  padding: 6px 16px 10px;
-  font-size: 11px;
-  font-weight: 700;
+  padding: 5px 16px 6px;
+  font-size: 10.5px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #71717a;
+  letter-spacing: 0.08em;
+  color: #a1a1aa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid rgba(255,255,255, 0.04);
+  margin-bottom: 2px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.toolkit-section-title:hover {
+  color: #d4d4d8;
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+
+.toolkit-section-title .section-chevron {
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.4;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+  margin-left: 4px;
+}
+
+.toolkit-section.expanded .section-chevron {
+  opacity: 0.4;
+  transform: rotate(180deg);
+}
+
+.toolkit-section-title .section-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .toolkit-grid {
@@ -2775,6 +2839,12 @@
 
 .toolkit-section-title-light {
   color: #475569;
+  border-bottom-color: rgba(0,0,0,0,0.06);
+}
+.toolkit-section-title-light:hover {
+  color: #1e293b;
+  border-bottom-color: rgba(0,0,0,0,0.1);
+}
 }
 
 .toolkit-chip-light:hover {
