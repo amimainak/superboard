@@ -12,8 +12,7 @@ export async function updateSession(request: NextRequest) {
     response.headers.set('X-Frame-Options', 'DENY')
     response.headers.set('X-Content-Type-Options', 'nosniff')
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(self), display-capture=()')
-    // SECURITY FIX (AUDIT-MED-4): Add HSTS header
+    response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self)')
     response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
     return response
   }
@@ -64,8 +63,7 @@ export async function updateSession(request: NextRequest) {
   supabaseResponse.headers.set('X-Frame-Options', 'DENY')
   supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
   supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  supabaseResponse.headers.set('Permissions-Policy', 'camera=(), microphone=(self), display-capture=()')
-  // SECURITY FIX (AUDIT-MED-4): Add HSTS header
+  supabaseResponse.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self)')
   supabaseResponse.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
 
   return supabaseResponse

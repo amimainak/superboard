@@ -55,13 +55,13 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(self), microphone=(self), geolocation=()',
+            value: 'camera=(self), microphone=(self), display-capture=(self), geolocation=()',
           },
           {
             key: 'X-DNS-Prefetch-Control',
             value: 'on',
           },
-          // SECURITY FIX (V-34/I-04): Added additional security headers
+          // Additional security headers
           {
             key: 'X-Permitted-Cross-Domain-Policies',
             value: 'none',
@@ -74,20 +74,9 @@ const nextConfig: NextConfig = {
             key: 'Cross-Origin-Resource-Policy',
             value: 'cross-origin',
           },
-          // SECURITY FIX (AUDIT-MED-4): HSTS
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          // SECURITY FIX (AUDIT-MED-4): Cache-Control for API routes
-          {
-            key: 'Cache-Control',
-            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
-          },
-          // SECURITY FIX: Remove X-Powered-By header to avoid server fingerprinting
-          {
-            key: 'X-Powered-By',
-            value: '',
           },
         ],
       },
@@ -99,7 +88,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' blob: data: https://*.supabase.co",
               "connect-src 'self' wss: https://*.supabase.co https://*.livekit.cloud",
@@ -122,6 +111,10 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'DENY',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
           },
         ],
       },
