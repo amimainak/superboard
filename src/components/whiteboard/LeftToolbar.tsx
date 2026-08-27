@@ -105,27 +105,37 @@ function Flyout({
     requestAnimationFrame(() => setReady(true))
   }, [anchorRef])
 
-  // Don't render until positioned correctly
-  if (!pos || !ready) return null
+  // Always render the panel div so useEffect can measure it.
+  // Hide visually (not removed from DOM) until positioned.
+  const isVisible = pos !== null && ready
 
   return (
     <>
       {/* Click-away backdrop */}
-      <div
-        className="wb-flyout-backdrop"
-        onMouseDown={(e) => {
-          e.stopPropagation()
-          onClose()
-        }}
-        aria-hidden="true"
-      />
+      {isVisible && (
+        <div
+          className="wb-flyout-backdrop"
+          onMouseDown={(e) => {
+            e.stopPropagation()
+            onClose()
+          }}
+          aria-hidden="true"
+        />
+      )}
       <div
         ref={panelRef}
         className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
         role="menu"
         onMouseDown={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
-        style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 10001 }}
+        style={{
+          position: 'fixed',
+          top: pos ? pos.top : 0,
+          left: pos ? pos.left : 0,
+          zIndex: 10001,
+          visibility: isVisible ? 'visible' : 'hidden',
+          pointerEvents: isVisible ? 'auto' : 'none',
+        }}
       >
         {children}
       </div>
