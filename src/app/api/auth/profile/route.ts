@@ -54,7 +54,6 @@ export async function GET(request: NextRequest) {
           tier: true,
           brandingColor: true,
           brandingLogoUrl: true,
-          customDomain: true,
           parentAgencyId: true,
         },
       });
@@ -77,7 +76,6 @@ export async function GET(request: NextRequest) {
         tier: true,
         brandingColor: true,
         brandingLogoUrl: true,
-        customDomain: true,
         parentAgencyId: true,
       },
     });
@@ -101,7 +99,6 @@ export async function GET(request: NextRequest) {
           tier: newUser.tier,
           brandingColor: null,
           brandingLogoUrl: null,
-          customDomain: null,
           parentAgencyId: null,
         });
       } catch {
@@ -111,7 +108,6 @@ export async function GET(request: NextRequest) {
           name: null,
           brandingColor: null,
           brandingLogoUrl: null,
-          customDomain: null,
           parentAgencyId: null,
         });
       }

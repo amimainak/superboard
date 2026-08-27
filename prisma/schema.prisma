@@ -1,9 +1,9 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Superboard Phase 2 — Supabase PostgreSQL Schema
+// Superboard — Full Schema
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Lean whiteboard SaaS: No Student, Homework, Scheduling,
-// Invoice, or Recording models. Students are anonymous
-// (ephemeral via Yjs awareness). Rooms auto-purge after 7 days.
+// Includes all models required by the application.
+// Tables with @@map() already exist in the database.
+// New tables will be created via prisma db push.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 datasource db {
@@ -15,31 +15,54 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// ── User (Tutor accounts only. Students have no DB model.) ──
+// ── User (Tutor / Agency Owner accounts) ──
 
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  name              String?
-  tier              String    @default("FREE") // FREE | PRO | AGENCY
-  isAdmin           Boolean   @default(false)
-  stripeCustomerId  String?   @unique
-  fingerprintHash   String?
+  id                    String    @id @default(uuid())
+  email                 String    @unique
+  name                  String?
+  tier                  String    @default("FREE") // FREE | PRO | AGENCY | AGENCY_STANDARD | AGENCY_PREMIUM
+  isAdmin               Boolean   @default(false)
+  status                String    @default("ACTIVE") // ACTIVE | SUSPENDED | BANNED
+  stripeCustomerId      String?   @unique
+  stripeSubscriptionId  String?
+  fingerprintHash       String?
+  customDomain          String?   @unique
+  parentEmail           String?
+  under13               Boolean   @default(false)
+  dataDeletedAt         DateTime?
+  gracePeriodEndsAt     DateTime?
+  // Referral system
+  referralCode          String?   @unique
+  referralCount         Int       @default(0)
+  referralRewardClaimed Boolean   @default(false)
+  referredByCode        String?
   // Agency fields
-  parentAgencyId    String?
-  brandingLogoUrl   String?
-  brandingColor     String?
-  agencyName        String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  parentAgencyId        String?
+  brandingLogoUrl       String?
+  brandingColor         String?
+  agencyName            String?
+  // Widget system
+  installedWidgets      Json?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   // Relations
-  rooms        Room[]
-  templates    Template[]
-  usageLogs    UsageLog[]
-  sentInvites  AgencyInvite[]
-  agencyMembers AgencyMember[] @relation("AgencyOwner")
-  agencyMemberships AgencyMember[] @relation("AgencyTutor")
+  rooms              Room[]
+  templates          Template[]
+  usageLogs          UsageLog[]
+  sentInvites        AgencyInvite[]
+  agencyMembers      AgencyMember[]       @relation("AgencyOwner")
+  agencyMemberships  AgencyMember[]       @relation("AgencyTutor")
+  bookings           Booking[]
+  scheduleSlots      ScheduleSlot[]
+  auditLogs          AuditLog[]
+  students           Student[]            @relation("AgencyOwnerStudent")
+  creditPacks        CreditPack[]
+  homeworkAssigned   Homework[]           @relation("HomeworkTutor")
+  lessonNotes        LessonNote[]
+  invoicesCreated    Invoice[]            @relation("InvoiceCreator")
+  subscriptions      Subscription[]
 
   @@index([parentAgencyId])
 }
@@ -48,8 +71,8 @@ model User {
 
 model AgencyMember {
   id          String   @id @default(uuid())
-  agencyId    String   // User ID of the agency owner
-  tutorId     String   // User ID of the invited tutor
+  agencyId    String
+  tutorId     String
   joinedAt    DateTime @default(now())
 
   agency User @relation("AgencyOwner", fields: [agencyId], references: [id], onDelete: Cascade)
@@ -59,15 +82,15 @@ model AgencyMember {
   @@index([tutorId])
 }
 
-// ── Agency Invite (invitation codes for agency tier) ──
+// ── Agency Invite ──
 
 model AgencyInvite {
   id           String   @id @default(uuid())
   agencyId     String
   code         String   @unique
   invitedEmail String?
-  recipientId  String?  @unique // set when accepted
-  status       String   @default("PENDING") // PENDING | ACCEPTED | EXPIRED
+  recipientId  String?  @unique
+  status       String   @default("PENDING")
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
@@ -77,37 +100,39 @@ model AgencyInvite {
   @@index([code])
 }
 
-// ── Room (Session rooms — ephemeral, auto-purged after 7 days) ──
+// ── Room ──
 
 model Room {
   id              String    @id @default(uuid())
   tutorId         String
-  subject         String    @default("GENERAL") // MATH | SCIENCE | LANGUAGE | GENERAL
+  subject         String    @default("GENERAL")
   isActive        Boolean   @default(true)
   startedAt       DateTime?
   endedAt         DateTime?
   durationMinutes Int       @default(0)
-  // Branding snapshot (frozen at room creation)
   brandingLogo    String?
   brandingColor   String?
   createdAt       DateTime  @default(now())
 
   // Relations
-  tutor     User       @relation(fields: [tutorId], references: [id], onDelete: Cascade)
-  pages     BoardPage[]
+  tutor        User              @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  pages        BoardPage[]
   chatMessages ChatMessage[]
+  participants  RoomParticipant[]
+  recordings   Recording[]
+  lessonNotes  LessonNote[]
 
   @@index([tutorId])
   @@index([isActive])
 }
 
-// ── Board Page (SVG element snapshots per page) ──
+// ── Board Page ──
 
 model BoardPage {
   id        String   @id @default(uuid())
   roomId    String
   pageIndex Int
-  snapshot  Json     // Serialized SVG elements array
+  snapshot  Json
   createdAt DateTime @default(now()) @db.Timestamp(6)
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -116,14 +141,14 @@ model BoardPage {
   @@index([roomId])
 }
 
-// ── Template (Reusable board layouts saved by tutors) ──
+// ── Template ──
 
 model Template {
   id        String   @id @default(uuid())
   tutorId   String
   name      String   @db.VarChar(50)
   subject   String   @default("GENERAL")
-  snapshot  Json     // All pages serialized
+  snapshot  Json
   createdAt DateTime @default(now())
 
   tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
@@ -131,15 +156,15 @@ model Template {
   @@index([tutorId])
 }
 
-// ── Chat Message (Session text chat — not persisted after room purge) ──
+// ── Chat Message ──
 
 model ChatMessage {
   id          String   @id @default(uuid())
   roomId      String
-  senderId    String?  // NULL for anonymous students
-  senderLabel String   // "Tutor Name" or "Student 1"
+  senderId    String?
+  senderLabel String
   content     String   @db.Text
-  fileUrl     String?  // Supabase Storage URL
+  fileUrl     String?
   fileName    String?
   isPinned    Boolean  @default(false)
   createdAt   DateTime @default(now()) @db.Timestamp(6)
@@ -149,18 +174,301 @@ model ChatMessage {
   @@index([roomId, createdAt])
 }
 
-// ── Usage Log (Monthly usage tracking for billing and throttles) ──
+// ── Usage Log ──
 
 model UsageLog {
-  id                  String   @id @default(uuid())
-  userId              String
-  periodStartDate     DateTime @db.Date
-  videoMinutesUsed    Int      @default(0)
-  aiCreditsUsed       Int      @default(0)
-  estimatedAiSpendCents Int    @default(0)
+  id                    String   @id @default(uuid())
+  userId                String
+  periodStartDate       DateTime @db.Date
+  videoMinutesUsed      Int      @default(0)
+  aiCreditsUsed         Int      @default(0)
+  estimatedAiSpendCents Int      @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, periodStartDate])
   @@index([userId])
+}
+
+// ── Room Participant (tracks who is/was in a room) ──
+// Maps to existing DB table with additional columns added.
+
+model RoomParticipant {
+  id              String    @id @default(uuid()) @map("id")
+  roomId          String    @map("room_id")
+  userId          String?   @map("user_id")
+  role            String    @default("participant") @map("role")
+  joinedAt        DateTime  @default(now()) @map("joined_at")
+  leftAt          DateTime? @map("left_at")
+  isOnline        Boolean   @default(false) @map("is_online")
+  studentIdentity String?   @map("studentIdentity")
+  studentName     String?   @map("studentName")
+  studentId       String?   @map("studentId")
+  lastActiveAt    DateTime? @map("lastActiveAt")
+
+  room Room? @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, studentIdentity])
+  @@index([roomId])
+  @@index([userId])
+
+  @@map("RoomParticipant")
+}
+
+// ── Booking (lesson bookings) ──
+// Maps to existing DB table.
+
+model Booking {
+  id           String   @id @default(uuid())
+  tutorId      String
+  studentName  String
+  studentEmail String?
+  parentId     String?
+  slotId       String
+  bookingDate  DateTime @db.Date
+  startTime    String
+  endTime      String
+  status       String   @default("upcoming") // upcoming | completed | cancelled
+  roomId       String?
+  notes        String?   @db.Text
+  createdAt    DateTime @default(now())
+
+  tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([status])
+
+  @@map("Booking")
+}
+
+// ── Schedule Slot ──
+// Maps to existing DB table.
+
+model ScheduleSlot {
+  id        String  @id @default(uuid())
+  tutorId   String
+  dayOfWeek Int
+  startTime String
+  endTime   String
+  timezone  String  @default("UTC")
+  isActive  Boolean @default(true)
+
+  tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+
+  @@map("ScheduleSlot")
+}
+
+// ── Student (Agency student roster) ──
+
+model Student {
+  id                String    @id @default(uuid())
+  agencyId          String
+  email             String
+  name              String?
+  isActive          Boolean   @default(true)
+  parentAccessToken  String?   @unique
+  deactivatedAt     DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  agency User @relation("AgencyOwnerStudent", fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@unique([agencyId, email])
+  @@index([agencyId])
+  @@index([email])
+}
+
+// ── Audit Log (admin action trail) ──
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  target    String?
+  details   Json?    @db.JsonB
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ── Recording (room session recordings) ──
+
+model Recording {
+  id           String    @id @default(uuid())
+  roomId       String
+  tutorId      String
+  startedAt    DateTime?
+  endedAt      DateTime?
+  durationSec  Int       @default(0)
+  status       String    @default("recording") // recording | processing | ready | failed | deleted
+  storageUrl   String?
+  thumbnailUrl String?
+  createdAt    DateTime  @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@index([tutorId])
+  @@index([status])
+}
+
+// ── Subscription (Stripe subscription tracking) ──
+
+model Subscription {
+  id                  String    @id @default(uuid())
+  userId              String    @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId       String?
+  status              String    @default("active") // active | past_due | canceled | trialing
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ── Platform Config (global settings) ──
+
+model PlatformConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json?    @db.JsonB
+  createdAt DateTime @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ── Invoice ──
+
+model Invoice {
+  id              String   @id @default(uuid())
+  creatorId       String
+  studentName     String
+  amount          Float
+  currency        String   @default("usd")
+  status          String   @default("draft") // draft | sent | paid | overdue | canceled
+  dueDate         DateTime?
+  paidAt          DateTime?
+  items           Json?    @db.JsonB
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  creator User @relation("InvoiceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@index([creatorId])
+  @@index([status])
+}
+
+// ── Scheduled Lesson ──
+
+model ScheduledLesson {
+  id          String    @id @default(uuid())
+  tutorId     String
+  studentName String?
+  studentEmail String?
+  subject     String    @default("GENERAL")
+  startTime   DateTime
+  endTime     DateTime?
+  status      String    @default("scheduled") // scheduled | completed | cancelled
+  roomId      String?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tutorId])
+  @@index([status])
+}
+
+// ── Credit Pack (agency credit system) ──
+
+model CreditPack {
+  id        String   @id @default(uuid())
+  agencyId  String
+  credits   Int
+  price     Float
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+
+  agency User @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
+  @@index([agencyId])
+}
+
+// ── Homework ──
+
+model Homework {
+  id          String   @id @default(uuid())
+  tutorId     String
+  roomId      String?
+  title       String
+  description String?  @db.Text
+  dueDate     DateTime?
+  status      String   @default("assigned") // assigned | submitted | graded
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tutor User @relation("HomeworkTutor", fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([roomId])
+}
+
+// ── Lesson Note ──
+// Maps to existing session_notes table.
+
+model LessonNote {
+  id        String   @id @default(uuid())
+  roomId    String
+  tutorId   String?
+  tutor     User?    @relation(fields: [tutorId], references: [id], onDelete: SetNull)
+  content   String   @default("") @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  room Room? @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+
+  @@map("session_notes")
+}
+
+// ── Webhook Config ──
+
+model WebhookConfig {
+  id        String   @id @default(uuid())
+  userId    String
+  url       String
+  events    String[]
+  secret    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ── Question Item (question bank) ──
+
+model QuestionItem {
+  id          String   @id @default(uuid())
+  tutorId     String?
+  type        String   @default("multiple_choice") // multiple_choice | short_answer | true_false
+  subject     String   @default("GENERAL")
+  difficulty  String   @default("medium")
+  question    String   @db.Text
+  options     Json?    @db.JsonB
+  correctAnswer String? @db.Text
+  explanation String?  @db.Text
+  tags        String[]
+ createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tutorId])
+  @@index([subject])
 }

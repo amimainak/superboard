@@ -43,9 +43,8 @@ export async function GET(request: NextRequest) {
         name: true,
         subject: true,
         createdAt: true,
-        updatedAt: true,
       },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
 
     return NextResponse.json(templates);

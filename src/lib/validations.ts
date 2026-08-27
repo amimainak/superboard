@@ -63,7 +63,7 @@ export const updateTemplateSchema = z.object({
 // ---- User Profile ----
 // A-03: Only user-writable fields. NEVER include tier, email, id, isAdmin — those are server-managed.
 export const updateProfileSchema = z.object({
-  displayName: z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(100).optional(),
   avatarUrl: z.string().max(500).url().optional(),
   bio: z.string().max(280).optional(),
   timezone: z.string().max(50).optional(),
@@ -98,8 +98,8 @@ export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown) {
 
 // Backward-compatible aliases for routes that import these names
 export const validateInput = parseBody
-export const registerSchema = z.object({ email: z.string().email() })
-export const joinRoomSchema = z.object({ roomId: z.string().min(1) })
+export const registerSchema = z.object({ id: z.string().uuid(), email: z.string().email(), name: z.string().optional().nullable() })
+export const joinRoomSchema = z.object({ roomId: z.string().min(1), studentIdentity: z.string().min(1).optional(), studentName: z.string().optional().nullable() })
 export const updateScheduleSchema = z.object({ status: z.string().optional(), startTime: z.string().optional(), endTime: z.string().optional() })
 export const createInviteSchema = z.object({ email: z.string().email(), role: z.string().optional() })
 export const registerWebhookSchema = z.object({ url: z.string().url(), events: z.array(z.string()) })

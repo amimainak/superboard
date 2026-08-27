@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
         status: true,
         isAdmin: true,
         createdAt: true,
-        _count: { select: { rooms: true, templates: true, subTutors: true } },
+        _count: { select: { rooms: true, templates: true, agencyMembers: true } },
       },
     });
 
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       u.isAdmin ? 'Yes' : 'No',
       u._count.rooms,
       u._count.templates,
-      u._count.subTutors,
+      u._count.agencyMembers,
       u.createdAt.toISOString(),
     ].join(','));
 

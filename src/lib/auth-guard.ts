@@ -11,11 +11,6 @@ interface AuthUser {
 /**
  * Reusable auth guard for API routes.
  * Returns the authenticated user or a 401 response — never both.
- *
- * Usage:
- *   const { user, response } = await getAuthenticatedUser()
- *   if (response) return response   // 401 Unauthorized
- *   // ... user is guaranteed to be non-null here
  */
 export async function getAuthenticatedUser(): Promise<{
   user: AuthUser | null
@@ -60,17 +55,57 @@ export async function getAuthenticatedUser(): Promise<{
   }
 }
 
-export function getDisplayRole(user: AuthUser): string {
-  return user.role || 'authenticated'
+/**
+ * Returns the user's display role based on DB fields.
+ * Looks up isAdmin and tier from the User table via dynamic import.
+ */
+export async function getDisplayRole(authUser: AuthUser): Promise<string> {
+  try {
+    const { db } = await import('@/lib/db')
+    const user = await db.user.findUnique({
+      where: { id: authUser.id },
+      select: { isAdmin: true, tier: true },
+    })
+    if (!user) return 'authenticated'
+    if (user.isAdmin) return 'admin'
+    if (user.tier === 'AGENCY' || user.tier === 'AGENCY_STANDARD' || user.tier === 'AGENCY_PREMIUM') return 'agency_owner'
+    if (user.tier === 'PRO') return 'pro_tutor'
+    return 'tutor'
+  } catch {
+    return 'authenticated'
+  }
 }
 
 /**
- * Backward-compatible alias: requireOwnerOrAdmin
- * Some routes import this name.
+ * requireOwnerOrAdmin — checks authentication AND admin status.
+ * Previously only checked auth (C17 bug).
  */
 export async function requireOwnerOrAdmin(): Promise<{
   user: AuthUser | null
   response: NextResponse | null
 }> {
-  return getAuthenticatedUser()
+  const { user, response } = await getAuthenticatedUser()
+  if (response) return { user: null, response }
+
+  // Check admin status from DB
+  try {
+    const { db } = await import('@/lib/db')
+    const dbUser = await db.user.findUnique({
+      where: { id: user!.id },
+      select: { isAdmin: true },
+    })
+    if (!dbUser?.isAdmin) {
+      return {
+        user: null,
+        response: NextResponse.json({ error: 'Admin access required.' }, { status: 403 }),
+      }
+    }
+  } catch {
+    return {
+      user: null,
+      response: NextResponse.json({ error: 'Internal server error' }, { status: 500 }),
+    }
+  }
+
+  return { user, response: null }
 }

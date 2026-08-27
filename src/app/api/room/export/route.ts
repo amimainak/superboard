@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
         id: true,
         pageIndex: true,
         snapshot: true,
-        updatedAt: true,
+        createdAt: true,
       },
     });
 

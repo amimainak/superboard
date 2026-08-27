@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireOwnerOrAdmin } from '@/lib/auth-guard'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 
 // GET /api/admin/users — list all users with search/pagination
 export async function GET(request: Request) {
@@ -14,46 +14,35 @@ export async function GET(request: Request) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10), 100)
     const offset = (page - 1) * limit
 
-    const supabase = await createClient()
-    const sb = supabase as any
-
-    // Try with role column, fall back to without (column may not exist in all DBs)
-    let data: any[] | null = null
-    let count = 0
-
-    try {
-      let query = sb
-        .from('User')
-        .select('id, email, name, tier, role, isAdmin, stripeCustomerId, parentAgencyId, agencyName, createdAt, updatedAt', { count: 'exact' })
-        .order('createdAt', { ascending: false })
-        .range(offset, offset + limit - 1)
-      if (search) {
-        query = query.or('email.ilike.%' + search + '%,name.ilike.%' + search + '%')
-      }
-      const result = await query
-      data = result.data
-      count = result.count || 0
-    } catch {
-      // role column doesn't exist, select without it
-      let query = sb
-        .from('User')
-        .select('id, email, name, tier, isAdmin, stripeCustomerId, parentAgencyId, agencyName, createdAt, updatedAt', { count: 'exact' })
-        .order('createdAt', { ascending: false })
-        .range(offset, offset + limit - 1)
-      if (search) {
-        query = query.or('email.ilike.%' + search + '%,name.ilike.%' + search + '%')
-      }
-      const result = await query
-      data = result.data
-      count = result.count || 0
+    const where: Record<string, unknown> = {}
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+      ]
     }
 
+    const [users, total] = await Promise.all([
+      db.user.findMany({
+        where,
+        select: {
+          id: true, email: true, name: true, tier: true, isAdmin: true,
+          status: true, stripeCustomerId: true, parentAgencyId: true,
+          agencyName: true, createdAt: true, updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: offset,
+        take: limit,
+      }),
+      db.user.count({ where }),
+    ])
+
     return NextResponse.json({
-      users: data || [],
-      total: count || 0,
+      users,
+      total,
       page,
       limit,
-      totalPages: Math.ceil((count || 0) / limit),
+      totalPages: Math.ceil(total / limit),
     })
   } catch (err: unknown) {
     console.error('[GET /api/admin/users]', err)
@@ -61,18 +50,17 @@ export async function GET(request: Request) {
   }
 }
 
-// PATCH /api/admin/users — update user tier/role/status
+// PATCH /api/admin/users — update user tier/status
 export async function PATCH(request: Request) {
   try {
     const { user: admin, response } = await requireOwnerOrAdmin()
     if (response) return response
 
-    // Only owners can change roles
     const body = await request.json()
-    const { userId, tier, role, ban } = body as {
+    const { userId, tier, status, ban } = body as {
       userId: string
       tier?: string
-      role?: string
+      status?: string
       ban?: boolean
     }
 
@@ -80,66 +68,29 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-    const sb = supabase as any
-
     const updates: Record<string, unknown> = {}
-    if (tier && ['FREE', 'PRO', 'AGENCY'].includes(tier)) {
+    if (tier && ['FREE', 'PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(tier)) {
       updates.tier = tier
     }
-    if (admin.dbRole === 'owner' && role && ['owner', 'admin', 'tutor', 'student'].includes(role)) {
-      updates.role = role
-      updates.isAdmin = role === 'owner' || role === 'admin'
-    }
-    // If no role change, still allow setting isAdmin for DBs without role column
-    if (admin.dbRole === 'owner' && !role && typeof ban === 'boolean' && ban) {
-      updates.isAdmin = false
+    if (status && ['ACTIVE', 'SUSPENDED', 'BANNED'].includes(status)) {
+      updates.status = status
     }
     if (typeof ban === 'boolean') {
-      updates.banned = ban
+      updates.status = ban ? 'BANNED' : 'ACTIVE'
+      updates.isAdmin = ban ? false : undefined
     }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
     }
 
-    // Try update, handling case where role column doesn't exist
-    let updateResult: any
-    if (updates.role) {
-      const { data, error } = await sb
-        .from('User')
-        .update(updates)
-        .eq('id', userId)
-        .select('id, email, name, tier, isAdmin')
-        .single()
-      if (error && String(error.message).includes('role')) {
-        // Column doesn't exist, retry without role
-        delete updates.role
-        const retry = await sb
-          .from('User')
-          .update(updates)
-          .eq('id', userId)
-          .select('id, email, name, tier, isAdmin')
-          .single()
-        if (retry.error) throw retry.error
-        updateResult = retry.data
-      } else if (error) {
-        throw error
-      } else {
-        updateResult = data
-      }
-    } else {
-      const { data, error } = await sb
-        .from('User')
-        .update(updates)
-        .eq('id', userId)
-        .select('id, email, name, tier, isAdmin')
-        .single()
-      if (error) throw error
-      updateResult = data
-    }
+    const updated = await db.user.update({
+      where: { id: userId },
+      data: updates,
+      select: { id: true, email: true, name: true, tier: true, isAdmin: true, status: true },
+    })
 
-    return NextResponse.json({ user: updateResult })
+    return NextResponse.json({ user: updated })
   } catch (err: unknown) {
     console.error('[PATCH /api/admin/users]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

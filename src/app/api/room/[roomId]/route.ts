@@ -75,7 +75,6 @@ export async function PATCH(
         isActive: false,
         endedAt: now,
         durationMinutes,
-        updatedAt: now,
       },
     });
 
