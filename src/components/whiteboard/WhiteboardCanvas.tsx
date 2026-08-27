@@ -161,7 +161,10 @@ export function WhiteboardCanvas() {
   const deletePage = useWhiteboardStore((s) => s.deletePage)
   const switchPage = useWhiteboardStore((s) => s.switchPage)
   const addPage = useWhiteboardStore((s) => s.addPage)
-  // canDraw, userRole, mathToolConfig, clearMathToolConfig removed — only used
+  // userRole & canDraw needed for JSX render (draw-permission-toast)
+  const userRole = useWhiteboardStore((s) => s.userRole)
+  const canDraw = useWhiteboardStore((s) => s.canDraw)
+  // mathToolConfig, clearMathToolConfig removed — only used
   // in handlePointerDown, read via getState() to avoid re-renders
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 })
@@ -707,7 +710,7 @@ export function WhiteboardCanvas() {
               selectElements([el.id])
               // Revert to select after placing
               setTool('select')
-              clearMathToolConfig()
+              useWhiteboardStore.getState().clearMathToolConfig()
             }
           }
           break
@@ -717,7 +720,7 @@ export function WhiteboardCanvas() {
     [
       tool, camera, spaceHeld, currentPageIndex,
       getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
-      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, setTool, removeElements, clearMathToolConfig,
+      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, setTool, removeElements,
     ]
   )
 
