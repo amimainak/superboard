@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { extractTextFromElements, inferSubject } from '@/lib/ai/extract-text'
 import GenerateSimilarPanel from './GenerateSimilarPanel'
@@ -12,11 +13,11 @@ export type AIAction = 'generate_similar' | 'adapt_reading_level' | 'check_work'
 type DropdownState = null | 'open' | AIAction
 
 export default function AIActionsButton() {
-  const elements = useWhiteboardStore(s => s.elements)
-  const selectedIds = useWhiteboardStore(s => s.selectedIds)
+  const elements = useWhiteboardStore(useShallow(s => s.elements))
+  const selectedIds = useWhiteboardStore(useShallow(s => s.selectedIds))
   const addElement = useWhiteboardStore(s => s.addElement)
   const currentPageIndex = useWhiteboardStore(s => s.currentPageIndex)
-  const camera = useWhiteboardStore(s => s.camera)
+  const camera = useWhiteboardStore(useShallow(s => s.camera))
   const isDark = useWhiteboardStore(s => s.isDark)
   const [dropdown, setDropdown] = useState<DropdownState>(null)
   const [content, setContent] = useState<{ text: string; subject: string; sourceBounds: { x: number; y: number; w: number; h: number } | null } | null>(null)

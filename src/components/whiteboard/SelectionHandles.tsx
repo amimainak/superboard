@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useCallback, useRef, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { getElementBounds, getBoundsCenter, type Bounds } from '@/lib/whiteboard/utils'
 import type { WhiteboardElement } from '@/lib/whiteboard/types'
@@ -17,9 +18,9 @@ interface SelectionHandlesProps {
 const HANDLE_SIZE = 8
 
 export function SelectionHandles({ containerRef }: SelectionHandlesProps) {
-  const elements = useWhiteboardStore((s) => s.elements)
-  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
-  const camera = useWhiteboardStore((s) => s.camera)
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
+  const selectedIds = useWhiteboardStore(useShallow((s) => s.selectedIds))
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
   const updateElement = useWhiteboardStore((s) => s.updateElement)
   const removeElements = useWhiteboardStore((s) => s.removeElements)
   const pushHistory = useWhiteboardStore((s) => s.pushHistory)

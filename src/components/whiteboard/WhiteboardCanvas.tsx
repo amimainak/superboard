@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useWhiteboardStore, STICKY_COLORS } from '@/lib/whiteboard/store'
 import { createMathElement } from '@/lib/whiteboard/math-elements'
 import { ElementRenderer } from './ElementRenderer'
@@ -71,16 +72,40 @@ function calcAlignGuides(
   return guides
 }
 
+// ---- Focused sub-component for current drawing preview ----
+// Subscribes to currentElement + isDrawing so the parent WhiteboardCanvas
+// does NOT re-render at 60fps during freehand drawing.
+function CurrentElementPreview({ cameraZoom, tool, isDark }: { cameraZoom: number; tool: string; isDark: boolean }) {
+  const currentElement = useWhiteboardStore((s) => s.currentElement)
+  const isDrawing = useWhiteboardStore((s) => s.isDrawing)
+  if (!isDrawing || !currentElement) return null
+  return (
+    <ElementRenderer
+      element={currentElement}
+      isSelected={false}
+      onPointerDown={CurrentElementPreview._noop}
+      onDoubleClick={CurrentElementPreview._noop}
+      cameraZoom={cameraZoom}
+      tool={tool}
+      isDark={isDark}
+    />
+  )
+}
+CurrentElementPreview._noop = () => {}
+
 export function WhiteboardCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
 
   const tool = useWhiteboardStore((s) => s.tool)
-  const camera = useWhiteboardStore((s) => s.camera)
-  const elements = useWhiteboardStore((s) => s.elements)
-  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
-  const currentElement = useWhiteboardStore((s) => s.currentElement)
-  const isDrawing = useWhiteboardStore((s) => s.isDrawing)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
+  const selectedIds = useWhiteboardStore(useShallow((s) => s.selectedIds))
+  // PERF: currentElement, isDrawing, style, eraserSize, userRole, canDraw, mathToolConfig
+  // are NOT subscribed here — they change at 60fps during drawing and would
+  // re-render this entire 1380-line component on every frame. Instead, we read
+  // them via useWhiteboardStore.getState() inside callbacks and the focused
+  // CurrentElementPreview sub-component.
   const isPanning = useWhiteboardStore((s) => s.isPanning)
   const spaceHeld = useWhiteboardStore((s) => s.spaceHeld)
   const showGrid = useWhiteboardStore((s) => s.showGrid)
@@ -89,8 +114,6 @@ export function WhiteboardCanvas() {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
-  const style = useWhiteboardStore((s) => s.style)
-  const eraserSize = useWhiteboardStore((s) => s.eraserSize)
 
   const setCamera = useWhiteboardStore((s) => s.setCamera)
   const panBy = useWhiteboardStore((s) => s.panBy)
@@ -111,7 +134,7 @@ export function WhiteboardCanvas() {
   const moveSelected = useWhiteboardStore((s) => s.moveSelected)
   const removeElements = useWhiteboardStore((s) => s.removeElements)
   const eraseAtPoint = useWhiteboardStore((s) => s.eraseAtPoint)
-  const setEraserActive = useWhiteboardStore((s) => s.setEraserActive)
+  // setEraserActive removed — only used in handlePointerUp, read via getState()
   const addLaserPoint = useWhiteboardStore((s) => s.addLaserPoint)
   const clearLaser = useWhiteboardStore((s) => s.clearLaser)
   const undo = useWhiteboardStore((s) => s.undo)
@@ -138,10 +161,8 @@ export function WhiteboardCanvas() {
   const deletePage = useWhiteboardStore((s) => s.deletePage)
   const switchPage = useWhiteboardStore((s) => s.switchPage)
   const addPage = useWhiteboardStore((s) => s.addPage)
-  const canDraw = useWhiteboardStore((s) => s.canDraw)
-  const userRole = useWhiteboardStore((s) => s.userRole)
-  const mathToolConfig = useWhiteboardStore((s) => s.mathToolConfig)
-  const clearMathToolConfig = useWhiteboardStore((s) => s.clearMathToolConfig)
+  // canDraw, userRole, mathToolConfig, clearMathToolConfig removed — only used
+  // in handlePointerDown, read via getState() to avoid re-renders
 
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 })
   const [alignGuides, setAlignGuides] = useState<{ axis: 'x' | 'y'; pos: number; start: number; end: number }[]>([])
@@ -487,6 +508,8 @@ export function WhiteboardCanvas() {
   const handlePointerDown = useCallback(
     (e: React.PointerEvent) => {
       // ---- Drawing permission check ----
+      const { userRole, canDraw, mathToolConfig, currentPageIndex: cpi, selectedIds: selIds, style: sStyle } =
+        useWhiteboardStore.getState()
       if (userRole === 'guest' && !canDraw && tool !== 'select' && tool !== 'hand') {
         // Brief visual feedback via a small toast
         const toast = document.getElementById('draw-permission-toast')
@@ -516,7 +539,7 @@ export function WhiteboardCanvas() {
         const container = containerRef.current
         if (container) {
           // Cancel any ongoing drawing
-          if (isDrawing) finishDrawing()
+          if (useWhiteboardStore.getState().isDrawing) finishDrawing()
           clearSelection()
           startPanning()
           pinchState.current = {
@@ -570,11 +593,11 @@ export function WhiteboardCanvas() {
           if (hitId) {
             if (e.shiftKey) {
               selectElements(
-                selectedIds.includes(hitId)
-                  ? selectedIds.filter((id) => id !== hitId)
-                  : [...selectedIds, hitId]
+                selIds.includes(hitId)
+                  ? selIds.filter((id) => id !== hitId)
+                  : [...selIds, hitId]
               )
-            } else if (!selectedIds.includes(hitId)) {
+            } else if (!selIds.includes(hitId)) {
               selectElements([hitId])
             }
             // Start move — don't push history until actual movement happens
@@ -692,10 +715,9 @@ export function WhiteboardCanvas() {
       }
     },
     [
-      tool, camera, spaceHeld, selectedIds, currentPageIndex,
+      tool, camera, spaceHeld, currentPageIndex,
       getCanvasPoint, startPanning, startDrawing, finishDrawing, clearSelection, selectElements,
-      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, isDrawing, setTool, removeElements,
-      userRole, canDraw, mathToolConfig, clearMathToolConfig,
+      pushHistory, eraseAtPoint, addLaserPoint, addElement, shouldRejectPointer, setTool, removeElements, clearMathToolConfig,
     ]
   )
 
@@ -792,13 +814,14 @@ export function WhiteboardCanvas() {
       const point = getCanvasPoint(e)
 
       // Move selected elements
-      if (tool === 'select' && lastMovePoint.current && selectedIds.length) {
+      const { selectedIds: sIds, isDrawing: drawing } = useWhiteboardStore.getState()
+      if (tool === 'select' && lastMovePoint.current && sIds.length) {
         const dx = point.x - lastMovePoint.current.x
         const dy = point.y - lastMovePoint.current.y
         if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
           moveSelected(dx, dy)
           lastMovePoint.current = point
-          setAlignGuides(calcAlignGuides(selectedIds, pageElements, 8 / camera.zoom))
+          setAlignGuides(calcAlignGuides(sIds, pageElements, 8 / camera.zoom))
         }
         return
       }
@@ -817,7 +840,7 @@ export function WhiteboardCanvas() {
       }
 
       // Drawing — batch via rAF (P-01)
-      if (isDrawing) {
+      if (drawing) {
         // Update pen cursor position even while drawing
         if (tool === 'draw' || tool === 'highlighter') {
           updateCursorOverlay({ x: e.clientX, y: e.clientY })
@@ -860,7 +883,7 @@ export function WhiteboardCanvas() {
       }
     },
     [
-      isPanning, isDrawing, tool, selectedIds, camera.zoom, camera.x, camera.y,
+      isPanning, tool, camera.zoom, camera.x, camera.y,
       getCanvasPoint, panBy, moveSelected, eraseAtPoint, addLaserPoint, setCamera,
       flushPendingPoints, updateCursorOverlay,
     ]
@@ -916,7 +939,7 @@ export function WhiteboardCanvas() {
       // so no points are lost after isDrawing is set to false.
       cancelPendingRaf()
 
-      if (isDrawing) {
+      if (useWhiteboardStore.getState().isDrawing) {
         const el = finishDrawing()
         // Auto-focus text/sticky after placement
         if (el && (el.type === 'text' || el.type === 'sticky')) {
@@ -962,7 +985,7 @@ export function WhiteboardCanvas() {
       }
     },
     [
-      isPanning, isDrawing, tool, boxSelect, pageElements,
+      isPanning, tool, boxSelect, pageElements,
       stopPanning, finishDrawing, clearLaser, selectElements, setTool,
       cancelPendingRaf,
     ]
@@ -1019,7 +1042,7 @@ export function WhiteboardCanvas() {
           togglePresentationMode()
           return
         }
-        if (selectedIds.length) {
+        if (store.selectedIds.length) {
           clearSelection()
           return
         }
@@ -1078,22 +1101,24 @@ export function WhiteboardCanvas() {
 
       // Delete
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selectedIds.length) {
+        const sel = useWhiteboardStore.getState().selectedIds
+        if (sel.length) {
           e.preventDefault()
           pushHistory()
-          removeElements(selectedIds)
+          removeElements(sel)
           clearSelection()
         }
         return
       }
 
       // Z-order
+      const selArr = useWhiteboardStore.getState().selectedIds
       if (e.key === ']') {
-        selectedIds.forEach((id) => bringToFront(id))
+        selArr.forEach((id) => bringToFront(id))
         return
       }
       if (e.key === '[') {
-        selectedIds.forEach((id) => sendToBack(id))
+        selArr.forEach((id) => sendToBack(id))
         return
       }
 
@@ -1125,7 +1150,7 @@ export function WhiteboardCanvas() {
       window.removeEventListener('keyup', handleKeyUp)
     }
   }, [
-    selectedIds, spaceHeld,
+    spaceHeld,
     togglePresentationMode,
     setTool, undo, redo, selectAll, copySelected, cutSelected, pasteClipboard,
     duplicateSelected, groupSelected, ungroupSelected, zoomIn, zoomOut,
@@ -1136,23 +1161,17 @@ export function WhiteboardCanvas() {
   // Prevent context menu
   const handleContextMenu = useCallback((e: React.MouseEvent) => e.preventDefault(), [])
 
-  // ---- Render ----
+  // ---- Stable noop callbacks for CurrentElementPreview ----
+  const stableNoop = useCallback(() => {}, [])
+  const stableNoopDbClick = useCallback(() => {}, [])
 
-  // Build current element preview
-  const renderCurrentElement = () => {
-    if (!currentElement) return null
-    return (
-      <ElementRenderer
-        element={currentElement}
-        isSelected={false}
-        onPointerDown={() => {}}
-        onDoubleClick={() => {}}
-        cameraZoom={camera.zoom}
-        tool={tool}
-        isDark={isDark}
-      />
-    )
-  }
+  // ---- Render ----
+  // Current element preview is rendered by a focused sub-component
+  // that subscribes to currentElement/isDrawing so the parent doesn't
+  // re-render at 60fps during drawing.
+  const currentElementRef = useRef(useWhiteboardStore.getState().currentElement)
+  // Keep ref in sync
+  currentElementRef.current = useWhiteboardStore.getState().currentElement
 
   return (
     <div
@@ -1188,7 +1207,7 @@ export function WhiteboardCanvas() {
           clearLaser()
         }
         // Finish in-progress strokes on pointer leave (P-06)
-        if (isDrawing) {
+        if (useWhiteboardStore.getState().isDrawing) {
           cancelPendingRaf()
           finishDrawing()
         }
@@ -1236,8 +1255,8 @@ export function WhiteboardCanvas() {
             </g>
           ))}
 
-          {/* Current drawing preview */}
-          {renderCurrentElement()}
+          {/* Current drawing preview — isolated sub-component */}
+          <CurrentElementPreview cameraZoom={camera.zoom} tool={tool} isDark={isDark} />
 
           {/* Selection handles */}
           <SelectionHandles containerRef={containerRef} />

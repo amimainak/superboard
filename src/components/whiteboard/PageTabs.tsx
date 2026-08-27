@@ -7,11 +7,12 @@
 
 import React from 'react'
 import { Plus, X } from 'lucide-react'
+import { useShallow } from "zustand/react/shallow"
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import './whiteboard.css'
 
 export function PageTabs() {
-  const pages = useWhiteboardStore((s) => s.pages)
+  const pages = useWhiteboardStore(useShallow((s) => s.pages))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
   const isDark = useWhiteboardStore((s) => s.isDark)
   const switchPage = useWhiteboardStore((s) => s.switchPage)

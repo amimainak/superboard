@@ -8,6 +8,7 @@ import { WhiteboardCanvas } from '@/components/whiteboard/WhiteboardCanvas'
 import { StylePanel } from '@/components/whiteboard/StylePanel'
 import { PageTabs } from '@/components/whiteboard/PageTabs'
 import { SearchOverlay } from '@/components/whiteboard/SearchOverlay'
+import { useShallow } from "zustand/react/shallow"
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import {
   exportAsPng, exportAsJpg, exportAsSvg, exportAsJson,
@@ -37,12 +38,12 @@ interface PageSnapshot {
 export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSaved }: RoomWhiteboardProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const tool = useWhiteboardStore((s) => s.tool)
-  const camera = useWhiteboardStore((s) => s.camera)
-  const pages = useWhiteboardStore((s) => s.pages)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
+  const pages = useWhiteboardStore(useShallow((s) => s.pages))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
-  const elements = useWhiteboardStore((s) => s.elements)
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
   const shortcutsOpen = useWhiteboardStore((s) => s.shortcutsOpen)
-  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const selectedIds = useWhiteboardStore(useShallow((s) => s.selectedIds))
   const showGrid = useWhiteboardStore((s) => s.showGrid)
   const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
   const gridType = useWhiteboardStore((s) => s.gridType)

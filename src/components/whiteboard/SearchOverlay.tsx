@@ -8,6 +8,7 @@
 'use client'
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import type { TextElement, StickyElement, FrameElement } from '@/lib/whiteboard/types'
 
@@ -56,8 +57,8 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
 
-  const elements = useWhiteboardStore((s) => s.elements)
-  const pages = useWhiteboardStore((s) => s.pages)
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
+  const pages = useWhiteboardStore(useShallow((s) => s.pages))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
   const setCurrentPageIndex = useWhiteboardStore((s) => s.setCurrentPageIndex)
   const setCamera = useWhiteboardStore((s) => s.setCamera)

@@ -7,6 +7,7 @@
 'use client'
 
 import React, { useCallback, useRef, useState, useEffect } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { TopBar } from '@/components/whiteboard/TopBar'
 import { ShortcutsDialog } from '@/components/whiteboard/ShortcutsDialog'
 import { LeftToolbar } from '@/components/whiteboard/LeftToolbar'
@@ -28,12 +29,12 @@ import {
 export default function WhiteboardClient() {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const tool = useWhiteboardStore((s) => s.tool)
-  const camera = useWhiteboardStore((s) => s.camera)
-  const pages = useWhiteboardStore((s) => s.pages)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
+  const pages = useWhiteboardStore(useShallow((s) => s.pages))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
-  const elements = useWhiteboardStore((s) => s.elements)
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
   const shortcutsOpen = useWhiteboardStore((s) => s.shortcutsOpen)
-  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const selectedIds = useWhiteboardStore(useShallow((s) => s.selectedIds))
   const showGrid = useWhiteboardStore((s) => s.showGrid)
   const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
   const gridType = useWhiteboardStore((s) => s.gridType)

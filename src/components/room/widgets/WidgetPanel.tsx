@@ -11,13 +11,13 @@ import { useWidgetStore, type WidgetId, type PanelMode, AVAILABLE_WIDGETS } from
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { ChatWidget } from './ChatWidget'
 import { ParticipantsWidget } from './ParticipantsWidget'
-import { VideoWidget } from './VideoWidget'
 import { RecordingWidget } from './RecordingWidget'
 import { TemplatesWidget } from './TemplatesWidget'
 import { SessionNotesWidget } from './SessionNotesWidget'
 import { AnalyticsWidget } from './AnalyticsWidget'
 import { ParentPortalWidget } from './ParentPortalWidget'
 import { SchedulingWidget } from './SchedulingWidget'
+const VideoWidget = dynamic(() => import('./VideoWidget').then((m) => ({ default: m.VideoWidget })), { ssr: false })
 const AgencyWidget = dynamic(() => import('./AgencyWidget').then((m) => ({ default: m.AgencyWidget })), { ssr: false })
 const BreakoutRoomsWidget = dynamic(() => import('./BreakoutRoomsWidget').then((m) => ({ default: m.BreakoutRoomsWidget })), { ssr: false })
 
