@@ -211,6 +211,7 @@ export interface WhiteboardStore {
   // Drawing
   startDrawing: (point: Point) => void
   continueDrawing: (point: Point) => void
+  continueDrawingBatch: (points: Array<{ x: number; y: number; pressure?: number }>) => void
   finishDrawing: () => WhiteboardElement | null
   setCurrentElement: (el: WhiteboardElement | null) => void
 
@@ -772,12 +773,10 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
 
       switch (currentElement.type) {
         case 'freehand': {
-          const pts = [...get().drawingPoints, { ...point, pressure: point.pressure || 0.5 }]
+          const pt = { x: point.x, y: point.y, pressure: point.pressure || 0.5 }
+          const pts = get().drawingPoints.concat(pt)
           set({
-            currentElement: {
-              ...currentElement,
-              points: pts,
-            },
+            currentElement: { ...currentElement, points: pts },
             drawingPoints: pts,
           })
           break
@@ -817,6 +816,22 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
         default:
           break
       }
+    },
+
+    continueDrawingBatch: (points) => {
+      const { currentElement, isDrawing } = get()
+      if (!isDrawing || !currentElement || currentElement.type !== 'freehand') return
+      if (points.length === 0) return
+
+      // Append all points in a single state update (avoids N separate re-renders)
+      const existing = get().drawingPoints
+      const pts = existing.concat(
+        points.map(function(p) { return { x: p.x, y: p.y, pressure: p.pressure || 0.5 }; })
+      )
+      set({
+        currentElement: { ...currentElement, points: pts },
+        drawingPoints: pts,
+      })
     },
 
     finishDrawing: (): WhiteboardElement | null => {

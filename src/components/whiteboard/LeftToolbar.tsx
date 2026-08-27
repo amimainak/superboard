@@ -75,7 +75,8 @@ function Flyout({
   anchorRef: React.RefObject<HTMLButtonElement | null>
 }) {
   const panelRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     const anchor = anchorRef.current
@@ -100,7 +101,12 @@ function Flyout({
     if (top < 8) top = 8
 
     setPos({ top, left })
+    // Mark as ready on next frame so initial (0,0) render is skipped
+    requestAnimationFrame(() => setReady(true))
   }, [anchorRef])
+
+  // Don't render until positioned correctly
+  if (!pos || !ready) return null
 
   return (
     <>
@@ -118,6 +124,7 @@ function Flyout({
         className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
         role="menu"
         onMouseDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
         style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 10001 }}
       >
         {children}

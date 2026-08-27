@@ -171,7 +171,7 @@ export function WhiteboardCanvas() {
   const isErasing = useRef(false)
   const [boxSelect, setBoxSelect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
-  // ---- rAF batching for pointer move (P-01) ----
+  // ---- rAF flush for batched drawing points (P-01) ----
   const pendingPointsRef = useRef<Array<{ x: number; y: number; pressure: number }>>([])
   const rafIdRef = useRef<number>(0)
 
@@ -710,10 +710,9 @@ export function WhiteboardCanvas() {
     if (!storeState.isDrawing || !storeState.currentElement) return
 
     if (storeState.currentElement.type === 'freehand') {
-      // For freehand, apply all pending points at once via the store
-      for (const pt of pts) {
-        storeState.continueDrawing(pt)
-      }
+      // Batch ALL pending freehand points in a single state update
+      // This avoids N separate re-renders per frame
+      storeState.continueDrawingBatch(pts)
     } else {
       // For shapes, only the last point matters
       storeState.continueDrawing(pts[pts.length - 1])
@@ -733,9 +732,7 @@ export function WhiteboardCanvas() {
       const storeState = useWhiteboardStore.getState()
       if (storeState.isDrawing && storeState.currentElement) {
         if (storeState.currentElement.type === 'freehand') {
-          for (const pt of pts) {
-            storeState.continueDrawing(pt)
-          }
+          storeState.continueDrawingBatch(pts)
         } else {
           storeState.continueDrawing(pts[pts.length - 1])
         }
