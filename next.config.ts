@@ -74,6 +74,16 @@ const nextConfig: NextConfig = {
             key: 'Cross-Origin-Resource-Policy',
             value: 'cross-origin',
           },
+          // SECURITY FIX (AUDIT-MED-4): HSTS
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          // SECURITY FIX (AUDIT-MED-4): Cache-Control for API routes
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
           // SECURITY FIX: Remove X-Powered-By header to avoid server fingerprinting
           {
             key: 'X-Powered-By',
@@ -89,7 +99,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' blob: data: https://*.supabase.co",
               "connect-src 'self' wss: https://*.supabase.co https://*.livekit.cloud",

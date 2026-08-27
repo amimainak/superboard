@@ -1,18 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
+import { NextResponse, type NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth'
 
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders })
+  return new NextResponse(null, { status: 204 })
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) return auth
+
     const { searchParams } = new URL(request.url)
     const roomId = searchParams.get('roomId')
     const widgetKind = searchParams.get('widgetKind')
@@ -20,7 +18,7 @@ export async function GET(request: Request) {
     if (!roomId) {
       return NextResponse.json(
         { error: 'roomId is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 },
       )
     }
 
@@ -50,26 +48,35 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({ mastery: mastery }, { headers: corsHeaders })
+    return NextResponse.json({ mastery: mastery })
   } catch (err: unknown) {
     console.error('[GET /api/lang/mastery]', err)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 },
     )
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // SECURITY FIX: Require auth for writing mastery data
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) return auth
+
     const body = await request.json()
     const { roomId, widgetKind, exerciseId, correct, userId } = body
 
     if (!roomId || !widgetKind || exerciseId === undefined || correct === undefined) {
       return NextResponse.json(
         { error: 'roomId, widgetKind, exerciseId, and correct are required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 },
       )
+    }
+
+    // Validate types
+    if (typeof correct !== 'boolean') {
+      return NextResponse.json({ error: 'correct must be a boolean' }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -109,9 +116,8 @@ export async function POST(request: Request) {
         last_seen: new Date().toISOString(),
         last_correct: correct,
       }
-      if (userId) {
-        insertRow.user_id = userId
-      }
+      // Use authenticated user's ID, not client-provided userId
+      insertRow.user_id = auth.userId
       const { error } = await (supabase as any)
         .from('student_mastery')
         .insert(insertRow)
@@ -119,25 +125,29 @@ export async function POST(request: Request) {
       if (error) throw error
     }
 
-    return NextResponse.json({ success: true }, { headers: corsHeaders })
+    return NextResponse.json({ success: true })
   } catch (err: unknown) {
     console.error('[POST /api/lang/mastery]', err)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 },
     )
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    // SECURITY FIX: Require auth for deleting mastery data
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) return auth
+
     const { searchParams } = new URL(request.url)
     const roomId = searchParams.get('roomId')
 
     if (!roomId) {
       return NextResponse.json(
         { error: 'roomId is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 },
       )
     }
 
@@ -150,12 +160,12 @@ export async function DELETE(request: Request) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true }, { headers: corsHeaders })
+    return NextResponse.json({ success: true })
   } catch (err: unknown) {
     console.error('[DELETE /api/lang/mastery]', err)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 },
     )
   }
 }

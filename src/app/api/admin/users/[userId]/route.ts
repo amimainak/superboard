@@ -42,12 +42,15 @@ export async function PATCH(
       }
     }
 
-    const updateData: any = {};
-    if (tier) updateData.tier = tier;
+    // SECURITY FIX (AUDIT-MED-1): Use !== undefined checks instead of truthy.
+    // Previously, `if (tier)` would skip tier='FREE' (falsy), and
+    // `if (gracePeriodDays)` would skip gracePeriodDays=0.
+    const updateData: Record<string, unknown> = {};
+    if (tier !== undefined) updateData.tier = tier;
     if (name !== undefined) updateData.name = name;
     if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
-    if (status) updateData.status = status;
-    if (gracePeriodDays) {
+    if (status !== undefined) updateData.status = status;
+    if (gracePeriodDays !== undefined) {
       updateData.gracePeriodEndsAt = new Date(Date.now() + gracePeriodDays * 24 * 60 * 60 * 1000);
     }
 
@@ -60,17 +63,17 @@ export async function PATCH(
       data: updateData,
     });
 
-    // Log each action type
-    if (tier) {
+    // Log each action type (use !== undefined for consistency)
+    if (tier !== undefined) {
       await logAudit(adminCheck.userId, 'USER_TIER_CHANGE', 'User', userId, { newTier: tier });
     }
     if (isAdmin !== undefined) {
       await logAudit(adminCheck.userId, 'USER_ADMIN_TOGGLE', 'User', userId, { isAdmin });
     }
-    if (status) {
+    if (status !== undefined) {
       await logAudit(adminCheck.userId, 'USER_STATUS_CHANGE', 'User', userId, { newStatus: status });
     }
-    if (gracePeriodDays) {
+    if (gracePeriodDays !== undefined) {
       await logAudit(adminCheck.userId, 'USER_GRACE_PERIOD', 'User', userId, { gracePeriodDays });
     }
 

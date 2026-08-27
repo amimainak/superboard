@@ -1,14 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
-
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders })
+  return new NextResponse(null, { status: 204 })
 }
 
 export async function GET(request: Request) {
@@ -22,7 +16,16 @@ export async function GET(request: Request) {
     if (!widgetKind) {
       return NextResponse.json(
         { error: 'widgetKind is required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 },
+      )
+    }
+
+    // Whitelist widgetKind to prevent injection
+    const allowedWidgetKinds = ['fill-blank', 'multiple-choice', 'sentence-reorder', 'punctuation', 'pos-tagger', 'subject-verb', 'tense-shift']
+    if (!allowedWidgetKinds.includes(widgetKind)) {
+      return NextResponse.json(
+        { error: 'Invalid widgetKind' },
+        { status: 400 },
       )
     }
 
@@ -31,6 +34,10 @@ export async function GET(request: Request) {
     let query = (supabase as any).from('language_exercises').select('*').eq('widget_kind', widgetKind)
 
     if (difficulty) {
+      const allowedDifficulties = ['easy', 'medium', 'hard', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+      if (!allowedDifficulties.includes(difficulty)) {
+        return NextResponse.json({ error: 'Invalid difficulty' }, { status: 400 })
+      }
       query = query.eq('difficulty', difficulty)
     }
 
@@ -49,6 +56,9 @@ export async function GET(request: Request) {
 
     query = query.order('band', { ascending: true }).order('difficulty', { ascending: true }).order('discriminator', { ascending: true })
 
+    // Limit results to prevent abuse
+    query = query.limit(200)
+
     const { data, error } = await query
 
     if (error) throw error
@@ -65,12 +75,12 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({ exercises: exercises }, { headers: corsHeaders })
+    return NextResponse.json({ exercises: exercises })
   } catch (err: unknown) {
     console.error('[GET /api/lang/exercises]', err)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+      { status: 500 },
     )
   }
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/supabase'
 
 export async function POST(request: Request) {
   try {
@@ -22,8 +22,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = event.data.object as any
+
+    // SECURITY FIX (AUDIT-MED-3): Use service role client for webhook operations.
+    // The anon client relies on RLS, but the Stripe webhook is a server-to-server
+    // call with no user session — it needs to bypass RLS.
+    const supabase = createServerClient()
+    if (!supabase) {
+      console.error('[Webhook] Supabase server client not configured')
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+    }
 
     switch (event.type) {
       case 'checkout.session.completed': {
@@ -38,7 +46,6 @@ export async function POST(request: Request) {
 
         console.warn(`[Webhook] Upgrading user ${userId} to ${tier}`)
 
-        const supabase = await createClient()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
           .from('User')
@@ -64,7 +71,6 @@ export async function POST(request: Request) {
 
         console.warn(`[Webhook] Subscription deleted for customer ${customerId}, reverting to FREE`)
 
-        const supabase = await createClient()
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await (supabase as any)
           .from('User')
@@ -83,12 +89,10 @@ export async function POST(request: Request) {
       case 'invoice.payment_failed': {
         const customerId = data.customer
         console.warn(`[Webhook] Payment failed for customer ${customerId}. Consider notifying user.`)
-        // TODO: Send email notification, mark account, etc.
         break
       }
 
       default:
-        // Unhandled event type — acknowledge anyway
         console.warn(`[Webhook] Unhandled event type: ${event.type}`)
     }
 

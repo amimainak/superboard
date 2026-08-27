@@ -1,14 +1,16 @@
 // ============================================================
 // API Route: Generate Manipulative Spec from Description
 // ============================================================
-// POST /api/manipulative/generate
-// Takes a natural-language description + subject,
-// uses Claude to produce a ManipulativeSpec JSON.
+// SECURITY FIX (AUDIT-CRIT-7): Added auth + rate limiting.
+// Previously anyone could invoke Claude AI (callTextAI) to generate
+// manipulative specs — direct AI cost abuse vector.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { callTextAI } from '@/lib/ai';
 import type { AIAction } from '@/types';
+import { requireAuth } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 const MANIPULATIVE_SYSTEM_PROMPT = `You are a K-12 math manipulative specification generator. Given a description and subject, output ONLY a valid JSON object with this shape:
 
@@ -42,6 +44,19 @@ IMPORTANT: Return ONLY the JSON object, no markdown fences, no explanation.`;
 
 export async function POST(request: NextRequest) {
   try {
+    // SECURITY: Require auth
+    const auth = await requireAuth(request);
+    if (auth instanceof NextResponse) return auth;
+
+    // SECURITY: Rate limit (15 per minute per user)
+    const { allowed, retryAfterMs } = rateLimit(`manipulative:gen:${auth.userId}`, 15, 60_000);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) } },
+      );
+    }
+
     const body = await request.json();
     const { description, subject } = body;
 
@@ -72,7 +87,7 @@ export async function POST(request: NextRequest) {
     console.error('[Manipulative Generate] Error:', error);
     return NextResponse.json(
       { error: 'Failed to generate manipulative' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

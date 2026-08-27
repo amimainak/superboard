@@ -1,28 +1,23 @@
 // ============================================================
 // Question Bank API — GET/POST /api/questions
 // ============================================================
-// GET: Fetches pre-built, standards-tagged questions with filters.
-// POST: Creates a new question (tutor-created).
-//
-// GET Query params:
-//   subject (required): MATH, SCIENCE, LANGUAGE, etc.
-//   gradeBand (optional): K-2, 3-5, 6-8, 9-12
-//   topic (optional): e.g., "Quadratic Equations"
-//   difficulty (optional): 1-5
-//   curriculum (optional): CCSS, NGSS, IB, etc.
-//   questionType (optional): MCQ, OPEN, TRUE_FALSE, etc.
-//   testType (optional): SAT, ACT, AP — filters by test prep category
-//   search (optional): full-text search in stem and topic
-//   limit (optional): default 20, max 100
-//   offset (optional): default 0
+// SECURITY FIX (AUDIT-CRIT-4): Added auth checks.
+// GET requires auth (question bank is proprietary).
+// POST requires auth (tutor-created questions).
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { QuestionType } from '@prisma/client';
+import { requireAuth } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest) {
   try {
+    // SECURITY: Require auth
+    const auth = await requireAuth(req);
+    if (auth instanceof NextResponse) return auth;
+
     const { searchParams } = req.nextUrl;
     const subject = searchParams.get('subject');
     const gradeBand = searchParams.get('gradeBand');
@@ -70,129 +65,70 @@ export async function GET(req: NextRequest) {
         skip: offset,
         orderBy: { difficulty: 'asc' },
         select: {
-          id: true,
-          subject: true,
-          gradeBand: true,
-          topic: true,
-          difficulty: true,
-          curriculum: true,
-          standardCode: true,
-          stem: true,
-          stemLatex: true,
-          diagramSvg: true,
-          answerKey: true,
-          solutionSteps: true,
-          distractors: true,
-          questionType: true,
-          tags: true,
-          estimatedTimeSec: true,
-          testPrepCategory: {
-            select: { id: true, name: true, testType: true },
-          },
+          id: true, subject: true, gradeBand: true, topic: true, difficulty: true,
+          curriculum: true, standardCode: true, stem: true, stemLatex: true,
+          diagramSvg: true, answerKey: true, solutionSteps: true, distractors: true,
+          questionType: true, tags: true, estimatedTimeSec: true,
+          testPrepCategory: { select: { id: true, name: true, testType: true } },
         },
       }),
       db.questionItem.count({ where }),
     ]);
 
-    return NextResponse.json({
-      questions,
-      total,
-      limit,
-      offset,
-    });
+    return NextResponse.json({ questions, total, limit, offset });
   } catch (error) {
     console.error('[API /questions] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch questions' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch questions' }, { status: 500 });
   }
 }
 
-// ============================================================
-// POST — Create a new question (tutor-created)
-// ============================================================
 export async function POST(req: NextRequest) {
   try {
+    // SECURITY: Require auth
+    const auth = await requireAuth(req);
+    if (auth instanceof NextResponse) return auth;
+
+    // Rate limit: 20 creates per minute
+    const { allowed } = rateLimit(`questions:create:${auth.userId}`, 20, 60_000);
+    if (!allowed) {
+      return NextResponse.json({ error: 'Rate limited' }, { status: 429 });
+    }
+
     const body = await req.json();
     const {
-      subject,
-      gradeBand,
-      topic,
-      difficulty,
-      curriculum,
-      standardCode,
-      stem,
-      stemLatex,
-      answerKey,
-      solutionSteps,
-      distractors,
-      questionType,
-      tags,
-      estimatedTimeSec,
-      diagramSvg,
-      testPrepCategoryId,
-    } = body as {
-      subject: string;
-      gradeBand: string;
-      topic: string;
-      difficulty: number;
-      curriculum?: string;
-      standardCode?: string;
-      stem: string;
-      stemLatex?: string;
-      answerKey: string;
-      solutionSteps?: string;
-      distractors?: string;
-      questionType?: string;
-      tags?: string;
-      estimatedTimeSec?: number;
-      diagramSvg?: string;
-      testPrepCategoryId?: string;
-    };
+      subject, gradeBand, topic, difficulty, curriculum, standardCode,
+      stem, stemLatex, answerKey, solutionSteps, distractors,
+      questionType, tags, estimatedTimeSec, diagramSvg, testPrepCategoryId,
+    } = body;
 
-    // Validate required fields
     if (!subject || !gradeBand || !topic || !stem || !answerKey) {
       return NextResponse.json(
         { error: 'subject, gradeBand, topic, stem, and answerKey are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (difficulty < 1 || difficulty > 5) {
+    if (typeof difficulty !== 'number' || difficulty < 1 || difficulty > 5) {
       return NextResponse.json(
-        { error: 'difficulty must be between 1 and 5' },
-        { status: 400 }
+        { error: 'difficulty must be a number between 1 and 5' },
+        { status: 400 },
       );
     }
 
     const question = await db.questionItem.create({
       data: {
         subject: subject.toUpperCase(),
-        gradeBand,
-        topic,
-        difficulty,
+        gradeBand, topic, difficulty,
         curriculum: curriculum?.toUpperCase(),
-        standardCode,
-        stem,
-        stemLatex,
-        answerKey,
-        solutionSteps,
-        distractors,
-        questionType: (questionType?.toUpperCase() || 'OPEN') as QuestionType,
-        tags,
-        estimatedTimeSec,
-        diagramSvg,
-        testPrepCategoryId,
+        standardCode, stem, stemLatex, answerKey, solutionSteps,
+        distractors, questionType: (questionType?.toUpperCase() || 'OPEN') as QuestionType,
+        tags, estimatedTimeSec, diagramSvg, testPrepCategoryId,
       },
     });
 
     return NextResponse.json({ question }, { status: 201 });
   } catch (error) {
     console.error('[API /questions POST] Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to create question' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to create question' }, { status: 500 });
   }
 }

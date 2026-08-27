@@ -1,49 +1,99 @@
-import { createClient } from '@supabase/supabase-js'
-import { NextResponse } from 'next/server'
+// ============================================================
+// POST /api/auth/send-reset-otp
+// ============================================================
+// SECURITY FIX (AUDIT-CRIT-2): Previously this endpoint had NO
+// authentication and NO rate limiting — anyone could trigger OTP
+// emails to any address, enabling spam and OTP enumeration.
+//
+// Hardened version:
+//   - Requires ADMIN auth (JWT Bearer token)
+//   - Rate limited (5 per 15 minutes per admin IP)
+//   - Validates email format
+// ============================================================
 
-export async function POST(request: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
+
+export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
-    if (!email || typeof email !== 'string' || !email.includes('@')) {
-      return NextResponse.json({ error: 'A valid email is required' }, { status: 400 })
+    // --- 1. Admin-only auth check ---
+    const adminCheck = await requireAdmin(request);
+    if (adminCheck instanceof NextResponse) return adminCheck;
+
+    // --- 2. Rate limit (5 per 15 min per admin IP) ---
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const { allowed, retryAfterMs } = rateLimit(
+      `admin:send-otp:${ip}`,
+      5,
+      15 * 60 * 1000,
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Too many OTP requests. Try again later.' },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) },
+        },
+      );
     }
 
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    // --- 3. Parse and validate input ---
+    const body = await request.json();
+    const { email } = body;
 
-    // Check user exists
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      return NextResponse.json({ error: 'A valid email is required' }, { status: 400 });
+    }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+
+    // --- 4. Admin-only Supabase client ---
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !serviceKey) {
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+
+    // --- 5. Check user exists ---
     const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({
       perPage: 1000,
-    })
+    });
     if (listError) {
-      return NextResponse.json({ error: 'Failed to look up account' }, { status: 500 })
-    }
-    const user = users.users.find(u => u.email === email)
-    if (!user) {
-      // Don't reveal whether email exists — return success anyway
-      return NextResponse.json({ success: true })
+      return NextResponse.json({ error: 'Failed to look up account' }, { status: 500 });
     }
 
-    // Send OTP via GoTrue's signInWithOtp (admin mode)
-    // This sends a 6-digit code to the user's email — NO URL needed
+    const user = users.users.find((u) => u.email === email);
+    if (!user) {
+      // Don't reveal whether email exists — return success anyway
+      return NextResponse.json({ success: true });
+    }
+
+    // --- 6. Send OTP ---
     const { error } = await supabaseAdmin.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false,
         emailRedirectTo: undefined,
       },
-    })
+    });
 
     if (error) {
-      console.error('send-reset-otp error:', error.message)
-      return NextResponse.json({ error: 'Failed to send verification code' }, { status: 500 })
+      console.error('[send-reset-otp] error:', error.message);
+      return NextResponse.json({ error: 'Failed to send verification code' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true })
+    console.warn(`[send-reset-otp] Admin ${adminCheck.userId} sent OTP to ${email}`);
+    return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('send-reset-otp exception:', e)
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+    console.error('[send-reset-otp] exception:', e);
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
 }

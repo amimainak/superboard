@@ -1,19 +1,25 @@
 // ============================================================
 // Question API — PUT/DELETE /api/questions/[id]
 // ============================================================
-// PUT: Update a question
-// DELETE: Soft-delete a question (sets isActive = false)
+// SECURITY FIX (AUDIT-CRIT-5): Added auth checks.
+// PUT requires auth to update questions.
+// DELETE requires auth to soft-delete questions.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { QuestionType } from '@prisma/client';
+import { requireAuth } from '@/lib/auth';
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: Require auth
+    const auth = await requireAuth(req);
+    if (auth instanceof NextResponse) return auth;
+
     const { id } = await params;
     const body = await req.json();
 
@@ -28,7 +34,7 @@ export async function PUT(
         ...(body.subject && { subject: body.subject.toUpperCase() }),
         ...(body.gradeBand && { gradeBand: body.gradeBand }),
         ...(body.topic && { topic: body.topic }),
-        ...(body.difficulty && { difficulty: body.difficulty }),
+        ...(body.difficulty !== undefined && { difficulty: body.difficulty }),
         ...(body.curriculum && { curriculum: body.curriculum.toUpperCase() }),
         ...(body.standardCode !== undefined && { standardCode: body.standardCode }),
         ...(body.stem && { stem: body.stem }),
@@ -56,6 +62,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // SECURITY: Require auth
+    const auth = await requireAuth(req);
+    if (auth instanceof NextResponse) return auth;
+
     const { id } = await params;
 
     const existing = await db.questionItem.findUnique({ where: { id } });

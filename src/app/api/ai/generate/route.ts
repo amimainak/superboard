@@ -1,29 +1,73 @@
-import { NextResponse } from 'next/server'
+// ============================================================
+// POST /api/ai/generate
+// ============================================================
+// SECURITY FIX (AUDIT-CRIT-3): Previously had NO auth check —
+// anyone could call this and burn AI credits.
+//
+// Hardened version:
+//   - Requires authenticated user
+//   - Rate limited (20 requests per minute per user)
+//   - Input length validation
+//   - Action whitelist validation
+// ============================================================
+
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { rateLimit } from '@/lib/rate-limit'
 import { getGenerateSimilarPrompt, getReadingLevelPrompt, getDraftFeedbackPrompt, SYSTEM_PROMPT } from '@/lib/ai/prompts'
 
 const MAX_CONTENT_LENGTH = 4000
+const VALID_ACTIONS = ['generate_similar', 'adapt_reading_level', 'check_work'] as const
 
-export async function POST(request: Request) {
+type ValidAction = (typeof VALID_ACTIONS)[number]
+
+export async function POST(request: NextRequest) {
   try {
+    // --- 1. Auth check ---
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) return auth
+
+    // --- 2. Rate limit (20 per minute per user) ---
+    const { allowed, retryAfterMs } = rateLimit(`ai:generate:${auth.userId}`, 20, 60_000)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'AI rate limit exceeded. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) } },
+      )
+    }
+
+    // --- 3. Parse and validate input ---
     const { action, content, options } = await request.json()
 
-    if (!action || !content || typeof content !== 'string') {
-      return NextResponse.json({ error: 'Missing action or content' }, { status: 400 })
+    if (!action || typeof action !== 'string' || !VALID_ACTIONS.includes(action as ValidAction)) {
+      return NextResponse.json(
+        { error: 'Invalid action. Use generate_similar, adapt_reading_level, or check_work.' },
+        { status: 400 },
+      )
+    }
+
+    if (!content || typeof content !== 'string') {
+      return NextResponse.json({ error: 'Content is required and must be a string' }, { status: 400 })
+    }
+
+    if (content.length > MAX_CONTENT_LENGTH) {
+      return NextResponse.json(
+        { error: 'Content exceeds maximum length of ' + MAX_CONTENT_LENGTH + ' characters' },
+        { status: 400 },
+      )
     }
 
     const trimmed = content.slice(0, MAX_CONTENT_LENGTH)
 
     let prompt = ''
     if (action === 'generate_similar') {
-      const subject = (options && options.subject) || 'general'
+      const subject = (options && typeof options.subject === 'string' && options.subject) || 'general'
       prompt = getGenerateSimilarPrompt(trimmed, subject)
     } else if (action === 'adapt_reading_level') {
-      const mode = (options && options.level) || 'simpler'
+      const mode = (options && typeof options.level === 'string' && options.level) || 'simpler'
       prompt = getReadingLevelPrompt(trimmed, mode)
     } else if (action === 'check_work') {
       prompt = getDraftFeedbackPrompt(trimmed)
-    } else {
-      return NextResponse.json({ error: 'Invalid action. Use generate_similar, adapt_reading_level, or check_work.' }, { status: 400 })
     }
 
     const result = await callLLM(prompt)
