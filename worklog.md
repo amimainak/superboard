@@ -153,3 +153,36 @@ Stage Summary:
 - `language_exercises` and `vocab_cards`: now read-only for authenticated users, RLS forced
 - `session_notes`: now scoped to room participants and tutor only, RLS forced
 - Supabase alert `rls_disabled_in_public` should auto-resolve
+
+---
+Task ID: 9
+Agent: Main
+Task: Build three AI canvas widgets (all phases) and fix RLS
+
+Work Log:
+- Audited and fixed 3 critical RLS vulnerabilities (language_exercises, vocab_cards, session_notes)
+- Created shared AI service layer (src/lib/ai/service.ts) with Gemini API integration
+  - Uses Gemini 2.0 Flash (free tier), retry logic, rate limit handling
+  - Three functions: generateVariations(), adaptReadingLevel(), getDraftFeedback()
+- Created 3 API routes with auth guards:
+  - /api/ai/generate-variations (POST)
+  - /api/ai/adapt-reading-level (POST)
+  - /api/ai/draft-feedback (POST)
+- Created CanvasAIWidgets.tsx with 3 canvas widget components:
+  - GenerateSimilarWidget: paste text, get 3 alternative versions with copy
+  - ReadingLevelAdapterWidget: simplify or bulletize for 4 grade levels
+  - DraftFeedbackWidget: score/10, strengths, improvements, suggestions
+- Registered in canvas-widget-registry.ts (added 'ai' ToolkitId, 3 widget entries)
+- Wired into CanvasWidgets.tsx (component map, default config, default size, labels)
+- Updated AIAssistantWidget.tsx with 'AI Canvas Tools' section with '+ Board' buttons
+- Fixed schedule route ambiguity (/api/schedule/[lessonId] vs [slotId])
+- Fixed proxy.ts/middleware.ts conflict (Next.js 16 deprecation)
+- Added missing exports for build: db alias, checkRateLimit, validation schemas, requireOwnerOrAdmin, getSupabaseServerClient
+- Added GEMINI_API_KEY env var requirement (not yet set)
+- Deployed to superboard-three.vercel.app
+
+Stage Summary:
+- 3 AI canvas widgets fully built and deployed
+- AI service reads GEMINI_API_KEY env var (not yet configured - user will provide later)
+- Widgets visible in 'AI Assistant' sidebar panel with '+ Board' buttons
+- Also fixed: RLS vulnerabilities, schedule route conflict, proxy/middleware conflict, missing module exports

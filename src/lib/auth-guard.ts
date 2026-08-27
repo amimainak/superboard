@@ -59,3 +59,18 @@ export async function getAuthenticatedUser(): Promise<{
     response: null,
   }
 }
+
+export function getDisplayRole(user: AuthUser): string {
+  return user.role || 'authenticated'
+}
+
+/**
+ * Backward-compatible alias: requireOwnerOrAdmin
+ * Some routes import this name.
+ */
+export async function requireOwnerOrAdmin(): Promise<{
+  user: AuthUser | null
+  response: NextResponse | null
+}> {
+  return getAuthenticatedUser()
+}

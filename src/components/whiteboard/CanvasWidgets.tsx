@@ -667,6 +667,14 @@ import {
   getScienceWidgetDefaultSize,
   SCIENCE_WIDGET_KIND_LABELS,
 } from './CanvasScienceWidgets'
+import {
+  GenerateSimilarWidget,
+  ReadingLevelAdapterWidget,
+  DraftFeedbackWidget,
+  getAIWidgetDefaultConfig,
+  getAIWidgetDefaultSize,
+  AI_WIDGET_KIND_LABELS,
+} from './CanvasAIWidgets'
 
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
   // Statistics widgets
@@ -752,6 +760,10 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'earth-water-carbon-cycle': CanvasScienceWidgetRenderer,
   'earth-solar-system': CanvasScienceWidgetRenderer,
   'earth-topographic-map': CanvasScienceWidgetRenderer,
+  // AI widgets
+  'ai-generate-similar': GenerateSimilarWidget as unknown as React.ComponentType<CanvasWidgetProps>,
+  'ai-reading-level': ReadingLevelAdapterWidget as unknown as React.ComponentType<CanvasWidgetProps>,
+  'ai-draft-feedback': DraftFeedbackWidget as unknown as React.ComponentType<CanvasWidgetProps>,
 }
 
 export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -765,6 +777,7 @@ export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ e
   if (isScienceWidget) {
     return <CanvasScienceWidgetRenderer element={element} isDark={isDark} />
   }
+  // AI widgets have their own components in WIDGET_COMPONENTS map
   const Component = WIDGET_COMPONENTS[element.widgetKind]
   if (!Component) {
     // Fallback: try MathElementRenderers for legacy math-* element types
@@ -860,6 +873,10 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'earth-water-carbon-cycle': return getScienceWidgetDefaultConfig('earth-water-carbon-cycle')
     case 'earth-solar-system': return getScienceWidgetDefaultConfig('earth-solar-system')
     case 'earth-topographic-map': return getScienceWidgetDefaultConfig('earth-topographic-map')
+    // AI widgets
+    case 'ai-generate-similar': return getAIWidgetDefaultConfig('ai-generate-similar')
+    case 'ai-reading-level': return getAIWidgetDefaultConfig('ai-reading-level')
+    case 'ai-draft-feedback': return getAIWidgetDefaultConfig('ai-draft-feedback')
     default: return {}
   }
 }
@@ -946,6 +963,10 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'earth-water-carbon-cycle': return getScienceWidgetDefaultSize('earth-water-carbon-cycle')
     case 'earth-solar-system': return getScienceWidgetDefaultSize('earth-solar-system')
     case 'earth-topographic-map': return getScienceWidgetDefaultSize('earth-topographic-map')
+    // AI widgets
+    case 'ai-generate-similar': return getAIWidgetDefaultSize('ai-generate-similar')
+    case 'ai-reading-level': return getAIWidgetDefaultSize('ai-reading-level')
+    case 'ai-draft-feedback': return getAIWidgetDefaultSize('ai-draft-feedback')
     default: return { width: 300, height: 300 }
   }
 }
@@ -964,4 +985,6 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...LANG_WIDGET_KIND_LABELS,
   // Science widgets
   ...SCIENCE_WIDGET_KIND_LABELS,
+  // AI widgets
+  ...AI_WIDGET_KIND_LABELS,
 }

@@ -90,8 +90,18 @@ export const livekitTokenSchema = z.object({
 export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown) {
   const result = schema.safeParse(body)
   if (!result.success) {
-    const errors = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`)
+    const errors = result.error.issues.map(i => i.path.join('.') + ': ' + i.message)
     return { data: null, error: errors.join('; ') }
   }
   return { data: result.data, error: null }
 }
+
+// Backward-compatible aliases for routes that import these names
+export const validateInput = parseBody
+export const registerSchema = z.object({ email: z.string().email() })
+export const joinRoomSchema = z.object({ roomId: z.string().min(1) })
+export const updateScheduleSchema = z.object({ status: z.string().optional(), startTime: z.string().optional(), endTime: z.string().optional() })
+export const createInviteSchema = z.object({ email: z.string().email(), role: z.string().optional() })
+export const registerWebhookSchema = z.object({ url: z.string().url(), events: z.array(z.string()) })
+export const applyReferralSchema = z.object({ code: z.string().min(1) })
+export const aiActionSchema = z.object({ prompt: z.string().min(1), roomId: z.string().optional() })

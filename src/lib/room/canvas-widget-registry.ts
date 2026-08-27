@@ -5,7 +5,7 @@
 // to let tutors hide/show individual widgets and save templates.
 // ============================================================
 
-export type ToolkitId = 'math' | 'physics' | 'chemistry' | 'biology' | 'language' | 'statistics' | 'earthscience' | 'classroom'
+export type ToolkitId = 'math' | 'physics' | 'chemistry' | 'biology' | 'language' | 'statistics' | 'earthscience' | 'classroom' | 'ai'
 
 export type CanvasWidgetEntry = {
   /** Unique widget kind used in WidgetElement.widgetKind */
@@ -166,6 +166,15 @@ const CLASSROOM_WIDGETS: CanvasWidgetEntry[] = [
 ]
 
 // ============================================================
+// AI Widgets (3 canvas kinds)
+// ============================================================
+const AI_WIDGETS: CanvasWidgetEntry[] = [
+  { kind: 'ai-generate-similar', label: 'Generate Similar', toolkit: 'ai', gradeBands: ['3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'ai-reading-level', label: 'Reading Level Adapter', toolkit: 'ai', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'ai-draft-feedback', label: 'Draft Feedback', toolkit: 'ai', gradeBands: ['6-8', '9-12'], isDefault: true },
+]
+
+// ============================================================
 // Combined Registry
 // ============================================================
 
@@ -178,6 +187,7 @@ export const ALL_CANVAS_WIDGETS: CanvasWidgetEntry[] = [
   ...STATISTICS_WIDGETS,
   ...EARTH_SCIENCE_WIDGETS,
   ...CLASSROOM_WIDGETS,
+  ...AI_WIDGETS,
 ]
 
 /** Map from widget kind to entry for O(1) lookup */
@@ -206,6 +216,7 @@ export const TOOLKIT_LABELS: Record<ToolkitId, string> = {
   statistics: 'Statistics',
   earthscience: 'Earth Science',
   classroom: 'Classroom',
+  ai: 'AI Tools',
 }
 
 /** Toolkit icon names (matching WidgetToggleBar icons) */
@@ -218,4 +229,5 @@ export const TOOLKIT_ICONS: Record<ToolkitId, string> = {
   statistics: 'BarChart3',
   earthscience: 'Globe',
   classroom: 'Timer',
+  ai: 'Sparkles',
 }

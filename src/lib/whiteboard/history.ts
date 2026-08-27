@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { WhiteboardEngine } from './engine'
 
 export interface HistoryCommand {

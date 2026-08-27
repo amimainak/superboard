@@ -32,3 +32,4 @@ if (typeof globalThis !== 'undefined') {
     }
   }, 5 * 60 * 1000)
 }
+export async function checkRateLimit(request: Request, key: string) { const ip = request.headers.get("x-forwarded-for") || "unknown"; const result = rateLimit(ip + ":" + key, 30, 60000); if (!result.allowed) { const res = new Response(JSON.stringify({ error: "Rate limited" }), { status: 429 }); return { allowed: false, response: res }; } return { allowed: true, response: null }; }

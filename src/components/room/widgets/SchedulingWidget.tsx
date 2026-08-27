@@ -112,7 +112,7 @@ export function SchedulingWidget({ roomId }: { roomId: string }) {
 
   const handleDeleteSlot = async (slotId: string) => {
     try {
-      const res = await fetch(`/api/schedule/${slotId}`, { method: 'DELETE' })
+      const res = await fetch(`/api/schedule/slot/${slotId}`, { method: 'DELETE' })
       if (res.ok) {
         await refreshSlots()
       }
