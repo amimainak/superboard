@@ -130,3 +130,26 @@ Stage Summary:
 - All 12 science tool improvements confirmed implemented
 - 3 build-blocking syntax errors fixed (CSS brace, TSX stray chars, unclosed fragment)
 - Deployed to production: superboard-three.vercel.app
+
+---
+Task ID: 8
+Agent: Main
+Task: Fix critical Supabase RLS vulnerability (security alert)
+
+Work Log:
+- Received Supabase security alert: tables publicly accessible due to RLS disabled
+- Audited all 15 public tables for RLS status and policy definitions
+- Found 3 critical vulnerabilities:
+  - `language_exercises` (664 rows): RLS completely disabled, anyone could read/write/delete
+  - `vocab_cards` (209 rows): RLS completely disabled, anyone could read/write/delete
+  - `session_notes`: RLS enabled but all 4 policies used `true` — any user could modify all notes
+- Fixed `language_exercises`: enabled RLS, forced RLS, restricted to SELECT for authenticated + ALL for service_role
+- Fixed `vocab_cards`: same pattern — read-only for authenticated users
+- Fixed `session_notes`: replaced open `true` policies with room-participant-scoped policies (tutor + RoomParticipant members only)
+- Verified all 15 tables have correct RLS status post-fix
+
+Stage Summary:
+- 3 critical RLS vulnerabilities fixed and verified
+- `language_exercises` and `vocab_cards`: now read-only for authenticated users, RLS forced
+- `session_notes`: now scoped to room participants and tutor only, RLS forced
+- Supabase alert `rls_disabled_in_public` should auto-resolve
