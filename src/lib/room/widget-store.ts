@@ -7,6 +7,30 @@
 
 import { create } from 'zustand'
 
+// H1 FIX: Subject-to-widget mapping for context-aware sidebar.
+// Only shows relevant tools based on the session subject.
+export const SUBJECT_WIDGET_MAP: Record<string, WidgetId[]> = {
+  MATH: ['math', 'ai', 'notes', 'templates', 'analytics'],
+  SCIENCE: ['physics', 'chemistry', 'biology', 'earthscience', 'math', 'ai', 'notes', 'templates'],
+  LANGUAGE: ['language', 'ai', 'notes', 'templates'],
+  ART: ['ai', 'notes', 'templates'],
+  MUSIC: ['ai', 'notes', 'templates'],
+  CODING: ['ai', 'notes', 'templates'],
+  TEST_PREP: ['math', 'language', 'ai', 'notes', 'templates'],
+  ESL: ['language', 'ai', 'notes', 'templates'],
+  GENERAL: [], // Empty = show all (default/fallback)
+}
+
+/** Get visible widget IDs filtered by subject */
+export function getWidgetsForSubject(subject: string): WidgetId[] {
+  const extra = SUBJECT_WIDGET_MAP[subject]
+  if (!extra || extra.length === 0) {
+    // GENERAL or unknown: show all tool widgets
+    return AVAILABLE_WIDGETS.filter(w => w.section === 'tools').map(w => w.id as WidgetId)
+  }
+  return extra
+}
+
 export type WidgetId =
   | 'chat'
   | 'participants'

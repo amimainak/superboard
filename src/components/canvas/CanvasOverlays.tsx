@@ -69,7 +69,6 @@ const StandardsTrackerPanel = dynamic(() => import('@/components/tools/english-r
 const PhonemeGraphemePanel = dynamic(() => import('@/components/tools/english-reading/PhonemeGraphemePanel'), { ssr: false });
 const PeerReviewPanel = dynamic(() => import('@/components/tools/english-reading/PeerReviewPanel'), { ssr: false });
 // Math tool overlays
-const FunctionPlotterPanel = dynamic(() => import('@/components/tools/math/FunctionPlotterPanel'), { ssr: false });
 const CoordPlanePanel = dynamic(() => import('@/components/tools/math/CoordPlanePanel'), { ssr: false });
 const ProofBuilderPanel = dynamic(() => import('@/components/tools/math/ProofBuilderPanel'), { ssr: false });
 const BarModelPanel = dynamic(() => import('@/components/tools/math/BarModelPanel'), { ssr: false });
@@ -150,7 +149,6 @@ export default function CanvasOverlays({ editorRef }: CanvasOverlaysProps) {
       <PhonemeGraphemePanel editor={editor} />
       <PeerReviewPanel editor={editor} />
       {/* Math tool panels */}
-      <FunctionPlotterPanel editor={editor} />
       <CoordPlanePanel editor={editor} />
       <ProofBuilderPanel editor={editor} />
       <BarModelPanel editor={editor} />

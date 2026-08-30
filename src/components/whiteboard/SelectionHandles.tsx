@@ -233,11 +233,13 @@ function SingleElementHandles({
   const strokeColor = element.locked ? '#f59e0b' : '#059669'
 
   // fx toggle button for text elements (LaTeX mode)
+  // B3 FIX: Increased hit target from 10 to 16/camera.zoom (32px at zoom=1)
   const isTextEl = element.type === 'text'
   const isLatex = isTextEl && (element as { isLatex?: boolean }).isLatex
   const fxBtnX = bounds.x + bounds.width + 6 / camera.zoom
   const fxBtnY = bounds.y
-  const fxR = 10 / camera.zoom
+  const fxR = 16 / camera.zoom
+  const fxVisualR = 10 / camera.zoom
   const fxUpdateElement = useWhiteboardStore((s) => s.updateElement)
   const fxPushHistory = useWhiteboardStore((s) => s.pushHistory)
 
@@ -284,22 +286,31 @@ function SingleElementHandles({
         />
       ))}
       {/* LaTeX toggle button for text elements */}
+      {/* B3 FIX: Larger hit target (fxR), visual circle (fxVisualR), invisible hit rect, tooltip */}
       {isTextEl && (
-        <g
-          style={{ cursor: 'pointer' as const }}
-          onPointerDown={(e) => { e.stopPropagation(); toggleLatex() }}
-          opacity={0.85}
-          onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
-          onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.85') }}
-        >
+        <g>
+          {/* Invisible hit area — 32x32 at zoom=1, centered on the button */}
+          <rect
+            x={fxBtnX + fxR - 16 / camera.zoom}
+            y={fxBtnY + fxR - 16 / camera.zoom}
+            width={32 / camera.zoom}
+            height={32 / camera.zoom}
+            fill="transparent"
+            style={{ cursor: 'pointer' }}
+            onPointerDown={(e) => { e.stopPropagation(); toggleLatex() }}
+          />
+          {/* Visible circle */}
           <circle
             cx={fxBtnX + fxR}
             cy={fxBtnY + fxR}
-            r={fxR}
+            r={fxVisualR}
             fill={isLatex ? '#059669' : (isDark ? 'rgba(14,14,16,0.92)' : 'rgba(255,255,255,0.95)')}
             stroke={isLatex ? '#34d399' : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)')}
             strokeWidth={1 / camera.zoom}
-          />
+            style={{ pointerEvents: 'none' }}
+          >
+            <title>{isLatex ? 'Switch to plain text' : 'Toggle equation mode (fx)'}</title>
+          </circle>
           <text
             x={fxBtnX + fxR}
             y={fxBtnY + fxR + 1}
@@ -310,7 +321,7 @@ function SingleElementHandles({
             fontStyle="italic"
             fontWeight="700"
             fill={isLatex ? '#ffffff' : (isDark ? '#34d399' : '#059669')}
-            style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
           >fx</text>
         </g>
       )}

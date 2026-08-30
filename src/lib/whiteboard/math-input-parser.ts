@@ -72,13 +72,16 @@ export function mathToLatex(input: string): string {
   s = s.replace(/\\sqrt\(([^)]+)\)/g, '\\sqrt{$1}')
 
   // 5. Fractions: (a+b)/(c+d) -> \frac{a+b}{c+d}
-  s = s.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g, '\\frac{$1}{$2}')
+  // H5 FIX: Handle nested parentheses with recursive matching
+  s = replaceFractionParens(s)
 
   // 6. Simple fractions: 1/2 -> \frac{1}{2}
   s = s.replace(/(\d)\s*\/\s*(\d)/g, '\\frac{$1}{$2}')
 
   // 7. Digit/variable fraction: 1/x -> \frac{1}{x}
+  // H5 FIX: Also handle variable/variable: x/y -> \frac{x}{y}
   s = s.replace(/(\d)\s*\/\s*([a-zA-Z_])/g, '\\frac{$1}{$2}')
+  s = s.replace(/([a-zA-Z_])\s*\/\s*([a-zA-Z_])/g, '\\frac{$1}{$2}')
 
   // 8. Superscripts: ^(expr) -> ^{expr}, ^digit -> ^{digit}
   s = s.replace(/\^\(([^)]+)\)/g, '^{$1}')
@@ -95,7 +98,7 @@ export function mathToLatex(input: string): string {
 
   // 11. Limit: \lim_(x->a) -> \lim_{x \to a}
   s = s.replace(/\\lim_\(([^)]+)\)/g, (_: string, inner: string) => {
-    return '\\lim_{' + inner.replace(/>/g, ' \\to ').replace(/→/g, ' \\to ') + '}'
+    return '\\lim_{' + inner.replace(/>/g, ' \\to ').replace(/\u2192/g, ' \\to ') + '}'
   })
 
   // 12. Plus-minus
@@ -103,7 +106,7 @@ export function mathToLatex(input: string): string {
   s = s.replace(/-\s*\+/g, ' \\mp ')
 
   // 13. Degree
-  s = s.replace(/°/g, '^{\\circ}')
+  s = s.replace(/\u00B0/g, '^{\\circ}')
   s = s.replace(/(\d+)deg(?![a-zA-Z])/g, '$1^{\\circ}')
 
   // 14. Binomial: C(n,k) -> \binom{n}{k}
@@ -118,7 +121,40 @@ export function mathToLatex(input: string): string {
   // 16. Clean up multiple spaces
   s = s.replace(/\s{2,}/g, ' ')
 
+  // 17. H5 FIX: Implicit multiplication — digit next to letter: 2x -> 2 \cdot x
+  //    (but skip if the letter is part of a function name that was already replaced)
+  s = s.replace(/(?<![a-zA-Z])(\d)\s*([a-z])(?![a-z{])/g, (_match: string, p1: string, p2: string) => {
+    // Don't add cdot inside existing LaTeX commands
+    if (_match.includes('\\frac') || _match.includes('\\sqrt') || _match.includes('\\vec')) return _match
+    return p1 + ' \\cdot ' + p2
+  })
+
+  // 18. H5 FIX: Support \begin{aligned} ... \end{aligned} for multi-line equations
+  //    Users can type: aligned(a+b=c, d+e=f) -> \begin{aligned}a+b=c \\ d+e=f\end{aligned}
+  s = s.replace(/aligned\(([^)]+)\)/g, (_: string, inner: string) => {
+    const lines = inner.split(',').map((l: string) => l.trim())
+    return '\\begin{aligned}' + lines.join(' \\\\ ') + '\\end{aligned}'
+  })
+
   return s
+}
+
+/** H5 FIX: Recursively match balanced parentheses for fraction conversion */
+function replaceFractionParens(s: string): string {
+  // Find pattern: (...) / (...) where parens can be nested
+  // Iteratively unwrap innermost paren pairs first
+  let result = s
+  let changed = true
+  let iterations = 0
+  while (changed && iterations < 5) {
+    changed = false
+    iterations++
+    result = result.replace(/\(([^()]*)\)\s*\/\s*\(([^()]*)\)/g, (_match: string, num: string, den: string) => {
+      changed = true
+      return '\\frac{' + num + '}{' + den + '}'
+    })
+  }
+  return result
 }
 
 function escapeRegex(str: string): string {
@@ -135,6 +171,7 @@ export const INPUT_HINTS = [
   'f(x) = ax^2 + bx + c',
   'y = mx + b',
   'pi * r^2',
+  'aligned(a+b=c, d+e=f)',
 ]
 
 // ---- Common equations library ----

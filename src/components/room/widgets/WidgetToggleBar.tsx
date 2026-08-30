@@ -6,9 +6,10 @@
 
 'use client'
 
-import { useEffect } from 'react'
-import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
+import { useEffect, useMemo } from 'react'
+import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS, getWidgetsForSubject } from '@/lib/room/widget-store'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useAppStore } from '@/store/app-store'
 import { WidgetBrowseModal } from './WidgetBrowseModal'
 
 export function WidgetToggleBar() {
@@ -17,6 +18,8 @@ export function WidgetToggleBar() {
   const toggleWidget = useWidgetStore((s) => s.toggleWidget)
   const setBrowseModalOpen = useWidgetStore((s) => s.setBrowseModalOpen)
   const setInstalledTools = useWidgetStore((s) => s.setInstalledTools)
+  // H1 FIX: Get the session subject for context-aware filtering
+  const subject = useAppStore((s) => s.room.subject)
 
   // Load installed tools from server on mount
   useEffect(() => {
@@ -29,7 +32,11 @@ export function WidgetToggleBar() {
   }, [setInstalledTools])
 
   const commWidgets = AVAILABLE_WIDGETS.filter((w) => w.section === 'communication')
-  const toolWidgets = AVAILABLE_WIDGETS.filter((w) => w.section === 'tools')
+  // H1 FIX: Filter tool widgets based on the session subject
+  const allowedToolIds = useMemo(() => getWidgetsForSubject(subject), [subject])
+  const toolWidgets = AVAILABLE_WIDGETS.filter(
+    (w) => w.section === 'tools' && allowedToolIds.includes(w.id as WidgetId)
+  )
 
   return (
     <>

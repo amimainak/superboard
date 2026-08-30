@@ -172,59 +172,20 @@ export const ElementRenderer = React.memo(function ElementRenderer({
       }
 
       // ---- Plain text element ----
+      // B2 FIX: Extracted to PlainTextElement to prevent text duplication.
+      // The old inline contentEditable re-rendered React children on top of
+      // browser-managed DOM, causing text to duplicate on blur commits.
       return (
-        <foreignObject
-          x={element.x}
-          y={element.y}
-          width={element.width || 300}
-          height={element.height || 100}
-          opacity={element.opacity}
-          onPointerDown={(e) => {
-            if (tool === 'select') e.stopPropagation()
-            onPointerDown(e, element.id)
-          }}
-          onDoubleClick={() => onDoubleClick(element.id)}
-          style={{ cursor: element.locked ? 'not-allowed' : 'text' }}
-        >
-          <div
-            contentEditable={!element.locked}
-            suppressContentEditableWarning
-            style={{
-              width: '100%',
-              height: '100%',
-              fontSize: element.fontSize,
-              fontFamily: element.fontFamily,
-              color: textColor,
-              outline: 'none',
-              lineHeight: 1.4,
-              whiteSpace: 'pre-wrap',
-              overflow: 'hidden',
-              textAlign: element.textAlign || 'left',
-              fontWeight: (element as { fontWeight?: string }).fontWeight || 'normal',
-              fontStyle: (element as { fontStyle?: string }).fontStyle || 'normal',
-              cursor: 'text',
-              caretColor: element.strokeColor,
-            }}
-            onPaste={(e) => {
-              e.preventDefault()
-              const pastedText = e.clipboardData.getData('text/plain')
-              document.execCommand('insertText', false, pastedText)
-            }}
-            onBlur={(e) => {
-              onTextChange?.(element.id, e.currentTarget.textContent || '')
-            }}
-            data-placeholder="Type here..."
-          >
-            {hasText
-              ? element.text.split('\n').map((line, i, arr) => (
-                <React.Fragment key={i}>
-                  {line}{i < arr.length - 1 && <br />}
-                </React.Fragment>
-              ))
-              : null
-            }
-          </div>
-        </foreignObject>
+        <PlainTextElement
+          element={element}
+          isDark={isDark}
+          textColor={textColor}
+          hasText={hasText}
+          onPointerDown={onPointerDown}
+          onDoubleClick={onDoubleClick}
+          onTextChange={onTextChange}
+          tool={tool}
+        />
       )
     }
 
@@ -1078,3 +1039,118 @@ function LaserSvg({ element }: { element: { points: { x: number; y: number }[]; 
     </g>
   )
 }
+
+// ============================================================
+// B2 FIX: PlainTextElement — prevents text duplication bug
+// ============================================================
+// Problem: React re-rendering JSX children into a contentEditable div
+// conflicts with browser-managed DOM, causing text to duplicate when
+// onBlur commits text back to the store (which triggers a re-render).
+// Fix: Track focus state via a ref. When focused, let the browser own
+// the DOM and do NOT render React children. Only set innerHTML from
+// element.text when the div is not focused (initial render or after blur).
+// ============================================================
+
+function PlainTextElement({
+  element,
+  isDark,
+  textColor,
+  hasText,
+  onPointerDown,
+  onDoubleClick,
+  onTextChange,
+  tool,
+}: {
+  element: WhiteboardElement
+  isDark: boolean
+  textColor: string
+  hasText: boolean
+  onPointerDown: (e: React.PointerEvent, id: string) => void
+  onDoubleClick: (id: string) => void
+  onTextChange?: (id: string, text: string) => void
+  tool: string
+}) {
+  const divRef = useRef<HTMLDivElement>(null)
+  const isFocusedRef = useRef(false)
+  // Track the last text we set into the DOM to avoid redundant updates
+  const lastSetTextRef = useRef<string | null>(null)
+
+  const elText = element.text || ''
+
+  // Set DOM content only when NOT focused and text differs from what we last set
+  useEffect(() => {
+    const div = divRef.current
+    if (!div || isFocusedRef.current) return
+    // Only update if text changed from outside (e.g., undo/redo, collaboration)
+    if (elText !== lastSetTextRef.current) {
+      if (elText) {
+        div.innerHTML = elText.split('\n').map(escapeHtml).join('<br/>')
+      } else {
+        div.innerHTML = ''
+      }
+      lastSetTextRef.current = elText
+    }
+  }, [elText])
+
+  return (
+    <foreignObject
+      x={element.x}
+      y={element.y}
+      width={element.width || 300}
+      height={element.height || 100}
+      opacity={element.opacity}
+      onPointerDown={(e) => {
+        if (tool === 'select') e.stopPropagation()
+        onPointerDown(e, element.id)
+      }}
+      onDoubleClick={() => onDoubleClick(element.id)}
+      style={{ cursor: element.locked ? 'not-allowed' : 'text' }}
+    >
+      <div
+        ref={divRef}
+        contentEditable={!element.locked}
+        suppressContentEditableWarning
+        style={{
+          width: '100%',
+          height: '100%',
+          fontSize: element.fontSize,
+          fontFamily: element.fontFamily,
+          color: textColor,
+          outline: 'none',
+          lineHeight: 1.4,
+          whiteSpace: 'pre-wrap',
+          overflow: 'hidden',
+          textAlign: element.textAlign || 'left',
+          fontWeight: (element as { fontWeight?: string }).fontWeight || 'normal',
+          fontStyle: (element as { fontStyle?: string }).fontStyle || 'normal',
+          cursor: 'text',
+          caretColor: element.strokeColor,
+        }}
+        onPaste={(e) => {
+          e.preventDefault()
+          const pastedText = e.clipboardData.getData('text/plain')
+          document.execCommand('insertText', false, pastedText)
+        }}
+        onFocus={() => {
+          isFocusedRef.current = true
+        }}
+        onBlur={(e) => {
+          isFocusedRef.current = false
+          const text = e.currentTarget.textContent || ''
+          lastSetTextRef.current = text
+          onTextChange?.(element.id, text)
+        }}
+        data-placeholder="Type here..."
+      />
+    </foreignObject>
+  )
+}
+
+/** Minimal HTML escaping for setting text content via innerHTML */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+

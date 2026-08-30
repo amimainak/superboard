@@ -897,6 +897,23 @@
     gap: 4px;
   }
 
+  /* B4 FIX: Prevent "+ Add to Board" button truncation on mobile */
+  .toolkit-add-to-board-btn,
+  .toolkit-section button[style*="align-self: flex-end"] {
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 32px);
+    font-size: 10px !important;
+    padding: 5px 10px !important;
+  }
+
+  /* Wrap preset button grids on narrow screens */
+  .toolkit-section div[style*="flex-wrap"] {
+    gap: 2px !important;
+  }
+
   /* Chat input area: prevent overflow */
   .chat-input-area {
     padding: 8px 10px !important;

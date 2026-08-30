@@ -6,7 +6,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { ChevronUp, Palette, Minus, Type } from 'lucide-react'
+import { ChevronUp, Palette, Minus, Type, FunctionSquare } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import './whiteboard.css'
 
@@ -296,6 +296,8 @@ export function StylePanel() {
               }}
               setStyle={setStyle}
             />
+            {/* H4 FIX: Insert Equation quick action */}
+            <InsertEquationButton isDark={isDark} />
           </Popup>
         )}
       </div>
@@ -547,6 +549,18 @@ function TextOptions({
 }) {
   const s = style
 
+  // H2 FIX: Also apply inline formatting to selected text within contentEditable
+  const applyInlineFormat = (command: string, value?: string) => {
+    // Apply to store style (for new elements)
+    if (command === 'bold') setStyle({ fontWeight: s.fontWeight === 'bold' ? 'normal' : 'bold' })
+    else if (command === 'italic') setStyle({ fontStyle: s.fontStyle === 'italic' ? 'normal' : 'italic' })
+    else if (command === 'underline' || command === 'foreColor') {
+      // These only work inline, not at element level
+    }
+    // Also apply to any current selection in a contentEditable
+    document.execCommand(command, false, value || undefined)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Font family + size in one row */}
@@ -639,7 +653,7 @@ function TextOptions({
             </button>
           ))}
           <button
-            onClick={() => setStyle({ fontWeight: s.fontWeight === 'bold' ? 'normal' : 'bold' })}
+            onClick={() => applyInlineFormat('bold')}
             role="radio"
             aria-checked={s.fontWeight === 'bold'}
             aria-label="Bold"
@@ -652,7 +666,7 @@ function TextOptions({
             <span style={{ fontWeight: 'bold', fontSize: 13 }}>B</span>
           </button>
           <button
-            onClick={() => setStyle({ fontStyle: s.fontStyle === 'italic' ? 'normal' : 'italic' })}
+            onClick={() => applyInlineFormat('italic')}
             role="radio"
             aria-checked={s.fontStyle === 'italic'}
             aria-label="Italic"
@@ -664,8 +678,92 @@ function TextOptions({
           >
             <span style={{ fontStyle: 'italic', fontSize: 13 }}>I</span>
           </button>
+          {/* H2 FIX: Underline button */}
+          <button
+            onClick={() => applyInlineFormat('underline')}
+            aria-label="Underline"
+            className={[
+              'wb-opt-btn',
+              `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+            ].join(' ')}
+          >
+            <span style={{ textDecoration: 'underline', fontSize: 13 }}>U</span>
+          </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ============================================================
+// H4 FIX: Insert Equation Button
+// Makes the LaTeX/equation feature discoverable from the
+// style bar's Text pocket, not just the tiny fx button.
+// ============================================================
+function InsertEquationButton({ isDark }: { isDark: boolean }) {
+  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const updateElement = useWhiteboardStore((s) => s.updateElement)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const style = useWhiteboardStore((s) => s.style)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+
+  const handleInsert = () => {
+    // If a text element is selected, toggle its LaTeX mode
+    if (selectedIds.length === 1) {
+      const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0])
+      if (el && el.type === 'text') {
+        pushHistory()
+        const isCurrentlyLatex = (el as { isLatex?: boolean }).isLatex
+        updateElement(el.id, {
+          isLatex: !isCurrentlyLatex,
+          width: Math.max(280, el.width || 300),
+          height: Math.max(120, el.height || 100),
+        })
+        return
+      }
+    }
+    // Otherwise, create a new equation text element at viewport center
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = ((vw / 2) - 150 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 60) - camera.y) / camera.zoom
+    addElement({
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+      type: 'text',
+      x: cx, y: cy, width: 300, height: 120,
+      rotation: 0, opacity: 1,
+      strokeColor: style.strokeColor, fillColor: 'transparent',
+      strokeWidth: 0, locked: false, pageIndex: currentPageIndex,
+      text: '', fontSize: style.fontSize || 20,
+      fontFamily: style.fontFamily || 'inherit',
+      textAlign: style.textAlign || 'left',
+      isLatex: true,
+    } as Record<string, unknown>)
+  }
+
+  const hasSelectedText = selectedIds.length === 1
+  const label = hasSelectedText ? 'Toggle Equation' : 'Insert Equation'
+
+  return (
+    <div style={{ marginTop: 6, borderTop: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'}`, paddingTop: 8 }}>
+      <button
+        onClick={handleInsert}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          width: '100%', padding: '6px 10px', borderRadius: 6,
+          background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.25)',
+          color: '#34d399', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(5,150,105,0.2)' }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(5,150,105,0.1)' }}
+      >
+        <FunctionSquare size={14} />
+        <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic' }}>fx</span>
+        <span>{label}</span>
+      </button>
     </div>
   )
 }
