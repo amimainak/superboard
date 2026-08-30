@@ -122,12 +122,26 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   const [cpStep, setCpStep] = useState(1)
   // Venn circles
   const [vennCount, setVennCount] = useState<2 | 3>(2)
+  // Function plotter config
+  const [plotterExpr, setPlotterExpr] = useState('x^2')
+  const [plotterRange, setPlotterRange] = useState(10)
+
+  const PLOTTER_PRESETS = [
+    { label: 'y = x', expr: 'x' },
+    { label: 'y = x\u00B2', expr: 'x^2' },
+    { label: 'y = x\u00B3', expr: 'x^3' },
+    { label: 'y = \u221Ax', expr: 'sqrt(x)' },
+    { label: 'y = 1/x', expr: '1/x' },
+    { label: 'y = |x|', expr: 'abs(x)' },
+    { label: 'y = sin(x)', expr: 'sin(x)' },
+    { label: 'y = cos(x)', expr: 'cos(x)' },
+    { label: 'y = 2x+1', expr: '2*x+1' },
+    { label: 'y = -x\u00B2+4', expr: '-x^2+4' },
+  ]
+
   // Chart data
   const [chartCategories, setChartCategories] = useState('A,B,C,D')
   const [chartValues, setChartValues] = useState('3,7,5,9')
-
-  // Quick Equations: active equation tracking
-  const [activeEquation, setActiveEquation] = useState('')
 
   // Widget size preset
   const [sizePreset, setSizePreset] = useState<'small' | 'medium' | 'large'>('medium')
@@ -260,13 +274,6 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   // Filter tools for current band (or show all if 'all')
   const getToolsForBand = (band: GradeBand) => CANVAS_TOOLS.filter(t => t.bands.includes(band))
 
-  // ---- Quick Equations (existing feature) ----
-  const mathFunctions = [
-    { label: 'y = x', eq: 'x' }, { label: 'y = x^2', eq: 'x^2' }, { label: 'y = sqrt(x)', eq: 'sqrt(x)' },
-    { label: 'y = 1/x', eq: '1/x' }, { label: 'y = sin(x)', eq: 'sin(x)' }, { label: 'y = cos(x)', eq: 'cos(x)' },
-    { label: 'y = |x|', eq: 'abs(x)' }, { label: 'y = log(x)', eq: 'log(x)' },
-  ]
-
   const ANGLE_PRESETS = [30, 45, 60, 90, 120, 135, 150, 180]
 
   const measurementTools = [
@@ -322,18 +329,28 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
             })}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Quick Equations')}
-            <div className="toolkit-grid">
-              {mathFunctions.map((fn) => (
-                <button key={fn.eq} className={'toolkit-chip' + (isDark ? '' : ' toolkit-chip-light')}
-                  onClick={() => {
-                    setActiveEquation(fn.eq)
-                    addToBoard('math-coordinate-plane', { range: 10, step: 1 })
-                  }}
-                  style={{ padding: '6px 10px', borderRadius: 6, fontSize: 12, fontFamily: 'monospace', background: activeEquation === fn.eq ? actBg : dkBg, border: activeEquation === fn.eq ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: activeEquation === fn.eq ? actText : dkText, cursor: 'pointer' as const, textAlign: 'left' as const }}>
-                  {fn.label}
-                </button>
-              ))}
+            {sectionTitle('Function Plotter')}
+            <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>f(x) =</span>
+                {textInput(plotterExpr, setPlotterExpr, 'x^2', 120)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>Range:</span>
+                {numInput(plotterRange, setPlotterRange, 1, 50, 1, 52)}
+                <span style={{ fontSize: 10, color: dkText }}>(-n to +n)</span>
+              </div>
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                {PLOTTER_PRESETS.map(function(p) {
+                  return (
+                    <button key={p.expr} onClick={function() { setPlotterExpr(p.expr) }}
+                      style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, fontFamily: 'monospace', background: plotterExpr === p.expr ? actBg : dkBg, border: plotterExpr === p.expr ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: plotterExpr === p.expr ? actText : dkText, cursor: 'pointer' }}>
+                      {p.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {addBoardBtn('Add to Board', function() { addToBoard('math-function-plotter', { expression: plotterExpr, range: plotterRange }) })}
             </div>
           </div>
           <div className="toolkit-section">
@@ -608,6 +625,33 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText }}>Values:</span>{textInput(chartValues, setChartValues, '3,7,5,9')}
               </div>
               {addBoardBtn('Add to Board', () => addToBoard('math-bar-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
+            </div>
+          </div>
+
+          {/* Function Plotter */}
+          <div className="toolkit-section">
+            {sectionTitle('Function Plotter')}
+            <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>f(x) =</span>
+                {textInput(plotterExpr, setPlotterExpr, 'x^2', 120)}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 11, color: dkText, minWidth: 44 }}>Range:</span>
+                {numInput(plotterRange, setPlotterRange, 1, 50, 1, 52)}
+                <span style={{ fontSize: 10, color: dkText }}>(-n to +n)</span>
+              </div>
+              <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                {PLOTTER_PRESETS.map(function(p) {
+                  return (
+                    <button key={p.expr} onClick={function() { setPlotterExpr(p.expr) }}
+                      style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, fontFamily: 'monospace', background: plotterExpr === p.expr ? actBg : dkBg, border: plotterExpr === p.expr ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: plotterExpr === p.expr ? actText : dkText, cursor: 'pointer' }}>
+                      {p.label}
+                    </button>
+                  )
+                })}
+              </div>
+              {addBoardBtn('Add to Board', function() { addToBoard('math-function-plotter', { expression: plotterExpr, range: plotterRange }) })}
             </div>
           </div>
 

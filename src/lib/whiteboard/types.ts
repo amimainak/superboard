@@ -135,6 +135,7 @@ export interface TextElement extends BaseElement {
   fontWeight?: string
   fontStyle?: string
   autoSize: boolean
+  isLatex?: boolean
 }
 
 export interface StickyElement extends BaseElement {

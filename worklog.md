@@ -129,3 +129,25 @@ Stage Summary:
 - Image and PDF tools now work on mobile — file picker opens from canvas tap
 - Hidden file inputs always in DOM, triggered from handlePointerDown (user gesture chain)
 - Deployed to https://superboard-three.vercel.app
+---
+Task ID: 3
+Agent: main
+Task: Add LaTeX equation rendering + Function Plotter config UI
+
+Work Log:
+- KaTeX already installed (katex@0.18.1 + @types/katex@0.16.8)
+- Added isLatex boolean field to TextElement type
+- Created LatexTextElement component: renders KaTeX HTML when viewing, textarea for editing
+- Added fx toggle button on SelectionHandles when text element is selected
+- fx button appears at top-right of selection, toggles isLatex on the element
+- KaTeX CSS loaded client-only via dynamic import
+- Text editing: double-click opens monospace textarea, Ctrl+Enter or blur commits, Escape cancels
+- Function plotter: added config panel in MathToolkit All tab and HS tab
+- Config panel: f(x)= input, range input, 10 preset buttons (y=x, y=x², sin, cos, etc.)
+- Replaced old Quick Equations section (which just placed coordinate planes) with proper plotter config
+- Build passes, deployed to production
+
+Stage Summary:
+- LaTeX: Select text → click green fx button → type LaTeX → double-click to edit
+- Function Plotter: Open Math Toolkit → set expression + range → Add to Board
+- Deployed to https://superboard-three.vercel.app

@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 import type { WhiteboardElement, FreehandElement, LineElement, ArrowElement } from '@/lib/whiteboard/types'
 import {
   getFreehandPath,
@@ -31,6 +31,11 @@ const LazyCanvasWidgets = dynamic(
   () => import('./CanvasWidgets').then(m => ({ default: m.CanvasWidgetRenderer })),
   { ssr: false, loading: () => null }
 )
+
+// Load KaTeX CSS (client-only)
+if (typeof window !== 'undefined') {
+  import('katex/dist/katex.min.css')
+}
 
 interface ElementRendererProps {
   element: WhiteboardElement
@@ -157,6 +162,15 @@ export const ElementRenderer = React.memo(function ElementRenderer({
 
     case 'text': {
       const hasText = !!element.text
+      const isLatex = (element as { isLatex?: boolean }).isLatex
+      const textColor = hasText ? element.strokeColor : (isDark ? '#b4c0d4' : '#4b5563')
+
+      // ---- LaTeX text element ----
+      if (isLatex) {
+        return <LatexTextElement element={element} isDark={isDark} textColor={textColor} onPointerDown={onPointerDown} onDoubleClick={onDoubleClick} onTextChange={onTextChange} tool={tool} />
+      }
+
+      // ---- Plain text element ----
       return (
         <foreignObject
           x={element.x}
@@ -179,7 +193,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               height: '100%',
               fontSize: element.fontSize,
               fontFamily: element.fontFamily,
-              color: hasText ? element.strokeColor : (isDark ? '#b4c0d4' : '#4b5563'),
+              color: textColor,
               outline: 'none',
               lineHeight: 1.4,
               whiteSpace: 'pre-wrap',
@@ -192,8 +206,8 @@ export const ElementRenderer = React.memo(function ElementRenderer({
             }}
             onPaste={(e) => {
               e.preventDefault()
-              const text = e.clipboardData.getData('text/plain')
-              document.execCommand('insertText', false, text)
+              const pastedText = e.clipboardData.getData('text/plain')
+              document.execCommand('insertText', false, pastedText)
             }}
             onBlur={(e) => {
               onTextChange?.(element.id, e.currentTarget.textContent || '')
@@ -452,6 +466,132 @@ export const ElementRenderer = React.memo(function ElementRenderer({
 })
 
 // ---- Sub-components ----
+
+// ---- LaTeX Text Element ----
+// Renders KaTeX when viewing, textarea when editing
+function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleClick, onTextChange, tool }: {
+  element: WhiteboardElement
+  isDark: boolean
+  textColor: string
+  onPointerDown: (e: React.PointerEvent, id: string) => void
+  onDoubleClick: (id: string) => void
+  onTextChange?: (id: string, text: string) => void
+  tool: string
+}) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [editValue, setEditValue] = useState(element.text || '')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const renderedHtml = useMemo(() => {
+    if (!element.text) return ''
+    try {
+      // Dynamic import katex to avoid SSR issues
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const katex = require('katex')
+      return katex.renderToString(element.text, {
+        displayMode: true,
+        throwOnError: false,
+        output: 'html',
+      })
+    } catch {
+      // Fallback: render as plain text
+      return '<span>' + element.text.replace(/</g, '&lt;') + '</span>'
+    }
+  }, [element.text])
+
+  // Sync edit value when element text changes externally
+  useEffect(() => {
+    if (!isEditing) {
+      setEditValue(element.text || '')
+    }
+  }, [element.text, isEditing])
+
+  const startEdit = useCallback(() => {
+    setEditValue(element.text || '')
+    setIsEditing(true)
+  }, [element.text])
+
+  const commitEdit = useCallback(() => {
+    onTextChange?.(element.id, editValue)
+    setIsEditing(false)
+  }, [element.id, editValue, onTextChange])
+
+  const cancelEdit = useCallback(() => {
+    setEditValue(element.text || '')
+    setIsEditing(false)
+  }, [element.text])
+
+  // Auto-focus textarea when editing
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus()
+    }
+  }, [isEditing])
+
+  return (
+    <foreignObject
+      x={element.x}
+      y={element.y}
+      width={element.width || 300}
+      height={element.height || 100}
+      opacity={element.opacity}
+      onPointerDown={(e) => {
+        if (tool === 'select') e.stopPropagation()
+        onPointerDown(e, element.id)
+      }}
+      onDoubleClick={() => {
+        if (!element.locked) startEdit()
+      }}
+      style={{ cursor: element.locked ? 'not-allowed' : (isEditing ? 'text' : 'pointer') }}
+    >
+      {isEditing ? (
+        <textarea
+          ref={textareaRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') cancelEdit()
+            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault()
+              commitEdit()
+            }
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            fontSize: element.fontSize,
+            fontFamily: 'ui-monospace, monospace',
+            color: textColor,
+            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+            border: '1.5px dashed ' + (isDark ? 'rgba(52,211,153,0.4)' : 'rgba(5,150,105,0.3)'),
+            borderRadius: 6,
+            padding: '8px',
+            outline: 'none',
+            resize: 'none',
+            boxSizing: 'border-box',
+            lineHeight: 1.5,
+          }}
+          placeholder="Type LaTeX, e.g. \\frac{a}{b}"
+        />
+      ) : (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '4px 8px',
+            overflow: 'auto',
+            boxSizing: 'border-box',
+          }}
+          dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          data-placeholder="Double-click to edit LaTeX..."
+        />
+      )}
+    </foreignObject>
+  )
+}
 
 function FreehandSvg({ element, commonProps }: { element: FreehandElement; commonProps: Record<string, unknown> }) {
   const isHighlighter = !!element.isHighlighter
