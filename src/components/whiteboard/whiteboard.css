@@ -1698,3 +1698,34 @@ div[data-placeholder]:empty::before {
     transform: translateY(0);
   }
 }
+
+/* ---- Canvas save/template actions ---- */
+.wb-canvas-actions {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  gap: 4px;
+}
+
+.wb-canvas-action-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  border: 1px solid;
+}
+
+.wb-canvas-action-save {
+  background: rgba(5,150,105,0.15);
+  border-color: rgba(5,150,105,0.3);
+  color: #34d399;
+}
+
+.wb-canvas-action-template {
+  background: rgba(56,189,248,0.15);
+  border-color: rgba(56,189,248,0.3);
+  color: #38bdf8;
+}

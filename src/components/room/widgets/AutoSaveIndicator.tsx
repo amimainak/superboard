@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
 interface AutoSaveIndicatorProps {
   /** 'saved' | 'saving' | 'error' | 'unsaved' */
@@ -8,6 +9,7 @@ interface AutoSaveIndicatorProps {
 }
 
 export function AutoSaveIndicator({ status }: AutoSaveIndicatorProps) {
+  const isDark = useWhiteboardStore((s) => s.isDark)
   const visibleRef = useRef(false)
   const subscribers = useRef(new Set<() => void>())
 
@@ -39,30 +41,10 @@ export function AutoSaveIndicator({ status }: AutoSaveIndicatorProps) {
   }[status] || { color: '#64748b', label: status, dot: 'rgba(100,116,139,0.3)' }
 
   return (
-    <div className="auto-save-indicator" style={{
-      position: 'absolute',
-      bottom: 52,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 6,
-      padding: '3px 10px',
-      borderRadius: 4,
-      fontSize: 10,
-      fontWeight: 500,
-      background: 'rgba(15, 23, 42, 0.7)',
-      backdropFilter: 'blur(4px)',
-      color: config.color,
-      transition: 'opacity 0.2s ease',
+    <div className={"auto-save-indicator" + (isDark ? '' : ' auto-save-indicator-light')} style={{
       opacity: visible ? 1 : 0,
-      pointerEvents: 'none',
     }}>
-      <span style={{
-        width: 6, height: 6, borderRadius: '50%',
-        background: config.dot,
-      }} />
+      <span className="auto-save-dot" style={{ background: config.dot }} />
       {config.label}
     </div>
   )

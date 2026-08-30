@@ -150,13 +150,7 @@ export default function RoomPage() {
         <WidgetToggleBar />
 
         {/* Raise Hand — positioned via CSS (widgets.css responsive) */}
-        <div style={{
-          position: 'absolute',
-          top: 'auto',
-          bottom: 56,
-          right: 8,
-          zIndex: 1000,
-        }}>
+        <div className="raise-hand-wrapper">
           <RaiseHandButton />
         </div>
 

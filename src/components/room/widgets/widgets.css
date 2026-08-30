@@ -768,11 +768,11 @@
   }
 
   .widget-toggle-btn {
-    height: 36px;
-    width: 36px;
+    height: 44px;
+    width: 44px;
     padding: 0;
     justify-content: center;
-    border-radius: 8px;
+    border-radius: 10px;
   }
 
   .widget-toggle-btn:hover {
@@ -847,9 +847,9 @@
     font-size: 11px;
   }
 
-  /* Session controls: bottom center on mobile */
+  /* Session controls: bottom center on mobile, above toolbar */
   .session-controls {
-    bottom: 64px;
+    bottom: 120px;
     right: 50%;
     transform: translateX(50%);
   }
@@ -859,12 +859,27 @@
     font-size: 11px;
   }
 
-  /* Raise hand button repositioned */
-  .raise-hand-btn {
-    position: fixed;
+  /* Raise hand wrapper: repositioned above session controls */
+  .raise-hand-wrapper {
+    bottom: 120px;
+    right: 8px;
+    top: auto;
+  }
+
+  /* Connection status: above mobile toolbar */
+  .connection-status {
     bottom: 64px;
-    right: 8px !important;
-    top: auto !important;
+    left: 6px;
+  }
+
+  /* Auto save indicator: above mobile toolbar */
+  .auto-save-indicator {
+    bottom: 68px;
+  }
+
+  /* Hide canvas save/template buttons on mobile (behind toolbar) */
+  .wb-canvas-actions {
+    display: none !important;
   }
 
   /* Toolkit sections: compact padding */
@@ -892,15 +907,6 @@
   }
 
   /* Connection status */
-  .connection-status {
-    bottom: 64px;
-    left: 6px;
-  }
-
-  /* Auto save indicator */
-  .auto-save-indicator {
-    bottom: 68px;
-  }
 }
 
 /* ---- Responsive: Light mode adjustments ---- */
@@ -913,9 +919,84 @@
   }
 }
 
-/* ---- Auto Save Indicator ---- */
+/* ---- Connection Status (positioned via CSS, not inline) ---- */
+.connection-status {
+  position: absolute;
+  bottom: 8px;
+  left: 56px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: #94a3b8;
+}
+
+.connection-status-light {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0,0,0,0.08);
+  color: #475569;
+}
+
+.connection-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connection-status-count {
+  color: #64748b;
+}
+
+.connection-status-light .connection-status-count {
+  color: #94a3b8;
+}
+
+/* ---- Raise Hand wrapper (positioned via CSS, not inline) ---- */
+.raise-hand-wrapper {
+  position: absolute;
+  bottom: 56px;
+  right: 8px;
+  z-index: 1000;
+}
+
+/* ---- Auto Save Indicator (positioned via CSS, not inline) ---- */
 .auto-save-indicator {
+  position: absolute;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  color: #64748b;
   transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.auto-save-indicator-light {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: #475569;
+}
+
+.auto-save-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
 /* ---- Chat Enhancements ---- */

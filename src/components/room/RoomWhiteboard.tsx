@@ -404,29 +404,18 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
         {!isPresentationMode && (
           <>
             <PageTabs />
-            <div style={{
-              position: 'absolute', bottom: 48, left: '50%', transform: 'translateX(-50%)',
-              zIndex: 100, display: 'flex', gap: 4,
-            }}>
+            <div className="wb-canvas-actions">
               <button
                 onClick={() => { saveRequestRef.current = true }}
                 title="Save now"
-                style={{
-                  padding: '4px 10px', borderRadius: 4,
-                  background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)',
-                  color: '#34d399', fontSize: 11, cursor: 'pointer',
-                }}
+                className="wb-canvas-action-btn wb-canvas-action-save"
               >
                 {saveStatus || 'Save'}
               </button>
               <button
                 onClick={handleSaveAsTemplate}
                 title="Save as template"
-                style={{
-                  padding: '4px 10px', borderRadius: 4,
-                  background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)',
-                  color: '#38bdf8', fontSize: 11, cursor: 'pointer',
-                }}
+                className="wb-canvas-action-btn wb-canvas-action-template"
               >
                 Save as Template
               </button>
