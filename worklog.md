@@ -50,3 +50,45 @@ Stage Summary:
 - Database now has 20 tables with proper relations and indexes
 - 6 code files fixed for runtime correctness
 - Deployed to production: https://superboard-three.vercel.app
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix all security audit findings without breaking whiteboard functionality
+
+Work Log:
+- Read and analyzed all 20+ security-critical files
+- Applied 13 fixes across 4 batches, all in isolated API routes/lib files:
+
+Batch 1 (zero whiteboard risk):
+- C-1: auth.ts — switched verifyAuth from service-role key to anon-key Supabase client; re-exported getSupabaseServerClient from cookie-aware anon client
+- C-2: auth/callback — removed `tier: 'FREE'` from OAuth update path (was silently downgrading paid users)
+- C-3: stripe/webhook — added VALID_WEBHOOK_TIERS whitelist check before applying tier from metadata
+- C-5: auth/dev-login — added email format regex validation
+- H-4: send-reset-otp + update-password — replaced listUsers(1000).find() with getUserByEmail()
+- H-2/H-3: rate-limit.ts — fixed checkRateLimit to accept options, return resetAt, added extractClientIP export
+- H-7: api-key.ts — replaced hardcoded 'api-key-xxxx' with env-configurable mapping + SHA-256 hash fallback
+
+Batch 2 (zero whiteboard risk):
+- C-6: parent/[token] — added token format validation (min 32 chars, alphanumeric); fixed broken extractClientIP import
+- M-4: agency/invite/[code] GET — restricted invite details to the invited user only; removed agency info leak
+- M-5: audit.ts — removed @ts-nocheck directive
+- C-4: middleware.ts — implemented CSRF double-submit pattern with Web Crypto API (Edge Runtime compatible)
+
+Batch 3 (careful changes):
+- M-7: room/join — set userId on RoomParticipant so LiveKit token route can find students; added OR fallback for legacy participants
+- M-3: Skipped (by design — shared room links need unauthenticated page load)
+
+Batch 4 (input validation):
+- C-7: questions/[id] PUT — added Zod schema validation, replaced raw body spread with validated data
+
+Deferred (require infrastructure):
+- H-1: In-memory rate limiting (needs Upstash Redis — documented as known limitation)
+- M-1: ignoreBuildErrors: true (needs dedicated type-fix pass)
+- M-2: CSP unsafe-inline/unsafe-eval (unsafe-eval required by Fabric.js; unsafe-inline needs nonce migration)
+
+Stage Summary:
+- 13 security fixes applied across 11 files
+- Build passes cleanly (no new warnings)
+- Deployed to production: https://superboard-three.vercel.app
+- Zero whiteboard code touched — all fixes in API routes, lib files, and middleware

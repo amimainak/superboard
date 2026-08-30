@@ -28,7 +28,6 @@ export async function GET(request: Request) {
           await sb.from('User').update({
             email: user.email ?? '',
             name: user.user_metadata?.name || null,
-            tier: 'FREE',
           }).eq('id', user.id)
         } else {
           await sb.from('User').insert({

@@ -49,8 +49,15 @@ export async function POST(request: Request) {
       canPublish = true
     } else {
       // Check if user is a participant in this room
+      // Try userId first, fall back to studentIdentity for legacy participants
       const participant = await db.roomParticipant.findFirst({
-        where: { roomId: roomName, userId: user!.id },
+        where: {
+          roomId: roomName,
+          OR: [
+            { userId: user!.id },
+            { studentIdentity: user!.id },
+          ],
+        },
       })
       if (!participant) {
         return NextResponse.json({ error: 'You do not have access to this room' }, { status: 403 })

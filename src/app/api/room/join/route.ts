@@ -104,11 +104,12 @@ export async function POST(request: NextRequest) {
       data: { startedAt: new Date() },
     });
 
-    // Use student name as the studentIdentity for the unique constraint
+    // Use student.id as the studentIdentity for the unique constraint
     const studentIdentity = student.id; // Use Student.id for reliable uniqueness
 
     // Upsert: if (roomId, studentIdentity) combo exists, update lastActiveAt;
     // otherwise create a new participant row.
+    // Also set userId so LiveKit token route can find the participant by userId.
     const participant = await db.roomParticipant.upsert({
       where: {
         roomId_studentIdentity: { roomId, studentIdentity },
@@ -117,12 +118,14 @@ export async function POST(request: NextRequest) {
         lastActiveAt: new Date(),
         studentId: student.id,
         studentName: student.name,
+        userId: auth.userId,
       },
       create: {
         roomId,
         studentIdentity,
         studentId: student.id,
         studentName: student.name,
+        userId: auth.userId,
       },
     });
 

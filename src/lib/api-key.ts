@@ -29,7 +29,21 @@ export function validateApiKey(apiKey: string | null): {
       try { return crypto.timingSafeEqual(Buffer.from(k), Buffer.from(apiKey)) } catch { return false }
     })
     if (isValidKey) {
-      return { valid: true, userId: 'api-key-xxxx' }
+      // API key → userId mapping. Set SUPERBOARD_API_KEY_USER_IDS env var
+      // as "keyPrefix:userId,keyPrefix:userId" for per-key mappings.
+      // Falls back to a configurable default or the key hash.
+      const envMapping = process.env.SUPERBOARD_API_KEY_USER_IDS
+      if (envMapping) {
+        const mappings = envMapping.split(',').map(m => m.trim().split(':'))
+        for (const [prefix, uid] of mappings) {
+          if (apiKey.startsWith(prefix) && uid) {
+            return { valid: true, userId: uid }
+          }
+        }
+      }
+      // Default: use first 8 chars of the key hash as a stable ID
+      const hash = crypto.createHash('sha256').update(apiKey).digest('hex').slice(0, 8)
+      return { valid: true, userId: 'api-key-' + hash }
     }
   }
 

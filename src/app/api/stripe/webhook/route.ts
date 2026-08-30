@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
 import { createServerClient } from '@/lib/supabase'
 
+const VALID_WEBHOOK_TIERS = ['PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'] as const;
+
 export async function POST(request: Request) {
   try {
     const body = await request.text()
@@ -41,6 +43,12 @@ export async function POST(request: Request) {
 
         if (!userId || !tier) {
           console.warn('[Webhook] checkout.session.completed missing userId or tier in metadata')
+          break
+        }
+
+        // Validate tier against known values to prevent arbitrary strings
+        if (!VALID_WEBHOOK_TIERS.includes(tier as any)) {
+          console.error(`[Webhook] Invalid tier '${tier}' in checkout metadata for user ${userId}`)
           break
         }
 

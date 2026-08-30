@@ -24,8 +24,7 @@ export async function GET(
         invitedEmail,
         status,
         expiresAt,
-        createdAt,
-        agency:User!inner(id, name, agencyName, email)
+        createdAt
       `)
       .eq('code', code)
       .single()
@@ -40,8 +39,13 @@ export async function GET(
     }
 
     // Check status
-    if (invite.status !== 'pending') {
+    if (invite.status !== 'PENDING') {
       return NextResponse.json({ error: `Invite already ${invite.status}` }, { status: 400 })
+    }
+
+    // SECURITY: Only the invited user (or an admin) can view invite details
+    if (invite.invitedEmail && authCheck.email && authCheck.email.toLowerCase() !== invite.invitedEmail.toLowerCase()) {
+      return NextResponse.json({ error: 'You do not have access to this invite' }, { status: 403 })
     }
 
     return NextResponse.json({
@@ -51,10 +55,6 @@ export async function GET(
       status: invite.status,
       expiresAt: invite.expiresAt,
       createdAt: invite.createdAt,
-      agency: {
-        id: invite.agency?.id,
-        name: invite.agency?.agencyName || invite.agency?.name || 'Unnamed Agency',
-      },
     })
   } catch (err: unknown) {
     console.error('[GET /api/agency/invite/[code]]', err)

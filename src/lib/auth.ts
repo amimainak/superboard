@@ -3,16 +3,26 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 export interface AuthResult {
   userId: string;
   email: string | null;
 }
 
+// Anon-key client for JWT verification — safe for verifyAuth (getUser
+// validates the JWT regardless of which key is used, but anon key
+// ensures no accidental RLS bypass via data queries).
+function createAnonServerClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createSupabaseClient(url, key);
+}
+
 export async function verifyAuth(request: NextRequest): Promise<AuthResult | null> {
   try {
-    const supabase = createServerClient();
+    const supabase = createAnonServerClient();
     if (!supabase) return null;
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) return null;
@@ -44,5 +54,6 @@ export function getTokenFromHeader(request: NextRequest): string | null {
   return authHeader.slice(7);
 }
 
-// Backward-compatible alias
-export const getSupabaseServerClient = () => createServerClient();
+// Cookie-aware anon-key server client for login/logout (needs cookie handling)
+// Async because it reads cookies via next/headers.
+export { createClient as getSupabaseServerClient } from '@/lib/supabase/server';

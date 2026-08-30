@@ -78,16 +78,9 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
-    // --- 5. Look up user by email ---
-    const { data: users, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-      perPage: 1000,
-    });
-    if (listError || !users) {
-      return NextResponse.json({ error: 'Failed to look up account' }, { status: 500 });
-    }
-
-    const user = users.users.find((u) => u.email === email);
-    if (!user) {
+    // --- 5. Look up user by email (direct lookup instead of listing all users) ---
+    const { data: user, error: lookupError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    if (lookupError || !user) {
       // Don't reveal whether email exists
       return NextResponse.json({ success: true });
     }

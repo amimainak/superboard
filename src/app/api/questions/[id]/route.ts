@@ -10,6 +10,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { QuestionType } from '@prisma/client';
 import { requireAuth } from '@/lib/auth';
+import { z } from 'zod';
+
+const updateQuestionSchema = z.object({
+  subject: z.string().max(100).optional(),
+  gradeBand: z.string().max(50).optional(),
+  topic: z.string().max(200).optional(),
+  difficulty: z.number().min(1).max(10).optional(),
+  curriculum: z.string().max(50).optional(),
+  standardCode: z.string().max(50).optional(),
+  stem: z.string().max(5000).optional(),
+  stemLatex: z.string().max(5000).optional(),
+  answerKey: z.string().max(5000).optional(),
+  solutionSteps: z.string().max(10000).optional(),
+  distractors: z.array(z.string()).max(10).optional(),
+  questionType: z.string().max(30).optional(),
+  tags: z.array(z.string()).max(20).optional(),
+  estimatedTimeSec: z.number().min(5).max(3600).optional(),
+  diagramSvg: z.string().max(50000).optional(),
+  testPrepCategoryId: z.string().max(100).optional(),
+});
 
 export async function PUT(
   req: NextRequest,
@@ -22,6 +42,16 @@ export async function PUT(
 
     const { id } = await params;
     const body = await req.json();
+
+    // Validate input with Zod — prevents arbitrary field injection
+    const parsed = updateQuestionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const data = parsed.data;
 
     const existing = await db.questionItem.findUnique({ where: { id } });
     if (!existing) {
@@ -36,22 +66,22 @@ export async function PUT(
     const question = await db.questionItem.update({
       where: { id },
       data: {
-        ...(body.subject && { subject: body.subject.toUpperCase() }),
-        ...(body.gradeBand && { gradeBand: body.gradeBand }),
-        ...(body.topic && { topic: body.topic }),
-        ...(body.difficulty !== undefined && { difficulty: body.difficulty }),
-        ...(body.curriculum && { curriculum: body.curriculum.toUpperCase() }),
-        ...(body.standardCode !== undefined && { standardCode: body.standardCode }),
-        ...(body.stem && { stem: body.stem }),
-        ...(body.stemLatex !== undefined && { stemLatex: body.stemLatex }),
-        ...(body.answerKey && { answerKey: body.answerKey }),
-        ...(body.solutionSteps !== undefined && { solutionSteps: body.solutionSteps }),
-        ...(body.distractors !== undefined && { distractors: body.distractors }),
-        ...(body.questionType && { questionType: body.questionType.toUpperCase() as QuestionType }),
-        ...(body.tags !== undefined && { tags: body.tags }),
-        ...(body.estimatedTimeSec !== undefined && { estimatedTimeSec: body.estimatedTimeSec }),
-        ...(body.diagramSvg !== undefined && { diagramSvg: body.diagramSvg }),
-        ...(body.testPrepCategoryId !== undefined && { testPrepCategoryId: body.testPrepCategoryId }),
+        ...(data.subject && { subject: data.subject.toUpperCase() }),
+        ...(data.gradeBand && { gradeBand: data.gradeBand }),
+        ...(data.topic && { topic: data.topic }),
+        ...(data.difficulty !== undefined && { difficulty: data.difficulty }),
+        ...(data.curriculum && { curriculum: data.curriculum.toUpperCase() }),
+        ...(data.standardCode !== undefined && { standardCode: data.standardCode }),
+        ...(data.stem && { stem: data.stem }),
+        ...(data.stemLatex !== undefined && { stemLatex: data.stemLatex }),
+        ...(data.answerKey && { answerKey: data.answerKey }),
+        ...(data.solutionSteps !== undefined && { solutionSteps: data.solutionSteps }),
+        ...(data.distractors !== undefined && { distractors: data.distractors }),
+        ...(data.questionType && { questionType: data.questionType.toUpperCase() as QuestionType }),
+        ...(data.tags !== undefined && { tags: data.tags }),
+        ...(data.estimatedTimeSec !== undefined && { estimatedTimeSec: data.estimatedTimeSec }),
+        ...(data.diagramSvg !== undefined && { diagramSvg: data.diagramSvg }),
+        ...(data.testPrepCategoryId !== undefined && { testPrepCategoryId: data.testPrepCategoryId }),
       },
     });
 

@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { checkRateLimit, extractClientIP } from '@/lib/rate-limit';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -19,7 +19,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { token } = await context.params;
 
-    // SECURITY FIX (API-C02/FE-M03): Rate limit parent portal token lookups
+    // SECURITY: Validate token format — must be at least 32 chars (cryptographic strength)
+    if (!token || token.length < 32 || !/^[a-zA-Z0-9_-]+$/.test(token)) {
+      return NextResponse.json({ error: 'Invalid access token format' }, { status: 400 });
+    }
+
+    // SECURITY: Rate limit parent portal token lookups
     // Uses shared rate-limit module with Upstash Redis for serverless compatibility
     const rlResult = await checkRateLimit(request, 'parentPortal', {
       max: 5,
