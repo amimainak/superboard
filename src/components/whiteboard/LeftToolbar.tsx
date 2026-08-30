@@ -1,6 +1,6 @@
 // ============================================================
-// Superboard — Left Toolbar (Ultra-Minimalist)
-// Direct buttons for core tools + one "Shapes" pocket + one "More" pocket
+// Superboard — Left Toolbar (Streamlined)
+// Essential tools directly accessible, rest in Tool Library
 // ============================================================
 
 'use client'
@@ -15,8 +15,6 @@ import {
   Trash2,
   Square,
   Circle,
-  Diamond,
-  Triangle,
   Minus,
   ArrowRight,
   Type,
@@ -24,8 +22,11 @@ import {
   ImagePlus,
   FileText,
   Frame,
+  Diamond,
+  Triangle,
   Zap,
   ChevronDown,
+  LayoutGrid,
 } from 'lucide-react'
 import type { ToolId } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
@@ -38,30 +39,35 @@ interface ToolDef {
   label: string
   shortcut: string
   icon: React.ReactNode
+  category: string
 }
 
-const SHAPES: ToolDef[] = [
-  { id: 'rectangle', label: 'Rectangle', shortcut: 'R', icon: <Square size={16} /> },
-  { id: 'ellipse', label: 'Ellipse', shortcut: 'O', icon: <Circle size={16} /> },
-  { id: 'diamond', label: 'Diamond', shortcut: '⇧R', icon: <Diamond size={16} /> },
-  { id: 'triangle', label: 'Triangle', shortcut: '⇧T', icon: <Triangle size={16} /> },
-  { id: 'line', label: 'Line', shortcut: 'L', icon: <Minus size={16} /> },
-  { id: 'arrow', label: 'Arrow', shortcut: 'A', icon: <ArrowRight size={16} /> },
-  { id: 'frame', label: 'Frame', shortcut: 'F', icon: <Frame size={16} /> },
+// Essential shapes — stay in toolbar pocket
+const ESSENTIAL_SHAPES: ToolDef[] = [
+  { id: 'rectangle', label: 'Rectangle', shortcut: 'R', icon: <Square size={16} />, category: 'Shapes' },
+  { id: 'ellipse', label: 'Ellipse', shortcut: 'O', icon: <Circle size={16} />, category: 'Shapes' },
+  { id: 'line', label: 'Line', shortcut: 'L', icon: <Minus size={16} />, category: 'Shapes' },
+  { id: 'arrow', label: 'Arrow', shortcut: 'A', icon: <ArrowRight size={16} />, category: 'Shapes' },
 ]
 
-const MORE_TOOLS: ToolDef[] = [
-  { id: 'sticky', label: 'Sticky Note', shortcut: 'N', icon: <StickyNote size={16} /> },
-  { id: 'image', label: 'Image', shortcut: 'U', icon: <ImagePlus size={16} /> },
-  { id: 'pdf', label: 'PDF Background', shortcut: '', icon: <FileText size={16} /> },
+// Library tools — organized by category
+const LIBRARY_TOOLS: ToolDef[] = [
+  // Extra shapes
+  { id: 'diamond', label: 'Diamond', shortcut: '⇧R', icon: <Diamond size={16} />, category: 'Shapes' },
+  { id: 'triangle', label: 'Triangle', shortcut: '⇧T', icon: <Triangle size={16} />, category: 'Shapes' },
+  { id: 'frame', label: 'Frame', shortcut: 'F', icon: <Frame size={16} />, category: 'Shapes' },
+  // Specialized tools
+  { id: 'laser', label: 'Laser Pointer', shortcut: 'K', icon: <Zap size={16} />, category: 'Tools' },
+  { id: 'eraser-object', label: 'Object Eraser', shortcut: '⇧E', icon: <Trash2 size={16} />, category: 'Tools' },
+  // Insert
+  { id: 'sticky', label: 'Sticky Note', shortcut: 'N', icon: <StickyNote size={16} />, category: 'Insert' },
+  { id: 'image', label: 'Image', shortcut: 'U', icon: <ImagePlus size={16} />, category: 'Insert' },
+  { id: 'pdf', label: 'PDF Background', shortcut: '', icon: <FileText size={16} />, category: 'Insert' },
 ]
 
-const ERASER_TOOLS: ToolDef[] = [
-  { id: 'eraser', label: 'Stroke Eraser', shortcut: 'E', icon: <Eraser size={16} /> },
-  { id: 'eraser-object', label: 'Object Eraser', shortcut: '⇧E', icon: <Trash2 size={16} /> },
-]
+const LIBRARY_CATEGORIES = ['Shapes', 'Tools', 'Insert'] as const
 
-// ---- Flyout menu component ----
+// ---- Flyout menu component (reused for shapes pocket) ----
 
 function Flyout({
   children,
@@ -87,13 +93,10 @@ function Flyout({
     const panelWidth = panel.offsetWidth
     const panelHeight = panel.offsetHeight
 
-    // Position to the right of the anchor
     let left = anchorRect.right + 8
-    // If would overflow right edge, flip to left
     if (left + panelWidth > window.innerWidth - 8) {
       left = anchorRect.left - panelWidth - 8
     }
-    // Vertical: align with anchor top, clamped to viewport
     let top = anchorRect.top - 6
     if (top + panelHeight > window.innerHeight - 8) {
       top = window.innerHeight - panelHeight - 8
@@ -101,17 +104,13 @@ function Flyout({
     if (top < 8) top = 8
 
     setPos({ top, left })
-    // Mark as ready on next frame so initial (0,0) render is skipped
     requestAnimationFrame(() => setReady(true))
   }, [anchorRef])
 
-  // Always render the panel div so useEffect can measure it.
-  // Hide visually (not removed from DOM) until positioned.
   const isVisible = pos !== null && ready
 
   return (
     <>
-      {/* Click-away backdrop */}
       {isVisible && (
         <div
           className="wb-flyout-backdrop"
@@ -171,9 +170,11 @@ function FlyoutItem({
         {tool.icon}
       </span>
       <span style={{ flex: 1 }}>{tool.label}</span>
-      <span className={`wb-flyout-item-shortcut wb-flyout-item-shortcut-${isDark ? 'dark' : 'light'}`}>
-        {tool.shortcut}
-      </span>
+      {tool.shortcut && (
+        <span className={`wb-flyout-item-shortcut wb-flyout-item-shortcut-${isDark ? 'dark' : 'light'}`}>
+          {tool.shortcut}
+        </span>
+      )}
     </button>
   )
 }
@@ -184,17 +185,125 @@ function Sep({ isDark }: { isDark: boolean }) {
   return <div className={`wb-sep-h wb-sep-h-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 }
 
+// ---- Tool Library Panel ----
+
+function ToolLibrary({
+  isDark,
+  onClose,
+  isOpen,
+}: {
+  isDark: boolean
+  onClose: () => void
+  isOpen: boolean
+}) {
+  const tool = useWhiteboardStore((s) => s.tool)
+  const setTool = useWhiteboardStore((s) => s.setTool)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  const handleSelect = useCallback(
+    (toolId: ToolId) => {
+      setTool(toolId)
+      onClose()
+    },
+    [setTool, onClose]
+  )
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [isOpen, onClose])
+
+  return (
+    <>
+      {isOpen && (
+        <div
+          className="wb-lib-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        ref={panelRef}
+        className={`wb-lib-panel wb-lib-panel-${isDark ? 'dark' : 'light'} ${isOpen ? 'wb-lib-panel-open' : ''}`}
+        role="dialog"
+        aria-label="Tool Library"
+      >
+        {/* Header */}
+        <div className="wb-lib-header">
+          <div className={`wb-lib-title wb-lib-title-${isDark ? 'dark' : 'light'}`}>
+            <LayoutGrid size={14} style={{ marginRight: 6, opacity: 0.7 }} />
+            Tool Library
+          </div>
+          <button
+            className={`wb-lib-close wb-lib-close-${isDark ? 'dark' : 'light'}`}
+            onClick={onClose}
+            aria-label="Close library"
+          >
+            <ChevronDown size={14} style={{ transform: 'rotate(90deg)' }} />
+          </button>
+        </div>
+
+        {/* Tool grid by category */}
+        <div className="wb-lib-body">
+          {LIBRARY_CATEGORIES.map((cat) => {
+            const items = LIBRARY_TOOLS.filter((t) => t.category === cat)
+            return (
+              <div key={cat}>
+                <div className={`wb-lib-category wb-lib-category-${isDark ? 'dark' : 'light'}`}>
+                  {cat}
+                </div>
+                <div className="wb-lib-grid">
+                  {items.map((t) => {
+                    const isActive = tool === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => handleSelect(t.id)}
+                        title={`${t.label}${t.shortcut ? ' (' + t.shortcut + ')' : ''}`}
+                        aria-label={t.label}
+                        className={[
+                          'wb-lib-item',
+                          `wb-lib-item-${isDark ? 'dark' : 'light'}`,
+                          isActive ? `wb-lib-item-active wb-lib-item-active-${isDark ? 'dark' : 'light'}` : '',
+                        ].join(' ')}
+                      >
+                        <span className="wb-lib-item-icon">{t.icon}</span>
+                        <span className={`wb-lib-item-label wb-lib-item-label-${isDark ? 'dark' : 'light'}`}>
+                          {t.label}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Footer hint */}
+        <div className={`wb-lib-footer wb-lib-footer-${isDark ? 'dark' : 'light'}`}>
+          Press a shortcut key to select any tool directly
+        </div>
+      </div>
+    </>
+  )
+}
+
 // ---- Main Toolbar ----
 
 export function LeftToolbar() {
   const tool = useWhiteboardStore((s) => s.tool)
   const setTool = useWhiteboardStore((s) => s.setTool)
   const isDark = useWhiteboardStore((s) => s.isDark)
-  const [openFlyout, setOpenFlyout] = useState<'shapes' | 'more' | 'eraser' | null>(null)
+  const [openFlyout, setOpenFlyout] = useState<'shapes' | null>(null)
+  const [showLibrary, setShowLibrary] = useState(false)
   const toolbarRef = useRef<HTMLDivElement>(null)
   const shapesBtnRef = useRef<HTMLButtonElement>(null)
-  const moreBtnRef = useRef<HTMLButtonElement>(null)
-  const eraserBtnRef = useRef<HTMLButtonElement>(null)
 
   // Close flyout on outside click
   useEffect(() => {
@@ -215,248 +324,146 @@ export function LeftToolbar() {
     [setTool]
   )
 
-  const toggleFlyout = useCallback((id: 'shapes' | 'more' | 'eraser') => {
-    setOpenFlyout((prev) => (prev === id ? null : id))
-  }, [])
+  const isShapeActive = ESSENTIAL_SHAPES.some((s) => s.id === tool)
+  const activeShape = ESSENTIAL_SHAPES.find((s) => s.id === tool)
+  const isLibraryToolActive = LIBRARY_TOOLS.some((t) => t.id === tool)
 
-  // Find the currently active shape icon for the shapes pocket button
-  const activeShape = SHAPES.find((s) => s.id === tool)
-  const isShapeActive = !!activeShape
-  const isMoreActive = MORE_TOOLS.some((t) => t.id === tool)
-  const isEraserActive = ERASER_TOOLS.some((t) => t.id === tool)
-  const activeEraser = ERASER_TOOLS.find((t) => t.id === tool)
-
-  // Core direct tools (always visible) — eraser removed, now a pocket
+  // Core direct tools — only the essentials
   const directTools: ToolDef[] = [
-    { id: 'select', label: 'Select', shortcut: 'V', icon: <MousePointer2 size={18} /> },
-    { id: 'hand', label: 'Hand', shortcut: 'H', icon: <Hand size={18} /> },
-    { id: 'draw', label: 'Pen', shortcut: 'D', icon: <Pencil size={18} /> },
-    { id: 'highlighter', label: 'Highlighter', shortcut: '⇧D', icon: <Highlighter size={18} /> },
-    { id: 'laser', label: 'Laser', shortcut: 'K', icon: <Zap size={18} /> },
-    { id: 'text', label: 'Text', shortcut: 'T', icon: <Type size={18} /> },
+    { id: 'select', label: 'Select', shortcut: 'V', icon: <MousePointer2 size={18} />, category: '' },
+    { id: 'hand', label: 'Hand', shortcut: 'H', icon: <Hand size={18} />, category: '' },
+    { id: 'draw', label: 'Pen', shortcut: 'D', icon: <Pencil size={18} />, category: '' },
+    { id: 'highlighter', label: 'Highlighter', shortcut: '⇧D', icon: <Highlighter size={18} />, category: '' },
+    { id: 'eraser', label: 'Eraser', shortcut: 'E', icon: <Eraser size={18} />, category: '' },
+    { id: 'text', label: 'Text', shortcut: 'T', icon: <Type size={18} />, category: '' },
   ]
 
   return (
-    <nav
-      ref={toolbarRef}
-      className={`wb-toolbar wb-toolbar-${isDark ? 'dark' : 'light'}`}
-      role="toolbar"
-      aria-label="Drawing tools"
-    >
-      {/* ---- Core tools (always visible) ---- */}
-      {directTools.map((t) => {
-        const isActive = tool === t.id
-        return (
+    <>
+      <nav
+        ref={toolbarRef}
+        className={`wb-toolbar wb-toolbar-${isDark ? 'dark' : 'light'}`}
+        role="toolbar"
+        aria-label="Drawing tools"
+      >
+        {/* ---- Core tools (always visible) ---- */}
+        {directTools.map((t) => {
+          const isActive = tool === t.id
+          return (
+            <button
+              key={t.id}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => handleSelect(t.id)}
+              title={`${t.label} (${t.shortcut})`}
+              aria-label={`${t.label} (${t.shortcut})`}
+              aria-pressed={isActive}
+              className={[
+                'wb-tool-btn',
+                `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
+                isActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+              ].join(' ')}
+            >
+              {t.icon}
+              {isActive && (
+                <div className="wb-tool-indicator" aria-hidden="true" />
+              )}
+            </button>
+          )
+        })}
+
+        {/* ---- Separator ---- */}
+        <Sep isDark={isDark} />
+
+        {/* ---- Shapes Pocket (essential shapes only) ---- */}
+        <div style={{ position: 'relative' }}>
           <button
-            key={t.id}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={() => handleSelect(t.id)}
-            title={`${t.label} (${t.shortcut})`}
-            aria-label={`${t.label} (${t.shortcut})`}
-            aria-pressed={isActive}
+            ref={shapesBtnRef}
+            onClick={() => setOpenFlyout((prev) => (prev === 'shapes' ? null : 'shapes'))}
+            title="Shapes"
+            aria-label="Shapes tools"
+            aria-expanded={openFlyout === 'shapes'}
+            aria-haspopup="menu"
             className={[
               'wb-tool-btn',
               `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
-              isActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+              isShapeActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
             ].join(' ')}
+            style={{
+              flexDirection: 'column',
+              gap: 0,
+              background: isShapeActive
+                ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
+                : openFlyout === 'shapes'
+                  ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                  : undefined,
+            }}
           >
-            {t.icon}
-            {/* Active indicator — subtle left bar */}
-            {isActive && (
+            <span style={{ lineHeight: 1, display: 'flex' }}>
+              {activeShape ? activeShape.icon : <Square size={16} />}
+            </span>
+            <ChevronDown
+              size={8}
+              style={{ marginTop: -1, opacity: 0.5 }}
+              aria-hidden="true"
+            />
+            {isShapeActive && (
               <div className="wb-tool-indicator" aria-hidden="true" />
             )}
           </button>
-        )
-      })}
 
-      {/* ---- Separator ---- */}
-      <Sep isDark={isDark} />
-
-      {/* ---- Eraser Pocket ---- */}
-      <div style={{ position: 'relative' }}>
-        <button
-          ref={eraserBtnRef}
-          onClick={() => toggleFlyout('eraser')}
-          title="Eraser"
-          aria-label="Eraser tools"
-          aria-expanded={openFlyout === 'eraser'}
-          aria-haspopup="menu"
-          className={[
-            'wb-tool-btn',
-            `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
-            isEraserActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
-          ].join(' ')}
-          style={{
-            flexDirection: 'column',
-            gap: 0,
-            background: isEraserActive
-              ? isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)'
-              : openFlyout === 'eraser'
-                ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-                : undefined,
-          }}
-        >
-          <span style={{ lineHeight: 1, display: 'flex' }}>
-            {activeEraser ? activeEraser.icon : <Eraser size={16} />}
-          </span>
-          <ChevronDown
-            size={8}
-            style={{
-              marginTop: -1,
-              opacity: 0.5,
-            }}
-            aria-hidden="true"
-          />
-          {isEraserActive && (
-            <div className="wb-tool-indicator" aria-hidden="true" style={{ background: '#ef4444', boxShadow: '0 0 6px rgba(239, 68, 68, 0.5)' }} />
+          {openFlyout === 'shapes' && (
+            <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={shapesBtnRef}>
+              <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
+                Shapes
+              </div>
+              {ESSENTIAL_SHAPES.map((t) => (
+                <FlyoutItem
+                  key={t.id}
+                  tool={t}
+                  isActive={tool === t.id}
+                  isDark={isDark}
+                  onClick={() => handleSelect(t.id)}
+                />
+              ))}
+            </Flyout>
           )}
-        </button>
+        </div>
 
-        {/* Eraser flyout */}
-        {openFlyout === 'eraser' && (
-          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={eraserBtnRef}>
-            <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
-              Eraser
-            </div>
-            {ERASER_TOOLS.map((t) => (
-              <FlyoutItem
-                key={t.id}
-                tool={t}
-                isActive={tool === t.id}
-                isDark={isDark}
-                onClick={() => handleSelect(t.id)}
-              />
-            ))}
-          </Flyout>
-        )}
-      </div>
+        {/* ---- Separator ---- */}
+        <Sep isDark={isDark} />
 
-      {/* ---- Separator ---- */}
-      <Sep isDark={isDark} />
-
-      {/* ---- Shapes Pocket ---- */}
-      <div style={{ position: 'relative' }}>
+        {/* ---- Library Button ---- */}
         <button
-          ref={shapesBtnRef}
-          onClick={() => toggleFlyout('shapes')}
-          title="Shapes"
-          aria-label="Shapes tools"
-          aria-expanded={openFlyout === 'shapes'}
-          aria-haspopup="menu"
+          onClick={() => setShowLibrary(true)}
+          title="Tool Library"
+          aria-label="Open tool library"
           className={[
             'wb-tool-btn',
             `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
-            isShapeActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
+            isLibraryToolActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
           ].join(' ')}
           style={{
-            flexDirection: 'column',
-            gap: 0,
-            background: isShapeActive
+            background: isLibraryToolActive
               ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-              : openFlyout === 'shapes'
-                ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-                : undefined,
+              : undefined,
           }}
         >
-          {/* Show active shape icon, or default shapes icon */}
-          <span style={{ lineHeight: 1, display: 'flex' }}>
-            {activeShape ? activeShape.icon : <Square size={16} />}
-          </span>
-          {/* Tiny chevron to indicate expandable */}
-          <ChevronDown
-            size={8}
-            style={{
-              marginTop: -1,
-              opacity: 0.5,
-            }}
-            aria-hidden="true"
-          />
-          {/* Active indicator */}
-          {isShapeActive && (
+          <LayoutGrid size={16} />
+          {isLibraryToolActive && (
             <div className="wb-tool-indicator" aria-hidden="true" />
           )}
         </button>
 
-        {/* Shapes flyout */}
-        {openFlyout === 'shapes' && (
-          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={shapesBtnRef}>
-            <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
-              Shapes
-            </div>
-            {SHAPES.map((t) => (
-              <FlyoutItem
-                key={t.id}
-                tool={t}
-                isActive={tool === t.id}
-                isDark={isDark}
-                onClick={() => handleSelect(t.id)}
-              />
-            ))}
-          </Flyout>
-        )}
-      </div>
+        {/* Bottom spacer */}
+        <div style={{ flex: 1 }} />
+      </nav>
 
-      {/* ---- More Tools Pocket ---- */}
-      <div style={{ position: 'relative' }}>
-        <button
-          ref={moreBtnRef}
-          onClick={() => toggleFlyout('more')}
-          title="More tools"
-          aria-label="More tools"
-          aria-expanded={openFlyout === 'more'}
-          aria-haspopup="menu"
-          className={[
-            'wb-tool-btn',
-            `wb-tool-btn-${isDark ? 'dark' : 'light'}`,
-            isMoreActive ? `wb-tool-btn-active wb-tool-btn-active-${isDark ? 'dark' : 'light'}` : '',
-          ].join(' ')}
-          style={{
-            flexDirection: 'column',
-            gap: 0,
-            background: isMoreActive
-              ? isDark ? 'rgba(16,185,129,0.15)' : 'rgba(16,185,129,0.1)'
-              : openFlyout === 'more'
-                ? isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-                : undefined,
-          }}
-        >
-          <span style={{ lineHeight: 1, display: 'flex' }}>
-            <StickyNote size={16} />
-          </span>
-          <ChevronDown
-            size={8}
-            style={{
-              marginTop: -1,
-              opacity: 0.5,
-            }}
-            aria-hidden="true"
-          />
-          {isMoreActive && (
-            <div className="wb-tool-indicator" aria-hidden="true" />
-          )}
-        </button>
-
-        {/* More tools flyout */}
-        {openFlyout === 'more' && (
-          <Flyout isDark={isDark} onClose={() => setOpenFlyout(null)} anchorRef={moreBtnRef}>
-            <div className={`wb-flyout-header wb-flyout-header-${isDark ? 'dark' : 'light'}`}>
-              More
-            </div>
-            {MORE_TOOLS.map((t) => (
-              <FlyoutItem
-                key={t.id}
-                tool={t}
-                isActive={tool === t.id}
-                isDark={isDark}
-                onClick={() => handleSelect(t.id)}
-              />
-            ))}
-          </Flyout>
-        )}
-      </div>
-
-      {/* Bottom spacer */}
-      <div style={{ flex: 1 }} />
-    </nav>
+      {/* ---- Tool Library Panel ---- */}
+      <ToolLibrary
+        isDark={isDark}
+        isOpen={showLibrary}
+        onClose={() => setShowLibrary(false)}
+      />
+    </>
   )
 }

@@ -91,4 +91,25 @@ Stage Summary:
 - 13 security fixes applied across 11 files
 - Build passes cleanly (no new warnings)
 - Deployed to production: https://superboard-three.vercel.app
-- Zero whiteboard code touched — all fixes in API routes, lib files, and middleware
+- Zero whiteboard code touched — all fixes in API routes, lib files, and middleware---
+Task ID: 1
+Agent: main
+Task: Streamline whiteboard toolbar — keep essential widgets, move rest to Tool Library
+
+Work Log:
+- Analyzed all 18 tools in LeftToolbar and 8 tools in MobileBottomToolbar
+- Categorized tools: essential (Select, Hand, Pen, Highlighter, Eraser, Text) vs library (Laser, Object Eraser, Diamond, Triangle, Frame, Sticky Note, Image, PDF)
+- Simplified shapes pocket from 7 to 4 items (Rectangle, Ellipse, Line, Arrow)
+- Created Tool Library panel: desktop slide-in from left, mobile bottom sheet
+- Rewrote LeftToolbar.tsx: 6 direct tools + shapes pocket + library button
+- Rewrote MobileBottomToolbar.tsx: 5 core + 3 more + Style + Library + More toggle
+- Added 300+ lines of CSS for library panel (desktop + mobile variants)
+- Fixed extra paren syntax error, missing Circle import
+- Build passed, deployed to production
+
+Stage Summary:
+- Toolbar reduced from 18 directly accessible tools to 6 + 4 shapes pocket
+- 8 tools moved to Tool Library (Diamond, Triangle, Frame, Laser, Object Eraser, Sticky Note, Image, PDF)
+- Library accessible via grid icon button on desktop (slide-in panel) and mobile (bottom sheet)
+- All tools still functional — just reorganized for cleaner mobile experience
+- Deployed to https://superboard-three.vercel.app
