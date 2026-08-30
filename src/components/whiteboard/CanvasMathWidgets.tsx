@@ -2565,7 +2565,8 @@ export function CanvasMultiplicationArray({ element, isDark }: CanvasWidgetProps
 }
 
 // ============================================================
-// Function Plotter Widget (Mafs-powered)
+// Function Plotter Widget (Mafs-powered, Enhanced)
+// Multi-function, categorized presets, grid control
 // ============================================================
 
 function parseExpression(expr: string): (x: number) => number {
@@ -2578,6 +2579,7 @@ function parseExpression(expr: string): (x: number) => number {
       .replace(/\babs\b/g, 'Math.abs')
       .replace(/\blog\b/g, 'Math.log')
       .replace(/\bln\b/g, 'Math.log')
+      .replace(/\bexp\b/g, 'Math.exp')
       .replace(/\bpi\b/g, 'Math.PI')
       .replace(/\be\b/g, 'Math.E')
       .replace(/\^/g, '**')
@@ -2589,138 +2591,301 @@ function parseExpression(expr: string): (x: number) => number {
   }
 }
 
-var PLOT_PRESETS = [
-  { label: 'y = x', expr: 'x' },
-  { label: 'y = x²', expr: 'x^2' },
-  { label: 'y = x³', expr: 'x^3' },
-  { label: 'y = √x', expr: 'sqrt(x)' },
-  { label: 'y = 1/x', expr: '1/x' },
-  { label: 'y = |x|', expr: 'abs(x)' },
-  { label: 'y = sin(x)', expr: 'sin(x)' },
-  { label: 'y = cos(x)', expr: 'cos(x)' },
-  { label: 'y = 2x+1', expr: '2*x+1' },
-  { label: 'y = -x²+4', expr: '-x^2+4' },
+var PLOT_COLORS = ['#34d399', '#f97316', '#3b82f6', '#ec4899', '#a855f7', '#eab308']
+
+interface PlotFunction {
+  id: string
+  expr: string
+  color: string
+  visible: boolean
+}
+
+var ENHANCED_PRESETS: { category: string; items: { label: string; expr: string }[] }[] = [
+  { category: 'Linear', items: [
+    { label: 'y = x', expr: 'x' },
+    { label: 'y = 2x + 1', expr: '2*x+1' },
+    { label: 'y = -x + 3', expr: '-x+3' },
+    { label: 'y = 0.5x', expr: '0.5*x' },
+  ]},
+  { category: 'Quadratic', items: [
+    { label: 'y = x²', expr: 'x^2' },
+    { label: 'y = -x²+4', expr: '-x^2+4' },
+    { label: 'y = (x-1)²', expr: '(x-1)^2' },
+    { label: 'y = 2x²-3', expr: '2*x^2-3' },
+  ]},
+  { category: 'Cubic', items: [
+    { label: 'y = x³', expr: 'x^3' },
+    { label: 'y = x³-x', expr: 'x^3-x' },
+  ]},
+  { category: 'Roots', items: [
+    { label: 'y = √x', expr: 'sqrt(x)' },
+    { label: 'y = 1/x', expr: '1/x' },
+    { label: 'y = |x|', expr: 'abs(x)' },
+  ]},
+  { category: 'Trig', items: [
+    { label: 'y = sin(x)', expr: 'sin(x)' },
+    { label: 'y = cos(x)', expr: 'cos(x)' },
+    { label: 'y = tan(x)', expr: 'tan(x)' },
+  ]},
+  { category: 'Exponential/Log', items: [
+    { label: 'y = e^x', expr: 'exp(x)' },
+    { label: 'y = ln(x)', expr: 'ln(x)' },
+    { label: 'y = 2^x', expr: '2^x' },
+  ]},
 ]
 
 export function CanvasFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
-  var cfg = element.config as { expression?: string; range?: number }
-  var expression = (cfg.expression || 'x^2') as string
-  var range = cfg.range ?? 10
+  var cfg = element.config as {
+    expression?: string
+    range?: number
+    functions?: PlotFunction[]
+    showGrid?: boolean
+    xRange?: number
+    yRange?: number
+  }
   var updateConfig = useConfigUpdater(element.id)
   var s = ws(isDark)
 
-  var setExpression = useCallback(function(e: string) {
-    updateConfig({ expression: e, range: range })
-  }, [range, updateConfig])
+  // Initialize functions array from legacy config or default
+  var functions: PlotFunction[] = useMemo(function() {
+    if (cfg.functions && cfg.functions.length > 0) return cfg.functions
+    // Migrate from legacy single-expression config
+    return [{ id: '1', expr: cfg.expression || 'x^2', color: PLOT_COLORS[0], visible: true }]
+  }, [cfg.functions, cfg.expression])
 
-  var setRange = useCallback(function(r: number) {
-    updateConfig({ expression: expression, range: Math.max(1, Math.min(50, r)) })
-  }, [expression, updateConfig])
+  var xRange = cfg.xRange ?? cfg.range ?? 10
+  var yRange = cfg.yRange ?? cfg.range ?? 10
+  var showGrid = cfg.showGrid !== false
 
-  var fn = useMemo(function() { return parseExpression(expression) }, [expression])
+  var updateFunctions = useCallback(function(newFns: PlotFunction[]) {
+    updateConfig({ functions: newFns, expression: newFns[0]?.expr || '', range: xRange, xRange: xRange, yRange: yRange, showGrid: showGrid })
+  }, [updateConfig, xRange, yRange, showGrid])
 
-  var curveColor = '#34d399'
-  var gridColor = isDark ? '#334155' : '#e2e8f0'
-  var axisColor = isDark ? '#64748b' : '#94a3b8'
-  var labelColor = isDark ? '#94a3b8' : '#64748b'
+  var updateFnExpr = useCallback(function(id: string, expr: string) {
+    var newFns = functions.map(function(f) { return f.id === id ? Object.assign({}, f, { expr: expr }) : f })
+    updateFunctions(newFns)
+  }, [functions, updateFunctions])
+
+  var toggleFn = useCallback(function(id: string) {
+    var newFns = functions.map(function(f) { return f.id === id ? Object.assign({}, f, { visible: !f.visible }) : f })
+    updateFunctions(newFns)
+  }, [functions, updateFunctions])
+
+  var removeFn = useCallback(function(id: string) {
+    if (functions.length <= 1) return
+    var newFns = functions.filter(function(f) { return f.id !== id })
+    updateFunctions(newFns)
+  }, [functions, updateFunctions])
+
+  var addFn = useCallback(function() {
+    var newId = String(Date.now())
+    var color = PLOT_COLORS[functions.length % PLOT_COLORS.length]
+    var newFns = functions.concat([{ id: newId, expr: 'x', color: color, visible: true }])
+    updateFunctions(newFns)
+  }, [functions, updateFunctions])
+
+  var setXRange = useCallback(function(r: number) {
+    updateConfig({ functions: functions, expression: functions[0]?.expr || '', range: r, xRange: r, yRange: yRange, showGrid: showGrid })
+  }, [functions, yRange, showGrid, updateConfig])
+
+  var setYRange = useCallback(function(r: number) {
+    updateConfig({ functions: functions, expression: functions[0]?.expr || '', range: xRange, xRange: xRange, yRange: r, showGrid: showGrid })
+  }, [functions, xRange, showGrid, updateConfig])
+
+  var toggleGrid = useCallback(function() {
+    updateConfig({ functions: functions, expression: functions[0]?.expr || '', range: xRange, xRange: xRange, yRange: yRange, showGrid: !showGrid })
+  }, [functions, xRange, yRange, showGrid, updateConfig])
+
   var inputBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   var inputBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.15)'
+  var gridColor = isDark ? '#334155' : '#e2e8f0'
+  var axisColor = isDark ? '#64748b' : '#94a3b8'
 
-  var eqLabel = expression.trim() ? ('y = ' + expression) : 'y = ...'
+  var [showPresets, setShowPresets] = useState(false)
+  var [presetCategory, setPresetCategory] = useState('Linear')
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Function Plotter</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5, height: '100%', fontFamily: 'inherit', overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>{'Function Plotter'}</span>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={toggleGrid} title={showGrid ? 'Hide grid' : 'Show grid'}
+            style={smBtnStyle(showGrid ? '#059669' : undefined, isDark)}>
+            {showGrid ? '#' : '#'}
+          </button>
+          <button onClick={addFn} title="Add function"
+            style={smBtnStyle(undefined, isDark)}>+</button>
+        </div>
       </div>
 
-      {/* Expression input */}
-      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-        <span style={{ fontSize: 11, color: s.text, alignSelf: 'center' as const, flexShrink: 0 }}>f(x) =</span>
-        <input
-          type="text"
-          value={expression}
-          onChange={function(e) { setExpression(e.target.value) }}
-          placeholder="x^2, sin(x), ..."
-          style={{
-            flex: 1, padding: '4px 8px', borderRadius: 4, fontSize: 12,
-            fontFamily: 'monospace', border: '1px solid ' + inputBorder,
-            background: inputBg, color: isDark ? '#e2e8f0' : '#1e293b',
-            outline: 'none' as const, minWidth: 0,
-          }}
-        />
+      {/* Function inputs */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flexShrink: 0, maxHeight: 80, overflowY: 'auto' }}>
+        {functions.map(function(fn, idx) {
+          return (
+            <div key={fn.id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {/* Color dot + visibility toggle */}
+              <button onClick={function() { toggleFn(fn.id) }}
+                style={{ width: 14, height: 14, borderRadius: '50%', background: fn.visible ? fn.color : 'transparent',
+                  border: '2px solid ' + fn.color, cursor: 'pointer', flexShrink: 0, padding: 0, opacity: fn.visible ? 1 : 0.4 }} />
+              <span style={{ fontSize: 10, color: s.text, flexShrink: 0 }}>{'f' + String(idx + 1) + '(x)='}</span>
+              <input type="text" value={fn.expr}
+                onChange={function(e) { updateFnExpr(fn.id, e.target.value) }}
+                placeholder="x^2, sin(x), ..."
+                style={{ flex: 1, padding: '3px 6px', borderRadius: 4, fontSize: 11,
+                  fontFamily: 'monospace', border: '1px solid ' + inputBorder,
+                  background: inputBg, color: isDark ? '#e2e8f0' : '#1e293b', outline: 'none', minWidth: 0 }} />
+              {functions.length > 1 && (
+                <button onClick={function() { removeFn(fn.id) }} title="Remove"
+                  style={{ fontSize: 12, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', opacity: 0.6 }}>
+                  {'\u00D7'}
+                </button>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Mafs graph */}
       <div style={{ flex: 1, minHeight: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)') }}>
         <Mafs
-          viewBox={{ x: [-range, range], y: [-range, range] }}
+          viewBox={{ x: [-xRange, xRange], y: [-yRange, yRange] }}
           preserveAspectRatio={false}
         >
-          <Coordinates.Cartesian
-            xAxis={{
-              axis: true,
-              lines: 1,
-              labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) },
-            }}
-            yAxis={{
-              axis: true,
-              lines: 1,
-              labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) },
-            }}
-          />
-          <Plot.OfX
-            y={fn}
-            color={curveColor}
-            weight={2.5}
-            svgPathProps={{
-              strokeLinecap: 'round' as const,
-              strokeLinejoin: 'round' as const,
-            }}
-          />
-          {expression.trim() && (
-            <MafsText
-              x={-range + 0.5}
-              y={range - 0.5}
-              size={11}
-              attach={'nw' as const}
-              color={curveColor}
-            >
-              {eqLabel}
-            </MafsText>
+          {showGrid && (
+            <Coordinates.Cartesian
+              xAxis={{
+                axis: true,
+                lines: 1,
+                labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) },
+              }}
+              yAxis={{
+                axis: true,
+                lines: 1,
+                labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) },
+              }}
+            />
           )}
+          {!showGrid && (
+            <Coordinates.Cartesian
+              xAxis={{ axis: true, lines: 0, labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) } }}
+              yAxis={{ axis: true, lines: 0, labels: function(v) { return Math.abs(v) < 0.001 ? '0' : String(Math.round(v)) } }}
+            />
+          )}
+          {functions.map(function(fn) {
+            if (!fn.visible || !fn.expr.trim()) return null
+            var parsed = parseExpression(fn.expr)
+            return (
+              <Plot.OfX key={fn.id} y={parsed} color={fn.color} weight={2}
+                svgPathProps={{ strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }} />
+            )
+          })}
+          {/* Equation labels */}
+          {functions.filter(function(f) { return f.visible && f.expr.trim() }).map(function(fn, idx) {
+            return (
+              <MafsText key={fn.id + '-label'}
+                x={-xRange + 0.5}
+                y={yRange - 0.8 - idx * 0.6}
+                size={10}
+                attach={'nw' as const}
+                color={fn.color}
+              >
+                {'f' + String(idx + 1) + '(x) = ' + fn.expr}
+              </MafsText>
+            )
+          })}
         </Mafs>
       </div>
 
-      {/* Range control */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <span style={{ fontSize: 9, color: s.text }}>Range</span>
-        <input type="range" min={2} max={20} value={range}
-          onChange={function(e) { setRange(Number(e.target.value)) }}
-          style={{ flex: 1, cursor: 'pointer' as const }} />
-        <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{'[−' + range + ', ' + range + ']'}</span>
+      {/* Range controls */}
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 9, color: s.text }}>{'X'}</span>
+          <input type="range" min={2} max={25} value={xRange}
+            onChange={function(e) { setXRange(Number(e.target.value)) }}
+            style={{ flex: 1, cursor: 'pointer' }} />
+          <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{String(xRange)}</span>
+        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 9, color: s.text }}>{'Y'}</span>
+          <input type="range" min={2} max={25} value={yRange}
+            onChange={function(e) { setYRange(Number(e.target.value)) }}
+            style={{ flex: 1, cursor: 'pointer' }} />
+          <span style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>{String(yRange)}</span>
+        </div>
       </div>
 
-      {/* Presets */}
-      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' as const, flexShrink: 0 }}>
-        {PLOT_PRESETS.map(function(p) {
-          var isActive = p.expr === expression
-          return (
-            <button key={p.expr} onClick={function() { setExpression(p.expr) }}
-              style={{
-                padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer' as const,
-                fontFamily: 'monospace',
-                background: isActive ? 'rgba(5,150,105,0.15)' : inputBg,
-                border: isActive ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + inputBorder,
-                color: isActive ? '#34d399' : s.text,
-              }}>
-              {p.label}
-            </button>
-          )
-        })}
-      </div>
+      {/* Presets toggle */}
+      <button onClick={function() { setShowPresets(function(p) { return !p }) }}
+        style={{
+          padding: '4px 8px', borderRadius: 5, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+          background: showPresets ? 'rgba(5,150,105,0.12)' : inputBg,
+          border: '1px solid ' + (showPresets ? 'rgba(5,150,105,0.3)' : inputBorder),
+          color: showPresets ? '#34d399' : s.text, textAlign: 'left' as const, flexShrink: 0,
+        }}>
+        {showPresets ? 'Hide Presets' : 'Quick Presets'}
+      </button>
+
+      {/* Preset panel */}
+      {showPresets && (
+        <div style={{ flexShrink: 0, overflowY: 'auto', maxHeight: 120 }}>
+          {/* Category tabs */}
+          <div style={{ display: 'flex', gap: 3, marginBottom: 6, overflowX: 'auto' }}>
+            {ENHANCED_PRESETS.map(function(cat) {
+              var isActive = cat.category === presetCategory
+              return (
+                <button key={cat.category} onClick={function() { setPresetCategory(cat.category) }}
+                  style={{ padding: '2px 7px', borderRadius: 4, fontSize: 9, fontWeight: 600, cursor: 'pointer',
+                    background: isActive ? 'rgba(5,150,105,0.15)' : inputBg,
+                    border: isActive ? '1px solid rgba(5,150,105,0.3)' : '1px solid ' + inputBorder,
+                    color: isActive ? '#34d399' : s.text, whiteSpace: 'nowrap' as const }}>
+                  {cat.category}
+                </button>
+              )
+            })}
+          </div>
+          {/* Preset buttons */}
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' as const }}>
+            {ENHANCED_PRESETS.filter(function(c) { return c.category === presetCategory })[0]?.items.map(function(p) {
+              var isActive = functions.some(function(f) { return f.expr === p.expr })
+              return (
+                <button key={p.expr}
+                  onClick={function() {
+                    // If first function is empty or matches, update it; otherwise add new
+                    if (!functions[0].expr.trim()) {
+                      updateFnExpr(functions[0].id, p.expr)
+                    } else {
+                      var newId = String(Date.now())
+                      var color = PLOT_COLORS[functions.length % PLOT_COLORS.length]
+                      updateFunctions(functions.concat([{ id: newId, expr: p.expr, color: color, visible: true }]))
+                    }
+                  }}
+                  style={{
+                    padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer',
+                    fontFamily: 'monospace',
+                    background: isActive ? 'rgba(5,150,105,0.15)' : inputBg,
+                    border: isActive ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + inputBorder,
+                    color: isActive ? '#34d399' : s.text,
+                  }}>
+                  {p.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+function smBtnStyle(activeColor: string | undefined, isDark: boolean): React.CSSProperties {
+  return {
+    width: 22, height: 22, borderRadius: 4, fontSize: 13, fontWeight: 700,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer', border: 'none', padding: 0,
+    background: activeColor || (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+    color: activeColor ? '#fff' : (isDark ? '#94a3b8' : '#64748b'),
+  }
 }
 
 // ============================================================

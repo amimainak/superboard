@@ -243,8 +243,15 @@ function SingleElementHandles({
 
   const toggleLatex = useCallback(() => {
     fxPushHistory()
-    fxUpdateElement(element.id, { isLatex: !isLatex } as Record<string, unknown>)
-  }, [element.id, isLatex, fxPushHistory, fxUpdateElement])
+    const newLatex = !isLatex
+    // When enabling LaTeX, resize the element to fit the editor UI nicely
+    const updates: Record<string, unknown> = { isLatex: newLatex }
+    if (newLatex) {
+      updates.width = Math.max(280, bounds.width)
+      updates.height = Math.max(120, bounds.height)
+    }
+    fxUpdateElement(element.id, updates)
+  }, [element.id, isLatex, fxPushHistory, fxUpdateElement, bounds.width, bounds.height])
 
   return (
     <g>

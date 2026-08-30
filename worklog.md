@@ -151,3 +151,40 @@ Stage Summary:
 - LaTeX: Select text → click green fx button → type LaTeX → double-click to edit
 - Function Plotter: Open Math Toolkit → set expression + range → Add to Board
 - Deployed to https://superboard-three.vercel.app
+
+---
+Task ID: 4
+Agent: main
+Task: Enhanced LaTeX with smart math input parser + enhanced function plotter
+
+Work Log:
+- Created smart math-to-LaTeX parser (`src/lib/whiteboard/math-input-parser.ts`)
+  - Converts plain text shortcuts to LaTeX: `x^2 + 1/2 + sqrt(4)` → `x^{2} + \frac{1}{2} + \sqrt{4}`
+  - Handles: Greek letters, trig/math functions, fractions, sqrt, superscripts, subscripts
+  - Handles: summation, integral, product limits, comparisons, degree, binomial
+  - 50+ common equations library across 6 categories (Algebra, Geometry, Trig, Calculus, Statistics, Logarithms)
+- Rewrote LatexTextElement in ElementRenderer.tsx:
+  - Replaced raw LaTeX textarea with smart input + live preview
+  - Users type plain text (e.g. `x^2 + 1/2`), see rendered equation live below input
+  - Added "Equations" button to open categorized equation library with search
+  - One-click insert from library (stores raw LaTeX for perfect rendering)
+  - Placeholder shows example shortcuts instead of raw LaTeX
+- Updated fx toggle in SelectionHandles.tsx:
+  - Auto-resizes element to 280x120 min when enabling LaTeX mode
+  - Toggling off reverts to plain text
+- Enhanced CanvasFunctionPlotter in CanvasMathWidgets.tsx:
+  - Multi-function support: add/remove functions, each with unique color
+  - Visibility toggle per function (colored dot)
+  - Independent X/Y range sliders
+  - Grid on/off toggle
+  - Categorized presets: Linear, Quadratic, Cubic, Roots, Trig, Exponential/Log (19 presets)
+  - Backward compatible with legacy single-expression config
+  - Added exp() support to expression parser
+- Installed @types/katex for type safety
+- Build passes, deployed to production
+
+Stage Summary:
+- LaTeX now has zero-friction input: type `x^2 + 1/2 + sqrt(4)` → see rendered equation live
+- 50+ common equations available via in-widget library with search & category filter
+- Function plotter now supports multiple functions, independent X/Y ranges, grid toggle, categorized presets
+- Deployed to https://superboard-three.vercel.app

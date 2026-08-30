@@ -18,6 +18,7 @@ import {
   generateId,
 } from '@/lib/whiteboard/utils'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { mathToLatex, EQUATION_LIBRARY, EQUATION_CATEGORIES } from '@/lib/whiteboard/math-input-parser'
 import dynamic from 'next/dynamic'
 
 // Lazy-load math renderers — 27.7 KB only loads when math elements exist on canvas (L-02 fix)
@@ -467,8 +468,24 @@ export const ElementRenderer = React.memo(function ElementRenderer({
 
 // ---- Sub-components ----
 
+// ---- Category button style helper ----
+function catBtnStyle(active: boolean, dk: boolean, accent: string): React.CSSProperties {
+  return {
+    background: active ? accent : (dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+    color: active ? '#fff' : (dk ? '#94a3b8' : '#64748b'),
+    border: 'none',
+    borderRadius: 5,
+    padding: '3px 8px',
+    fontSize: 11,
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    fontFamily: 'inherit',
+  }
+}
+
 // ---- LaTeX Text Element ----
-// Renders KaTeX when viewing, textarea when editing
+// Renders KaTeX when viewing, smart input + equation library when editing
 function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleClick, onTextChange, tool }: {
   element: WhiteboardElement
   isDark: boolean
@@ -480,23 +497,43 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(element.text || '')
+  const [showLibrary, setShowLibrary] = useState(false)
+  const [librarySearch, setLibrarySearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState('all')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const libRef = useRef<HTMLDivElement>(null)
+
+  // Convert stored text (which is plain-text input) to LaTeX for rendering
   const renderedHtml = useMemo(() => {
     if (!element.text) return ''
     try {
-      // Dynamic import katex to avoid SSR issues
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const katex = require('katex')
-      return katex.renderToString(element.text, {
+      const latex = mathToLatex(element.text)
+      return katex.renderToString(latex || element.text, {
         displayMode: true,
         throwOnError: false,
         output: 'html',
       })
     } catch {
-      // Fallback: render as plain text
       return '<span>' + element.text.replace(/</g, '&lt;') + '</span>'
     }
   }, [element.text])
+
+  // Live preview of current input as user types
+  const previewHtml = useMemo(() => {
+    if (!editValue) return ''
+    try {
+      const katex = require('katex')
+      const latex = mathToLatex(editValue)
+      return katex.renderToString(latex || editValue, {
+        displayMode: true,
+        throwOnError: false,
+        output: 'html',
+      })
+    } catch {
+      return ''
+    }
+  }, [editValue])
 
   // Sync edit value when element text changes externally
   useEffect(() => {
@@ -508,24 +545,109 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
   const startEdit = useCallback(() => {
     setEditValue(element.text || '')
     setIsEditing(true)
+    setShowLibrary(false)
   }, [element.text])
 
   const commitEdit = useCallback(() => {
     onTextChange?.(element.id, editValue)
     setIsEditing(false)
+    setShowLibrary(false)
   }, [element.id, editValue, onTextChange])
 
   const cancelEdit = useCallback(() => {
     setEditValue(element.text || '')
     setIsEditing(false)
+    setShowLibrary(false)
   }, [element.text])
+
+  const insertEquation = useCallback((latex: string) => {
+    // Store the raw LaTeX directly (advanced users or library inserts)
+    onTextChange?.(element.id, latex)
+    setEditValue(latex)
+  }, [element.id, onTextChange])
 
   // Auto-focus textarea when editing
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
+    if (isEditing && textareaRef.current && !showLibrary) {
       textareaRef.current.focus()
     }
-  }, [isEditing])
+  }, [isEditing, showLibrary])
+
+  // Filter equations by search and category
+  const filteredEquations = useMemo(() => {
+    let eqs = EQUATION_LIBRARY
+    if (activeCategory !== 'all') {
+      eqs = eqs.filter(e => e.category === activeCategory)
+    }
+    if (librarySearch.trim()) {
+      const q = librarySearch.toLowerCase()
+      eqs = eqs.filter(e =>
+        e.label.toLowerCase().includes(q) ||
+        e.category.toLowerCase().includes(q) ||
+        e.latex.toLowerCase().includes(q)
+      )
+    }
+    return eqs
+  }, [activeCategory, librarySearch, EQUATION_LIBRARY])
+
+  // Render a single equation card in the library
+  const renderEquationCard = useCallback((eq: { label: string; latex: string; category: string }) => {
+    let cardHtml = ''
+    try {
+      const katex = require('katex')
+      cardHtml = katex.renderToString(eq.latex, {
+        displayMode: true,
+        throwOnError: false,
+        output: 'html',
+      })
+    } catch { /* skip */ }
+    const bg = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)'
+    const bgHover = isDark ? 'rgba(52,211,153,0.1)' : 'rgba(5,150,105,0.06)'
+    return (
+      <div
+        key={eq.label}
+        className={'wb-eq-card'}
+        style={{
+          background: bg,
+          borderRadius: 8,
+          padding: '8px 10px',
+          cursor: 'pointer',
+          transition: 'background 0.15s',
+          border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'),
+        }}
+        onPointerDown={(e) => { e.stopPropagation() }}
+        onClick={(e) => {
+          e.stopPropagation()
+          insertEquation(eq.latex)
+          setShowLibrary(false)
+          setTimeout(() => textareaRef.current?.focus(), 50)
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = bgHover }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = bg }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: isDark ? '#94a3b8' : '#64748b',
+            marginBottom: 4,
+          }}
+        >{eq.label}</div>
+        <div
+          dangerouslySetInnerHTML={{ __html: cardHtml }}
+          style={{ minHeight: 24, display: 'flex', alignItems: 'center', color: textColor }}
+        />
+      </div>
+    )
+  }, [isDark, textColor, insertEquation])
+
+  const dk = isDark
+  const bgColor = dk ? 'rgba(14,14,16,0.96)' : 'rgba(255,255,255,0.98)'
+  const borderColor = dk ? 'rgba(52,211,153,0.4)' : 'rgba(5,150,105,0.3)'
+  const inputBg = dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'
+  const labelColor = dk ? '#94a3b8' : '#64748b'
+  const accentColor = dk ? '#34d399' : '#059669'
+  const hintColor = dk ? '#475569' : '#94a3b8'
 
   return (
     <foreignObject
@@ -544,35 +666,151 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
       style={{ cursor: element.locked ? 'not-allowed' : (isEditing ? 'text' : 'pointer') }}
     >
       {isEditing ? (
-        <textarea
-          ref={textareaRef}
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={commitEdit}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') cancelEdit()
-            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault()
-              commitEdit()
-            }
-          }}
+        <div
+          ref={libRef}
           style={{
             width: '100%',
             height: '100%',
-            fontSize: element.fontSize,
-            fontFamily: 'ui-monospace, monospace',
-            color: textColor,
-            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-            border: '1.5px dashed ' + (isDark ? 'rgba(52,211,153,0.4)' : 'rgba(5,150,105,0.3)'),
-            borderRadius: 6,
-            padding: '8px',
-            outline: 'none',
-            resize: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            background: bgColor,
+            border: '1.5px dashed ' + borderColor,
+            borderRadius: 8,
+            overflow: 'hidden',
             boxSizing: 'border-box',
-            lineHeight: 1.5,
           }}
-          placeholder="Type LaTeX, e.g. \\frac{a}{b}"
-        />
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {/* Top bar: input + buttons */}
+          <div style={{ display: 'flex', gap: 6, padding: '6px 8px 4px', alignItems: 'center' }}>
+            <input
+              ref={textareaRef as unknown as React.RefObject<HTMLInputElement>}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') cancelEdit()
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault()
+                  commitEdit()
+                }
+              }}
+              onBlur={commitEdit}
+              style={{
+                flex: 1,
+                fontSize: Math.max(12, element.fontSize - 2),
+                fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+                color: textColor,
+                background: inputBg,
+                border: '1px solid ' + (dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+                borderRadius: 6,
+                padding: '5px 8px',
+                outline: 'none',
+                minWidth: 0,
+              }}
+              placeholder="x^2 + 1/2 + sqrt(4)"
+            />
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowLibrary(prev => !prev)
+              }}
+              style={{
+                background: showLibrary ? accentColor : (dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'),
+                color: showLibrary ? '#fff' : (dk ? '#94a3b8' : '#64748b'),
+                border: 'none',
+                borderRadius: 6,
+                padding: '5px 10px',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                fontFamily: 'inherit',
+              }}
+            >
+              {'Equations'}
+            </button>
+          </div>
+
+          {/* Live preview */}
+          <div
+            style={{
+              minHeight: 32,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2px 12px 6px',
+              borderBottom: showLibrary ? ('1px solid ' + (dk ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)')) : 'none',
+            }}
+          >
+            {previewHtml ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+                style={{ color: textColor, fontSize: Math.max(14, element.fontSize) }}
+              />
+            ) : (
+              <span style={{ color: hintColor, fontSize: 12 }}>
+                {'Type math above — previews here live'}
+              </span>
+            )}
+          </div>
+
+          {/* Equation library panel */}
+          {showLibrary && (
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '6px 8px',
+            }}>
+              {/* Category tabs */}
+              <div style={{
+                display: 'flex',
+                gap: 4,
+                marginBottom: 8,
+                overflowX: 'auto',
+                flexShrink: 0,
+              }}>
+                <button
+                  onClick={() => setActiveCategory('all')}
+                  style={catBtnStyle(activeCategory === 'all', dk, accentColor)}
+                >All</button>
+                {EQUATION_CATEGORIES.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    style={catBtnStyle(activeCategory === cat, dk, accentColor)}
+                  >{cat}</button>
+                ))}
+              </div>
+              {/* Search */}
+              <input
+                value={librarySearch}
+                onChange={(e) => setLibrarySearch(e.target.value)}
+                placeholder={'Search equations...'}
+                style={{
+                  width: '100%',
+                  fontSize: 12,
+                  background: inputBg,
+                  color: textColor,
+                  border: '1px solid ' + (dk ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+                  borderRadius: 6,
+                  padding: '4px 8px',
+                  outline: 'none',
+                  marginBottom: 8,
+                  boxSizing: 'border-box',
+                  fontFamily: 'inherit',
+                }}
+              />
+              {/* Equation grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                gap: 6,
+              }}>
+                {filteredEquations.map(renderEquationCard)}
+              </div>
+            </div>
+          )}
+        </div>
       ) : (
         <div
           style={{
@@ -586,7 +824,7 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
             boxSizing: 'border-box',
           }}
           dangerouslySetInnerHTML={{ __html: renderedHtml }}
-          data-placeholder="Double-click to edit LaTeX..."
+          data-placeholder={'Double-click to edit equation...'}
         />
       )}
     </foreignObject>
