@@ -113,3 +113,19 @@ Stage Summary:
 - Library accessible via grid icon button on desktop (slide-in panel) and mobile (bottom sheet)
 - All tools still functional — just reorganized for cleaner mobile experience
 - Deployed to https://superboard-three.vercel.app
+---
+Task ID: 2
+Agent: main
+Task: Fix image/PDF file picker not working on mobile
+
+Work Log:
+- Root cause: useEffect-based input.click() blocked by mobile Safari (not in user gesture)
+- Replaced with: hidden <input> refs in JSX + trigger from onPointerDown (real user gesture)
+- Also fixed PDF tool with same pattern
+- File handlers now use getState() for latest state instead of stale closure values
+- Added input.value reset so same file can be re-picked
+
+Stage Summary:
+- Image and PDF tools now work on mobile — file picker opens from canvas tap
+- Hidden file inputs always in DOM, triggered from handlePointerDown (user gesture chain)
+- Deployed to https://superboard-three.vercel.app

@@ -206,34 +206,29 @@ export function WhiteboardCanvas() {
   const prevToolRef = useRef<ToolId | null>(null) // for stylus barrel-button eraser
   const palmRejectTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // ---- Image tool: open file picker immediately on tool select ----
-  useEffect(() => {
-    if (tool !== 'image') return
+  // ---- Hidden file inputs for Image and PDF tools ----
+  // Must be in the DOM and triggered from a user gesture (onPointerDown) for mobile Safari compat
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const pdfInputRef = useRef<HTMLInputElement>(null)
 
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    let cancelled = false
-
-    input.onchange = (ev) => {
-      if (cancelled) return
-      const file = (ev.target as HTMLInputElement).files?.[0]
+  // Image file handler
+  const handleImageFileChange = useCallback(
+    (ev: React.ChangeEvent<HTMLInputElement>) => {
+      const file = ev.target.files?.[0]
       if (!file) {
         setTool('select')
         return
       }
       const reader = new FileReader()
       reader.onload = (re) => {
-        if (cancelled) return
         const img = new Image()
         img.onload = () => {
-          if (cancelled) return
           const maxW = 400
           const scale = Math.min(1, maxW / img.width)
-          // Place image at center of the current viewport
-          const cx = -camera.x + containerSize.width / 2 / camera.zoom
-          const cy = -camera.y + containerSize.height / 2 / camera.zoom
-          pushHistory()
+          const st = useWhiteboardStore.getState()
+          const cx = -st.camera.x + containerSize.width / 2 / st.camera.zoom
+          const cy = -st.camera.y + containerSize.height / 2 / st.camera.zoom
+          st.pushHistory()
           const el: WhiteboardElement = {
             id: generateId(),
             type: 'image',
@@ -247,158 +242,97 @@ export function WhiteboardCanvas() {
             fillColor: 'transparent',
             strokeWidth: 0,
             locked: false,
-            pageIndex: currentPageIndex,
+            pageIndex: st.currentPageIndex,
             src: re.target?.result as string,
             naturalWidth: img.width,
             naturalHeight: img.height,
           }
-          addElement(el)
-          setTool('select')
+          st.addElement(el)
+          st.setTool('select')
         }
         img.src = re.target?.result as string
       }
       reader.readAsDataURL(file)
-    }
+      // Reset input so same file can be picked again
+      ev.target.value = ''
+    },
+    [containerSize]
+  )
 
-    // If user cancels the file dialog (no onchange fires), still revert tool
-    const onCancel = () => {
-      // Small delay to let onchange fire first if a file was selected
-      setTimeout(() => {
-        if (!cancelled) {
-          setTool('select')
-        }
-      }, 300)
-    }
-    input.addEventListener('cancel', onCancel)
-
-    input.click()
-
-    return () => {
-      cancelled = true
-      input.removeEventListener('cancel', onCancel)
-    }
-  }, [tool]) // intentionally minimal deps — runs once per tool switch to 'image'
-
-  // ---- PDF tool: open file picker, render first page to image ----
-  useEffect(() => {
-    if (tool !== 'pdf') return
-
-    let cancelled = false
-
-    // Dynamic import of pdfjs-dist (client-side only)
-    import('pdfjs-dist/legacy/build/pdf.mjs').then(async (pdfjsLib) => {
-      if (cancelled) return
-
-      // Set worker source to local bundle
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString()
-
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.accept = '.pdf,application/pdf'
-
-      input.onchange = async (ev) => {
-        if (cancelled) return
-        const file = (ev.target as HTMLInputElement).files?.[0]
-        if (!file) {
-          setTool('select')
-          return
-        }
-
-        try {
-          const arrayBuffer = await file.arrayBuffer()
-          if (cancelled) return
-
-          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-          if (cancelled) return
-
-          // Render first page
-          const page = await pdf.getPage(1)
-          if (cancelled) return
-
-          const viewport = page.getViewport({ scale: 2 }) // 2x for quality
-
-          const canvas = document.createElement('canvas')
-          canvas.width = viewport.width
-          canvas.height = viewport.height
-          const ctx = canvas.getContext('2d')!
-
-          await page.render({ canvasContext: ctx, viewport }).promise
-          if (cancelled) return
-
-          const pdfDataUrl = canvas.toDataURL('image/png')
-
-          // Calculate placement: fit PDF to viewport with padding
-          const vw = containerSize.width / camera.zoom
-          const vh = containerSize.height / camera.zoom
-          const pdfAspect = viewport.width / viewport.height
-          const viewAspect = vw / vh
-
-          let elWidth: number
-          let elHeight: number
-          if (pdfAspect > viewAspect) {
-            elWidth = vw * 0.9
-            elHeight = elWidth / pdfAspect
-          } else {
-            elHeight = vh * 0.9
-            elWidth = elHeight * pdfAspect
-          }
-
-          // Center in viewport
-          const cx = -camera.x + containerSize.width / 2 / camera.zoom
-          const cy = -camera.y + containerSize.height / 2 / camera.zoom
-
-          pushHistory()
-          const el: WhiteboardElement = {
-            id: generateId(),
-            type: 'pdf',
-            x: cx - elWidth / 2,
-            y: cy - elHeight / 2,
-            width: elWidth,
-            height: elHeight,
-            rotation: 0,
-            opacity: 1,
-            strokeColor: 'transparent',
-            fillColor: 'transparent',
-            strokeWidth: 0,
-            locked: false,
-            pageIndex: currentPageIndex,
-            pdfDataUrl,
-            pageNumber: 1,
-            naturalWidth: viewport.width,
-            naturalHeight: viewport.height,
-          }
-          addElement(el)
-          setTool('select')
-        } catch (err) {
-          console.error('Failed to load PDF:', err)
-          setTool('select')
-        }
+  // PDF file handler — dynamically loads pdfjs-dist
+  const handlePdfFileChange = useCallback(
+    async (ev: React.ChangeEvent<HTMLInputElement>) => {
+      const file = ev.target.files?.[0]
+      if (!file) {
+        setTool('select')
+        return
       }
+      ev.target.value = ''
 
-      // If user cancels the file dialog
-      const onCancel = () => {
-        setTimeout(() => {
-          if (!cancelled) {
-            setTool('select')
-          }
-        }, 300)
+      try {
+        const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/legacy/build/pdf.worker.min.mjs', import.meta.url).toString()
+
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+        const page = await pdf.getPage(1)
+        const viewport = page.getViewport({ scale: 2 })
+
+        const offscreen = document.createElement('canvas')
+        offscreen.width = viewport.width
+        offscreen.height = viewport.height
+        const ctx = offscreen.getContext('2d')!
+        await page.render({ canvasContext: ctx, viewport }).promise
+        const pdfDataUrl = offscreen.toDataURL('image/png')
+
+        const st = useWhiteboardStore.getState()
+        const vw = containerSize.width / st.camera.zoom
+        const vh = containerSize.height / st.camera.zoom
+        const pdfAspect = viewport.width / viewport.height
+        const viewAspect = vw / vh
+
+        let elWidth: number
+        let elHeight: number
+        if (pdfAspect > viewAspect) {
+          elWidth = vw * 0.9
+          elHeight = elWidth / pdfAspect
+        } else {
+          elHeight = vh * 0.9
+          elWidth = elHeight * pdfAspect
+        }
+
+        const cx = -st.camera.x + containerSize.width / 2 / st.camera.zoom
+        const cy = -st.camera.y + containerSize.height / 2 / st.camera.zoom
+
+        st.pushHistory()
+        const el: WhiteboardElement = {
+          id: generateId(),
+          type: 'pdf',
+          x: cx - elWidth / 2,
+          y: cy - elHeight / 2,
+          width: elWidth,
+          height: elHeight,
+          rotation: 0,
+          opacity: 1,
+          strokeColor: 'transparent',
+          fillColor: 'transparent',
+          strokeWidth: 0,
+          locked: false,
+          pageIndex: st.currentPageIndex,
+          pdfDataUrl,
+          pageNumber: 1,
+          naturalWidth: viewport.width,
+          naturalHeight: viewport.height,
+        }
+        st.addElement(el)
+        st.setTool('select')
+      } catch (err) {
+        console.error('Failed to load PDF:', err)
+        setTool('select')
       }
-      input.addEventListener('cancel', onCancel)
-
-      input.click()
-
-      return () => {
-        input.removeEventListener('cancel', onCancel)
-      }
-    }).catch((err) => {
-      console.error('Failed to load pdfjs-dist:', err)
-      if (!cancelled) setTool('select')
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [tool]) // intentionally minimal deps — runs once per tool switch to 'pdf'
+    },
+    [containerSize]
+  )
 
   // Observe container size
   useEffect(() => {
@@ -693,12 +627,18 @@ export function WhiteboardCanvas() {
           break
         }
         case 'image': {
-          // Image file picker is handled by the useEffect — no-op here
-          break
+          // Trigger hidden file input — must be in user gesture for mobile Safari
+          if (imageInputRef.current) {
+            imageInputRef.current.click()
+          }
+          return // Don't start drawing
         }
         case 'pdf': {
-          // PDF file picker is handled by the useEffect — no-op here
-          break
+          // Trigger hidden PDF file input — must be in user gesture for mobile Safari
+          if (pdfInputRef.current) {
+            pdfInputRef.current.click()
+          }
+          return // Don't start drawing
         }
         default: {
           // Math tools and any future tools — create element directly on click
@@ -1396,6 +1336,21 @@ export function WhiteboardCanvas() {
       >
         {Math.round(camera.zoom * 100)}%
       </div>
+      {/* Hidden file inputs for Image/PDF tools — triggered from pointer down (user gesture) */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleImageFileChange}
+      />
+      <input
+        ref={pdfInputRef}
+        type="file"
+        accept=".pdf,application/pdf"
+        style={{ display: 'none' }}
+        onChange={handlePdfFileChange}
+      />
     </div>
   )
 }
