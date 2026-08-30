@@ -79,6 +79,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Invalid subject. Must be one of: ${validSubjects.join(', ')}` }, { status: 400 })
     }
 
+    if (brandingLogo !== undefined) {
+      if (typeof brandingLogo !== 'string' || !brandingLogo.startsWith('https://') || brandingLogo.length > 500) {
+        return NextResponse.json({ error: 'brandingLogo must be a URL starting with https:// and max 500 chars' }, { status: 400 })
+      }
+    }
+    if (brandingColor !== undefined) {
+      if (typeof brandingColor !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(brandingColor)) {
+        return NextResponse.json({ error: 'brandingColor must be a hex color like #ff0000' }, { status: 400 })
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
 

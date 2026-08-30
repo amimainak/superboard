@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
 
 // GET: Get invite details by code
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ code: string }> }
 ) {
+  const authCheck = await requireAuth(_request)
+  if (authCheck instanceof NextResponse) return authCheck
   try {
     const { code } = await params
     const supabase = await createClient()
@@ -92,6 +95,11 @@ export async function POST(
     // Check expiry
     if (new Date(invite.expiresAt) < new Date()) {
       return NextResponse.json({ error: 'Invite expired' }, { status: 410 })
+    }
+
+    // CRITICAL: Verify the invite was sent to this user's email
+    if (invite.invitedEmail && user.email && user.email.toLowerCase() !== invite.invitedEmail.toLowerCase()) {
+      return NextResponse.json({ error: 'This invite was sent to a different email address' }, { status: 403 })
     }
 
     // Update user's parentAgencyId

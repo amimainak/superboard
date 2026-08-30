@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
@@ -126,7 +127,7 @@ export async function POST(request: Request) {
     }
 
     // Generate a short invite code
-    const code = Math.random().toString(36).substring(2, 8)
+    const code = crypto.randomBytes(4).toString('hex')
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
 
     const { data: invite, error } = await sb

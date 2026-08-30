@@ -24,6 +24,26 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient()
 
+    // IDOR: verify user is the room tutor or a participant
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: room } = await (supabase as any)
+      .from('Room')
+      .select('tutorId')
+      .eq('id', roomId)
+      .single()
+    const isTutor = room && room.tutorId === auth.userId
+    if (!isTutor) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count } = await (supabase as any)
+        .from('RoomParticipant')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', roomId)
+        .eq('user_id', auth.userId)
+      if (!count) {
+        return NextResponse.json({ error: 'You do not have access to this room' }, { status: 403 })
+      }
+    }
+
     let query = (supabase as any)
       .from('student_mastery')
       .select('*')
@@ -152,6 +172,26 @@ export async function DELETE(request: NextRequest) {
     }
 
     const supabase = await createClient()
+
+    // IDOR: verify user is the room tutor or a participant
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: room } = await (supabase as any)
+      .from('Room')
+      .select('tutorId')
+      .eq('id', roomId)
+      .single()
+    const isTutor = room && room.tutorId === auth.userId
+    if (!isTutor) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count } = await (supabase as any)
+        .from('RoomParticipant')
+        .select('*', { count: 'exact', head: true })
+        .eq('room_id', roomId)
+        .eq('user_id', auth.userId)
+      if (!count) {
+        return NextResponse.json({ error: 'You do not have access to this room' }, { status: 403 })
+      }
+    }
 
     const { error } = await (supabase as any)
       .from('student_mastery')

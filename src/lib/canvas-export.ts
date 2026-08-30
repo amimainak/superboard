@@ -107,8 +107,8 @@ export function openCanvasForPrint(options: PdfExportOptions): void {
   const width = canvas.getWidth();
   const height = canvas.getHeight();
   const timestamp = new Date().toLocaleString();
-  const agencyName = branding?.agencyName || 'Superboard';
-  const brandColor = branding?.color || '#3b82f6';
+  const agencyName = escapeHtml(branding?.agencyName || 'Superboard');
+  const brandColor = /^#[0-9a-fA-F]{6}$/.test(branding?.color || '') ? branding!.color! : '#3b82f6';
 
   const html = `<!DOCTYPE html>
 <html>
@@ -163,7 +163,7 @@ export function openCanvasForPrint(options: PdfExportOptions): void {
   <div class="header">
     <h1>${agencyName}</h1>
     <div class="meta">
-      ${studentName ? `Student: ${studentName} | ` : ''}${timestamp}
+      ${studentName ? 'Student: ' + escapeHtml(studentName) + ' | ' : ''}${timestamp}
     </div>
   </div>
   <div class="canvas-container">
@@ -225,8 +225,8 @@ export function exportCanvasWithBookmarks(options: PdfExportOptions & {
   const width = canvas.getWidth();
   const height = canvas.getHeight();
   const timestamp = new Date().toLocaleString();
-  const agencyName = branding?.agencyName || 'Superboard';
-  const brandColor = branding?.color || '#059669';
+  const agencyName = escapeHtml(branding?.agencyName || 'Superboard');
+  const brandColor = /^#[0-9a-fA-F]{6}$/.test(branding?.color || '') ? branding!.color! : '#059669';
 
   // Build bookmark sidebar items
   const bookmarkItems = bookmarks
@@ -409,7 +409,7 @@ export function exportCanvasWithBookmarks(options: PdfExportOptions & {
   <div class="header">
     <h1>${agencyName}</h1>
     <div class="meta">
-      ${studentName ? `Student: ${studentName} | ` : ''}Page ${currentPage} of ${totalPages} | ${timestamp}
+      ${studentName ? 'Student: ' + escapeHtml(studentName) + ' | ' : ''}Page ${currentPage} of ${totalPages} | ${timestamp}
     </div>
   </div>
   <div class="content-area">
@@ -441,7 +441,7 @@ export function exportCanvasWithBookmarks(options: PdfExportOptions & {
         const ts = item.getAttribute('data-timestamp');
         if (ts && window.opener) {
           // Try to communicate with parent window's audio player
-          window.opener.postMessage({ type: 'seek-audio', timestamp: parseFloat(ts) }, '*');
+          window.opener.postMessage({ type: 'seek-audio', timestamp: parseFloat(ts) }, window.location.origin);
         }
       });
     });
@@ -480,8 +480,8 @@ function createPdfHtml({
   mimeType: string;
 }): string {
   const timestamp = new Date().toLocaleString();
-  const agencyName = branding?.agencyName || 'Superboard';
-  const brandColor = branding?.color || '#3b82f6';
+  const agencyName = escapeHtml(branding?.agencyName || 'Superboard');
+  const brandColor = /^#[0-9a-fA-F]{6}$/.test(branding?.color || '') ? branding!.color! : '#3b82f6';
 
   return `<!DOCTYPE html>
 <html><head><title>${agencyName} — Whiteboard Export</title>
@@ -493,7 +493,7 @@ function createPdfHtml({
   .meta { font-size: 12px; color: #666; }
 </style></head>
 <body>
-<div class="header"><h1>${agencyName}</h1><div class="meta">${studentName || ''} | ${timestamp}</div></div>
+<div class="header"><h1>${agencyName}</h1><div class="meta">${escapeHtml(studentName || '')} | ${timestamp}</div></div>
 <div style="display:flex;justify-content:center;"><img src="${imageDataUrl}" width="${width}" /></div>
 </body></html>`;
 }

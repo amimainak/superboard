@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ templateId: string }> }
 ) {
   try {
-    const { response } = await getAuthenticatedUser()
+    const { user, response } = await getAuthenticatedUser()
     if (response) return response
 
     const { templateId } = await params
@@ -19,6 +19,7 @@ export async function GET(
       .from('Template')
       .select('*')
       .eq('id', templateId)
+      .eq('tutorId', user!.id)
       .single()
 
     if (error) throw error

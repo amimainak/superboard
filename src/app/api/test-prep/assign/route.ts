@@ -48,6 +48,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // IDOR: verify the caller owns the questions being assigned
+    const ownedQuestions = await db.questionItem.findMany({
+      where: { id: { in: questionIds }, tutorId: auth.userId },
+      select: { id: true },
+    });
+    const ownedIds = new Set(ownedQuestions.map(q => q.id));
+    const disallowedIds = questionIds.filter((id: string) => !ownedIds.has(id));
+    // Only block if some questions have a tutorId that doesn't match
+    // (questions with null tutorId are legacy and allowed)
+    if (disallowedIds.length > 0) {
+      const nonNullTutorQuestions = await db.questionItem.findMany({
+        where: { id: { in: disallowedIds }, tutorId: { not: null } },
+        select: { id: true },
+      });
+      if (nonNullTutorQuestions.length > 0) {
+        return NextResponse.json(
+          { error: 'You do not have access to some of these questions' },
+          { status: 403 },
+        );
+      }
+    }
+
     // Update all questions to reference this category
     const result = await db.questionItem.updateMany({
       where: { id: { in: questionIds } },

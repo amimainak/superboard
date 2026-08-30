@@ -41,6 +41,11 @@ export async function PATCH(
         return NextResponse.json({ error: 'gracePeriodDays must be a number between 1 and 365' }, { status: 400 });
       }
     }
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length > 200) {
+        return NextResponse.json({ error: 'name must be a string with max 200 chars' }, { status: 400 });
+      }
+    }
 
     // SECURITY FIX (AUDIT-MED-1): Use !== undefined checks instead of truthy.
     // Previously, `if (tier)` would skip tier='FREE' (falsy), and
@@ -56,6 +61,15 @@ export async function PATCH(
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    // Protect owner from admin demotion
+    if (isAdmin === false) {
+      const targetUser = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+      const isOwner = targetUser && targetUser.email === process.env.OWNER_EMAIL;
+      if (isOwner) {
+        return NextResponse.json({ error: 'Cannot demote the platform owner' }, { status: 403 });
+      }
     }
 
     const user = await db.user.update({
@@ -105,6 +119,12 @@ export async function DELETE(
       where: { id: userId },
       select: { email: true },
     });
+
+    // Protect owner from deletion
+    const isOwner = targetUser && targetUser.email === process.env.OWNER_EMAIL;
+    if (isOwner) {
+      return NextResponse.json({ error: 'Cannot delete the platform owner' }, { status: 403 });
+    }
 
     await db.user.delete({ where: { id: userId } });
 

@@ -21,6 +21,10 @@ export async function POST(
     const body = await request.json();
     const { status, reason } = body;
 
+    if (typeof reason === 'string' && reason.length > 1000) {
+      return NextResponse.json({ error: 'Reason must be 1000 characters or less.' }, { status: 400 });
+    }
+
     if (!['ACTIVE', 'SUSPENDED', 'BANNED'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status. Must be ACTIVE, SUSPENDED, or BANNED.' }, { status: 400 });
     }
@@ -40,6 +44,12 @@ export async function POST(
 
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Protect owner from ban/suspend
+    const isOwner = currentUser.email === process.env.OWNER_EMAIL;
+    if (isOwner) {
+      return NextResponse.json({ error: 'Cannot ban the platform owner' }, { status: 403 });
     }
 
     const user = await db.user.update({

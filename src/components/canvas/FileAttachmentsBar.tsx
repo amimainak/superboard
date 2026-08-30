@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import DOMPurify from 'dompurify';
 import {
   Paperclip,
   Download,
@@ -147,20 +148,13 @@ export default function FileAttachmentsBar({
       }
 
       try {
-        // SECURITY FIX (FE-H02): Sanitize SVG files to prevent XSS.
-        // SVG files can contain embedded <script> tags and foreignObject elements.
-        // Convert SVG to PNG data URL to neutralize any script execution vectors.
+        // SECURITY FIX (FE-H02): Sanitize SVG files with DOMPurify to prevent XSS.
         let dataUrl = await readFileAsDataUrl(file);
         const isSvg = file.type === 'image/svg+xml';
         if (isSvg) {
-          // Sanitize SVG by stripping script-like content and converting to safe format
           const svgText = atob(dataUrl.split(',')[1] || '');
-          const sanitized = svgText
-            .replace(/<script[\s\S]*?<\/script>/gi, '')
-            .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '')
-            .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-            .replace(/javascript:/gi, '');
-          dataUrl = `data:image/svg+xml;base64,${btoa(sanitized)}`;
+          const sanitized = DOMPurify.sanitize(svgText);
+          dataUrl = 'data:image/svg+xml;base64,' + btoa(sanitized);
         }
 
         // Create Fabric.js image object centered on viewport

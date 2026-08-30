@@ -1,11 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }
 
 export async function GET(request: Request) {
+  const authCheck = await requireAuth(request)
+  if (authCheck instanceof NextResponse) return authCheck
   try {
     const { searchParams } = new URL(request.url)
     const widgetKind = searchParams.get('widgetKind')

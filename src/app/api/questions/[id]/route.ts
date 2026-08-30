@@ -28,6 +28,11 @@ export async function PUT(
       return NextResponse.json({ error: 'Question not found' }, { status: 404 });
     }
 
+    // IDOR check: only the owner can update their own questions
+    if (existing.tutorId && existing.tutorId !== auth.userId) {
+      return NextResponse.json({ error: 'You do not have access to this question' }, { status: 403 });
+    }
+
     const question = await db.questionItem.update({
       where: { id },
       data: {
@@ -71,6 +76,11 @@ export async function DELETE(
     const existing = await db.questionItem.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Question not found' }, { status: 404 });
+    }
+
+    // IDOR check: only the owner can delete their own questions
+    if (existing.tutorId && existing.tutorId !== auth.userId) {
+      return NextResponse.json({ error: 'You do not have access to this question' }, { status: 403 });
     }
 
     // Soft delete

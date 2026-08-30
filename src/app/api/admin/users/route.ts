@@ -27,7 +27,7 @@ export async function GET(request: Request) {
         where,
         select: {
           id: true, email: true, name: true, tier: true, isAdmin: true,
-          status: true, stripeCustomerId: true, parentAgencyId: true,
+          status: true, parentAgencyId: true,
           agencyName: true, createdAt: true, updatedAt: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -66,6 +66,11 @@ export async function PATCH(request: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'userId is required' }, { status: 400 })
+    }
+
+    // Prevent admin from modifying their own tier
+    if (userId === admin!.id && tier) {
+      return NextResponse.json({ error: 'Cannot modify your own tier' }, { status: 403 })
     }
 
     const updates: Record<string, unknown> = {}

@@ -4,6 +4,8 @@
 // For now, reads from env var. Future: reads from User table.
 // ============================================================
 
+import crypto from 'crypto'
+
 /**
  * Validate an API key from the x-api-key header.
  * Currently checks against SUPERBOARD_API_KEYS env var (comma-separated).
@@ -22,8 +24,12 @@ export function validateApiKey(apiKey: string | null): {
   const envKeys = process.env.SUPERBOARD_API_KEYS
   if (envKeys) {
     const allowedKeys = envKeys.split(',').map(k => k.trim()).filter(Boolean)
-    if (allowedKeys.includes(apiKey)) {
-      return { valid: true, userId: 'api-key-' + apiKey.slice(0, 8) }
+    const isValidKey = allowedKeys.some(k => {
+      if (k.length !== apiKey.length) return false
+      try { return crypto.timingSafeEqual(Buffer.from(k), Buffer.from(apiKey)) } catch { return false }
+    })
+    if (isValidKey) {
+      return { valid: true, userId: 'api-key-xxxx' }
     }
   }
 

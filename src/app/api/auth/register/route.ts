@@ -42,11 +42,7 @@ export async function POST(request: NextRequest) {
     // Check if user already exists in our DB (match by Supabase Auth ID)
     const existingById = await db.user.findUnique({ where: { id } });
     if (existingById) {
-      return NextResponse.json({
-        id: existingById.id,
-        email: existingById.email,
-        tier: existingById.tier,
-      });
+      return NextResponse.json({ message: 'Account already exists' }, { status: 200 });
     }
 
     // SECURITY FIX: Removed unsafe primary key modification.
@@ -58,12 +54,7 @@ export async function POST(request: NextRequest) {
     // Check if email is already taken by a different user
     const existingByEmail = await db.user.findUnique({ where: { email } });
     if (existingByEmail) {
-      // Return existing user info without modifying the PK
-      return NextResponse.json({
-        id: existingByEmail.id,
-        email: existingByEmail.email,
-        tier: existingByEmail.tier,
-      });
+      return NextResponse.json({ message: 'Account already exists' }, { status: 200 });
     }
 
     // Create new user record with FREE tier default, using Supabase Auth ID

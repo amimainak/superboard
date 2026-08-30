@@ -6,10 +6,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-guard'
 import { getDraftFeedback } from '@/lib/ai/service'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest) {
   const auth = await getAuthenticatedUser()
   if (auth.response) return auth.response
+
+  const { allowed } = rateLimit('ai:draft-feedback:' + auth.user!.id, 10, 60000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Try again later.' }, { status: 429 })
+  }
 
   try {
     const body = await req.json()
@@ -20,6 +26,11 @@ export async function POST(req: NextRequest) {
         { error: 'Please provide at least 20 characters of draft text.' },
         { status: 400 }
       )
+    }
+
+    const draftText = text.trim()
+    if (draftText.length > 10000) {
+      return NextResponse.json({ error: 'Input too long. Maximum 10,000 characters.' }, { status: 400 })
     }
 
     const result = await getDraftFeedback(text.trim(), context)

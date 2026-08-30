@@ -12,6 +12,8 @@ export async function GET(
     if (response) return response
 
     const { roomId, pageIndex } = await params
+    const pageIndexNum = parseInt(pageIndex)
+    if (isNaN(pageIndexNum) || pageIndexNum < 0) return NextResponse.json({ error: 'Invalid page index' }, { status: 400 })
     const supabase = await createClient()
 
     // Verify room ownership
@@ -24,7 +26,7 @@ export async function GET(
       .from('BoardPage')
       .select('*')
       .eq('roomId', roomId)
-      .eq('pageIndex', parseInt(pageIndex))
+      .eq('pageIndex', pageIndexNum)
       .single()
 
     if (error) throw error
@@ -45,6 +47,8 @@ export async function PUT(
     if (response) return response
 
     const { roomId, pageIndex } = await params
+    const pageIndexNum = parseInt(pageIndex)
+    if (isNaN(pageIndexNum) || pageIndexNum < 0) return NextResponse.json({ error: 'Invalid page index' }, { status: 400 })
     const supabase = await createClient()
 
     // Verify room ownership
@@ -62,7 +66,7 @@ export async function PUT(
     const { data, error } = await (supabase as any)
       .from('BoardPage')
       .upsert(
-        { roomId, pageIndex: parseInt(pageIndex), snapshot },
+        { roomId, pageIndex: pageIndexNum, snapshot },
         { onConflict: 'roomId,pageIndex' }
       )
 

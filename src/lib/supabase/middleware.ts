@@ -5,9 +5,25 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Graceful degradation: if Supabase env vars are missing, skip auth
-  // but still set security headers so the app at least loads.
+  // Fail closed: if Supabase env vars are missing, redirect non-public routes to /login
+  // instead of letting all requests through without auth.
   if (!supabaseUrl || !supabaseKey) {
+    const publicRoutes = ['/', '/login', '/signup']
+    const isPublicRoute = publicRoutes.some(route =>
+      request.nextUrl.pathname === route
+    )
+    const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
+
+    if (!isPublicRoute && !isRoomRoute) {
+      const response = NextResponse.redirect(new URL('/login', request.url))
+      response.headers.set('X-Frame-Options', 'DENY')
+      response.headers.set('X-Content-Type-Options', 'nosniff')
+      response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+      response.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self)')
+      response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      return response
+    }
+
     const response = NextResponse.next()
     response.headers.set('X-Frame-Options', 'DENY')
     response.headers.set('X-Content-Type-Options', 'nosniff')

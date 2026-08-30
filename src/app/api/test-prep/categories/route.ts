@@ -9,8 +9,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireAuth } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
+  const authCheck = await requireAuth(req)
+  if (authCheck instanceof NextResponse) return authCheck
   try {
     const { searchParams } = req.nextUrl;
     const testType = searchParams.get('testType');

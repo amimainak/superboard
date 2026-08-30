@@ -4,6 +4,8 @@
 // All AI canvas widgets call through this service.
 // ============================================================
 
+import { sanitizePrompt } from '@/lib/ai'
+
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 
 export interface AIServiceConfig {
@@ -53,7 +55,7 @@ async function callGemini(
 ): Promise<string> {
   const apiKey = getApiKey()
   const model = config.model || DEFAULT_MODEL
-  const url = GEMINI_BASE + '/' + model + ':generateContent?key=' + apiKey
+  const url = GEMINI_BASE + '/' + model + ':generateContent'
 
   const body = {
     contents: [{ parts: [{ text: prompt }] }],
@@ -68,7 +70,10 @@ async function callGemini(
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey,
+        },
         body: JSON.stringify(body),
       })
       if (res.status === 429) {
@@ -111,7 +116,7 @@ export async function generateVariations(
     'You are a tutoring assistant. Given the following educational content, generate ' + n + ' alternative versions that teach the same concept but with different wording, examples, or analogies.',
     '',
     'Original content:',
-    sourceText,
+    sanitizePrompt(sourceText),
     '',
     'Respond ONLY with a valid JSON array. Each element must have:',
     '- "label": a short title (3-5 words) describing the variation approach (e.g. "Simple Analogy", "Real-World Example", "Step-by-Step")',
@@ -171,7 +176,7 @@ export async function adaptReadingLevel(
     modeInstruction,
     '',
     'Original text:',
-    sourceText,
+    sanitizePrompt(sourceText),
     '',
     'Respond ONLY with valid JSON:',
     '{',
@@ -214,12 +219,13 @@ export async function getDraftFeedback(
   draftText: string,
   context?: string
 ): Promise<AIDraftFeedbackResult> {
-  const contextLine = context ? 'Context/assignment: ' + context + '\n\n' : ''
+  const sanitizedContext = context ? sanitizePrompt(context) : ''
+  const contextLine = sanitizedContext ? 'Context/assignment: ' + sanitizedContext + '\n\n' : ''
   const prompt = [
     'You are a writing tutor. Analyze the following student draft and provide constructive feedback.',
     '',
     contextLine + 'Student draft:',
-    draftText,
+    sanitizePrompt(draftText),
     '',
     'Respond ONLY with valid JSON:',
     '{',

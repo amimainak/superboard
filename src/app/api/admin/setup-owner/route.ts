@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import crypto from 'crypto'
+import { rateLimit } from '@/lib/rate-limit'
 
-const OWNER_EMAIL = 'thephysicsmathtutor@gmail.com'
+const OWNER_EMAIL = process.env.OWNER_EMAIL || 'owner@superboard.app'
 
 // POST /api/admin/setup-owner
 // One-time setup: creates the platform owner account.
 // Requires SETUP_SECRET env var to prevent abuse.
 // Uses SUPABASE_SERVICE_ROLE_KEY for admin-level operations.
 export async function POST(request: Request) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown'
+  const { allowed } = rateLimit('setup-owner:' + ip, 5, 60000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  }
+
   const secret = process.env.SETUP_SECRET
   if (!secret) {
     return NextResponse.json({ error: 'SETUP_SECRET not configured' }, { status: 500 })
@@ -15,7 +23,7 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}))
   const providedSecret = (body as { secret?: string }).secret
-  if (providedSecret !== secret) {
+  if (!providedSecret || !crypto.timingSafeEqual(Buffer.from(providedSecret), Buffer.from(secret))) {
     return NextResponse.json({ error: 'Invalid secret' }, { status: 403 })
   }
 
@@ -39,7 +47,6 @@ export async function POST(request: Request) {
       userId = existingAuth.id
     } else {
       // Create the auth user with a temporary password
-      const crypto = await import('crypto')
       const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
       const password = Array.from(crypto.randomBytes(20)).map((b: number) => chars[b % chars.length]).join('')
 
@@ -130,13 +137,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      user: verify,
-      isNewUser,
-      diagnostics,
-      authUserId: userId,
-      message: isNewUser
-        ? 'Owner account created. Check your email to set a password, or use "Forgot Password" at /login.'
-        : 'Existing account promoted to owner role.',
+      message: 'Owner account configured',
     })
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Setup failed'

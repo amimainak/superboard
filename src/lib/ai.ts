@@ -49,7 +49,7 @@ export function getModelForAction(action: AIAction): string {
  * SECURITY (V-13): Sanitize user prompts before sending to Claude.
  * Removes common prompt injection patterns and limits length.
  */
-function sanitizePrompt(prompt: string): string {
+export function sanitizePrompt(prompt: string): string {
   // Limit prompt length
   let sanitized = prompt.substring(0, 50_000);
 

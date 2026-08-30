@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { rateLimit } from '@/lib/rate-limit';
 
 const prisma = new PrismaClient();
 
@@ -8,8 +9,14 @@ const prisma = new PrismaClient();
 // Only works when NEXT_PUBLIC_SUPABASE_URL is NOT set
 // ============================================================
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown';
+  const { allowed } = rateLimit('dev-login:' + ip, 5, 60000);
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   // Security gate: only works in development without Supabase
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  if (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_SUPABASE_URL) {
     return NextResponse.json({ error: 'Supabase Auth is configured. Use normal login.' }, { status: 403 });
   }
 

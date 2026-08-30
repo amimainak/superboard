@@ -3,6 +3,7 @@ import { AccessToken } from 'livekit-server-sdk'
 import { parseBody, livekitTokenSchema } from '@/lib/validations'
 import { rateLimit } from '@/lib/rate-limit'
 import { getAuthenticatedUser } from '@/lib/auth-guard'
+import { db } from '@/lib/db'
 
 // POST /api/livekit/token — generate LiveKit join token
 export async function POST(request: Request) {
@@ -37,6 +38,25 @@ export async function POST(request: Request) {
     }
     const { roomName, participantName, metadata } = data
 
+    // CRITICAL: Verify user has access to this room
+    const room = await db.room.findUnique({
+      where: { id: roomName },
+      select: { tutorId: true },
+    })
+    const isTutor = room && room.tutorId === user!.id
+    let canPublish = false
+    if (isTutor) {
+      canPublish = true
+    } else {
+      // Check if user is a participant in this room
+      const participant = await db.roomParticipant.findFirst({
+        where: { roomId: roomName, userId: user!.id },
+      })
+      if (!participant) {
+        return NextResponse.json({ error: 'You do not have access to this room' }, { status: 403 })
+      }
+    }
+
     // Force participantIdentity to the authenticated user's ID
     const participantIdentity = user!.id
 
@@ -49,7 +69,7 @@ export async function POST(request: Request) {
     token.addGrant({
       roomJoin: true,
       room: roomName,
-      canPublish: true,
+      canPublish,
       canSubscribe: true,
       // No recording
       canPublishData: true,

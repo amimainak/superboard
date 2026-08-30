@@ -62,6 +62,7 @@
     "cmdk": "^1.1.1",
     "compromise": "^14.16.0",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.4.14",
     "embla-carousel-react": "^8.6.0",
     "fabric": "^7.4.0",
     "framer-motion": "^12.23.2",
@@ -101,6 +102,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/dompurify": "^3.0.5",
     "@types/katex": "^0.16.8",
     "@types/react": "^19",
     "@types/react-dom": "^19",

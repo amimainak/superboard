@@ -94,7 +94,11 @@ export async function requireOwnerOrAdmin(): Promise<{
       where: { id: user!.id },
       select: { isAdmin: true },
     })
-    if (!dbUser?.isAdmin) {
+    // TODO: add a dedicated role column for granular permissions.
+    // For now, allow if OWNER_EMAIL env var matches OR isAdmin is true.
+    const ownerEmail = process.env.OWNER_EMAIL
+    const isOwner = ownerEmail ? user!.email === ownerEmail : false
+    if (!dbUser?.isAdmin && !isOwner) {
       return {
         user: null,
         response: NextResponse.json({ error: 'Admin access required.' }, { status: 403 }),

@@ -95,6 +95,7 @@ self.addEventListener('activate', function(event) {
 
 // ---- Logout message: clear all caches ----
 self.addEventListener('message', function(event) {
+  if (event.source && event.source !== self) return;
   if (event.data && event.data.type === 'LOGOUT') {
     caches.keys().then(function(keys) {
       keys.forEach(function(key) { caches.delete(key); });

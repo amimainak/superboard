@@ -22,16 +22,23 @@ export async function GET(request: Request) {
       if (user) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const sb = supabase as any
-        await sb.from('User').upsert(
-          {
+        // Only set isAdmin: false on create — never reset it on update
+        const { data: existingUser } = await sb.from('User').select('id').eq('id', user.id).single()
+        if (existingUser) {
+          await sb.from('User').update({
+            email: user.email ?? '',
+            name: user.user_metadata?.name || null,
+            tier: 'FREE',
+          }).eq('id', user.id)
+        } else {
+          await sb.from('User').insert({
             id: user.id,
             email: user.email ?? '',
             name: user.user_metadata?.name || null,
             tier: 'FREE',
             isAdmin: false,
-          },
-          { onConflict: 'id' }
-        )
+          })
+        }
       }
 
       return NextResponse.redirect(`${origin}${next}`)

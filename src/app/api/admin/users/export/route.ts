@@ -19,6 +19,15 @@ export async function GET(request: NextRequest) {
   const tier = searchParams.get('tier') || '';
   const status = searchParams.get('status') || '';
 
+  const VALID_TIERS = ['FREE', 'PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'];
+  const VALID_STATUSES = ['ACTIVE', 'SUSPENDED', 'BANNED'];
+  if (tier && !VALID_TIERS.includes(tier)) {
+    return NextResponse.json({ error: 'Invalid tier filter' }, { status: 400 });
+  }
+  if (status && !VALID_STATUSES.includes(status)) {
+    return NextResponse.json({ error: 'Invalid status filter' }, { status: 400 });
+  }
+
   try {
     const where: any = {};
     if (tier) where.tier = tier;
@@ -43,8 +52,8 @@ export async function GET(request: NextRequest) {
     // Build CSV
     const header = 'ID,Email,Name,Tier,Status,Is Admin,Rooms,Templates,Sub-Tutors,Created At';
     const rows = users.map(u => [
-      u.id,
-      `"${u.email}"`,
+      '"' + u.id.replace(/"/g, '""') + '"',
+      '"' + (u.email || '').replace(/"/g, '""') + '"',
       `"${(u.name || '').replace(/"/g, '""')}"`,
       u.tier,
       u.status,

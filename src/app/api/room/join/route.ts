@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = studentEmail.trim().toLowerCase();
 
+    // CRITICAL: Verify the caller IS the student — prevent joining as someone else
+    if (auth.email && auth.email.toLowerCase() !== normalizedEmail) {
+      return NextResponse.json(
+        { error: 'You can only join as yourself' },
+        { status: 403 }
+      );
+    }
+
     // Validate room exists and is active
     const room = await db.room.findUnique({
       where: { id: roomId },

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         hoursPurchased: packConfig.hours,
         hoursRemaining: packConfig.hours,
         pricePaidCents: packConfig.priceCents,
-        status: 'ACTIVE',
+        status: 'PENDING_PAYMENT', // TODO: Set to ACTIVE after payment confirmation
       },
     });
 
