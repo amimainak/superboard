@@ -5,7 +5,7 @@
 // to let tutors hide/show individual widgets and save templates.
 // ============================================================
 
-export type ToolkitId = 'math' | 'physics' | 'chemistry' | 'biology' | 'language' | 'statistics' | 'earthscience' | 'classroom' | 'ai'
+export type ToolkitId = 'math' | 'physics' | 'chemistry' | 'biology' | 'language' | 'statistics' | 'earthscience' | 'arts' | 'classroom' | 'ai'
 
 export type CanvasWidgetEntry = {
   /** Unique widget kind used in WidgetElement.widgetKind */
@@ -156,13 +156,22 @@ const EARTH_SCIENCE_WIDGETS: CanvasWidgetEntry[] = [
 ]
 
 // ============================================================
-// Classroom Widgets
+// Arts Widgets (4 canvas kinds)
+// ============================================================
+const ARTS_WIDGETS: CanvasWidgetEntry[] = [
+  { kind: 'arts-color-theory', label: 'Color Theory Explorer', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'arts-perspective-grid', label: 'Perspective Grid', toolkit: 'arts', gradeBands: ['6-8', '9-12'], isDefault: true },
+  { kind: 'arts-staff-notation', label: 'Staff Notation Builder', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'arts-compare', label: 'Artwork Comparison', toolkit: 'arts', gradeBands: ['6-8', '9-12'], isDefault: true },
+]
+
+// ============================================================
+// Classroom Widgets (3 canvas kinds)
 // ============================================================
 const CLASSROOM_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'classroom-timer', label: 'Timer', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'classroom-random-picker', label: 'Random Picker', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
-  { kind: 'classroom-scoreboard', label: 'Scoreboard', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8'], isDefault: true },
-  { kind: 'classroom-behavior-tracker', label: 'Behavior Tracker', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8'], isDefault: false },
+  { kind: 'classroom-graphing', label: 'Interactive Graphing', toolkit: 'classroom', gradeBands: ['6-8', '9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -186,6 +195,7 @@ export const ALL_CANVAS_WIDGETS: CanvasWidgetEntry[] = [
   ...LANGUAGE_WIDGETS,
   ...STATISTICS_WIDGETS,
   ...EARTH_SCIENCE_WIDGETS,
+  ...ARTS_WIDGETS,
   ...CLASSROOM_WIDGETS,
   ...AI_WIDGETS,
 ]
@@ -215,6 +225,7 @@ export const TOOLKIT_LABELS: Record<ToolkitId, string> = {
   language: 'Language',
   statistics: 'Statistics',
   earthscience: 'Earth Science',
+  arts: 'Arts & Music',
   classroom: 'Classroom',
   ai: 'AI Tools',
 }

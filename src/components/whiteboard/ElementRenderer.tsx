@@ -326,6 +326,10 @@ export const ElementRenderer = React.memo(function ElementRenderer({
         gradeBorderTop = '3px solid #3b82f6'
       } else if (wk.startsWith('stat-')) {
         gradeBorderTop = '3px solid #a855f7'
+      } else if (wk.startsWith('arts-')) {
+        gradeBorderTop = '3px solid #8b5cf6'
+      } else if (wk.startsWith('classroom-')) {
+        gradeBorderTop = '3px solid #059669'
       }
       return (
         <g>
@@ -376,7 +380,8 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               </div>
             </div>
           </foreignObject>
-          {/* Close (x) button — SVG, always has pointer events regardless of tool mode */}
+          {/* Action buttons — SVG, always has pointer events regardless of tool mode */}
+          {/* Close (x) button — top right */}
           <g
             style={{ cursor: 'pointer' as const }}
             onPointerDown={(e) => e.stopPropagation()}
@@ -394,7 +399,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
             <circle cx={closeBtnCx} cy={closeBtnCy} r={btnR} fill={btnBg} />
             <text x={closeBtnCx} y={closeBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={12} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>x</text>
           </g>
-          {/* Duplicate button — SVG, always has pointer events regardless of tool mode */}
+          {/* Duplicate (⯑) button — top left */}
           <g
             style={{ cursor: 'pointer' as const }}
             onPointerDown={(e) => e.stopPropagation()}
@@ -405,8 +410,7 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               var clone: WhiteboardElement = {
                 ...element,
                 id: generateId(),
-                x: element.x + 20,
-                y: element.y + 20,
+                x: element.x + 20, y: element.y + 20,
               }
               store.addElement(clone)
               store.selectElements([clone.id])
@@ -417,6 +421,40 @@ export const ElementRenderer = React.memo(function ElementRenderer({
           >
             <circle cx={dupBtnCx} cy={dupBtnCy} r={btnR} fill={btnBg} />
             <text x={dupBtnCx} y={dupBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={11} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>⯑</text>
+          </g>
+          {/* Lock/Unlock (🔒/🔓) button — below close, top right */}
+          <g
+            style={{ cursor: 'pointer' as const }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              var store = useWhiteboardStore.getState()
+              store.pushHistory()
+              store.updateElement(element.id, { locked: !element.locked } as Partial<WhiteboardElement>)
+            }}
+            opacity={element.locked ? 1 : 0.5}
+            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
+            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', String(element.locked ? 1 : 0.5)) }}
+          >
+            <circle cx={element.x + element.width - 14} cy={element.y + 40} r={btnR} fill={element.locked ? 'rgba(239,68,68,0.15)' : btnBg} />
+            <text x={element.x + element.width - 14} y={41} textAnchor='middle' dominantBaseline='central' fontSize={10} fill={element.locked ? '#f87171' : btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>{element.locked ? '🔒' : '🔓'}</text>
+          </g>
+          {/* Bring to Front (↑) button — below duplicate, top left */}
+          <g
+            style={{ cursor: 'pointer' as const }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              var store = useWhiteboardStore.getState()
+              store.pushHistory()
+              store.bringToFront(element.id)
+            }}
+            opacity={0.5}
+            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
+            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.5') }}
+          >
+            <circle cx={element.x + 14} cy={element.y + 40} r={btnR} fill={btnBg} />
+            <text x={element.x + 14} y={41} textAnchor='middle' dominantBaseline='central' fontSize={12} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>↑</text>
           </g>
         </g>
       )

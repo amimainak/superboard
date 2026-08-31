@@ -247,20 +247,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
     addElement(el)
   }, [addElement, camera, isDark, currentPageIndex, sizePreset])
 
-  // H3 FIX: Auto-collapse panel after placing a widget
-  const addToBoardAutoCollapse = useCallback((widgetKind: string, overrides?: Record<string, unknown>) => {
-    addToBoard(widgetKind, overrides)
-    // Dynamically import widget store to avoid circular deps at module level
-    import('@/lib/room/widget-store').then(({ useWidgetStore }) => {
-      // Schedule collapse after 1.5 seconds (gives time for the widget to render)
-      setTimeout(() => {
-        const state = useWidgetStore.getState()
-        if (state.panelVisible) {
-          useWidgetStore.getState().setPanelMode('minimized')
-        }
-      }, 1500)
-    })
-  }, [addToBoard])
+  // NOTE: Panel stays open after placing widget (no auto-collapse)
 
   // Shared "Add to Board" button for math widgets
   // B4 FIX: Responsive label — shorter on mobile to prevent truncation
@@ -380,7 +367,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   )
                 })}
               </div>
-              {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-function-plotter', { expression: plotterExpr, range: plotterRange }) })}
+              {addBoardBtn('Add to Board', function() { addToBoard('math-function-plotter', { expression: plotterExpr, range: plotterRange }) })}
             </div>
           </div>
           <div className="toolkit-section">
@@ -474,7 +461,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 </button>
                 <span style={{ fontSize: 12, fontWeight: 700, color: actText }}>{circleShaded.length}/{circleDivisions}</span>
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-fraction-circle', { divisions: circleDivisions, shaded: circleShaded }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-fraction-circle', { divisions: circleDivisions, shaded: circleShaded }))}
             </div>
           </div>
 
@@ -514,24 +501,24 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   <button key={o} onClick={() => setBarOrientation(o)} style={{ padding: '2px 8px', borderRadius: 3, fontSize: 10, background: barOrientation === o ? actBg : dkBg, border: barOrientation === o ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: barOrientation === o ? actText : dkText, cursor: 'pointer' }}>{o}</button>
                 ))}
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-fraction-bar', { divisions: barDivisions, shaded: barShaded, orientation: barOrientation }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-fraction-bar', { divisions: barDivisions, shaded: barShaded, orientation: barOrientation }))}
             </div>
           </div>
 
           {/* Multiplication Grid */}
           <div className="toolkit-section">{sectionTitle('Multiplication Grid')}
           <div style={{ padding: '0 12px 12px' }}><MultGridPanel isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-multiplication-grid', {}) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-multiplication-grid', {}) })}</div>
 
           {/* Base-10 Blocks */}
           <div className="toolkit-section">{sectionTitle('Base-10 Blocks')}
           <div style={{ padding: '0 12px 12px' }}><Base10Panel isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-base-10', {}) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-base-10', {}) })}</div>
 
           {/* Flashcards */}
           <div className="toolkit-section">{sectionTitle('Flashcards')}
           <div style={{ padding: '0 12px 12px' }}><FlashcardsPanel isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-flashcards', {}) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-flashcards', {}) })}</div>
 
 
         </>
@@ -551,7 +538,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText }}>Max:</span>{numInput(nlMax, setNlMax, 1, 100, 1, 48)}
                 <span style={{ fontSize: 11, color: dkText }}>Step:</span>{numInput(nlStep, setNlStep, 0.1, 10, 0.1, 48)}
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-number-line', { min: nlMin, max: nlMax, step: nlStep }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-number-line', { min: nlMin, max: nlMax, step: nlStep }))}
             </div>
           </div>
 
@@ -570,7 +557,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 {numInput(angleCustomDeg, setAngleCustomDeg, 1, 359, 1, 52)}
                 <span style={{ fontSize: 11, color: dkText }}>°</span>
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-angle-maker', { degrees: anglePreset !== null ? anglePreset : angleCustomDeg }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-angle-maker', { degrees: anglePreset !== null ? anglePreset : angleCustomDeg }))}
             </div>
           </div>
 
@@ -586,7 +573,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   ))}
                 </div>
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-polygon', { sides: polySides }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-polygon', { sides: polySides }))}
             </div>
           </div>
 
@@ -609,17 +596,17 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           {/* Calculator */}
           <div className="toolkit-section">{sectionTitle('Scientific Calculator')}
           <div style={{ padding: '0 12px 12px' }}><CalcPanel isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-calculator', {}) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-calculator', {}) })}</div>
 
           {/* Unit Converter */}
           <div className="toolkit-section">{sectionTitle('Unit Converter')}
           <div style={{ padding: '0 12px 12px' }}><UnitPanel isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-unit-converter', {}) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-unit-converter', {}) })}</div>
 
           {/* Formula Reference */}
           <div className="toolkit-section">{sectionTitle('Formula Reference')}
           <div style={{ padding: '0 12px 12px' }}><FormulaPanel band="middle" isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-formula-reference', { band: 'middle' }) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-formula-reference', { band: 'middle' }) })}</div>
 
 
         </>
@@ -639,7 +626,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 <span style={{ fontSize: 11, color: dkText }}>Step:</span>{numInput(cpStep, setCpStep, 0.5, 10, 0.5, 48)}
               </div>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: 0 }}>Click on the plane to plot points.</p>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-coordinate-plane', { range: cpRange, step: cpStep }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-coordinate-plane', { range: cpRange, step: cpStep }))}
             </div>
           </div>
 
@@ -653,7 +640,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                   <button key={n} onClick={() => setVennCount(n as 2 | 3)} style={{ padding: '3px 10px', borderRadius: 4, fontSize: 11, background: vennCount === n ? actBg : dkBg, border: vennCount === n ? '1px solid ' + actBorder : '1px solid ' + dkBorder, color: vennCount === n ? actText : dkText, cursor: 'pointer' }}>{n}</button>
                 ))}
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-venn-diagram', { circleCount: vennCount }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-venn-diagram', { circleCount: vennCount }))}
             </div>
           </div>
 
@@ -667,7 +654,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 11, color: dkText }}>Values:</span>{textInput(chartValues, setChartValues, '3,7,5,9')}
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-bar-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-bar-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
             </div>
           </div>
 
@@ -681,19 +668,19 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: 11, color: dkText }}>Values:</span>{textInput(chartValues, setChartValues, '30,25,20,25')}
               </div>
-              {addBoardBtn('Add to Board', () => addToBoardAutoCollapse('math-pie-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
+              {addBoardBtn('Add to Board', () => addToBoard('math-pie-chart', { categories: chartCategories.split(',').map(function(s) { return s.trim() }).filter(Boolean), values: chartValues.split(',').map(function(s) { return parseFloat(s.trim()) }).filter(function(n) { return !isNaN(n) }) }))}
             </div>
           </div>
 
           {/* Formula Reference */}
           <div className="toolkit-section">{sectionTitle('Formula Reference')}
           <div style={{ padding: '0 12px 12px' }}><FormulaPanel band="highschool" isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-formula-reference', { band: 'highschool' }) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-formula-reference', { band: 'highschool' }) })}</div>
 
           {/* Proof Builder */}
           <div className="toolkit-section">{sectionTitle('Proof Builder')}
           <div style={{ padding: '0 12px 12px' }}><ProofPanel isDark={isDark} /></div>
-          {addBoardBtn('Add to Board', function() { addToBoardAutoCollapse('math-proof-builder', {}) })}</div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-proof-builder', {}) })}</div>
 
 
         </>

@@ -675,6 +675,21 @@ import {
   getAIWidgetDefaultSize,
   AI_WIDGET_KIND_LABELS,
 } from './CanvasAIWidgets'
+import {
+  CanvasColorTheory,
+  CanvasPerspectiveGrid,
+  CanvasStaffNotation,
+  CanvasArtworkCompare,
+  CanvasTimer,
+  CanvasRandomPicker,
+  CanvasGraphingTool,
+  getArtsWidgetDefaultConfig,
+  getArtsWidgetDefaultSize,
+  getClassroomWidgetDefaultConfig,
+  getClassroomWidgetDefaultSize,
+  ARTS_WIDGET_KIND_LABELS,
+  CLASSROOM_WIDGET_KIND_LABELS,
+} from './CanvasArtsWidgets'
 
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
   // Statistics widgets
@@ -764,6 +779,15 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'ai-generate-similar': GenerateSimilarWidget as unknown as React.ComponentType<CanvasWidgetProps>,
   'ai-reading-level': ReadingLevelAdapterWidget as unknown as React.ComponentType<CanvasWidgetProps>,
   'ai-draft-feedback': DraftFeedbackWidget as unknown as React.ComponentType<CanvasWidgetProps>,
+  // Arts widgets
+  'arts-color-theory': CanvasColorTheory,
+  'arts-perspective-grid': CanvasPerspectiveGrid,
+  'arts-staff-notation': CanvasStaffNotation,
+  'arts-compare': CanvasArtworkCompare,
+  // Classroom widgets
+  'classroom-timer': CanvasTimer,
+  'classroom-random-picker': CanvasRandomPicker,
+  'classroom-graphing': CanvasGraphingTool,
 }
 
 export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -877,6 +901,15 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'ai-generate-similar': return getAIWidgetDefaultConfig('ai-generate-similar')
     case 'ai-reading-level': return getAIWidgetDefaultConfig('ai-reading-level')
     case 'ai-draft-feedback': return getAIWidgetDefaultConfig('ai-draft-feedback')
+    // Arts widgets
+    case 'arts-color-theory': return getArtsWidgetDefaultConfig('arts-color-theory')
+    case 'arts-perspective-grid': return getArtsWidgetDefaultConfig('arts-perspective-grid')
+    case 'arts-staff-notation': return getArtsWidgetDefaultConfig('arts-staff-notation')
+    case 'arts-compare': return getArtsWidgetDefaultConfig('arts-compare')
+    // Classroom widgets
+    case 'classroom-timer': return getClassroomWidgetDefaultConfig('classroom-timer')
+    case 'classroom-random-picker': return getClassroomWidgetDefaultConfig('classroom-random-picker')
+    case 'classroom-graphing': return getClassroomWidgetDefaultConfig('classroom-graphing')
     default: return {}
   }
 }
@@ -967,6 +1000,15 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'ai-generate-similar': return getAIWidgetDefaultSize('ai-generate-similar')
     case 'ai-reading-level': return getAIWidgetDefaultSize('ai-reading-level')
     case 'ai-draft-feedback': return getAIWidgetDefaultSize('ai-draft-feedback')
+    // Arts widgets
+    case 'arts-color-theory': return getArtsWidgetDefaultSize('arts-color-theory')
+    case 'arts-perspective-grid': return getArtsWidgetDefaultSize('arts-perspective-grid')
+    case 'arts-staff-notation': return getArtsWidgetDefaultSize('arts-staff-notation')
+    case 'arts-compare': return getArtsWidgetDefaultSize('arts-compare')
+    // Classroom widgets
+    case 'classroom-timer': return getClassroomWidgetDefaultSize('classroom-timer')
+    case 'classroom-random-picker': return getClassroomWidgetDefaultSize('classroom-random-picker')
+    case 'classroom-graphing': return getClassroomWidgetDefaultSize('classroom-graphing')
     default: return { width: 300, height: 300 }
   }
 }
@@ -987,4 +1029,8 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...SCIENCE_WIDGET_KIND_LABELS,
   // AI widgets
   ...AI_WIDGET_KIND_LABELS,
+  // Arts widgets
+  ...ARTS_WIDGET_KIND_LABELS,
+  // Classroom widgets
+  ...CLASSROOM_WIDGET_KIND_LABELS,
 }

@@ -6,10 +6,6 @@ import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 
-// ============================================================
-// Inline Arts Tools — self-contained, no modal dependency
-// ============================================================
-
 function ToolSkeleton({ isDark }: { isDark: boolean }) {
   return (
     <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -286,9 +282,13 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
 
   const toggleBand = (band: GradeBand) => {
     setVisibleBands(prev => {
@@ -299,6 +299,40 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
     })
   }
 
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) next.delete(sectionId)
+      else next.add(sectionId)
+      return next
+    })
+  }
+
+  // Add to Board — same pattern as MathToolkit
+  const addToBoard = useCallback((widgetKind: string, overrides?: Record<string, unknown>) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = ((vw / 2) - 80 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(),
+      type: 'widget',
+      widgetKind,
+      config: { ...getDefaultWidgetConfig(widgetKind), ...overrides },
+      x: cx - size.width / 2,
+      y: cy - size.height / 2,
+      width: size.width,
+      height: size.height,
+      rotation: 0, opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1, locked: false,
+      pageIndex: currentPageIndex,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark, currentPageIndex])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -306,9 +340,19 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
   const actBg = 'rgba(139,92,246,0.15)'
   const actBorder = 'rgba(139,92,246,0.3)'
   const actText = '#a78bfa'
+  const addBg = 'rgba(5,150,105,0.15)'
+  const addBorder = 'rgba(5,150,105,0.3)'
+  const addText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, sectionId: string) => (
+    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }} onClick={() => toggleSection(sectionId)}>
+      <span>{text}</span>
+      <span style={{ fontSize: 10, color: dkText, transition: 'transform 0.15s', transform: collapsedSections.has(sectionId) ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
+    </div>
+  )
+
+  const addBoardBtn = (widgetKind: string) => (
+    <button onClick={() => addToBoard(widgetKind)} className="toolkit-add-to-board-btn" style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: addBg, border: '1px solid ' + addBorder, color: addText, cursor: 'pointer', alignSelf: 'flex-end', flexShrink: 0 }}>+ Board</button>
   )
 
   return (
@@ -343,24 +387,36 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Color Theory Explorer')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore color harmonies, HSL values, and value scales. Great for teaching color theory fundamentals.</p>
-            <div style={{ padding: '0 12px 12px' }}><ColorTheoryInline isDark={isDark} /></div>
+            {sectionTitle('Color Theory Explorer', 'all-color')}
+            {!collapsedSections.has('all-color') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore color harmonies, HSL values, and value scales. Great for teaching color theory fundamentals.</p>
+              <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Perspective Grid')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create one-point perspective grids. Adjust vanishing point and line count for drawing exercises.</p>
-            <div style={{ padding: '0 12px 12px' }}><PerspectiveGridInline isDark={isDark} /></div>
+            {sectionTitle('Perspective Grid', 'all-perspective')}
+            {!collapsedSections.has('all-perspective') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create one-point perspective grids. Adjust vanishing point and line count for drawing exercises.</p>
+              <div style={{ padding: '0 12px 8px' }}><PerspectiveGridInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-perspective-grid')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Staff Notation Builder')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build melodies on a treble clef staff. Click notes to add them to your composition.</p>
-            <div style={{ padding: '0 12px 12px' }}><StaffNotationInline isDark={isDark} /></div>
+            {sectionTitle('Staff Notation Builder', 'all-staff')}
+            {!collapsedSections.has('all-staff') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build melodies on a treble clef staff. Click notes to add them to your composition.</p>
+              <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Artwork Comparison')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Compare two artworks using guided prompts for color, composition, texture, style, and meaning.</p>
-            <div style={{ padding: '0 12px 12px' }}><ArtCompareInline isDark={isDark} /></div>
+            {sectionTitle('Artwork Comparison', 'all-compare')}
+            {!collapsedSections.has('all-compare') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Compare two artworks using guided prompts for color, composition, texture, style, and meaning.</p>
+              <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
+            </>}
           </div>
         </>
       )}
@@ -371,14 +427,20 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Color Theory Explorer')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Learn about colors! Mix hues and see harmonies.</p>
-            <div style={{ padding: '0 12px 12px' }}><ColorTheoryInline isDark={isDark} /></div>
+            {sectionTitle('Color Theory Explorer', 'k5-color')}
+            {!collapsedSections.has('k5-color') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Learn about colors! Mix hues and see harmonies.</p>
+              <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Staff Notation Builder')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place notes on the staff to create simple melodies.</p>
-            <div style={{ padding: '0 12px 12px' }}><StaffNotationInline isDark={isDark} /></div>
+            {sectionTitle('Staff Notation Builder', 'k5-staff')}
+            {!collapsedSections.has('k5-staff') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place notes on the staff to create simple melodies.</p>
+              <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
+            </>}
           </div>
         </>
       )}
@@ -389,20 +451,32 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Color Theory Explorer')}
-            <div style={{ padding: '0 12px 12px' }}><ColorTheoryInline isDark={isDark} /></div>
+            {sectionTitle('Color Theory Explorer', '68-color')}
+            {!collapsedSections.has('68-color') && <>
+              <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Perspective Grid')}
-            <div style={{ padding: '0 12px 12px' }}><PerspectiveGridInline isDark={isDark} /></div>
+            {sectionTitle('Perspective Grid', '68-perspective')}
+            {!collapsedSections.has('68-perspective') && <>
+              <div style={{ padding: '0 12px 8px' }}><PerspectiveGridInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-perspective-grid')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Staff Notation Builder')}
-            <div style={{ padding: '0 12px 12px' }}><StaffNotationInline isDark={isDark} /></div>
+            {sectionTitle('Staff Notation Builder', '68-staff')}
+            {!collapsedSections.has('68-staff') && <>
+              <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Artwork Comparison')}
-            <div style={{ padding: '0 12px 12px' }}><ArtCompareInline isDark={isDark} /></div>
+            {sectionTitle('Artwork Comparison', '68-compare')}
+            {!collapsedSections.has('68-compare') && <>
+              <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
+            </>}
           </div>
         </>
       )}
@@ -413,20 +487,32 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Color Theory Explorer')}
-            <div style={{ padding: '0 12px 12px' }}><ColorTheoryInline isDark={isDark} /></div>
+            {sectionTitle('Color Theory Explorer', '912-color')}
+            {!collapsedSections.has('912-color') && <>
+              <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Perspective Grid')}
-            <div style={{ padding: '0 12px 12px' }}><PerspectiveGridInline isDark={isDark} /></div>
+            {sectionTitle('Perspective Grid', '912-perspective')}
+            {!collapsedSections.has('912-perspective') && <>
+              <div style={{ padding: '0 12px 8px' }}><PerspectiveGridInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-perspective-grid')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Staff Notation Builder')}
-            <div style={{ padding: '0 12px 12px' }}><StaffNotationInline isDark={isDark} /></div>
+            {sectionTitle('Staff Notation Builder', '912-staff')}
+            {!collapsedSections.has('912-staff') && <>
+              <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Artwork Comparison')}
-            <div style={{ padding: '0 12px 12px' }}><ArtCompareInline isDark={isDark} /></div>
+            {sectionTitle('Artwork Comparison', '912-compare')}
+            {!collapsedSections.has('912-compare') && <>
+              <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
+            </>}
           </div>
         </>
       )}

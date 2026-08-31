@@ -1,7 +1,10 @@
 'use client'
 
-import { useState, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { generateId } from '@/lib/whiteboard/utils'
+import { getDefaultWidgetConfig, getWidgetDefaultSize } from '@/components/whiteboard/CanvasWidgets'
+import type { WidgetElement } from '@/lib/whiteboard/types'
 
 // Lazy-load panel utilities — only parsed when the grade tab renders them
 const TimerStopwatchLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.TimerStopwatch })))
@@ -42,9 +45,13 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 
 export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
 
   const toggleBand = (band: GradeBand) => {
     setVisibleBands(prev => {
@@ -55,6 +62,35 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
     })
   }
 
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) next.delete(sectionId)
+      else next.add(sectionId)
+      return next
+    })
+  }
+
+  // Add to Board
+  const addToBoard = useCallback((widgetKind: string, overrides?: Record<string, unknown>) => {
+    const size = getWidgetDefaultSize(widgetKind)
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = ((vw / 2) - 80 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+    const el: WidgetElement = {
+      id: generateId(), type: 'widget', widgetKind,
+      config: { ...getDefaultWidgetConfig(widgetKind), ...overrides },
+      x: cx - size.width / 2, y: cy - size.height / 2,
+      width: size.width, height: size.height,
+      rotation: 0, opacity: 1,
+      strokeColor: isDark ? '#334155' : '#e2e8f0',
+      fillColor: isDark ? '#0f172a' : '#ffffff',
+      strokeWidth: 1, locked: false, pageIndex: currentPageIndex,
+    }
+    addElement(el)
+  }, [addElement, camera, isDark, currentPageIndex])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -62,9 +98,19 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
   const actBg = 'rgba(5,150,105,0.15)'
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
+  const addBg = 'rgba(5,150,105,0.15)'
+  const addBorder = 'rgba(5,150,105,0.3)'
+  const addText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
+  const sectionTitle = (text: string, sectionId: string) => (
+    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }} onClick={() => toggleSection(sectionId)}>
+      <span>{text}</span>
+      <span style={{ fontSize: 10, color: dkText, transition: 'transform 0.15s', transform: collapsedSections.has(sectionId) ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
+    </div>
+  )
+
+  const addBoardBtn = (widgetKind: string) => (
+    <button onClick={() => addToBoard(widgetKind)} className="toolkit-add-to-board-btn" style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: addBg, border: '1px solid ' + addBorder, color: addText, cursor: 'pointer', alignSelf: 'flex-end', flexShrink: 0 }}>+ Board</button>
   )
 
   return (
@@ -99,16 +145,25 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
       {activeBand === 'all' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Timer / Stopwatch (K-12)')}
-            <div style={{ padding: '0 12px 12px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+            {sectionTitle('Timer / Stopwatch (K-12)', 'all-timer')}
+            {!collapsedSections.has('all-timer') && <>
+              <div style={{ padding: '0 12px 8px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-timer')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Interactive Graphing Tool (6-12)')}
-            <div style={{ padding: '0 12px 12px' }}><GraphingToolPanel isDark={isDark} /></div>
+            {sectionTitle('Interactive Graphing Tool (6-12)', 'all-graphing')}
+            {!collapsedSections.has('all-graphing') && <>
+              <div style={{ padding: '0 12px 8px' }}><GraphingToolPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-graphing')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Random Student Picker (K-12)')}
-            <div style={{ padding: '0 12px 12px' }}><StudentPickerPanel isDark={isDark} /></div>
+            {sectionTitle('Random Student Picker (K-12)', 'all-picker')}
+            {!collapsedSections.has('all-picker') && <>
+              <div style={{ padding: '0 12px 8px' }}><StudentPickerPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
+            </>}
           </div>
         </>
       )}
@@ -119,12 +174,18 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Timer / Stopwatch')}
-            <div style={{ padding: '0 12px 12px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+            {sectionTitle('Timer / Stopwatch', 'k5-timer')}
+            {!collapsedSections.has('k5-timer') && <>
+              <div style={{ padding: '0 12px 8px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-timer')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Random Student Picker')}
-            <div style={{ padding: '0 12px 12px' }}><StudentPickerPanel isDark={isDark} /></div>
+            {sectionTitle('Random Student Picker', 'k5-picker')}
+            {!collapsedSections.has('k5-picker') && <>
+              <div style={{ padding: '0 12px 8px' }}><StudentPickerPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
+            </>}
           </div>
         </>
       )}
@@ -135,16 +196,25 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
       {activeBand === 'middle' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Timer / Stopwatch')}
-            <div style={{ padding: '0 12px 12px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+            {sectionTitle('Timer / Stopwatch', '68-timer')}
+            {!collapsedSections.has('68-timer') && <>
+              <div style={{ padding: '0 12px 8px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-timer')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Interactive Graphing Tool')}
-            <div style={{ padding: '0 12px 12px' }}><GraphingToolPanel isDark={isDark} /></div>
+            {sectionTitle('Interactive Graphing Tool', '68-graphing')}
+            {!collapsedSections.has('68-graphing') && <>
+              <div style={{ padding: '0 12px 8px' }}><GraphingToolPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-graphing')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Random Student Picker')}
-            <div style={{ padding: '0 12px 12px' }}><StudentPickerPanel isDark={isDark} /></div>
+            {sectionTitle('Random Student Picker', '68-picker')}
+            {!collapsedSections.has('68-picker') && <>
+              <div style={{ padding: '0 12px 8px' }}><StudentPickerPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
+            </>}
           </div>
         </>
       )}
@@ -155,16 +225,25 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
       {activeBand === 'highschool' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle('Timer / Stopwatch')}
-            <div style={{ padding: '0 12px 12px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+            {sectionTitle('Timer / Stopwatch', '912-timer')}
+            {!collapsedSections.has('912-timer') && <>
+              <div style={{ padding: '0 12px 8px' }}><TimerStopwatchPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-timer')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Interactive Graphing Tool')}
-            <div style={{ padding: '0 12px 12px' }}><GraphingToolPanel isDark={isDark} /></div>
+            {sectionTitle('Interactive Graphing Tool', '912-graphing')}
+            {!collapsedSections.has('912-graphing') && <>
+              <div style={{ padding: '0 12px 8px' }}><GraphingToolPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-graphing')}</div>
+            </>}
           </div>
           <div className="toolkit-section">
-            {sectionTitle('Random Student Picker')}
-            <div style={{ padding: '0 12px 12px' }}><StudentPickerPanel isDark={isDark} /></div>
+            {sectionTitle('Random Student Picker', '912-picker')}
+            {!collapsedSections.has('912-picker') && <>
+              <div style={{ padding: '0 12px 8px' }}><StudentPickerPanel isDark={isDark} /></div>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
+            </>}
           </div>
         </>
       )}
