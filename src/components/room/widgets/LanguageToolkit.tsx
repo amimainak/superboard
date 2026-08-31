@@ -56,6 +56,11 @@ import {
 // Only lazy-load panel tools that don't have unified components
 const ReadingPassageAnalyzerLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ReadingPassageAnalyzer })))
 
+// Phase 3 — Annotation tools
+const WritingRubricLazy = lazy(() => import('./language/AnnotationUtilities').then(m => ({ default: m.WritingAnnotationRubric })))
+const GrammarChecklistLazy = lazy(() => import('./language/AnnotationUtilities').then(m => ({ default: m.GrammarChecklist })))
+const WritingPromptLazy = lazy(() => import('./language/AnnotationUtilities').then(m => ({ default: m.WritingPromptGenerator })))
+
 // Phase 2 — Marketplace tools
 const RootMorphologyExplorerLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.RootMorphologyExplorer })))
 const ActivePassiveVoiceLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.ActivePassiveVoice })))
