@@ -20,34 +20,49 @@ const HumanBodyInterLazy = lazy(() => import('./biology/BiologyUtilities').then(
 
 // Stable wrapper components (no remount on re-render)
 function PunnettSquarePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PunnettSquareLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PunnettSquareLazy isDark={isDark} /></Suspense>
 }
 function CellDiagramPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><CellDiagramLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><CellDiagramLazy isDark={isDark} /></Suspense>
 }
 function TaxonomyPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TaxonomyLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><TaxonomyLazy isDark={isDark} /></Suspense>
 }
 function BodySystemsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><BodySystemsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><BodySystemsLazy isDark={isDark} /></Suspense>
 }
 function FoodWebPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FoodWebLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><FoodWebLazy isDark={isDark} /></Suspense>
 }
 function DNAStructurePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><DNAStructureLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><DNAStructureLazy isDark={isDark} /></Suspense>
 }
 function NaturalSelectionPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><NaturalSelectionLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><NaturalSelectionLazy isDark={isDark} /></Suspense>
 }
 function CellDivisionPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><CellDivisionLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><CellDivisionLazy isDark={isDark} /></Suspense>
 }
 function PhotoRespPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PhotoRespLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PhotoRespLazy isDark={isDark} /></Suspense>
 }
 function HumanBodyInterPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><HumanBodyInterLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><HumanBodyInterLazy isDark={isDark} /></Suspense>
+}
+
+
+// Loading skeleton shown while lazy-loaded tools are loading
+function ToolSkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {[1,2,3].map(i => (
+        <div key={i} style={{
+          height: 28, borderRadius: 6,
+          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        }} />
+      ))}
+    </div>
+  )
 }
 
 // ============================================================

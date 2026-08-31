@@ -20,34 +20,49 @@ const IonFormationLazy = lazy(() => import('./chemistry/ChemistryUtilities').the
 
 // Stable wrapper components (no remount on re-render)
 function PeriodicTablePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PeriodicTableLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PeriodicTableLazy isDark={isDark} /></Suspense>
 }
 function EquationBalancerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><EquationBalancerLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><EquationBalancerLazy isDark={isDark} /></Suspense>
 }
 function PhScalePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PhScaleLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PhScaleLazy isDark={isDark} /></Suspense>
 }
 function SciNotationPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SciNotationLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><SciNotationLazy isDark={isDark} /></Suspense>
 }
 function MolarMassPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><MolarMassLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><MolarMassLazy isDark={isDark} /></Suspense>
 }
 function LewisDotPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><LewisDotLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><LewisDotLazy isDark={isDark} /></Suspense>
 }
 function VSEPRPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><VSEPRLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><VSEPRLazy isDark={isDark} /></Suspense>
 }
 function GasLawsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><GasLawsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><GasLawsLazy isDark={isDark} /></Suspense>
 }
 function TitrationPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TitrationLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><TitrationLazy isDark={isDark} /></Suspense>
 }
 function IonFormationPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><IonFormationLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><IonFormationLazy isDark={isDark} /></Suspense>
+}
+
+
+// Loading skeleton shown while lazy-loaded tools are loading
+function ToolSkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {[1,2,3].map(i => (
+        <div key={i} style={{
+          height: 28, borderRadius: 6,
+          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        }} />
+      ))}
+    </div>
+  )
 }
 
 // ============================================================

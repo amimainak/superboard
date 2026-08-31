@@ -6,6 +6,7 @@
 
 'use client'
 
+import React, { Component } from 'react'
 import dynamic from 'next/dynamic'
 import { useWidgetStore, type WidgetId, type PanelMode, AVAILABLE_WIDGETS } from '@/lib/room/widget-store'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
@@ -31,6 +32,30 @@ const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({
 const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false })
 const EarthScienceToolkit = dynamic(() => import('./EarthScienceToolkit').then((m) => ({ default: m.EarthScienceToolkit })), { ssr: false })
 const ClassroomToolkit = dynamic(() => import('./ClassroomToolkit').then((m) => ({ default: m.ClassroomToolkit })), { ssr: false })
+
+// Error boundary for dynamic widget loading failures
+class WidgetErrorBoundary extends Component<
+  { children: React.ReactNode; name: string },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(err: Error) {
+    console.warn(`[WidgetPanel] ${this.props.name} failed to load:`, err)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 12, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 20, marginBottom: 8 }}>&#9888;&#65039;</div>
+          <div>Failed to load {this.props.name}.</div>
+          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.7 }}>Try refreshing the page.</div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 interface WidgetPanelProps {
   roomId: string
@@ -163,7 +188,9 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
       {/* Active widget content (hidden in minimized mode) */}
       {!isMinimized && (
         <div className="widget-panel-body" role="tabpanel">
-          {renderWidget()}
+          <WidgetErrorBoundary name={AVAILABLE_WIDGETS.find(w => w.id === activeTab)?.label || activeTab || 'widget'}>
+            {renderWidget()}
+          </WidgetErrorBoundary>
         </div>
       )}
     </div>

@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useRef, useState, useCallback, Component } from 'react'
 import { ChevronUp, Palette, Minus, Type, FunctionSquare } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import './whiteboard.css'
@@ -167,6 +167,29 @@ function VDiv({ isDark }: { isDark: boolean }) {
   return <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 }
 
+// ---- Lightweight inline error boundary for popup content ----
+class PopupErrorBoundary extends Component<
+  { children: React.ReactNode; isDark: boolean },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  componentDidCatch(err: Error) { console.warn('[StylePanel Popup]', err) }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          padding: '8px 12px', fontSize: 11, color: this.props.isDark ? '#f87171' : '#dc2626',
+          textAlign: 'center', lineHeight: 1.4,
+        }}>
+          Something went wrong. Please try again.
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 // ---- Main Style Panel ----
 
 export function StylePanel() {
@@ -285,19 +308,21 @@ export function StylePanel() {
         />
         {openPocket === 'text' && (
           <Popup isDark={isDark} onClose={() => setOpenPocket(null)} anchorRef={textBtnRef}>
-            <TextOptions
-              isDark={isDark}
-              style={{
-                fontFamily: style.fontFamily || 'inherit',
-                fontSize: style.fontSize || 20,
-                textAlign: (style.textAlign as 'left' | 'center' | 'right') || 'left',
-                fontWeight: style.fontWeight || 'normal',
-                fontStyle: style.fontStyle || 'normal',
-              }}
-              setStyle={setStyle}
-            />
-            {/* H4 FIX: Insert Equation quick action */}
-            <InsertEquationButton isDark={isDark} />
+            <PopupErrorBoundary isDark={isDark}>
+              <TextOptions
+                isDark={isDark}
+                style={{
+                  fontFamily: style.fontFamily || 'inherit',
+                  fontSize: style.fontSize || 20,
+                  textAlign: (style.textAlign as 'left' | 'center' | 'right') || 'left',
+                  fontWeight: style.fontWeight || 'normal',
+                  fontStyle: style.fontStyle || 'normal',
+                }}
+                setStyle={setStyle}
+              />
+              {/* H4 FIX: Insert Equation quick action */}
+              <InsertEquationButton isDark={isDark} />
+            </PopupErrorBoundary>
           </Popup>
         )}
       </div>
@@ -551,14 +576,18 @@ function TextOptions({
 
   // H2 FIX: Also apply inline formatting to selected text within contentEditable
   const applyInlineFormat = (command: string, value?: string) => {
-    // Apply to store style (for new elements)
-    if (command === 'bold') setStyle({ fontWeight: s.fontWeight === 'bold' ? 'normal' : 'bold' })
-    else if (command === 'italic') setStyle({ fontStyle: s.fontStyle === 'italic' ? 'normal' : 'italic' })
-    else if (command === 'underline' || command === 'foreColor') {
-      // These only work inline, not at element level
+    try {
+      // Apply to store style (for new elements)
+      if (command === 'bold') setStyle({ fontWeight: s.fontWeight === 'bold' ? 'normal' : 'bold' })
+      else if (command === 'italic') setStyle({ fontStyle: s.fontStyle === 'italic' ? 'normal' : 'italic' })
+      else if (command === 'underline' || command === 'foreColor') {
+        // These only work inline, not at element level
+      }
+      // Also apply to any current selection in a contentEditable
+      document.execCommand(command, false, value || undefined)
+    } catch (err) {
+      console.warn('[StylePanel] applyInlineFormat failed:', err)
     }
-    // Also apply to any current selection in a contentEditable
-    document.execCommand(command, false, value || undefined)
   }
 
   return (
@@ -710,37 +739,41 @@ function InsertEquationButton({ isDark }: { isDark: boolean }) {
   const addElement = useWhiteboardStore((s) => s.addElement)
 
   const handleInsert = () => {
-    // If a text element is selected, toggle its LaTeX mode
-    if (selectedIds.length === 1) {
-      const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0])
-      if (el && el.type === 'text') {
-        pushHistory()
-        const isCurrentlyLatex = (el as { isLatex?: boolean }).isLatex
-        updateElement(el.id, {
-          isLatex: !isCurrentlyLatex,
-          width: Math.max(280, el.width || 300),
-          height: Math.max(120, el.height || 100),
-        })
-        return
+    try {
+      // If a text element is selected, toggle its LaTeX mode
+      if (selectedIds.length === 1) {
+        const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0])
+        if (el && el.type === 'text') {
+          pushHistory()
+          const isCurrentlyLatex = (el as { isLatex?: boolean }).isLatex
+          updateElement(el.id, {
+            isLatex: !isCurrentlyLatex,
+            width: Math.max(280, el.width || 300),
+            height: Math.max(120, el.height || 100),
+          })
+          return
+        }
       }
+      // Otherwise, create a new equation text element at viewport center
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+      const cx = ((vw / 2) - 150 - camera.x) / camera.zoom
+      const cy = ((vh / 2 - 60) - camera.y) / camera.zoom
+      addElement({
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+        type: 'text',
+        x: cx, y: cy, width: 300, height: 120,
+        rotation: 0, opacity: 1,
+        strokeColor: style.strokeColor, fillColor: 'transparent',
+        strokeWidth: 0, locked: false, pageIndex: currentPageIndex,
+        text: '', fontSize: style.fontSize || 20,
+        fontFamily: style.fontFamily || 'inherit',
+        textAlign: style.textAlign || 'left',
+        isLatex: true,
+      } as Record<string, unknown>)
+    } catch (err) {
+      console.warn('[InsertEquation] Failed:', err)
     }
-    // Otherwise, create a new equation text element at viewport center
-    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
-    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
-    const cx = ((vw / 2) - 150 - camera.x) / camera.zoom
-    const cy = ((vh / 2 - 60) - camera.y) / camera.zoom
-    addElement({
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
-      type: 'text',
-      x: cx, y: cy, width: 300, height: 120,
-      rotation: 0, opacity: 1,
-      strokeColor: style.strokeColor, fillColor: 'transparent',
-      strokeWidth: 0, locked: false, pageIndex: currentPageIndex,
-      text: '', fontSize: style.fontSize || 20,
-      fontFamily: style.fontFamily || 'inherit',
-      textAlign: style.textAlign || 'left',
-      isLatex: true,
-    } as Record<string, unknown>)
   }
 
   const hasSelectedText = selectedIds.length === 1

@@ -21,37 +21,52 @@ const InteractiveGraphingLazy = lazy(() => import('./physics/PhysicsUtilities').
 
 // Stable wrapper components (no remount on re-render)
 function FormulaCalcPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FormulaCalcLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><FormulaCalcLazy isDark={isDark} /></Suspense>
 }
 function WaveSimPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><WaveSimLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><WaveSimLazy isDark={isDark} /></Suspense>
 }
 function PendulumSimPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PendulumSimLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PendulumSimLazy isDark={isDark} /></Suspense>
 }
 function ConverterPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ConverterLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ConverterLazy isDark={isDark} /></Suspense>
 }
 function ProjectilePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ProjectileLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ProjectileLazy isDark={isDark} /></Suspense>
 }
 function OhmsLawPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><OhmsLawLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><OhmsLawLazy isDark={isDark} /></Suspense>
 }
 function CircuitDiagramPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><CircuitDiagramLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><CircuitDiagramLazy isDark={isDark} /></Suspense>
 }
 function FreeBodyDiagramPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FreeBodyDiagramLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><FreeBodyDiagramLazy isDark={isDark} /></Suspense>
 }
 function RayDiagramPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><RayDiagramLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><RayDiagramLazy isDark={isDark} /></Suspense>
 }
 function EnergyBarChartsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><EnergyBarChartsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><EnergyBarChartsLazy isDark={isDark} /></Suspense>
 }
 function InteractiveGraphingPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><InteractiveGraphingLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><InteractiveGraphingLazy isDark={isDark} /></Suspense>
+}
+
+
+// Loading skeleton shown while lazy-loaded tools are loading
+function ToolSkeleton({ isDark }: { isDark: boolean }) {
+  return (
+    <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {[1,2,3].map(i => (
+        <div key={i} style={{
+          height: 28, borderRadius: 6,
+          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+        }} />
+      ))}
+    </div>
+  )
 }
 
 // ============================================================
