@@ -99,7 +99,7 @@ export function TopBar({
 }: TopBarProps) {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
-  const [menuPos, setMenuPos] = useState({ top: 0, right: 0 })
+  const [menuPos, setMenuPos] = useState({ top: -9999, right: 0 })
 
   useEffect(() => {
     if (!menuOpen || !moreBtnRef.current) return
@@ -225,7 +225,7 @@ export function TopBar({
         >
           <MoreHorizontal size={14} />
         </button>
-        {menuOpen && (
+        {menuOpen && menuPos.top > -100 && (
           <>
             <div className="wb-menu-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
             <div
