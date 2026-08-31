@@ -16,6 +16,11 @@ const Base10Lazy = lazy(() => import('./math/MathUtilities').then(m => ({ defaul
 const FlashcardsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Flashcards })))
 const ProofBuilderLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.ProofBuilder })))
 
+// Phase 3: Enhanced K-5 tools
+const NumberLineEnhancedLazy = lazy(() => import('@/components/tools/math/NumberLinePanelEnhanced').then(m => ({ default: m.NumberLineEnhanced })))
+const FractionBarLazy = lazy(() => import('@/components/tools/math/FractionBarPanel').then(m => ({ default: m.FractionBarPanel })))
+const ShapeBuilderLazy = lazy(() => import('@/components/tools/math/ShapeBuilderPanel').then(m => ({ default: m.ShapeBuilderPanel })))
+
 // Pre-built wrapper components (stable references, no remount on re-render)
 function CalcPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><CalculatorLazy isDark={isDark} /></Suspense>
@@ -37,6 +42,15 @@ function FlashcardsPanel({ isDark }: { isDark: boolean }) {
 }
 function ProofPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><ProofBuilderLazy isDark={isDark} /></Suspense>
+}
+function NumberLineEnhancedPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><NumberLineEnhancedLazy isDark={isDark} /></Suspense>
+}
+function FractionBarEnhancedPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><FractionBarLazy isDark={isDark} /></Suspense>
+}
+function ShapeBuilderPanelRender({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ShapeBuilderLazy isDark={isDark} /></Suspense>
 }
 
 interface MathToolkitProps {
@@ -408,6 +422,19 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 )
               })}
             </div>
+          </div>
+          {/* Phase 3: Enhanced K-5 Interactive Tools */}
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Number Line')}
+            <div style={{ padding: '0 12px 12px' }}><NumberLineEnhancedPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Fraction Bars')}
+            <div style={{ padding: '0 12px 12px' }}><FractionBarEnhancedPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Shape Builder')}
+            <div style={{ padding: '0 12px 12px' }}><ShapeBuilderPanelRender isDark={isDark} /></div>
           </div>
         </>
       )}

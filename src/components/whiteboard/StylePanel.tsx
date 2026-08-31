@@ -170,11 +170,16 @@ function VDiv({ isDark }: { isDark: boolean }) {
 // ---- Lightweight inline error boundary for popup content ----
 class PopupErrorBoundary extends Component<
   { children: React.ReactNode; isDark: boolean },
-  { hasError: boolean }
+  { hasError: boolean; error: Error | null }
 > {
-  state = { hasError: false }
-  static getDerivedStateFromError() { return { hasError: true } }
-  componentDidCatch(err: Error) { console.warn('[StylePanel Popup]', err) }
+  state = { hasError: false, error: null as Error | null }
+  static getDerivedStateFromError(err: Error) { return { hasError: true, error: err } }
+  componentDidCatch(err: Error, info: React.ErrorInfo) {
+    console.warn('[StylePanel Popup]', err, info.componentStack)
+  }
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null })
+  }
   render() {
     if (this.state.hasError) {
       return (
@@ -182,7 +187,18 @@ class PopupErrorBoundary extends Component<
           padding: '8px 12px', fontSize: 11, color: this.props.isDark ? '#f87171' : '#dc2626',
           textAlign: 'center', lineHeight: 1.4,
         }}>
-          Something went wrong. Please try again.
+          <div style={{ marginBottom: 4 }}>Something went wrong.</div>
+          <button
+            onClick={this.handleRetry}
+            style={{
+              padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
+              background: this.props.isDark ? 'rgba(239,68,68,0.15)' : 'rgba(220,38,38,0.1)',
+              border: '1px solid ' + (this.props.isDark ? 'rgba(239,68,68,0.3)' : 'rgba(220,38,38,0.2)'),
+              color: this.props.isDark ? '#fca5a5' : '#dc2626', cursor: 'pointer',
+            }}
+          >
+            Retry
+          </button>
         </div>
       )
     }
@@ -320,12 +336,15 @@ export function StylePanel() {
                 }}
                 setStyle={setStyle}
               />
-              {/* H4 FIX: Insert Equation quick action */}
+              {/* fx / LaTeX equation button */}
               <InsertEquationButton isDark={isDark} />
             </PopupErrorBoundary>
           </Popup>
         )}
       </div>
+
+      {/* ---- Standalone fx Button (always visible) ---- */}
+      <FxQuickButton isDark={isDark} />
 
       <VDiv isDark={isDark} />
 
@@ -725,9 +744,84 @@ function TextOptions({
 }
 
 // ============================================================
-// H4 FIX: Insert Equation Button
+// Fx Quick Button — always visible in the style bar
+// One-click access to insert/toggle LaTeX equations.
+// ============================================================
+function FxQuickButton({ isDark }: { isDark: boolean }) {
+  const selectedIds = useWhiteboardStore((s) => s.selectedIds)
+  const updateElement = useWhiteboardStore((s) => s.updateElement)
+  const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const style = useWhiteboardStore((s) => s.style)
+  const addElement = useWhiteboardStore((s) => s.addElement)
+
+  const handleClick = useCallback(() => {
+    try {
+      if (selectedIds.length === 1) {
+        const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0])
+        if (el && el.type === 'text') {
+          pushHistory()
+          const isCurrentlyLatex = (el as Record<string, unknown>).isLatex as boolean
+          updateElement(el.id, { isLatex: !isCurrentlyLatex, width: Math.max(280, el.width || 300), height: Math.max(120, el.height || 100) })
+          return
+        }
+      }
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+      const cx = ((vw / 2) - 150 - camera.x) / camera.zoom
+      const cy = ((vh / 2 - 60) - camera.y) / camera.zoom
+      addElement({
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+        type: 'text',
+        x: cx, y: cy, width: 300, height: 120,
+        rotation: 0, opacity: 1,
+        strokeColor: style.strokeColor, fillColor: 'transparent',
+        strokeWidth: 0, locked: false, pageIndex: currentPageIndex,
+        text: '', fontSize: style.fontSize || 20,
+        fontFamily: style.fontFamily || 'inherit',
+        textAlign: style.textAlign || 'left',
+        isLatex: true,
+      } as Record<string, unknown>)
+    } catch (err) {
+      console.warn('[FxQuickButton] Failed:', err)
+    }
+  }, [selectedIds, updateElement, pushHistory, camera, currentPageIndex, style, addElement])
+
+  const isActive = selectedIds.length === 1 &&
+    (() => { const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0]); return el?.type === 'text' && (el as Record<string, unknown>).isLatex })()
+
+  return (
+    <button
+      onClick={handleClick}
+      data-testid="fx-equation-btn"
+      title={isActive ? 'Toggle off equation mode' : 'Insert equation (LaTeX)'}
+      className={[
+        'wb-pocket-btn',
+        'wb-fx-btn',
+        `wb-pocket-btn-${isDark ? 'dark' : 'light'}`,
+        isActive ? 'wb-fx-btn-active' : '',
+      ].join(' ')}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 6,
+        background: isActive ? 'rgba(5,150,105,0.2)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'),
+        border: isActive ? '1px solid rgba(5,150,105,0.4)' : ('1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)')),
+        color: isActive ? '#34d399' : (isDark ? '#a1a1aa' : '#71717a'),
+        cursor: 'pointer', transition: 'all 0.15s', fontSize: 12, fontWeight: 500,
+      }}
+      onMouseEnter={(e) => { const t = e.currentTarget; t.style.background = isActive ? 'rgba(5,150,105,0.3)' : (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)') }}
+      onMouseLeave={(e) => { const t = e.currentTarget; t.style.background = isActive ? 'rgba(5,150,105,0.2)' : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)') }}
+    >
+      <FunctionSquare size={14} />
+      <span style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', fontSize: 12 }}>fx</span>
+    </button>
+  )
+}
+
+// ============================================================
+// Insert Equation Button (inside Text pocket popup)
 // Makes the LaTeX/equation feature discoverable from the
-// style bar's Text pocket, not just the tiny fx button.
+// style bar's Text pocket.
 // ============================================================
 function InsertEquationButton({ isDark }: { isDark: boolean }) {
   const selectedIds = useWhiteboardStore((s) => s.selectedIds)

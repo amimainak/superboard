@@ -23,25 +23,40 @@ const AgencyWidget = dynamic(() => import('./AgencyWidget').then((m) => ({ defau
 const BreakoutRoomsWidget = dynamic(() => import('./BreakoutRoomsWidget').then((m) => ({ default: m.BreakoutRoomsWidget })), { ssr: false })
 
 // Lazy-load tool widgets to reduce initial bundle
-const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) => ({ default: m.AIAssistantWidget })), { ssr: false })
-const MathToolkit = dynamic(() => import('./MathToolkit').then((m) => ({ default: m.MathToolkit })), { ssr: false })
-const PhysicsToolkit = dynamic(() => import('./PhysicsToolkit').then((m) => ({ default: m.PhysicsToolkit })), { ssr: false })
-const ChemistryToolkit = dynamic(() => import('./ChemistryToolkit').then((m) => ({ default: m.ChemistryToolkit })), { ssr: false })
-const BiologyToolkit = dynamic(() => import('./BiologyToolkit').then((m) => ({ default: m.BiologyToolkit })), { ssr: false })
-const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({ default: m.LanguageToolkit })), { ssr: false })
-const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false })
-const EarthScienceToolkit = dynamic(() => import('./EarthScienceToolkit').then((m) => ({ default: m.EarthScienceToolkit })), { ssr: false })
-const ClassroomToolkit = dynamic(() => import('./ClassroomToolkit').then((m) => ({ default: m.ClassroomToolkit })), { ssr: false })
+// Add loading fallbacks so dynamic() doesn't render空白 on chunk errors
+function makeLoadingFallback(name: string) {
+  return function LoadingFallback() {
+    return (
+      <div style={{ padding: '16px 12px', textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>
+        <div style={{ marginBottom: 6, opacity: 0.5 }}>Loading {name}...</div>
+      </div>
+    )
+  }
+}
+
+const AIAssistantWidget = dynamic(() => import('./AIAssistantWidget').then((m) => ({ default: m.AIAssistantWidget })), { ssr: false, loading: makeLoadingFallback('AI Assistant') })
+const MathToolkit = dynamic(() => import('./MathToolkit').then((m) => ({ default: m.MathToolkit })), { ssr: false, loading: makeLoadingFallback('Math Tools') })
+const PhysicsToolkit = dynamic(() => import('./PhysicsToolkit').then((m) => ({ default: m.PhysicsToolkit })), { ssr: false, loading: makeLoadingFallback('Physics') })
+const ChemistryToolkit = dynamic(() => import('./ChemistryToolkit').then((m) => ({ default: m.ChemistryToolkit })), { ssr: false, loading: makeLoadingFallback('Chemistry') })
+const BiologyToolkit = dynamic(() => import('./BiologyToolkit').then((m) => ({ default: m.BiologyToolkit })), { ssr: false, loading: makeLoadingFallback('Biology') })
+const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({ default: m.LanguageToolkit })), { ssr: false, loading: makeLoadingFallback('Language') })
+const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false, loading: makeLoadingFallback('Statistics') })
+const EarthScienceToolkit = dynamic(() => import('./EarthScienceToolkit').then((m) => ({ default: m.EarthScienceToolkit })), { ssr: false, loading: makeLoadingFallback('Earth Science') })
+const ClassroomToolkit = dynamic(() => import('./ClassroomToolkit').then((m) => ({ default: m.ClassroomToolkit })), { ssr: false, loading: makeLoadingFallback('Classroom') })
 
 // Error boundary for dynamic widget loading failures
 class WidgetErrorBoundary extends Component<
   { children: React.ReactNode; name: string },
-  { hasError: boolean }
+  { hasError: boolean; error: Error | null }
 > {
-  state = { hasError: false }
-  static getDerivedStateFromError() { return { hasError: true } }
+  state = { hasError: false, error: null as Error | null }
+  static getDerivedStateFromError(err: Error) { return { hasError: true, error: err } }
   componentDidCatch(err: Error) {
     console.warn(`[WidgetPanel] ${this.props.name} failed to load:`, err)
+  }
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null })
+    window.location.reload()
   }
   render() {
     if (this.state.hasError) {
@@ -49,7 +64,17 @@ class WidgetErrorBoundary extends Component<
         <div style={{ padding: 24, textAlign: 'center', color: '#94a3b8', fontSize: 12, lineHeight: 1.6 }}>
           <div style={{ fontSize: 20, marginBottom: 8 }}>&#9888;&#65039;</div>
           <div>Failed to load {this.props.name}.</div>
-          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.7 }}>Try refreshing the page.</div>
+          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.7 }}>{this.state.error?.message || 'Unknown error'}</div>
+          <button
+            onClick={this.handleRetry}
+            style={{
+              marginTop: 8, padding: '4px 12px', borderRadius: 4, fontSize: 11,
+              background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)',
+              color: '#34d399', cursor: 'pointer',
+            }}
+          >
+            Refresh
+          </button>
         </div>
       )
     }

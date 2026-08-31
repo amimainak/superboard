@@ -10,13 +10,13 @@ import { create } from 'zustand'
 // H1 FIX: Subject-to-widget mapping for context-aware sidebar.
 // Only shows relevant tools based on the session subject.
 export const SUBJECT_WIDGET_MAP: Record<string, WidgetId[]> = {
-  MATH: ['math', 'ai', 'notes', 'templates', 'analytics'],
-  SCIENCE: ['physics', 'chemistry', 'biology', 'earthscience', 'math', 'ai', 'notes', 'templates'],
-  LANGUAGE: ['language', 'ai', 'notes', 'templates'],
-  ART: ['ai', 'notes', 'templates'],
+  MATH: ['math', 'physics', 'statistics', 'ai', 'notes', 'templates', 'analytics'],
+  SCIENCE: ['physics', 'chemistry', 'biology', 'earthscience', 'math', 'statistics', 'ai', 'notes', 'templates'],
+  LANGUAGE: ['language', 'math', 'ai', 'notes', 'templates'],
+  ART: ['ai', 'notes', 'templates', 'math'],
   MUSIC: ['ai', 'notes', 'templates'],
-  CODING: ['ai', 'notes', 'templates'],
-  TEST_PREP: ['math', 'language', 'ai', 'notes', 'templates'],
+  CODING: ['ai', 'notes', 'templates', 'math'],
+  TEST_PREP: ['math', 'language', 'statistics', 'ai', 'notes', 'templates'],
   ESL: ['language', 'ai', 'notes', 'templates'],
   GENERAL: [], // Empty = show all (default/fallback)
 }
