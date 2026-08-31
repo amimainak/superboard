@@ -173,6 +173,7 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
     <div className={panelClassName}>
       {/* Tab bar */}
       <div className={`widget-tab-bar ${isDark ? '' : 'widget-tab-bar-light'}`} role="tablist">
+        <div className="widget-tab-bar-inner">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -200,10 +201,12 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
             </button>
           </button>
         ))}
+        </div>
         <button
           className={`widget-mode-toggle ${isDark ? '' : 'widget-mode-toggle-light'}`}
           onClick={handleModeToggle}
           title={`Panel mode: ${panelMode} (click to switch)`}
+          style={{ flexShrink: 0 }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             {panelMode === 'dock' && <><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M15 3v18" /></>}
