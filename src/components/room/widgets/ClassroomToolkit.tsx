@@ -165,11 +165,20 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
             </>}
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Quiz (L3)', 'all-quiz')}
+            {!collapsedSections.has('all-quiz') && (
+              <div style={{ padding: '0 12px 12px' }}>
+                <div style={{ fontSize: 11, color: dkText, marginBottom: 6, lineHeight: 1.4 }}>Create MC, True/False, and short answer quizzes. Students take them directly on the board.</div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-quiz')}</div>
+              </div>
+            )}
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* ELEMENTARY TAB (K-5) — Timer, Random Picker */}
+      {/* ELEMENTARY TAB (K-5) — Timer, Random Picker, Quiz */}
       {/* ============================================================ */}
       {activeBand === 'elementary' && (
         <>
@@ -187,11 +196,20 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
             </>}
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Quiz (L3)', 'k5-quiz')}
+            {!collapsedSections.has('k5-quiz') && (
+              <div style={{ padding: '0 12px 12px' }}>
+                <div style={{ fontSize: 11, color: dkText, marginBottom: 6, lineHeight: 1.4 }}>Create and take quizzes directly on the board.</div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-quiz')}</div>
+              </div>
+            )}
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* MIDDLE SCHOOL TAB (6-8) — all 3 tools */}
+      {/* MIDDLE SCHOOL TAB (6-8) — Timer, Graphing, Picker, Quiz */}
       {/* ============================================================ */}
       {activeBand === 'middle' && (
         <>
@@ -216,11 +234,20 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
             </>}
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Quiz (L3)', '68-quiz')}
+            {!collapsedSections.has('68-quiz') && (
+              <div style={{ padding: '0 12px 12px' }}>
+                <div style={{ fontSize: 11, color: dkText, marginBottom: 6, lineHeight: 1.4 }}>Create and take quizzes directly on the board.</div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-quiz')}</div>
+              </div>
+            )}
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* HIGH SCHOOL TAB (9-12) — all 3 tools */}
+      {/* HIGH SCHOOL TAB (9-12) — Timer, Graphing, Picker, Quiz */}
       {/* ============================================================ */}
       {activeBand === 'highschool' && (
         <>
@@ -244,6 +271,15 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
               <div style={{ padding: '0 12px 8px' }}><StudentPickerPanel isDark={isDark} /></div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-random-picker')}</div>
             </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Interactive Quiz (L3)', '912-quiz')}
+            {!collapsedSections.has('912-quiz') && (
+              <div style={{ padding: '0 12px 12px' }}>
+                <div style={{ fontSize: 11, color: dkText, marginBottom: 6, lineHeight: 1.4 }}>Create and take quizzes directly on the board.</div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-quiz')}</div>
+              </div>
+            )}
           </div>
         </>
       )}

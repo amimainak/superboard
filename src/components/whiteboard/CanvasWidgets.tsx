@@ -690,6 +690,13 @@ import {
   ARTS_WIDGET_KIND_LABELS,
   CLASSROOM_WIDGET_KIND_LABELS,
 } from './CanvasArtsWidgets'
+import {
+  CanvasQuiz,
+  CanvasL3Flashcards,
+  getL3WidgetDefaultConfig,
+  getL3WidgetDefaultSize,
+  L3_WIDGET_KIND_LABELS,
+} from './CanvasL3Widgets'
 
 const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> = {
   // Statistics widgets
@@ -719,7 +726,7 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'math-multiplication-array': CanvasMultiplicationArray,
   'math-function-plotter': CanvasFunctionPlotter,
   'math-multiplication-grid': CanvasMultiplicationGrid,
-  'math-flashcards': CanvasFlashcards,
+  'math-flashcards': CanvasL3Flashcards,
   'math-calculator': CanvasCalculator,
   'math-unit-converter': CanvasUnitConverter,
   'math-formula-reference': CanvasFormulaReference,
@@ -788,6 +795,8 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'classroom-timer': CanvasTimer,
   'classroom-random-picker': CanvasRandomPicker,
   'classroom-graphing': CanvasGraphingTool,
+  // L3 widgets
+  'classroom-quiz': CanvasQuiz,
 }
 
 export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -910,6 +919,9 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'classroom-timer': return getClassroomWidgetDefaultConfig('classroom-timer')
     case 'classroom-random-picker': return getClassroomWidgetDefaultConfig('classroom-random-picker')
     case 'classroom-graphing': return getClassroomWidgetDefaultConfig('classroom-graphing')
+    // L3 widgets
+    case 'classroom-quiz': return getL3WidgetDefaultConfig('classroom-quiz')
+    case 'math-flashcards': return getL3WidgetDefaultConfig('math-flashcards')
     default: return {}
   }
 }
@@ -1009,6 +1021,9 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'classroom-timer': return getClassroomWidgetDefaultSize('classroom-timer')
     case 'classroom-random-picker': return getClassroomWidgetDefaultSize('classroom-random-picker')
     case 'classroom-graphing': return getClassroomWidgetDefaultSize('classroom-graphing')
+    // L3 widgets
+    case 'classroom-quiz': return getL3WidgetDefaultSize('classroom-quiz')
+    case 'math-flashcards': return getL3WidgetDefaultSize('math-flashcards')
     default: return { width: 300, height: 300 }
   }
 }
@@ -1033,4 +1048,6 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...ARTS_WIDGET_KIND_LABELS,
   // Classroom widgets
   ...CLASSROOM_WIDGET_KIND_LABELS,
+  // L3 widgets
+  ...L3_WIDGET_KIND_LABELS,
 }

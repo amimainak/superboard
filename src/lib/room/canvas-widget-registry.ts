@@ -172,6 +172,7 @@ const CLASSROOM_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'classroom-timer', label: 'Timer', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'classroom-random-picker', label: 'Random Picker', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'classroom-graphing', label: 'Interactive Graphing', toolkit: 'classroom', gradeBands: ['6-8', '9-12'], isDefault: true },
+  { kind: 'classroom-quiz', label: 'Interactive Quiz (L3)', toolkit: 'classroom', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
 ]
 
 // ============================================================
