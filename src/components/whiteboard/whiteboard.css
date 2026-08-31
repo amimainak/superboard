@@ -2035,3 +2035,683 @@ div[data-placeholder]:empty::before {
     display: none !important;
   }
 }
+
+/* ============================================================
+   PHASE 4 — Responsiveness & Polish Enhancements
+   ============================================================ */
+
+/* ---- Safe-area insets for notch phones (iPhone X+) ---- */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .wb-mobile-toolbar {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .whiteboard-grid {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
+  }
+
+  .wb-mobile-style-popover {
+    bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  .wb-lib-mobile-sheet {
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+/* ---- Intermediate tablet breakpoint (768px) ---- */
+@media (max-width: 768px) {
+  .whiteboard-grid {
+    grid-template-rows: 40px 1fr;
+    grid-template-columns: 1fr;
+    padding-bottom: 56px;
+  }
+
+  /* Hide left toolbar on tablets in portrait */
+  .wb-toolbar {
+    display: none;
+  }
+
+  /* Show mobile toolbar */
+  .wb-mobile-toolbar {
+    display: flex !important;
+  }
+
+  /* Hide style panel — accessed via mobile popover */
+  .wb-style-panel {
+    display: none;
+  }
+
+  /* Top bar: more compact */
+  .wb-top-bar {
+    height: 40px;
+    min-height: 40px;
+    padding: 0 8px;
+    gap: 2px;
+  }
+
+  /* Hide secondary info on tablet portrait */
+  .wb-top-bar-hide-mobile {
+    display: none !important;
+  }
+
+  /* Page tabs: adjust position above mobile toolbar */
+  .wb-page-tabs {
+    bottom: 64px;
+  }
+
+  /* Canvas save actions: hide on tablet portrait (behind toolbar) */
+  .wb-canvas-actions {
+    display: none !important;
+  }
+}
+
+/* ---- Smooth scrolling for all scrollable containers ---- */
+.wb-toolbar,
+.wb-style-panel,
+.wb-mobile-style-popover,
+.wb-lib-body,
+.wb-lib-mobile-body,
+.wb-shortcuts-body,
+.search-overlay-results {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---- Focus-visible styles for accessibility ---- */
+.wb-tool-btn:focus-visible,
+.wb-ico:focus-visible,
+.wb-pocket-btn:focus-visible,
+.wb-zoom-btn:focus-visible,
+.wb-page-tab:focus-visible,
+.wb-page-add-btn:focus-visible,
+.wb-opt-btn:focus-visible,
+.wb-font-btn:focus-visible,
+.wb-size-btn:focus-visible,
+.wb-swatch:focus-visible,
+.wb-mobile-tool-btn:focus-visible,
+.wb-lib-item:focus-visible,
+.wb-lib-close:focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ---- Improved scrollbar styling ---- */
+.wb-toolbar::-webkit-scrollbar,
+.wb-style-panel::-webkit-scrollbar,
+.wb-lib-body::-webkit-scrollbar,
+.wb-lib-mobile-body::-webkit-scrollbar,
+.wb-shortcuts-body::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.wb-toolbar::-webkit-scrollbar-track,
+.wb-style-panel::-webkit-scrollbar-track,
+.wb-lib-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.wb-toolbar::-webkit-scrollbar-thumb,
+.wb-style-panel::-webkit-scrollbar-thumb,
+.wb-lib-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.wb-toolbar::-webkit-scrollbar-thumb:hover,
+.wb-style-panel::-webkit-scrollbar-thumb:hover,
+.wb-lib-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Light mode scrollbar */
+.wb-toolbar-light::-webkit-scrollbar-thumb,
+.wb-style-panel-light::-webkit-scrollbar-thumb,
+.wb-lib-body-light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.wb-toolbar-light::-webkit-scrollbar-thumb:hover,
+.wb-style-panel-light::-webkit-scrollbar-thumb:hover,
+.wb-lib-body-light::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* ---- Micro-interaction polish ---- */
+
+/* Subtle press scale on interactive elements */
+.wb-tool-btn:active,
+.wb-ico:active,
+.wb-pocket-btn:active,
+.wb-opt-btn:active,
+.wb-font-btn:active,
+.wb-size-btn:active,
+.wb-swatch:active,
+.wb-page-tab:active,
+.wb-menu-item:active,
+.wb-flyout-item:active,
+.wb-lib-item:active {
+  transform: scale(0.94);
+  transition-duration: 0.06s;
+}
+
+/* Smoother color swatch hover */
+.wb-swatch {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.12s ease;
+}
+
+.wb-swatch:hover {
+  transform: scale(1.18);
+}
+
+/* Subtle glow on active tool indicator */
+.wb-tool-indicator {
+  animation: wb-tool-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes wb-tool-glow {
+  from { box-shadow: 0 0 6px rgba(52, 211, 153, 0.5); }
+  to   { box-shadow: 0 0 10px rgba(52, 211, 153, 0.7), 0 0 20px rgba(52, 211, 153, 0.15); }
+}
+
+/* ---- Missing toolkit-section-title for whiteboard.css ---- */
+.toolkit-section-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 16px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolkit-section-title-dark {
+  color: #8090a8;
+}
+
+.toolkit-section-title-light {
+  color: #64748b;
+}
+
+/* ---- Missing wb-fx-btn style ---- */
+.wb-fx-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  font-style: italic;
+  font-family: 'Times New Roman', Georgia, serif;
+}
+
+.wb-fx-btn-dark {
+  color: #b4c0d4;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.wb-fx-btn-light {
+  color: #4b5563;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.wb-fx-btn-dark:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e8ecf4;
+}
+
+.wb-fx-btn-light:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+
+.wb-fx-btn-active {
+  color: #34d399 !important;
+}
+
+.wb-fx-btn-active-dark {
+  background: rgba(16, 185, 129, 0.18) !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.12) !important;
+}
+
+.wb-fx-btn-active-light {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(52, 211, 153, 0.25) !important;
+}
+
+/* ---- Light mode search overlay fix ---- */
+.search-overlay-panel-light {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+}
+
+.search-overlay-input-light {
+  color: #111827;
+}
+
+.search-overlay-input-light::placeholder {
+  color: #9ca3af;
+}
+
+.search-overlay-panel-light .search-overlay-input-row {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.search-overlay-panel-light .search-overlay-filters {
+  border-bottom-color: rgba(0, 0, 0, 0.04);
+}
+
+.search-overlay-panel-light .search-overlay-result-item {
+  color: #111827;
+}
+
+.search-overlay-panel-light .search-overlay-result-item:hover,
+.search-overlay-panel-light .search-overlay-result-selected {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.search-overlay-panel-light .search-overlay-result-selected {
+  background: rgba(5, 150, 105, 0.08) !important;
+  border-color: rgba(5, 150, 105, 0.2) !important;
+}
+
+.search-overlay-panel-light .search-overlay-result-label {
+  color: #111827;
+}
+
+.search-overlay-panel-light .search-overlay-result-meta {
+  color: #6b7280;
+}
+
+.search-overlay-panel-light .search-overlay-results-header {
+  color: #6b7280;
+}
+
+.search-overlay-panel-light .search-overlay-empty {
+  color: #6b7280;
+}
+
+.search-overlay-panel-light .search-overlay-hint {
+  color: #9ca3af;
+}
+
+.search-overlay-panel-light .search-overlay-kbd {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #6b7280;
+}
+
+.search-overlay-panel-light .search-filter-btn {
+  color: #6b7280;
+}
+
+.search-overlay-panel-light .search-filter-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #374151;
+}
+
+.search-overlay-panel-light .search-filter-btn-active {
+  background: rgba(5, 150, 105, 0.12) !important;
+  border-color: rgba(5, 150, 105, 0.25) !important;
+  color: #059669 !important;
+}
+
+/* ---- Improved page tab transition ---- */
+.wb-page-tab {
+  position: relative;
+}
+
+.wb-page-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: #34d399;
+  transition: width 0.2s ease, left 0.2s ease;
+}
+
+.wb-page-tab-active::after {
+  width: 60%;
+  left: 20%;
+}
+
+/* ---- Presentation mode: hide all UI ---- */
+.wb-grid-presentation .wb-toolbar,
+.wb-grid-presentation .wb-top-bar,
+.wb-grid-presentation .wb-style-panel,
+.wb-grid-presentation .wb-page-tabs,
+.wb-grid-presentation .wb-mobile-toolbar,
+.wb-grid-presentation .wb-canvas-actions {
+  display: none !important;
+}
+
+/* ---- Reduced motion preference ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .wb-tool-indicator {
+    animation: none !important;
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+  }
+
+  .wb-page-tab::after {
+    transition: none;
+  }
+}
+
+/* ---- Widget toggle bar: hide on very small screens when panel is open ---- */
+@media (max-width: 400px) {
+  .widget-toggle-bar {
+    max-width: 48px;
+    padding: 4px;
+    gap: 2px;
+    border-radius: 10px;
+  }
+
+  .widget-toggle-group-label {
+    display: none !important;
+  }
+
+  .widget-toggle-label {
+    display: none !important;
+  }
+
+  .widget-toggle-btn {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* ---- Landscape mobile: adjust toolbar height ---- */
+@media (max-width: 640px) and (orientation: landscape) {
+  .wb-mobile-toolbar {
+    height: 48px;
+  }
+
+  .wb-mobile-tool-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .wb-mobile-tool-btn-label {
+    display: none;
+  }
+
+  .whiteboard-grid {
+    padding-bottom: 48px;
+  }
+
+  .wb-mobile-style-popover {
+    bottom: 52px;
+  }
+
+  .wb-page-tabs {
+    bottom: 52px;
+  }
+}
+
+/* ---- Touch target size enforcement (accessibility) ---- */
+@media (pointer: coarse) {
+  .wb-tool-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .wb-ico {
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .wb-pocket-btn {
+    min-height: 32px;
+  }
+
+  .wb-opt-btn,
+  .wb-font-btn,
+  .wb-size-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .wb-swatch {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ---- High contrast mode support ---- */
+@media (forced-colors: active) {
+  .wb-tool-btn-active,
+  .wb-ico-active,
+  .wb-pocket-btn-active,
+  .wb-opt-btn-active,
+  .wb-font-btn-active,
+  .wb-size-btn-active,
+  .wb-page-tab-active,
+  .wb-flyout-item-active,
+  .wb-mobile-tool-btn-active,
+  .wb-lib-item-active {
+    forced-color-adjust: none;
+    border: 2px solid Highlight;
+  }
+
+  .wb-tool-indicator {
+    background: Highlight;
+  }
+}
+
+/* ---- Widget panel slide-in animation polish ---- */
+.widget-panel {
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease,
+              transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.widget-panel-minimized {
+  transform: translateX(4px);
+}
+
+/* ---- Improved flyout panel animation ---- */
+.wb-flyout-panel {
+  animation: wb-flyout-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wb-flyout-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ---- Menu panel animation ---- */
+.wb-menu-panel {
+  animation: wb-menu-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wb-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ---- Shortcuts dialog animation polish ---- */
+.wb-shortcuts-card {
+  animation: wb-shortcuts-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes wb-shortcuts-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ---- Hover lift effect for lib items ---- */
+.wb-lib-item-dark:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.wb-lib-item-light:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* ---- Gradient accent line under top bar ---- */
+.wb-top-bar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(52, 211, 153, 0.3) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+/* ---- Selection handles z-index fix ---- */
+.selection-handles {
+  z-index: 100;
+  pointer-events: none;
+}
+
+.selection-handles > * {
+  pointer-events: auto;
+}
+
+/* ---- Better text selection in canvas ---- */
+.text-element-content::selection {
+  background: rgba(52, 211, 153, 0.25);
+  color: inherit;
+}
+
+.text-element-content-light::selection {
+  background: rgba(5, 150, 105, 0.2);
+}
+
+/* ---- Mobile: better touch feedback for style popover ---- */
+@media (max-width: 640px) {
+  .wb-mobile-style-popover {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .wb-mobile-style-popover button[style] {
+    min-width: 32px;
+    min-height: 32px;
+  }
+}
+
+/* ---- Print styles ---- */
+@media print {
+  .wb-toolbar,
+  .wb-top-bar,
+  .wb-style-panel,
+  .wb-mobile-toolbar,
+  .wb-page-tabs,
+  .widget-toggle-bar,
+  .widget-panel,
+  .session-controls,
+  .room-info-bar,
+  .connection-status,
+  .auto-save-indicator,
+  .raise-hand-wrapper {
+    display: none !important;
+  }
+
+  .whiteboard-grid {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+}
+
+/* ---- Improved disabled state for menu items ---- */
+.wb-menu-item[aria-disabled="true"] {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.wb-menu-item[aria-disabled="true"]:hover {
+  background: transparent !important;
+}
+
+/* ---- Tooltip base style (for future use) ---- */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 9999;
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+}
+
+[data-tooltip-dark]::before {
+  background: rgba(0, 0, 0, 0.85);
+  color: #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-tooltip-light]::before {
+  background: #1e293b;
+  color: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

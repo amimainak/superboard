@@ -446,7 +446,7 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
       )}
 
       {/* Search Overlay */}
-      {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} />}
+      {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} isDark={isDark} />}
 
       {/* Presentation Mode */}
       {isPresentationMode && (

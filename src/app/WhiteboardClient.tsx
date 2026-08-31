@@ -269,7 +269,7 @@ export default function WhiteboardClient() {
       )}
 
       {/* Search Overlay */}
-      {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} />}
+      {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} isDark={isDark} />}
 
       {/* Presentation Mode: floating exit button + minimal info */}
       {isPresentationMode && (

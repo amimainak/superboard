@@ -27,6 +27,7 @@ interface SearchResult {
 
 interface SearchOverlayProps {
   onClose: () => void
+  isDark?: boolean
 }
 
 const FILTER_OPTIONS: { value: SearchFilter; label: string }[] = [
@@ -50,7 +51,7 @@ const TYPE_LABELS: Record<string, string> = {
   page: 'Page',
 }
 
-export function SearchOverlay({ onClose }: SearchOverlayProps) {
+export function SearchOverlay({ onClose, isDark = true }: SearchOverlayProps) {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<SearchFilter>('all')
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -240,7 +241,7 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
       onClick={handleBackdropClick}
       aria-label="Search overlay"
     >
-      <div ref={overlayRef} className="search-overlay-panel" role="dialog" aria-label="Search board">
+      <div ref={overlayRef} className={`search-overlay-panel${isDark ? '' : '-light'}`} role="dialog" aria-label="Search board">
         <div className="search-overlay-input-row">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-overlay-icon">
             <circle cx="11" cy="11" r="8" />
@@ -249,7 +250,7 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
           <input
             ref={inputRef}
             type="text"
-            className="search-overlay-input"
+            className={`search-overlay-input${isDark ? '' : '-light'}`}
             placeholder="Search board..."
             value={query}
             onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0) }}
@@ -258,7 +259,7 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
             autoComplete="off"
             spellCheck={false}
           />
-          <kbd className="search-overlay-kbd">Esc</kbd>
+          <kbd className={`search-overlay-kbd${isDark ? '' : '-light'}`}>Esc</kbd>
         </div>
 
         <div className="search-overlay-filters" role="tablist">
@@ -282,7 +283,7 @@ export function SearchOverlay({ onClose }: SearchOverlayProps) {
           {query.trim() === '' ? (
             <div className="search-overlay-empty">
               <p>Type to search text, sticky notes, frames, and page names</p>
-              <p className="search-overlay-hint">Ctrl+K to toggle · Esc to close</p>
+              <p className={`search-overlay-hint${isDark ? '' : '-light'}`}>Ctrl+K to toggle · Esc to close</p>
             </div>
           ) : results.length === 0 ? (
             <div className="search-overlay-empty">

@@ -167,3 +167,35 @@
     min-height: 0;
   }
 }
+
+/* Phase 4: Fix mobile browser viewport height (address bar) */
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+@supports (height: 100dvh) {
+  html, body {
+    height: 100dvh;
+  }
+}
+
+/* Phase 4: Prevent text selection on UI chrome elements */
+.wb-top-bar,
+.wb-toolbar,
+.wb-style-panel,
+.wb-mobile-toolbar,
+.widget-toggle-bar,
+.widget-tab-bar,
+.session-controls,
+.room-info-bar {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Phase 4: Smoother font rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

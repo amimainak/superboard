@@ -3329,5 +3329,369 @@
 }
 
 /* ============================================================
+   PHASE 4 — Widget System Responsiveness & Polish
+   ============================================================ */
+
+/* ---- Safe-area insets for widget UI on notch phones ---- */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .widget-panel {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .widget-panel-minimized {
+    bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ---- Tablet portrait (768px): widget panel adjustments ---- */
+@media (max-width: 768px) {
+  .widget-toggle-bar {
+    top: 48px;
+    right: 4px;
+    padding: 5px;
+    gap: 3px;
+    max-height: calc(100vh - 120px);
+    border-radius: 10px;
+  }
+
+  .widget-toggle-btn {
+    height: 36px;
+    padding: 0 10px;
+    gap: 6px;
+  }
+
+  .widget-toggle-label {
+    font-size: 11px;
+  }
+
+  .widget-panel {
+    width: 260px;
+    min-width: 260px;
+  }
+
+  .widget-panel-float {
+    width: 280px !important;
+    min-width: 280px !important;
+    right: 4px;
+  }
+
+  .widget-tab-label {
+    font-size: 11px;
+  }
+
+  /* Widget panel full-screen on tablet portrait when open */
+  .widget-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 100% !important;
+    min-width: 100% !important;
+    z-index: 999;
+    border-left: none;
+    border-radius: 0;
+    animation: none;
+  }
+
+  .widget-panel-float {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .widget-panel-minimized {
+    position: absolute !important;
+    bottom: 64px !important;
+    right: 8px !important;
+    border-radius: 10px;
+    min-width: 140px;
+  }
+}
+
+/* ---- Widget panel scrollbar styling ---- */
+.widget-panel-body::-webkit-scrollbar,
+.ai-messages::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar,
+.toolkit-section.expanded .toolkit-section-body::-webkit-scrollbar {
+  width: 4px;
+}
+
+.widget-panel-body::-webkit-scrollbar-track,
+.ai-messages::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widget-panel-body::-webkit-scrollbar-thumb,
+.ai-messages::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+.widget-panel-body::-webkit-scrollbar-thumb:hover,
+.ai-messages::-webkit-scrollbar-thumb:hover,
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.widget-panel-light .widget-panel-body::-webkit-scrollbar-thumb,
+.widget-panel-light .ai-messages::-webkit-scrollbar-thumb,
+.widget-panel-light .chat-messages::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.widget-panel-light .widget-panel-body::-webkit-scrollbar-thumb:hover,
+.widget-panel-light .ai-messages::-webkit-scrollbar-thumb:hover,
+.widget-panel-light .chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+/* ---- Smooth scrolling for widget scrollable areas ---- */
+.widget-panel-body,
+.ai-messages,
+.chat-messages,
+.toolkit-section.expanded .toolkit-section-body {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---- Focus-visible for widget interactive elements ---- */
+.widget-toggle-btn:focus-visible,
+.widget-tab:focus-visible,
+.widget-tab-close:focus-visible,
+.widget-mode-toggle:focus-visible,
+.toolkit-chip:focus-visible,
+.chat-send-btn:focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+}
+
+/* ---- Micro-interaction: press scale on widget buttons ---- */
+.widget-toggle-btn:active,
+.widget-tab:active,
+.toolkit-chip:active {
+  transform: scale(0.95);
+  transition-duration: 0.06s;
+}
+
+/* ---- Widget panel entrance animation ---- */
+.widget-panel:not(.widget-panel-minimized) {
+ animation: widget-panel-slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes widget-panel-slide-in {
+  from {
+    opacity: 0.8;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ---- Toggle button hover glow ---- */
+.widget-toggle-btn:hover {
+  box-shadow: 0 0 12px rgba(52, 211, 153, 0.06);
+}
+
+.widget-toggle-btn-active:hover {
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.15);
+}
+
+/* ---- Light mode widget toggle bar ---- */
+.widget-toggle-bar-light {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.widget-toggle-bar-light .widget-toggle-group-label {
+  color: #94a3b8;
+}
+
+.widget-toggle-btn-light {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #475569;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.widget-toggle-btn-light:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #1e293b;
+  border-color: rgba(0, 0, 0, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.widget-toggle-btn-active {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(52, 211, 153, 0.3) !important;
+  color: #059669 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.12) !important;
+}
+
+.widget-toggle-label {
+  color: inherit;
+}
+
+/* ---- Improved toolkit section light mode ---- */
+.widget-panel-light .toolkit-section-title {
+  color: #64748b;
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+.widget-panel-light .toolkit-section-title:hover {
+  color: #334155;
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+.widget-panel-light .toolkit-chip:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ---- Chat input improvements ---- */
+.chat-input-field {
+ transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chat-input-field:focus {
+  border-color: rgba(52, 211, 153, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.08);
+}
+
+.widget-panel-light .chat-input-field:focus {
+  border-color: rgba(5, 150, 105, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.06);
+}
+
+/* ---- Tab bar smooth scroll for many tabs ---- */
+.widget-tab-bar-inner {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.widget-tab-bar-inner::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Widget panel light mode: better backdrop ---- */
+.widget-panel-light {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.06);
+}
+
+.widget-panel-float-light {
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ---- Touch target enforcement for widget buttons ---- */
+@media (pointer: coarse) {
+  .widget-toggle-btn {
+    min-height: 40px;
+  }
+
+  .toolkit-chip {
+    min-height: 32px;
+    min-width: 32px;
+  }
+
+  .widget-tab-close {
+    min-width: 28px;
+    min-height: 28px;
+  }
+
+  .chat-send-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+}
+
+/* ---- Reduced motion for widgets ---- */
+@media (prefers-reduced-motion: reduce) {
+  .widget-panel,
+  .widget-panel:not(.widget-panel-minimized) {
+    animation: none !important;
+  }
+
+  .toolkit-section-body {
+    transition: none !important;
+  }
+
+  .widget-toggle-btn,
+  .widget-tab,
+  .toolkit-chip {
+    transition: none !important;
+  }
+}
+
+/* ---- Landscape mobile: widget adjustments ---- */
+@media (max-width: 640px) and (orientation: landscape) {
+  .widget-panel {
+    top: 0;
+    bottom: 0;
+  }
+
+  .widget-panel-minimized {
+    bottom: 52px !important;
+  }
+
+  .widget-toggle-bar {
+    max-height: calc(100vh - 100px);
+  }
+
+  .session-controls {
+    bottom: 100px;
+  }
+
+  .raise-hand-wrapper {
+    bottom: 100px;
+  }
+}
+
+/* ---- Print: hide all widget UI ---- */
+@media print {
+  .widget-toggle-bar,
+  .widget-panel,
+  .session-controls,
+  .room-info-bar,
+  .connection-status,
+  .auto-save-indicator,
+  .raise-hand-wrapper {
+    display: none !important;
+  }
+}
+
+/* ---- High contrast mode for widgets ---- */
+@media (forced-colors: active) {
+  .widget-toggle-btn-active {
+    forced-color-adjust: none;
+    border: 2px solid Highlight;
+  }
+
+  .widget-tab-active {
+    forced-color-adjust: none;
+    border-bottom: 2px solid Highlight;
+  }
+}
+
+/* ============================================================
    Superboard — Widget System Styles (end)
    ============================================================ */
