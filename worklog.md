@@ -64,10 +64,53 @@ Stage Summary:
 - Deploy command: `VERCEL_TOKEN=... npx vercel --prod --yes`
 
 ## Phase Plan Status
-- Phase 1: ✅ PARTIALLY COMPLETE (canvas widget consistency, toolbar, collapsible, no auto-collapse)
-- Phase 1 remaining: L3 interactive upgrades for Quiz/Fraction Circle/Flashcards/Base-10 on canvas
+- Phase 1: ✅ COMPLETE (canvas widget consistency, toolbar, collapsible, no auto-collapse, L3 interactive widgets)
 - Phase 2: Template Engine (not started)
 - Phase 3: Math & Science Content (not started)
 - Phase 4: English & Arts Content (not started)
 - Phase 5: UX Polish (not started)
 - Phase 6: Platform & Future (deferred)
+
+---
+Task ID: 1b
+Agent: Main
+Task: Phase 1 remaining — L3 Interactive Canvas Widget Upgrades
+
+Work Log:
+- Created CanvasL3Widgets.tsx with two L3 widgets:
+  - CanvasQuiz: Full quiz system on canvas (MC/TF/SA), create/take/results modes, config-synced via element.config, quick-start templates, per-student results, score breakdown with explanations
+  - CanvasL3Flashcards: Custom cards with categories, add/delete/shuffle, category filtering, config-synced state (replaces pass-through wrapper)
+- Upgraded CanvasFractionCircle to L3:
+  - Comparison mode (two circles side-by-side)
+  - Equivalent fractions detection
+  - Decimal and percent display toggles
+  - Stamp to canvas button
+  - Updated default size to 400x520
+- Upgraded CanvasBase10Blocks to L3:
+  - Regrouping (trade up: 10 ones → 1 ten, etc.)
+  - Trade down button
+  - Expanded form display (e.g., 2 x 1000 + 3 x 100 + 5 x 10 + 7 x 1)
+  - Number words display (e.g., "two thousand, three hundred fifty-seven")
+  - Allows values >9 in each column (for teaching regrouping)
+  - Visual overflow indicator (+N more) for large ones counts
+  - Updated default size to 440x620
+- Registered classroom-quiz in canvas-widget-registry.ts
+- Added L3 widget imports/entries in CanvasWidgets.tsx:
+  - Imported CanvasQuiz, CanvasL3Flashcards, getL3WidgetDefaultConfig/Size, L3_WIDGET_KIND_LABELS
+  - Added 'classroom-quiz' to WIDGET_COMPONENTS
+  - Added 'math-flashcards' → CanvasL3Flashcards (replacing old pass-through)
+  - Added getDefaultWidgetConfig/getWidgetDefaultSize cases for L3 widgets
+  - Spread L3_WIDGET_KIND_LABELS into WIDGET_KIND_LABELS
+- Added "Interactive Quiz (L3)" section with + Board button to ClassroomToolkit.tsx (all 4 grade tabs: All, K-5, 6-8, 9-12)
+- Updated CanvasMathWidgets.tsx:
+  - Re-exported CanvasL3Flashcards as CanvasFlashcards for backwards compat
+  - Updated default configs for fraction-circle (added mode, divisions2, shaded2, showDecimal, showPercent)
+  - Updated default config for base-10 (added showRegroup, showExpanded, showWords)
+  - Updated default sizes for fraction-circle (400x520) and base-10 (440x620)
+- Build successful, deployed to Vercel, site returns 200
+
+Stage Summary:
+- **Files created**: CanvasL3Widgets.tsx (~420 lines — Quiz + Flashcards L3)
+- **Files modified**: CanvasWidgets.tsx, CanvasMathWidgets.tsx, canvas-widget-registry.ts, ClassroomToolkit.tsx
+- **4 L3 widgets now live on canvas**: Quiz (classroom-quiz), Flashcards (math-flashcards), Fraction Circle (math-fraction-circle), Base-10 Blocks (math-base-10)
+- **Phase 1 is now COMPLETE**
