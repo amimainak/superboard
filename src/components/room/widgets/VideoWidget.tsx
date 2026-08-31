@@ -163,23 +163,97 @@ export function VideoWidget({ roomId, userName }: VideoWidgetProps) {
   }, [roomId, userName, LIVEKIT_URL])
 
   if (!LIVEKIT_URL) {
+    const dkText = isDark ? '#94a3b8' : '#475569'
+    const dkTextStrong = isDark ? '#e2e8f0' : '#1e293b'
+    const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+    const dkBg = isDark ? 'rgba(15,23,42,0.5)' : 'rgba(241,245,249,0.8)'
+    const roomIdValue = typeof window !== 'undefined' ? window.location.pathname.split('/room/')[1]?.split('/')[0] || '' : ''
+
+    const copyRoomLink = () => {
+      const url = window.location.href
+      navigator.clipboard?.writeText(url)
+      const btn = document.getElementById('copy-link-btn')
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Room Link' }, 2000) }
+    }
+
     return (
-      <div className={`video-placeholder ${isDark ? '' : 'video-placeholder-light'}`}>
-        <div className={`video-placeholder-icon ${isDark ? '' : 'video-placeholder-icon-light'}`}>
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
-          </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ padding: '12px 12px 8px', borderBottom: `1px solid ${dkBorder}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z" />
+            </svg>
+            <span style={{ fontSize: 14, fontWeight: 700, color: dkTextStrong }}>Video Call</span>
+          </div>
         </div>
-        <div className={`video-placeholder-title ${isDark ? '' : 'video-placeholder-title-light'}`}>Video Call</div>
-        <div className={`video-placeholder-desc ${isDark ? '' : 'video-placeholder-desc-light'}`}>
-          Live video, audio &amp; screen sharing via LiveKit
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+          {/* Setup status */}
+          <div style={{ padding: '12px', borderRadius: 8, background: dkBg, border: `1px solid ${dkBorder}`, marginBottom: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: 28, marginBottom: 6 }}>📹</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: dkTextStrong, marginBottom: 4 }}>Video Setup Required</div>
+            <div style={{ fontSize: 11, color: dkText, lineHeight: 1.5 }}>
+              Live video requires a LiveKit server. Contact your administrator or use an external video call while using the whiteboard.
+            </div>
+          </div>
+
+          {/* Alternative: Share room link */}
+          <div style={{ fontSize: 11, fontWeight: 700, color: dkText, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+            While waiting, you can:
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ padding: '10px', borderRadius: 8, background: dkBg, border: `1px solid ${dkBorder}` }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: dkTextStrong, marginBottom: 4 }}>Share This Whiteboard</div>
+              <div style={{ fontSize: 11, color: dkText, marginBottom: 8, lineHeight: 1.4 }}>
+                Send the room link so others can collaborate on the whiteboard in real time.
+              </div>
+              <button
+                id="copy-link-btn"
+                onClick={copyRoomLink}
+                style={{
+                  width: '100%', padding: '7px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                  background: 'rgba(56,189,248,0.12)', border: '1px solid rgba(56,189,248,0.25)',
+                  color: '#38bdf8', cursor: 'pointer',
+                }}
+              >Copy Room Link</button>
+            </div>
+
+            <div style={{ padding: '10px', borderRadius: 8, background: dkBg, border: `1px solid ${dkBorder}` }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: dkTextStrong, marginBottom: 4 }}>Use External Video</div>
+              <div style={{ fontSize: 11, color: dkText, lineHeight: 1.4 }}>
+                Start a Zoom, Google Meet, or FaceTime call, then share your screen showing the whiteboard. Students see your drawings in real time.
+              </div>
+            </div>
+
+            <div style={{ padding: '10px', borderRadius: 8, background: dkBg, border: `1px solid ${dkBorder}` }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: dkTextStrong, marginBottom: 4 }}>Use the Chat Widget</div>
+              <div style={{ fontSize: 11, color: dkText, lineHeight: 1.4 }}>
+                The chat widget supports text, pinned messages, and image attachments for text-based collaboration.
+              </div>
+            </div>
+          </div>
+
+          {/* Setup guide for admins */}
+          <details style={{ marginTop: 12 }}>
+            <summary style={{ fontSize: 11, fontWeight: 600, color: '#64748b', cursor: 'pointer', userSelect: 'none' }}>
+              Setup Guide for Administrators
+            </summary>
+            <div style={{
+              marginTop: 6, padding: '10px', borderRadius: 6, fontSize: 10, color: dkText, lineHeight: 1.6,
+              background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+              border: `1px solid ${dkBorder}`,
+            }}>
+              <strong>1.</strong> Deploy a LiveKit server (Docker recommended):<br />
+              <code style={{ fontSize: 9, color: '#a5b4fc', wordBreak: 'break-all' }}>docker run -d --name livekit -p 7880:7880 -p 7881:7881 -p 7882:7882/udp livekit/livekit-server</code><br /><br />
+              <strong>2.</strong> Set environment variables:<br />
+              <code style={{ fontSize: 9, color: '#a5b4fc' }}>NEXT_PUBLIC_LIVEKIT_URL=wss://your-server:7880</code><br />
+              <code style={{ fontSize: 9, color: '#a5b4fc' }}>LIVEKIT_API_KEY=your-key</code><br />
+              <code style={{ fontSize: 9, color: '#a5b4fc' }}>LIVEKIT_API_SECRET=your-secret</code><br /><br />
+              <strong>3.</strong> Redeploy the application.
+            </div>
+          </details>
         </div>
-        <div className={`video-placeholder-status ${isDark ? '' : 'video-placeholder-status-light'}`}>
-          Requires VPS setup (LiveKit Server)
-        </div>
-        <button className="video-placeholder-btn" disabled>
-          Coming Soon
-        </button>
       </div>
     )
   }

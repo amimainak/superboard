@@ -21,6 +21,7 @@ import { SchedulingWidget } from './SchedulingWidget'
 const VideoWidget = dynamic(() => import('./VideoWidget').then((m) => ({ default: m.VideoWidget })), { ssr: false })
 const AgencyWidget = dynamic(() => import('./AgencyWidget').then((m) => ({ default: m.AgencyWidget })), { ssr: false })
 const BreakoutRoomsWidget = dynamic(() => import('./BreakoutRoomsWidget').then((m) => ({ default: m.BreakoutRoomsWidget })), { ssr: false })
+const AssessmentWidget = dynamic(() => import('./AssessmentWidget').then((m) => ({ default: m.AssessmentWidget })), { ssr: false, loading: makeLoadingFallback('Assessment') })
 
 // Lazy-load tool widgets to reduce initial bundle
 // Add loading fallbacks so dynamic() doesn't render空白 on chunk errors
@@ -164,6 +165,8 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <AgencyWidget roomId={roomId} />
       case 'breakout':
         return <BreakoutRoomsWidget roomId={roomId} />
+      case 'assessment':
+        return <AssessmentWidget roomId={roomId} />
       default:
         return null
     }

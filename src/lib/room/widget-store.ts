@@ -10,13 +10,13 @@ import { create } from 'zustand'
 // H1 FIX: Subject-to-widget mapping for context-aware sidebar.
 // Only shows relevant tools based on the session subject.
 export const SUBJECT_WIDGET_MAP: Record<string, WidgetId[]> = {
-  MATH: ['math', 'physics', 'statistics', 'ai', 'notes', 'templates', 'analytics'],
-  SCIENCE: ['physics', 'chemistry', 'biology', 'earthscience', 'math', 'statistics', 'ai', 'notes', 'templates'],
-  LANGUAGE: ['language', 'math', 'ai', 'notes', 'templates'],
+  MATH: ['math', 'physics', 'statistics', 'ai', 'assessment', 'notes', 'templates', 'analytics'],
+  SCIENCE: ['physics', 'chemistry', 'biology', 'earthscience', 'math', 'statistics', 'ai', 'assessment', 'notes', 'templates'],
+  LANGUAGE: ['language', 'math', 'ai', 'assessment', 'notes', 'templates'],
   ART: ['arts', 'ai', 'notes', 'templates', 'math'],
   MUSIC: ['arts', 'ai', 'notes', 'templates'],
   CODING: ['ai', 'notes', 'templates', 'math'],
-  TEST_PREP: ['math', 'language', 'statistics', 'ai', 'notes', 'templates'],
+  TEST_PREP: ['math', 'language', 'statistics', 'ai', 'assessment', 'notes', 'templates'],
   ESL: ['language', 'ai', 'notes', 'templates'],
   GENERAL: [], // Empty = show all (default/fallback)
 }
@@ -53,6 +53,7 @@ export type WidgetId =
   | 'scheduling'
   | 'agency'
   | 'breakout'
+  | 'assessment'
 
 /** Marketplace tool IDs — sub-tools installed within core widgets */
 export type MarketplaceToolId = string
@@ -91,6 +92,7 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'scheduling', label: 'Scheduling', icon: 'Calendar', section: 'tools' },
   { id: 'agency', label: 'Agency', icon: 'Building2', section: 'tools' },
   { id: 'breakout', label: 'Breakout Rooms', icon: 'LayoutGrid', section: 'tools' },
+  { id: 'assessment', label: 'Assessment', icon: 'ClipboardCheck', section: 'tools' },
 ]
 
 interface WidgetStore {
