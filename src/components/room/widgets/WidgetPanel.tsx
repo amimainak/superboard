@@ -42,6 +42,7 @@ const BiologyToolkit = dynamic(() => import('./BiologyToolkit').then((m) => ({ d
 const LanguageToolkit = dynamic(() => import('./LanguageToolkit').then((m) => ({ default: m.LanguageToolkit })), { ssr: false, loading: makeLoadingFallback('Language') })
 const StatToolkit = dynamic(() => import('./StatToolkit').then((m) => ({ default: m.StatToolkit })), { ssr: false, loading: makeLoadingFallback('Statistics') })
 const EarthScienceToolkit = dynamic(() => import('./EarthScienceToolkit').then((m) => ({ default: m.EarthScienceToolkit })), { ssr: false, loading: makeLoadingFallback('Earth Science') })
+const ArtsToolkit = dynamic(() => import('./ArtsToolkit').then((m) => ({ default: m.ArtsToolkit })), { ssr: false, loading: makeLoadingFallback('Arts & Music') })
 const ClassroomToolkit = dynamic(() => import('./ClassroomToolkit').then((m) => ({ default: m.ClassroomToolkit })), { ssr: false, loading: makeLoadingFallback('Classroom') })
 
 // Error boundary for dynamic widget loading failures
@@ -147,6 +148,8 @@ export function WidgetPanel({ roomId }: WidgetPanelProps) {
         return <StatToolkit roomId={roomId} />
       case 'earthscience':
         return <EarthScienceToolkit roomId={roomId} />
+      case 'arts':
+        return <ArtsToolkit roomId={roomId} />
       case 'classroom':
         return <ClassroomToolkit roomId={roomId} />
       case 'templates':

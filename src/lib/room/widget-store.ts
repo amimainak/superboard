@@ -13,8 +13,8 @@ export const SUBJECT_WIDGET_MAP: Record<string, WidgetId[]> = {
   MATH: ['math', 'physics', 'statistics', 'ai', 'notes', 'templates', 'analytics'],
   SCIENCE: ['physics', 'chemistry', 'biology', 'earthscience', 'math', 'statistics', 'ai', 'notes', 'templates'],
   LANGUAGE: ['language', 'math', 'ai', 'notes', 'templates'],
-  ART: ['ai', 'notes', 'templates', 'math'],
-  MUSIC: ['ai', 'notes', 'templates'],
+  ART: ['arts', 'ai', 'notes', 'templates', 'math'],
+  MUSIC: ['arts', 'ai', 'notes', 'templates'],
   CODING: ['ai', 'notes', 'templates', 'math'],
   TEST_PREP: ['math', 'language', 'statistics', 'ai', 'notes', 'templates'],
   ESL: ['language', 'ai', 'notes', 'templates'],
@@ -45,6 +45,7 @@ export type WidgetId =
   | 'language'
   | 'statistics'
   | 'earthscience'
+  | 'arts'
   | 'classroom'
   | 'templates'
   | 'analytics'
@@ -81,6 +82,7 @@ export const AVAILABLE_WIDGETS: WidgetDef[] = [
   { id: 'language', label: 'Language', icon: 'Languages', section: 'tools' },
   { id: 'statistics', label: 'Statistics', icon: 'BarChart3', section: 'tools' },
   { id: 'earthscience', label: 'Earth Science', icon: 'Globe', section: 'tools' },
+  { id: 'arts', label: 'Arts & Music', icon: 'Palette', section: 'tools' },
   { id: 'classroom', label: 'Classroom', icon: 'Timer', section: 'tools' },
   { id: 'templates', label: 'Templates', icon: 'LayoutTemplate', section: 'tools' },
   // Analytics widgets
