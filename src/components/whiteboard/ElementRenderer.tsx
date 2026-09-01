@@ -314,8 +314,9 @@ export const ElementRenderer = React.memo(function ElementRenderer({
       var dupBtnCx = element.x + 14
       var dupBtnCy = element.y + 14
       var btnR = 11
-      var btnBg = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
-      var btnColor = '#94a3b8'
+      var btnBg = isDark ? 'rgba(15,23,42,0.85)' : 'rgba(255,255,255,0.92)'
+      var btnBorder = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)'
+      var btnColor = isDark ? '#e2e8f0' : '#1e293b'
       // Grade-band color coding for widget border
       var gradeBorder = '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)')
       var gradeBorderTop = 'none'
@@ -336,12 +337,14 @@ export const ElementRenderer = React.memo(function ElementRenderer({
           <foreignObject
             x={element.x}
             y={element.y}
-            width={element.width}
-            height={element.height}
+            width={element.width / 1.3}
+            height={element.height / 1.3}
             opacity={element.opacity}
             style={{
               cursor: element.locked ? 'not-allowed' : (tool === 'select' ? 'pointer' : 'none'),
               pointerEvents: widgetPointerEvents as React.CSSProperties['pointerEvents'],
+              transform: 'scale(1.3)',
+              transformOrigin: '0 0' as const,
             }}
             onPointerDown={(e) => {
               if (tool === 'select') {
@@ -372,18 +375,26 @@ export const ElementRenderer = React.memo(function ElementRenderer({
                   boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                   fontFamily: 'inherit',
                   boxSizing: 'border-box',
-                  transform: 'scale(1.3)',
-                  transformOrigin: 'top left' as const,
                 }}
               >
                 <LazyCanvasWidgets element={element as import('@/lib/whiteboard/types').WidgetElement} isDark={isDark} />
               </div>
             </div>
           </foreignObject>
-          {/* Action buttons — SVG, always has pointer events regardless of tool mode */}
+          {/* Action buttons — hidden by default, shown on hover over widget top area */}
+          <g>
+            {/* Invisible hit area to detect hover over the widget top region */}
+            <rect x={element.x} y={element.y} width={element.width} height={58} fill='transparent'
+              style={{ pointerEvents: 'all' as const, cursor: 'default' as const }}
+              onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+              onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
+            />
+          </g>
           {/* Close (x) button — top right */}
           <g
-            style={{ cursor: 'pointer' as const }}
+            className={'wtb-' + element.id}
+            opacity={element.locked ? 1 : 0}
+            style={{ cursor: 'pointer' as const, transition: 'opacity 0.15s ease' }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
@@ -392,16 +403,17 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               store.removeElements([element.id])
               store.clearSelection()
             }}
-            opacity={0.5}
-            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
-            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.5') }}
+            onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+            onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
           >
-            <circle cx={closeBtnCx} cy={closeBtnCy} r={btnR} fill={btnBg} />
-            <text x={closeBtnCx} y={closeBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={12} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>x</text>
+            <circle cx={closeBtnCx} cy={closeBtnCy} r={btnR} fill={btnBg} stroke={btnBorder} strokeWidth={1} />
+            <text x={closeBtnCx} y={closeBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={13} fontWeight={700} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>x</text>
           </g>
           {/* Duplicate (⯑) button — top left */}
           <g
-            style={{ cursor: 'pointer' as const }}
+            className={'wtb-' + element.id}
+            opacity={element.locked ? 1 : 0}
+            style={{ cursor: 'pointer' as const, transition: 'opacity 0.15s ease' }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
@@ -415,16 +427,17 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               store.addElement(clone)
               store.selectElements([clone.id])
             }}
-            opacity={0.5}
-            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
-            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.5') }}
+            onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+            onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
           >
-            <circle cx={dupBtnCx} cy={dupBtnCy} r={btnR} fill={btnBg} />
+            <circle cx={dupBtnCx} cy={dupBtnCy} r={btnR} fill={btnBg} stroke={btnBorder} strokeWidth={1} />
             <text x={dupBtnCx} y={dupBtnCy + 1} textAnchor='middle' dominantBaseline='central' fontSize={11} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>⯑</text>
           </g>
           {/* Lock/Unlock (🔒/🔓) button — below close, top right */}
           <g
-            style={{ cursor: 'pointer' as const }}
+            className={'wtb-' + element.id}
+            opacity={element.locked ? 1 : 0}
+            style={{ cursor: 'pointer' as const, transition: 'opacity 0.15s ease' }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
@@ -432,16 +445,17 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               store.pushHistory()
               store.updateElement(element.id, { locked: !element.locked } as Partial<WhiteboardElement>)
             }}
-            opacity={element.locked ? 1 : 0.5}
-            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
-            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', String(element.locked ? 1 : 0.5)) }}
+            onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+            onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
           >
-            <circle cx={element.x + element.width - 14} cy={element.y + 40} r={btnR} fill={element.locked ? 'rgba(239,68,68,0.15)' : btnBg} />
-            <text x={element.x + element.width - 14} y={41} textAnchor='middle' dominantBaseline='central' fontSize={10} fill={element.locked ? '#f87171' : btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>{element.locked ? '🔒' : '🔓'}</text>
+            <circle cx={element.x + element.width - 14} cy={element.y + 40} r={btnR} fill={element.locked ? 'rgba(239,68,68,0.2)' : btnBg} stroke={element.locked ? 'rgba(239,68,68,0.4)' : btnBorder} strokeWidth={1} />
+            <text x={element.x + element.width - 14} y={element.y + 41} textAnchor='middle' dominantBaseline='central' fontSize={10} fill={element.locked ? '#f87171' : btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>{element.locked ? '🔒' : '🔓'}</text>
           </g>
           {/* Bring to Front (↑) button — below duplicate, top left */}
           <g
-            style={{ cursor: 'pointer' as const }}
+            className={'wtb-' + element.id}
+            opacity={element.locked ? 1 : 0}
+            style={{ cursor: 'pointer' as const, transition: 'opacity 0.15s ease' }}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation()
@@ -449,12 +463,11 @@ export const ElementRenderer = React.memo(function ElementRenderer({
               store.pushHistory()
               store.bringToFront(element.id)
             }}
-            opacity={0.5}
-            onMouseOver={(e) => { e.currentTarget.setAttribute('opacity', '1') }}
-            onMouseOut={(e) => { e.currentTarget.setAttribute('opacity', '0.5') }}
+            onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+            onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
           >
-            <circle cx={element.x + 14} cy={element.y + 40} r={btnR} fill={btnBg} />
-            <text x={element.x + 14} y={41} textAnchor='middle' dominantBaseline='central' fontSize={12} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>↑</text>
+            <circle cx={element.x + 14} cy={element.y + 40} r={btnR} fill={btnBg} stroke={btnBorder} strokeWidth={1} />
+            <text x={element.x + 14} y={element.y + 41} textAnchor='middle' dominantBaseline='central' fontSize={13} fontWeight={700} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>↑</text>
           </g>
         </g>
       )
