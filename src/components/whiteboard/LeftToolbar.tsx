@@ -110,39 +110,43 @@ function Flyout({
 
   const isVisible = pos !== null && ready
 
+  // Close on click outside the flyout panel (no full-viewport backdrop)
+  useEffect(() => {
+    if (!isVisible) return
+    const handler = (e: MouseEvent) => {
+      const panel = panelRef.current
+      const anchor = anchorRef.current
+      if (
+        panel && !panel.contains(e.target as Node) &&
+        anchor && !anchor.contains(e.target as Node)
+      ) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [isVisible, onClose])
+
   return (
     createPortal(
-      <>
-        {isVisible && (
-          <div
-            className="wb-flyout-backdrop"
-            onMouseDown={(e) => {
-              e.stopPropagation()
-              onClose()
-            }}
-            aria-hidden="true"
-          />
-        )}
-        <div
-          ref={panelRef}
-          className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
-          role="menu"
-          onMouseDown={(e) => e.stopPropagation()}
-          onPointerDown={(e) => e.stopPropagation()}
-          style={{
-            position: 'fixed',
-            top: pos ? pos.top : 0,
-            left: pos ? pos.left : 0,
-            zIndex: 10001,
-            visibility: isVisible ? 'visible' : 'hidden',
-            pointerEvents: isVisible ? 'auto' : 'none',
-          }}
-        >
-          {children}
-        </div>
-      </>
+      <div
+        ref={panelRef}
+        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
+        role="menu"
+        onMouseDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed',
+          top: pos ? pos.top : 0,
+          left: pos ? pos.left : 0,
+          zIndex: 10001,
+          visibility: isVisible ? 'visible' : 'hidden',
+          pointerEvents: isVisible ? 'auto' : 'none',
+        }}
+      >
+        {children}
+      </div>
       , document.body)
-
   )
 }
 
@@ -223,19 +227,12 @@ function ToolLibrary({
   }, [isOpen, onClose])
 
   return createPortal(
-    <>
-      {isOpen && (
-        <div
-          className="wb-lib-backdrop"
-          onClick={onClose}
-          aria-hidden="true"
-        />
-      )}
       <div
         ref={panelRef}
         className={`wb-lib-panel wb-lib-panel-${isDark ? 'dark' : 'light'} ${isOpen ? 'wb-lib-panel-open' : ''}`}
         role="dialog"
         aria-label="Tool Library"
+        onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="wb-lib-header">
@@ -294,7 +291,6 @@ function ToolLibrary({
           Press a shortcut key to select any tool directly
         </div>
       </div>
-    </>
     , document.body)
 }
 

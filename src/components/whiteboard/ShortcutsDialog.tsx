@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Keyboard, Lightbulb } from 'lucide-react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import './whiteboard.css'
@@ -210,6 +210,15 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const d = isDark ? 'dark' : 'light'
   const [tab, setTab] = useState<'shortcuts' | 'tips'>('tips')
+
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
 
   return (
     <div

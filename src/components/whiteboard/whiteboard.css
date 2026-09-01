@@ -446,6 +446,11 @@ div[data-placeholder]:empty::before {
   color: #34d399 !important;
 }
 
+.wb-ico-disabled {
+  opacity: 0.3 !important;
+  pointer-events: none !important;
+}
+
 .wb-ico-active-dark {
   background: rgba(16, 185, 129, 0.18) !important;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.12) !important;

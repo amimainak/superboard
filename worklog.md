@@ -187,63 +187,34 @@ Work Log:
 Stage Summary:
 - **Bug fixed**: Missing `eraserSize` subscription in WhiteboardCanvas.tsx caused ReferenceError crash when selecting eraser tool
 - **Files modified**: WhiteboardCanvas.tsx (added 1 subscription line, updated 1 comment)
-- **All tools verified working on live production site**
-
----
-Task ID: 2
+- **All tools verified working on live production site**---
+Task ID: 7
 Agent: Main
-Task: Phase 2 — Template Engine
+Task: Full white-box feature audit + bug fixes + weakness improvements
 
 Work Log:
-- Explored existing codebase: found pre-existing Template model in Prisma schema (already has description, gradeBand, tags, isPublic, updatedAt fields), two sets of API routes (/api/templates + /api/room/templates), TemplateGallery and TemplatesPanel dashboard components
-- Updated validation schemas: createTemplateSchema and updateTemplateSchema now include description, gradeBand, tags, isPublic fields, name widened to 100 chars
-- Added TemplateFull type to types/index.ts with all Phase 2 fields
-- Rewrote /api/room/templates route: GET with search/subject/gradeBand filter, POST with full Phase 2 fields
-- Rewrote /api/room/templates/[id] route: GET (own+public), PATCH (full update), DELETE, POST (duplicate)
-- Created /api/room/templates/community route: browse public templates with filters/sort/pagination/author info
-- Created /api/room/from-template route: create room from template ID, pre-loads snapshot to page 0
-- Created template-snapshot.ts: extractTemplateSnapshot() extracts only widget elements + canvas settings (no freehand/text/sticky), snapshotToElements() and snapshotWithNewIds() for loading
-- Created SaveAsTemplateModal: name, description, subject, grade band, tags (add/remove), public toggle, edit mode, error handling
-- Created MyTemplatesPanel: grid cards, search, subject/grade filters, 3-dot menu (edit/duplicate/toggle-public/delete), "Start from Template" creates room and navigates
-- Created CommunityTemplatesPanel: purple-themed cards, subject/grade/search filters, sort by newest/popular, author attribution, "Use This Template"
-- Updated TopBar: added Save (floppy) and LayoutTemplate icon buttons, Templates section in More menu with all 3 template actions
-- Updated WhiteboardClient: imported all 3 template modals, added template state management, added Ctrl+Shift+S / Ctrl+Shift+T keyboard shortcuts
-- Build succeeded, pushed to git, Vercel auto-deployed, site returns 200
+- Conducted comprehensive white-box feature audit on live site via agent-browser
+- Tested 50+ features across 7 areas: Top Bar, Left Toolbar, Style Panel, Pages, Widget Panels, Templates, Keyboard Shortcuts
+- Identified 4 bugs and 7 weaknesses
+- **Bug 1 FIXED** (CRITICAL): Flyout backdrop (z-index 9000) blocked entire toolbar (z-index 200). Removed full-viewport backdrop from Flyout component, replaced with document-level mousedown handler that checks panel/anchor containment.
+- **Bug 2 FIXED** (MODERATE): Menu backdrop (z-index 9000) blocked top bar (z-index 1000). Removed full-viewport backdrop from TopBar More Options menu, added document-level mousedown handler + menuPanelRef.
+- **Bug 3 FIXED** (LOW): ShortcutsDialog had no Escape keydown handler. Added useEffect with keydown listener.
+- **Tool Library backdrop FIX**: Same z-index issue. Removed wb-lib-backdrop, added document-level mousedown handler.
+- **Weakness 3 FIXED**: Undo/Redo buttons now disabled (opacity 0.3, pointer-events none) when undoStack/redoStack are empty. Added canUndo/canRedo props to TopBar, disabled prop to Ico component, wb-ico-disabled CSS class.
+- **Weakness 4 FIXED**: Chat widget no longer auto-opens on first visit. Removed useEffect auto-open from page.tsx, cleaned up unused imports (useWidgetStore, useEffect).
+- Build verified: `npx next build` succeeds with no new errors.
+- All pre-existing TS errors (server/index.ts, ElementRenderer.tsx) are unchanged.
+
+Files modified:
+- src/components/whiteboard/LeftToolbar.tsx — Removed flyout backdrop, added mousedown close handler, removed lib backdrop, added mousedown close handler
+- src/components/whiteboard/TopBar.tsx — Removed menu backdrop, added menuPanelRef + mousedown close handler, added canUndo/canRedo/disabled props to Ico
+- src/components/whiteboard/ShortcutsDialog.tsx — Added useEffect import, added Escape keydown handler
+- src/components/whiteboard/whiteboard.css — Added .wb-ico-disabled class
+- src/app/WhiteboardClient.tsx — Subscribed to undoStack/redoStack, passed canUndo/canRedo to TopBar
+- src/app/page.tsx — Removed chat auto-open useEffect, removed unused useWidgetStore import
 
 Stage Summary:
-- **Files created**: template-snapshot.ts, SaveAsTemplateModal.tsx, MyTemplatesPanel.tsx, CommunityTemplatesPanel.tsx, from-template/route.ts, community/route.ts
-- **Files modified**: validations.ts, types/index.ts, TopBar.tsx, WhiteboardClient.tsx, room/templates/route.ts, room/templates/[id]/route.ts
-- **Phase 2 is COMPLETE** — all 5 deliverables implemented:
-  - 2A: Template CRUD (Save as Template modal, My Templates panel with grid/search/filter/edit/duplicate/delete, Start from Template)
-  - 2B: Community Templates browser (filter by subject/grade/search/tags, sort, Use This Template, author attribution)
-  - 2C: Snapshot format (widget types+configs, positions/sizes, canvas settings; does NOT save freehand drawings)
-  - 2D: Supabase backend (Prisma Template model + DB migration applied — description, grade_band, tags, is_public, updatedAt columns + indexes + trigger)
-  - 2E: Keyboard shortcuts (Ctrl+Shift+S → save modal, Ctrl+Shift+T → template browser)
-- **Migration applied** — connected via Session Pooler (port 5432, password Thephisics1). All columns, indexes, and updatedAt trigger verified.
-
----
-Task ID: 2d
-Agent: Main
-Task: Phase 2D — Run Supabase migration for Template table
-
-Work Log:
-- Attempted Transaction Pooler (port 6543) — failed with encoding error
-- Connected via Session Pooler (port 5432) with password Thephisics1
-- Checked pre-migration schema: Template had id, tutorId, name, subject, snapshot, createdAt
-- Ran migration SQL: added description (VARCHAR 500), grade_band (TEXT default ''), tags (TEXT[] default '{}'), is_public (BOOLEAN default false), updatedAt (TIMESTAMP)
-- Created 3 new indexes: Template_is_public_idx, Template_subject_idx, Template_grade_band_idx
-- Created update_template_updatedat() trigger for auto-updating updatedAt on row change
-- Verified all columns, indexes, and triggers post-migration
-- Build passed, pushed to git, Vercel auto-deployed
-
-Stage Summary:
-- **Database migration COMPLETE** — Template table now has all Phase 2 columns
-- **Phase 2 is now FULLY COMPLETE (code + database)**
-
-## Phase Plan Status
-- Phase 1: COMPLETE
-- Phase 2: COMPLETE
-- Phase 3: Math & Science Content (not started)
-- Phase 4: English & Arts Content (not started)
-- Phase 5: UX Polish (not started)
-- Phase 6: Platform & Future (deferred)
+- All 3 backdrop-related bugs fixed by removing full-viewport overlays and using document mousedown handlers
+- Backdrop CSS classes (wb-flyout-backdrop, wb-menu-backdrop, wb-lib-backdrop) left in CSS but no longer rendered — safe for rollback
+- Undo/Redo now visually disabled when stacks empty
+- Chat no longer auto-opens, cleaner first-load experience

@@ -66,6 +66,8 @@ export default function WhiteboardClient() {
   const addPage = useWhiteboardStore((s) => s.addPage)
   const undo = useWhiteboardStore((s) => s.undo)
   const redo = useWhiteboardStore((s) => s.redo)
+  const undoStack = useWhiteboardStore((s) => s.undoStack)
+  const redoStack = useWhiteboardStore((s) => s.redoStack)
   const setTool = useWhiteboardStore((s) => s.setTool)
 
   const [searchKey, setSearchKey] = useState(0)
@@ -226,6 +228,8 @@ export default function WhiteboardClient() {
           isDark={isDark}
           onUndo={undo}
           onRedo={redo}
+          canUndo={undoStack.length > 0}
+          canRedo={redoStack.length > 0}
           onToggleDark={toggleDark}
           onExportPng={handleExportPng}
           onExportSvg={handleExportSvg}

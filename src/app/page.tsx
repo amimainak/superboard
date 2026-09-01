@@ -1,12 +1,11 @@
 'use client'
 
-import React, { useEffect } from 'react'
+import React from 'react'
 import dynamic from 'next/dynamic'
 import {
   WidgetPanel,
   WidgetToggleBar,
 } from '@/components/room/widgets'
-import { useWidgetStore } from '@/lib/room/widget-store'
 import '@/components/room/widgets/widgets.css'
 
 const WhiteboardClient = dynamic(() => import('./WhiteboardClient'), {
@@ -114,16 +113,6 @@ class ErrorBoundary extends React.Component<
 }
 
 export default function Home() {
-  const openWidget = useWidgetStore((s) => s.openWidget)
-  const panelVisible = useWidgetStore((s) => s.panelVisible)
-
-  // Auto-open the chat widget on first visit
-  useEffect(() => {
-    if (!panelVisible) {
-      openWidget('chat')
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   return (
     <ErrorBoundary>
       <div className="room-layout">

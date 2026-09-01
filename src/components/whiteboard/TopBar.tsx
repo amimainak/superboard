@@ -6,7 +6,6 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
 import {
   Sun,
   Moon,
@@ -19,9 +18,6 @@ import {
   ZoomOut,
   Maximize,
   Search,
-  Save,
-  LayoutTemplate,
-  Users,
 } from 'lucide-react'
 import './whiteboard.css'
 
@@ -62,10 +58,10 @@ interface TopBarProps {
   onSearch: () => void
   /** When false, export menu items (PNG, JPEG, SVG, JSON) are disabled with a tooltip */
   canExport?: boolean
-  /** Template actions */
-  onSaveAsTemplate?: () => void
-  onMyTemplates?: () => void
-  onCommunityTemplates?: () => void
+  /** Disable undo when nothing to undo */
+  canUndo?: boolean
+  /** Disable redo when nothing to redo */
+  canRedo?: boolean
 }
 
 export function TopBar({
@@ -104,12 +100,12 @@ export function TopBar({
   onTogglePresentation,
   onSearch,
   canExport = true,
-  onSaveAsTemplate,
-  onMyTemplates,
-  onCommunityTemplates,
+  canUndo = true,
+  canRedo = true,
 }: TopBarProps) {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
+  const menuPanelRef = useRef<HTMLDivElement>(null)
   const [menuPos, setMenuPos] = useState({ top: -9999, right: 0 })
 
   useEffect(() => {
@@ -124,6 +120,23 @@ export function TopBar({
     }
     if (right < 8) right = 8
     setMenuPos({ top, right })
+  }, [menuOpen])
+
+  // Close menu on click outside (no full-viewport backdrop that blocks other UI)
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = (e: MouseEvent) => {
+      const panel = menuPanelRef.current
+      const btn = moreBtnRef.current
+      if (
+        panel && !panel.contains(e.target as Node) &&
+        btn && !btn.contains(e.target as Node)
+      ) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
   }, [menuOpen])
 
   const ToolLabel: Record<string, string> = {
@@ -161,10 +174,10 @@ export function TopBar({
       <div className={`wb-sep-v wb-sep-v-${isDark ? 'dark' : 'light'}`} aria-hidden="true" />
 
       {/* Undo / Redo — always visible, prominent */}
-      <Ico title="Undo" isDark={isDark} onClick={onUndo} ariaLabel="Undo">
+      <Ico title="Undo" isDark={isDark} onClick={onUndo} ariaLabel="Undo" disabled={!canUndo}>
         <Undo2 size={14} />
       </Ico>
-      <Ico title="Redo" isDark={isDark} onClick={onRedo} ariaLabel="Redo">
+      <Ico title="Redo" isDark={isDark} onClick={onRedo} ariaLabel="Redo" disabled={!canRedo}>
         <Redo2 size={14} />
       </Ico>
 
@@ -198,17 +211,6 @@ export function TopBar({
         </Ico>
       </div>
 
-      {/* Template buttons */}
-      {onSaveAsTemplate && (
-        <Ico title="Save as Template (Ctrl+Shift+S)" isDark={isDark} onClick={onSaveAsTemplate} ariaLabel="Save as Template">
-          <Save size={14} />
-        </Ico>
-      )}
-      {onMyTemplates && (
-        <Ico title="My Templates (Ctrl+Shift+T)" isDark={isDark} onClick={onMyTemplates} ariaLabel="My Templates">
-          <LayoutTemplate size={14} />
-        </Ico>
-      )}
       {/* Right actions — minimal icons */}
       <Ico title="Search board (Ctrl+K)" isDark={isDark} onClick={onSearch} ariaLabel="Search board">
         <Search size={14} />
@@ -247,15 +249,15 @@ export function TopBar({
         >
           <MoreHorizontal size={14} />
         </button>
-        {menuOpen && menuPos.top > -100 && createPortal(
-          <>
-            <div className="wb-menu-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
-            <div
-              className={`wb-menu-panel wb-menu-panel-${isDark ? 'dark' : 'light'}`}
-              role="menu"
-              aria-label="Actions menu"
-              style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
-            >
+        {menuOpen && menuPos.top > -100 && (
+          <div
+            ref={menuPanelRef}
+            className={`wb-menu-panel wb-menu-panel-${isDark ? 'dark' : 'light'}`}
+            role="menu"
+            aria-label="Actions menu"
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+          >
               {/* Page — most visible at top */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 Page
@@ -308,26 +310,12 @@ export function TopBar({
               <MenuItem label={snapToGrid ? 'Disable Snap' : 'Enable Snap'} isDark={isDark} onClick={() => { onToggleSnap(); setMenuOpen(false) }} />
               <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
               <MenuItem label="Zoom to Fit" isDark={isDark} shortcut="⇧1" onClick={() => { onZoomFit(); setMenuOpen(false) }} />
-              {/* Templates */}
-              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
-                Templates
-              </div>
-              {onSaveAsTemplate && (
-                <MenuItem label="Save as Template" isDark={isDark} shortcut="Ctrl+⇧S" onClick={() => { onSaveAsTemplate(); setMenuOpen(false) }} />
-              )}
-              {onMyTemplates && (
-                <MenuItem label="My Templates" isDark={isDark} shortcut="Ctrl+⇧T" onClick={() => { onMyTemplates(); setMenuOpen(false) }} />
-              )}
-              {onCommunityTemplates && (
-                <MenuItem label="Community Templates" isDark={isDark} onClick={() => { onCommunityTemplates(); setMenuOpen(false) }} />
-              )}
+              {/* Help */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 Help
               </div>
               <MenuItem label="Keyboard Shortcuts" isDark={isDark} shortcut="Ctrl+/" onClick={() => { onShowShortcuts(); setMenuOpen(false) }} />
             </div>
-          </>
-          , document.body
         )}
       </div>
     </header>
@@ -341,6 +329,7 @@ function Ico({
   isDark,
   onClick,
   active,
+  disabled,
   ariaLabel,
   ariaExpanded,
   ariaHaspopup,
@@ -350,6 +339,7 @@ function Ico({
   isDark: boolean
   onClick?: () => void
   active?: boolean
+  disabled?: boolean
   ariaLabel: string
   ariaExpanded?: boolean
   ariaHaspopup?: 'menu' | 'dialog' | 'true' | 'false'
@@ -357,14 +347,16 @@ function Ico({
   return (
     <button
       title={title}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       aria-haspopup={ariaHaspopup}
+      aria-disabled={disabled || undefined}
       className={[
         'wb-ico',
         `wb-ico-${isDark ? 'dark' : 'light'}`,
         active ? `wb-ico-active wb-ico-active-${isDark ? 'dark' : 'light'}` : '',
+        disabled ? 'wb-ico-disabled' : '',
       ].join(' ')}
     >
       {children}
