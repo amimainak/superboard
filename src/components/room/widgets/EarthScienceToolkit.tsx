@@ -181,11 +181,32 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
             {sectionTitle('Topographic Map Tool', 'earth-topographic-map')}
             <div style={{ padding: '0 12px 12px' }}><TopographicPanel isDark={isDark} /></div>
           </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('States of Matter', 'earth-states-matter')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Temperature slider → particles move (solid/liquid/gas), phase change labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Animal Habitats', 'earth-animal-habitats')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Match animals to habitats (ocean, forest, desert, arctic, grassland).</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sink or Float', 'earth-sink-float')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Select object + liquid → predict outcome → reveal answer.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Scientific Method', 'earth-scientific-method')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step scaffold: Question → Hypothesis → Experiment → Data → Analysis → Conclusion.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Data Collection', 'earth-data-collection')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create tables, input data, auto-generate bar/line/scatter graphs.</p>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* K-5 TAB — WaterCarbonCycle, SolarSystemScale */}
+      {/* K-5 TAB */}
       {/* ============================================================ */}
       {activeBand === 'elementary' && (
         <>
@@ -196,6 +217,19 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Solar System Scale', 'earth-solar-system')}
             <div style={{ padding: '0 12px 12px' }}><SolarSystemPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('States of Matter', 'earth-states-matter')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Temperature slider → particles move (solid/liquid/gas), phase change labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Animal Habitats', 'earth-animal-habitats')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Match animals to habitats (ocean, forest, desert, arctic, grassland).</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sink or Float', 'earth-sink-float')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Select object + liquid → predict outcome → reveal answer.</p>
           </div>
         </>
       )}
@@ -229,11 +263,24 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
             {sectionTitle('Topographic Map Tool', 'earth-topographic-map')}
             <div style={{ padding: '0 12px 12px' }}><TopographicPanel isDark={isDark} /></div>
           </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('States of Matter', 'earth-states-matter')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Temperature slider → particles move (solid/liquid/gas), phase change labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Scientific Method', 'earth-scientific-method')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step scaffold: Question → Hypothesis → Experiment → Data → Analysis → Conclusion.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Data Collection', 'earth-data-collection')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create tables, input data, auto-generate bar/line/scatter graphs.</p>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* 9-12 TAB — ALL 6 */}
+      {/* 9-12 TAB */}
       {/* ============================================================ */}
       {activeBand === 'highschool' && (
         <>
@@ -260,6 +307,27 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Topographic Map Tool', 'earth-topographic-map')}
             <div style={{ padding: '0 12px 12px' }}><TopographicPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('States of Matter', 'earth-states-matter')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Temperature slider → particles move (solid/liquid/gas), phase change labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Animal Habitats', 'earth-animal-habitats')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Match animals to habitats (ocean, forest, desert, arctic, grassland).</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sink or Float', 'earth-sink-float')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Select object + liquid → predict outcome → reveal answer.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Scientific Method', 'earth-scientific-method')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step scaffold: Question → Hypothesis → Experiment → Data → Analysis → Conclusion.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Data Collection', 'earth-data-collection')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create tables, input data, auto-generate bar/line/scatter graphs.</p>
           </div>
         </>
       )}

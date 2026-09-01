@@ -228,17 +228,35 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
             {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
           </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Food Chain Builder', 'bio-food-chain')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag organisms into chain order with energy flow arrows and labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Plant Life Cycle', 'bio-plant-life-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Seed → sprout → plant → flower → fruit → seed cycle with labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Meiosis Visualizer', 'bio-meiosis')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step meiosis I & II with crossing over, compare to mitosis.</p>
+          </div>
         </>
       )}
 
       {/* ============================================================ */}
-      {/* ELEMENTARY TAB (K-5) — Human Body Interactive only */}
+      {/* ELEMENTARY TAB (K-5) */}
       {/* ============================================================ */}
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
             {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Plant Life Cycle', 'bio-plant-life-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Seed → sprout → plant → flower → fruit → seed cycle with labels.</p>
           </div>
         </>
       )}
@@ -283,6 +301,11 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Food Chain Builder', 'bio-food-chain')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag organisms into chain order with energy flow arrows and labels.</p>
           </div>
         </>
       )}
@@ -331,6 +354,19 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Human Body Interactive', 'bio-human-body')}
             <div style={{ padding: '0 12px 12px' }}><HumanBodyInterPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Food Chain Builder', 'bio-food-chain')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag organisms into chain order with energy flow arrows and labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Plant Life Cycle', 'bio-plant-life-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Seed → sprout → plant → flower → fruit → seed cycle with labels.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Meiosis Visualizer', 'bio-meiosis')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step meiosis I & II with crossing over, compare to mitosis.</p>
           </div>
         </>
       )}

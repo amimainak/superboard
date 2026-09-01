@@ -1,0 +1,36 @@
+import re
+
+with open('/home/z/my-project/src/components/whiteboard/CanvasWidgets.tsx','r') as f:
+    c = f.read()
+    # Find the PHASE4_LANG_KIND_LABELS line
+    p = c.find('PHASE4_LANG_KIND_LABELS')
+    if p == -1:
+        print('NOT FOUND'); exit(1)
+    q = c.find(',', p)
+    n = 3
+    # Build insertion text with new label entries
+    new_labels = []
+    labels = [
+        ('lang-sight-words', 'Sight Word Bank'),
+        ('lang-cvc-sort', 'CVC Word Sort'),
+        ('lang-fluency-timer', 'Fluency Timer'),
+        ('lang-argument-organizer', 'Argumentative Writing Organizer'),
+        ('lang-text-evidence', 'Text Evidence Highlighter'),
+        ('lang-semicolon-punct', 'Semicolon & Advanced Punctuation'),
+        ('lang-context-clues-exp', 'Context Clues Explorer'),
+        ('lang-rhetorical-analysis', 'Rhetorical Analysis Framework'),
+        ('lang-logical-fallacies', 'Logical Fallacies Reference'),
+        ('lang-citation-gen', 'MLA/APA Citation Generator'),
+        ('lang-essay-outline', 'Essay Outline Builder'),
+        ('lang-tts-preview', 'Text-to-Speech Preview'),
+    ]
+    # Replace from "PHASE4_LANG_KIND_LABELS,\n  // Phase 4" 
+    # to "PHASE4_LANG_KIND_LABELS,\n  // Phase 4\n    ...LANG_WIDGET_KIND_LABELS,\n    // Science widgets\n    ...SCIENCE_WIDGET_KIND_LABELS,"
+    # Build the replacement with labels added
+    before_science = "PHASE4_LANG_KIND_LABELS,\\n  // Phase 4\n    ...LANG_WIDGET_KIND_LABELS,\n    // Science widgets"
+    after_lang = "PHASE4_LANG_KIND_LABELS,\n  // Phase 4\n    'lang-sight-words': 'Sight Word Bank',\n    'lang-cvc-sort': 'CVC Word Sort',\n    'lang-fluency-timer': 'Fluency Timer',\n    'lang-argument-organizer': 'Argumentative Writing Organizer',\n    'lang-text-evidence': 'Text Evidence Highlighter',\n    'lang-semicolon-punct': 'Semicolon & Advanced Punctuation',\n    'lang-context-clues-exp': 'Context Clues Explorer',\n    'lang-rhetorical-analysis': 'Rhetorical Analysis Framework',\n    'lang-logical-fallacies': 'Logical Fallacies Reference',\n    'lang-citation-gen': 'MLA/APA Citation Generator',\n    'lang-essay-outline': 'Essay Outline Builder',\n    'lang-tts-preview': 'Text-to-Speech Preview',\n  // Science widgets"
+    repl = before_science + after_lang
+    c = c[:before_science] + after_lang + after_science
+    with open('/home/z/my-project/src/components/whiteboard/CanvasWidgets.tsx','w') as f:
+        f.write(c)
+    print('OK')

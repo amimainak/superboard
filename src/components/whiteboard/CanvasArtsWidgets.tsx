@@ -500,6 +500,395 @@ function CanvasGraphingTool({ element, isDark }: CanvasWidgetProps) {
 }
 
 // ============================================================
+// Phase 4: New Arts Canvas Widgets
+// ============================================================
+
+// --- Elements of Art ---
+const ART_ELEMENTS = [
+  { name: 'Line', desc: 'A mark between two points. Can be thick, thin, wavy, zigzag, or curved.', color: '#ef4444', examples: 'Straight lines, curved lines, zigzag lines, spiral lines' },
+  { name: 'Shape', desc: 'A 2D area enclosed by lines. Geometric or organic.', color: '#f97316', examples: 'Circles, squares, triangles, freeform shapes' },
+  { name: 'Form', desc: 'A 3D shape with volume. Has height, width, and depth.', color: '#eab308', examples: 'Sphere, cube, cylinder, cone, pyramid' },
+  { name: 'Space', desc: 'The area around and between objects. Positive and negative space.', color: '#22c55e', examples: 'Foreground/background, overlapping, placement' },
+  { name: 'Color', desc: 'The visual quality of objects caused by light. Has hue, value, and intensity.', color: '#3b82f6', examples: 'Primary, secondary, warm, cool, complementary' },
+  { name: 'Texture', desc: 'How a surface feels or looks like it would feel.', color: '#8b5cf6', examples: 'Smooth, rough, bumpy, fuzzy, glossy, matte' },
+]
+
+export function CanvasElementsOfArt({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const selected = (raw.selected as number) || 0
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+  const el = ART_ELEMENTS[selected]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Elements of Art</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+        {ART_ELEMENTS.map((e, i) => (
+          <button key={e.name} onClick={() => updateConfig({ selected: i })} style={{ padding: '4px 8px', borderRadius: 5, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid ' + (selected === i ? e.color : s.border), background: selected === i ? e.color + '18' : s.surface, color: selected === i ? e.color : s.text, transition: 'all 0.15s' }}>{e.name}</button>
+        ))}
+      </div>
+      {el && (
+        <div style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid ' + s.border, background: s.surface }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: el.color, marginBottom: 6 }}>{el.name}</div>
+          <div style={{ fontSize: 11, color: s.bright, lineHeight: 1.5, marginBottom: 8 }}>{el.desc}</div>
+          <div style={{ fontSize: 10, color: s.text }}><span style={{ fontWeight: 600 }}>Examples:</span> {el.examples}</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- Symmetry Drawing ---
+export function CanvasSymmetryDrawing({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const mode = (raw.mode as string) || 'vertical'
+  const paths = (raw.paths as string[]) || []
+  const currentPath = (raw.currentPath as string) || ''
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+
+  const handlePointerUp = () => {
+    if (currentPath) { updateConfig({ paths: [...paths, currentPath], currentPath: '' }) }
+  }
+
+  const mirrorPath = (p: string, w: number, h: number) => {
+    const points = p.split(' ').map(s => { const [x, y] = s.split(',').map(Number); return [x, y] })
+    if (mode === 'vertical') return points.map(([x, y]) => `${w - x},${y}`).join(' ')
+    if (mode === 'horizontal') return points.map(([x, y]) => `${x},${h - y}`).join(' ')
+    return points.map(([x, y]) => `${w - x},${h - y}`).join(' ') // 4-way uses vertical
+  }
+
+  const w = 240, h = 200
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Symmetry Drawing</span>
+        <button onClick={() => updateConfig({ paths: [], currentPath: '' })} style={{ fontSize: 9, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>Clear</button>
+      </div>
+      <div style={{ display: 'flex', gap: 3 }}>
+        {['vertical', 'horizontal', '4-way'].map(m => (
+          <button key={m} onClick={() => updateConfig({ mode: m })} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer', fontWeight: 600, background: mode === m ? 'rgba(139,92,246,0.15)' : s.surface, border: '1px solid ' + (mode === m ? 'rgba(139,92,246,0.3)' : s.border), color: mode === m ? '#a78bfa' : s.text }}>{m}</button>
+        ))}
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', borderRadius: 6, border: '1px solid ' + s.border, background: isDark ? '#0f172a' : '#fafafa', cursor: 'crosshair' }} onPointerUp={handlePointerUp}>
+        {mode !== 'horizontal' && <line x1={w / 2} y1={0} x2={w / 2} y2={h} stroke={s.border} strokeWidth={1} strokeDasharray="4 4" />}
+        {mode !== 'vertical' && <line x1={0} y1={h / 2} x2={w} y2={h / 2} stroke={s.border} strokeWidth={1} strokeDasharray="4 4" />}
+        {[...paths, currentPath].filter(Boolean).map((p, i) => <>
+          <polyline key={'o' + i} points={p} fill="none" stroke={i === paths.length ? '#8b5cf6' : '#8b5cf688'} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          <polyline key={'m' + i} points={mirrorPath(p, w, h)} fill="none" stroke={i === paths.length ? '#8b5cf6' : '#8b5cf688'} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </>)}
+      </svg>
+    </div>
+  )
+}
+
+// --- Rhythm Builder ---
+const NOTE_TYPES = ['quarter', 'half', 'eighth', 'rest']
+const NOTE_LABELS: Record<string, string> = { quarter: 'Ta', half: 'Ta-a', eighth: 'Ti-ti', rest: 'Rest' }
+const NOTE_VALUES: Record<string, number> = { quarter: 1, half: 2, eighth: 0.5, rest: 0 }
+
+export function CanvasRhythmBuilder({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const grid = (raw.grid as string[]) || Array(8).fill('quarter')
+  const bpm = (raw.bpm as number) || 120
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+
+  const setNote = (i: number, type: string) => { const g = [...grid]; g[i] = type; updateConfig({ grid: g }) }
+  const totalBeats = grid.reduce((sum, n) => sum + (NOTE_VALUES[n] || 0), 0)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Rhythm Builder</span>
+        <span style={{ fontSize: 9, color: s.text }}>{totalBeats} beats</span>
+      </div>
+      <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        {NOTE_TYPES.map(t => <span key={t} style={{ fontSize: 9, padding: '2px 6px', borderRadius: 3, background: s.surface, border: '1px solid ' + s.border, color: s.text }}>{NOTE_LABELS[t]}</span>)}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1 }}>
+        {grid.map((note, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 9, color: s.text, width: 20, textAlign: 'right' }}>{i + 1}</span>
+            {NOTE_TYPES.map(t => (
+              <button key={t} onClick={() => setNote(i, t)} style={{ flex: 1, padding: '6px 0', borderRadius: 4, fontSize: 10, fontWeight: 500, cursor: 'pointer', border: '1px solid ' + (note === t ? 'rgba(139,92,246,0.4)' : s.border), background: note === t ? 'rgba(139,92,246,0.12)' : s.surface, color: note === t ? '#a78bfa' : s.text }}>{NOTE_LABELS[t]}</button>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 10, color: s.text }}>BPM:</span>
+        <input type="range" min={60} max={200} value={bpm} onChange={e => updateConfig({ bpm: parseInt(e.target.value) })} style={{ flex: 1, accentColor: '#8b5cf6' }} />
+        <span style={{ fontSize: 9, color: s.text }}>{bpm}</span>
+      </div>
+    </div>
+  )
+}
+
+// --- Artist Spotlight ---
+const ARTISTS = [
+  { name: 'Vincent van Gogh', years: '1853-1890', movement: 'Post-Impressionism', works: 'Starry Night, Sunflowers, The Bedroom', style: 'Bold color, expressive brushwork, emotional intensity' },
+  { name: 'Pablo Picasso', years: '1881-1973', movement: 'Cubism', works: 'Guernica, Les Demoiselles d\'Avignon, The Weeping Woman', style: 'Geometric forms, multiple perspectives, abstract' },
+  { name: 'Claude Monet', years: '1840-1926', movement: 'Impressionism', works: 'Water Lilies, Impression Sunrise, Rouen Cathedral', style: 'Light and color, outdoor scenes, visible brushstrokes' },
+  { name: 'Frida Kahlo', years: '1907-1954', movement: 'Surrealism', works: 'The Two Fridas, Self-Portrait with Thorn Necklace', style: 'Symbolism, Mexican culture, self-portraiture' },
+  { name: 'Leonardo da Vinci', years: '1452-1519', movement: 'Renaissance', works: 'Mona Lisa, The Last Supper, Vitruvian Man', style: 'Realism, sfumato, anatomical precision' },
+  { name: 'Georgia O\'Keeffe', years: '1887-1986', movement: 'American Modernism', works: 'Jimson Weed, Red Poppy, Black Iris', style: 'Large-scale flowers, New Mexico landscapes' },
+  { name: 'Katsushika Hokusai', years: '1760-1849', movement: 'Ukiyo-e', works: 'The Great Wave, Thirty-Six Views of Mt. Fuji', style: 'Japanese woodblock, wave motifs, nature' },
+  { name: 'Henri Matisse', years: '1869-1954', movement: 'Fauvism', works: 'The Dance, The Joy of Life, Icarus', style: 'Bold color, simplified forms, cut-outs' },
+]
+
+export function CanvasArtistSpotlight({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const idx = (raw.idx as number) || 0
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+  const a = ARTISTS[idx % ARTISTS.length]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Artist Spotlight</span>
+        <span style={{ fontSize: 9, color: s.text }}>{idx + 1}/{ARTISTS.length}</span>
+      </div>
+      <div style={{ padding: 10, borderRadius: 8, background: s.surface, border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: s.bright }}>{a.name}</div>
+        <div style={{ fontSize: 10, color: '#8b5cf6', fontWeight: 600 }}>{a.years} · {a.movement}</div>
+        <div style={{ fontSize: 10, color: s.text, marginTop: 6, lineHeight: 1.5 }}>{a.style}</div>
+      </div>
+      <div><div style={{ fontSize: 10, fontWeight: 700, color: s.bright, marginBottom: 3 }}>Key Works</div><div style={{ fontSize: 10, color: s.text, lineHeight: 1.5 }}>{a.works}</div></div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button onClick={() => updateConfig({ idx: (idx - 1 + ARTISTS.length) % ARTISTS.length })} style={{ flex: 1, padding: '6px 0', borderRadius: 5, fontSize: 11, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text }}>Previous</button>
+        <button onClick={() => updateConfig({ idx: (idx + 1) % ARTISTS.length })} style={{ flex: 1, padding: '6px 0', borderRadius: 5, fontSize: 11, cursor: 'pointer', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)', color: '#a78bfa' }}>Next</button>
+      </div>
+    </div>
+  )
+}
+
+// --- Art History Timeline ---
+const ART_PERIODS = [
+  { name: 'Medieval', years: '500-1400', color: '#8b5cf6', desc: 'Religious art, illuminated manuscripts, flat perspective' },
+  { name: 'Renaissance', years: '1400-1600', color: '#3b82f6', desc: 'Linear perspective, human anatomy, realism, da Vinci, Michelangelo' },
+  { name: 'Baroque', years: '1600-1750', color: '#f59e0b', desc: 'Drama, contrast, movement, Caravaggio, Rembrandt, Vermeer' },
+  { name: 'Neoclassical', years: '1750-1850', color: '#64748b', desc: 'Order, balance, Greek/Roman influence, Jacques-Louis David' },
+  { name: 'Impressionism', years: '1860-1890', color: '#34d399', desc: 'Light, color, outdoor scenes, Monet, Renoir, Degas' },
+  { name: 'Post-Impressionism', years: '1880-1910', color: '#f97316', desc: 'Bold color, emotion, structure, van Gogh, Cezanne, Seurat' },
+  { name: 'Cubism', years: '1907-1920', color: '#ef4444', desc: 'Geometric forms, multiple views, Picasso, Braque' },
+  { name: 'Surrealism', years: '1920-1945', color: '#ec4899', desc: 'Dreams, unconscious, juxtaposition, Dali, Magritte, Ernst' },
+  { name: 'Abstract Expressionism', years: '1945-1970', color: '#06b6d4', desc: 'Gesture, color field, emotion, Pollock, Rothko, de Kooning' },
+  { name: 'Pop Art', years: '1955-1970', color: '#f43f5e', desc: 'Consumer culture, bold imagery, Warhol, Lichtenstein' },
+  { name: 'Contemporary', years: '1970-present', color: '#a855f7', desc: 'Digital art, installation, multicultural, diverse media' },
+]
+
+export function CanvasArtHistoryTimeline({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const selected = (raw.selected as number) || -1
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Art History Timeline</span>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {ART_PERIODS.map((p, i) => (
+          <div key={p.name} onClick={() => updateConfig({ selected: selected === i ? -1 : i })} style={{ padding: '6px 8px', borderRadius: 6, cursor: 'pointer', border: '1px solid ' + (selected === i ? p.color + '66' : s.border), background: selected === i ? p.color + '10' : s.surface, transition: 'all 0.15s' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ width: 4, height: 24, borderRadius: 2, background: p.color, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: selected === i ? p.color : s.bright }}>{p.name} <span style={{ fontWeight: 400, color: s.text }}> ({p.years})</span></div>
+                {selected === i && <div style={{ fontSize: 9, color: s.text, lineHeight: 1.4, marginTop: 2 }}>{p.desc}</div>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// --- Value/Shading Study ---
+export function CanvasValueShading({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const technique = (raw.technique as string) || 'hatching'
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+  const steps = Array.from({ length: 10 }, (_, i) => i)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Value Scale & Shading</span>
+      </div>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>{['hatching', 'cross-hatching', 'stippling'].map(t => (
+        <button key={t} onClick={() => updateConfig({ technique: t })} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer', fontWeight: 600, background: technique === t ? 'rgba(139,92,246,0.15)' : s.surface, border: '1px solid ' + (technique === t ? 'rgba(139,92,246,0.3)' : s.border), color: technique === t ? '#a78bfa' : s.text }}>{t}</button>
+      ))}</div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end' }}>
+        {steps.map(i => {
+          const gray = Math.round((i / 9) * 255)
+          const hex = `#${gray.toString(16).padStart(2, '0').repeat(3)}`
+          return (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <div style={{ width: '100%', height: 50, borderRadius: 4, background: hex, border: '1px solid ' + s.border, position: 'relative', overflow: 'hidden' }}>
+                {technique === 'hatching' && <svg width="100%" height="100%"><line x1="0" y1={10 + i * 3} x2="100%" y2={10 + i * 3} stroke={i < 5 ? '#00000044' : '#ffffff44'} strokeWidth={1} /><line x1="0" y1={15 + i * 3} x2="100%" y2={15 + i * 3} stroke={i < 5 ? '#00000044' : '#ffffff44'} strokeWidth={1} /><line x1="0" y1={20 + i * 3} x2="100%" y2={20 + i * 3} stroke={i < 5 ? '#00000044' : '#ffffff44'} strokeWidth={1} /></svg>}
+                {technique === 'stippling' && Array.from({ length: i * 3 + 2 }, (_, j) => <div key={j} style={{ position: 'absolute', width: 2, height: 2, borderRadius: 1, background: i < 5 ? '#00000066' : '#ffffff66', left: `${Math.random() * 95}%`, top: `${Math.random() * 90}%` }} />)}
+              </div>
+              <span style={{ fontSize: 8, color: s.text }}>{i + 1}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// --- Compositional Analysis ---
+export function CanvasCompositionalAnalysis({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const overlay = (raw.overlay as string) || 'thirds'
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+  const w = 200, h = 200
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Compositional Analysis</span>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>{['thirds', 'golden', 'leading'].map(o => (
+        <button key={o} onClick={() => updateConfig({ overlay: o })} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer', fontWeight: 600, background: overlay === o ? 'rgba(139,92,246,0.15)' : s.surface, border: '1px solid ' + (overlay === o ? 'rgba(139,92,246,0.3)' : s.border), color: overlay === o ? '#a78bfa' : s.text }}>{o === 'thirds' ? 'Rule of Thirds' : o === 'golden' ? 'Golden Ratio' : 'Leading Lines'}</button>
+      ))}</div>
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', borderRadius: 6, border: '1px solid ' + s.border, background: isDark ? '#0f172a' : '#fafafa' }}>
+        <rect x={0} y={0} width={w} height={h} fill="none" />
+        {overlay === 'thirds' && <><line x1={w/3} y1={0} x2={w/3} y2={h} stroke="#a78bfa44" strokeWidth={1} /><line x1={2*w/3} y1={0} x2={2*w/3} y2={h} stroke="#a78bfa44" strokeWidth={1} /><line x1={0} y1={h/3} x2={w} y2={h/3} stroke="#a78bfa44" strokeWidth={1} /><line x1={0} y1={2*h/3} x2={w} y2={2*h/3} stroke="#a78bfa44" strokeWidth={1} /><circle cx={w/3} cy={h/3} r={4} fill="#a78bfa33" /><circle cx={2*w/3} cy={h/3} r={4} fill="#a78bfa33" /><circle cx={w/3} cy={2*h/3} r={4} fill="#a78bfa33" /><circle cx={2*w/3} cy={2*h/3} r={4} fill="#a78bfa33" /></>}
+        {overlay === 'golden' && <><rect x={w*0.191} y={h*0.191} width={w*0.618} height={h*0.618} fill="none" stroke="#a78bfa44" strokeWidth={1} strokeDasharray="4 4" /><rect x={w*0.382} y={h*0.382} width={w*0.236} height={h*0.236} fill="none" stroke="#a78bfa44" strokeWidth={1} strokeDasharray="4 4" /></>}
+        {overlay === 'leading' && <><line x1={0} y1={h*0.6} x2={w*0.7} y2={0} stroke="#a78bfa44" strokeWidth={1.5} strokeDasharray="6 3" /><line x1={w*0.3} y1={h} x2={w} y2={h*0.3} stroke="#a78bfa44" strokeWidth={1.5} strokeDasharray="6 3" /><line x1={w*0.1} y1={0} x2={w*0.5} y2={h} stroke="#a78bfa44" strokeWidth={1} strokeDasharray="6 3" /></>}
+        <text x={w/2} y={h/2} textAnchor="middle" dominantBaseline="middle" fontSize={10} fill={s.text}>Place artwork here</text>
+      </svg>
+    </div>
+  )
+}
+
+// --- Art Criticism (Feldman's Method) ---
+export function CanvasArtCriticism({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const describe = (raw.describe as string) || ''
+  const analyze = (raw.analyze as string) || ''
+  const interpret = (raw.interpret as string) || ''
+  const judge = (raw.judge as string) || ''
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b', input: { padding: '4px 8px', borderRadius: 5, fontSize: 11, width: '100%', boxSizing: 'border-box' as const, border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'), background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', color: isDark ? '#e2e8f0' : '#1e293b', outline: 'none' } }
+
+  const steps = [
+    { label: '1. Describe', color: '#3b82f6', key: 'describe', val: describe, hint: 'What do you see? List elements, colors, subjects, materials.' },
+    { label: '2. Analyze', color: '#f59e0b', key: 'analyze', val: analyze, hint: 'How is the work organized? Lines, shapes, colors, textures, principles of design.' },
+    { label: '3. Interpret', color: '#8b5cf6', key: 'interpret', val: interpret, hint: 'What is the artist communicating? Mood, meaning, symbols, context.' },
+    { label: '4. Judge', color: '#34d399', key: 'judge', val: judge, hint: 'Is it successful? Why? Support with evidence from Describe/Analyze.' },
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit', overflowY: 'auto' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Art Criticism (Feldman)</span>
+      {steps.map(st => (
+        <div key={st.key}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: st.color, marginBottom: 3 }}>{st.label}</div>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 3, fontStyle: 'italic' }}>{st.hint}</div>
+          <textarea value={st.val} onChange={e => updateConfig({ [st.key]: e.target.value })} rows={3} style={{ ...s.input, resize: 'vertical' as const }} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// --- Two-Point Perspective ---
+export function CanvasTwoPointPerspective({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const vp1x = (raw.vp1x as number) || 15
+  const vp2x = (raw.vp2x as number) || 85
+  const vpy = (raw.vpy as number) || 40
+  const lines = (raw.lines as number) || 10
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+  const w = 200, h = 200
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Two-Point Perspective</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, color: s.text }}>Lines:</span>
+        <input type="range" min={4} max={20} value={lines} onChange={e => updateConfig({ lines: parseInt(e.target.value) })} style={{ flex: 1, accentColor: '#8b5cf6' }} />
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} style={{ width: '100%', borderRadius: 6, border: '1px solid ' + s.border, background: isDark ? '#0f172a' : '#fafafa' }}>
+        {/* Horizon line */}
+        <line x1={0} y1={vpy} x2={w} y2={vpy} stroke={s.text} strokeWidth={0.5} />
+        {/* Vanishing points */}
+        <circle cx={vp1x} cy={vpy} r={3} fill="#ef4444" />
+        <circle cx={vp2x} cy={vpy} r={3} fill="#3b82f6" />
+        {/* Lines from VP1 */}
+        {Array.from({ length: lines }, (_, i) => {
+          const y = vpy + (i + 1) * ((h - vpy) / (lines + 1))
+          return <line key={'a' + i} x1={vp1x} y1={vpy} x2={0} y2={y} stroke="#ef444433" strokeWidth={0.5} />
+        })}
+        {/* Lines from VP2 */}
+        {Array.from({ length: lines }, (_, i) => {
+          const y = vpy + (i + 1) * ((h - vpy) / (lines + 1))
+          return <line key={'b' + i} x1={vp2x} y1={vpy} x2={w} y2={y} stroke="#3b82f633" strokeWidth={0.5} />
+        })}
+        {/* Vertical edge lines */}
+        <line x1={0} y1={vpy} x2={0} y2={h} stroke={s.text + '44'} strokeWidth={0.5} />
+        <line x1={w} y1={vpy} x2={w} y2={h} stroke={s.text + '44'} strokeWidth={0.5} />
+        <text x={w/2} y={h - 5} textAnchor="middle" fontSize={8} fill={s.text}>Draw over this grid</text>
+      </svg>
+    </div>
+  )
+}
+
+// --- Chord Progression Builder ---
+const CHORDS = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii']
+const COMMON_PROGRESSIONS = [
+  { name: 'Pop', chords: ['I', 'V', 'vi', 'IV'] },
+  { name: 'Classical', chords: ['I', 'IV', 'V', 'I'] },
+  { name: 'Jazz ii-V-I', chords: ['ii', 'V', 'I'] },
+  { name: 'Rock', chords: ['I', 'IV', 'V', 'IV'] },
+  { name: 'Sad', chords: ['vi', 'IV', 'I', 'V'] },
+  { name: '50s', chords: ['I', 'vi', 'IV', 'V'] },
+]
+
+export function CanvasChordProgression({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const progression = (raw.progression as string[]) || ['I', 'V', 'vi', 'IV']
+  const key = (raw.key as string) || 'C'
+  const s = { bg: isDark ? '#0f172a' : '#ffffff', surface: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)', text: isDark ? '#94a3b8' : '#64748b', bright: isDark ? '#e2e8f0' : '#1e293b' }
+
+  const addChord = (c: string) => updateConfig({ progression: [...progression, c] })
+  const removeChord = (i: number) => updateConfig({ progression: progression.filter((_, idx) => idx !== i) })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Chord Progressions</span>
+        <span style={{ fontSize: 9, color: s.text }}>Key: {key}</span>
+      </div>
+      <div style={{ fontSize: 9, color: s.text, marginBottom: 2 }}>Common progressions:</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>{COMMON_PROGRESSIONS.map(p => (
+        <button key={p.name} onClick={() => updateConfig({ progression: [...p.chords] })} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 9, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text }}>{p.name} ({p.chords.join('-')})</button>
+      ))}</div>
+      <div style={{ fontSize: 9, color: s.text, marginTop: 2 }}>Your progression:</div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+        {progression.map((c, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <div style={{ padding: '6px 10px', borderRadius: 6, background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.3)', color: '#a78bfa', fontSize: 12, fontWeight: 600 }}>{c}</div>
+            {i < progression.length - 1 && <span style={{ color: s.text, fontSize: 12 }}>→</span>}
+            <button onClick={() => removeChord(i)} style={{ fontSize: 10, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginTop: 4 }}>{CHORDS.map(c => (
+        <button key={c} onClick={() => addChord(c)} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text }}>+ {c}</button>
+      ))}</div>
+    </div>
+  )
+}
+
+// ============================================================
 // Exports for CanvasWidgets.tsx integration
 // ============================================================
 
@@ -508,6 +897,17 @@ export const ARTS_WIDGET_KIND_LABELS: Record<string, string> = {
   'arts-perspective-grid': 'Perspective Grid',
   'arts-staff-notation': 'Staff Notation Builder',
   'arts-compare': 'Artwork Comparison',
+  // Phase 4 Arts widgets
+  'arts-elements-art': 'Elements of Art',
+  'arts-symmetry-drawing': 'Symmetry Drawing Tool',
+  'arts-rhythm-builder': 'Rhythm Builder',
+  'arts-artist-spotlight': 'Artist Spotlight',
+ 'arts-art-timeline': 'Art History Timeline',
+  'arts-value-shading': 'Value & Shading Study',
+  'arts-compositional': 'Compositional Analysis',
+  'arts-criticism': 'Art Criticism Framework',
+  'arts-two-point-persp': 'Two-Point Perspective',
+  'arts-chord-progression': 'Chord Progression Builder',
 }
 
 export const CLASSROOM_WIDGET_KIND_LABELS: Record<string, string> = {
@@ -522,6 +922,17 @@ export function getArtsWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'arts-perspective-grid': return { vanishingX: 50, vanishingY: 40, numLines: 8 }
     case 'arts-staff-notation': return { notes: ['C4', 'E4', 'G4', 'C5'] }
     case 'arts-compare': return { aspect: 'color', textA: '', textB: '' }
+    // Phase 4 Arts widgets
+    case 'arts-elements-art': return { selected: 0 }
+    case 'arts-symmetry-drawing': return { mode: 'vertical', paths: [], currentPath: '' }
+    case 'arts-rhythm-builder': return { grid: Array(8).fill('quarter'), bpm: 120 }
+    case 'arts-artist-spotlight': return { idx: 0 }
+    case 'arts-art-timeline': return { selected: -1 }
+    case 'arts-value-shading': return { technique: 'hatching' }
+    case 'arts-compositional': return { overlay: 'thirds' }
+    case 'arts-criticism': return { describe: '', analyze: '', interpret: '', judge: '' }
+    case 'arts-two-point-persp': return { vp1x: 15, vp2x: 85, vpy: 40, lines: 10 }
+    case 'arts-chord-progression': return { progression: ['I','V','vi','IV'], key: 'C' }
     default: return {}
   }
 }
@@ -532,6 +943,17 @@ export function getArtsWidgetDefaultSize(kind: string): { width: number; height:
     case 'arts-perspective-grid': return { width: 280, height: 320 }
     case 'arts-staff-notation': return { width: 300, height: 320 }
     case 'arts-compare': return { width: 360, height: 340 }
+    // Phase 4 Arts widgets
+    case 'arts-elements-art': return { width: 400, height: 500 }
+    case 'arts-symmetry-drawing': return { width: 440, height: 500 }
+    case 'arts-rhythm-builder': return { width: 440, height: 400 }
+    case 'arts-artist-spotlight': return { width: 400, height: 520 }
+    case 'arts-art-timeline': return { width: 460, height: 400 }
+    case 'arts-value-shading': return { width: 440, height: 520 }
+    case 'arts-compositional': return { width: 420, height: 420 }
+    case 'arts-criticism': return { width: 420, height: 550 }
+    case 'arts-two-point-persp': return { width: 460, height: 500 }
+    case 'arts-chord-progression': return { width: 420, height: 480 }
     default: return { width: 280, height: 300 }
   }
 }
@@ -555,4 +977,4 @@ export function getClassroomWidgetDefaultSize(kind: string): { width: number; he
 }
 
 // Individual component exports for WIDGET_COMPONENTS map
-export { CanvasColorTheory, CanvasPerspectiveGrid, CanvasStaffNotation, CanvasArtworkCompare, CanvasTimer, CanvasRandomPicker, CanvasGraphingTool }
+export { CanvasColorTheory, CanvasPerspectiveGrid, CanvasStaffNotation, CanvasArtworkCompare, CanvasTimer, CanvasRandomPicker, CanvasGraphingTool, CanvasElementsOfArt, CanvasSymmetryDrawing, CanvasRhythmBuilder, CanvasArtistSpotlight, CanvasArtHistoryTimeline, CanvasValueShading, CanvasCompositionalAnalysis, CanvasArtCriticism, CanvasTwoPointPerspective, CanvasChordProgression }

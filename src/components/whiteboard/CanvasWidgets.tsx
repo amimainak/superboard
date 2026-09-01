@@ -657,12 +657,40 @@ import {
   CanvasFormulaReference,
   CanvasProofBuilder,
   CanvasFlashcards,
+  CanvasCoinCounter,
+  CanvasAnalogClock,
+  CanvasPatternBlocks,
+  CanvasPictureGraph,
+  CanvasStatsToolbox,
+  CanvasPointPlotter,
+  CanvasRatioTable,
+  CanvasMultiFunctionPlotter,
+  CanvasDerivativeVisualizer,
+  CanvasConicSections,
+  CanvasLogExpVisualizer,
   getMathWidgetDefaultConfig,
   getMathWidgetDefaultSize,
   MATH_WIDGET_KIND_LABELS,
 } from './CanvasMathWidgets'
 import {
+  CanvasSightWordBank, CanvasCVCWordSort, CanvasFluencyTimer, CanvasArgumentOrganizer,
+  CanvasTextEvidence, CanvasSemicolonPunctuation, CanvasContextCluesExplorer, CanvasRhetoricalAnalysis,
+  CanvasLogicalFallacies, CanvasCitationGenerator, CanvasEssayOutline, CanvasTTSPreview,
+} from "./CanvasLanguageWidgets"
+import {
   CanvasScienceWidgetRenderer,
+  CanvasStatesOfMatter,
+  CanvasFoodChain,
+  CanvasAnimalHabitats,
+  CanvasPlantLifeCycle,
+  CanvasSinkOrFloat,
+  CanvasScientificMethod,
+  CanvasDataCollection,
+  CanvasMagnetism,
+  CanvasPeriodicTrends,
+  CanvasStoichiometry,
+  CanvasMeiosis,
+  CanvasWaveInterference,
   getScienceWidgetDefaultConfig,
   getScienceWidgetDefaultSize,
   SCIENCE_WIDGET_KIND_LABELS,
@@ -731,6 +759,18 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'math-unit-converter': CanvasUnitConverter,
   'math-formula-reference': CanvasFormulaReference,
   'math-proof-builder': CanvasProofBuilder,
+  // Phase 3 new math widgets
+  'math-coin-counter': CanvasCoinCounter,
+  'math-analog-clock': CanvasAnalogClock,
+  'math-pattern-blocks': CanvasPatternBlocks,
+  'math-picture-graph': CanvasPictureGraph,
+  'math-stats-toolbox': CanvasStatsToolbox,
+  'math-point-plotter': CanvasPointPlotter,
+  'math-ratio-table': CanvasRatioTable,
+  'math-multi-function': CanvasMultiFunctionPlotter,
+  'math-derivative-visualizer': CanvasDerivativeVisualizer,
+  'math-conic-sections': CanvasConicSections,
+  'math-log-exp-visualizer': CanvasLogExpVisualizer,
   // Language widgets
   'lang-pos-tagger': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
   'lang-sentence-structure': CanvasLanguageWidgetRenderer as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -782,6 +822,19 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'earth-water-carbon-cycle': CanvasScienceWidgetRenderer,
   'earth-solar-system': CanvasScienceWidgetRenderer,
   'earth-topographic-map': CanvasScienceWidgetRenderer,
+  // Phase 3 new interactive science widgets
+  'earth-states-matter': CanvasStatesOfMatter as unknown as React.ComponentType<CanvasWidgetProps>,
+  'bio-food-chain': CanvasFoodChain as unknown as React.ComponentType<CanvasWidgetProps>,
+  'earth-animal-habitats': CanvasAnimalHabitats as unknown as React.ComponentType<CanvasWidgetProps>,
+  'bio-plant-life-cycle': CanvasPlantLifeCycle as unknown as React.ComponentType<CanvasWidgetProps>,
+  'earth-sink-float': CanvasSinkOrFloat as unknown as React.ComponentType<CanvasWidgetProps>,
+  'earth-scientific-method': CanvasScientificMethod as unknown as React.ComponentType<CanvasWidgetProps>,
+  'earth-data-collection': CanvasDataCollection as unknown as React.ComponentType<CanvasWidgetProps>,
+  'phys-magnetism': CanvasMagnetism as unknown as React.ComponentType<CanvasWidgetProps>,
+  'chem-periodic-trends': CanvasPeriodicTrends as unknown as React.ComponentType<CanvasWidgetProps>,
+  'chem-stoichiometry': CanvasStoichiometry as unknown as React.ComponentType<CanvasWidgetProps>,
+  'bio-meiosis': CanvasMeiosis as unknown as React.ComponentType<CanvasWidgetProps>,
+  'phys-wave-interference': CanvasWaveInterference as unknown as React.ComponentType<CanvasWidgetProps>,
   // AI widgets
   'ai-generate-similar': GenerateSimilarWidget as unknown as React.ComponentType<CanvasWidgetProps>,
   'ai-reading-level': ReadingLevelAdapterWidget as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -797,6 +850,29 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'classroom-graphing': CanvasGraphingTool,
   // L3 widgets
   'classroom-quiz': CanvasQuiz,
+  'lang-sight-words': CanvasSightWordBank,
+  'lang-cvc-sort': CanvasCVCWordSort,
+  'lang-fluency-timer': CanvasFluencyTimer,
+  'lang-argument-organizer': CanvasArgumentOrganizer,
+  'lang-text-evidence': CanvasTextEvidence,
+  'lang-semicolon-punct': CanvasSemicolonPunctuation,
+  'lang-context-clues-exp': CanvasContextCluesExplorer,
+  'lang-rhetorical-analysis': CanvasRhetoricalAnalysis,
+  'lang-logical-fallacies': CanvasLogicalFallacies,
+  'lang-citation-gen': CanvasCitationGenerator,
+  'lang-essay-outline': CanvasEssayOutline,
+  'lang-tts-preview': CanvasTTSPreview,
+  'arts-elements-art': CanvasElementsOfArt,
+  'arts-symmetry-drawing': CanvasSymmetryDrawing,
+  'arts-rhythm-builder': CanvasRhythmBuilder,
+  'arts-artist-spotlight': CanvasArtistSpotlight,
+  'arts-art-timeline': CanvasArtHistoryTimeline,
+  'arts-value-shading': CanvasValueShading,
+  'arts-compositional': CanvasCompositionalAnalysis,
+  'arts-criticism': CanvasArtCriticism,
+  'arts-two-point-persp': CanvasTwoPointPerspective,
+  'arts-chord-progression': CanvasChordProgression,
+
 }
 
 export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -805,14 +881,14 @@ export const CanvasWidgetRenderer = React.memo(function CanvasWidgetRenderer({ e
   if (isLangWidget) {
     return <CanvasLanguageWidgetRenderer element={element} isDark={isDark} />
   }
-  // Science widgets go through their own renderer
-  const isScienceWidget = element.widgetKind.startsWith('phys-') || element.widgetKind.startsWith('chem-') || element.widgetKind.startsWith('bio-') || element.widgetKind.startsWith('earth-')
-  if (isScienceWidget) {
-    return <CanvasScienceWidgetRenderer element={element} isDark={isDark} />
-  }
-  // AI widgets have their own components in WIDGET_COMPONENTS map
+  // Check WIDGET_COMPONENTS first — handles both direct and science widgets
   const Component = WIDGET_COMPONENTS[element.widgetKind]
   if (!Component) {
+    // Try science renderer as fallback for legacy lazy-loaded science widgets
+    const isScienceWidget = element.widgetKind.startsWith('phys-') || element.widgetKind.startsWith('chem-') || element.widgetKind.startsWith('bio-') || element.widgetKind.startsWith('earth-')
+    if (isScienceWidget) {
+      return <CanvasScienceWidgetRenderer element={element} isDark={isDark} />
+    }
     // Fallback: try MathElementRenderers for legacy math-* element types
     if (element.widgetKind.startsWith('math-')) {
       return <div style={{ padding: 12, color: isDark ? '#fbbf24' : '#d97706', fontSize: 11 }}>
@@ -858,6 +934,18 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'math-unit-converter': return getMathWidgetDefaultConfig('math-unit-converter')
     case 'math-formula-reference': return getMathWidgetDefaultConfig('math-formula-reference')
     case 'math-proof-builder': return getMathWidgetDefaultConfig('math-proof-builder')
+    // Phase 3 new math widgets
+    case 'math-coin-counter': return getMathWidgetDefaultConfig('math-coin-counter')
+    case 'math-analog-clock': return getMathWidgetDefaultConfig('math-analog-clock')
+    case 'math-pattern-blocks': return getMathWidgetDefaultConfig('math-pattern-blocks')
+    case 'math-picture-graph': return getMathWidgetDefaultConfig('math-picture-graph')
+    case 'math-stats-toolbox': return getMathWidgetDefaultConfig('math-stats-toolbox')
+    case 'math-point-plotter': return getMathWidgetDefaultConfig('math-point-plotter')
+    case 'math-ratio-table': return getMathWidgetDefaultConfig('math-ratio-table')
+    case 'math-multi-function': return getMathWidgetDefaultConfig('math-multi-function')
+    case 'math-derivative-visualizer': return getMathWidgetDefaultConfig('math-derivative-visualizer')
+    case 'math-conic-sections': return getMathWidgetDefaultConfig('math-conic-sections')
+    case 'math-log-exp-visualizer': return getMathWidgetDefaultConfig('math-log-exp-visualizer')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultConfig('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultConfig('lang-sentence-structure')
@@ -868,7 +956,19 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'lang-punctuation': return getLangWidgetDefaultConfig('lang-punctuation')
     case 'lang-phonics': return getLangWidgetDefaultConfig('lang-phonics')
     case 'lang-sentence-expansion': return getLangWidgetDefaultConfig('lang-sentence-expansion')
-    // Science widgets
+      'lang-sight-words': 'Sight Word Bank',
+  'lang-cvc-sort': 'CVC Word Sort',
+  'lang-fluency-timer': 'Fluency Timer',
+  'lang-argument-organizer': 'Argumentative Writing Organizer',
+  'lang-text-evidence': 'Text Evidence Highlighter',
+  'lang-semicolon-punct': 'Semicolon & Advanced Punctuation',
+  'lang-context-clues-exp': 'Context Clues Explorer',
+  'lang-rhetorical-analysis': 'Rhetorical Analysis Framework',
+  'lang-logical-fallacies': 'Logical Fallacies Reference',
+  'lang-citation-gen': 'MLA/APA Citation Generator',
+  'lang-essay-outline': 'Essay Outline Builder',
+  'lang-tts-preview': 'Text-to-Speech Preview',
+// Science widgets
     case 'phys-formula-calc': return getScienceWidgetDefaultConfig('phys-formula-calc')
     case 'phys-wave-sim': return getScienceWidgetDefaultConfig('phys-wave-sim')
     case 'phys-pendulum-sim': return getScienceWidgetDefaultConfig('phys-pendulum-sim')
@@ -906,6 +1006,19 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'earth-water-carbon-cycle': return getScienceWidgetDefaultConfig('earth-water-carbon-cycle')
     case 'earth-solar-system': return getScienceWidgetDefaultConfig('earth-solar-system')
     case 'earth-topographic-map': return getScienceWidgetDefaultConfig('earth-topographic-map')
+    // Phase 3 new science widgets
+    case 'earth-states-matter': return getScienceWidgetDefaultConfig('earth-states-matter')
+    case 'bio-food-chain': return getScienceWidgetDefaultConfig('bio-food-chain')
+    case 'earth-animal-habitats': return getScienceWidgetDefaultConfig('earth-animal-habitats')
+    case 'bio-plant-life-cycle': return getScienceWidgetDefaultConfig('bio-plant-life-cycle')
+    case 'earth-sink-float': return getScienceWidgetDefaultConfig('earth-sink-float')
+    case 'earth-scientific-method': return getScienceWidgetDefaultConfig('earth-scientific-method')
+    case 'earth-data-collection': return getScienceWidgetDefaultConfig('earth-data-collection')
+    case 'phys-magnetism': return getScienceWidgetDefaultConfig('phys-magnetism')
+    case 'chem-periodic-trends': return getScienceWidgetDefaultConfig('chem-periodic-trends')
+    case 'chem-stoichiometry': return getScienceWidgetDefaultConfig('chem-stoichiometry')
+    case 'bio-meiosis': return getScienceWidgetDefaultConfig('bio-meiosis')
+    case 'phys-wave-interference': return getScienceWidgetDefaultConfig('phys-wave-interference')
     // AI widgets
     case 'ai-generate-similar': return getAIWidgetDefaultConfig('ai-generate-similar')
     case 'ai-reading-level': return getAIWidgetDefaultConfig('ai-reading-level')
@@ -921,6 +1034,31 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'classroom-graphing': return getClassroomWidgetDefaultConfig('classroom-graphing')
     // L3 widgets
     case 'classroom-quiz': return getL3WidgetDefaultConfig('classroom-quiz')
+  // Phase 4 English
+  case 'lang-sight-words': return getLangWidgetDefaultConfig('lang-sight-words')
+  case 'lang-cvc-sort': return getLangWidgetDefaultConfig('lang-cvc-sort')
+  case 'lang-fluency-timer': return getLangWidgetDefaultConfig('lang-fluency-timer')
+  case 'lang-argument-organizer': return getLangWidgetDefaultConfig('lang-argument-organizer')
+  case 'lang-text-evidence': return getLangWidgetDefaultConfig('lang-text-evidence')
+  case 'lang-semicolon-punct': return getLangWidgetDefaultConfig('lang-semicolon-punct')
+  case 'lang-context-clues-exp': return getLangWidgetDefaultConfig('lang-context-clues-exp')
+  case 'lang-rhetorical-analysis': return getLangWidgetDefaultConfig('lang-rhetorical-analysis')
+  case 'lang-logical-fallacies': return getLangWidgetDefaultConfig('lang-logical-fallacies')
+  case 'lang-citation-gen': return getLangWidgetDefaultConfig('lang-citation-gen')
+  case 'lang-essay-outline': return getLangWidgetDefaultConfig('lang-essay-outline')
+  case 'lang-tts-preview': return getLangWidgetDefaultConfig('lang-tts-preview')
+  // Phase 4 Arts
+  case 'arts-elements-art': return getArtsWidgetDefaultConfig('arts-elements-art')
+  case 'arts-symmetry-drawing': return getArtsWidgetDefaultConfig('arts-symmetry-drawing')
+  case 'arts-rhythm-builder': return getArtsWidgetDefaultConfig('arts-rhythm-builder')
+  case 'arts-artist-spotlight': return getArtsWidgetDefaultConfig('arts-artist-spotlight')
+  case 'arts-art-timeline': return getArtsWidgetDefaultConfig('arts-art-timeline')
+  case 'arts-value-shading': return getArtsWidgetDefaultConfig('arts-value-shading')
+  case 'arts-compositional': return getArtsWidgetDefaultConfig('arts-compositional')
+  case 'arts-criticism': return getArtsWidgetDefaultConfig('arts-criticism')
+  case 'arts-two-point-persp': return getArtsWidgetDefaultConfig('arts-two-point-persp')
+  case 'arts-chord-progression': return getArtsWidgetDefaultConfig('arts-chord-progression')
+
     case 'math-flashcards': return getL3WidgetDefaultConfig('math-flashcards')
     default: return {}
   }
@@ -960,6 +1098,18 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'math-unit-converter': return getMathWidgetDefaultSize('math-unit-converter')
     case 'math-formula-reference': return getMathWidgetDefaultSize('math-formula-reference')
     case 'math-proof-builder': return getMathWidgetDefaultSize('math-proof-builder')
+    // Phase 3 new math widgets
+    case 'math-coin-counter': return getMathWidgetDefaultSize('math-coin-counter')
+    case 'math-analog-clock': return getMathWidgetDefaultSize('math-analog-clock')
+    case 'math-pattern-blocks': return getMathWidgetDefaultSize('math-pattern-blocks')
+    case 'math-picture-graph': return getMathWidgetDefaultSize('math-picture-graph')
+    case 'math-stats-toolbox': return getMathWidgetDefaultSize('math-stats-toolbox')
+    case 'math-point-plotter': return getMathWidgetDefaultSize('math-point-plotter')
+    case 'math-ratio-table': return getMathWidgetDefaultSize('math-ratio-table')
+    case 'math-multi-function': return getMathWidgetDefaultSize('math-multi-function')
+    case 'math-derivative-visualizer': return getMathWidgetDefaultSize('math-derivative-visualizer')
+    case 'math-conic-sections': return getMathWidgetDefaultSize('math-conic-sections')
+    case 'math-log-exp-visualizer': return getMathWidgetDefaultSize('math-log-exp-visualizer')
     // Language widgets
     case 'lang-pos-tagger': return getLangWidgetDefaultSize('lang-pos-tagger')
     case 'lang-sentence-structure': return getLangWidgetDefaultSize('lang-sentence-structure')
@@ -1008,6 +1158,19 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'earth-water-carbon-cycle': return getScienceWidgetDefaultSize('earth-water-carbon-cycle')
     case 'earth-solar-system': return getScienceWidgetDefaultSize('earth-solar-system')
     case 'earth-topographic-map': return getScienceWidgetDefaultSize('earth-topographic-map')
+    // Phase 3 new science widgets
+    case 'earth-states-matter': return getScienceWidgetDefaultSize('earth-states-matter')
+    case 'bio-food-chain': return getScienceWidgetDefaultSize('bio-food-chain')
+    case 'earth-animal-habitats': return getScienceWidgetDefaultSize('earth-animal-habitats')
+    case 'bio-plant-life-cycle': return getScienceWidgetDefaultSize('bio-plant-life-cycle')
+    case 'earth-sink-float': return getScienceWidgetDefaultSize('earth-sink-float')
+    case 'earth-scientific-method': return getScienceWidgetDefaultSize('earth-scientific-method')
+    case 'earth-data-collection': return getScienceWidgetDefaultSize('earth-data-collection')
+    case 'phys-magnetism': return getScienceWidgetDefaultSize('phys-magnetism')
+    case 'chem-periodic-trends': return getScienceWidgetDefaultSize('chem-periodic-trends')
+    case 'chem-stoichiometry': return getScienceWidgetDefaultSize('chem-stoichiometry')
+    case 'bio-meiosis': return getScienceWidgetDefaultSize('bio-meiosis')
+    case 'phys-wave-interference': return getScienceWidgetDefaultSize('phys-wave-interference')
     // AI widgets
     case 'ai-generate-similar': return getAIWidgetDefaultSize('ai-generate-similar')
     case 'ai-reading-level': return getAIWidgetDefaultSize('ai-reading-level')
@@ -1023,6 +1186,31 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'classroom-graphing': return getClassroomWidgetDefaultSize('classroom-graphing')
     // L3 widgets
     case 'classroom-quiz': return getL3WidgetDefaultSize('classroom-quiz')
+  // Phase 4 English
+  case 'lang-sight-words': return getLangWidgetDefaultSize('lang-sight-words')
+  case 'lang-cvc-sort': return getLangWidgetDefaultSize('lang-cvc-sort')
+  case 'lang-fluency-timer': return getLangWidgetDefaultSize('lang-fluency-timer')
+  case 'lang-argument-organizer': return getLangWidgetDefaultSize('lang-argument-organizer')
+  case 'lang-text-evidence': return getLangWidgetDefaultSize('lang-text-evidence')
+  case 'lang-semicolon-punct': return getLangWidgetDefaultSize('lang-semicolon-punct')
+  case 'lang-context-clues-exp': return getLangWidgetDefaultSize('lang-context-clues-exp')
+  case 'lang-rhetorical-analysis': return getLangWidgetDefaultSize('lang-rhetorical-analysis')
+  case 'lang-logical-fallacies': return getWidgetDefaultSize('lang-logical-fallacies')
+  case 'lang-citation-gen': return getWidgetDefaultSize('lang-citation-gen')
+ case 'lang-essay-outline': return getWidgetDefaultSize('lang-essay-outline')
+  case 'lang-tts-preview': return getWidgetDefaultSize('lang-tts-preview')
+  // Phase 4 Arts
+  case 'arts-elements-art': return getArtsWidgetDefaultSize('arts-elements-art')
+  case 'arts-symmetry-drawing': return getArtsWidgetDefaultSize('arts-symmetry-drawing')
+  case 'arts-rhythm-builder': return getArtsWidgetDefaultSize('arts-rhythm-builder')
+  case 'arts-artist-spotlight': return getArtsWidgetDefaultSize('arts-artist-spotlight')
+  case 'arts-art-timeline': return getArtsWidgetDefaultSize('arts-art-timeline')
+  case 'arts-value-shading': return getArtsWidgetDefaultSize('arts-value-shading')
+  case 'arts-compositional': return getArtsWidgetDefaultSize('arts-compositional')
+  case 'arts-criticism': return getArtsWidgetDefaultSize('arts-criticism')
+  case 'arts-two-point-persp': return getArtsWidgetDefaultSize('arts-two-point-persp')
+  case 'arts-chord-progression': return getArtsWidgetDefaultSize('arts-chord-progression')
+
     case 'math-flashcards': return getL3WidgetDefaultSize('math-flashcards')
     default: return { width: 300, height: 300 }
   }
@@ -1040,6 +1228,8 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...MATH_WIDGET_KIND_LABELS,
   // Language widgets
   ...LANG_WIDGET_KIND_LABELS,
+  // Phase 4 English widgets
+  ...PHASE4_LANG_KIND_LABELS,
   // Science widgets
   ...SCIENCE_WIDGET_KIND_LABELS,
   // AI widgets
@@ -1050,4 +1240,8 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...CLASSROOM_WIDGET_KIND_LABELS,
   // L3 widgets
   ...L3_WIDGET_KIND_LABELS,
-}
+}import {
+  CanvasElementsOfArt, CanvasSymmetryDrawing, CanvasRhythmBuilder, CanvasArtistSpotlight,
+  CanvasArtHistoryTimeline, CanvasValueShading, CanvasCompositionalAnalysis,
+  CanvasArtCriticism, CanvasTwoPointPerspective, CanvasChordProgression,
+} from ./CanvasArtsWidgets

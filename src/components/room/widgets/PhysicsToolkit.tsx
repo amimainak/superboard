@@ -242,6 +242,15 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
             {sectionTitle('Interactive Graphing Tool', 'phys-interactive-graphing')}
             <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
           </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Wave Interference', 'phys-wave-interference')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Two-source wave simulation showing constructive/destructive patterns.</p>
+          </div>
         </>
       )}
 
@@ -254,6 +263,11 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
             {sectionTitle("Ohm's Law Calculator", 'phys-ohms-law')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>A simple introduction to the relationship between voltage, current, and resistance.</p>
             <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
           </div>
         </>
       )}
@@ -298,6 +312,11 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Interactive Graphing Tool', 'phys-interactive-graphing')}
             <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
           </div>
         </>
       )}
@@ -350,6 +369,15 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Interactive Graphing Tool', 'phys-interactive-graphing')}
             <div style={{ padding: '0 12px 12px' }}><InteractiveGraphingPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Wave Interference', 'phys-wave-interference')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Two-source wave simulation showing constructive/destructive patterns.</p>
           </div>
         </>
       )}

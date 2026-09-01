@@ -238,6 +238,15 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after ionization.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
           </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Periodic Trends', 'chem-periodic-trends')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Click element to graph electronegativity/atomic radius/ionization energy across periods.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Stoichiometry Calculator', 'chem-stoichiometry')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input balanced equation + known quantity → calculates all other quantities.</p>
+          </div>
         </>
       )}
 
@@ -347,6 +356,15 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             {sectionTitle('Ion Formation Visualizer', 'chem-ion-formation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>See how atoms gain or lose electrons to form ions. View electron shells before and after.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
+          </div>
+          {/* Phase 3 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Periodic Trends', 'chem-periodic-trends')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Click element to graph electronegativity/atomic radius/ionization energy across periods.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Stoichiometry Calculator', 'chem-stoichiometry')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input balanced equation + known quantity → calculates all other quantities.</p>
           </div>
         </>
       )}

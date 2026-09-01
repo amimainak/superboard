@@ -51,6 +51,18 @@ const MATH_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'math-unit-converter', label: 'Unit Converter', toolkit: 'math', gradeBands: ['6-8', '9-12'], isDefault: true },
   { kind: 'math-formula-reference', label: 'Formula Reference', toolkit: 'math', gradeBands: ['9-12'], isDefault: true },
   { kind: 'math-proof-builder', label: 'Proof Builder', toolkit: 'math', gradeBands: ['9-12'], isDefault: false },
+  // Phase 3 new math widgets
+  { kind: 'math-coin-counter', label: 'Coin Counter', toolkit: 'math', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'math-analog-clock', label: 'Analog Clock', toolkit: 'math', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'math-pattern-blocks', label: 'Pattern Blocks', toolkit: 'math', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'math-picture-graph', label: 'Picture Graph', toolkit: 'math', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'math-stats-toolbox', label: 'Stats Toolbox', toolkit: 'math', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'math-point-plotter', label: 'Point Plotter', toolkit: 'math', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'math-ratio-table', label: 'Ratio Table', toolkit: 'math', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'math-multi-function', label: 'Multi-Function Plotter', toolkit: 'math', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'math-derivative-visualizer', label: 'Derivative Visualizer', toolkit: 'math', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'math-conic-sections', label: 'Conic Sections', toolkit: 'math', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'math-log-exp-visualizer', label: 'Log & Exp Visualizer', toolkit: 'math', gradeBands: ['9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -68,6 +80,9 @@ const PHYSICS_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'phys-ray-diagram', label: 'Ray Diagram Optics', toolkit: 'physics', gradeBands: ['9-12'], isDefault: false },
   { kind: 'phys-energy-bar-charts', label: 'Energy Bar Charts', toolkit: 'physics', gradeBands: ['9-12'], isDefault: false },
   { kind: 'phys-interactive-graphing', label: 'Interactive Graphing', toolkit: 'physics', gradeBands: ['6-8', '9-12'], isDefault: true },
+  // Phase 3 new physics widgets
+  { kind: 'phys-magnetism', label: 'Magnetism Simulator', toolkit: 'physics', gradeBands: ['6-8', '9-12'], isDefault: true },
+  { kind: 'phys-wave-interference', label: 'Wave Interference', toolkit: 'physics', gradeBands: ['9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -84,6 +99,9 @@ const CHEMISTRY_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'chem-gas-laws', label: 'Gas Laws Simulator', toolkit: 'chemistry', gradeBands: ['9-12'], isDefault: true },
   { kind: 'chem-titration', label: 'Acid-Base Titration', toolkit: 'chemistry', gradeBands: ['9-12'], isDefault: false },
   { kind: 'chem-ion-formation', label: 'Ion Formation Visualizer', toolkit: 'chemistry', gradeBands: ['6-8', '9-12'], isDefault: false },
+  // Phase 3 new chemistry widgets
+  { kind: 'chem-periodic-trends', label: 'Periodic Trends', toolkit: 'chemistry', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'chem-stoichiometry', label: 'Stoichiometry Calculator', toolkit: 'chemistry', gradeBands: ['9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -100,6 +118,10 @@ const BIOLOGY_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'bio-respiration', label: 'Cell Respiration', toolkit: 'biology', gradeBands: ['9-12'], isDefault: false },
   { kind: 'bio-food-web', label: 'Food Web Builder', toolkit: 'biology', gradeBands: ['3-5', '6-8'], isDefault: true },
   { kind: 'bio-classification', label: 'Classification Key', toolkit: 'biology', gradeBands: ['6-8', '9-12'], isDefault: false },
+  // Phase 3 new biology widgets
+  { kind: 'bio-food-chain', label: 'Food Chain Builder', toolkit: 'biology', gradeBands: ['3-5', '6-8'], isDefault: true },
+  { kind: 'bio-plant-life-cycle', label: 'Plant Life Cycle', toolkit: 'biology', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'bio-meiosis', label: 'Meiosis Visualizer', toolkit: 'biology', gradeBands: ['9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -153,6 +175,12 @@ const EARTH_SCIENCE_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'earth-water-cycle', label: 'Water Cycle', toolkit: 'earthscience', gradeBands: ['3-5', '6-8'], isDefault: true },
   { kind: 'earth-weather-map', label: 'Weather Map', toolkit: 'earthscience', gradeBands: ['3-5', '6-8'], isDefault: true },
   { kind: 'earth-solar-system', label: 'Solar System', toolkit: 'earthscience', gradeBands: ['3-5', '6-8'], isDefault: true },
+  // Phase 3 new earth science widgets
+  { kind: 'earth-states-matter', label: 'States of Matter', toolkit: 'earthscience', gradeBands: ['K-2', '3-5', '6-8'], isDefault: true },
+  { kind: 'earth-animal-habitats', label: 'Animal Habitats', toolkit: 'earthscience', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'earth-sink-float', label: 'Sink or Float', toolkit: 'earthscience', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'earth-scientific-method', label: 'Scientific Method', toolkit: 'earthscience', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'earth-data-collection', label: 'Data Collection', toolkit: 'earthscience', gradeBands: ['6-8'], isDefault: true },
 ]
 
 // ============================================================

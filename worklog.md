@@ -180,3 +180,57 @@ Work Log:
 - Phase 4: English & Arts Content (not started)
 - Phase 5: UX Polish (not started)
 - Phase 6: Platform & Future (deferred)
+
+## Phase 3: Math & Science Deep-Dive — Verification & Toolkit Integration
+
+### Date: 2026-09-01
+
+### Summary
+Phase 3 Math & Science widgets were already implemented in a prior session. This session verified completeness and fixed toolkit tab placement so all 23 new widgets appear with "Add to Board" buttons in the correct grade-band tabs across all toolkit panels.
+
+### What Was Already Complete (prior session)
+- **11 Math Widgets** in `CanvasMathWidgets.tsx`: CoinCounter, AnalogClock, PatternBlocks, PictureGraph, StatsToolbox, PointPlotter, RatioTable, MultiFunctionPlotter, DerivativeVisualizer, ConicSections, LogExpVisualizer
+- **12 Science Widgets** in `CanvasScienceWidgets.tsx`: StatesOfMatter, FoodChain, AnimalHabitats, PlantLifeCycle, SinkOrFloat, ScientificMethod, DataCollection, Magnetism, PeriodicTrends, Stoichiometry, Meiosis, WaveInterference
+- All widget components exported and functional
+- `MATH_WIDGET_KIND_LABELS`, `getMathWidgetDefaultConfig`, `getMathWidgetDefaultSize` — all 11 entries registered
+- `SCIENCE_WIDGET_KIND_LABELS`, `getScienceWidgetDefaultConfig`, `getScienceWidgetDefaultSize` — all 12 entries registered
+- All 23 widgets registered in `CanvasWidgets.tsx` (WIDGET_COMPONENTS, getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS)
+- All 23 widgets in `canvas-widget-registry.ts` (MATH_WIDGETS, PHYSICS_WIDGETS, CHEMISTRY_WIDGETS, BIOLOGY_WIDGETS, EARTH_SCIENCE_WIDGETS)
+- MathToolkit.tsx — all 11 math widgets with "Add to Board" buttons ✅
+
+### Changes Made This Session
+1. **PhysicsToolkit.tsx** — Added Phase 3 widgets to correct tabs:
+   - Magnetism (6-8, 9-12): Added to elementary, middle, and highschool tabs
+   - Wave Interference (9-12): Added to highschool tab
+
+2. **ChemistryToolkit.tsx** — Added Phase 3 widgets to "All" tab:
+   - Periodic Trends (9-12): Added to "all" tab (was only in highschool)
+   - Stoichiometry (9-12): Added to "all" tab (was only in highschool)
+
+3. **BiologyToolkit.tsx** — Added Phase 3 widgets to correct tabs:
+   - Food Chain (3-5, 6-8): Added to "all" and "middle" tabs
+   - Plant Life Cycle (K-2, 3-5): Added to "all" and "elementary" tabs
+   - Meiosis (9-12): Added to "all" tab
+
+4. **EarthScienceToolkit.tsx** — Added Phase 3 widgets to correct tabs:
+   - States of Matter (K-2, 3-5, 6-8): Added to "all", "elementary", "middle" tabs
+   - Animal Habitats (K-2, 3-5): Added to "all" and "elementary" tabs
+   - Sink or Float (K-2, 3-5): Added to "all" and "elementary" tabs
+   - Scientific Method (6-8): Added to "all" and "middle" tabs
+   - Data Collection (6-8): Added to "all" and "middle" tabs
+
+### Verification
+- TypeScript compilation: 0 errors in modified toolkit files
+- All pre-existing TS errors are in untouched files (CanvasMathWidgets, CanvasScienceWidgets, canvas-widget-registry)
+- All widgets use the `sectionTitle(title, widgetKind)` pattern which auto-renders the "+ Add to Board" button
+
+### Widget Count Summary
+| Category | Phase 1-2 | Phase 3 New | Total |
+|----------|-----------|-------------|-------|
+| Math | 22 | 11 | 33 |
+| Physics | 11 | 2 | 13 |
+| Chemistry | 10 | 2 | 12 |
+| Biology | 10 | 3 | 13 |
+| Earth Science | 6 | 5 | 11 |
+| **Total** | **59** | **23** | **82** |
+

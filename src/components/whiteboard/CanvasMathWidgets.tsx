@@ -3058,6 +3058,838 @@ function smBtnStyle(activeColor: string | undefined, isDark: boolean): React.CSS
 }
 
 // ============================================================
+// NEW PHASE 3 MATH WIDGETS
+// ============================================================
+
+// ---- 1. Coin Counter (K-5) ----
+export function CanvasCoinCounter({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const coins: Array<{ type: string; x: number; y: number }> = (raw.coins as Array<{ type: string; x: number; y: number }>) || []
+  const challenge = (raw.challenge as number) || 0
+  const s = ws(isDark)
+
+  const coinValues: Record<string, number> = { penny: 1, nickel: 5, dime: 10, quarter: 25 }
+  const coinColors: Record<string, string> = { penny: '#b45309', nickel: '#9ca3af', dime: '#94a3b8', quarter: '#a3a3a3' }
+  const coinLabels: Record<string, string> = { penny: '¢1', nickel: '¢5', dime: '¢10', quarter: '¢25' }
+
+  const total = coins.reduce((sum, c) => sum + (coinValues[c.type] || 0), 0)
+  const totalDollars = (total / 100).toFixed(2)
+
+  function addCoin(type: string) {
+    const newCoins = [...coins, { type, x: 20 + Math.random() * 300, y: 20 + Math.random() * 200 }]
+    updateConfig({ coins: newCoins })
+  }
+
+  function clearCoins() { updateConfig({ coins: [] }) }
+
+  function setChallenge(val: number) { updateConfig({ challenge: val, coins: [] }) }
+
+  const matchColor = challenge > 0 && total === challenge ? '#34d399' : challenge > 0 ? '#f87171' : undefined
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>🪙 Coin Counter</div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {Object.keys(coinValues).map(function(type) {
+          return (
+            <button key={type} onClick={function() { addCoin(type) }}
+              style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', background: coinColors[type] + '22', border: '1px solid ' + coinColors[type] + '44', color: coinColors[type] }}>
+              {coinLabels[type]}
+            </button>
+          )
+        })}
+        <button onClick={clearCoins} style={{ padding: '4px 8px', borderRadius: 6, fontSize: 10, cursor: 'pointer', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>Clear</button>
+      </div>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 10, color: s.text }}>
+        <span>Make $</span>
+        {[0, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50].map(function(v) {
+          return (
+            <button key={v} onClick={function() { setChallenge(Math.round(v * 100)) }}
+              style={{ padding: '2px 6px', borderRadius: 3, fontSize: 9, cursor: 'pointer', background: challenge === Math.round(v * 100) ? 'rgba(5,150,105,0.15)' : s.surface, border: challenge === Math.round(v * 100) ? '1px solid rgba(5,150,105,0.3)' : '1px solid ' + s.border, color: challenge === Math.round(v * 100) ? '#34d399' : s.text }}>
+              {v.toFixed(2)}
+            </button>
+          )
+        })}
+      </div>
+      <div style={{ flex: 1, background: s.surface, borderRadius: 8, position: 'relative', minHeight: 120, overflow: 'hidden', border: '1px solid ' + s.border }}>
+        {coins.map(function(c, i) {
+          return (
+            <div key={i} onClick={function() {
+              var nc = coins.filter(function(_, j) { return j !== i })
+              updateConfig({ coins: nc })
+            }} style={{ position: 'absolute', left: c.x, top: c.y, width: 32, height: 32, borderRadius: '50%', background: coinColors[c.type], border: '2px solid ' + coinColors[c.type] + '88', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}>
+              {c.type[0].toUpperCase()}
+            </div>
+          )
+        })}
+        {coins.length === 0 && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.text, fontSize: 11 }}>Click coins above to add</div>
+        )}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 11, color: s.text }}>{coins.length} coin{coins.length !== 1 ? 's' : ''}</span>
+        <span style={{ fontSize: 18, fontWeight: 800, color: matchColor || s.bright }}>${totalDollars}</span>
+      </div>
+    </div>
+  )
+}
+
+// ---- 2. Analog Clock (K-5) ----
+export function CanvasAnalogClock({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const hours = (raw.hours as number) ?? 10
+  const minutes = (raw.minutes as number) ?? 10
+  const showDigital = (raw.showDigital as boolean) ?? true
+  const s = ws(isDark)
+
+  const h12 = hours % 12
+  const minuteDeg = minutes * 6
+  const hourDeg = h12 * 30 + minutes * 0.5
+
+  function setHours(v: number) { updateConfig({ hours: Math.max(0, Math.min(23, v)) }) }
+  function setMinutes(v: number) { updateConfig({ minutes: Math.max(0, Math.min(59, v)) }) }
+  function toggleDigital() { updateConfig({ showDigital: !showDigital }) }
+
+  const cx = 120, cy = 120, r = 90
+  const hourMarkers = Array.from({ length: 12 }, function(_, i) {
+    var a = (i * 30 - 90) * Math.PI / 180
+    return { x: cx + (r - 12) * Math.cos(a), y: cy + (r - 12) * Math.sin(a), label: i === 0 ? '12' : String(i) }
+  })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif', alignItems: 'center' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright, alignSelf: 'flex-start' }}>🕐 Analog Clock</div>
+      <svg width={240} height={240} viewBox="0 0 240 240">
+        <circle cx={cx} cy={cy} r={r} fill={s.surface} stroke={s.border} strokeWidth={2} />
+        {hourMarkers.map(function(m, i) {
+          return <text key={i} x={m.x} y={m.y} textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight={600} fill={s.bright}>{m.label}</text>
+        })}
+        {Array.from({ length: 60 }, function(_, i) {
+          if (i % 5 !== 0) {
+            var a = (i * 6 - 90) * Math.PI / 180
+            return <line key={i} x1={cx + (r - 6) * Math.cos(a)} y1={cy + (r - 6) * Math.sin(a)} x2={cx + (r - 2) * Math.cos(a)} y2={cy + (r - 2) * Math.sin(a)} stroke={s.border} strokeWidth={1} />
+          }
+          return null
+        })}
+        <line x1={cx} y1={cy} x2={cx + 50 * Math.cos((hourDeg - 90) * Math.PI / 180)} y2={cy + 50 * Math.sin((hourDeg - 90) * Math.PI / 180)} stroke={s.bright} strokeWidth={4} strokeLinecap="round" />
+        <line x1={cx} y1={cy} x2={cx + 68 * Math.cos((minuteDeg - 90) * Math.PI / 180)} y2={cy + 68 * Math.sin((minuteDeg - 90) * Math.PI / 180)} stroke={s.text} strokeWidth={2.5} strokeLinecap="round" />
+        <circle cx={cx} cy={cy} r={4} fill={s.accent} />
+      </svg>
+      {showDigital && (
+        <div style={{ fontSize: 28, fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: s.bright, letterSpacing: 2 }}>
+          {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}
+        </div>
+      )}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <label style={{ fontSize: 10, color: s.text }}>H:</label>
+        <input type="range" min={0} max={23} value={hours} onChange={function(e) { setHours(Number(e.target.value)) }} style={{ width: 80, cursor: 'pointer' }} />
+        <label style={{ fontSize: 10, color: s.text }}>M:</label>
+        <input type="range" min={0} max={59} value={minutes} onChange={function(e) { setMinutes(Number(e.target.value)) }} style={{ width: 80, cursor: 'pointer' }} />
+      </div>
+      <button onClick={toggleDigital} style={{ padding: '4px 10px', borderRadius: 5, fontSize: 10, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text }}>{showDigital ? 'Hide' : 'Show'} Digital</button>
+    </div>
+  )
+}
+
+// ---- 3. Pattern Blocks (K-5) ----
+export function CanvasPatternBlocks({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const blocks: Array<{ shape: string; x: number; y: number; rot: number; color: string }> = (raw.blocks as Array<{ shape: string; x: number; y: number; rot: number; color: string }>) || []
+  const selectedShape = (raw.selectedShape as string) || 'hexagon'
+  const s = ws(isDark)
+
+  var shapes = [
+    { id: 'hexagon', label: '⬡', color: '#f59e0b' },
+    { id: 'trapezoid', label: '⏢', color: '#3b82f6' },
+    { id: 'rhombus', label: '◇', color: '#ef4444' },
+    { id: 'triangle', label: '△', color: '#22c55e' },
+    { id: 'square', label: '□', color: '#a855f7' },
+  ]
+
+  function addBlock() {
+    var sh = shapes.find(function(s) { return s.id === selectedShape })
+    var newBlocks = [...blocks, { shape: selectedShape, x: 30 + Math.random() * 300, y: 30 + Math.random() * 250, rot: 0, color: sh ? sh.color : '#888' }]
+    updateConfig({ blocks: newBlocks })
+  }
+
+  function rotateBlock(i: number) {
+    var nb = blocks.map(function(b, j) { return j === i ? { ...b, rot: b.rot + 60 } : b })
+    updateConfig({ blocks: nb })
+  }
+
+  function removeBlock(i: number) {
+    updateConfig({ blocks: blocks.filter(function(_, j) { return j !== i }) })
+  }
+
+  function clearAll() { updateConfig({ blocks: [] }) }
+
+  function shapePath(shape: string, sz: number): string {
+    switch (shape) {
+      case 'hexagon': return Array.from({ length: 6 }, function(_, i) { var a = i * 60 - 30; return (sz * Math.cos(a * Math.PI / 180)).toFixed(1) + ',' + (sz * Math.sin(a * Math.PI / 180)).toFixed(1) }).join(' ')
+      case 'trapezoid': return (-sz + ',' + (-sz * 0.5)) + ' ' + (sz * 0.6 + ',' + (-sz * 0.5)) + ' ' + (sz * 0.3 + ',' + (sz * 0.5)) + ' ' + (-sz * 0.3 + ',' + (sz * 0.5))
+      case 'rhombus': return '0,' + (-sz) + ' ' + (sz * 0.6) + ',0 0,' + sz + ' ' + (-sz * 0.6) + ',0'
+      case 'triangle': return Array.from({ length: 3 }, function(_, i) { var a = i * 120 - 90; return (sz * Math.cos(a * Math.PI / 180)).toFixed(1) + ',' + (sz * Math.sin(a * Math.PI / 180)).toFixed(1) }).join(' ')
+      case 'square': return (-sz * 0.7 + ',' + (-sz * 0.7)) + ' ' + (sz * 0.7 + ',' + (-sz * 0.7)) + ' ' + (sz * 0.7 + ',' + (sz * 0.7)) + ' ' + (-sz * 0.7 + ',' + (sz * 0.7))
+      default: return ''
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>🧩 Pattern Blocks</div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {shapes.map(function(sh) {
+          var active = selectedShape === sh.id
+          return (
+            <button key={sh.id} onClick={function() { updateConfig({ selectedShape: sh.id }) }}
+              style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', background: active ? sh.color + '33' : s.surface, border: active ? '1px solid ' + sh.color + '66' : '1px solid ' + s.border, color: active ? sh.color : s.text }}>
+              {sh.label} {sh.id}
+            </button>
+          )
+        })}
+        <button onClick={addBlock} style={{ padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }}>+ Add</button>
+        <button onClick={clearAll} style={{ padding: '4px 8px', borderRadius: 6, fontSize: 10, cursor: 'pointer', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>Clear</button>
+      </div>
+      <div style={{ flex: 1, background: s.surface, borderRadius: 8, position: 'relative', minHeight: 200, overflow: 'hidden', border: '1px solid ' + s.border }}>
+        <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+          {blocks.map(function(b, i) {
+            return (
+              <g key={i} transform={'translate(' + b.x + ',' + b.y + ') rotate(' + b.rot + ')'} style={{ cursor: 'pointer' }} onClick={function() { rotateBlock(i) }} onContextMenu={function(e) { e.preventDefault(); removeBlock(i) }}>
+                <polygon points={shapePath(b.shape, 22)} fill={b.color + 'cc'} stroke={b.color} strokeWidth={1.5} />
+              </g>
+            )
+          })}
+        </svg>
+        {blocks.length === 0 && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.text, fontSize: 11 }}>Select a shape, click Add. Click shape to rotate, right-click to delete.</div>
+        )}
+      </div>
+      <div style={{ fontSize: 10, color: s.text, textAlign: 'center' }}>{blocks.length} blocks · Click to rotate · Right-click to remove</div>
+    </div>
+  )
+}
+
+// ---- 4. Picture Graph (K-5) ----
+export function CanvasPictureGraph({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var categories: string[] = (raw.categories as string[]) || ['Dogs', 'Cats', 'Fish', 'Birds']
+  var values: number[] = (raw.values as number[]) || [4, 3, 2, 5]
+  var icon = (raw.icon as string) || '⭐'
+  var emojis = ['⭐', '🍎', '🎈', '❤️', '🌸', '🐱', '🐶']
+  var s = ws(isDark)
+
+  var maxVal = Math.max.apply(null, values.concat([1]))
+
+  function setCat(i: number, v: string) {
+    var nc = [...categories]; nc[i] = v
+    updateConfig({ categories: nc })
+  }
+  function setVal(i: number, v: number) {
+    var nv = [...values]; nv[i] = Math.max(0, v)
+    updateConfig({ values: nv })
+  }
+  function addCategory() {
+    updateConfig({ categories: [...categories, 'New'], values: [...values, 2] })
+  }
+  function removeCategory() {
+    if (categories.length > 1) updateConfig({ categories: categories.slice(0, -1), values: values.slice(0, -1) })
+  }
+  function setIcon(ic: string) { updateConfig({ icon: ic }) }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>📊 Picture Graph</div>
+      <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>Icon:</span>
+        {emojis.map(function(e) {
+          return (
+            <button key={e} onClick={function() { setIcon(e) }}
+              style={{ padding: '2px', borderRadius: 4, fontSize: 14, cursor: 'pointer', background: icon === e ? 'rgba(5,150,105,0.15)' : 'transparent', border: icon === e ? '1px solid rgba(5,150,105,0.3)' : '1px solid transparent' }}>
+              {e}
+            </button>
+          )
+        })}
+      </div>
+      <div style={{ flex: 1, display: 'flex', gap: 4, overflowY: 'auto' }}>
+        {categories.map(function(cat, i) {
+          return (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: s.surface, borderRadius: 8, padding: 6, border: '1px solid ' + s.border }}>
+              <input value={cat} onChange={function(e) { setCat(i, e.target.value) }} style={{ width: '100%', textAlign: 'center', fontSize: 10, fontWeight: 600, padding: '2px 4px', borderRadius: 4, border: '1px solid ' + s.border, background: 'transparent', color: s.bright, outline: 'none' }} />
+              <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: 1, minHeight: 20 }}>
+                {Array.from({ length: values[i] }, function(_, j) {
+                  return <span key={j} style={{ fontSize: 12 }}>{icon}</span>
+                })}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button onClick={function() { setVal(i, values[i] - 1) }} style={{ width: 20, height: 20, borderRadius: 4, fontSize: 14, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                <span style={{ fontSize: 14, fontWeight: 700, color: s.bright, minWidth: 20, textAlign: 'center' }}>{values[i]}</span>
+                <button onClick={function() { setVal(i, values[i] + 1) }} style={{ width: 20, height: 20, borderRadius: 4, fontSize: 14, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+        <button onClick={addCategory} style={{ padding: '4px 10px', borderRadius: 5, fontSize: 10, cursor: 'pointer', background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399' }}>+ Category</button>
+        <button onClick={removeCategory} style={{ padding: '4px 10px', borderRadius: 5, fontSize: 10, cursor: 'pointer', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>- Category</button>
+      </div>
+    </div>
+  )
+}
+
+// ---- 5. Stats Toolbox (6-8) ----
+export function CanvasStatsToolbox({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const dataStr = (raw.dataStr as string) || '12, 15, 18, 22, 25, 14, 19, 21, 17, 30'
+  const s = ws(isDark)
+  var nums = dataStr.split(',').map(function(v) { return parseFloat(v.trim()) }).filter(function(n) { return !isNaN(n) })
+  var sorted = nums.slice().sort(function(a, b) { return a - b })
+  var n = nums.length
+  var mean = n > 0 ? nums.reduce(function(a, b) { return a + b }, 0) / n : 0
+  var median = n > 0 ? (n % 2 === 1 ? sorted[Math.floor(n / 2)] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2) : 0
+  var freq: Record<number, number> = {}
+  nums.forEach(function(v) { freq[v] = (freq[v] || 0) + 1 })
+  var maxFreq = Math.max.apply(null, Object.values(freq).concat([0]))
+  var modes = Object.keys(freq).filter(function(k) { return freq[Number(k)] === maxFreq && maxFreq > 1 }).map(Number)
+  var range = n > 0 ? sorted[n - 1] - sorted[0] : 0
+  var q1 = n >= 4 ? sorted[Math.floor(n / 4)] : sorted[0]
+  var q3 = n >= 4 ? sorted[Math.ceil(3 * n / 4) - 1] : sorted[n - 1]
+  var iqr = q3 - q1
+
+  // Histogram data
+  var minV = n > 0 ? sorted[0] : 0
+  var maxV = n > 0 ? sorted[n - 1] : 10
+  var binCount = Math.min(8, Math.max(3, Math.ceil(Math.sqrt(n))))
+  var binWidth = (maxV - minV) / binCount || 1
+  var bins: Array<{ lo: number; hi: number; count: number }> = []
+  for (var i = 0; i < binCount; i++) {
+    var lo = minV + i * binWidth
+    var hi = lo + binWidth
+    var count = nums.filter(function(v) { return i === binCount - 1 ? v >= lo && v <= hi : v >= lo && v < hi }).length
+    bins.push({ lo: lo, hi: hi, count: count })
+  }
+  var maxBin = Math.max.apply(null, bins.map(function(b) { return b.count }).concat([1]))
+  var histH = 100, histW = 340
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>📈 Stats Toolbox</div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <input value={dataStr} onChange={function(e) { updateConfig({ dataStr: e.target.value }) }} placeholder="12, 15, 18..." style={{ flex: 1, padding: '4px 8px', borderRadius: 5, fontSize: 10, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', fontFamily: 'monospace' }} />
+        <span style={{ fontSize: 10, color: s.text, alignSelf: 'center' }}>n={n}</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: 11 }}>
+        {[['Mean', mean.toFixed(2)], ['Median', median.toFixed(2)], ['Mode', modes.length > 0 ? modes.join(', ') : 'none'], ['Range', range.toFixed(2)], ['Q1', q1.toFixed(2)], ['Q3', q3.toFixed(2)], ['IQR', iqr.toFixed(2)], ['σ', n > 1 ? Math.sqrt(nums.reduce(function(s2, v) { return s2 + (v - mean) ** 2 }, 0) / (n - 1)).toFixed(2) : '0']].map(function(item, i) {
+          return (
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', background: s.surface, borderRadius: 4, border: '1px solid ' + s.border }}>
+              <span style={{ color: s.text, fontWeight: 600 }}>{item[0]}</span>
+              <span style={{ color: s.bright, fontWeight: 700, fontFamily: 'monospace' }}>{item[1]}</span>
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: s.text }}>Histogram</div>
+      <svg width={histW} height={histH} style={{ background: s.surface, borderRadius: 6, border: '1px solid ' + s.border }}>
+        {bins.map(function(b, i) {
+          var bw = histW / binCount
+          var bh = (b.count / maxBin) * (histH - 20)
+          return <rect key={i} x={i * bw + 1} y={histH - bh - 5} width={bw - 2} height={bh} fill={s.accent + '88'} stroke={s.accent} strokeWidth={1} rx={2} />
+        })}
+        <text x={histW / 2} y={histH - 1} textAnchor="middle" fontSize={8} fill={s.text}>{minV.toFixed(0)} — {maxV.toFixed(0)}</text>
+      </svg>
+      <div style={{ fontSize: 10, fontWeight: 600, color: s.text }}>Box Plot</div>
+      <svg width={histW} height={50} style={{ background: s.surface, borderRadius: 6, border: '1px solid ' + s.border }}>
+        {n > 0 && (
+          <>
+            <line x1={20} y1={25} x2={histW - 20} y2={25} stroke={s.text} strokeWidth={1} />
+            <line x1={20} y1={10} x2={20} y2={40} stroke={s.bright} strokeWidth={1.5} />
+            <rect x={(20 + (q1 - minV) / (maxV - minV || 1) * (histW - 40))} y={10} width={((q3 - q1) / (maxV - minV || 1) * (histW - 40))} height={30} fill={s.accent + '33'} stroke={s.accent} strokeWidth={1.5} rx={3} />
+            <line x1={(20 + (median - minV) / (maxV - minV || 1) * (histW - 40))} y1={10} x2={(20 + (median - minV) / (maxV - minV || 1) * (histW - 40))} y2={40} stroke={s.accent} strokeWidth={2} />
+            <line x1={histW - 20} y1={10} x2={histW - 20} y2={40} stroke={s.bright} strokeWidth={1.5} />
+            <text x={10} y={50} textAnchor="middle" fontSize={7} fill={s.text}>{sorted[0]}</text>
+            <text x={histW - 10} y={50} textAnchor="middle" fontSize={7} fill={s.text}>{sorted[n - 1]}</text>
+          </>
+        )}
+      </svg>
+    </div>
+  )
+}
+
+// ---- 6. Point Plotter (6-8) ----
+export function CanvasPointPlotter({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var points: Array<[number, number]> = (raw.points as Array<[number, number]>) || []
+  var showLine = (raw.showLine as boolean) ?? true
+  var gridRange = (raw.gridRange as number) || 10
+  var s = ws(isDark)
+
+  var w = 400, h = 400, pad = 30
+  var scaleX = (w - pad * 2) / (gridRange * 2)
+  var scaleY = (h - pad * 2) / (gridRange * 2)
+  function toX(v: number) { return pad + (v + gridRange) * scaleX }
+  function toY(v: number) { return pad + (gridRange - v) * scaleY }
+
+  var slope = '', eq = ''
+  if (points.length >= 2 && showLine) {
+    var dx = points[points.length - 1][0] - points[points.length - 2][0]
+    var dy = points[points.length - 1][1] - points[points.length - 2][1]
+    if (dx !== 0) {
+      var m = dy / dx
+      var b = points[points.length - 1][1] - m * points[points.length - 1][0]
+      slope = 'm = ' + m.toFixed(2)
+      eq = 'y = ' + m.toFixed(2) + 'x' + (b >= 0 ? ' + ' : ' - ') + Math.abs(b).toFixed(2)
+    } else {
+      slope = 'undefined'
+      eq = 'x = ' + points[points.length - 1][0]
+    }
+  }
+
+  function handleSvgClick(e: React.MouseEvent<SVGSVGElement>) {
+    var rect = e.currentTarget.getBoundingClientRect()
+    var px = e.clientX - rect.left
+    var py = e.clientY - rect.top
+    var x = Math.round(((px - pad) / scaleX - gridRange) * 2) / 2
+    var y = Math.round((gridRange - (py - pad) / scaleY) * 2) / 2
+    if (Math.abs(x) <= gridRange && Math.abs(y) <= gridRange) {
+      updateConfig({ points: [...points, [x, y]] })
+    }
+  }
+
+  function undoPoint() { updateConfig({ points: points.slice(0, -1) }) }
+  function clearPoints() { updateConfig({ points: [] }) }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>📍 Point Plotter</span>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={function() { updateConfig({ showLine: !showLine }) }} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 9, cursor: 'pointer', background: showLine ? 'rgba(5,150,105,0.15)' : s.surface, border: showLine ? '1px solid rgba(5,150,105,0.3)' : '1px solid ' + s.border, color: showLine ? '#34d399' : s.text }}>Line: {showLine ? 'ON' : 'OFF'}</button>
+          <button onClick={undoPoint} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 9, cursor: 'pointer', background: s.surface, border: '1px solid ' + s.border, color: s.text }}>Undo</button>
+          <button onClick={clearPoints} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 9, cursor: 'pointer', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>Clear</button>
+        </div>
+      </div>
+      <svg width={w} height={h} onClick={handleSvgClick} style={{ background: s.surface, borderRadius: 8, border: '1px solid ' + s.border, cursor: 'crosshair' }}>
+        {Array.from({ length: gridRange * 2 + 1 }, function(_, i) {
+          var v = i - gridRange
+          return [
+            <line key={'v' + i} x1={toX(v)} y1={pad} x2={toX(v)} y2={h - pad} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />,
+            <line key={'h' + i} x1={pad} y1={toY(v)} x2={w - pad} y2={toY(v)} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />,
+            v !== 0 && <text key={'vl' + i} x={toX(v)} y={h - pad + 14} textAnchor="middle" fontSize={8} fill={s.text}>{v}</text>,
+            v !== 0 && <text key={'hl' + i} x={pad - 6} y={toY(v) + 3} textAnchor="end" fontSize={8} fill={s.text}>{v}</text>,
+          ]
+        })}
+        {showLine && points.length >= 2 && (
+          <line x1={toX(points[0][0])} y1={toY(points[0][1])} x2={toX(points[points.length - 1][0])} y2={toY(points[points.length - 1][1])} stroke={s.accent} strokeWidth={2} strokeDasharray="6,3" />
+        )}
+        {points.map(function(p, i) {
+          return (
+            <g key={i}>
+              <circle cx={toX(p[0])} cy={toY(p[1])} r={5} fill={i === points.length - 1 ? '#f59e0b' : s.accent} stroke="#fff" strokeWidth={1.5} />
+              <text x={toX(p[0]) + 8} y={toY(p[1]) - 8} fontSize={8} fill={s.bright} fontWeight={600}>({p[0]}, {p[1]})</text>
+            </g>
+          )
+        })}
+      </svg>
+      {eq && (
+        <div style={{ display: 'flex', gap: 12, fontSize: 11, fontWeight: 600 }}>
+          <span style={{ color: s.text }}>{slope}</span>
+          <span style={{ color: s.accent }}>{eq}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---- 7. Ratio Table (6-8) ----
+export function CanvasRatioTable({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var numA = (raw.numA as number) ?? 2
+  var numB = (raw.numB as number) ?? 3
+  var rows = (raw.rows as number) ?? 5
+  var s = ws(isDark)
+
+  var ratio = numB / (numA || 1)
+  var tableData = Array.from({ length: rows }, function(_, i) {
+    var a = numA * (i + 1)
+    return { a: a, b: Math.round(a * ratio * 100) / 100 }
+  })
+  var maxB = Math.max.apply(null, tableData.map(function(r) { return r.b }).concat([1]))
+  var barW = 200
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>⚖️ Ratio Table</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <span style={{ fontSize: 11, color: s.text }}>Ratio:</span>
+        <input type="number" value={numA} onChange={function(e) { updateConfig({ numA: Math.max(1, Number(e.target.value)) }) }} style={{ width: 50, padding: '3px 6px', borderRadius: 4, fontSize: 12, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', textAlign: 'center' }} />
+        <span style={{ fontSize: 12, fontWeight: 700, color: s.bright }}>:</span>
+        <input type="number" value={numB} onChange={function(e) { updateConfig({ numB: Math.max(1, Number(e.target.value)) }) }} style={{ width: 50, padding: '3px 6px', borderRadius: 4, fontSize: 12, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', textAlign: 'center' }} />
+        <span style={{ fontSize: 10, color: s.text }}>Rows:</span>
+        <input type="number" value={rows} min={2} max={10} onChange={function(e) { updateConfig({ rows: Math.max(2, Math.min(10, Number(e.target.value))) }) }} style={{ width: 40, padding: '3px 6px', borderRadius: 4, fontSize: 11, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', textAlign: 'center' }} />
+      </div>
+      <div style={{ fontSize: 11, color: s.text }}>For every <b style={{ color: s.bright }}>{numA}</b> there are <b style={{ color: s.bright }}>{numB}</b> (ratio = {ratio.toFixed(2)})</div>
+      <div style={{ display: 'flex', gap: 0, borderRadius: 6, overflow: 'hidden', border: '1px solid ' + s.border }}>
+        <div style={{ flex: 1, background: s.accent + '22' }}>
+          <div style={{ padding: '4px 8px', fontSize: 10, fontWeight: 700, color: s.accent, borderBottom: '1px solid ' + s.border }}>A</div>
+          {tableData.map(function(r, i) {
+            return <div key={i} style={{ padding: '4px 8px', fontSize: 11, borderBottom: '1px solid ' + s.border, color: s.bright, fontWeight: 600, textAlign: 'center' }}>{r.a}</div>
+          })}
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ padding: '4px 8px', fontSize: 10, fontWeight: 700, color: '#f59e0b', borderBottom: '1px solid ' + s.border }}>B</div>
+          {tableData.map(function(r, i) {
+            return <div key={i} style={{ padding: '4px 8px', fontSize: 11, borderBottom: '1px solid ' + s.border, color: s.bright, fontWeight: 600, textAlign: 'center' }}>{r.b}</div>
+          })}
+        </div>
+      </div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: s.text, marginBottom: 4 }}>Bar Model</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {tableData.map(function(r, i) {
+          var wA = (r.a / (tableData[tableData.length - 1].a || 1)) * barW
+          var wB = (r.b / (maxB || 1)) * barW
+          return (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 9, color: s.text, width: 16, textAlign: 'right' }}>×{i + 1}</span>
+              <div style={{ width: barW, height: 12, background: s.surface, borderRadius: 3, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ width: wA, height: '100%', background: s.accent + '88', borderRadius: 3, transition: 'width 0.2s' }} />
+              </div>
+              <div style={{ width: barW, height: 12, background: s.surface, borderRadius: 3, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ width: wB, height: '100%', background: '#f59e0b88', borderRadius: 3, transition: 'width 0.2s' }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ---- 8. Multi-Function Plotter (9-12) ----
+export function CanvasMultiFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var functions: Array<{ id: string; expr: string; color: string; visible: boolean }> = (raw.functions as Array<{ id: string; expr: string; color: string; visible: boolean }>) || [
+    { id: 'f1', expr: 'x^2', color: '#34d399', visible: true },
+  ]
+  var xRange = (raw.xRange as number) ?? 10
+  var s = ws(isDark)
+  var COLORS = ['#34d399', '#f59e0b', '#f87171', '#60a5fa', '#c084fc']
+
+  function evalExpr(expr: string, x: number): number {
+    try {
+      var safe = expr.replace(/\^/g, '**').replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos').replace(/tan/g, 'Math.tan').replace(/sqrt/g, 'Math.sqrt').replace(/abs/g, 'Math.abs').replace(/log/g, 'Math.log').replace(/ln/g, 'Math.log').replace(/pi/g, 'Math.PI').replace(/e(?![a-z])/g, 'Math.E')
+      return new Function('x', 'return ' + safe)(x)
+    } catch { return NaN }
+  }
+
+  function addFunction() {
+    var id = 'f' + Date.now()
+    updateConfig({ functions: [...functions, { id, expr: '', color: COLORS[functions.length % COLORS.length], visible: true }] })
+  }
+
+  function updateExpr(id: string, expr: string) {
+    updateConfig({ functions: functions.map(function(f) { return f.id === id ? { ...f, expr } : f }) })
+  }
+
+  function toggleFn(id: string) {
+    updateConfig({ functions: functions.map(function(f) { return f.id === id ? { ...f, visible: !f.visible } : f }) })
+  }
+
+  function removeFn(id: string) {
+    updateConfig({ functions: functions.filter(function(f) { return f.id !== id }) })
+  }
+
+  var svgW = 420, svgH = 300, pad = 35
+  var xScale = (svgW - pad * 2) / (xRange * 2)
+  var yScale = (svgH - pad * 2) / (xRange * 2)
+  function sx(v: number) { return pad + (v + xRange) * xScale }
+  function sy(v: number) { return pad + (xRange - v) * yScale }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>📐 Multi-Function Plotter</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {functions.map(function(f, i) {
+          return (
+            <div key={f.id} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <div style={{ width: 10, height: 10, borderRadius: 2, background: f.color, flexShrink: 0 }} />
+              <input value={f.expr} onChange={function(e) { updateExpr(f.id, e.target.value) }} placeholder="e.g. x^2, sin(x)" style={{ flex: 1, padding: '3px 6px', borderRadius: 4, fontSize: 10, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', fontFamily: 'monospace' }} />
+              <button onClick={function() { toggleFn(f.id) }} style={{ padding: '2px 5px', borderRadius: 3, fontSize: 9, cursor: 'pointer', background: f.visible ? s.accent + '22' : s.surface, border: '1px solid ' + (f.visible ? s.accent + '44' : s.border), color: f.visible ? s.accent : s.text }}>{f.visible ? '👁' : '◯'}</button>
+              {functions.length > 1 && <button onClick={function() { removeFn(f.id) }} style={{ padding: '2px 5px', borderRadius: 3, fontSize: 9, cursor: 'pointer', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}>✕</button>}
+            </div>
+          )
+        })}
+        {functions.length < 5 && (
+          <button onClick={addFunction} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 10, cursor: 'pointer', background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399', alignSelf: 'flex-start' }}>+ Add Function</button>
+        )}
+      </div>
+      <svg width={svgW} height={svgH} style={{ background: s.surface, borderRadius: 8, border: '1px solid ' + s.border }}>
+        {Array.from({ length: xRange * 2 + 1 }, function(_, i) {
+          var v = i - xRange
+          return [
+            <line key={'v' + i} x1={sx(v)} y1={pad} x2={sx(v)} y2={svgH - pad} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />,
+            <line key={'h' + i} x1={pad} y1={sy(v)} x2={svgW - pad} y2={sy(v)} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />,
+          ]
+        })}
+        {functions.filter(function(f) { return f.visible && f.expr.trim() }).map(function(f) {
+          var pts: string = ''
+          for (var px = -xRange; px <= xRange; px += 0.1) {
+            var y = evalExpr(f.expr, px)
+            if (!isNaN(y) && isFinite(y)) {
+              pts += sx(px).toFixed(1) + ',' + sy(y).toFixed(1) + ' '
+            } else {
+              if (pts) { pts += ' M ' }
+            }
+          }
+          return <polyline key={f.id} points={pts} fill="none" stroke={f.color} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        })}
+      </svg>
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>X range: ±</span>
+        <input type="range" min={2} max={50} value={xRange} onChange={function(e) { updateConfig({ xRange: Number(e.target.value) }) }} style={{ flex: 1, cursor: 'pointer' }} />
+        <span style={{ fontSize: 10, fontWeight: 600, color: s.bright }}>{xRange}</span>
+      </div>
+    </div>
+  )
+}
+
+// ---- 9. Derivative Visualizer (9-12) ----
+export function CanvasDerivativeVisualizer({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var expr = (raw.expr as string) || 'x^3'
+  var showF = (raw.showF as boolean) ?? true
+  var showF1 = (raw.showF1 as boolean) ?? true
+  var showF2 = (raw.showF2 as boolean) ?? false
+  var tangentX = (raw.tangentX as number) ?? 1
+  var xRange = (raw.xRange as number) ?? 5
+  var s = ws(isDark)
+
+  function evalF(x: number): number {
+    try { return new Function('x', 'return ' + expr.replace(/\^/g, '**').replace(/sin/g, 'Math.sin').replace(/cos/g, 'Math.cos').replace(/tan/g, 'Math.tan').replace(/pi/g, 'Math.PI').replace(/e(?![a-z])/g, 'Math.E'))(x) } catch { return NaN }
+  }
+  function numericalDeriv(f: (x: number) => number, x: number, h?: number): number {
+    h = h || 0.0001
+    return (f(x + h) - f(x - h)) / (2 * h)
+  }
+
+  var svgW = 420, svgH = 320, pad = 35
+  var xS = (svgW - pad * 2) / (xRange * 2)
+  var yRange = xRange
+  var yS = (svgH - pad * 2) / (yRange * 2)
+  function sx(v: number) { return pad + (v + xRange) * xS }
+  function sy(v: number) { return pad + (yRange - v) * yS }
+
+  function makePath(fn: (x: number) => number): string {
+    var pts = ''
+    for (var x = -xRange; x <= xRange; x += 0.05) {
+      var y = fn(x)
+      if (!isNaN(y) && isFinite(y) && Math.abs(y) < yRange * 3) {
+        pts += sx(x).toFixed(1) + ',' + sy(y).toFixed(1) + ' '
+      } else if (pts) {
+        pts += ' M '
+      }
+    }
+    return pts
+  }
+
+  var f1 = function(x: number) { return numericalDeriv(evalF, x) }
+  var f2 = function(x: number) { return numericalDeriv(f1, x) }
+  var tangentY = evalF(tangentX)
+  var tangentSlope = numericalDeriv(evalF, tangentX)
+  var tangentLineY1 = tangentY + tangentSlope * (-xRange - tangentX)
+  var tangentLineY2 = tangentY + tangentSlope * (xRange - tangentX)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>📐 Derivative Visualizer</div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>f(x) =</span>
+        <input value={expr} onChange={function(e) { updateConfig({ expr: e.target.value }) }} style={{ flex: 1, padding: '3px 6px', borderRadius: 4, fontSize: 11, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', fontFamily: 'monospace' }} />
+      </div>
+      <div style={{ display: 'flex', gap: 6, fontSize: 10 }}>
+        {[['f(x)', showF, '#34d399', 'showF'], ["f'(x)", showF1, '#f59e0b', 'showF1'], ["f''(x)", showF2, '#f87171', 'showF2']].map(function(item) {
+          return (
+            <button key={item[3]} onClick={function() { updateConfig({ [item[3]]: !item[1] }) }} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer', background: item[1] ? item[2] + '22' : s.surface, border: item[1] ? '1px solid ' + item[2] + '44' : '1px solid ' + s.border, color: item[1] ? item[2] : s.text }}>{item[0]}</button>
+          )
+        })}
+      </div>
+      <svg width={svgW} height={svgH} style={{ background: s.surface, borderRadius: 8, border: '1px solid ' + s.border }}>
+        {Array.from({ length: xRange * 2 + 1 }, function(_, i) {
+          var v = i - xRange
+          return [<line key={'v' + i} x1={sx(v)} y1={pad} x2={sx(v)} y2={svgH - pad} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />, <line key={'h' + i} x1={pad} y1={sy(v)} x2={svgW - pad} y2={sy(v)} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />]
+        })}
+        {showF && <polyline points={makePath(evalF)} fill="none" stroke="#34d399" strokeWidth={2} />}
+        {showF1 && <polyline points={makePath(f1)} fill="none" stroke="#f59e0b" strokeWidth={2} />}
+        {showF2 && <polyline points={makePath(f2)} fill="none" stroke="#f87171" strokeWidth={2} />}
+        <line x1={sx(-xRange)} y1={sy(tangentLineY1)} x2={sx(xRange)} y2={sy(tangentLineY2)} stroke="#94a3b8" strokeWidth={1} strokeDasharray="4,3" />
+        <circle cx={sx(tangentX)} cy={sy(tangentY)} r={5} fill="#fff" stroke={s.accent} strokeWidth={2} />
+      </svg>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10 }}>
+        <span style={{ color: s.text }}>Tangent at x:</span>
+        <input type="range" min={-xRange} max={xRange} step={0.1} value={tangentX} onChange={function(e) { updateConfig({ tangentX: Number(e.target.value) }) }} style={{ flex: 1, cursor: 'pointer' }} />
+        <span style={{ color: s.bright, fontWeight: 600, fontFamily: 'monospace' }}>x={tangentX.toFixed(1)} slope={tangentSlope.toFixed(2)}</span>
+      </div>
+    </div>
+  )
+}
+
+// ---- 10. Conic Sections (9-12) ----
+export function CanvasConicSections({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var conicType = (raw.conicType as string) || 'ellipse'
+  var paramA = (raw.paramA as number) ?? 3
+  var paramB = (raw.paramB as number) ?? 2
+  var paramC = (raw.paramC as number) ?? 1
+  var s = ws(isDark)
+
+  var svgW = 380, svgH = 380, cx = svgW / 2, cy = svgH / 2, scale = 30
+  var range = 6
+
+  function makeConicPath(): string {
+    var pts = ''
+    if (conicType === 'ellipse') {
+      for (var t = 0; t <= Math.PI * 2 + 0.1; t += 0.05) {
+        var x = paramA * Math.cos(t)
+        var y = paramB * Math.sin(t)
+        pts += (cx + x * scale).toFixed(1) + ',' + (cy - y * scale).toFixed(1) + ' '
+      }
+    } else if (conicType === 'hyperbola') {
+      for (var t2 = -3; t2 <= 3; t2 += 0.05) {
+        var x2 = paramA * (Math.cosh(t2) - 1)
+        var y2 = paramB * Math.sinh(t2)
+        if (x2 * scale < svgW) pts += (cx + x2 * scale).toFixed(1) + ',' + (cy - y2 * scale).toFixed(1) + ' '
+        if (x2 * scale > 0) pts += (cx - x2 * scale).toFixed(1) + ',' + (cy + y2 * scale).toFixed(1) + ' '
+      }
+    } else { // parabola
+      for (var px = -range; px <= range; px += 0.1) {
+        var py = paramC * px * px
+        pts += (cx + px * scale).toFixed(1) + ',' + (cy - py * scale).toFixed(1) + ' '
+      }
+    }
+    return pts
+  }
+
+  var equation = conicType === 'ellipse' ? ('x²/' + paramA + '² + y²/' + paramB + '² = 1') : conicType === 'hyperbola' ? ('x²/' + paramA + '² − y²/' + paramB + '² = 1') : ('y = ' + paramC + 'x²')
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>🔵 Conic Sections</div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {['ellipse', 'parabola', 'hyperbola'].map(function(t) {
+          return (
+            <button key={t} onClick={function() { updateConfig({ conicType: t }) }} style={{ padding: '4px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600, cursor: 'pointer', background: conicType === t ? 'rgba(5,150,105,0.15)' : s.surface, border: conicType === t ? '1px solid rgba(5,150,105,0.3)' : '1px solid ' + s.border, color: conicType === t ? '#34d399' : s.text, textTransform: 'capitalize' }}>{t}</button>
+          )
+        })}
+      </div>
+      <svg width={svgW} height={svgH} style={{ background: s.surface, borderRadius: 8, border: '1px solid ' + s.border }}>
+        {Array.from({ length: range * 2 + 1 }, function(_, i) {
+          var v = i - range
+          return [
+            <line key={'v' + i} x1={cx + v * scale} y1={10} x2={cx + v * scale} y2={svgH - 10} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />,
+            <line key={'h' + i} x1={10} y1={cy - v * scale} x2={svgW - 10} y2={cy - v * scale} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />,
+          ]
+        })}
+        <polyline points={makeConicPath()} fill="none" stroke={s.accent} strokeWidth={2.5} vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        {conicType !== 'parabola' && (
+          <div style={{ display: 'flex', gap: 4, alignItems: 'center', fontSize: 10 }}>
+            <span style={{ color: s.text }}>a:</span>
+            <input type="range" min={1} max={5} step={0.5} value={paramA} onChange={function(e) { updateConfig({ paramA: Number(e.target.value) }) }} style={{ width: 60, cursor: 'pointer' }} />
+            <span style={{ color: s.bright, fontWeight: 600 }}>{paramA}</span>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', fontSize: 10 }}>
+          <span style={{ color: s.text }}>{conicType === 'parabola' ? 'c:' : 'b:'}</span>
+          <input type="range" min={0.5} max={5} step={0.5} value={conicType === 'parabola' ? paramC : paramB} onChange={function(e) { updateConfig(conicType === 'parabola' ? { paramC: Number(e.target.value) } : { paramB: Number(e.target.value) }) }} style={{ width: 60, cursor: 'pointer' }} />
+          <span style={{ color: s.bright, fontWeight: 600 }}>{conicType === 'parabola' ? paramC : paramB}</span>
+        </div>
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 600, color: s.accent, textAlign: 'center', fontFamily: 'serif', fontStyle: 'italic' }}>{equation}</div>
+    </div>
+  )
+}
+
+// ---- 11. Log/Exp Visualizer (9-12) ----
+export function CanvasLogExpVisualizer({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  var base = (raw.base as number) ?? 2
+  var showExp = (raw.showExp as boolean) ?? true
+  var showLog = (raw.showLog as boolean) ?? true
+  var s = ws(isDark)
+
+  var svgW = 380, svgH = 300, pad = 35, xRange = 6
+  var xS = (svgW - pad * 2) / (xRange * 2)
+  var yRange = xRange
+  var yS = (svgH - pad * 2) / (yRange * 2)
+  function sx(v: number) { return pad + (v + xRange) * xS }
+  function sy(v: number) { return pad + (yRange - v) * yS }
+
+  function makeExpPath(): string {
+    var pts = ''
+    for (var x = -xRange; x <= xRange; x += 0.05) {
+      var y = Math.pow(base, x)
+      if (isFinite(y) && y < yRange * 2) pts += sx(x).toFixed(1) + ',' + sy(y).toFixed(1) + ' '
+    }
+    return pts
+  }
+
+  function makeLogPath(): string {
+    var pts = ''
+    for (var x = 0.01; x <= xRange; x += 0.03) {
+      var y = Math.log(x) / Math.log(base)
+      if (isFinite(y) && y > -yRange) pts += sx(x).toFixed(1) + ',' + sy(y).toFixed(1) + ' '
+    }
+    return pts
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', padding: 8, background: s.bg, borderRadius: 8, boxSizing: 'border-box', fontFamily: 'system-ui, sans-serif' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: s.bright }}>📈 Log & Exp Visualizer</div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 10 }}>
+        <span style={{ color: s.text }}>Base a =</span>
+        <input type="range" min={1.1} max={10} step={0.1} value={base} onChange={function(e) { updateConfig({ base: Number(e.target.value) }) }} style={{ width: 100, cursor: 'pointer' }} />
+        <span style={{ color: s.bright, fontWeight: 700, fontSize: 13 }}>{base.toFixed(1)}</span>
+      </div>
+      <div style={{ display: 'flex', gap: 6, fontSize: 10 }}>
+        <button onClick={function() { updateConfig({ showExp: !showExp }) }} style={{ padding: '3px 8px', borderRadius: 4, fontWeight: 600, cursor: 'pointer', background: showExp ? '#34d39922' : s.surface, border: showExp ? '1px solid #34d39944' : '1px solid ' + s.border, color: showExp ? '#34d399' : s.text }}>y = {base.toFixed(1)}^x</button>
+        <button onClick={function() { updateConfig({ showLog: !showLog }) }} style={{ padding: '3px 8px', borderRadius: 4, fontWeight: 600, cursor: 'pointer', background: showLog ? '#f59e0b22' : s.surface, border: showLog ? '1px solid #f59e0b44' : '1px solid ' + s.border, color: showLog ? '#f59e0b' : s.text }}>y = log_{base.toFixed(1)}(x)</button>
+      </div>
+      <svg width={svgW} height={svgH} style={{ background: s.surface, borderRadius: 8, border: '1px solid ' + s.border }}>
+        {Array.from({ length: xRange * 2 + 1 }, function(_, i) {
+          var v = i - xRange
+          return [<line key={'v' + i} x1={sx(v)} y1={pad} x2={sx(v)} y2={svgH - pad} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />, <line key={'h' + i} x1={pad} y1={sy(v)} x2={svgW - pad} y2={sy(v)} stroke={s.border} strokeWidth={v === 0 ? 1.5 : 0.5} />]
+        })}
+        {showExp && <polyline points={makeExpPath()} fill="none" stroke="#34d399" strokeWidth={2} />}
+        {showLog && <polyline points={makeLogPath()} fill="none" stroke="#f59e0b" strokeWidth={2} />}
+      </svg>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, fontSize: 10 }}>
+        <div style={{ padding: '4px 8px', background: '#34d39911', borderRadius: 4, border: '1px solid #34d39933' }}>
+          <div style={{ color: '#34d399', fontWeight: 600 }}>y = a^x</div>
+          <div style={{ color: s.text }}>Domain: (-∞, ∞) · Range: (0, ∞)</div>
+          <div style={{ color: s.text }}>y-int: (0, 1) · Asymptote: y=0</div>
+        </div>
+        <div style={{ padding: '4px 8px', background: '#f59e0b11', borderRadius: 4, border: '1px solid #f59e0b33' }}>
+          <div style={{ color: '#f59e0b', fontWeight: 600 }}>y = log_a(x)</div>
+          <div style={{ color: s.text }}>Domain: (0, ∞) · Range: (-∞, ∞)</div>
+          <div style={{ color: s.text }}>x-int: (1, 0) · Asymptote: x=0</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
 // Registry helpers (used by CanvasWidgets.tsx)
 // ============================================================
 
@@ -3086,6 +3918,18 @@ export const MATH_WIDGET_KIND_LABELS: Record<string, string> = {
   'math-unit-converter': 'Unit Converter',
   'math-formula-reference': 'Formula Reference',
   'math-proof-builder': 'Proof Builder',
+  // Phase 3 new widgets
+  'math-coin-counter': 'Coin Counter',
+  'math-analog-clock': 'Analog Clock',
+  'math-pattern-blocks': 'Pattern Blocks',
+  'math-picture-graph': 'Picture Graph',
+  'math-stats-toolbox': 'Stats Toolbox',
+  'math-point-plotter': 'Point Plotter',
+  'math-ratio-table': 'Ratio Table',
+  'math-multi-function': 'Multi-Function Plotter',
+  'math-derivative-visualizer': 'Derivative Visualizer',
+  'math-conic-sections': 'Conic Sections',
+  'math-log-exp-visualizer': 'Log & Exp Visualizer',
 }
 
 export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown> {
@@ -3114,6 +3958,18 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'math-unit-converter': return {}
     case 'math-formula-reference': return {}
     case 'math-proof-builder': return {}
+    // Phase 3 new widgets
+    case 'math-coin-counter': return { coins: [], challenge: 0 }
+    case 'math-analog-clock': return { hours: 10, minutes: 10, showDigital: true }
+    case 'math-pattern-blocks': return { blocks: [], selectedShape: 'hexagon' }
+    case 'math-picture-graph': return { categories: ['Dogs', 'Cats', 'Fish', 'Birds'], values: [4, 3, 2, 5], icon: '⭐' }
+    case 'math-stats-toolbox': return { dataStr: '12, 15, 18, 22, 25, 14, 19, 21, 17, 30' }
+    case 'math-point-plotter': return { points: [], showLine: true, gridRange: 10 }
+    case 'math-ratio-table': return { numA: 2, numB: 3, rows: 5 }
+    case 'math-multi-function': return { functions: [{ id: 'f1', expr: 'x^2', color: '#34d399', visible: true }], xRange: 10 }
+    case 'math-derivative-visualizer': return { expr: 'x^3', showF: true, showF1: true, showF2: false, tangentX: 1, xRange: 5 }
+    case 'math-conic-sections': return { conicType: 'ellipse', paramA: 3, paramB: 2, paramC: 1 }
+    case 'math-log-exp-visualizer': return { base: 2, showExp: true, showLog: true }
     default: return {}
   }
 }
@@ -3144,6 +4000,18 @@ export function getMathWidgetDefaultSize(kind: string): { width: number; height:
     case 'math-unit-converter': return { width: 420, height: 490 }
     case 'math-formula-reference': return { width: 470, height: 620 }
     case 'math-proof-builder': return { width: 490, height: 680 }
+    // Phase 3 new widgets
+    case 'math-coin-counter': return { width: 400, height: 500 }
+    case 'math-analog-clock': return { width: 350, height: 400 }
+    case 'math-pattern-blocks': return { width: 450, height: 500 }
+    case 'math-picture-graph': return { width: 400, height: 450 }
+    case 'math-stats-toolbox': return { width: 440, height: 580 }
+    case 'math-point-plotter': return { width: 440, height: 500 }
+    case 'math-ratio-table': return { width: 400, height: 400 }
+    case 'math-multi-function': return { width: 480, height: 560 }
+    case 'math-derivative-visualizer': return { width: 480, height: 500 }
+    case 'math-conic-sections': return { width: 440, height: 500 }
+    case 'math-log-exp-visualizer': return { width: 440, height: 500 }
     default: return { width: 360, height: 390 }
   }
 }
