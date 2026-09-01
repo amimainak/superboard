@@ -1,0 +1,533 @@
+Got it. Clear answers, no more questions. Here's the full plan.
+
+---
+
+# SUPERBOARD — PHASEWISE CORRECTION PLAN
+**Philosophy: Whiteboard is the center. Widgets are modular. Teachers compose. Templates persist. SDK-ready.**
+
+---
+
+## KEY ARCHITECTURAL DECISIONS (Before Phase 1 Starts)
+
+### 1. Canvas Widget Rendering Strategy
+
+tldraw supports **custom shapes** via `shapeUtils` — React components that live inside the tldraw document, participate in undo/redo, zoom/pan, and export. This is the correct path for L3 widgets.
+
+The current "Add to Board" likely dumps a static image/asset. The new system will:
+
+- Register each widget type as a **custom tldraw shape** with its own `shapeUtils`
+- The shape renders a React component that handles its own pointer events
+- Widget state (fraction parts, quiz answers, flashcard index) lives in `shape.props`
+- tldraw's built-in move/resize handles the drag/resize — no custom drag code needed
+- Docking = snapping widget bounds to canvas edges (top/bottom/left/right)
+
+**Proof-of-concept widgets for Phase 1** (chosen for interaction diversity):
+- **Interactive Quiz** — click-to-answer with instant feedback (most complex: state machine)
+- **Fraction Circle** — click parts to shade/unshade (medium: visual state)
+- **Flashcards** — click to flip, arrows to navigate (medium: animation + state)
+- **Base-10 Blocks** — drag individual unit blocks on canvas (complex: multi-item drag)
+
+### 2. Widget State Architecture
+
+Every widget that goes on canvas needs a state schema:
+
+```
+CanvasWidget = {
+  id: tldraw shape id
+  type: 'fraction-circle' | 'quiz' | 'flashcard' | 'function-plotter' | ...
+  props: { ...widget-specific state... }  // persists in tldraw document
+  x, y, width, height, rotation  // handled by tldraw
+  isLocked: boolean  // student mode prep (deferred)
+}
+```
+
+Sidebar panel tools and canvas widgets share the **same React component** but receive props differently:
+- Sidebar: props from local React state
+- Canvas: props from `shape.props`, updated via `editor.updateShape()`
+
+This means every existing panel tool can become a canvas widget by wrapping it in a custom shape — no rewrite needed for L1/L2.
+
+### 3. Template Storage Model
+
+Templates are **JSON documents** stored in Supabase (you already have it):
+
+```
+Template = {
+  id: uuid
+  owner_id: auth.user.id
+  title: string
+  description: string
+  subject: 'MATH' | 'SCIENCE' | 'LANGUAGE' | 'ARTS' | 'GENERAL'
+  grade_band: 'K-5' | '6-8' | '9-12'
+  is_public: boolean  // sharing toggle
+  snapshot: {
+    widget_configs: [{ type, props }]  // what widgets, their settings
+    canvas_layout: [{ type, x, y, w, h }]  // positions and sizes
+    background: 'grid' | 'dot' | 'lines' | 'none'
+    subject_filter: string  // which subject tab is active
+  }
+  created_at, updated_at
+}
+```
+
+**Sharing model**: Teacher A marks template `is_public: true` → appears in a "Community Templates" browser filtered by subject/grade. No approval flow, no monetization. Just share. Teachers can "Use Template" which creates a copy in their personal library with their own modifications.
+
+**Supabase tables needed**: `templates`, `template_favorites` (for future), `template_tags` (for search).
+
+### 4. Phase Ordering Logic
+
+The plan is ordered so each phase **unlocks** the next:
+- Phase 1 unlocks all content phases (widgets can go on canvas)
+- Phase 2 unlocks teacher workflows (save/share/reuse)
+- Phases 3-5 can be worked on **in parallel** after Phase 2 (they're independent content domains)
+- Phase 6 is deferred until Phases 1-5 are stable
+
+---
+
+## PHASE 1: CANVAS WIDGET FOUNDATION
+**Goal**: Every panel tool can be placed on the canvas as a draggable, resizable widget. High-value widgets are fully interactive (L3) on canvas.
+
+### Deliverables
+
+**1A. Custom Shape System for Canvas Widgets**
+- Create a `CanvasWidgetShape` base type in tldraw's shape system
+- Build a `widgetShapeUtils` registry that maps widget types to their tldraw shape definitions
+- Each widget shape wraps the existing React component and reads/writes state via `shape.props`
+- Widgets inherit tldraw's native move, resize (by handles), rotate, and delete
+- Docking: snap to canvas edges when within 20px (visual guide appears)
+
+**1B. Universal "Add to Board" Button**
+- Add "Add to Board" to every single panel tool that's missing it (currently ~60% have it)
+- Button behavior:
+  - Click → creates a canvas widget shape at a smart default position (next to last placed widget, or center if first)
+  - Auto-opens the widget at a reasonable default size (varies by widget type)
+  - Sidebar stays OPEN (remove the 1.5s auto-collapse)
+- Widgets placed on canvas default to L2 (live sync with sidebar) when possible
+- Sidebar and canvas widget stay in sync: changing fraction parts in sidebar updates canvas and vice versa
+
+**1C. L3 Interactive Canvas Widgets (Proof of Concept)**
+Implement full interactivity on canvas for these 4 widgets:
+
+| Widget | Interaction | Complexity |
+|--------|------------|------------|
+| **Interactive Quiz** | Click answer choice → instant correct/incorrect feedback → next question → final score | High |
+| **Fraction Circle** | Click individual segments to shade/unshade → visual updates instantly | Medium |
+| **Flashcards** | Click to flip → arrow navigation → shuffle | Medium |
+| **Base-10 Blocks** | Stamps panel gets ones/tens/hundreds/thousands blocks → drag onto canvas → they snap together | High |
+
+**1D. Widget Canvas Toolbar**
+When a canvas widget is selected, show a floating mini-toolbar:
+- Pin/Unpin (lock position)
+- Duplicate
+- Bring to Front / Send to Back
+- Reset to Default
+- Remove from Board
+- (Future: "Lock for Students" — grayed out, prep for student mode)
+
+**1E. Widget Panel UX Improvements**
+- Make each tool section **collapsible** (accordion pattern) to reduce scrolling
+- Add a "Minimize Panel" button that collapses the sidebar to icon-only (expandable on hover)
+- Show a small indicator on sidebar tools that are already on the canvas (e.g., checkmark or dot)
+
+### What This Unlocks
+- Templates can save widget positions because widgets now HAVE positions
+- All future widgets automatically get canvas placement via the shape system
+- Teachers can compose lesson layouts by placing multiple widgets side by side
+- The "Add to Board" inconsistency problem is solved permanently
+
+### Complexity: High (2-3 weeks)
+This is the heaviest phase because it changes the core architecture. But it's a one-time cost — everything after this is incremental.
+
+---
+
+## PHASE 2: TEMPLATE ENGINE
+**Goal**: Teachers save their widget configurations and canvas layouts as reusable templates, and share them with peers.
+
+### Deliverables
+
+**2A. Template CRUD System**
+- "Save as Template" button in the room toolbar → opens a modal:
+  - Title (required), Description (optional)
+  - Subject (auto-detected from current filter, editable)
+  - Grade Band (auto-detected, editable)
+  - Tags (comma-separated, for search)
+  - "Make Public" toggle (default: off)
+- "My Templates" panel accessible from room toolbar:
+  - Grid of template cards showing title, subject icon, grade band, last modified
+  - Search and filter by subject/grade
+  - Edit title/description, duplicate, delete, toggle public/private
+- "Start from Template" → loads the template into a fresh room
+
+**2B. Template Sharing**
+- "Community Templates" browser:
+  - Filterable by subject, grade band, search query, tags
+  - Sort by: newest, most used, most favorited (future)
+  - "Use This Template" → creates a copy in personal library → opens in new room
+  - "View Details" → shows description, widget list, preview thumbnail (optional)
+- Template author attribution (shows creator name)
+- No approval workflow. No monetization. Pure peer sharing.
+
+**2C. Template Snapshot Format**
+A template saves:
+- Which widgets are on the canvas + their types and configurations
+- Widget positions (x, y) and sizes (width, height)
+- Canvas background type
+- Active subject filter
+- It does NOT save canvas drawings/content (that's session save, a different feature)
+
+**2D. Supabase Backend**
+- `templates` table (id, owner_id, title, description, subject, grade_band, tags, is_public, snapshot JSONB, created_at, updated_at)
+- RLS policies: users can read/write their own; everyone can read public templates
+- `template_tags` table for normalized tag search (optional, can start with comma-separated string in tags column)
+
+**2E. Quick-Template Keyboard Shortcut**
+- `Ctrl/Cmd + Shift + S` → Save current room as template (opens the modal)
+- `Ctrl/Cmd + Shift + T` → Open template browser
+
+### What This Unlocks
+- Teachers don't set up from scratch every session
+- Community grows organically — good templates spread
+- Subject leads / curriculum teams can standardize setups
+- Future: template analytics (most-used, highest-rated)
+
+### Complexity: Medium (1-2 weeks)
+Mostly CRUD + JSON serialization. The snapshot format is the main design decision.
+
+---
+
+## PHASE 3: MATH & SCIENCE DEEP-DIVE
+**Goal**: Fill all critical content gaps in Math and Science across all three grade bands. This is the largest content phase.
+
+### 3A. Math — New Widgets & Enhancements
+
+**K-5 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Number Line (K-5) | L2 panel + L3 canvas | Configurable range (0-20, 0-100), click to place/move points, show jumps for addition/subtraction |
+| Place Value Chart | L1 canvas | Columns: thousands/hundreds/tens/ones, click to add digits, expanded form display |
+| Analog Clock | L3 canvas | Movable hour/minute hands, show digital time, "set time to" input, elapsed time mode |
+| Coin Counter | L3 canvas | Drag pennies/nickels/dimes/quarters onto canvas, auto-total, "make $X" challenges |
+| Custom Flashcard Builder | L2 panel + L1 canvas | Create/edit/delete cards from panel, add images, save card sets |
+| Base-10 Block Stamps | L3 canvas | Individual ones cubes, ten rods, hundred flats — drag from stamps, snap together, auto-count |
+| Pattern Blocks | L3 canvas | Hexagons, trapezoids, rhombuses, triangles, squares — drag, rotate, snap, fill area activities |
+| Picture Graph Builder | L2 panel + L2 canvas | Choose categories, add data, renders pictograph on canvas |
+
+**6-8 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Statistics Toolbox | L2 panel | Input data set → shows mean, median, mode, range, box plot, histogram |
+| Interactive Point Plotter | L3 canvas | Click to place points on coordinate plane, connect to make lines, show slope/equation |
+| Ratio Table | L2 panel + L1 canvas | Input ratio → auto-generates equivalent ratios, visual bar model |
+| Scientific Calculator (Canvas) | L1 canvas | Same calculator but placeable on board for "show your work" |
+| Unit Converter (Canvas) | L1 canvas | Placeable for reference during problem-solving |
+
+**9-12 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Multi-Function Plotter | L3 canvas | Plot up to 5 functions simultaneously with color coding, intersection finder, zoom/pan |
+| Derivative/Integral Visualizer | L3 canvas | Input f(x) → shows f(x), f'(x), f''(x) on same plot, tangent line at cursor |
+| Conic Sections Explorer | L3 canvas | Adjust a/b/c parameters → see parabola/ellipse/hyperbola change in real time |
+| Proof Builder (Canvas) | L1 canvas | Placeable proof table with statement/reason columns, add/remove rows |
+| Formula Reference (Canvas) | L1 canvas | Placeable formula sheet for any topic (trig, calculus, stats) |
+| Log/Exponential Visualizer | L3 canvas | Graph y=a^x, y=log_a(x), show domain/range/intercepts |
+
+**Math Enhancements to Existing Widgets:**
+- Function Plotter → upgrade to multi-function (the single biggest math improvement)
+- Flashcards → add custom card creation in K-5 and 6-8 tabs
+- Formula Reference → add "Add to Board" + make sections expandable
+- Proof Builder → add "Add to Board" + export as image
+
+### 3B. Science — New Widgets & Enhancements
+
+**K-5 New Widgets (Critical Gap — Currently Nearly Empty):**
+
+| Widget | Subject | Type | Description |
+|--------|---------|------|-------------|
+| Simple Machines Explorer | Physics | L3 canvas | 6 machines (lever, pulley, ramp, wedge, screw, wheel/axle) — interactive force diagrams |
+| States of Matter | Physics | L3 canvas | Slider for temperature → particles move (solid/liquid/gas), phase change labels |
+| Plant Life Cycle | Biology | L2 panel + L1 canvas | Seed → sprout → plant → flower → fruit → seed cycle with labels |
+| Animal Habitats | Biology | L2 panel | Match animals to habitats (ocean, forest, desert, arctic, grassland) |
+| Food Chain Builder | Biology | L3 canvas | Drag organisms into chain order, arrows show energy flow, producer/consumer/decomposer labels |
+| Solar System | Earth Sci | L2 panel + L2 canvas | Scaled planet display, relative sizes, orbit paths, click planet for facts |
+| Water Cycle | Earth Sci | L2 panel + L1 canvas | Evaporation → condensation → precipitation → collection diagram |
+| Sink or Float Predictor | Physics | L3 canvas | Select object + liquid → predict outcome → reveal answer with explanation |
+| Rock Cycle | Earth Sci | L2 panel | Igneous ↔ Sedimentary ↔ Metamorphic with transformation conditions |
+| Observation Journal | All | L1 canvas | "I observe / I wonder / I learned" template with drawing area |
+
+**6-8 New Widgets:**
+
+| Widget | Subject | Type | Description |
+|--------|---------|------|-------------|
+| Scientific Method Scaffold | All | L2 panel + L1 canvas | Step-by-step: Question → Hypothesis → Experiment → Data → Analysis → Conclusion |
+| Lab Report Template | All | L1 canvas | Structured sections: Title, Purpose, Materials, Procedure, Data, Analysis, Conclusion |
+| Equation Balancer | Chemistry | L3 canvas | Input unbalanced equation → step-by-step balancing with coefficient adjustments |
+| Data Collection Table | All | L2 panel + L2 canvas | Create tables, input data, auto-generate bar/line/scatter graphs |
+| Magnetism Explorer | Physics | L3 canvas | Place magnets, see field lines, attract/repel visualization |
+| Weather Patterns | Earth Sci | L2 panel | Cold/warm front symbols, pressure systems, basic weather map reading |
+
+**9-12 New Widgets:**
+
+| Widget | Subject | Type | Description |
+|--------|---------|------|-------------|
+| Periodic Trends Grapher | Chemistry | L3 canvas | Click element → graphs electronegativity/atomic radius/ionization energy across periods/groups |
+| Rotational Motion | Physics | L3 canvas | Torque, angular momentum, moment of inertia — adjustable parameters, visual demos |
+| Meiosis Visualizer | Biology | L3 canvas | Step-by-step meiosis I & II with crossing over, compare to mitosis side by side |
+| Dimensional Analysis Tool | Chemistry | L2 panel | Input quantity → step-by-step unit conversion with cancellation visualization |
+| Stoichiometry Calculator | Chemistry | L2 panel | Input balanced equation + known quantity → calculates all other quantities |
+| Wave Interference | Physics | L3 canvas | Two-source wave simulation, constructive/destructive interference patterns |
+
+**Science Enhancements to Existing Widgets:**
+- Remove Ohm's Law from K-5 Physics tab (inappropriate for that age)
+- Differentiate 6-8 vs 9-12 tool complexity (currently nearly identical)
+- Add "Add to Board" to all Biology and Chemistry panel tools
+- Integrate Statistics Toolbox (from Math) into Science data tools
+- Titration tool → add stoichiometry calculations
+
+### What This Unlocks
+- K-5 Science goes from "nearly empty" to "fully functional"
+- Math becomes the strongest subject at every grade level
+- Science tools are now grade-appropriate (not the same tools at every level)
+- Heavy L3 widget count proves the canvas architecture works
+
+### Complexity: High (3-4 weeks)
+Largest phase by widget count. But many widgets share patterns (labelled diagrams, interactive sliders, drag-drop) so component reuse will help.
+
+---
+
+## PHASE 4: ENGLISH & ARTS DEEP-DIVE
+**Goal**: Fill all critical content gaps in English and Arts. Bring Arts from "thinnest subject" to fully functional.
+
+### 4A. English/Language Arts — New Widgets & Enhancements
+
+**K-5 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Sight Word Bank | L2 panel | Pre-loaded Dolch Pre-Primer through 3rd Grade + Fry First 300, filterable by grade |
+| CVC Word Sort | L3 canvas | Word family bins (-at, -an, -ig, -op, -ug), drag words into correct bin |
+| Writing Mechanics | L2 panel | Handwriting line templates (sky/grass/dirt), letter formation guides, typing practice area |
+| Fluency Timer | L1 canvas | Start/stop timer with word count input → WPM calculation, history for tracking progress |
+| Decodable Passage Builder | L2 panel | Input text → highlights decodable patterns (CVC, digraphs, blends, vowel teams) by color |
+| Listening Comprehension | L2 panel | Paste passage → auto-generate comprehension questions (who/what/where/when/why) |
+
+**6-8 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Argumentative Writing Organizer | L2 panel + L1 canvas | Claim → Evidence 1/2/3 → Counterclaim → Rebuttal → Conclusion with transition prompts |
+| Text Evidence Highlighter | L3 canvas | Paste passage on canvas → highlight in different colors → label each highlight (claim, evidence, reasoning) |
+| Enhanced POS Tagger | L2 panel | Student-friendly labels ("Action Verb" not "VBZ"), color-coded, sentence diagram option |
+| Semicolon & Advanced Punctuation | L2 panel | Exercises for semicolons, colons, em dashes, with context-specific rules |
+| Context Clues Explorer | L2 panel | Input sentence with unknown word → shows surrounding context clues → student guesses meaning |
+
+**9-12 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Rhetorical Analysis Framework | L2 panel + L1 canvas | Ethos/Pathos/Logos organizer, rhetorical devices checklist, SOAPS (Speaker/Occasion/Audience/Purpose/Subject) |
+| Logical Fallacies Reference | L1 canvas | 15+ fallacies with definitions, examples, and "spot the fallacy" exercises |
+| MLA/APA Citation Generator | L2 panel | Input source info → generates proper citations (book, website, journal, interview) |
+| Essay Outline Builder | L2 panel + L1 canvas | 5-paragraph and research paper structures, thesis statement builder, outline with drag-reorder |
+| Enhanced Reading Analyzer | L2 panel | Existing metrics PLUS: Lexile estimate, sentence variety scoring, cohesion analysis, topic sentence identification |
+| Text-to-Speech Preview | L1 canvas | Paste writing → hear it read aloud (browser TTS API, no external service needed) |
+
+**English Enhancements to Existing Widgets:**
+- Paragraph Organizer → live canvas sync (paragraph forms in real-time on board)
+- Story Elements Map → option to render Story Mountain directly on canvas
+- Flashcards → integrate with Sight Word Bank (one-click to create flashcard set from word bank)
+- Reading Passage Analyzer → add the enhancements listed above
+
+### 4B. Arts & Music — New Widgets & Enhancements
+
+**K-5 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Elements of Art Reference | L1 canvas | Interactive poster: Line, Shape, Form, Space, Color, Texture — click each for examples |
+| Symmetry Drawing Tool | L3 canvas | Draw on one side → mirrors on the other (vertical, horizontal, 4-way) |
+| Shape Stamp Library | L3 canvas | Basic shapes (circle, square, triangle, star, heart) + nature shapes (leaf, flower, tree) for stamping |
+| Rhythm Builder | L3 canvas | Place quarter/half/eighth notes and rests on a rhythm grid → play back the rhythm |
+| Color Theory (Canvas) | L1 canvas | Same HSL/harmony tool but placeable as reference palette on canvas |
+| Artist Spotlight Cards | L2 panel | 12 artists (Van Gogh, Picasso, Monet, etc.) with image, movement, key works, style description |
+
+**6-8 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Perspective Grid (Canvas) | L2 canvas | Vanishing point + grid lines rendered ON canvas → draw over it |
+| Value/Shading Study | L3 canvas | 10-step value scale, hatching/cross-hatching/stippling practice areas, sphere/cube shading guide |
+| Artwork Comparison (Enhanced) | L2 panel + L2 canvas | IMAGE UPLOAD for both panels, VTS (Visual Thinking Strategies) question prompts |
+| Art History Timeline | L2 panel + L1 canvas | Scrollable timeline: Medieval → Renaissance → Baroque → Impressionism → Modern → Contemporary |
+| Staff Notation Enhanced | L2 panel | Add: time signatures, rests, bass clef option, bar lines, simple composition area |
+
+**9-12 New Widgets:**
+
+| Widget | Type | Description |
+|--------|------|-------------|
+| Two-Point Perspective | L3 canvas | Adjustable two vanishing points + grid → draw over it, hide grid for final artwork |
+| Compositional Analysis | L2 panel + L1 canvas | Rule of thirds overlay, golden ratio spiral, leading lines guide — place over any artwork |
+| Art Criticism Framework | L2 panel + L1 canvas | Feldman's method (Describe/Analyze/Interpret/Judge) + Barrett's method — structured response areas |
+| Chord Progression Builder | L3 canvas | Build chord progressions in major/minor keys, hear playback, common progressions (I-V-vi-IV, etc.) |
+| Portfolio Organizer | L2 panel | Categorize artworks by theme/medium/date, add artist statements, export as gallery view |
+
+**Arts Enhancements to Existing Widgets:**
+- Color Theory → add "Add to Board"
+- All 4 existing tools → add "Add to Board"
+- Artwork Comparison → add image upload (this single fix makes it 10x more useful)
+- Grade differentiation: K-5 shows only K-5 tools, 6-8 adds 6-8 tools, 9-12 adds 9-12 tools (currently all show same 4)
+
+### What This Unlocks
+- English covers every major K-12 curriculum standard
+- Arts goes from "embarrassingly thin" to "comprehensive"
+- Rhetorical analysis and citation tools make 9-12 English viable
+- Image upload in Arts Comparison unlocks visual analysis
+- Music gets rhythm, chords, and composition — not just note placement
+
+### Complexity: High (3-4 weeks)
+Second largest phase. Arts requires more visual/interactive work per widget.
+
+---
+
+## PHASE 5: UX POLISH, TOOLBAR & CROSS-CUTTING
+**Goal**: Fix all cross-cutting UX issues, enhance the core whiteboard experience, and upgrade remaining widgets to L3.
+
+### 5A. Core Whiteboard Enhancements
+
+| Enhancement | Description | Impact |
+|-------------|-------------|--------|
+| Text Tool Rich Formatting | Add: underline, highlight, text color picker, font family selector to the text style toolbar | English tutors, daily use |
+| LaTeX Quick Button | Move the fx/LaTeX button from StylePanel to the main top toolbar (always visible) | Math/Science tutors, every session |
+| Visible Timer | Always-visible timer in toolbar (not buried in Breakout Rooms). Start/pause/reset, optional alarm | Assessment, fluency, all subjects |
+| Sticky Notes | Pre-made canvas widgets: "I observe / I think / I learned", "Key Vocabulary", "Question", "Important" | K-5 Science, all subjects |
+| Quick Shapes Toolbar | One-click access to common shapes (rectangle, circle, arrow, line) directly from toolbar | All subjects |
+| Canvas Background Switcher | Quick toggle between: blank, grid, dot, isometric, lined, music staff | All subjects |
+
+### 5B. Panel UX Improvements
+
+| Improvement | Description |
+|-------------|-------------|
+| Collapsible Tool Sections | Every tool in sidebar is an accordion — click header to expand/collapse. Remember state per session. |
+| Panel Width Toggle | Narrow (icons only, expandable on hover) ↔ Full width. Toggle button in panel header. |
+| "Already on Board" Indicator | Small badge/dot on sidebar tools that are currently placed on the canvas. Click to focus/jump to that widget. |
+| Tool Search | Search bar at top of panel — filters tools by name. Critical for toolkit-heavy subjects like Science. |
+| Keyboard Shortcuts Panel | `?` key opens shortcut reference. Add shortcuts for common actions (add widget, toggle panel, save template). |
+
+### 5C. Widget Upgrades to L3
+
+Upgrade these high-value existing widgets from L1/L2 to fully interactive canvas widgets:
+
+| Widget | Upgrade | What Changes |
+|--------|---------|-------------|
+| Coordinate Plane | L1 → L3 | Click to plot points, draw lines/shapes, label axes |
+| Venn Diagram | L1 → L3 | Drag items into regions, add/remove circles, label intersections |
+| pH Scale | L2 → L3 | Drag substances to place on scale, see pH value, classification |
+| Multiplication Grid | L1 → L3 | Click cells to highlight, show multiplication fact, product coloring |
+| Story Mountain | L1 → L3 | Click each story stage to add text, drag to reorder, draw connections |
+
+### 5D. Stamp Library Expansion
+
+Add subject-categorized stamps that work as L3 canvas widgets (drag, rotate, resize):
+
+| Category | Stamps |
+|----------|--------|
+| Math | Base-10 blocks (ones/tens/hundreds), pattern blocks, fraction tiles, geoboard, protractor, ruler |
+| Science | Beaker, flask, test tube, thermometer, magnet, spring scale, circuit symbols (battery, wire, resistor, bulb), arrow (force), wave |
+| ELA | Thought bubble, speech bubble, exclamation mark, question mark, book, pencil, "turn the page" arrow |
+| Arts | Color wheel, musical notes (whole/half/quarter/eighth), rest symbols, treble/bass clef, paintbrush, palette |
+| General | Star, checkmark, X mark, arrow (4 directions), heart, thumb up/down, lightbulb, clock face |
+
+### 5E. Assessment Widget Enhancements
+
+- Add "Add to Board" — place quiz directly on canvas as L3 widget
+- Students can answer on the canvas quiz (prep for student mode)
+- Add question types: matching, ordering, fill-in-the-blank
+- Add timer per quiz with configurable time limit
+- Show answer explanations after submission
+
+### What This Unlocks
+- The whiteboard itself is more powerful (text formatting, LaTeX, timer)
+- Panel is usable even with 20+ tools per subject
+- Stamps make K-5 interactive without needing full widgets
+- Assessment becomes a real tool, not a sidebar curiosity
+- L3 upgrades make existing tools 10x more engaging
+
+### Complexity: Medium (2-3 weeks)
+Mostly incremental improvements. The L3 upgrades reuse the Phase 1 architecture.
+
+---
+
+## PHASE 6: PLATFORM FEATURES & FUTURE (DEFERRED)
+**Goal**: Transform from a tutoring tool into a tutoring platform. These are not needed until Phases 1-5 are stable.
+
+### 6A. Student Mode (Deferred per your request)
+- Toggle in room toolbar: "Enable Student Mode"
+- When enabled: hides panel, locks tutor annotations, makes only designated canvas widgets interactive
+- Student sees: canvas with interactive widgets + a "Raise Hand" / "I'm Confused" button
+- Tutor sees: same canvas + student status indicators
+- Permission levels: view-only, interact-with-widgets, draw
+
+### 6B. Session Recording & Playback
+- Record all canvas actions as a timeline
+- Playback at 1x/2x/4x speed
+- Share recording link with absent students
+- Export as video (optional, higher effort)
+
+### 6C. Student View / Preview Mode
+- "Preview as Student" button for tutors
+- Shows exactly what a connected student would see
+- Useful for lesson prep and QA
+
+### 6D. Progress Tracking
+- Mark standards covered in a session (Common Core / NGSS / state standards)
+- Per-student session history
+- "Standards Covered This Week" dashboard for tutors
+- Optional: student performance from assessments
+
+### 6E. Widget Communication API
+- Define a `widgetBus` event system so widgets can talk to each other
+- Examples: Function Plotter sends graph → Assessment widget creates a question about it
+- Data Collection Table sends data → Bar Chart widget renders it
+- This is the foundation for the "smart tutoring" experience
+
+### 6F. SDK Extraction Prep
+- Decouple whiteboard + widget system from the hosting app
+- Extract into a standalone npm package: `@superboard/core`
+- API: `createBoard(container, { widgets, templates, auth, collaboration })`
+- The Phase 1 canvas widget architecture (custom tldraw shapes) makes this clean — the SDK is essentially: tldraw + widget shape registry + template system + collaboration layer
+
+### Complexity: Very High (4-6 weeks total)
+This is effectively a separate product phase. Start only after Phases 1-5 are shipped and stable for at least 2 weeks of real usage.
+
+---
+
+## EXECUTION SUMMARY
+
+| Phase | Focus | New Widgets | L3 Upgrades | Complexity | Duration Est. |
+|-------|-------|-------------|-------------|------------|---------------|
+| **1** | Canvas Widget Foundation | 0 (architecture) | 4 (proof of concept) | High | 2-3 weeks |
+| **2** | Template Engine | 0 (system) | 0 | Medium | 1-2 weeks |
+| **3** | Math & Science Content | ~35 new | 5+ | High | 3-4 weeks |
+| **4** | English & Arts Content | ~30 new | 3+ | High | 3-4 weeks |
+| **5** | UX Polish & Upgrades | ~10 new | 5+ | Medium | 2-3 weeks |
+| **6** | Platform & Future | TBD | TBD | Very High | 4-6 weeks (deferred) |
+
+**Total estimated active development: ~11-16 weeks for Phases 1-5**
+
+### Recommended Execution Order
+1. **Phase 1** (must be first — everything depends on it)
+2. **Phase 2** (must be second — templates need canvas widgets)
+3. **Phases 3, 4, 5 can be worked in parallel** after Phase 2, but I recommend sequential (3 → 4 → 5) because Math/Science gaps are most critical and Phase 5's UX polish benefits from having all content in place
+4. **Phase 6** only after 2+ weeks of stable usage
+
+### Key Risk: Phase 1 Scope
+Phase 1 is the make-or-break phase. If the canvas widget architecture is solid, everything else is incremental. If it's fragile, every content phase will be painful. I recommend:
+- Start Phase 1 with just the custom shape system + "Add to Board" consistency (1A + 1B)
+- Get that deployed and tested before building L3 interactive widgets (1C)
+- This reduces risk and gets the template system (Phase 2) unblocked faster
+
+---
+
+This is the full plan. Every item traces back to either the evaluation findings or the core philosophy. Want me to adjust anything — phase ordering, scope, priorities — before we start coding?
