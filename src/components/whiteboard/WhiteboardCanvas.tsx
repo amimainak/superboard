@@ -101,17 +101,20 @@ export function WhiteboardCanvas() {
   const camera = useWhiteboardStore(useShallow((s) => s.camera))
   const elements = useWhiteboardStore(useShallow((s) => s.elements))
   const selectedIds = useWhiteboardStore(useShallow((s) => s.selectedIds))
-  // PERF: currentElement, isDrawing, style, eraserSize, userRole, canDraw, mathToolConfig
+  // PERF: currentElement, isDrawing, style, userRole, canDraw, mathToolConfig
   // are NOT subscribed here — they change at 60fps during drawing and would
   // re-render this entire 1380-line component on every frame. Instead, we read
   // them via useWhiteboardStore.getState() inside callbacks and the focused
   // CurrentElementPreview sub-component.
+  // Note: eraserSize IS subscribed because it's used in JSX for the cursor overlay;
+  // it only changes on explicit user clicks (not at 60fps), so this is safe.
   const isPanning = useWhiteboardStore((s) => s.isPanning)
   const spaceHeld = useWhiteboardStore((s) => s.spaceHeld)
   const showGrid = useWhiteboardStore((s) => s.showGrid)
   const gridSize = useWhiteboardStore((s) => s.gridSize)
   const gridType = useWhiteboardStore((s) => s.gridType)
   const isDark = useWhiteboardStore((s) => s.isDark)
+  const eraserSize = useWhiteboardStore((s) => s.eraserSize)
   const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
 
