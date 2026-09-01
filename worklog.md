@@ -140,3 +140,26 @@ Stage Summary:
 - **Bug fixed**: Missing `btn()` in `ws()` style helper (CanvasMathWidgets.tsx)
 - **Deployment fixed**: .vercel/project.json now correctly points to superboard2/superboard
 - **All 4 L3 widgets verified working on live production site**
+
+---
+Task ID: 1d
+Agent: Main
+Task: Widget clipping fix, toolbar hover reveal, Function Plotter upgrades
+
+Work Log:
+- **Widget clipping fix**: Moved `transform: scale(1.3)` from inner div to `foreignObject` element, dividing FO dimensions by 1.3 so the scaled content fits within the allocated space. This fixes Color Theory Explorer and ALL other widgets that were showing ~80% from left.
+- **Toolbar hover reveal**: Widget action buttons (close, duplicate, lock, bring-to-front) now start with `opacity: 0` and appear on hover. An invisible hit-area rect at the widget top detects hover and shows all buttons via `document.querySelectorAll('.wtb-' + id)`. Locked widgets always show buttons.
+- **Toolbar contrast**: Changed button styling from `rgba(255,255,255,0.08)` / `rgba(0,0,0,0.06)` (barely visible) to `rgba(15,23,42,0.85)` / `rgba(255,255,255,0.92)` with a 1px border. Bold text color changed from `#94a3b8` to `#e2e8f0`/`#1e293b`.
+- **Function Plotter upgrades**:
+  - Auto Y-range: samples all visible functions across the X range, computes optimal Y viewport with 15% padding
+  - Independent zoom: scroll wheel on the graph container zooms toward the cursor position, only affecting the plot (not the whiteboard)
+  - Always-visible coordinate grid with smart tick step based on range
+  - Reset view button (⟲) to restore default zoom/pan
+  - Removed manual Y-range slider (auto-range handles it)
+  - X range slider now goes from 1-50 for finer control
+- Built, deployed, browser-tested on live site
+
+Stage Summary:
+- **Files modified**: ElementRenderer.tsx, CanvasMathWidgets.tsx, whiteboard.css
+- **All 6 issues fixed**: widget clipping, toolbar visibility, toolbar contrast, toolbar hover, plotter auto-range, plotter independent zoom
+- **Verified on live site**: Color Theory Explorer renders fully, Function Plotter shows grid + auto-range + scroll zoom, toolbar buttons hidden until hover
