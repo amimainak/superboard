@@ -63,9 +63,10 @@ div[data-placeholder]:empty::before {
   align-items: center;
   padding: 10px 7px;
   gap: 3px;
-  overflow-y: auto;
-  overflow-x: visible;
+  overflow: visible;
   z-index: 200;
+  position: relative;
+  isolation: isolate;
 }
 
 .wb-toolbar-dark {
@@ -115,8 +116,10 @@ div[data-placeholder]:empty::before {
   align-items: center;
   padding: 0 10px;
   gap: 2px;
-  overflow: hidden;
+  overflow: visible;
   z-index: 1000;
+  position: relative;
+  isolation: isolate;
 }
 
 .wb-top-bar-dark {

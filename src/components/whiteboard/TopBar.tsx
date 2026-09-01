@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Sun,
   Moon,
@@ -246,7 +247,7 @@ export function TopBar({
         >
           <MoreHorizontal size={14} />
         </button>
-        {menuOpen && menuPos.top > -100 && (
+        {menuOpen && menuPos.top > -100 && createPortal(
           <>
             <div className="wb-menu-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
             <div
@@ -326,6 +327,7 @@ export function TopBar({
               <MenuItem label="Keyboard Shortcuts" isDark={isDark} shortcut="Ctrl+/" onClick={() => { onShowShortcuts(); setMenuOpen(false) }} />
             </div>
           </>
+          , document.body
         )}
       </div>
     </header>

@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   MousePointer2,
   Hand,
@@ -110,35 +111,38 @@ function Flyout({
   const isVisible = pos !== null && ready
 
   return (
-    <>
-      {isVisible && (
+    createPortal(
+      <>
+        {isVisible && (
+          <div
+            className="wb-flyout-backdrop"
+            onMouseDown={(e) => {
+              e.stopPropagation()
+              onClose()
+            }}
+            aria-hidden="true"
+          />
+        )}
         <div
-          className="wb-flyout-backdrop"
-          onMouseDown={(e) => {
-            e.stopPropagation()
-            onClose()
+          ref={panelRef}
+          className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
+          role="menu"
+          onMouseDown={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: pos ? pos.top : 0,
+            left: pos ? pos.left : 0,
+            zIndex: 10001,
+            visibility: isVisible ? 'visible' : 'hidden',
+            pointerEvents: isVisible ? 'auto' : 'none',
           }}
-          aria-hidden="true"
-        />
-      )}
-      <div
-        ref={panelRef}
-        className={`wb-flyout-panel wb-flyout-panel-${isDark ? 'dark' : 'light'}`}
-        role="menu"
-        onMouseDown={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-        style={{
-          position: 'fixed',
-          top: pos ? pos.top : 0,
-          left: pos ? pos.left : 0,
-          zIndex: 10001,
-          visibility: isVisible ? 'visible' : 'hidden',
-          pointerEvents: isVisible ? 'auto' : 'none',
-        }}
-      >
-        {children}
-      </div>
-    </>
+        >
+          {children}
+        </div>
+      </>
+      , document.body)
+
   )
 }
 
@@ -218,7 +222,7 @@ function ToolLibrary({
     return () => document.removeEventListener('keydown', handler)
   }, [isOpen, onClose])
 
-  return (
+  return createPortal(
     <>
       {isOpen && (
         <div
@@ -291,7 +295,7 @@ function ToolLibrary({
         </div>
       </div>
     </>
-  )
+    , document.body)
 }
 
 // ---- Main Toolbar ----
