@@ -8,7 +8,7 @@ import sys
 DB_HOST = "aws-0-ap-northeast-1.pooler.supabase.com"
 DB_NAME = "postgres"
 DB_USER = "postgres.sjbxyxallfeyfuplacnn"
-DB_PASS = "thephisics1"
+DB_PASS = "Thephisics1"
 
 MIGRATION_SQL = """
 -- Phase 2: Template Engine - Upgrade Template table
