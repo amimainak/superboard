@@ -217,9 +217,28 @@ Stage Summary:
   - 2A: Template CRUD (Save as Template modal, My Templates panel with grid/search/filter/edit/duplicate/delete, Start from Template)
   - 2B: Community Templates browser (filter by subject/grade/search/tags, sort, Use This Template, author attribution)
   - 2C: Snapshot format (widget types+configs, positions/sizes, canvas settings; does NOT save freehand drawings)
-  - 2D: Supabase backend (Prisma Template model already had all fields, API routes use Prisma)
+  - 2D: Supabase backend (Prisma Template model + DB migration applied — description, grade_band, tags, is_public, updatedAt columns + indexes + trigger)
   - 2E: Keyboard shortcuts (Ctrl+Shift+S → save modal, Ctrl+Shift+T → template browser)
-- **NOTE**: Migration SQL (scripts/migration-template-phase2.sql) must be run in Supabase SQL editor if not already applied. The Prisma schema already has the columns defined.
+- **Migration applied** — connected via Session Pooler (port 5432, password Thephisics1). All columns, indexes, and updatedAt trigger verified.
+
+---
+Task ID: 2d
+Agent: Main
+Task: Phase 2D — Run Supabase migration for Template table
+
+Work Log:
+- Attempted Transaction Pooler (port 6543) — failed with encoding error
+- Connected via Session Pooler (port 5432) with password Thephisics1
+- Checked pre-migration schema: Template had id, tutorId, name, subject, snapshot, createdAt
+- Ran migration SQL: added description (VARCHAR 500), grade_band (TEXT default ''), tags (TEXT[] default '{}'), is_public (BOOLEAN default false), updatedAt (TIMESTAMP)
+- Created 3 new indexes: Template_is_public_idx, Template_subject_idx, Template_grade_band_idx
+- Created update_template_updatedat() trigger for auto-updating updatedAt on row change
+- Verified all columns, indexes, and triggers post-migration
+- Build passed, pushed to git, Vercel auto-deployed
+
+Stage Summary:
+- **Database migration COMPLETE** — Template table now has all Phase 2 columns
+- **Phase 2 is now FULLY COMPLETE (code + database)**
 
 ## Phase Plan Status
 - Phase 1: COMPLETE
