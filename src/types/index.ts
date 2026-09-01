@@ -316,6 +316,23 @@ export interface TemplateRow {
   createdAt: string;
 }
 
+/** Full template row with all Phase 2 fields */
+export interface TemplateFull {
+  id: string;
+  tutorId: string;
+  name: string;
+  description: string | null;
+  subject: string;
+  gradeBand: string;
+  tags: string[];
+  isPublic: boolean;
+  snapshot: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  // Joined author info for community templates
+  authorName?: string | null;
+}
+
 export interface SubTutorRow {
   id: string;
   email: string;

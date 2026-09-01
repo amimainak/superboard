@@ -1,17 +1,16 @@
 // ============================================================
-// API Route: Templates CRUD
+// API Route: Templates CRUD (Phase 2 — Enhanced)
 // ============================================================
-// GET: List templates for a tutor (Pro/Agency only).
-// POST: Save a new template snapshot with size and count validation.
+// GET:  List own templates (with search/filter).
+//       ?subject=  &gradeBand=  &search=  &isPublic=
+// POST: Save a new template snapshot.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { createTemplateSchema, validateInput } from '@/lib/validations';
-import { isAgencyTier, type Subject } from '@/types';
+import { parseBody, createTemplateSchema } from '@/lib/validations';
 
-// LIMIT: Restrict body size for template snapshots (prevent unbounded uploads)
 export const maxDuration = 30;
 
 const MAX_SNAPSHOT_SIZE = 5_000_000; // 5MB per snapshot
@@ -23,28 +22,37 @@ export async function GET(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const { searchParams } = new URL(request.url);
-    const tutorId = searchParams.get('tutorId');
-
-    // Use authenticated user's ID if tutorId param not provided
-    const targetTutorId = tutorId || auth.userId;
-
-    // Security: caller can only view their own templates
-    if (tutorId && tutorId !== auth.userId) {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 }
-      );
-    }
+    const subject = searchParams.get('subject') || undefined;
+    const gradeBand = searchParams.get('gradeBand') || undefined;
+    const search = searchParams.get('search') || undefined;
 
     const templates = await db.template.findMany({
-      where: { tutorId: targetTutorId },
+      where: {
+        tutorId: auth.userId,
+        ...(subject ? { subject } : {}),
+        ...(gradeBand ? { gradeBand } : {}),
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+                { tags: { has: search } },
+              ],
+            }
+          : {}),
+      },
       select: {
         id: true,
         name: true,
+        description: true,
         subject: true,
+        gradeBand: true,
+        tags: true,
+        isPublic: true,
         createdAt: true,
+        updatedAt: true,
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
     });
 
     return NextResponse.json(templates);
@@ -63,9 +71,11 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ tutorId?: string; name: string; subject: string; snapshot: string | Record<string, unknown> }>(createTemplateSchema, body);
-    if (!parsed.success) return parsed.response;
-    const { tutorId, name, subject, snapshot } = parsed.data;
+    const { data: parsed, error: parseError } = parseBody(createTemplateSchema, body);
+    if (parseError || !parsed) {
+      return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 });
+    }
+    const { name, description, subject, gradeBand, tags, isPublic, snapshot } = parsed;
 
     // Validate snapshot size
     const snapshotStr = typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot);
@@ -76,54 +86,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Security: caller can only save templates for themselves
-    const targetTutorId = tutorId || auth.userId;
-    if (tutorId && tutorId !== auth.userId) {
-      return NextResponse.json(
-        { error: 'Forbidden — you can only save templates for your own account' },
-        { status: 403 }
-      );
-    }
-
-    // Check feature access (templates require Pro or Agency)
-    const user = await db.user.findUnique({ where: { id: targetTutorId } });
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    if (user.tier !== 'PRO' && !isAgencyTier(user.tier)) {
-      return NextResponse.json(
-        { error: 'FEATURE_LOCKED', message: 'Templates require Pro or Agency tier' },
-        { status: 403 }
-      );
-    }
-
     // Check template count limit
     const templateCount = await db.template.count({
-      where: { tutorId: targetTutorId },
+      where: { tutorId: auth.userId },
     });
     if (templateCount >= MAX_TEMPLATES_PER_USER) {
       return NextResponse.json(
-        { error: 'TEMPLATE_LIMIT_REACHED', message: `Maximum ${MAX_TEMPLATES_PER_USER} templates allowed. Delete some to add more.` },
+        { error: 'TEMPLATE_LIMIT_REACHED', message: `Maximum ${MAX_TEMPLATES_PER_USER} templates allowed.` },
         { status: 403 }
       );
     }
 
     const template = await db.template.create({
       data: {
-        tutorId: targetTutorId,
+        tutorId: auth.userId,
         name,
-        subject: subject as Subject,
-        snapshot: snapshotStr,
+        description: description ?? null,
+        subject,
+        gradeBand: gradeBand ?? '',
+        tags,
+        isPublic,
+        snapshot: snapshotStr as any, // Prisma JSON field
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        subject: true,
+        gradeBand: true,
+        tags: true,
+        isPublic: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
 
-    return NextResponse.json({
-      id: template.id,
-      name: template.name,
-      subject: template.subject,
-      createdAt: template.createdAt,
-    });
+    return NextResponse.json(template, { status: 201 });
   } catch (error) {
     console.error('[Templates Create] Error:', error);
     return NextResponse.json(

@@ -18,6 +18,9 @@ import {
   ZoomOut,
   Maximize,
   Search,
+  Save,
+  LayoutTemplate,
+  Users,
 } from 'lucide-react'
 import './whiteboard.css'
 
@@ -58,6 +61,10 @@ interface TopBarProps {
   onSearch: () => void
   /** When false, export menu items (PNG, JPEG, SVG, JSON) are disabled with a tooltip */
   canExport?: boolean
+  /** Template actions */
+  onSaveAsTemplate?: () => void
+  onMyTemplates?: () => void
+  onCommunityTemplates?: () => void
 }
 
 export function TopBar({
@@ -96,6 +103,9 @@ export function TopBar({
   onTogglePresentation,
   onSearch,
   canExport = true,
+  onSaveAsTemplate,
+  onMyTemplates,
+  onCommunityTemplates,
 }: TopBarProps) {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
@@ -187,6 +197,17 @@ export function TopBar({
         </Ico>
       </div>
 
+      {/* Template buttons */}
+      {onSaveAsTemplate && (
+        <Ico title="Save as Template (Ctrl+Shift+S)" isDark={isDark} onClick={onSaveAsTemplate} ariaLabel="Save as Template">
+          <Save size={14} />
+        </Ico>
+      )}
+      {onMyTemplates && (
+        <Ico title="My Templates (Ctrl+Shift+T)" isDark={isDark} onClick={onMyTemplates} ariaLabel="My Templates">
+          <LayoutTemplate size={14} />
+        </Ico>
+      )}
       {/* Right actions — minimal icons */}
       <Ico title="Search board (Ctrl+K)" isDark={isDark} onClick={onSearch} ariaLabel="Search board">
         <Search size={14} />
@@ -286,7 +307,19 @@ export function TopBar({
               <MenuItem label={snapToGrid ? 'Disable Snap' : 'Enable Snap'} isDark={isDark} onClick={() => { onToggleSnap(); setMenuOpen(false) }} />
               <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
               <MenuItem label="Zoom to Fit" isDark={isDark} shortcut="⇧1" onClick={() => { onZoomFit(); setMenuOpen(false) }} />
-              {/* Help */}
+              {/* Templates */}
+              <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
+                Templates
+              </div>
+              {onSaveAsTemplate && (
+                <MenuItem label="Save as Template" isDark={isDark} shortcut="Ctrl+⇧S" onClick={() => { onSaveAsTemplate(); setMenuOpen(false) }} />
+              )}
+              {onMyTemplates && (
+                <MenuItem label="My Templates" isDark={isDark} shortcut="Ctrl+⇧T" onClick={() => { onMyTemplates(); setMenuOpen(false) }} />
+              )}
+              {onCommunityTemplates && (
+                <MenuItem label="Community Templates" isDark={isDark} onClick={() => { onCommunityTemplates(); setMenuOpen(false) }} />
+              )}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 Help
               </div>

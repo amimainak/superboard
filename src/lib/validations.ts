@@ -42,21 +42,28 @@ export const upsertPageSchema = z.object({
   snapshot: pageSnapshotSchema,
 })
 
+// ---- Grade Bands ----
+export const GRADE_BANDS = ['K-2', '3-5', '6-8', '9-12'] as const
+export type GradeBand = (typeof GRADE_BANDS)[number]
+
 // ---- Template ----
 export const createTemplateSchema = z.object({
-  name: z.string().min(1).max(50),
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
   subject: z.enum(SUBJECTS).default('GENERAL'),
-  snapshot: pageSnapshotSchema.extend({
-    pages: z.array(z.object({
-      pageIndex: z.number().int().min(0),
-      elements: z.array(z.record(z.string(), z.unknown())),
-    })),
-  }),
+  gradeBand: z.string().max(20).optional(),
+  tags: z.array(z.string().max(30)).max(10).default([]),
+  isPublic: z.boolean().default(false),
+  snapshot: z.record(z.string(), z.unknown()),
 })
 
 export const updateTemplateSchema = z.object({
-  name: z.string().min(1).max(50).optional(),
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
   subject: z.enum(SUBJECTS).optional(),
+  gradeBand: z.string().max(20).optional(),
+  tags: z.array(z.string().max(30)).max(10).optional(),
+  isPublic: z.boolean().optional(),
   snapshot: z.record(z.string(), z.unknown()).optional(),
 })
 

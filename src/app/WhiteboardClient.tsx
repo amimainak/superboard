@@ -16,7 +16,11 @@ import { StylePanel } from '@/components/whiteboard/StylePanel'
 import { PageTabs } from '@/components/whiteboard/PageTabs'
 import { SearchOverlay } from '@/components/whiteboard/SearchOverlay'
 import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar'
+import { SaveAsTemplateModal } from '@/components/whiteboard/SaveAsTemplateModal'
+import { MyTemplatesPanel } from '@/components/whiteboard/MyTemplatesPanel'
+import { CommunityTemplatesPanel } from '@/components/whiteboard/CommunityTemplatesPanel'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import type { TemplateFull } from '@/types'
 import {
   exportAsPng,
   exportAsJpg,
@@ -67,6 +71,12 @@ export default function WhiteboardClient() {
   const [searchKey, setSearchKey] = useState(0)
   const searchOpen = searchKey > 0
   const canvasContainerRef = useRef<HTMLDivElement>(null)
+
+  // ---- Template State (Phase 2) ----
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
+  const [myTemplatesOpen, setMyTemplatesOpen] = useState(false)
+  const [communityTemplatesOpen, setCommunityTemplatesOpen] = useState(false)
+  const [editingTemplate, setEditingTemplate] = useState<TemplateFull | undefined>(undefined)
 
   // ---- Export Handlers ----
 
@@ -176,12 +186,25 @@ export default function WhiteboardClient() {
     setGridType(gridType === 'dot' ? 'line' : 'dot')
   }, [gridType, setGridType])
 
-  // Ctrl+K / Cmd+K shortcut for search
+  // ---- Keyboard Shortcuts (Phase 2E) ----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      const mod = e.metaKey || e.ctrlKey
+      if (!mod) return
+      // Ctrl+K / Cmd+K — search
+      if (e.key === 'k') {
         e.preventDefault()
         setSearchKey((k) => (k > 0 ? 0 : 1))
+      }
+      // Ctrl+Shift+S — Save as Template
+      if (e.shiftKey && e.key === 'S') {
+        e.preventDefault()
+        setSaveTemplateOpen(true)
+      }
+      // Ctrl+Shift+T — My Templates
+      if (e.shiftKey && e.key === 'T') {
+        e.preventDefault()
+        setMyTemplatesOpen(true)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -234,6 +257,9 @@ export default function WhiteboardClient() {
           onToggleGrid={toggleGrid}
           onToggleSnap={toggleSnap}
           onToggleGridType={handleToggleGridType}
+          onSaveAsTemplate={() => setSaveTemplateOpen(true)}
+          onMyTemplates={() => setMyTemplatesOpen(true)}
+          onCommunityTemplates={() => setCommunityTemplatesOpen(true)}
         />
         </div>
       )}
@@ -267,6 +293,24 @@ export default function WhiteboardClient() {
       {shortcutsOpen && (
         <ShortcutsDialog onClose={() => setShortcutsOpen(false)} />
       )}
+
+      {/* Template Modals (Phase 2) */}
+      <SaveAsTemplateModal
+        open={saveTemplateOpen}
+        onClose={() => { setSaveTemplateOpen(false); setEditingTemplate(undefined) }}
+        editTemplate={editingTemplate}
+        onSuccess={() => { if (myTemplatesOpen) setMyTemplatesOpen(true) }}
+      />
+      <MyTemplatesPanel
+        open={myTemplatesOpen}
+        onClose={() => setMyTemplatesOpen(false)}
+        onSaveNew={() => { setMyTemplatesOpen(false); setEditingTemplate(undefined); setSaveTemplateOpen(true) }}
+        onEditTemplate={(t) => { setMyTemplatesOpen(false); setEditingTemplate(t); setSaveTemplateOpen(true) }}
+      />
+      <CommunityTemplatesPanel
+        open={communityTemplatesOpen}
+        onClose={() => setCommunityTemplatesOpen(false)}
+      />
 
       {/* Search Overlay */}
       {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} isDark={isDark} />}
