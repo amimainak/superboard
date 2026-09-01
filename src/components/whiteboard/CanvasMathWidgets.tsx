@@ -102,6 +102,12 @@ const ws = (isDark: boolean) => ({
     background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
     color: isDark ? '#e2e8f0' : '#1e293b', outline: 'none' as const,
   },
+  btn: (active: boolean) => ({
+    padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer' as const,
+    background: active ? 'rgba(5,150,105,0.15)' : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'),
+    border: active ? '1px solid rgba(5,150,105,0.4)' : '1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'),
+    color: active ? '#34d399' : (isDark ? '#94a3b8' : '#64748b'),
+  }),
 })
 
 // ---- Color palette for shaded slices ----
