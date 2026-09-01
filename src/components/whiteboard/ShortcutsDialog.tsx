@@ -224,6 +224,7 @@ export function ShortcutsDialog({ onClose }: ShortcutsDialogProps) {
     <div
       className="wb-shortcuts-overlay"
       onClick={onClose}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
       role="dialog"
       aria-modal="true"
       aria-label="Help"
