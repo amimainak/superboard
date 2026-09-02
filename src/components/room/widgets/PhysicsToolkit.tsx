@@ -379,6 +379,11 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
             {sectionTitle('Wave Interference', 'phys-wave-interference')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Two-source wave simulation showing constructive/destructive patterns.</p>
           </div>
+          {/* Batch 2 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Rotational Motion', 'phys-rotational-motion')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Torque, angular velocity, moment of inertia with interactive sliders.</p>
+          </div>
         </>
       )}
     </div>

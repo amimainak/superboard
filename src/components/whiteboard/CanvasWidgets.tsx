@@ -691,6 +691,15 @@ import {
   CanvasStoichiometry,
   CanvasMeiosis,
   CanvasWaveInterference,
+  CanvasSimpleMachines,
+  CanvasSolarSystem,
+  CanvasWaterCycle,
+  CanvasRockCycle,
+  CanvasObservationJournal,
+  CanvasLabReportTemplate,
+  CanvasWeatherPatterns,
+  CanvasRotationalMotion,
+  CanvasDimensionalAnalysis,
   getScienceWidgetDefaultConfig,
   getScienceWidgetDefaultSize,
   SCIENCE_WIDGET_KIND_LABELS,
@@ -708,6 +717,16 @@ import {
   CanvasPerspectiveGrid,
   CanvasStaffNotation,
   CanvasArtworkCompare,
+  CanvasElementsOfArt,
+  CanvasSymmetryDrawing,
+  CanvasRhythmBuilder,
+  CanvasArtistSpotlight,
+  CanvasArtHistoryTimeline,
+  CanvasValueShading,
+  CanvasCompositionalAnalysis,
+  CanvasArtCriticism,
+  CanvasTwoPointPerspective,
+  CanvasChordProgression,
   CanvasTimer,
   CanvasRandomPicker,
   CanvasGraphingTool,
@@ -835,6 +854,16 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'chem-stoichiometry': CanvasStoichiometry as unknown as React.ComponentType<CanvasWidgetProps>,
   'bio-meiosis': CanvasMeiosis as unknown as React.ComponentType<CanvasWidgetProps>,
   'phys-wave-interference': CanvasWaveInterference as unknown as React.ComponentType<CanvasWidgetProps>,
+  // Batch 2 new interactive science widgets
+  'sci-simple-machines': CanvasSimpleMachines as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-solar-system': CanvasSolarSystem as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-water-cycle': CanvasWaterCycle as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-rock-cycle': CanvasRockCycle as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-observation-journal': CanvasObservationJournal as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-lab-report': CanvasLabReportTemplate as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-weather-patterns': CanvasWeatherPatterns as unknown as React.ComponentType<CanvasWidgetProps>,
+  'phys-rotational-motion': CanvasRotationalMotion as unknown as React.ComponentType<CanvasWidgetProps>,
+  'sci-dimensional-analysis': CanvasDimensionalAnalysis as unknown as React.ComponentType<CanvasWidgetProps>,
   // AI widgets
   'ai-generate-similar': GenerateSimilarWidget as unknown as React.ComponentType<CanvasWidgetProps>,
   'ai-reading-level': ReadingLevelAdapterWidget as unknown as React.ComponentType<CanvasWidgetProps>,
@@ -956,18 +985,19 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'lang-punctuation': return getLangWidgetDefaultConfig('lang-punctuation')
     case 'lang-phonics': return getLangWidgetDefaultConfig('lang-phonics')
     case 'lang-sentence-expansion': return getLangWidgetDefaultConfig('lang-sentence-expansion')
-      'lang-sight-words': 'Sight Word Bank',
-  'lang-cvc-sort': 'CVC Word Sort',
-  'lang-fluency-timer': 'Fluency Timer',
-  'lang-argument-organizer': 'Argumentative Writing Organizer',
-  'lang-text-evidence': 'Text Evidence Highlighter',
-  'lang-semicolon-punct': 'Semicolon & Advanced Punctuation',
-  'lang-context-clues-exp': 'Context Clues Explorer',
-  'lang-rhetorical-analysis': 'Rhetorical Analysis Framework',
-  'lang-logical-fallacies': 'Logical Fallacies Reference',
-  'lang-citation-gen': 'MLA/APA Citation Generator',
-  'lang-essay-outline': 'Essay Outline Builder',
-  'lang-tts-preview': 'Text-to-Speech Preview',
+    // Phase 4 English widgets
+    case 'lang-sight-words': return getLangWidgetDefaultConfig('lang-sight-words')
+    case 'lang-cvc-sort': return getLangWidgetDefaultConfig('lang-cvc-sort')
+    case 'lang-fluency-timer': return getLangWidgetDefaultConfig('lang-fluency-timer')
+    case 'lang-argument-organizer': return getLangWidgetDefaultConfig('lang-argument-organizer')
+    case 'lang-text-evidence': return getLangWidgetDefaultConfig('lang-text-evidence')
+    case 'lang-semicolon-punct': return getLangWidgetDefaultConfig('lang-semicolon-punct')
+    case 'lang-context-clues-exp': return getLangWidgetDefaultConfig('lang-context-clues-exp')
+    case 'lang-rhetorical-analysis': return getLangWidgetDefaultConfig('lang-rhetorical-analysis')
+    case 'lang-logical-fallacies': return getLangWidgetDefaultConfig('lang-logical-fallacies')
+    case 'lang-citation-gen': return getLangWidgetDefaultConfig('lang-citation-gen')
+    case 'lang-essay-outline': return getLangWidgetDefaultConfig('lang-essay-outline')
+    case 'lang-tts-preview': return getLangWidgetDefaultConfig('lang-tts-preview')
 // Science widgets
     case 'phys-formula-calc': return getScienceWidgetDefaultConfig('phys-formula-calc')
     case 'phys-wave-sim': return getScienceWidgetDefaultConfig('phys-wave-sim')
@@ -1019,6 +1049,16 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'chem-stoichiometry': return getScienceWidgetDefaultConfig('chem-stoichiometry')
     case 'bio-meiosis': return getScienceWidgetDefaultConfig('bio-meiosis')
     case 'phys-wave-interference': return getScienceWidgetDefaultConfig('phys-wave-interference')
+    // Batch 2 new science widgets
+    case 'sci-simple-machines': return getScienceWidgetDefaultConfig('sci-simple-machines')
+    case 'sci-solar-system': return getScienceWidgetDefaultConfig('sci-solar-system')
+    case 'sci-water-cycle': return getScienceWidgetDefaultConfig('sci-water-cycle')
+    case 'sci-rock-cycle': return getScienceWidgetDefaultConfig('sci-rock-cycle')
+    case 'sci-observation-journal': return getScienceWidgetDefaultConfig('sci-observation-journal')
+    case 'sci-lab-report': return getScienceWidgetDefaultConfig('sci-lab-report')
+    case 'sci-weather-patterns': return getScienceWidgetDefaultConfig('sci-weather-patterns')
+    case 'phys-rotational-motion': return getScienceWidgetDefaultConfig('phys-rotational-motion')
+    case 'sci-dimensional-analysis': return getScienceWidgetDefaultConfig('sci-dimensional-analysis')
     // AI widgets
     case 'ai-generate-similar': return getAIWidgetDefaultConfig('ai-generate-similar')
     case 'ai-reading-level': return getAIWidgetDefaultConfig('ai-reading-level')
@@ -1059,7 +1099,6 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
   case 'arts-two-point-persp': return getArtsWidgetDefaultConfig('arts-two-point-persp')
   case 'arts-chord-progression': return getArtsWidgetDefaultConfig('arts-chord-progression')
 
-    case 'math-flashcards': return getL3WidgetDefaultConfig('math-flashcards')
     default: return {}
   }
 }
@@ -1171,6 +1210,16 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
     case 'chem-stoichiometry': return getScienceWidgetDefaultSize('chem-stoichiometry')
     case 'bio-meiosis': return getScienceWidgetDefaultSize('bio-meiosis')
     case 'phys-wave-interference': return getScienceWidgetDefaultSize('phys-wave-interference')
+    // Batch 2 new science widgets
+    case 'sci-simple-machines': return getScienceWidgetDefaultSize('sci-simple-machines')
+    case 'sci-solar-system': return getScienceWidgetDefaultSize('sci-solar-system')
+    case 'sci-water-cycle': return getScienceWidgetDefaultSize('sci-water-cycle')
+    case 'sci-rock-cycle': return getScienceWidgetDefaultSize('sci-rock-cycle')
+    case 'sci-observation-journal': return getScienceWidgetDefaultSize('sci-observation-journal')
+    case 'sci-lab-report': return getScienceWidgetDefaultSize('sci-lab-report')
+    case 'sci-weather-patterns': return getScienceWidgetDefaultSize('sci-weather-patterns')
+    case 'phys-rotational-motion': return getScienceWidgetDefaultSize('phys-rotational-motion')
+    case 'sci-dimensional-analysis': return getScienceWidgetDefaultSize('sci-dimensional-analysis')
     // AI widgets
     case 'ai-generate-similar': return getAIWidgetDefaultSize('ai-generate-similar')
     case 'ai-reading-level': return getAIWidgetDefaultSize('ai-reading-level')
@@ -1195,10 +1244,10 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
   case 'lang-semicolon-punct': return getLangWidgetDefaultSize('lang-semicolon-punct')
   case 'lang-context-clues-exp': return getLangWidgetDefaultSize('lang-context-clues-exp')
   case 'lang-rhetorical-analysis': return getLangWidgetDefaultSize('lang-rhetorical-analysis')
-  case 'lang-logical-fallacies': return getWidgetDefaultSize('lang-logical-fallacies')
-  case 'lang-citation-gen': return getWidgetDefaultSize('lang-citation-gen')
- case 'lang-essay-outline': return getWidgetDefaultSize('lang-essay-outline')
-  case 'lang-tts-preview': return getWidgetDefaultSize('lang-tts-preview')
+  case 'lang-logical-fallacies': return getLangWidgetDefaultSize('lang-logical-fallacies')
+  case 'lang-citation-gen': return getLangWidgetDefaultSize('lang-citation-gen')
+  case 'lang-essay-outline': return getLangWidgetDefaultSize('lang-essay-outline')
+  case 'lang-tts-preview': return getLangWidgetDefaultSize('lang-tts-preview')
   // Phase 4 Arts
   case 'arts-elements-art': return getArtsWidgetDefaultSize('arts-elements-art')
   case 'arts-symmetry-drawing': return getArtsWidgetDefaultSize('arts-symmetry-drawing')
@@ -1210,7 +1259,6 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
   case 'arts-criticism': return getArtsWidgetDefaultSize('arts-criticism')
   case 'arts-two-point-persp': return getArtsWidgetDefaultSize('arts-two-point-persp')
   case 'arts-chord-progression': return getArtsWidgetDefaultSize('arts-chord-progression')
-
     case 'math-flashcards': return getL3WidgetDefaultSize('math-flashcards')
     default: return { width: 300, height: 300 }
   }
@@ -1228,8 +1276,6 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...MATH_WIDGET_KIND_LABELS,
   // Language widgets
   ...LANG_WIDGET_KIND_LABELS,
-  // Phase 4 English widgets
-  ...PHASE4_LANG_KIND_LABELS,
   // Science widgets
   ...SCIENCE_WIDGET_KIND_LABELS,
   // AI widgets
@@ -1240,8 +1286,4 @@ export const WIDGET_KIND_LABELS: Record<string, string> = {
   ...CLASSROOM_WIDGET_KIND_LABELS,
   // L3 widgets
   ...L3_WIDGET_KIND_LABELS,
-}import {
-  CanvasElementsOfArt, CanvasSymmetryDrawing, CanvasRhythmBuilder, CanvasArtistSpotlight,
-  CanvasArtHistoryTimeline, CanvasValueShading, CanvasCompositionalAnalysis,
-  CanvasArtCriticism, CanvasTwoPointPerspective, CanvasChordProgression,
-} from ./CanvasArtsWidgets
+}

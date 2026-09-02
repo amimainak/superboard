@@ -202,6 +202,39 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
             {sectionTitle('Data Collection', 'earth-data-collection')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create tables, input data, auto-generate bar/line/scatter graphs.</p>
           </div>
+          {/* Batch 2 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Simple Machines Explorer', 'sci-simple-machines')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore 6 simple machines with diagrams, examples, and mechanical advantage.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Solar System', 'sci-solar-system')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Interactive solar system with 8 planets, click for facts.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Water Cycle', 'sci-water-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Evaporation, condensation, precipitation, collection flow diagram.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rock Cycle', 'sci-rock-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Igneous, sedimentary, metamorphic rock cycle triangle.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Observation Journal', 'sci-observation-journal')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Record date, location, weather, and observations.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Weather Patterns', 'sci-weather-patterns')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Fronts, pressure systems, and precipitation types.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Lab Report Template', 'sci-lab-report')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Structured lab report with hypothesis, data, analysis, conclusion.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Dimensional Analysis', 'sci-dimensional-analysis')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Unit conversion tool with step-by-step cancellation.</p>
+          </div>
         </>
       )}
 
@@ -230,6 +263,19 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Sink or Float', 'earth-sink-float')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Select object + liquid → predict outcome → reveal answer.</p>
+          </div>
+          {/* Batch 2 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Simple Machines Explorer', 'sci-simple-machines')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore 6 simple machines with diagrams and examples.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Solar System', 'sci-solar-system')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Interactive solar system with 8 planets.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Observation Journal', 'sci-observation-journal')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Record date, location, weather, and observations.</p>
           </div>
         </>
       )}
@@ -275,6 +321,23 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Data Collection', 'earth-data-collection')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create tables, input data, auto-generate bar/line/scatter graphs.</p>
+          </div>
+          {/* Batch 2 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Water Cycle', 'sci-water-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Evaporation, condensation, precipitation, collection flow diagram.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rock Cycle', 'sci-rock-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Igneous, sedimentary, metamorphic rock cycle triangle.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Weather Patterns', 'sci-weather-patterns')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Fronts, pressure systems, and precipitation types.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Lab Report Template', 'sci-lab-report')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Structured lab report with hypothesis, data, analysis, conclusion.</p>
           </div>
         </>
       )}
@@ -328,6 +391,27 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Data Collection', 'earth-data-collection')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create tables, input data, auto-generate bar/line/scatter graphs.</p>
+          </div>
+          {/* Batch 2 new */}
+          <div className="toolkit-section">
+            {sectionTitle('Water Cycle', 'sci-water-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Evaporation, condensation, precipitation, collection flow diagram.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rock Cycle', 'sci-rock-cycle')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Igneous, sedimentary, metamorphic rock cycle triangle.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Weather Patterns', 'sci-weather-patterns')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Fronts, pressure systems, and precipitation types.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Lab Report Template', 'sci-lab-report')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Structured lab report with hypothesis, data, analysis, conclusion.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Dimensional Analysis', 'sci-dimensional-analysis')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Unit conversion tool with step-by-step cancellation.</p>
           </div>
         </>
       )}

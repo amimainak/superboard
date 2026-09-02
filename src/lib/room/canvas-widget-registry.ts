@@ -83,6 +83,8 @@ const PHYSICS_WIDGETS: CanvasWidgetEntry[] = [
   // Phase 3 new physics widgets
   { kind: 'phys-magnetism', label: 'Magnetism Simulator', toolkit: 'physics', gradeBands: ['6-8', '9-12'], isDefault: true },
   { kind: 'phys-wave-interference', label: 'Wave Interference', toolkit: 'physics', gradeBands: ['9-12'], isDefault: true },
+  // Batch 2 new physics widgets
+  { kind: 'phys-rotational-motion', label: 'Rotational Motion', toolkit: 'physics', gradeBands: ['9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -151,6 +153,19 @@ const LANGUAGE_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'lang-vocab-flashcards', label: 'Vocab Flashcards', toolkit: 'language', gradeBands: ['3-5', '6-8', '9-12'], isDefault: false },
   { kind: 'lang-conjunctions', label: 'Conjunction Junction', toolkit: 'language', gradeBands: ['3-5', '6-8'], isDefault: false },
   { kind: 'lang-prefix-suffix', label: 'Prefix & Suffix', toolkit: 'language', gradeBands: ['3-5', '6-8'], isDefault: true },
+  // Phase 4 English widgets
+  { kind: 'lang-sight-words', label: 'Sight Word Bank', toolkit: 'language', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'lang-cvc-sort', label: 'CVC Word Sort', toolkit: 'language', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'lang-fluency-timer', label: 'Fluency Timer', toolkit: 'language', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'lang-argument-organizer', label: 'Argumentative Writing Organizer', toolkit: 'language', gradeBands: ['6-8', '9-12'], isDefault: true },
+  { kind: 'lang-text-evidence', label: 'Text Evidence Highlighter', toolkit: 'language', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'lang-context-clues-exp', label: 'Context Clues Explorer', toolkit: 'language', gradeBands: ['3-5', '6-8'], isDefault: true },
+  { kind: 'lang-semicolon-punct', label: 'Semicolon & Advanced Punctuation', toolkit: 'language', gradeBands: ['6-8', '9-12'], isDefault: true },
+  { kind: 'lang-rhetorical-analysis', label: 'Rhetorical Analysis Framework', toolkit: 'language', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'lang-logical-fallacies', label: 'Logical Fallacies Reference', toolkit: 'language', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'lang-citation-gen', label: 'MLA/APA Citation Generator', toolkit: 'language', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'lang-essay-outline', label: 'Essay Outline Builder', toolkit: 'language', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'lang-tts-preview', label: 'Text-to-Speech Preview', toolkit: 'language', gradeBands: ['6-8', '9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -181,16 +196,37 @@ const EARTH_SCIENCE_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'earth-sink-float', label: 'Sink or Float', toolkit: 'earthscience', gradeBands: ['K-2', '3-5'], isDefault: true },
   { kind: 'earth-scientific-method', label: 'Scientific Method', toolkit: 'earthscience', gradeBands: ['6-8'], isDefault: true },
   { kind: 'earth-data-collection', label: 'Data Collection', toolkit: 'earthscience', gradeBands: ['6-8'], isDefault: true },
+  // Batch 2 new earth science widgets
+  { kind: 'sci-simple-machines', label: 'Simple Machines Explorer', toolkit: 'earthscience', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'sci-solar-system', label: 'Solar System', toolkit: 'earthscience', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'sci-water-cycle', label: 'Water Cycle', toolkit: 'earthscience', gradeBands: ['3-5', '6-8'], isDefault: true },
+  { kind: 'sci-rock-cycle', label: 'Rock Cycle', toolkit: 'earthscience', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'sci-observation-journal', label: 'Observation Journal', toolkit: 'earthscience', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'sci-weather-patterns', label: 'Weather Patterns', toolkit: 'earthscience', gradeBands: ['6-8'], isDefault: true },
+  { kind: 'sci-dimensional-analysis', label: 'Dimensional Analysis', toolkit: 'earthscience', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'sci-lab-report', label: 'Lab Report Template', toolkit: 'earthscience', gradeBands: ['6-8', '9-12'], isDefault: true },
 ]
 
 // ============================================================
-// Arts Widgets (4 canvas kinds)
+// Arts Widgets (14 canvas kinds)
 // ============================================================
 const ARTS_WIDGETS: CanvasWidgetEntry[] = [
+  // Phase 1 arts widgets
   { kind: 'arts-color-theory', label: 'Color Theory Explorer', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-perspective-grid', label: 'Perspective Grid', toolkit: 'arts', gradeBands: ['6-8', '9-12'], isDefault: true },
   { kind: 'arts-staff-notation', label: 'Staff Notation Builder', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-compare', label: 'Artwork Comparison', toolkit: 'arts', gradeBands: ['6-8', '9-12'], isDefault: true },
+  // Phase 4 arts widgets
+  { kind: 'arts-elements-art', label: 'Elements of Art', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'arts-symmetry-drawing', label: 'Symmetry Drawing Tool', toolkit: 'arts', gradeBands: ['K-2', '3-5'], isDefault: true },
+  { kind: 'arts-rhythm-builder', label: 'Rhythm Builder', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8'], isDefault: true },
+  { kind: 'arts-artist-spotlight', label: 'Artist Spotlight', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8'], isDefault: true },
+  { kind: 'arts-art-timeline', label: 'Art History Timeline', toolkit: 'arts', gradeBands: ['3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'arts-value-shading', label: 'Value & Shading Study', toolkit: 'arts', gradeBands: ['6-8', '9-12'], isDefault: true },
+  { kind: 'arts-compositional', label: 'Compositional Analysis', toolkit: 'arts', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'arts-criticism', label: 'Art Criticism Framework', toolkit: 'arts', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'arts-two-point-persp', label: 'Two-Point Perspective', toolkit: 'arts', gradeBands: ['9-12'], isDefault: true },
+  { kind: 'arts-chord-progression', label: 'Chord Progression Builder', toolkit: 'arts', gradeBands: ['6-8', '9-12'], isDefault: true },
 ]
 
 // ============================================================

@@ -391,6 +391,15 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
             <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sight Word Bank', false, 'lang-sight-words')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('CVC Word Sort', false, 'lang-cvc-sort')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Fluency Timer', false, 'lang-fluency-timer')}
+          </div>
 
           {/* --- Sentence Level --- */}
           <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: 0.8 }}>
@@ -407,6 +416,12 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
             <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Semicolon & Advanced Punctuation', false, 'lang-semicolon-punct')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Context Clues Explorer', false, 'lang-context-clues-exp')}
           </div>
 
           {/* --- Text Level --- */}
@@ -428,6 +443,27 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Reading Passage Analyzer', false, 'lang-reading-analyzer')}
             <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Text Evidence Highlighter', false, 'lang-text-evidence')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Argumentative Writing Organizer', false, 'lang-argument-organizer')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rhetorical Analysis Framework', false, 'lang-rhetorical-analysis')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Logical Fallacies Reference', false, 'lang-logical-fallacies')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('MLA/APA Citation Generator', false, 'lang-citation-gen')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Essay Outline Builder', false, 'lang-essay-outline')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Text-to-Speech Preview', false, 'lang-tts-preview')}
           </div>
 
           {/* Phase 2: Marketplace (installed only) */}
@@ -468,6 +504,15 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Story Elements Map', false, 'lang-story-elements')}
             <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sight Word Bank', false, 'lang-sight-words')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('CVC Word Sort', false, 'lang-cvc-sort')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Fluency Timer', false, 'lang-fluency-timer')}
+          </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
               <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Marketplace Tools</div>
@@ -500,6 +545,9 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
             <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Semicolon & Advanced Punctuation', false, 'lang-semicolon-punct')}
+          </div>
           <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#c084fc', textTransform: 'uppercase', letterSpacing: 0.8 }}>Text & Vocabulary</div>
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
@@ -516,6 +564,18 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Context Clues Explorer', false, 'lang-context-clues-exp')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Text Evidence Highlighter', false, 'lang-text-evidence')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Argumentative Writing Organizer', false, 'lang-argument-organizer')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Text-to-Speech Preview', false, 'lang-tts-preview')}
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
@@ -545,6 +605,12 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rhetorical Analysis Framework', false, 'lang-rhetorical-analysis')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Logical Fallacies Reference', false, 'lang-logical-fallacies')}
+          </div>
           <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: 0.8 }}>Composition</div>
           <div className="toolkit-section">
             {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
@@ -561,6 +627,21 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Reading Passage Analyzer', false, 'lang-reading-analyzer')}
             <div style={{ padding: '0 12px 12px' }}><ReadingPassageAnalyzerPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Semicolon & Advanced Punctuation', false, 'lang-semicolon-punct')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Argumentative Writing Organizer', false, 'lang-argument-organizer')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Essay Outline Builder', false, 'lang-essay-outline')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('MLA/APA Citation Generator', false, 'lang-citation-gen')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Text-to-Speech Preview', false, 'lang-tts-preview')}
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>

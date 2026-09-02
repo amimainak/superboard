@@ -418,6 +418,76 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
             </>}
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Elements of Art', 'all-elements-art')}
+            {!collapsedSections.has('all-elements-art') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Visual reference for the seven elements of art: line, shape, form, texture, value, color, and space.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-elements-art')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Symmetry Drawing Tool', 'all-symmetry-drawing')}
+            {!collapsedSections.has('all-symmetry-drawing') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Mirror drawing tool for teaching symmetry. Your strokes are reflected in real time.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-symmetry-drawing')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rhythm Builder', 'all-rhythm-builder')}
+            {!collapsedSections.has('all-rhythm-builder') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build and play rhythmic patterns using a step sequencer grid.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-rhythm-builder')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Artist Spotlight Cards', 'all-artist-spotlight')}
+            {!collapsedSections.has('all-artist-spotlight') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Famous artist bios and works. Browse cards featuring artists from different movements.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-artist-spotlight')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Art History Timeline', 'all-art-timeline')}
+            {!collapsedSections.has('all-art-timeline') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore major art movements and periods from ancient to contemporary art.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-art-timeline')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Value & Shading Study', 'all-value-shading')}
+            {!collapsedSections.has('all-value-shading') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Practice hatching, cross-hatching, and stippling shading techniques on the canvas.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-value-shading')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Compositional Analysis', 'all-compositional')}
+            {!collapsedSections.has('all-compositional') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Overlay rule of thirds, golden ratio, and other compositional guides on images.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compositional')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Art Criticism Framework', 'all-criticism')}
+            {!collapsedSections.has('all-criticism') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Guided framework: describe, analyze, interpret, and judge artworks systematically.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-criticism')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Two-Point Perspective', 'all-two-point-persp')}
+            {!collapsedSections.has('all-two-point-persp') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Advanced two-point perspective drawing with adjustable vanishing points and guide lines.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-two-point-persp')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Chord Progression Builder', 'all-chord-progression')}
+            {!collapsedSections.has('all-chord-progression') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build and hear chord progressions. Explore common progressions and music theory concepts.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-chord-progression')}</div>
+            </>}
+          </div>
         </>
       )}
 
@@ -440,6 +510,34 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place notes on the staff to create simple melodies.</p>
               <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Elements of Art', 'k5-elements-art')}
+            {!collapsedSections.has('k5-elements-art') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Visual reference for the seven elements of art: line, shape, form, texture, value, color, and space.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-elements-art')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Symmetry Drawing Tool', 'k5-symmetry-drawing')}
+            {!collapsedSections.has('k5-symmetry-drawing') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Mirror drawing tool for teaching symmetry. Your strokes are reflected in real time.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-symmetry-drawing')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rhythm Builder', 'k5-rhythm-builder')}
+            {!collapsedSections.has('k5-rhythm-builder') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build and play rhythmic patterns using a step sequencer grid.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-rhythm-builder')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Artist Spotlight Cards', 'k5-artist-spotlight')}
+            {!collapsedSections.has('k5-artist-spotlight') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Famous artist bios and works. Browse cards featuring artists from different movements.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-artist-spotlight')}</div>
             </>}
           </div>
         </>
@@ -478,6 +576,20 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
             </>}
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Art History Timeline', '68-art-timeline')}
+            {!collapsedSections.has('68-art-timeline') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore major art movements and periods from ancient to contemporary art.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-art-timeline')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Value & Shading Study', '68-value-shading')}
+            {!collapsedSections.has('68-value-shading') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Practice hatching, cross-hatching, and stippling shading techniques on the canvas.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-value-shading')}</div>
+            </>}
+          </div>
         </>
       )}
 
@@ -512,6 +624,34 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('912-compare') && <>
               <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Compositional Analysis', '912-compositional')}
+            {!collapsedSections.has('912-compositional') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Overlay rule of thirds, golden ratio, and other compositional guides on images.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compositional')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Art Criticism Framework', '912-criticism')}
+            {!collapsedSections.has('912-criticism') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Guided framework: describe, analyze, interpret, and judge artworks systematically.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-criticism')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Two-Point Perspective', '912-two-point-persp')}
+            {!collapsedSections.has('912-two-point-persp') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Advanced two-point perspective drawing with adjustable vanishing points and guide lines.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-two-point-persp')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Chord Progression Builder', '912-chord-progression')}
+            {!collapsedSections.has('912-chord-progression') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build and hear chord progressions. Explore common progressions and music theory concepts.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-chord-progression')}</div>
             </>}
           </div>
         </>
