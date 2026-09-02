@@ -1074,31 +1074,7 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'classroom-graphing': return getClassroomWidgetDefaultConfig('classroom-graphing')
     // L3 widgets
     case 'classroom-quiz': return getL3WidgetDefaultConfig('classroom-quiz')
-  // Phase 4 English
-  case 'lang-sight-words': return getLangWidgetDefaultConfig('lang-sight-words')
-  case 'lang-cvc-sort': return getLangWidgetDefaultConfig('lang-cvc-sort')
-  case 'lang-fluency-timer': return getLangWidgetDefaultConfig('lang-fluency-timer')
-  case 'lang-argument-organizer': return getLangWidgetDefaultConfig('lang-argument-organizer')
-  case 'lang-text-evidence': return getLangWidgetDefaultConfig('lang-text-evidence')
-  case 'lang-semicolon-punct': return getLangWidgetDefaultConfig('lang-semicolon-punct')
-  case 'lang-context-clues-exp': return getLangWidgetDefaultConfig('lang-context-clues-exp')
-  case 'lang-rhetorical-analysis': return getLangWidgetDefaultConfig('lang-rhetorical-analysis')
-  case 'lang-logical-fallacies': return getLangWidgetDefaultConfig('lang-logical-fallacies')
-  case 'lang-citation-gen': return getLangWidgetDefaultConfig('lang-citation-gen')
-  case 'lang-essay-outline': return getLangWidgetDefaultConfig('lang-essay-outline')
-  case 'lang-tts-preview': return getLangWidgetDefaultConfig('lang-tts-preview')
-  // Phase 4 Arts
-  case 'arts-elements-art': return getArtsWidgetDefaultConfig('arts-elements-art')
-  case 'arts-symmetry-drawing': return getArtsWidgetDefaultConfig('arts-symmetry-drawing')
-  case 'arts-rhythm-builder': return getArtsWidgetDefaultConfig('arts-rhythm-builder')
-  case 'arts-artist-spotlight': return getArtsWidgetDefaultConfig('arts-artist-spotlight')
-  case 'arts-art-timeline': return getArtsWidgetDefaultConfig('arts-art-timeline')
-  case 'arts-value-shading': return getArtsWidgetDefaultConfig('arts-value-shading')
-  case 'arts-compositional': return getArtsWidgetDefaultConfig('arts-compositional')
-  case 'arts-criticism': return getArtsWidgetDefaultConfig('arts-criticism')
-  case 'arts-two-point-persp': return getArtsWidgetDefaultConfig('arts-two-point-persp')
-  case 'arts-chord-progression': return getArtsWidgetDefaultConfig('arts-chord-progression')
-
+    case 'math-flashcards': return getL3WidgetDefaultConfig('math-flashcards')
     default: return {}
   }
 }

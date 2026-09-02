@@ -582,6 +582,19 @@ const LANG_WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetPro
   'lang-reading-strategies': CanvasReadingStrategies,
   'lang-grammar-diagnostic': CanvasGrammarDiagnostic,
   'lang-spelling-patterns': CanvasSpellingPatterns,
+  // Phase 4 English widgets
+  'lang-sight-words': CanvasSightWordBank,
+  'lang-cvc-sort': CanvasCVCWordSort,
+  'lang-fluency-timer': CanvasFluencyTimer,
+  'lang-argument-organizer': CanvasArgumentOrganizer,
+  'lang-text-evidence': CanvasTextEvidence,
+  'lang-semicolon-punct': CanvasSemicolonPunctuation,
+  'lang-context-clues-exp': CanvasContextCluesExplorer,
+  'lang-rhetorical-analysis': CanvasRhetoricalAnalysis,
+  'lang-logical-fallacies': CanvasLogicalFallacies,
+  'lang-citation-gen': CanvasCitationGenerator,
+  'lang-essay-outline': CanvasEssayOutline,
+  'lang-tts-preview': CanvasTTSPreview,
 }
 
 export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
