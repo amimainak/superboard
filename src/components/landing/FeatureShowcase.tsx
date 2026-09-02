@@ -16,18 +16,18 @@ const FEATURES: {
   tier: TierAvailability;
   tierLabel: string;
 }[] = [
-  { icon: PenTool, title: 'Infinite Whiteboard', description: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', color: 'from-emerald-500 to-teal-500', tier: 'free', tierLabel: 'Free' },
-  { icon: Video, title: 'Live Video Calling', description: 'Built-in face-to-face video with your students. No separate app needed — everything happens on the same screen.', color: 'from-blue-500 to-cyan-500', tier: 'free', tierLabel: 'Free · Limited' },
-  { icon: Sparkles, title: 'Smart Content Tools', description: 'Generate quizzes, plot graphs, balance equations, and create worksheets right from your board. Free users get 10 credits/week.', color: 'from-purple-500 to-indigo-500', tier: 'free', tierLabel: 'Free (limited)' },
-  { icon: Brain, title: 'Handwriting Recognition', description: 'Convert handwritten math into digital equations and diagrams automatically.', color: 'from-cyan-500 to-blue-500', tier: 'pro', tierLabel: 'Pro' },
-  { icon: Download, title: 'Export & Templates', description: 'Save boards as reusable templates, export branded PDFs, and share PNGs with students.', color: 'from-orange-500 to-red-500', tier: 'pro', tierLabel: 'Pro' },
-  { icon: Clock, title: 'Session Recording', description: 'Record lessons for students to review later. Great for absent students or exam revision.', color: 'from-teal-500 to-emerald-500', tier: 'pro', tierLabel: 'Pro · Limited' },
-  { icon: Palette, title: 'White-Label Branding', description: 'Add your agency logo, colors, and custom domain to every lesson board.', color: 'from-pink-500 to-rose-500', tier: 'agency', tierLabel: 'Agency' },
-  { icon: Users, title: 'Multi-Tutor Management', description: 'Manage sub-tutors, track their usage, and assign students from one dashboard.', color: 'from-amber-500 to-orange-500', tier: 'agency', tierLabel: 'Agency' },
-  { icon: BarChart3, title: 'Usage Analytics', description: 'Track lesson hours, student engagement, and teaching effectiveness across your team.', color: 'from-indigo-500 to-violet-500', tier: 'agency', tierLabel: 'Agency' },
-  { icon: Shield, title: 'End-to-End Encryption', description: 'All video calls, board data, and student interactions are encrypted in transit and at rest.', color: 'from-emerald-500 to-green-500', tier: 'free', tierLabel: 'All Plans' },
-  { icon: Globe, title: 'Works on Any Device', description: 'Browser-based with no downloads. Works on tablets, laptops, and phones.', color: 'from-violet-500 to-purple-500', tier: 'free', tierLabel: 'All Plans' },
-  { icon: Zap, title: 'Per-Hour Billing', description: 'Pay only for the hours your tutors actually teach. No flat fees for unused capacity.', color: 'from-yellow-500 to-amber-500', tier: 'agency', tierLabel: 'Agency' },
+  { icon: PenTool, title: 'Infinite Whiteboard', description: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', color: 'from-emerald-600 to-teal-500', tier: 'free', tierLabel: 'Free' },
+  { icon: Video, title: 'Live Video Calling', description: 'Built-in face-to-face video with your students. No separate app needed — everything happens on the same screen.', color: 'from-teal-500 to-cyan-500', tier: 'free', tierLabel: 'Free · Limited' },
+  { icon: Sparkles, title: 'Smart Content Tools', description: 'Generate quizzes, plot graphs, balance equations, and create worksheets right from your board. Free users get 10 credits/week.', color: 'from-cyan-500 to-sky-500', tier: 'free', tierLabel: 'Free (limited)' },
+  { icon: Brain, title: 'Handwriting Recognition', description: 'Convert handwritten math into digital equations and diagrams automatically.', color: 'from-emerald-500 to-teal-400', tier: 'pro', tierLabel: 'Pro' },
+  { icon: Download, title: 'Export & Templates', description: 'Save boards as reusable templates, export branded PDFs, and share PNGs with students.', color: 'from-teal-500 to-emerald-400', tier: 'pro', tierLabel: 'Pro' },
+  { icon: Clock, title: 'Session Recording', description: 'Record lessons for students to review later. Great for absent students or exam revision.', color: 'from-cyan-500 to-teal-400', tier: 'pro', tierLabel: 'Pro · Limited' },
+  { icon: Palette, title: 'White-Label Branding', description: 'Add your agency logo, colors, and custom domain to every lesson board.', color: 'from-amber-500 to-amber-400', tier: 'agency', tierLabel: 'Agency' },
+  { icon: Users, title: 'Multi-Tutor Management', description: 'Manage sub-tutors, track their usage, and assign students from one dashboard.', color: 'from-emerald-600 to-emerald-400', tier: 'agency', tierLabel: 'Agency' },
+  { icon: BarChart3, title: 'Usage Analytics', description: 'Track lesson hours, student engagement, and teaching effectiveness across your team.', color: 'from-teal-500 to-cyan-500', tier: 'agency', tierLabel: 'Agency' },
+  { icon: Shield, title: 'End-to-End Encryption', description: 'All video calls, board data, and student interactions are encrypted in transit and at rest.', color: 'from-emerald-600 to-teal-500', tier: 'free', tierLabel: 'All Plans' },
+  { icon: Globe, title: 'Works on Any Device', description: 'Browser-based with no downloads. Works on tablets, laptops, and phones.', color: 'from-cyan-500 to-sky-500', tier: 'free', tierLabel: 'All Plans' },
+  { icon: Zap, title: 'Per-Hour Billing', description: 'Pay only for the hours your tutors actually teach. No flat fees for unused capacity.', color: 'from-amber-400 to-amber-500', tier: 'agency', tierLabel: 'Agency' },
 ];
 
 const tierStyles: Record<TierAvailability, { badge: string; text: string }> = {

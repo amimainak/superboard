@@ -210,7 +210,7 @@ function LandingPage() {
   return (
     <main className="min-h-screen bg-white">
       {/* ===== NAVBAR ===== */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+      <nav className="fixed top-0 left-0 right-0 z-50 nav-glass">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center shadow-md shadow-emerald-500/20">
@@ -259,9 +259,11 @@ function LandingPage() {
       </nav>
 
       {/* ===== HERO SECTION ===== */}
-      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-white">
-        {/* Subtle grid — no blur blobs */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.6px, transparent 0.6px)', backgroundSize: '24px 24px' }} />
+      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-section-warm">
+        {/* Brand dot-grid pattern */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
+        {/* Ambient glow top-right */}
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.07) 0%, transparent 60%)' }} />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -275,7 +277,7 @@ function LandingPage() {
 
               <h1 className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.1] tracking-tight text-gray-900 animate-fade-in-up">
                 Run your entire tutoring business{' '}
-                <span className="bg-gradient-to-r from-emerald-600 via-teal-500 to-sky-500 bg-clip-text text-transparent">
+                <span className="gradient-text-brand">
                   from one screen
                 </span>
               </h1>
@@ -303,7 +305,7 @@ function LandingPage() {
 
             {/* Right: Hero Illustration */}
             <div className="hidden md:flex justify-center animate-fade-in-up-delay-1">
-              <div className="relative w-full max-w-lg">
+              <div className="relative w-full max-w-lg hero-card-glow">
                 {/* Canvas card */}
                 <div className="rounded-2xl border border-gray-200 bg-white shadow-xl p-4 relative z-10">
                   {/* Mini toolbar */}
@@ -343,8 +345,8 @@ function LandingPage() {
                   </div>
                 </div>
                 {/* Decorative cards behind */}
-                <div className="absolute -top-3 -right-3 w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-50 -z-10 rotate-6 opacity-60" />
-                <div className="absolute -bottom-3 -left-3 w-20 h-20 rounded-xl bg-gradient-to-br from-sky-100 to-blue-50 -z-10 -rotate-6 opacity-60" />
+                <div className="absolute -top-3 -right-3 w-24 h-24 rounded-xl bg-gradient-to-br from-emerald-200 to-teal-100 -z-10 rotate-6 opacity-50" />
+                <div className="absolute -bottom-3 -left-3 w-20 h-20 rounded-xl bg-gradient-to-br from-cyan-200 to-sky-100 -z-10 -rotate-6 opacity-50" />
               </div>
             </div>
           </div>
@@ -367,14 +369,14 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-500 to-teal-500' },
-              { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-sky-500 to-blue-500' },
-              { icon: Brain, title: 'Smart Subject Tools', desc: 'Plot graphs, balance equations, generate quizzes, and use subject-specific tools — available on the Pro plan.', gradient: 'from-purple-500 to-violet-500' },
-              { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-amber-500 to-orange-500' },
-              { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-rose-500 to-pink-500' },
-              { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-indigo-500 to-blue-500' },
+              { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-600 to-teal-500' },
+              { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-teal-500 to-cyan-500' },
+              { icon: Brain, title: 'Smart Subject Tools', desc: 'Plot graphs, balance equations, generate quizzes, and use subject-specific tools — available on the Pro plan.', gradient: 'from-cyan-500 to-sky-500' },
+              { icon: Calculator, title: 'Math Toolkit', desc: 'Graph functions, solve equations, and visualize geometry. Purpose-built for math tutoring.', gradient: 'from-emerald-500 to-emerald-400' },
+              { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-teal-500 to-emerald-400' },
+              { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-sky-500 to-cyan-500' },
             ].map((item) => (
-              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-200/60 transition-all hover:-translate-y-1">
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
                   <item.icon className="w-5 h-5 text-white" />
                 </div>
@@ -387,7 +389,7 @@ function LandingPage() {
       </section>
 
       {/* ===== TRUST SIGNALS ===== */}
-      <section className="py-16 bg-gray-50/80 border-y border-gray-100">
+      <section className="py-16 bg-section-cool border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
             {[
@@ -408,7 +410,7 @@ function LandingPage() {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section id="how-it-works" className="py-20 md:py-28 bg-gray-50/80">
+      <section id="how-it-works" className="py-20 md:py-28 bg-section-warm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
@@ -444,7 +446,7 @@ function LandingPage() {
       </section>
 
       {/* ===== PERFECT FOR EVERY TUTOR ===== */}
-      <section className="py-20 md:py-28 bg-white">
+      <section className="py-20 md:py-28 bg-section-cool">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
@@ -454,9 +456,9 @@ function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-500 to-teal-500' },
-              { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-orange-500' },
-              { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-sky-500 to-cyan-500' },
+              { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-600 to-teal-500' },
+              { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-amber-400' },
+              { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-teal-500 to-cyan-500' },
             ].map((item) => (
               <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
@@ -471,7 +473,7 @@ function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section id="pricing" className="py-20 md:py-28 bg-gray-50/80">
+      <section id="pricing" className="py-20 md:py-28 bg-section-warm">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 mb-4">
@@ -671,24 +673,24 @@ function LandingPage() {
       {/* ===== FAQ ===== */}
       <FAQSection />
 
-      {/* ===== FINAL CTA — honest, specific, creates urgency ===== */}
-      <section className="py-20 md:py-28 bg-gradient-to-br from-emerald-50 via-white to-sky-50">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-6">
-            <Check className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="text-xs font-semibold text-emerald-700">No credit card required to start</span>
+      {/* ===== FINAL CTA — dark, dramatic, brand signature ===== */}
+      <section className="py-20 md:py-28 bg-cta-dark">
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 mb-6">
+            <Check className="w-3.5 h-3.5 text-emerald-300" />
+            <span className="text-xs font-semibold text-emerald-200">No credit card required to start</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-4">
             Try the free plan today
           </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto leading-relaxed">
+          <p className="text-lg text-emerald-100/80 mb-8 max-w-xl mx-auto leading-relaxed">
             Create a room, share the link with your student, and start teaching on an interactive whiteboard with video calling. When you need more — save boards, export PDFs, or use smart tools — upgrade to Pro in one click.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Button className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12" onClick={() => setShowAuth('register')}>
+            <Button className="rounded-xl bg-white text-emerald-700 font-semibold shadow-lg shadow-black/20 hover:shadow-black/30 transition-all hover:-translate-y-0.5 text-[15px] px-8 h-12 hover:bg-white/95" onClick={() => setShowAuth('register')}>
               Start Teaching Free <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
-            <Button variant="outline" className="rounded-xl border-gray-200 font-medium text-[15px] px-6 h-12" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Button variant="outline" className="rounded-xl border-white/20 text-white font-medium text-[15px] px-6 h-12 hover:bg-white/10 hover:border-white/30" onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}>
               Compare Plans
             </Button>
           </div>

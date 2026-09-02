@@ -50,7 +50,7 @@ const TESTIMONIALS = [
 
 export function SocialProofSection() {
   return (
-    <section className="py-20 px-6 bg-gray-50/50">
+    <section className="py-20 px-6 bg-section-cool">
       <div className="max-w-6xl mx-auto">
         {/* Platform Capabilities — not inflated stats */}
         <div className="text-center mb-16">
