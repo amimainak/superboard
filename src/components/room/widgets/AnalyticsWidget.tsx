@@ -48,8 +48,10 @@ export function AnalyticsWidget({ roomId }: { roomId: string }) {
       try {
         setLoading(true)
         const res = await fetch('/api/analytics')
-        if (!res.ok) throw new Error('Failed to load analytics')
-        const json = await res.json()
+        if (!res.ok) throw new Error('Unable to load analytics. Please sign in and try again.')
+        const text = await res.text()
+        let json: AnalyticsData
+        try { json = JSON.parse(text) } catch { throw new Error('Invalid response from server.') }
         if (!cancelled) setData(json)
       } catch (err: unknown) {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Unknown error')

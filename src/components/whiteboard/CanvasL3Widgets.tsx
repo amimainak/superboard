@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 
@@ -16,29 +16,18 @@ interface CanvasWidgetProps {
   isDark: boolean
 }
 
-/** Immediate config updater (no debounce — click interactions need instant feedback) */
+/** Immediate config updater — syncs on every call, no batching.
+ * Used by L3 widgets where state mutations must not be lost. */
 function useConfigUpdater(elementId: string) {
   const updateElement = useWhiteboardStore((s) => s.updateElement)
-  const pendingRef = useRef<Record<string, unknown>>({})
-  const rafRef = useRef<number>(0)
 
   const updateConfig = useCallback((patch: Record<string, unknown>) => {
-    Object.assign(pendingRef.current, patch)
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    rafRef.current = requestAnimationFrame(() => {
-      updateElement(elementId, { config: { ...pendingRef.current } } as Partial<WidgetElement>)
-      pendingRef.current = {}
-    })
+    updateElement(elementId, { config: patch } as Partial<WidgetElement>)
   }, [updateElement, elementId])
-
-  React.useEffect(() => () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-  }, [])
 
   return updateConfig
 }
 
-import { useRef, useEffect } from 'react'
 
 // ============================================================
 // L3 QUIZ WIDGET

@@ -147,6 +147,7 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
       <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
       {widgetKind && (
         <button
+          className="toolkit-add-to-board-btn"
           onClick={() => addToBoard(widgetKind)}
           style={{
             padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,

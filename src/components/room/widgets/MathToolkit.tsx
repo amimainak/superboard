@@ -520,6 +520,23 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div style={{ padding: '0 12px 12px' }}><FlashcardsPanel isDark={isDark} /></div>
           {addBoardBtn('Add to Board', function() { addToBoard('math-flashcards', {}) })}</div>
 
+          {/* Phase 3: K-5 New Widgets */}
+          <div className="toolkit-section">{sectionTitle('🪙 Coin Counter')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag coins onto the canvas. Auto-totals with &quot;make $X&quot; challenges.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-coin-counter', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🕐 Analog Clock')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Movable hour/minute hands with digital time display.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-analog-clock', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🧩 Pattern Blocks')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag and rotate hexagons, trapezoids, rhombuses, triangles, squares.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-pattern-blocks', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('📊 Picture Graph')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Choose categories, add data, renders pictograph with emoji icons.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-picture-graph', {}) })}</div>
+
 
         </>
       )}
@@ -608,6 +625,19 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div style={{ padding: '0 12px 12px' }}><FormulaPanel band="middle" isDark={isDark} /></div>
           {addBoardBtn('Add to Board', function() { addToBoard('math-formula-reference', { band: 'middle' }) })}</div>
 
+          {/* Phase 3: 6-8 New Widgets */}
+          <div className="toolkit-section">{sectionTitle('📈 Stats Toolbox')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input data → mean, median, mode, range, box plot, histogram.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-stats-toolbox', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('📍 Point Plotter')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Click to place points, connect to make lines, show slope/equation.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-point-plotter', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('⚖️ Ratio Table')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input ratio → auto-generates equivalent ratios with bar model.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-ratio-table', {}) })}</div>
+
 
         </>
       )}
@@ -681,36 +711,6 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div className="toolkit-section">{sectionTitle('Proof Builder')}
           <div style={{ padding: '0 12px 12px' }}><ProofPanel isDark={isDark} /></div>
           {addBoardBtn('Add to Board', function() { addToBoard('math-proof-builder', {}) })}</div>
-
-          {/* Phase 3: K-5 New Widgets */}
-          <div className="toolkit-section">{sectionTitle('🪙 Coin Counter')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag coins onto the canvas. Auto-totals with &quot;make $X&quot; challenges.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-coin-counter', {}) })}</div>
-
-          <div className="toolkit-section">{sectionTitle('🕐 Analog Clock')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Movable hour/minute hands with digital time display.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-analog-clock', {}) })}</div>
-
-          <div className="toolkit-section">{sectionTitle('🧩 Pattern Blocks')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag and rotate hexagons, trapezoids, rhombuses, triangles, squares.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-pattern-blocks', {}) })}</div>
-
-          <div className="toolkit-section">{sectionTitle('📊 Picture Graph')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Choose categories, add data, renders pictograph with emoji icons.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-picture-graph', {}) })}</div>
-
-          {/* Phase 3: 6-8 New Widgets */}
-          <div className="toolkit-section">{sectionTitle('📈 Stats Toolbox')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input data → mean, median, mode, range, box plot, histogram.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-stats-toolbox', {}) })}</div>
-
-          <div className="toolkit-section">{sectionTitle('📍 Point Plotter')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Click to place points, connect to make lines, show slope/equation.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-point-plotter', {}) })}</div>
-
-          <div className="toolkit-section">{sectionTitle('⚖️ Ratio Table')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input ratio → auto-generates equivalent ratios with bar model.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-ratio-table', {}) })}</div>
 
           {/* Phase 3: 9-12 New Widgets */}
           <div className="toolkit-section">{sectionTitle('📐 Multi-Function Plotter')}
