@@ -261,9 +261,9 @@ function LandingPage() {
       {/* ===== HERO SECTION ===== */}
       <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-section-warm">
         {/* Brand dot-grid pattern */}
-        <div className="absolute inset-0 pointer-events-none opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(circle, #059669 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }} />
+        <div className="absolute inset-0 pointer-events-none bg-dot-grid" />
         {/* Ambient glow top-right */}
-        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.07) 0%, transparent 60%)' }} />
+        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 60%)' }} />
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid md:grid-cols-2 gap-12 items-center">

@@ -470,6 +470,7 @@
 .bg-dot-grid {
   background-image: radial-gradient(circle, var(--brand-emerald) 0.5px, transparent 0.5px);
   background-size: 24px 24px;
+  opacity: 0.12;
 }
 
 /* Soft gradient mesh for section backgrounds */
