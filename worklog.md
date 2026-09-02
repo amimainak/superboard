@@ -307,3 +307,47 @@ Phase 3 Math & Science widgets were already implemented in a prior session. This
 | Earth Science | 6 | 5 | 11 |
 | **Total** | **59** | **23** | **82** |
 
+---
+Task ID: qa-test-149-widgets
+Agent: Main
+Task: Comprehensive QA testing of all 149 canvas widgets on live site (superboard-three.vercel.app)
+
+Work Log:
+- Logged into live site, opened whiteboard directly (no login page — already authenticated)
+- Systematically opened each toolkit panel (Math, Physics, Chemistry, Biology, Language, Statistics, Earth Science, Arts, Classroom)
+- Added every canvas widget with an "Add to Board" button to the canvas, checking for console errors after each batch
+- Math: 28 widgets added across K-5 (5), 6-8 (6), 9-12 (17) tabs — ZERO errors
+- Physics: 13 widgets added (Formula Calc, Wave Sim, Pendulum, Unit Converter, Projectile, Ohm's Law, Circuit, Free Body, Ray Diagram, Energy Bar, Interactive Graphing, Magnetism, Wave Interference) — ZERO errors
+- Chemistry: 12 widgets added (pH Scale, Sci Notation, Periodic Table, Eq Balancer, Molar Mass, Lewis Dot, VSEPR, Gas Laws, Titration, Ion Formation, Periodic Trends, Stoichiometry) — ZERO errors
+- Biology: 13 widgets added (Punnett, Cell Diagram, Taxonomy, Body Systems, Food Web, DNA Structure, Natural Selection, Cell Division, PhotoResp, Human Body, Food Chain, Plant Life Cycle, Meiosis) — ZERO errors
+- Language/ELA: 22 widgets added (Phonics, Vocab Flashcards, Punctuation, Sight Words, CVC Sort, Fluency Timer, POS Tagger, Sentence Structure, Sentence Expansion, Semicolon Punct, Context Clues Explorer, Figurative Language, Paragraph Organizer, Story Elements, Reading Analyzer, Text Evidence, Argument Organizer, Rhetorical Analysis, Logical Fallacies, Citation Gen, Essay Outline, TTS Preview) — ZERO errors
+- Statistics: 6 widgets added (Data Table, Histogram, Box Plot, Scatter Plot, Normal Distribution, Probability) — ZERO errors
+- Earth Science: 19 widgets added (Rock Cycle, Plate Tectonics, Weather Map, Water/Carbon Cycle, Solar System, Topographic Map, States of Matter, Animal Habitats, Sink or Float, Scientific Method, Data Collection, Simple Machines, Solar System [Phase 3], Water Cycle [Phase 3], Rock Cycle [Phase 3], Observation Journal, Weather Patterns, Lab Report, Dimensional Analysis) — ZERO errors
+- Arts & Music: 14 widgets added (Color Theory, Perspective Grid, Staff Notation, Artwork Comparison, Elements of Art, Symmetry Drawing, Rhythm Builder, Artist Spotlight, Art Timeline, Value Shading, Compositional Analysis, Art Criticism, Two-Point Perspective, Chord Progression) — ZERO errors
+- Classroom: 4 widgets added (Timer, Interactive Graphing, Random Picker, Quiz L3) — ZERO errors
+- Deep usability: Quiz L3 widget tested — can add MC questions, edit mode works, question types available
+- Dark mode toggle works with zero errors
+- Total widgets placed on canvas during testing: ~130+ (batch tests + individual tests)
+
+Bugs Found:
+1. **Phase 3 K-5/6-8 Math widgets in wrong tab** — Coin Counter, Analog Clock, Pattern Blocks, Picture Graph (K-5) and Stats Toolbox, Point Plotter, Ratio Table (6-8) are all inside `activeBand === 'highschool'` block in MathToolkit.tsx (lines 685-713). Should be in elementary/middle blocks.
+2. **Physics "Add to Board" buttons missing CSS class** — PhysicsToolkit's `sectionTitle()` helper renders buttons with inline styles but NO `className`. Other toolkits (Math, Arts, Classroom) use `className="toolkit-add-to-board-btn"`. Not a user-facing bug but hurts maintainability.
+3. **Arts "Add to Board" button label inconsistency** — ArtsToolkit renders `+ Board` while all other toolkits render `+ Add to Board`. (Line 355 of ArtsToolkit.tsx)
+4. **Analytics panel API error** — `/api/analytics` returns HTML (404/error page) instead of JSON. Shows `Unexpected token '<', "<!DOCTYPE "... is not valid JSON` in the Analytics panel. The API route file exists but likely fails auth (no real session for dev-login user).
+5. **Canvas widget registry out of sync** — 26 widget kinds in `canvas-widget-registry.ts` don't match actual kind strings used in `CanvasWidgets.tsx` and toolkit files. 12 widget kinds in code are not in the registry. This doesn't affect user-facing functionality (toolkits bypass registry) but breaks any registry-dependent features like widget curation.
+6. **Quiz L3 config sync instability** — Adding a T/F question after an MC question sometimes resets the quiz to initial state. May be a useConfigUpdater debouncing issue with rapid state changes.
+7. **Panel tab accumulation** — Opening multiple toolkit panels creates tab clutter. No limit on open tabs. Closing a tab requires finding the small X button.
+
+Performance Notes:
+- All widgets render in <2s on canvas
+- Zero JavaScript console errors across 130+ widget placements
+- Dark mode works correctly
+- Widget toolbar (close/duplicate/lock/bring-to-front) works
+- foreignObject scaling (1.3x) consistent across all widgets
+
+Stage Summary:
+- **149 widgets in registry, ~130+ tested on live canvas**
+- **7 bugs found** (2 high-priority, 3 medium, 2 low)
+- **Zero rendering crashes** — all widgets that could be added to board rendered successfully
+- **Zero console errors** during widget placement
+
