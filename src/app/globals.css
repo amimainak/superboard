@@ -164,30 +164,30 @@
 .auth-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
+  filter: blur(100px);
   pointer-events: none;
-  opacity: 0.4;
+  opacity: 1;
 }
 .auth-blob-1 {
-  width: 400px;
-  height: 400px;
-  background: rgba(5, 150, 105, 0.15);
-  top: -10%;
-  right: -5%;
+  width: 500px;
+  height: 500px;
+  background: rgba(5, 150, 105, 0.25);
+  top: -15%;
+  right: -10%;
   animation: blob-float-1 12s ease-in-out infinite;
 }
 .auth-blob-2 {
-  width: 300px;
-  height: 300px;
-  background: rgba(8, 145, 178, 0.12);
-  bottom: -8%;
-  left: -5%;
+  width: 400px;
+  height: 400px;
+  background: rgba(8, 145, 178, 0.2);
+  bottom: -12%;
+  left: -8%;
   animation: blob-float-2 15s ease-in-out infinite;
 }
 .auth-blob-3 {
-  width: 200px;
-  height: 200px;
-  background: rgba(52, 211, 153, 0.08);
+  width: 300px;
+  height: 300px;
+  background: rgba(52, 211, 153, 0.15);
   top: 40%;
   left: 20%;
   animation: blob-float-3 10s ease-in-out infinite;
@@ -208,14 +208,15 @@
   50% { transform: translate(25px, -20px) scale(1.1); }
 }
 
-/* Subtle dot-grid background — brand signature pattern */
+/* Dot-grid background — brand signature pattern */
 .auth-page::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(52, 211, 153, 0.08) 0.5px, transparent 0.5px);
+  background-image: radial-gradient(circle, rgba(52, 211, 153, 0.25) 0.7px, transparent 0.7px);
   background-size: 28px 28px;
   pointer-events: none;
+  z-index: 0;
 }
 
 /* Ambient glow behind the card */
@@ -225,10 +226,11 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(5, 150, 105, 0.08) 0%, transparent 70%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(5, 150, 105, 0.18) 0%, rgba(8, 145, 178, 0.08) 40%, transparent 70%);
   pointer-events: none;
+  z-index: 0;
 }
 
 .auth-card {
@@ -883,6 +885,169 @@ body {
    Extracts 400+ lines of inline styles from dashboard/page.tsx
    into semantic CSS classes.
    ============================================================ */
+
+/* Dashboard layout wrapper (full-bleed dark bg, not max-width) */
+.dash-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  font-family: inherit;
+}
+
+/* Dashboard nav bar */
+.dash-nav {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.dash-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-nav-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #059669, #0891b2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-nav-brand {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+/* Action row */
+.dash-action-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+/* New room form */
+.dash-form-card {
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.dash-form-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.dash-form-label {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+
+.dash-form-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+  font-size: 14px;
+}
+
+.dash-form-select option {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+/* Two column grid */
+.dash-grid-2col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Widget marketplace grid (inline override) */
+.dash-widget-grid-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+/* Inline widget card (horizontal layout) */
+.dash-widget-card-inline {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color var(--duration-normal) var(--ease-out);
+}
+
+/* Upgrade success banner */
+.dash-success-banner {
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(5, 150, 105, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dash-success-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-success-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-success-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 2px;
+}
+
+.dash-success-desc {
+  font-size: 13px;
+  color: #94a3b8;
+}
 
 .dash-page {
   min-height: 100vh;
