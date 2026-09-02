@@ -566,3 +566,31 @@ Stage Summary:
 - 7 files changed, 840 insertions, 180 deletions
 - Commit: 64fe447 pushed to main
 - Vercel deployment: https://superboard-three.vercel.app/ — live and healthy
+
+---
+Task ID: phase-b-review-fix
+Agent: Main
+Task: Review Phase B implementation, identify issues, fix them
+
+Work Log:
+- Screenshoted live login, signup, and home pages via agent-browser
+- VLM analysis confirmed: dot-grid pattern, ambient glow, and gradient blobs are NOT visible on live site
+- Browser computed style analysis revealed: CSS classes ARE deployed and applied, but opacity values are too low (effective opacity 0.03–0.06 on dark bg)
+- Root cause 1: Auth page effects invisible — blob opacity 0.4 × bg opacity 0.08–0.15 = effective 0.03–0.06
+- Root cause 2: Dashboard page (540 lines) still uses inline styles despite 38 CSS classes existing in globals.css
+- Root cause 3: Landing page (with nav-glass, gradient-text-brand, hero-card-glow) is unreachable — middleware redirects /dashboard to /login
+- Fixed auth effects: blob opacity 0.4→1, bg opacity 2-3x increase, blur 80→100px, blob sizes 200-400→300-500px
+- Fixed dot-grid: opacity 0.08→0.25, dot size 0.5px→0.7px
+- Fixed ambient glow: opacity 0.08→0.18, added dual-color gradient, size 500→600px, added z-index
+- Added 160 lines of new dashboard CSS classes (dash-layout, dash-nav, dash-form-card, dash-grid-2col, dash-success-banner, etc.)
+- Migrated dashboard/page.tsx from inline styles to CSS classes, then replaced with AuthGate to enable landing page routing
+- Updated middleware: added /dashboard and /pricing to public routes, supports prefix matching for /dashboard/*
+- Build: 0 errors, 0 warnings
+- Verified build output contains correct new values (blob opacity 1, dot-grid 0.25, ambient glow 0.18)
+- Vercel auto-deploy not triggering from GitHub push (no CLI token available in this session)
+
+Stage Summary:
+- 3 files changed: globals.css (+170 lines), middleware.ts (public routes), dashboard/page.tsx (rewritten)
+- Commit: 2e70c91 pushed to main
+- Vercel deploy pending — user needs to trigger deploy manually or check GitHub integration
+- All changes verified correct in local build output
