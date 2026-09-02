@@ -30,8 +30,63 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* ============================================================
+   DESIGN TOKENS — Spacing, Radius, Transitions
+   ============================================================ */
 :root {
+  /* --- Radius scale (4px base grid) --- */
   --radius: 0.75rem;
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 9999px;
+
+  /* --- Spacing scale (4px base) --- */
+  --space-0: 0;
+  --space-0.5: 0.125rem;
+  --space-1: 0.25rem;
+  --space-1.5: 0.375rem;
+  --space-2: 0.5rem;
+  --space-2.5: 0.625rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* --- Transition presets --- */
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 300ms;
+  --transition-fast: all 120ms var(--ease-out);
+  --transition-normal: all 180ms var(--ease-out);
+  --transition-slow: all 300ms var(--ease-out);
+
+  /* --- Shadow tokens --- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+
+  /* --- Brand colors (constant, not theme-dependent) --- */
+  --brand-emerald: #059669;
+  --brand-emerald-light: #10b981;
+  --brand-emerald-glow: #34d399;
+  --brand-cyan: #0891b2;
+  --brand-cyan-light: #06b6d4;
+
+  /* --- shadcn theme tokens --- */
   --background: #f8fafc;
   --foreground: #0f172a;
   --card: #ffffff;
@@ -92,7 +147,195 @@
   }
 }
 
-/* Whiteboard-specific styles */
+/* ============================================================
+   PHANTOM CLASS FIXES — Previously used but never defined
+   These classes were referenced in 27+ files but had no CSS rules,
+   causing buttons to appear unstyled and animations to not play.
+   ============================================================ */
+
+/* --- Brand gradient (primary CTA, icons, badges) --- */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--brand-emerald), var(--brand-cyan));
+}
+
+/* --- Hero section gradient (dashboard welcome banners) --- */
+.gradient-hero {
+  background: linear-gradient(135deg, #064e3b 0%, #0f766e 50%, #0e7490 100%);
+}
+
+/* --- Stat card gradients (dashboard usage cards) --- */
+.stat-gradient-sparkles {
+  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+}
+
+.stat-gradient-video {
+  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+}
+
+.stat-gradient-recordings {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+/* --- Card hover lift effect --- */
+.card-hover {
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ============================================================
+   ENTRANCE ANIMATIONS — Fade-in-up with staggered delays
+   Used on landing page, dashboard, auth gate, student dashboard.
+   Replaces the previously undefined animate-fade-in-up classes.
+   ============================================================ */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s var(--ease-out) both;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fade-in-up 0.5s var(--ease-out) 0.1s both;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fade-in-up 0.5s var(--ease-out) 0.2s both;
+}
+
+.animate-fade-in-up-delay-3 {
+  animation: fade-in-up 0.5s var(--ease-out) 0.3s both;
+}
+
+/* --- Pulsing glow effect (auth gate logo) --- */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(5, 150, 105, 0.25),
+                0 0 40px rgba(5, 150, 105, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.4),
+                0 0 60px rgba(16, 185, 129, 0.15);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   WHITEBOARD THEME VARIABLE BRIDGE
+   Custom properties that map the whiteboard chrome colors to CSS
+   variables, set on .wb-grid-dark / .wb-grid-light containers.
+   This enables future migration from BEM dark/light class duplication
+   to a single variable-driven system — purely additive, no existing
+   classes are changed.
+   ============================================================ */
+
+.wb-grid-dark {
+  /* Surface */
+  --wb-surface: rgba(14, 14, 16, 0.92);
+  --wb-surface-solid: #0e0e10;
+  --wb-surface-hover: rgba(255, 255, 255, 0.07);
+  --wb-surface-active: rgba(16, 185, 129, 0.15);
+  /* Border */
+  --wb-border: rgba(255, 255, 255, 0.06);
+  --wb-border-subtle: rgba(255, 255, 255, 0.04);
+  --wb-border-active: rgba(52, 211, 153, 0.12);
+  /* Text */
+  --wb-text: #e5e7eb;
+  --wb-text-muted: #a1a1aa;
+  --wb-text-dim: #71717a;
+  --wb-text-accent: #b4c0d4;
+  /* Accent */
+  --wb-accent: #34d399;
+  --wb-accent-bg: rgba(16, 185, 129, 0.15);
+  --wb-accent-glow: 0 0 16px rgba(16, 185, 129, 0.2),
+                      inset 0 0 8px rgba(16, 185, 129, 0.05);
+  --wb-accent-subtle: rgba(52, 211, 153, 0.5);
+  /* Shadows */
+  --wb-shadow-soft: 0 0 20px rgba(0, 0, 0, 0.4);
+  --wb-shadow-flyout: 0 20px 60px rgba(0, 0, 0, 0.7),
+                        0 0 0 1px rgba(255, 255, 255, 0.05),
+                        0 0 30px rgba(16, 185, 129, 0.06);
+  --wb-shadow-menu: 0 12px 40px rgba(0, 0, 0, 0.6),
+                      0 0 0 1px rgba(255, 255, 255, 0.04),
+                      0 0 20px rgba(16, 185, 129, 0.03);
+  /* Backdrop */
+  --wb-backdrop: blur(20px) saturate(1.4);
+  /* Canvas */
+  --wb-canvas-bg: #0f172a;
+}
+
+.wb-grid-light {
+  /* Surface */
+  --wb-surface: rgba(255, 255, 255, 0.95);
+  --wb-surface-solid: #ffffff;
+  --wb-surface-hover: rgba(0, 0, 0, 0.04);
+  --wb-surface-active: rgba(16, 185, 129, 0.10);
+  /* Border */
+  --wb-border: rgba(0, 0, 0, 0.06);
+  --wb-border-subtle: rgba(0, 0, 0, 0.03);
+  --wb-border-active: rgba(16, 185, 129, 0.08);
+  /* Text */
+  --wb-text: #111827;
+  --wb-text-muted: #475569;
+  --wb-text-dim: #64748b;
+  --wb-text-accent: #4b5563;
+  /* Accent */
+  --wb-accent: #34d399;
+  --wb-accent-bg: rgba(16, 185, 129, 0.10);
+  --wb-accent-glow: 0 0 12px rgba(16, 185, 129, 0.12);
+  --wb-accent-subtle: rgba(52, 211, 153, 0.4);
+  /* Shadows */
+  --wb-shadow-soft: 0 0 8px rgba(0, 0, 0, 0.06);
+  --wb-shadow-flyout: 0 16px 48px rgba(0, 0, 0, 0.12),
+                        0 0 0 1px rgba(0, 0, 0, 0.03);
+  --wb-shadow-menu: 0 12px 32px rgba(0, 0, 0, 0.12);
+  /* Backdrop */
+  --wb-backdrop: blur(12px);
+  /* Canvas */
+  --wb-canvas-bg: #f8fafc;
+}
+
+/* ============================================================
+   ACCESSIBILITY — Focus-visible rings for whiteboard chrome
+   Whiteboard tool buttons, top bar icons, and pocket buttons
+   previously had NO focus indicators. These rings use the
+   theme accent color and are only shown on keyboard navigation.
+   ============================================================ */
+
+.wb-tool-btn:focus-visible,
+.wb-ico:focus-visible,
+.wb-pocket-btn:focus-visible,
+.wb-zoom-btn:focus-visible,
+.wb-flyout-item:focus-visible,
+.wb-menu-item:focus-visible {
+ outline: 2px solid var(--brand-emerald-glow);
+  outline-offset: 2px;
+}
+
+/* Reduce focus ring for small toolbar icons */
+.wb-ico:focus-visible,
+.wb-zoom-btn:focus-visible {
+  outline-offset: 1px;
+}
+
+/* ============================================================
+   WHITEBOARD-SPECIFIC STYLES (unchanged)
+   ============================================================ */
 .whiteboard-root {
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
