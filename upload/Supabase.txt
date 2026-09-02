@@ -1,0 +1,31 @@
+project url
+https://sjbxyxallfeyfuplacnn.supabase.co
+Publishable key
+sb_publishable_hyS20Q_VkI1a47HaNXBy-w_bGev4bJi
+1. Connection string
+Copy the connection details for your database.
+Details:
+Shared pooler
+If your database password contains special characters, percent-encode them in the connection string.
+Connection parameters
+host:aws-0-ap-northeast-1.pooler.supabase.com
+port:6543
+database:postgres
+user:postgres.sjbxyxallfeyfuplacnn
+Code:
+File: Code
+```
+postgresql://postgres.sjbxyxallfeyfuplacnn:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+```
+
+2. Install Agent Skills (optional)
+Agent Skills give AI coding tools ready-made instructions, scripts, and resources for working with Supabase more accurately and efficiently.
+Code:
+File: Code
+```
+npx skills add supabase/agent-skills
+```
+Anon key
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqYnh5eGFsbGZleWZ1cGxhY25uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1NDI3NTgsImV4cCI6MjEwMjExODc1OH0.KjasiAOX22zTLGYiNi3vMjml0Z0dopU8I4pooPNC7lw
+Secret key
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqYnh5eGFsbGZleWZ1cGxhY25uIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjU0Mjc1OCwiZXhwIjoyMTAyMTE4NzU4fQ.FJlVDCic-YTxOdO0W6uFZt52UtjIQ3AzoH7T4XCKn4c
