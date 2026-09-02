@@ -468,9 +468,9 @@
 
 /* Dot-grid brand signature pattern — used on hero & auth */
 .bg-dot-grid {
-  background-image: radial-gradient(circle, var(--brand-emerald) 0.7px, transparent 0.7px);
+  background-image: radial-gradient(circle, var(--brand-emerald) 1px, transparent 1px);
   background-size: 24px 24px;
-  opacity: 0.18;
+  opacity: 0.22;
 }
 
 /* Soft gradient mesh for section backgrounds */
@@ -492,7 +492,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0.7px, transparent 0.7px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
   background-size: 24px 24px;
   pointer-events: none;
 }
