@@ -40,29 +40,18 @@ const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> 
 
 function UpgradePrompt() {
   return (
-    <div style={{
-      padding: 20, borderRadius: 12, marginBottom: 32,
-      border: '1px solid rgba(5,150,105,0.3)',
-      background: 'linear-gradient(135deg, rgba(5,150,105,0.08), rgba(8,145,178,0.08))',
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      flexWrap: 'wrap', gap: 12,
-    }}>
+    <div className="dash-upgrade">
       <div>
-        <div style={{ fontSize: 15, fontWeight: 600, color: '#f1f5f9', marginBottom: 4 }}>
+        <div className="dash-upgrade-title">
           Unlock more with Pro
         </div>
-        <div style={{ fontSize: 13, color: '#94a3b8' }}>
+        <div className="dash-upgrade-desc">
           Get PDF exports, templates, file uploads, and more for $19/mo.
         </div>
       </div>
       <button
         onClick={() => window.location.href = '/pricing'}
-        style={{
-          padding: '10px 20px', borderRadius: 8,
-          background: 'linear-gradient(135deg, #059669, #0891b2)',
-          color: 'white', fontSize: 13, fontWeight: 600,
-          border: 'none', cursor: 'pointer', whiteSpace: 'nowrap',
-        }}
+        className="dash-upgrade-btn"
       >
         View Plans
       </button>
@@ -100,12 +89,7 @@ function UpgradeSuccessBanner({ onDismiss }: { onDismiss: () => void }) {
       </div>
       <button
         onClick={onDismiss}
-        style={{
-          padding: '8px 16px', borderRadius: 8,
-          background: 'rgba(255,255,255,0.06)',
-          color: '#94a3b8', fontSize: 12, fontWeight: 500,
-          border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
-        }}
+        className="dash-btn dash-btn-ghost"
       >
         Dismiss
       </button>
@@ -230,9 +214,8 @@ function DashboardPage() {
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+      <div className="dash-page" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <div style={{ color: '#94a3b8', fontSize: 14 }}>Loading...</div>
       </div>
@@ -240,7 +223,7 @@ function DashboardPage() {
   }
 
   return (
-    <div style={{
+    <div className="animate-fade-in-up" style={{
       minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a, #1e293b)',
       fontFamily: 'inherit',
     }}>
@@ -263,8 +246,7 @@ function DashboardPage() {
             </svg>
           </div>
           <span style={{ fontSize: 16, fontWeight: 700, color: '#f1f5f9' }}>Superboard</span>
-          <span style={{
-            fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
+          <span className="dash-tier-badge" style={{
             background: profile?.tier === 'PRO' ? 'rgba(168,85,247,0.2)' : profile?.tier === 'AGENCY' ? 'rgba(245,158,11,0.2)' : 'rgba(100,116,139,0.2)',
             color: profile?.tier === 'PRO' ? '#c084fc' : profile?.tier === 'AGENCY' ? '#fbbf24' : '#94a3b8',
           }}>
@@ -274,26 +256,16 @@ function DashboardPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
             onClick={() => router.push('/dashboard/billing')}
-            style={{
-              padding: '6px 14px', borderRadius: 6, fontSize: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#94a3b8', cursor: 'pointer',
-            }}
+            className="dash-btn dash-btn-ghost"
           >
             Billing
           </button>
-          <span style={{ fontSize: 13, color: '#94a3b8' }}>
+          <span className="dash-username">
             {profile?.name || profile?.email}
           </span>
           <button
             onClick={handleLogout}
-            style={{
-              padding: '6px 14px', borderRadius: 6, fontSize: 12,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#94a3b8', cursor: 'pointer',
-            }}
+            className="dash-btn dash-btn-ghost"
           >
             Sign Out
           </button>
@@ -301,7 +273,7 @@ function DashboardPage() {
       </nav>
 
       {/* Main Content */}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
+      <main className="dash-page">
         {/* Upgrade success banner (after Stripe checkout) */}
         {showUpgradeSuccess && (
           <UpgradeSuccessBanner onDismiss={() => setShowUpgradeSuccess(false)} />
@@ -312,10 +284,10 @@ function DashboardPage() {
 
         {/* Hero */}
         <div style={{ marginBottom: 40 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#f1f5f9', margin: '0 0 8px' }}>
+          <h1 className="dash-title" style={{ margin: '0 0 8px' }}>
             Welcome back{profile?.name ? `, ${profile.name}` : ''}
           </h1>
-          <p style={{ fontSize: 14, color: '#64748b', margin: 0 }}>
+          <p className="dash-subtitle" style={{ margin: 0 }}>
             Create a room to start a tutoring session, or load a template.
           </p>
         </div>
@@ -324,13 +296,7 @@ function DashboardPage() {
         <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowNewRoom(!showNewRoom)}
-            style={{
-              padding: '12px 24px', borderRadius: 10,
-              background: 'linear-gradient(135deg, #059669, #0891b2)',
-              color: 'white', fontSize: 14, fontWeight: 600,
-              border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}
+            className="dash-btn dash-btn-primary"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" />
@@ -340,13 +306,7 @@ function DashboardPage() {
           </button>
           <button
             onClick={() => router.push('/')}
-            style={{
-              padding: '12px 24px', borderRadius: 10,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'rgba(255,255,255,0.05)',
-              color: '#e2e8f0', fontSize: 14, fontWeight: 500,
-              cursor: 'pointer',
-            }}
+            className="dash-btn dash-btn-ghost"
           >
             Quick Whiteboard
           </button>
@@ -385,23 +345,15 @@ function DashboardPage() {
             <button
               type="submit"
               disabled={creating}
-              style={{
-                padding: '10px 24px', borderRadius: 8,
-                background: creating ? 'rgba(5,150,105,0.5)' : '#059669',
-                color: 'white', fontSize: 14, fontWeight: 600,
-                border: 'none', cursor: creating ? 'not-allowed' : 'pointer',
-              }}
+              className="dash-btn dash-btn-primary"
+              style={{ opacity: creating ? 0.6 : 1, cursor: creating ? 'not-allowed' : 'pointer' }}
             >
               {creating ? 'Creating...' : 'Start Session'}
             </button>
             <button
               type="button"
               onClick={() => setShowNewRoom(false)}
-              style={{
-                padding: '10px 16px', borderRadius: 8,
-                background: 'none', border: '1px solid rgba(255,255,255,0.1)',
-                color: '#94a3b8', fontSize: 13, cursor: 'pointer',
-              }}
+              className="dash-btn dash-btn-ghost"
             >
               Cancel
             </button>
@@ -409,8 +361,8 @@ function DashboardPage() {
         )}
 
         {/* Widget Library — Marketplace */}
-        <div style={{ marginBottom: 40 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: '#e2e8f0', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="dash-section">
+          <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 16px' }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
             </svg>
@@ -426,15 +378,14 @@ function DashboardPage() {
               const tierColor = TIER_COLORS[w.tier] || TIER_COLORS.free
               const isSaving = widgetsSaving === w.id
               return (
-                <div key={w.id} style={{
-                  padding: 14, borderRadius: 10,
+                <div key={w.id} className="dash-widget-card" style={{
                   border: '1px solid ' + (isInstalled ? 'rgba(5,150,105,0.3)' : 'rgba(255,255,255,0.06)'),
                   background: isInstalled ? 'rgba(5,150,105,0.04)' : 'rgba(255,255,255,0.02)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{w.label}</span>
+                        <span className="dash-widget-name">{w.label}</span>
                         <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: tierColor.bg, color: tierColor.text, border: '1px solid ' + tierColor.border, textTransform: 'uppercase', letterSpacing: 0.5 }}>{w.tier}</span>
                       </div>
                       <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.4, marginBottom: 6 }}>{w.description}</div>
@@ -448,9 +399,9 @@ function DashboardPage() {
                     <button
                       onClick={() => handleToggleWidget(w.id, isInstalled)}
                       disabled={isSaving || (w.tier === 'pro' && profile?.tier === 'FREE')}
+                      className="dash-btn"
                       style={{
-                        padding: '6px 12px', borderRadius: 6, fontSize: 11, fontWeight: 600,
-                        whiteSpace: 'nowrap', cursor: isSaving ? 'not-allowed' : 'pointer', flexShrink: 0,
+                        whiteSpace: 'nowrap', flexShrink: 0,
                         ...(isInstalled
                           ? { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#fca5a5' }
                           : w.tier === 'pro' && profile?.tier === 'FREE'
@@ -467,13 +418,12 @@ function DashboardPage() {
             })}
             {/* Coming Soon */}
             {COMING_SOON_WIDGETS.map((w) => (
-              <div key={w.id} style={{
-                padding: 14, borderRadius: 10, opacity: 0.5,
+              <div key={w.id} className="dash-widget-card dash-widget-coming-soon" style={{
                 border: '1px dashed rgba(255,255,255,0.1)',
                 background: 'rgba(255,255,255,0.01)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{w.label}</span>
+                  <span className="dash-widget-name">{w.label}</span>
                   <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 5px', borderRadius: 3, background: 'rgba(100,116,139,0.15)', color: '#64748b', border: '1px solid rgba(100,116,139,0.2)' }}>Coming Soon</span>
                 </div>
                 <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.4 }}>{w.description}</div>
@@ -486,7 +436,7 @@ function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
           {/* Active Rooms */}
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#e2e8f0', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 16px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2">
                 <rect x="3" y="3" width="7" height="7" />
                 <rect x="14" y="3" width="7" height="7" />
@@ -496,11 +446,7 @@ function DashboardPage() {
               Active Rooms
             </h2>
             {rooms.length === 0 ? (
-              <div style={{
-                padding: 32, borderRadius: 12, textAlign: 'center',
-                border: '1px dashed rgba(255,255,255,0.1)',
-                color: '#64748b', fontSize: 13,
-              }}>
+              <div className="dash-empty">
                 No active rooms. Create one to get started.
               </div>
             ) : (
@@ -508,42 +454,26 @@ function DashboardPage() {
                 {rooms.map((room) => (
                   <div
                     key={room.id}
-                    style={{
-                      padding: 16, borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      background: 'rgba(255,255,255,0.02)',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    }}
+                    className="dash-room-card"
                   >
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: '#e2e8f0', marginBottom: 2 }}>
+                      <div className="dash-room-subject">
                         {room.subject}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>
+                      <div className="dash-room-meta">
                         Started {new Date(room.startedAt).toLocaleDateString()}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => router.push(`/room/${room.id}`)}
-                        style={{
-                          padding: '6px 14px', borderRadius: 6,
-                          background: 'linear-gradient(135deg, #059669, #0891b2)',
-                          color: 'white', fontSize: 12, fontWeight: 500,
-                          border: 'none', cursor: 'pointer',
-                        }}
+                        className="dash-btn dash-btn-primary"
                       >
                         Open
                       </button>
                       <button
                         onClick={() => handleEndRoom(room.id)}
-                        style={{
-                          padding: '6px 14px', borderRadius: 6,
-                          border: '1px solid rgba(239,68,68,0.3)',
-                          background: 'rgba(239,68,68,0.1)',
-                          color: '#fca5a5', fontSize: 12,
-                          cursor: 'pointer',
-                        }}
+                        className="dash-btn dash-btn-danger"
                       >
                         End
                       </button>
@@ -556,7 +486,7 @@ function DashboardPage() {
 
           {/* Templates */}
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#e2e8f0', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 className="dash-section-title" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 16px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -566,11 +496,7 @@ function DashboardPage() {
               Templates
             </h2>
             {templates.length === 0 ? (
-              <div style={{
-                padding: 32, borderRadius: 12, textAlign: 'center',
-                border: '1px dashed rgba(255,255,255,0.1)',
-                color: '#64748b', fontSize: 13,
-              }}>
+              <div className="dash-empty">
                 No templates yet. Save a whiteboard as a template.
               </div>
             ) : (
@@ -578,29 +504,19 @@ function DashboardPage() {
                 {templates.map((t) => (
                   <div
                     key={t.id}
-                    style={{
-                      padding: 16, borderRadius: 10,
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      background: 'rgba(255,255,255,0.02)',
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    }}
+                    className="dash-template-card"
                   >
                     <div>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: '#e2e8f0', marginBottom: 2 }}>
+                      <div className="dash-template-name">
                         {t.name}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>
+                      <div className="dash-template-meta">
                         {t.subject} · {new Date(t.createdAt).toLocaleDateString()}
                       </div>
                     </div>
                     <button
                       onClick={() => handleDeleteTemplate(t.id)}
-                      style={{
-                        padding: '4px 10px', borderRadius: 4,
-                        border: '1px solid rgba(239,68,68,0.2)',
-                        background: 'none', color: '#f87171',
-                        fontSize: 11, cursor: 'pointer',
-                      }}
+                      className="dash-btn dash-btn-danger"
                     >
                       Delete
                     </button>

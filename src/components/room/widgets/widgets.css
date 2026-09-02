@@ -79,13 +79,26 @@
   border-color: rgba(255, 255, 255, 0.14);
   color: #e4e4e7;
   transform: translateX(-2px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.widget-toggle-btn:active {
+  transform: translateX(-2px) scale(0.97);
+  transition-duration: 60ms;
 }
 
 .widget-toggle-btn-active {
   background: rgba(16, 185, 129, 0.18) !important;
   border-color: rgba(16, 185, 129, 0.4) !important;
   color: #34d399 !important;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.1),
+              inset 0 0 0 1px rgba(16, 185, 129, 0.08);
+}
+
+.widget-toggle-btn-active:hover {
+  background: rgba(16, 185, 129, 0.24) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15),
+              inset 0 0 0 1px rgba(16, 185, 129, 0.1);
 }
 
 .widget-toggle-btn-active .widget-toggle-label {
@@ -183,6 +196,8 @@
   background: rgba(239, 68, 68, 0.25);
   border-color: rgba(239, 68, 68, 0.5);
   color: #fca5a5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
 }
 
 .session-btn-toggle-draw {
@@ -195,6 +210,8 @@
   background: rgba(5, 150, 105, 0.25);
   border-color: rgba(5, 150, 105, 0.5);
   color: #34d399;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
 }
 
 .session-ended-badge {

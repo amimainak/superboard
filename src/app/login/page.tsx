@@ -72,9 +72,14 @@ export default function LoginPage() {
 
   return (
     <div className="auth-page">
+      {/* Phase C: Ambient gradient blobs */}
+      <div className="auth-blob auth-blob-1" />
+      <div className="auth-blob auth-blob-2" />
+      <div className="auth-blob auth-blob-3" />
+
       <div className="auth-card">
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div className="auth-logo-center">
           <div className="auth-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 19l7-7 3 3-7 7-3-3z" />
@@ -93,7 +98,7 @@ export default function LoginPage() {
         {/* Success message */}
         {message && <div className="auth-success">{message}</div>}
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={handleLogin} className="auth-form">
           <input
             type="email"
             placeholder="Email"
@@ -124,7 +129,7 @@ export default function LoginPage() {
         <div className="auth-divider"><span>or</span></div>
 
         {/* OAuth */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="auth-oauth-row">
           <button
             onClick={() => handleOAuthLogin('google')}
             disabled={loading}

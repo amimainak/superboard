@@ -44,26 +44,24 @@ export default function SignupPage() {
   if (success) {
     return (
       <div className="auth-page">
-        <div style={{ maxWidth: 400, textAlign: 'center', color: '#f1f5f9', position: 'relative', zIndex: 1 }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: '50%',
-            background: 'rgba(34,197,94,0.1)', border: '2px solid rgba(34,197,94,0.3)',
-            margin: '0 auto 20px', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-          }}>
+        <div className="auth-blob auth-blob-1" />
+        <div className="auth-blob auth-blob-2" />
+        <div className="auth-blob auth-blob-3" />
+
+        <div className="auth-success-state">
+          <div className="auth-success-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 8px' }}>Check your email</h2>
-          <p style={{ fontSize: 14, color: '#94a3b8', margin: '0 0 24px', lineHeight: 1.6 }}>
-            We sent a confirmation link to <strong style={{ color: '#e2e8f0' }}>{email}</strong>.
+          <h2 className="auth-success-title">Check your email</h2>
+          <p className="auth-success-desc">
+            We sent a confirmation link to <strong>{email}</strong>.
             Click it to verify your account, then log in.
           </p>
           <button
             onClick={() => router.push('/login')}
-            className="auth-submit"
-            style={{ width: 'auto', padding: '10px 24px', display: 'inline-block' }}
+            className="auth-submit auth-success-btn"
           >
             Go to Login
           </button>
@@ -74,8 +72,12 @@ export default function SignupPage() {
 
   return (
     <div className="auth-page">
+      <div className="auth-blob auth-blob-1" />
+      <div className="auth-blob auth-blob-2" />
+      <div className="auth-blob auth-blob-3" />
+
       <div className="auth-card">
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div className="auth-logo-center">
           <div className="auth-logo">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -90,7 +92,7 @@ export default function SignupPage() {
 
         {error && <div className="auth-error">{error}</div>}
 
-        <form onSubmit={handleSignup} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <form onSubmit={handleSignup} className="auth-form">
           <input
             type="text"
             placeholder="Name (optional)"

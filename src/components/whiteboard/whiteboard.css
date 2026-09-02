@@ -164,11 +164,13 @@ div[data-placeholder]:empty::before {
   background: rgba(255, 255, 255, 0.07);
   color: #e4e4e7;
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.04);
+  transform: scale(1.05);
 }
 
 .wb-tool-btn-light:hover {
   background: rgba(0, 0, 0, 0.04);
   color: #0f172a;
+  transform: scale(1.05);
 }
 
 .wb-tool-btn-active {
@@ -1201,11 +1203,13 @@ div[data-placeholder]:empty::before {
 .wb-page-tab-dark:hover {
   background: rgba(255, 255, 255, 0.06);
   color: #c8d1e0;
+  transform: translateY(-1px);
 }
 
 .wb-page-tab-light:hover {
   background: rgba(0, 0, 0, 0.04);
   color: #374151;
+  transform: translateY(-1px);
 }
 
 .wb-page-tab-active {
