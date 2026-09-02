@@ -1647,3 +1647,252 @@ body {
 .wb-ico:hover {
   border-radius: 6px;
 }
+
+/* ============================================================
+   PHASE C — SCROLL-TRIGGERED REVEAL ANIMATIONS
+   Elements start invisible and animate in when they enter the
+   viewport. The .reveal-visible class is toggled via JS.
+   ============================================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s var(--ease-out),
+              transform 0.6s var(--ease-out);
+}
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children — apply .reveal-stagger to parent */
+.reveal-stagger > .reveal:nth-child(1) { transition-delay: 0ms; }
+.reveal-stagger > .reveal:nth-child(2) { transition-delay: 80ms; }
+.reveal-stagger > .reveal:nth-child(3) { transition-delay: 160ms; }
+.reveal-stagger > .reveal:nth-child(4) { transition-delay: 240ms; }
+.reveal-stagger > .reveal:nth-child(5) { transition-delay: 320ms; }
+.reveal-stagger > .reveal:nth-child(6) { transition-delay: 400ms; }
+
+/* Scale-in variant (for cards, icons) */
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.5s var(--ease-out),
+              transform 0.5s var(--ease-out);
+}
+.reveal-scale.reveal-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Slide-in from left */
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s var(--ease-out),
+              transform 0.6s var(--ease-out);
+}
+.reveal-left.reveal-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Slide-in from right */
+.reveal-right {
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.6s var(--ease-out),
+              transform 0.6s var(--ease-out);
+}
+.reveal-right.reveal-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ============================================================
+   PHASE C — AMBIENT FLOATING SHAPES (Hero)
+   Soft geometric shapes that drift slowly in the background.
+   ============================================================ */
+
+.ambient-shape {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: 0;
+}
+
+.ambient-shape-1 {
+  width: 400px;
+  height: 400px;
+  top: -10%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+  animation: ambient-drift-1 20s ease-in-out infinite;
+}
+
+.ambient-shape-2 {
+  width: 300px;
+  height: 300px;
+  bottom: 10%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(8, 145, 178, 0.10) 0%, transparent 70%);
+  animation: ambient-drift-2 25s ease-in-out infinite;
+}
+
+.ambient-shape-3 {
+  width: 200px;
+  height: 200px;
+  top: 40%;
+  right: 20%;
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.08) 0%, transparent 70%);
+  animation: ambient-drift-3 18s ease-in-out infinite;
+}
+
+@keyframes ambient-drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-20px, 15px) scale(1.05); }
+  66% { transform: translate(10px, -10px) scale(0.95); }
+}
+
+@keyframes ambient-drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(25px, -20px) scale(1.08); }
+}
+
+@keyframes ambient-drift-3 {
+  0%, 100% { transform: translate(0, 0); }
+  40% { transform: translate(-15px, 20px); }
+  80% { transform: translate(10px, -15px); }
+}
+
+/* ============================================================
+   PHASE C — LANDING PAGE CARD HOVER ENHANCEMENT
+   Polished hover lift with subtle border glow for feature/
+  tutor/pricing cards.
+   ============================================================ */
+
+.landing-card {
+  border-radius: var(--radius-2xl);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: white;
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out);
+}
+.landing-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08),
+              0 0 0 1px rgba(5, 150, 105, 0.06);
+  border-color: rgba(5, 150, 105, 0.15);
+}
+
+/* Pricing card featured variant */
+.landing-card-featured {
+  border: 2px solid var(--brand-emerald);
+  box-shadow: 0 8px 30px rgba(5, 150, 105, 0.1);
+}
+.landing-card-featured:hover {
+  box-shadow: 0 16px 50px rgba(5, 150, 105, 0.15),
+              0 0 0 1px rgba(5, 150, 105, 0.1);
+}
+
+/* ============================================================
+   PHASE C — WHITEBOARD PAGE TAB POLISH
+   Smoother tabs with active indicator animation.
+   ============================================================ */
+
+.wb-page-tab {
+  position: relative;
+  transition: color var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.wb-page-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: var(--wb-accent, #34d399);
+  border-radius: 1px;
+  transition: width 0.2s var(--ease-out),
+              left 0.2s var(--ease-out);
+}
+
+.wb-page-tab-active::after {
+  width: 60%;
+  left: 20%;
+}
+
+/* ============================================================
+   PHASE D — WIDGET PLACEMENT ANIMATION
+   When a widget is placed on the canvas, it pops in.
+   ============================================================ */
+
+@keyframes widget-place {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.widget-entering {
+  animation: widget-place 0.35s var(--ease-out) both;
+}
+
+/* ============================================================
+   PHASE D — BRANDED SKELETON FOR DASHBOARD
+   Pulse-shimmer loading cards for dashboard panels.
+   ============================================================ */
+
+.skeleton-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+.skeleton-card::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ============================================================
+   PHASE D — SMOOTH BUTTON PRESS STATES (Landing)
+   ============================================================ */
+
+.btn-press {
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* ============================================================
+   PHASE D — NAV LINK HOVER UNDERLINE ANIMATION
+   ============================================================ */
+
+.nav-link-animated {
+  position: relative;
+}
+.nav-link-animated::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--brand-emerald);
+  transition: width 0.25s var(--ease-out);
+}
+.nav-link-animated:hover::after {
+  width: 100%;
+}

@@ -151,12 +151,12 @@ export default function AuthGate() {
   // --- Loading state ---
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-fade-in-up">
-          <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse-glow">
-            <GraduationCap className="w-9 h-9 text-white" />
+      <div className="skeleton-page">
+        <div className="skeleton-center">
+          <div className="skeleton-logo">
+            <GraduationCap className="w-5 h-5 text-white" />
           </div>
-          <p className="text-sm text-gray-500 font-medium">Loading Superboard...</p>
+          <div className="skeleton-text">Loading Superboard...</div>
         </div>
       </div>
     );

@@ -5,6 +5,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useAppStore } from '@/store/app-store';
+import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { createClient } from '@/lib/supabase';
 import { authFetch, initAuthFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
@@ -207,8 +208,10 @@ function LandingPage() {
 
   const closeAuth = () => { setShowAuth(null); setAuthError(''); setAuthMessage(''); setShowForgotPassword(false); setForgotSuccess(false); setForgotEmail(''); };
 
+  const scrollRef = useScrollReveal<HTMLDivElement>();
+
   return (
-    <main className="min-h-screen bg-white">
+    <main ref={scrollRef} className="min-h-screen bg-white">
       {/* ===== NAVBAR ===== */}
       <nav className="fixed top-0 left-0 right-0 z-50 nav-glass">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -262,6 +265,10 @@ function LandingPage() {
       <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden bg-section-warm">
         {/* Brand dot-grid pattern */}
         <div className="absolute inset-0 pointer-events-none bg-dot-grid" />
+        {/* Ambient floating shapes */}
+        <div className="ambient-shape ambient-shape-1" />
+        <div className="ambient-shape ambient-shape-2" />
+        <div className="ambient-shape ambient-shape-3" />
         {/* Ambient glow top-right */}
         <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 60%)' }} />
 
@@ -354,7 +361,7 @@ function LandingPage() {
       </section>
 
       {/* ===== FEATURES ===== */}
-      <section id="features" className="py-20 md:py-28 bg-white">
+      <section id="features" className="py-20 md:py-28 bg-white reveal">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-50 border border-sky-100 mb-4">
@@ -367,7 +374,7 @@ function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 reveal-stagger">
             {[
               { icon: PenTool, title: 'Infinite Whiteboard', desc: 'Draw, write, and collaborate on an unlimited canvas. Zoom in for detail or zoom out for the big picture.', gradient: 'from-emerald-600 to-teal-500' },
               { icon: Video, title: 'Built-in Video Call', desc: 'Face-to-face tutoring without leaving the app. Crystal-clear video with zero student setup.', gradient: 'from-teal-500 to-cyan-500' },
@@ -376,7 +383,7 @@ function LandingPage() {
               { icon: FlaskConical, title: 'Science Lab Tools', desc: 'Chemical equation balancer, lab report generators, and diagram tools for science tutors.', gradient: 'from-teal-500 to-emerald-400' },
               { icon: Languages, title: 'Language Arts', desc: 'Grammar checks, phonics helpers, vocabulary quizzes, and writing prompts for ELA tutors.', gradient: 'from-sky-500 to-cyan-500' },
             ].map((item) => (
-              <div key={item.title} className="group rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-200/60 transition-all hover:-translate-y-1">
+              <div key={item.title} className="reveal landing-card p-6">
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
                   <item.icon className="w-5 h-5 text-white" />
                 </div>
@@ -389,7 +396,7 @@ function LandingPage() {
       </section>
 
       {/* ===== TRUST SIGNALS ===== */}
-      <section className="py-16 bg-section-cool border-y border-gray-100">
+      <section className="py-16 bg-section-cool border-y border-gray-100 reveal">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
             {[
@@ -410,7 +417,7 @@ function LandingPage() {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section id="how-it-works" className="py-20 md:py-28 bg-section-warm">
+      <section id="how-it-works" className="py-20 md:py-28 bg-section-warm reveal">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 mb-4">
@@ -446,7 +453,7 @@ function LandingPage() {
       </section>
 
       {/* ===== PERFECT FOR EVERY TUTOR ===== */}
-      <section className="py-20 md:py-28 bg-section-cool">
+      <section className="py-20 md:py-28 bg-section-cool reveal">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
@@ -454,13 +461,13 @@ function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6 reveal-stagger">
             {[
               { icon: GraduationCap, title: 'Individual Tutors', desc: 'Freelance tutors who want a professional whiteboard without juggling multiple tools.', gradient: 'from-emerald-600 to-teal-500' },
               { icon: Users, title: 'Tutoring Centers', desc: 'Agencies that need branding, sub-tutor management, and per-hour billing.', gradient: 'from-amber-500 to-amber-400' },
               { icon: School, title: 'School Teachers', desc: 'K-12 educators looking for interactive math, science, and language tools.', gradient: 'from-teal-500 to-cyan-500' },
             ].map((item) => (
-              <div key={item.title} className="rounded-2xl border border-gray-100 bg-white p-6 hover:shadow-lg hover:border-emerald-100 transition-all hover:-translate-y-1">
+              <div key={item.title} className="reveal landing-card p-6">
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4 shadow-sm`}>
                   <item.icon className="w-5 h-5 text-white" />
                 </div>
@@ -473,7 +480,7 @@ function LandingPage() {
       </section>
 
       {/* ===== PRICING ===== */}
-      <section id="pricing" className="py-20 md:py-28 bg-section-warm">
+      <section id="pricing" className="py-20 md:py-28 bg-section-warm reveal">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 mb-4">
@@ -612,7 +619,7 @@ function LandingPage() {
       </section>
 
       {/* ===== FEATURE COMPARISON TABLE ===== */}
-      <section className="py-12 px-6 bg-white border-t border-gray-100">
+      <section className="py-12 px-6 bg-white border-t border-gray-100 reveal">
         <div className="max-w-5xl mx-auto">
           <h3 className="text-lg font-bold text-gray-900 text-center mb-6">Feature comparison</h3>
           <div className="overflow-x-auto">
@@ -665,16 +672,16 @@ function LandingPage() {
       </section>
 
       {/* ===== SOCIAL PROOF (moved before FAQ for stronger impact) ===== */}
-      <SocialProofSection />
+      <div className="reveal"><SocialProofSection /></div>
 
       {/* ===== FEATURE SHOWCASE ===== */}
-      <FeatureShowcase />
+      <div className="reveal"><FeatureShowcase /></div>
 
       {/* ===== FAQ ===== */}
-      <FAQSection />
+      <div className="reveal"><FAQSection /></div>
 
       {/* ===== FINAL CTA — dark, dramatic, brand signature ===== */}
-      <section className="py-20 md:py-28 bg-cta-dark">
+      <section className="py-20 md:py-28 bg-cta-dark reveal">
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/10 mb-6">
             <Check className="w-3.5 h-3.5 text-emerald-300" />
@@ -709,13 +716,13 @@ function LandingPage() {
               <span className="text-sm font-semibold text-gray-900">Superboard</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Features</a>
-              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Pricing</a>
-              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Terms &amp; Conditions</a>
-              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Privacy Policy</a>
-              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Refund Policy</a>
-              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Cookie Policy</a>
-              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2">Contact</a>
+              <a href="#features" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Features</a>
+              <a href="#pricing" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Pricing</a>
+              <a href="/terms" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Terms &amp; Conditions</a>
+              <a href="/privacy" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Privacy Policy</a>
+              <a href="/refund" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Refund Policy</a>
+              <a href="/cookies" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Cookie Policy</a>
+              <a href="/contact" className="text-xs text-gray-500 hover:text-gray-700 transition-colors py-2 nav-link-animated">Contact</a>
             </div>
           </div>
           {/* Bottom row: copyright */}
