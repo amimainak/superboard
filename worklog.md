@@ -351,3 +351,39 @@ Stage Summary:
 - **Zero rendering crashes** — all widgets that could be added to board rendered successfully
 - **Zero console errors** during widget placement
 
+---
+Task ID: fix-7-bugs-supabase-security
+Agent: Main
+Task: Fix all 7 QA bugs + 2 critical Supabase security issues
+
+Work Log:
+- **Bug 1 (HIGH)**: Moved Phase 3 K-5 math widgets (Coin Counter, Analog Clock, Pattern Blocks, Picture Graph) from `highschool` tab to `elementary` tab in MathToolkit.tsx. Moved 6-8 widgets (Stats Toolbox, Point Plotter, Ratio Table) from `highschool` to `middle` tab.
+- **Bug 2 (HIGH)**: Fixed Analytics panel JSON parse error. Changed `res.json()` to `res.text()` + `JSON.parse()` with proper error messages. AnalyticsWidget now shows 'Unable to load analytics. Please sign in and try again.' instead of raw parse error.
+- **Bug 3 (MED)**: Fixed ArtsToolkit button label from `+ Board` to `+ Add to Board` to match all other toolkits.
+- **Bug 4 (MED)**: Regenerated canvas-widget-registry.ts from scratch using actual case statement kinds from CanvasWidgets.tsx. Went from 155 entries (38 mismatched) to 141 entries (0 mismatches).
+- **Bug 5 (MED)**: Replaced rAF-based batching useConfigUpdater in CanvasL3Widgets.tsx with immediate synchronous updater. Quiz L3 no longer loses state on rapid interactions.
+- **Bug 6 (LOW)**: Added `className="toolkit-add-to-board-btn"` to PhysicsToolkit's sectionTitle() button.
+- **Bug 7 (LOW)**: Added 4-tab limit to widget store. toggleWidget and openWidget now auto-close oldest tabs when >4 are open.
+- **Supabase Security**: Created `scripts/enable-rls.sql` — SQL to run in Supabase Dashboard that: (1) enables RLS on all public tables, (2) creates service_role_all policy on every table (backend still works), (3) creates anon_block_all policy on every table (blocks direct PostgREST access), (4) allows selective reads on safe tables (RoomParticipant, public Templates).
+
+Files Modified:
+- src/components/room/widgets/MathToolkit.tsx — moved Phase 3 widgets to correct grade tabs
+- src/components/room/widgets/AnalyticsWidget.tsx — better error handling for JSON parse
+- src/components/room/widgets/ArtsToolkit.tsx — button label fix
+- src/components/room/widgets/PhysicsToolkit.tsx — CSS class added
+- src/components/whiteboard/CanvasL3Widgets.tsx — sync config updater
+- src/lib/room/widget-store.ts — 4-tab limit
+- src/lib/room/canvas-widget-registry.ts — fully regenerated (141 entries, 0 mismatches)
+- scripts/enable-rls.sql — Supabase RLS migration SQL
+
+Deployment:
+- Build: SUCCESS (0 errors)
+- Git push: SUCCESS (commit 8cbe564)
+- Vercel: Auto-deployed from git push
+- Live site: superboard-three.vercel.app returning 200
+
+Stage Summary:
+- All 7 app bugs fixed and deployed
+- Supabase RLS SQL script created (requires manual execution in Supabase Dashboard)
+- Registry now perfectly synced with code (0 mismatches)
+
