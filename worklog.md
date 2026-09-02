@@ -174,12 +174,85 @@ Work Log:
 - Weakness 4 FIXED: Chat widget no longer auto-opens on first visit
 
 ## Phase Plan Status
-- Phase 1: ✅ COMPLETE (3 minor UX gaps deferred to Phase 5)
-- Phase 2: ✅ COMPLETE
-- Phase 3: Math & Science Content (ready to start)
-- Phase 4: English & Arts Content (not started)
-- Phase 5: UX Polish (not started)
+- Phase 1: COMPLETE (3 minor UX gaps deferred to Phase 5)
+- Phase 2: COMPLETE
+- Phase 3: COMPLETE (11 math + 21 science = 32 new widgets)
+- Phase 4: COMPLETE (12 ELA + 10 Arts = 22 new widgets)
+- Phase 5: UX Polish (not started - includes 3 Phase 1 gaps)
 - Phase 6: Platform & Future (deferred)
+
+## Wave 1: Phase 3 + Phase 4 Deep-Dive (2026-09-02)
+
+### Session Overview
+Parallel execution of Phase 3 (Math & Science) and Phase 4 (English & Arts) deep-dive. Phase 3 math widgets (11) were already built in prior session. This session: built 9 missing science widgets, integrated 12 ELA + 10 Arts Phase 4 widgets into toolkits/registry, and fixed critical bugs.
+
+### Phase 3: Math & Science - Completion
+
+#### What Was Already Done (prior session)
+- 11 math widgets in CanvasMathWidgets.tsx
+- 12 science widgets in CanvasScienceWidgets.tsx
+- All 23 registered in CanvasWidgets.tsx + canvas-widget-registry.ts + toolkit panels
+
+#### Built This Session (9 new science widgets)
+1. CanvasSimpleMachines (sci-simple-machines) - K-2, 3-5
+2. CanvasSolarSystem (sci-solar-system) - K-2, 3-5
+3. CanvasWaterCycle (sci-water-cycle) - 3-5, 6-8
+4. CanvasRockCycle (sci-rock-cycle) - 6-8
+5. CanvasObservationJournal (sci-observation-journal) - K-2, 3-5
+6. CanvasLabReportTemplate (sci-lab-report) - 6-8, 9-12
+7. CanvasWeatherPatterns (sci-weather-patterns) - 6-8
+8. CanvasRotationalMotion (phys-rotational-motion) - 9-12
+9. CanvasDimensionalAnalysis (sci-dimensional-analysis) - 9-12
+
+Files modified for Phase 3:
+- CanvasScienceWidgets.tsx (~550 lines added)
+- CanvasWidgets.tsx (9 imports + WIDGET_COMPONENTS + config/size switches)
+- canvas-widget-registry.ts (1 physics + 8 earth science entries)
+- EarthScienceToolkit.tsx (20 section entries across all tabs)
+- PhysicsToolkit.tsx (Rotational Motion in highschool tab)
+
+### Phase 4: English & Arts - Completion
+
+#### What Was Already Done (prior session)
+- 12 ELA canvas widget components in CanvasLanguageWidgets.tsx
+- 10 Arts canvas widget components in CanvasArtsWidgets.tsx
+- All 22 registered in CanvasWidgets.tsx (WIDGET_COMPONENTS, config/size switches)
+
+#### Done This Session (integration only)
+1. LanguageToolkit.tsx - Added 12 Add to Board buttons across K-5/6-8/9-12/All tabs
+2. ArtsToolkit.tsx - Added 10 Board buttons across K-5/6-8/9-12/All tabs
+3. canvas-widget-registry.ts - Added 12 LANGUAGE_WIDGETS + 10 ARTS_WIDGETS entries
+4. CanvasLanguageWidgets.tsx - Added 12 entries to LANG_WIDGET_COMPONENTS map (was missing!)
+
+### Bugs Fixed
+1. CanvasWidgets.tsx: Phase 4 label entries incorrectly inside getDefaultWidgetConfig switch
+2. CanvasWidgets.tsx: Duplicate Phase 4 config/size switch cases
+3. CanvasWidgets.tsx: 3 size cases used recursive getWidgetDefaultSize() instead of getLangWidgetDefaultSize()
+4. CanvasWidgets.tsx: Missing arts imports (were in malformed block at end of file)
+5. CanvasLanguageWidgets.tsx: 12 Phase 4 ELA widgets missing from LANG_WIDGET_COMPONENTS routing map
+6. CanvasWidgets.tsx: Undefined PHASE4_LANG_KIND_LABELS reference removed
+
+### Live Site Testing
+- Language panel: 22 widgets with Add to Board buttons
+- Arts panel: 14 widgets across all grade tabs
+- Earth Science panel: 18 widgets (6 original + 12 Phase 3)
+- Physics panel: 14 widgets (11 original + 3 Phase 3)
+- Canvas rendering tested: Sight Word Bank, Citation Generator, Elements of Art, Simple Machines, Solar System - all working
+
+### Total Widget Count
+| Category | Phase 1-2 | Phase 3 | Phase 4 | Total |
+|----------|-----------|---------|---------|-------|
+| Math | 22 | 11 | 0 | 33 |
+| Physics | 11 | 3 | 0 | 14 |
+| Chemistry | 10 | 2 | 0 | 12 |
+| Biology | 10 | 3 | 0 | 13 |
+| Earth Science | 6 | 9 | 0 | 15 |
+| Language/ELA | 23 | 0 | 12 | 35 |
+| Statistics | 6 | 0 | 0 | 6 |
+| Arts & Music | 4 | 0 | 10 | 14 |
+| Classroom | 4 | 0 | 0 | 4 |
+| AI | 3 | 0 | 0 | 3 |
+| **Total** | **99** | **28** | **22** | **149** |
 
 ## Phase 3: Math & Science Deep-Dive — Verification & Toolkit Integration
 
