@@ -55,6 +55,13 @@ export async function updateSession(request: NextRequest) {
     const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
 
     if (!isPublicRoute && !isRoomRoute) {
+      // API routes: return 401 JSON instead of redirecting to HTML login page
+      if (request.nextUrl.pathname.startsWith('/api/')) {
+        const response = NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
+        response.headers.set('X-Frame-Options', 'DENY')
+        response.headers.set('X-Content-Type-Options', 'nosniff')
+        return response
+      }
       const response = NextResponse.redirect(new URL('/login', request.url))
       response.headers.set('X-Frame-Options', 'DENY')
       response.headers.set('X-Content-Type-Options', 'nosniff')
@@ -107,6 +114,13 @@ export async function updateSession(request: NextRequest) {
   const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
 
   if (!user && !isPublicRoute && !isRoomRoute) {
+    // API routes: return 401 JSON instead of redirecting to HTML login page
+    if (request.nextUrl.pathname.startsWith('/api/')) {
+      const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      response.headers.set('X-Frame-Options', 'DENY')
+      response.headers.set('X-Content-Type-Options', 'nosniff')
+      return response
+    }
     const url = new URL('/login', request.url)
     return NextResponse.redirect(url)
   }
