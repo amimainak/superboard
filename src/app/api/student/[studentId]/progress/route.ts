@@ -5,11 +5,18 @@
 //       homework completion stats, and recent lesson notes.
 //       Requires agency or tutor auth with access to the student.
 // ============================================================
+//
+// NOTE: The Student schema has no `grade` or `notes` columns.
+// Homework has no `studentId`, `subject`, `grade`, or
+// `tutorFeedback` fields; we associate homework with a student
+// via the rooms the student participated in. LessonNote has no
+// `studentId`, `tutorFeedback`, `topicsForNext`, or `rating`
+// fields; we fetch notes for rooms the student participated in.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, Tier } from '@/types';
 
 type RouteContext = { params: Promise<{ studentId: string }> };
 
@@ -32,12 +39,12 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     // Agency owner: can see any student in their agency
     // Sub-tutor: can see students in their agency
-    const agencyId = user.parentAgencyId || (isAgencyTier(user.tier) ? auth.userId : null);
+    const agencyId = user.parentAgencyId || (isAgencyTier(user.tier as Tier) ? auth.userId : null);
 
     const student = await db.student.findFirst({
       where: agencyId ? { id: studentId, agencyId } : { id: studentId },
       select: {
-        id: true, name: true, email: true, grade: true, notes: true,
+        id: true, name: true, email: true,
         agencyId: true, isActive: true, createdAt: true,
       },
     });
@@ -46,73 +53,85 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
-    // Fetch all progress data in parallel
-    const [roomParticipation, homeworkStats, recentNotes, homeworkList] =
-      await Promise.all([
-        // Room participation (lessons attended)
-        db.roomParticipant.findMany({
-          where: { studentId },
+    // Find all rooms the student participated in (RoomParticipant.studentId
+    // is a free-form String column used to link participation back to a Student).
+    const participation = await db.roomParticipant.findMany({
+      where: { studentId },
+      select: {
+        roomId: true,
+        joinedAt: true,
+        lastActiveAt: true,
+        room: {
           select: {
-            roomId: true,
-            joinedAt: true,
-            lastActiveAt: true,
-            room: {
-              select: {
-                subject: true,
-                durationMinutes: true,
-                endedAt: true,
-                tutor: { select: { id: true, name: true, email: true } },
-              },
-            },
-          },
-          orderBy: { joinedAt: 'desc' },
-          take: 100,
-        }),
-
-        // Homework completion stats
-        db.homework.groupBy({
-          by: ['status'],
-          where: { studentId },
-          _count: true,
-        }),
-
-        // Recent lesson notes (last 10)
-        db.lessonNote.findMany({
-          where: { studentId },
-          select: {
-            id: true,
-            content: true,
-            tutorFeedback: true,
-            topicsForNext: true,
-            rating: true,
-            createdAt: true,
-            room: { select: { subject: true, durationMinutes: true } },
-            tutor: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        }),
-
-        // Recent homework (last 20) — now includes tutorFeedback
-        db.homework.findMany({
-          where: { studentId },
-          select: {
-            id: true,
-            title: true,
             subject: true,
-            dueDate: true,
-            status: true,
-            grade: true,
-            tutorFeedback: true,
-            createdAt: true,
+            durationMinutes: true,
+            endedAt: true,
+            tutor: { select: { id: true, name: true, email: true } },
           },
-          orderBy: { createdAt: 'desc' },
-          take: 20,
-        }),
-      ]);
+        },
+      },
+      orderBy: { joinedAt: 'desc' },
+      take: 100,
+    });
 
-    // Completed lessons only (rooms with endedAt)
-    const completedLessons = roomParticipation.filter((p) => p.room.endedAt);
+    const roomIds = participation.map((p) => p.roomId);
+
+    // Fetch progress data in parallel. Homework and LessonNote don't
+    // have a studentId column, so we filter by the rooms the student
+    // participated in.
+    const [homeworkStats, recentNotes, homeworkList] = await Promise.all([
+      // Homework completion stats grouped by status
+      roomIds.length > 0
+        ? db.homework.groupBy({
+            by: ['status'],
+            where: { roomId: { in: roomIds } },
+            _count: true,
+          })
+        : Promise.resolve([]),
+
+      // Recent lesson notes (last 10) — schema only exposes content,
+      // createdAt, tutor, room.
+      roomIds.length > 0
+        ? db.lessonNote.findMany({
+            where: { roomId: { in: roomIds } },
+            select: {
+              id: true,
+              content: true,
+              createdAt: true,
+              room: { select: { subject: true, durationMinutes: true } },
+              tutor: { select: { id: true, name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          })
+        : Promise.resolve([]),
+
+      // Recent homework (last 20)
+      roomIds.length > 0
+        ? db.homework.findMany({
+            where: { roomId: { in: roomIds } },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              dueDate: true,
+              status: true,
+              createdAt: true,
+              tutor: { select: { id: true, name: true, email: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+          })
+        : Promise.resolve([]),
+    ]);
+
+    // Completed lessons only (rooms with endedAt). RoomParticipant.room
+    // is an optional relation in the schema, so we skip rows whose room
+    // has been deleted.
+    const completedLessons = participation.filter(
+      (p): p is typeof p & { room: NonNullable<typeof p.room> } =>
+        !!p.room && !!p.room.endedAt,
+    );
     const totalLessonMinutes = completedLessons.reduce(
       (sum, p) => sum + (p.room.durationMinutes || 0),
       0,
@@ -133,22 +152,18 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       hwMap[h.status] = h._count;
     }
     const totalHomework = Object.values(hwMap).reduce((a, b) => a + b, 0);
-    const gradedHomework = hwMap['GRADED'] || 0;
+    const gradedHomework = hwMap['graded'] || hwMap['GRADED'] || 0;
     const homeworkCompletionRate = totalHomework > 0
-      ? Math.round(((gradedHomework + (hwMap['SUBMITTED'] || 0)) / totalHomework) * 100)
+      ? Math.round(((gradedHomework + (hwMap['submitted'] || hwMap['SUBMITTED'] || 0)) / totalHomework) * 100)
       : 0;
 
-    // Average rating
-    const ratedNotes = recentNotes.filter((n) => n.rating !== null);
-    const avgRating = ratedNotes.length > 0
-      ? ratedNotes.reduce((sum, n) => sum + (n.rating || 0), 0) / ratedNotes.length
-      : null;
-
     // Last active: max of all room participation lastActiveAt
-    const lastActive = roomParticipation.length > 0
-      ? roomParticipation.reduce((latest, p) => {
+    const lastActive = participation.length > 0
+      ? participation.reduce((latest, p) => {
+          if (!p.lastActiveAt) return latest;
+          if (!latest) return p.lastActiveAt;
           return p.lastActiveAt > latest ? p.lastActiveAt : latest;
-        }, roomParticipation[0].lastActiveAt)
+        }, participation[0].lastActiveAt ?? null)
       : null;
 
     return NextResponse.json({
@@ -156,8 +171,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         id: student.id,
         name: student.name,
         email: student.email,
-        grade: student.grade,
-        notes: student.notes,
         isActive: student.isActive,
         enrolledSince: student.createdAt.toISOString(),
       },
@@ -175,34 +188,30 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       },
       homework: {
         total: totalHomework,
-        pending: hwMap['PENDING'] || 0,
-        submitted: hwMap['SUBMITTED'] || 0,
+        pending: hwMap['assigned'] || hwMap['PENDING'] || 0,
+        submitted: hwMap['submitted'] || hwMap['SUBMITTED'] || 0,
         graded: gradedHomework,
-        overdue: hwMap['OVERDUE'] || 0,
+        overdue: hwMap['overdue'] || hwMap['OVERDUE'] || 0,
         completionRate: homeworkCompletionRate,
         recent: homeworkList.map((h) => ({
           id: h.id,
           title: h.title,
-          subject: h.subject,
+          description: h.description,
           dueDate: h.dueDate?.toISOString() ?? null,
           status: h.status,
-          grade: h.grade,
-          tutorFeedback: h.tutorFeedback,
           createdAt: h.createdAt.toISOString(),
+          tutorName: h.tutor?.name ?? null,
         })),
       },
       notes: {
-        totalWritten: ratedNotes.length + (recentNotes.length - ratedNotes.length),
-        averageRating: avgRating !== null ? Math.round(avgRating * 100) / 100 : null,
+        totalWritten: recentNotes.length,
+        averageRating: null,
         recent: recentNotes.map((n) => ({
           id: n.id,
           content: n.content,
-          tutorFeedback: n.tutorFeedback,
-          topicsForNext: n.topicsForNext,
-          rating: n.rating,
           subject: n.room?.subject ?? null,
           date: n.createdAt.toISOString(),
-          tutorName: n.tutor.name || null,
+          tutorName: n.tutor?.name ?? null,
         })),
       },
       lastActive: lastActive?.toISOString() ?? null,

@@ -4,9 +4,13 @@
 // SECURITY FIX (AUDIT-CRIT-6): Added auth check.
 // Previously anyone could reassign questions to categories.
 // ============================================================
+//
+// NOTE: The TestPrepCategory model does not exist in the Prisma
+// schema, and QuestionItem has no `testPrepCategoryId` column.
+// This endpoint validates input and auth, then returns a no-op
+// 200 response with updated: 0.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -36,49 +40,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Verify category exists
-    const category = await db.testPrepCategory.findUnique({
-      where: { id: categoryId },
-    });
-
-    if (!category) {
-      return NextResponse.json(
-        { error: 'Test prep category not found' },
-        { status: 404 },
-      );
-    }
-
-    // IDOR: verify the caller owns the questions being assigned
-    const ownedQuestions = await db.questionItem.findMany({
-      where: { id: { in: questionIds }, tutorId: auth.userId },
-      select: { id: true },
-    });
-    const ownedIds = new Set(ownedQuestions.map(q => q.id));
-    const disallowedIds = questionIds.filter((id: string) => !ownedIds.has(id));
-    // Only block if some questions have a tutorId that doesn't match
-    // (questions with null tutorId are legacy and allowed)
-    if (disallowedIds.length > 0) {
-      const nonNullTutorQuestions = await db.questionItem.findMany({
-        where: { id: { in: disallowedIds }, tutorId: { not: null } },
-        select: { id: true },
-      });
-      if (nonNullTutorQuestions.length > 0) {
-        return NextResponse.json(
-          { error: 'You do not have access to some of these questions' },
-          { status: 403 },
-        );
-      }
-    }
-
-    // Update all questions to reference this category
-    const result = await db.questionItem.updateMany({
-      where: { id: { in: questionIds } },
-      data: { testPrepCategoryId: categoryId },
-    });
-
+    // TestPrepCategory model is not present in the Prisma schema, and
+    // QuestionItem has no testPrepCategoryId column. Acknowledge the
+    // request without modifying any rows.
     return NextResponse.json({
-      updated: result.count,
+      updated: 0,
       categoryId,
+      note: 'Test prep categories are not enabled on this deployment.',
     });
   } catch (error) {
     console.error('[API /test-prep/assign] Error:', error);

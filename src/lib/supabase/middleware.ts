@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
   // Fail closed: if Supabase env vars are missing, redirect non-public routes to /login
   // instead of letting all requests through without auth.
   if (!supabaseUrl || !supabaseKey) {
-    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing']
+    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health']
     const isPublicRoute = publicRoutes.some(route =>
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
     )

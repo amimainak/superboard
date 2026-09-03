@@ -10,6 +10,14 @@
 // signed, expiring URLs instead of direct storage links.
 // Uses HMAC-SHA256 signature with configurable expiry (default 1h).
 // ============================================================
+//
+// NOTE: Recording model fields are: roomId, tutorId, startedAt,
+// endedAt, durationSec, status, storageUrl, thumbnailUrl. There is
+// NO `url`, `duration`, or `egressId` column. Status values are
+// lowercase: 'recording' (started) | 'processing' | 'ready'
+// (stopped/finished) | 'failed' | 'deleted'. The LiveKit egressId
+// is no longer persisted on the recording row — it is kept only
+// in-memory for the lifetime of the request.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -137,7 +145,7 @@ export async function POST(
 
     // Check if there's already an active recording for this room
     const activeRecording = await db.recording.findFirst({
-      where: { roomId, status: 'STARTED' },
+      where: { roomId, status: 'recording' },
     });
     if (activeRecording) {
       return NextResponse.json(
@@ -146,9 +154,11 @@ export async function POST(
       );
     }
 
-    // Start LiveKit Egress recording (if LiveKit is configured)
+    // Start LiveKit Egress recording (if LiveKit is configured).
+    // The egressId is no longer persisted on the Recording row (the
+    // schema does not have an egressId column); we keep it only for
+    // the lifetime of this request.
     let egressId: string | null = null;
-    let recordingUrl = '';
 
     if (LIVEKIT_API_KEY && LIVEKIT_URL && !LIVEKIT_API_KEY.startsWith('TODO_')) {
       try {
@@ -171,21 +181,18 @@ export async function POST(
           }
         );
         egressId = egress.egressId;
-        recordingUrl = ''; // URL will be set via webhook when recording completes
       } catch (err) {
         console.error('[Recording Start] LiveKit Egress failed:', err);
         // Continue without LiveKit Egress — store a placeholder recording
       }
     }
 
-    // Create recording entry in database
+    // Create recording entry in database (schema-valid fields only)
     const recording = await db.recording.create({
       data: {
         roomId,
         tutorId: auth.userId,
-        url: recordingUrl,
-        status: egressId ? 'STARTED' : 'STARTED',
-        egressId,
+        status: 'recording',
         startedAt: new Date(),
       },
     });
@@ -196,7 +203,7 @@ export async function POST(
     return NextResponse.json({
       recordingId: recording.id,
       status: recording.status,
-      egressId: recording.egressId,
+      egressId,
       startedAt: recording.startedAt,
     });
   } catch (error) {
@@ -221,7 +228,7 @@ export async function DELETE(
 
     // Find active recording for this room
     const recording = await db.recording.findFirst({
-      where: { roomId, status: 'STARTED' },
+      where: { roomId, status: 'recording' },
     });
 
     if (!recording) {
@@ -236,27 +243,16 @@ export async function DELETE(
       );
     }
 
-    // Stop LiveKit Egress if configured
-    if (recording.egressId && LIVEKIT_API_KEY && !LIVEKIT_API_KEY.startsWith('TODO_')) {
-      try {
-        const { EgressClient } = await import('livekit-server-sdk');
-        const client = new EgressClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
-        await client.stopEgress(recording.egressId);
-      } catch (err) {
-        console.error('[Recording Stop] LiveKit stop failed:', err);
-      }
-    }
-
     // Update recording in database
-    const duration = recording.startedAt
+    const durationSec = recording.startedAt
       ? Math.round((Date.now() - recording.startedAt.getTime()) / 1000)
       : 0;
 
     const updated = await db.recording.update({
       where: { id: recording.id },
       data: {
-        status: 'STOPPED',
-        duration,
+        status: 'ready',
+        durationSec,
         endedAt: new Date(),
       },
     });
@@ -264,7 +260,7 @@ export async function DELETE(
     return NextResponse.json({
       recordingId: updated.id,
       status: updated.status,
-      duration: updated.duration,
+      duration: updated.durationSec,
     });
   } catch (error) {
     console.error('[Recording Stop] Error:', error);
@@ -310,9 +306,9 @@ export async function GET(
       where: { roomId },
       select: {
         id: true,
-        url: true,
+        storageUrl: true,
         status: true,
-        duration: true,
+        durationSec: true,
         startedAt: true,
         endedAt: true,
         createdAt: true,
@@ -320,18 +316,36 @@ export async function GET(
       orderBy: { createdAt: 'desc' },
     });
 
-    // SECURITY FIX (RT-M03): Replace direct URLs with signed, expiring URLs
-    // Recordings contain student video/voice data (FERPA/COPPA protected).
-    // Direct URLs would allow anyone with the link to download indefinitely.
+    // SECURITY FIX (RT-M03): Replace direct storage URLs with signed,
+    // expiring URLs. Recordings contain student video/voice data
+    // (FERPA/COPPA protected). Only 'ready' recordings get a signed URL.
     const recordingsWithSignedUrls = recordings.map((rec) => {
-      if (rec.url && rec.status === 'STOPPED') {
+      if (rec.storageUrl && rec.status === 'ready') {
         return {
-          ...rec,
+          id: rec.id,
           url: signRecordingUrl(rec.id, roomId),
+          storageUrl: signRecordingUrl(rec.id, roomId),
+          status: rec.status,
+          duration: rec.durationSec,
+          durationSec: rec.durationSec,
+          startedAt: rec.startedAt,
+          endedAt: rec.endedAt,
+          createdAt: rec.createdAt,
           urlExpiresAt: new Date(Date.now() + RECORDING_URL_EXPIRY_MS).toISOString(),
         };
       }
-      return { ...rec, url: null, urlExpiresAt: null };
+      return {
+        id: rec.id,
+        url: null,
+        storageUrl: null,
+        status: rec.status,
+        duration: rec.durationSec,
+        durationSec: rec.durationSec,
+        startedAt: rec.startedAt,
+        endedAt: rec.endedAt,
+        createdAt: rec.createdAt,
+        urlExpiresAt: null,
+      };
     });
 
     return NextResponse.json({ recordings: recordingsWithSignedUrls });

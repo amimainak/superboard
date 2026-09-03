@@ -8,6 +8,15 @@
 // SECURITY FIX (API-C02/FE-M03): Brute-force protection using
 // shared rate-limit module (Upstash Redis or in-memory fallback).
 // ============================================================
+//
+// NOTE: Student has no `grade`/`notes` fields. ScheduledLesson has
+// no `title`, `scheduledAt`, `durationMinutes`, `timeZone`, or
+// `tutor` relation — we use `startTime`/`endTime` and the tutor
+// relation is resolved via tutorId -> User. Homework and LessonNote
+// are linked to the student via the rooms the student participated
+// in (RoomParticipant.studentId). Homework has no subject/grade/
+// tutorFeedback. LessonNote has no tutorFeedback/topicsForNext/
+// rating.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -62,118 +71,132 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const tutorIds = [agencyId];
     const subTutors = await db.user.findMany({
       where: { parentAgencyId: agencyId },
-      select: { id: true },
+      select: { id: true, name: true, email: true },
     });
     tutorIds.push(...subTutors.map((t) => t.id));
+    const tutorMap = new Map(subTutors.map((t) => [t.id, t]));
+    // Include agency owner in map
+    tutorMap.set(agencyId, student.agency);
+
+    // Find all rooms the student participated in so we can pull
+    // homework and lesson notes via roomId.
+    const participation = await db.roomParticipant.findMany({
+      where: { studentId: student.id },
+      select: {
+        roomId: true,
+        joinedAt: true,
+        room: {
+          select: {
+            subject: true,
+            durationMinutes: true,
+            endedAt: true,
+            tutorId: true,
+          },
+        },
+      },
+      orderBy: { joinedAt: 'desc' },
+      take: 100,
+    });
+    const roomIds = participation.map((p) => p.roomId);
+    // RoomParticipant.room is an optional relation — only keep rows
+    // whose room exists and has ended.
+    const completedParticipants = participation.filter(
+      (p): p is typeof p & { room: NonNullable<typeof p.room> } =>
+        !!p.room && !!p.room.endedAt,
+    );
 
     // Fetch data in parallel
-    const [upcomingLessons, recentNotes, allHomework, completedParticipants, gradedHomework] =
-      await Promise.all([
-        // Upcoming scheduled lessons with tutor info
-        db.scheduledLesson.findMany({
-          where: {
-            tutorId: { in: tutorIds },
-            studentEmail: student.email,
-            status: 'SCHEDULED',
-            scheduledAt: { gte: new Date() },
-          },
-          select: {
-            id: true,
-            title: true,
-            subject: true,
-            scheduledAt: true,
-            durationMinutes: true,
-            timeZone: true,
-            tutor: { select: { name: true, email: true } },
-          },
-          orderBy: { scheduledAt: 'asc' },
-          take: 15,
-        }),
+    const [upcomingLessons, recentNotes, allHomework, gradedHomework] = await Promise.all([
+      // Upcoming scheduled lessons. ScheduledLesson has no `tutor` relation
+      // — resolve tutor info from the tutorMap built above.
+      db.scheduledLesson.findMany({
+        where: {
+          tutorId: { in: tutorIds },
+          studentEmail: student.email,
+          status: 'scheduled',
+          startTime: { gte: new Date() },
+        },
+        select: {
+          id: true,
+          subject: true,
+          startTime: true,
+          endTime: true,
+          notes: true,
+          tutorId: true,
+        },
+        orderBy: { startTime: 'asc' },
+        take: 15,
+      }),
 
-        // Recent lesson notes (last 10)
-        db.lessonNote.findMany({
-          where: { studentId: student.id },
-          select: {
-            id: true,
-            content: true,
-            tutorFeedback: true,
-            topicsForNext: true,
-            rating: true,
-            createdAt: true,
-            room: { select: { subject: true, durationMinutes: true } },
-            tutor: { select: { name: true } },
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        }),
-
-        // All pending/overdue homework
-        db.homework.findMany({
-          where: {
-            studentId: student.id,
-            status: { in: ['PENDING', 'SUBMITTED', 'OVERDUE'] },
-          },
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            subject: true,
-            dueDate: true,
-            status: true,
-            tutorFeedback: true,
-            grade: true,
-            createdAt: true,
-          },
-          orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
-          take: 20,
-        }),
-
-        // Completed room participants for total lesson count + subjects
-        db.roomParticipant.findMany({
-          where: { studentId: student.id },
-          select: {
-            roomId: true,
-            joinedAt: true,
-            room: {
-              select: {
-                subject: true,
-                durationMinutes: true,
-                endedAt: true,
-              },
+      // Recent lesson notes (last 10) — schema only exposes content,
+      // createdAt, tutor, room.
+      roomIds.length > 0
+        ? db.lessonNote.findMany({
+            where: { roomId: { in: roomIds } },
+            select: {
+              id: true,
+              content: true,
+              createdAt: true,
+              room: { select: { subject: true, durationMinutes: true } },
+              tutor: { select: { name: true } },
             },
-          },
-          orderBy: { joinedAt: 'desc' },
-          take: 100,
-        }),
+            orderBy: { createdAt: 'desc' },
+            take: 10,
+          })
+        : Promise.resolve([]),
 
-        // Graded homework for the homework tab
-        db.homework.findMany({
-          where: {
-            studentId: student.id,
-            status: 'GRADED',
-          },
-          select: {
-            id: true,
-            title: true,
-            subject: true,
-            grade: true,
-            tutorFeedback: true,
-            createdAt: true,
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 20,
-        }),
-      ]);
+      // All pending/overdue homework
+      roomIds.length > 0
+        ? db.homework.findMany({
+            where: {
+              roomId: { in: roomIds },
+              status: { in: ['assigned', 'submitted', 'overdue'] },
+            },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              dueDate: true,
+              status: true,
+              createdAt: true,
+            },
+            orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
+            take: 20,
+          })
+        : Promise.resolve([]),
+
+      // Graded homework for the homework tab
+      roomIds.length > 0
+        ? db.homework.findMany({
+            where: {
+              roomId: { in: roomIds },
+              status: 'graded',
+            },
+            select: {
+              id: true,
+              title: true,
+              createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 20,
+          })
+        : Promise.resolve([]),
+    ]);
 
     // Compute progress stats
-    const completedLessons = completedParticipants.filter((p) => p.room.endedAt);
-    const subjectsCovered = [...new Set(completedLessons.map((p) => p.room.subject))];
-    const lastLessonDate = completedLessons.length > 0
-      ? completedLessons.reduce((latest, p) => {
+    const subjectsCovered = [...new Set(completedParticipants.map((p) => p.room.subject))];
+    const lastLessonDate = completedParticipants.length > 0
+      ? completedParticipants.reduce((latest, p) => {
           const d = p.room.endedAt!;
           return d > latest ? d : latest;
-        }, completedLessons[0].room.endedAt!)
+        }, completedParticipants[0].room.endedAt!)
       : null;
+
+    // Helper to look up a tutor's display name from the tutor map.
+    const tutorNameFor = (tutorId: string): string => {
+      const t = tutorMap.get(tutorId);
+      return t?.name || t?.email || 'Tutor';
+    };
 
     return NextResponse.json({
       studentName: student.name,
@@ -182,14 +205,17 @@ export async function GET(request: NextRequest, context: RouteContext) {
       agencyLogo: student.agency.brandingLogoUrl,
       schedule: upcomingLessons.map((l) => ({
         id: l.id,
-        title: l.title,
         subject: l.subject,
-        scheduledAt: l.scheduledAt.toISOString(),
-        durationMinutes: l.durationMinutes,
-        tutorName: l.tutor.name || l.tutor.email,
+        scheduledAt: l.startTime.toISOString(),
+        startTime: l.startTime.toISOString(),
+        endTime: l.endTime?.toISOString() ?? null,
+        durationMinutes: l.endTime
+          ? Math.round((l.endTime.getTime() - l.startTime.getTime()) / 60000)
+          : null,
+        tutorName: tutorNameFor(l.tutorId),
       })),
       progress: {
-        totalLessons: completedLessons.length,
+        totalLessons: completedParticipants.length,
         subjects: subjectsCovered,
         lastActive: lastLessonDate?.toISOString() ?? null,
       },
@@ -197,29 +223,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
         ...allHomework.map((h) => ({
           id: h.id,
           title: h.title,
-          subject: h.subject,
-          status: h.status as 'PENDING' | 'SUBMITTED' | 'GRADED' | 'OVERDUE',
-          grade: h.grade,
-          feedback: h.tutorFeedback,
+          status: h.status,
           dueDate: h.dueDate?.toISOString() ?? null,
         })),
         ...gradedHomework.map((h) => ({
           id: h.id,
           title: h.title,
-          subject: h.subject,
-          status: 'GRADED' as const,
-          grade: h.grade,
-          feedback: h.tutorFeedback,
+          status: 'graded' as const,
           dueDate: null as string | null,
         })),
       ],
       notes: recentNotes.map((n) => ({
         id: n.id,
         content: n.content,
-        tutorName: n.tutor.name ?? null,
+        tutorName: n.tutor?.name ?? null,
         subject: n.room?.subject ?? 'GENERAL',
         createdAt: n.createdAt.toISOString(),
-        rating: n.rating ?? 0,
       })),
     });
   } catch (error) {

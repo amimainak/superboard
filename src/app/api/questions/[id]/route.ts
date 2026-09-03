@@ -5,30 +5,26 @@
 // PUT requires auth to update questions.
 // DELETE requires auth to soft-delete questions.
 // ============================================================
+//
+// NOTE: QuestionItem fields are: tutorId, type, subject, difficulty,
+// question, options (Json), correctAnswer, explanation, tags.
+// There is no `isActive` column to soft-delete; we hard-delete
+// instead. The update schema only validates real fields.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { QuestionType } from '@prisma/client';
 import { requireAuth } from '@/lib/auth';
 import { z } from 'zod';
 
 const updateQuestionSchema = z.object({
   subject: z.string().max(100).optional(),
-  gradeBand: z.string().max(50).optional(),
-  topic: z.string().max(200).optional(),
-  difficulty: z.number().min(1).max(10).optional(),
-  curriculum: z.string().max(50).optional(),
-  standardCode: z.string().max(50).optional(),
-  stem: z.string().max(5000).optional(),
-  stemLatex: z.string().max(5000).optional(),
-  answerKey: z.string().max(5000).optional(),
-  solutionSteps: z.string().max(10000).optional(),
-  distractors: z.array(z.string()).max(10).optional(),
-  questionType: z.string().max(30).optional(),
-  tags: z.array(z.string()).max(20).optional(),
-  estimatedTimeSec: z.number().min(5).max(3600).optional(),
-  diagramSvg: z.string().max(50000).optional(),
-  testPrepCategoryId: z.string().max(100).optional(),
+  difficulty: z.string().max(50).optional(),
+  type: z.string().max(50).optional(),
+  question: z.string().max(10000).optional(),
+  options: z.any().optional(),
+  correctAnswer: z.string().max(10000).optional().nullable(),
+  explanation: z.string().max(10000).optional().nullable(),
+  tags: z.array(z.string()).max(50).optional(),
 });
 
 export async function PUT(
@@ -63,26 +59,20 @@ export async function PUT(
       return NextResponse.json({ error: 'You do not have access to this question' }, { status: 403 });
     }
 
+    // Build update payload with only schema-valid fields
+    const updateData: Record<string, unknown> = {};
+    if (data.subject !== undefined) updateData.subject = data.subject.toUpperCase();
+    if (data.difficulty !== undefined) updateData.difficulty = data.difficulty.toLowerCase();
+    if (data.type !== undefined) updateData.type = data.type.toLowerCase();
+    if (data.question !== undefined) updateData.question = data.question;
+    if (data.options !== undefined) updateData.options = data.options;
+    if (data.correctAnswer !== undefined) updateData.correctAnswer = data.correctAnswer;
+    if (data.explanation !== undefined) updateData.explanation = data.explanation;
+    if (data.tags !== undefined) updateData.tags = data.tags;
+
     const question = await db.questionItem.update({
       where: { id },
-      data: {
-        ...(data.subject && { subject: data.subject.toUpperCase() }),
-        ...(data.gradeBand && { gradeBand: data.gradeBand }),
-        ...(data.topic && { topic: data.topic }),
-        ...(data.difficulty !== undefined && { difficulty: data.difficulty }),
-        ...(data.curriculum && { curriculum: data.curriculum.toUpperCase() }),
-        ...(data.standardCode !== undefined && { standardCode: data.standardCode }),
-        ...(data.stem && { stem: data.stem }),
-        ...(data.stemLatex !== undefined && { stemLatex: data.stemLatex }),
-        ...(data.answerKey && { answerKey: data.answerKey }),
-        ...(data.solutionSteps !== undefined && { solutionSteps: data.solutionSteps }),
-        ...(data.distractors !== undefined && { distractors: data.distractors }),
-        ...(data.questionType && { questionType: data.questionType.toUpperCase() as QuestionType }),
-        ...(data.tags !== undefined && { tags: data.tags }),
-        ...(data.estimatedTimeSec !== undefined && { estimatedTimeSec: data.estimatedTimeSec }),
-        ...(data.diagramSvg !== undefined && { diagramSvg: data.diagramSvg }),
-        ...(data.testPrepCategoryId !== undefined && { testPrepCategoryId: data.testPrepCategoryId }),
-      },
+      data: updateData,
     });
 
     return NextResponse.json({ question });
@@ -113,11 +103,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'You do not have access to this question' }, { status: 403 });
     }
 
-    // Soft delete
-    await db.questionItem.update({
-      where: { id },
-      data: { isActive: false },
-    });
+    // Hard delete — schema has no `isActive` flag to soft-delete.
+    await db.questionItem.delete({ where: { id } });
 
     return NextResponse.json({ deleted: true, id });
   } catch (error) {

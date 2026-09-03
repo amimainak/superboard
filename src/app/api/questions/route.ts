@@ -5,10 +5,18 @@
 // GET requires auth (question bank is proprietary).
 // POST requires auth (tutor-created questions).
 // ============================================================
+//
+// NOTE: QuestionItem fields are: tutorId (nullable), type, subject,
+// difficulty, question, options (Json), correctAnswer, explanation,
+// tags (String[]). There are no gradeBand, topic, curriculum,
+// standardCode, stem, stemLatex, diagramSvg, answerKey,
+// solutionSteps, distractors, isActive, estimatedTimeSec, or
+// testPrepCategoryId columns. `type` is a plain String (e.g.
+// 'multiple_choice' | 'short_answer' | 'true_false'); `difficulty`
+// is a String ('easy' | 'medium' | 'hard'), not an Int.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { QuestionType } from '@prisma/client';
 import { requireAuth } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
@@ -20,12 +28,8 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = req.nextUrl;
     const subject = searchParams.get('subject');
-    const gradeBand = searchParams.get('gradeBand');
-    const topic = searchParams.get('topic');
     const difficulty = searchParams.get('difficulty');
-    const curriculum = searchParams.get('curriculum');
-    const questionType = searchParams.get('questionType');
-    const testType = searchParams.get('testType');
+    const type = searchParams.get('type') || searchParams.get('questionType');
     const search = searchParams.get('search');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
@@ -39,23 +43,17 @@ export async function GET(req: NextRequest) {
 
     const where: Record<string, unknown> = {
       subject: subject.toUpperCase(),
-      isActive: true,
     };
 
-    if (gradeBand) where.gradeBand = gradeBand;
-    if (topic) where.topic = { contains: topic, mode: 'insensitive' } as Record<string, unknown>;
-    if (difficulty) where.difficulty = parseInt(difficulty, 10);
-    if (curriculum) where.curriculum = curriculum.toUpperCase();
-    if (questionType) where.questionType = questionType.toUpperCase() as QuestionType;
+    if (difficulty) where.difficulty = difficulty.toLowerCase();
+    if (type) where.type = type.toLowerCase();
+
     if (search) {
       (where as Record<string, unknown[]>).OR = [
-        { stem: { contains: search, mode: 'insensitive' } },
-        { topic: { contains: search, mode: 'insensitive' } },
-        { tags: { contains: search, mode: 'insensitive' } },
+        { question: { contains: search, mode: 'insensitive' } },
+        { explanation: { contains: search, mode: 'insensitive' } },
+        { tags: { has: search } },
       ];
-    }
-    if (testType) {
-      where.testPrepCategory = { testType: testType.toUpperCase() };
     }
 
     const [questions, total] = await Promise.all([
@@ -63,13 +61,11 @@ export async function GET(req: NextRequest) {
         where,
         take: limit,
         skip: offset,
-        orderBy: { difficulty: 'asc' },
+        orderBy: { createdAt: 'desc' },
         select: {
-          id: true, subject: true, gradeBand: true, topic: true, difficulty: true,
-          curriculum: true, standardCode: true, stem: true, stemLatex: true,
-          diagramSvg: true, answerKey: true, solutionSteps: true, distractors: true,
-          questionType: true, tags: true, estimatedTimeSec: true,
-          testPrepCategory: { select: { id: true, name: true, testType: true } },
+          id: true, tutorId: true, type: true, subject: true, difficulty: true,
+          question: true, options: true, correctAnswer: true, explanation: true,
+          tags: true, createdAt: true, updatedAt: true,
         },
       }),
       db.questionItem.count({ where }),
@@ -96,37 +92,32 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const {
-      subject, gradeBand, topic, difficulty, curriculum, standardCode,
-      stem, stemLatex, answerKey, solutionSteps, distractors,
-      questionType, tags, estimatedTimeSec, diagramSvg, testPrepCategoryId,
-    } = body;
+      subject, difficulty, type,
+      question, options, correctAnswer, explanation, tags,
+    } = body ?? {};
 
-    if (!subject || !gradeBand || !topic || !stem || !answerKey) {
+    if (!subject || !question) {
       return NextResponse.json(
-        { error: 'subject, gradeBand, topic, stem, and answerKey are required' },
+        { error: 'subject and question are required' },
         { status: 400 },
       );
     }
 
-    if (typeof difficulty !== 'number' || difficulty < 1 || difficulty > 5) {
-      return NextResponse.json(
-        { error: 'difficulty must be a number between 1 and 5' },
-        { status: 400 },
-      );
-    }
-
-    const question = await db.questionItem.create({
+    const created = await db.questionItem.create({
       data: {
-        subject: subject.toUpperCase(),
-        gradeBand, topic, difficulty,
-        curriculum: curriculum?.toUpperCase(),
-        standardCode, stem, stemLatex, answerKey, solutionSteps,
-        distractors, questionType: (questionType?.toUpperCase() || 'OPEN') as QuestionType,
-        tags, estimatedTimeSec, diagramSvg, testPrepCategoryId,
+        tutorId: auth.userId,
+        subject: String(subject).toUpperCase(),
+        difficulty: difficulty ? String(difficulty).toLowerCase() : 'medium',
+        type: type ? String(type).toLowerCase() : 'multiple_choice',
+        question: String(question),
+        options: options ?? null,
+        correctAnswer: correctAnswer ?? null,
+        explanation: explanation ?? null,
+        tags: Array.isArray(tags) ? tags : [],
       },
     });
 
-    return NextResponse.json({ question }, { status: 201 });
+    return NextResponse.json({ question: created }, { status: 201 });
   } catch (error) {
     console.error('[API /questions POST] Error:', error);
     return NextResponse.json({ error: 'Failed to create question' }, { status: 500 });

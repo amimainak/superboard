@@ -15,7 +15,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@fingerprintjs/fingerprintjs": "^5.2.0",
-    "@hocuspocus/server": "^4.4.0",
     "@livekit/components-core": "^0.12.14",
     "@livekit/components-react": "^2.9.23",
     "@prisma/client": "^5.22.0",

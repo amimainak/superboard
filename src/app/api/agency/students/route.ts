@@ -4,11 +4,15 @@
 // GET: Lists all students for an agency (with optional status filter).
 //      Agency owner or sub-tutor auth required.
 // ============================================================
+//
+// NOTE: The Student Prisma model has no `roomParticipants` relation
+// (only `agency`). We fetch participation counts separately via
+// RoomParticipant.studentId.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, Tier } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,7 +30,7 @@ export async function GET(request: NextRequest) {
       select: { tier: true, parentAgencyId: true },
     });
 
-    if (!agency || !isAgencyTier(agency.tier)) {
+    if (!agency || !isAgencyTier(agency.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }
@@ -37,6 +41,7 @@ export async function GET(request: NextRequest) {
     const agencyId = agency.parentAgencyId || auth.userId;
 
     // Build query filter
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereFilter: any = { agencyId };
     if (status === 'active') whereFilter.isActive = true;
     if (status === 'inactive') whereFilter.isActive = false;
@@ -51,9 +56,6 @@ export async function GET(request: NextRequest) {
           isActive: true,
           createdAt: true,
           deactivatedAt: true,
-          _count: {
-            select: { roomParticipants: true },
-          },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -62,20 +64,34 @@ export async function GET(request: NextRequest) {
       db.student.count({ where: whereFilter }),
     ]);
 
-    // Get the last-seen date for each student from their most recent room participation
+    // Get the last-seen date and lesson count for each student from
+    // their RoomParticipant rows. Student has no `roomParticipants`
+    // relation in the schema.
     const studentIds = students.map((s) => s.id);
     const lastSeenMap = new Map<string, string | null>();
+    const lessonsAttendedMap = new Map<string, number>();
 
     if (studentIds.length > 0) {
       const latestParticipations = await db.roomParticipant.findMany({
         where: { studentId: { in: studentIds } },
-        select: { studentId: true, lastActiveAt: true },
+        select: { studentId: true, lastActiveAt: true, joinedAt: true },
         orderBy: { lastActiveAt: 'desc' },
       });
 
       for (const p of latestParticipations) {
         if (p.studentId) {
-          lastSeenMap.set(p.studentId, p.lastActiveAt ? p.lastActiveAt.toISOString() : null);
+          // First occurrence wins because the query is ordered by
+          // lastActiveAt desc — that gives us the latest lastActiveAt.
+          if (!lastSeenMap.has(p.studentId)) {
+            lastSeenMap.set(
+              p.studentId,
+              p.lastActiveAt ? p.lastActiveAt.toISOString() : null,
+            );
+          }
+          lessonsAttendedMap.set(
+            p.studentId,
+            (lessonsAttendedMap.get(p.studentId) ?? 0) + 1,
+          );
         }
       }
     }
@@ -87,7 +103,7 @@ export async function GET(request: NextRequest) {
       isActive: s.isActive,
       createdAt: s.createdAt.toISOString(),
       deactivatedAt: s.deactivatedAt?.toISOString() || null,
-      lessonsAttended: s._count.roomParticipants,
+      lessonsAttended: lessonsAttendedMap.get(s.id) ?? 0,
       lastSeen: lastSeenMap.get(s.id) || null,
     }));
 

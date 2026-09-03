@@ -1,14 +1,20 @@
 // ============================================================
 // API Route: Agency Credit Packs
 // ============================================================
-// GET:  Return agency's active credit packs with hoursRemaining
+// GET:  Return agency's active credit packs with total credits
 // POST: Create a new credit pack (payment integration coming soon)
 // ============================================================
+//
+// NOTE: The CreditPack Prisma model has fields: credits (Int),
+// price (Float), status (String). There are no `hoursPurchased`,
+// `hoursRemaining`, or `pricePaidCents` columns. Status is a plain
+// String; we use lowercase values 'active' and 'pending' to match
+// the rest of the codebase.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, Tier } from '@/types';
 import { CREDIT_PACKS } from '@/types';
 
 export async function GET(request: NextRequest) {
@@ -22,7 +28,7 @@ export async function GET(request: NextRequest) {
       select: { tier: true, parentAgencyId: true },
     });
 
-    if (!agency || !isAgencyTier(agency.tier)) {
+    if (!agency || !isAgencyTier(agency.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }
@@ -32,13 +38,14 @@ export async function GET(request: NextRequest) {
     const agencyId = agency.parentAgencyId || auth.userId;
 
     const packs = await db.creditPack.findMany({
-      where: { agencyId, status: 'ACTIVE' },
+      where: { agencyId, status: 'active' },
       orderBy: { createdAt: 'desc' },
     });
 
-    const totalHoursRemaining = packs.reduce((sum, p) => sum + p.hoursRemaining, 0);
+    // Schema has no hoursRemaining; sum `credits` instead.
+    const totalCredits = packs.reduce((sum, p) => sum + p.credits, 0);
 
-    return NextResponse.json({ packs, totalHoursRemaining });
+    return NextResponse.json({ packs, totalCredits });
   } catch (error) {
     console.error('[Credit Packs] GET error:', error);
     return NextResponse.json(
@@ -59,7 +66,7 @@ export async function POST(request: NextRequest) {
       select: { tier: true, parentAgencyId: true },
     });
 
-    if (!agency || !isAgencyTier(agency.tier)) {
+    if (!agency || !isAgencyTier(agency.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }
@@ -80,14 +87,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the credit pack (payment integration coming soon)
+    // Create the credit pack (payment integration coming soon).
+    // Map the legacy CREDIT_PACKS config onto schema-valid fields:
+    //   credits       ← packConfig.hours (credits represent hours)
+    //   price         ← packConfig.priceCents / 100 (Float, dollars)
+    //   status        ← 'pending' until payment is confirmed
     const creditPack = await db.creditPack.create({
       data: {
         agencyId,
-        hoursPurchased: packConfig.hours,
-        hoursRemaining: packConfig.hours,
-        pricePaidCents: packConfig.priceCents,
-        status: 'PENDING_PAYMENT', // TODO: Set to ACTIVE after payment confirmation
+        credits: packConfig.hours,
+        price: packConfig.priceCents / 100,
+        status: 'pending',
       },
     });
 

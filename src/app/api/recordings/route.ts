@@ -6,6 +6,13 @@
 //      Eliminates N+1 API calls from RecordingsPanel.
 //      Returns signed URLs for completed recordings (RT-M03).
 // ============================================================
+//
+// NOTE: The Recording Prisma model exposes: roomId, tutorId,
+// startedAt, endedAt, durationSec, status, storageUrl,
+// thumbnailUrl. There is no `url`, `duration`, or `egressId`
+// column. Status uses lowercase values ('recording' | 'processing'
+// | 'ready' | 'failed' | 'deleted'); a 'ready' recording is the
+// equivalent of the legacy 'STOPPED' state.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -43,9 +50,9 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         roomId: true,
-        url: true,
+        storageUrl: true,
         status: true,
-        duration: true,
+        durationSec: true,
         startedAt: true,
         endedAt: true,
         createdAt: true,
@@ -74,9 +81,9 @@ export async function GET(request: NextRequest) {
         select: {
           id: true,
           roomId: true,
-          url: true,
+          storageUrl: true,
           status: true,
-          duration: true,
+          durationSec: true,
           startedAt: true,
           endedAt: true,
           createdAt: true,
@@ -106,15 +113,17 @@ export async function GET(request: NextRequest) {
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-    // SECURITY FIX (RT-M03): Return signed URLs for completed recordings
+    // SECURITY FIX (RT-M03): Return signed URLs for completed recordings.
+    // A recording is "completed" when its status is 'ready' (the schema's
+    // equivalent of the legacy 'STOPPED' state).
     const recordingsWithSignedUrls = allRecordings.map((rec) => {
-      if (rec.url && rec.status === 'STOPPED') {
+      if (rec.storageUrl && rec.status === 'ready') {
         return {
           id: rec.id,
           roomId: rec.roomId,
           url: signRecordingUrl(rec.id, rec.roomId),
           status: rec.status,
-          duration: rec.duration,
+          duration: rec.durationSec,
           startedAt: rec.startedAt,
           endedAt: rec.endedAt,
           createdAt: rec.createdAt,
@@ -127,7 +136,7 @@ export async function GET(request: NextRequest) {
         roomId: rec.roomId,
         url: null,
         status: rec.status,
-        duration: rec.duration,
+        duration: rec.durationSec,
         startedAt: rec.startedAt,
         endedAt: rec.endedAt,
         createdAt: rec.createdAt,

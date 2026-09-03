@@ -6,38 +6,22 @@
 //   testType (optional): SAT, ACT, AP, STAAR, etc.
 //   subject (optional): MATH, ENGLISH, SCIENCE, etc.
 // ============================================================
+//
+// NOTE: The TestPrepCategory Prisma model does not exist in the
+// schema. This endpoint returns an empty list with a 200 status
+// to preserve client compatibility.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const authCheck = await requireAuth(req)
-  if (authCheck instanceof NextResponse) return authCheck
+  const authCheck = await requireAuth(req);
+  if (authCheck instanceof NextResponse) return authCheck;
+
   try {
-    const { searchParams } = req.nextUrl;
-    const testType = searchParams.get('testType');
-    const subject = searchParams.get('subject');
-
-    const where: Record<string, unknown> = { isActive: true };
-    if (testType) where.testType = testType.toUpperCase();
-    if (subject) where.subject = subject.toUpperCase();
-
-    const categories = await db.testPrepCategory.findMany({
-      where,
-      select: {
-        id: true,
-        name: true,
-        testType: true,
-        subject: true,
-        gradeLevel: true,
-        description: true,
-        _count: { select: { questions: true } },
-      },
-      orderBy: [{ testType: 'asc' }, { subject: 'asc' }],
-    });
-
-    return NextResponse.json({ categories });
+    // TestPrepCategory model is not present in the Prisma schema.
+    // Return an empty list so the client UI renders gracefully.
+    return NextResponse.json({ categories: [] });
   } catch (error) {
     console.error('[API /test-prep/categories] Error:', error);
     return NextResponse.json(

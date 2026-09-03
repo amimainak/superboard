@@ -19,6 +19,7 @@ import {
 } from '@/lib/whiteboard/utils'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { mathToLatex, EQUATION_LIBRARY, EQUATION_CATEGORIES } from '@/lib/whiteboard/math-input-parser'
+import DOMPurify from 'dompurify'
 import dynamic from 'next/dynamic'
 
 // Lazy-load math renderers — 27.7 KB only loads when math elements exist on canvas (L-02 fix)
@@ -689,7 +690,7 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
           }}
         >{eq.label}</div>
         <div
-          dangerouslySetInnerHTML={{ __html: cardHtml }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cardHtml) }}
           style={{ minHeight: 24, display: 'flex', alignItems: 'center', color: textColor }}
         />
       </div>
@@ -799,7 +800,7 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
           >
             {previewHtml ? (
               <div
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewHtml) }}
                 style={{ color: textColor, fontSize: Math.max(14, element.fontSize) }}
               />
             ) : (
@@ -878,7 +879,7 @@ function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleC
             overflow: 'auto',
             boxSizing: 'border-box',
           }}
-          dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(renderedHtml) }}
           data-placeholder={'Double-click to edit equation...'}
         />
       )}

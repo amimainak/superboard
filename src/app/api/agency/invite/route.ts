@@ -8,8 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { createInviteSchema, validateInput } from '@/lib/validations';
-import { isAgencyTier } from '@/types';
+import { createInviteSchema } from '@/lib/validations';
+import { isAgencyTier, Tier } from '@/types';
 import crypto from 'crypto';
 
 /**
@@ -30,8 +30,14 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ email: string; role: string }>(createInviteSchema, body);
-    if (!parsed.success) return parsed.response;
+    const parsed = createInviteSchema.safeParse(body);
+    if (!parsed.success) {
+      const errors = parsed.error.issues.map((i) => ({
+        field: i.path.join('.'),
+        message: i.message || 'Validation error',
+      }));
+      return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 });
+    }
     const { email } = parsed.data;
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -41,7 +47,7 @@ export async function POST(request: NextRequest) {
       select: { tier: true, name: true },
     });
 
-    if (!agency || !isAgencyTier(agency.tier)) {
+    if (!agency || !isAgencyTier(agency.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'Only Agency tier users can create invites' },
         { status: 403 }
@@ -55,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // Enforce sub-tutor limit for AGENCY_STANDARD (5 max)
     const { TIER_LIMITS } = await import('@/types');
-    const effectiveTier = agency.tier === 'AGENCY' ? 'AGENCY_STANDARD' : agency.tier;
+    const effectiveTier: Tier = agency.tier === 'AGENCY' ? 'AGENCY_STANDARD' : (agency.tier as Tier);
     const maxSubTutors = TIER_LIMITS[effectiveTier]?.maxSubTutors ?? Infinity;
     if (subTutorCount >= maxSubTutors) {
       return NextResponse.json(
@@ -142,7 +148,7 @@ export async function GET(request: NextRequest) {
       select: { tier: true },
     });
 
-    if (!agency || !isAgencyTier(agency.tier)) {
+    if (!agency || !isAgencyTier(agency.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'This endpoint is only available for Agency tier users' },
         { status: 403 }
@@ -166,17 +172,10 @@ export async function GET(request: NextRequest) {
         id: true,
         code: true,
         invitedEmail: true,
+        recipientId: true,
         status: true,
         expiresAt: true,
-        acceptedAt: true,
         createdAt: true,
-        recipient: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
       },
       orderBy: { createdAt: 'desc' },
     });

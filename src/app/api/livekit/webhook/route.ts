@@ -2,9 +2,15 @@
 // API Route: LiveKit Webhook
 // ============================================================
 // Receives webhook events from LiveKit (egress started, ended, failed).
-// Updates recording status and URL in the database.
+// Updates recording status and storage URL in the database.
 // SECURITY: Validates LiveKit webhook authorization header.
 // ============================================================
+//
+// NOTE: The Recording Prisma model has no `egressId` column, so we
+// look up the in-progress recording by roomId + status='recording'
+// when handling webhook events. Field names that differ from the
+// legacy schema: `storageUrl` (was `url`), `durationSec` (was
+// `duration`), and lowercase status values ('ready', 'failed').
 
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -15,7 +21,7 @@ const LIVEKIT_WEBHOOK_SECRET = process.env.LIVEKIT_WEBHOOK_SECRET || '';
 // Webhook event types we handle
 type WebhookEvent = {
   event: string;
-  egressId: string;
+  egressId?: string;
   roomId?: string;
   userId?: string;
   startTime?: string;
@@ -56,16 +62,19 @@ export async function POST(request: NextRequest) {
 
     const event: WebhookEvent = JSON.parse(bodyText);
 
-    console.log(`[LiveKit Webhook] Event: ${event.event}, EgressID: ${event.egressId}`);
+    console.log(`[LiveKit Webhook] Event: ${event.event}, EgressID: ${event.egressId ?? 'n/a'}`);
 
-    // Handle egress ended — update recording with final URL
-    if (event.event === 'egress_ended' && event.egressId) {
+    // Handle egress ended — update recording with final URL.
+    // Since the Recording schema has no egressId column, look up the
+    // most recent in-progress recording for this room.
+    if (event.event === 'egress_ended' && event.roomId) {
       const recording = await db.recording.findFirst({
-        where: { egressId: event.egressId },
+        where: { roomId: event.roomId, status: 'recording' },
+        orderBy: { startedAt: 'desc' },
       });
 
       if (recording) {
-        const duration = event.duration
+        const durationSec = event.duration
           ? event.duration
           : recording.startedAt
             ? Math.round((Date.now() - recording.startedAt.getTime()) / 1000)
@@ -74,28 +83,29 @@ export async function POST(request: NextRequest) {
         await db.recording.update({
           where: { id: recording.id },
           data: {
-            status: 'STOPPED',
-            url: event.fileLocation || recording.url,
-            duration,
+            status: 'ready',
+            storageUrl: event.fileLocation || recording.storageUrl,
+            durationSec,
             endedAt: event.endTime ? new Date(event.endTime) : new Date(),
           },
         });
 
-        console.log(`[LiveKit Webhook] Updated recording ${recording.id}: duration=${duration}s, url=${event.fileLocation || 'pending'}`);
+        console.log(`[LiveKit Webhook] Updated recording ${recording.id}: duration=${durationSec}s, url=${event.fileLocation || 'pending'}`);
       }
     }
 
     // Handle egress failed
-    if (event.event === 'egress_failed' && event.egressId) {
+    if (event.event === 'egress_failed' && event.roomId) {
       const recording = await db.recording.findFirst({
-        where: { egressId: event.egressId },
+        where: { roomId: event.roomId, status: 'recording' },
+        orderBy: { startedAt: 'desc' },
       });
 
       if (recording) {
         await db.recording.update({
           where: { id: recording.id },
           data: {
-            status: 'FAILED',
+            status: 'failed',
             endedAt: new Date(),
           },
         });

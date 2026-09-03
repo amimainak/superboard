@@ -14,6 +14,7 @@ import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { isAgencyTier } from '@/types';
 import { z } from 'zod';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const answerKeyVerifySchema = z.object({
   roomId: z.string().min(1).max(100),
@@ -21,6 +22,10 @@ const answerKeyVerifySchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // --- Rate limit: 20 per minute per IP (AI cost abuse protection) ---
+    const { allowed, response } = await checkRateLimit(request, 'ai-answer-key', { max: 20, windowMs: 60_000 });
+    if (!allowed) return response;
+
     // --- Auth check: require authentication ---
     const auth = await requireAuth(request);
     if (auth instanceof NextResponse) return auth;

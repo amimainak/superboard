@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // TODO: 251 pre-existing TypeScript errors remain across the codebase
+  // (Tier type casts, validateInput patterns, admin route schema mismatches,
+  // CanvasArtsWidgets re-exports, LessonNote include/select mismatches).
+  // The critical Prisma schema mismatches in 16 API routes have been fixed.
+  // Re-enable strict checking once the remaining errors are resolved.
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -29,7 +34,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-icons',
-      'yjs',
       'perfect-freehand',
     ],
   },
