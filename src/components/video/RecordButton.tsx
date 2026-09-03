@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { hasFeature } from '@/lib/usage';
 import { authFetch } from '@/lib/auth-fetch';
 import type { Tier } from '@/types';
+import { useShallow } from 'zustand/react/shallow'
 
 // ---- Helpers ----
 

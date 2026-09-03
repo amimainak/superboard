@@ -3,6 +3,7 @@
 import React, { lazy, Suspense, useState, useCallback, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useConfigUpdater } from './shared/widgetUtils'
 
 // ============================================================
 // On-Canvas Science Widgets
@@ -12,22 +13,6 @@ import { useWhiteboardStore } from '@/lib/whiteboard/store'
 interface CanvasScienceWidgetProps {
   element: WidgetElement
   isDark: boolean
-}
-
-function useConfigUpdater(elementId: string) {
-  const updateElement = useWhiteboardStore((s) => s.updateElement)
-  const pendingRef = useRef<Record<string, unknown>>({})
-  const rafRef = useRef<number>(0)
-  const updateConfig = useCallback((patch: Record<string, unknown>) => {
-    Object.assign(pendingRef.current, patch)
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    rafRef.current = requestAnimationFrame(() => {
-      updateElement(elementId, { config: { ...pendingRef.current } } as Partial<WidgetElement>)
-      pendingRef.current = {}
-    })
-  }, [updateElement, elementId])
-  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
-  return updateConfig
 }
 
 const ws = (isDark: boolean) => ({

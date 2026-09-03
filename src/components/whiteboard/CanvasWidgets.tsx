@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useConfigUpdater } from './shared/widgetUtils'
 
 // ============================================================
 // On-Canvas Interactive Widgets
@@ -14,29 +15,6 @@ import { useWhiteboardStore } from '@/lib/whiteboard/store'
 interface CanvasWidgetProps {
   element: WidgetElement
   isDark: boolean
-}
-
-/** Debounced config updater — avoids flooding the store on every keystroke */
-function useConfigUpdater(elementId: string) {
-  const updateElement = useWhiteboardStore((s) => s.updateElement)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingRef = useRef<Record<string, unknown>>({})
-
-  const updateConfig = useCallback((patch: Record<string, unknown>) => {
-    Object.assign(pendingRef.current, patch)
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      updateElement(elementId, { config: { ...pendingRef.current } } as Partial<WidgetElement>)
-      pendingRef.current = {}
-    }, 150)
-  }, [updateElement, elementId])
-
-  // Flush on unmount
-  useEffect(() => () => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-  }, [])
-
-  return updateConfig
 }
 
 // ---- Shared helpers (self-contained, no external deps) ----

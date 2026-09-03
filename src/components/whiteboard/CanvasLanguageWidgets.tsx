@@ -97,6 +97,7 @@ import {
   type ProofreadingConfig,
 } from './ProofreadingWidget'
 import { ReadingPassageAnalyzer } from '@/components/room/widgets/language/LanguageUtilities'
+import { useConfigUpdater } from './shared/widgetUtils'
 import {
   RootMorphologyExplorer,
   ActivePassiveVoice,
@@ -115,28 +116,6 @@ import {
 interface CanvasWidgetProps {
   element: WidgetElement
   isDark: boolean
-}
-
-/** Debounced config updater */
-function useConfigUpdater(elementId: string) {
-  const updateElement = useWhiteboardStore((s) => s.updateElement)
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingRef = useRef<Record<string, unknown>>({})
-
-  const updateConfig = useCallback((patch: Record<string, unknown>) => {
-    Object.assign(pendingRef.current, patch)
-    if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      updateElement(elementId, { config: { ...pendingRef.current } } as Partial<WidgetElement>)
-      pendingRef.current = {}
-    }, 200)
-  }, [updateElement, elementId])
-
-  React.useEffect(() => () => {
-    if (timerRef.current) clearTimeout(timerRef.current)
-  }, [])
-
-  return updateConfig
 }
 
 // ---- Shared styles ----

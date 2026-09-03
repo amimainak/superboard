@@ -758,3 +758,4 @@ function snapToEdge(
 
 // Import Track for cleanup
 import { Track } from 'livekit-client';
+import { useShallow } from 'zustand/react/shallow'

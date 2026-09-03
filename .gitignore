@@ -21,3 +21,18 @@ tsconfig.tsbuildinfo
 bun.lock
 .vercel
 .env*
+
+# Phase 5 cleanup: dev artifacts that should never be tracked
+test-screenshots/
+upload/
+agent-ctx/
+blueprint/
+scripts/
+worklog.md
+dev.log
+server.log
+vercel-check.json
+search_results_*.json
+*_docs.json
+--timeout
+, shrink-0

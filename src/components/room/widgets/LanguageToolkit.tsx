@@ -51,6 +51,7 @@ import {
   DEFAULT_PARAORG_CONFIG,
   type ParagraphOrganizerWidgetConfig,
 } from '@/components/whiteboard/ParagraphOrganizerWidget'
+import { useShallow } from 'zustand/react/shallow'
 
 // Phase 1 — Core tools
 // Only lazy-load panel tools that don't have unified components
@@ -251,9 +252,9 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const installedTools = useWidgetStore((s) => s.installedTools)
   const addElement = useWhiteboardStore((s) => s.addElement)
-  const camera = useWhiteboardStore((s) => s.camera)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
   // Track which widget kinds are already on the canvas (Phase 1E: "already on canvas" badges)
-  const elements = useWhiteboardStore((s) => s.elements)
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
   const onCanvasKinds = useMemo(() => {
     const set = new Set<string>()
     for (const el of elements) {

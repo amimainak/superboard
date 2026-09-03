@@ -3,6 +3,7 @@
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import type { ArrowElement, TextElement, StickyElement } from '@/lib/whiteboard/types'
+import { useShallow } from 'zustand/react/shallow'
 
 interface ScienceToolkitProps {
   roomId?: string
@@ -42,8 +43,8 @@ function getArrowBounds(x1: number, y1: number, x2: number, y2: number) {
 
 export function ScienceToolkit({ roomId: _roomId }: ScienceToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
-  const camera = useWhiteboardStore((s) => s.camera)
-  const style = useWhiteboardStore((s) => s.style)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
+  const style = useWhiteboardStore(useShallow((s) => s.style))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
   const addElement = useWhiteboardStore((s) => s.addElement)
   const pushHistory = useWhiteboardStore((s) => s.pushHistory)

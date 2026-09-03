@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import type { WidgetElement } from '@/lib/whiteboard/types'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useConfigUpdater } from './shared/widgetUtils'
 
 // ============================================================
 // L3 Interactive Canvas Widgets — Quiz, Enhanced Flashcards
@@ -18,16 +19,6 @@ interface CanvasWidgetProps {
 
 /** Immediate config updater — syncs on every call, no batching.
  * Used by L3 widgets where state mutations must not be lost. */
-function useConfigUpdater(elementId: string) {
-  const updateElement = useWhiteboardStore((s) => s.updateElement)
-
-  const updateConfig = useCallback((patch: Record<string, unknown>) => {
-    updateElement(elementId, { config: patch } as Partial<WidgetElement>)
-  }, [updateElement, elementId])
-
-  return updateConfig
-}
-
 
 // ============================================================
 // L3 QUIZ WIDGET

@@ -6,6 +6,7 @@ import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { Mafs, Coordinates, Plot, Text as MafsText } from 'mafs'
 import { MultiplicationGrid, Flashcards, Calculator, UnitConverter, FormulaReference, ProofBuilder } from '@/components/room/widgets/math/MathUtilities'
+import { useConfigUpdater } from './shared/widgetUtils'
 
 // ============================================================
 // On-Canvas Math Widgets — Interactive fraction & angle tools
@@ -63,28 +64,6 @@ function useStampToCanvas(element: WidgetElement) {
 interface CanvasWidgetProps {
   element: WidgetElement
   isDark: boolean
-}
-
-/** Immediate config updater (no debounce — click interactions need instant feedback) */
-function useConfigUpdater(elementId: string) {
-  const updateElement = useWhiteboardStore((s) => s.updateElement)
-  const pendingRef = useRef<Record<string, unknown>>({})
-  const rafRef = useRef<number>(0)
-
-  const updateConfig = useCallback((patch: Record<string, unknown>) => {
-    Object.assign(pendingRef.current, patch)
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    rafRef.current = requestAnimationFrame(() => {
-      updateElement(elementId, { config: { ...pendingRef.current } } as Partial<WidgetElement>)
-      pendingRef.current = {}
-    })
-  }, [updateElement, elementId])
-
-  useEffect(() => () => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-  }, [])
-
-  return updateConfig
 }
 
 // ---- Shared styles ----

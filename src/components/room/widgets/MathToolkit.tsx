@@ -6,6 +6,7 @@ import type { ToolId } from '@/lib/whiteboard/types'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { useShallow } from 'zustand/react/shallow'
 
 // Lazy-load panel utilities — only parsed when the grade tab renders them
 const CalculatorLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Calculator })))
@@ -104,7 +105,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   const setMathToolConfig = useWhiteboardStore((s) => s.setMathToolConfig)
   const pushHistory = useWhiteboardStore((s) => s.pushHistory)
   const addElement = useWhiteboardStore((s) => s.addElement)
-  const camera = useWhiteboardStore((s) => s.camera)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
   const showGrid = useWhiteboardStore((s) => s.showGrid)
   const setGridType = useWhiteboardStore((s) => s.setGridType)

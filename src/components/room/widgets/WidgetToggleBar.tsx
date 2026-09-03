@@ -11,6 +11,7 @@ import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS, getWidgetsForSubject 
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { useAppStore } from '@/store/app-store'
 import { WidgetBrowseModal } from './WidgetBrowseModal'
+import { useShallow } from 'zustand/react/shallow'
 
 export function WidgetToggleBar() {
   const isDark = useWhiteboardStore((s) => s.isDark)

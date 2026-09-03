@@ -12,6 +12,7 @@
 import { useAppStore } from '@/store/app-store';
 import { AlertTriangle, Info, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useShallow } from 'zustand/react/shallow'
 
 export default function VideoLimitBanner() {
   const videoLimited = useAppStore((s) => s.videoLimited);

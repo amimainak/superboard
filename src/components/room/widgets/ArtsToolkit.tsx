@@ -5,6 +5,7 @@ import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { useShallow } from 'zustand/react/shallow'
 
 function ToolSkeleton({ isDark }: { isDark: boolean }) {
   return (
@@ -283,10 +284,10 @@ const GRADE_BANDS: { id: GradeBand; label: string; icon: string }[] = [
 export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
   const isDark = useWhiteboardStore((s) => s.isDark)
   const addElement = useWhiteboardStore((s) => s.addElement)
-  const camera = useWhiteboardStore((s) => s.camera)
+  const camera = useWhiteboardStore(useShallow((s) => s.camera))
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
   // Track which widget kinds are already on the canvas (Phase 1E: "already on canvas" badges)
-  const elements = useWhiteboardStore((s) => s.elements)
+  const elements = useWhiteboardStore(useShallow((s) => s.elements))
   const onCanvasKinds = useMemo(() => {
     const set = new Set<string>()
     for (const el of elements) {
