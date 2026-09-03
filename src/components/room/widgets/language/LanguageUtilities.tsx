@@ -227,6 +227,52 @@ export function ReadingPassageAnalyzer({ isDark }: { isDark: boolean }) {
     const avgSyllablesPerWord = wordCount > 0 ? totalSyllables / wordCount : 0
     const fleschKincaid = 0.39 * avgWordsPerSentence + 11.8 * avgSyllablesPerWord - 15.59
 
+    // --- Enhanced metrics (Phase 4 cleanup) ---
+
+    // 1. Lexile-style estimate (approximation — true Lexile requires proprietary formula).
+    //    Heuristic based on sentence length + word length, bounded to plausible range.
+    const charCount = words.reduce((sum, w) => sum + w.replace(/[^a-zA-Z]/g, '').length, 0)
+    const avgWordLength = wordCount > 0 ? charCount / wordCount : 0
+    const lexileEstimate = Math.round(
+      Math.min(1700, Math.max(200, 250 * (avgWordsPerSentence / 10) + 10 * avgWordLength - 50 + 500))
+    )
+
+    // 2. Sentence variety — coefficient of variation of sentence lengths.
+    const sentenceLengths = sentences.map(sent => sent.trim().split(/\s+/).filter(Boolean).length).filter(n => n > 0)
+    const meanLen = sentenceLengths.length > 0 ? sentenceLengths.reduce((a, b) => a + b, 0) / sentenceLengths.length : 0
+    const variance = sentenceLengths.length > 1
+      ? sentenceLengths.reduce((sum, len) => sum + Math.pow(len - meanLen, 2), 0) / sentenceLengths.length
+      : 0
+    const stdev = Math.sqrt(variance)
+    const cv = meanLen > 0 ? stdev / meanLen : 0
+    const varietyScore = Math.round(Math.min(100, cv * 100))
+    const varietyLabel = varietyScore < 20 ? 'Low (similar lengths)' : varietyScore < 40 ? 'Moderate' : varietyScore < 60 ? 'Good variety' : 'Rich variety'
+
+    // 3. Cohesion — count of cohesive devices (transitions, pronouns, conjunctions).
+    const lowerText = text.toLowerCase()
+    const transitionWords = ['however', 'therefore', 'moreover', 'furthermore', 'although', 'because', 'since', 'while', 'whereas', 'first', 'second', 'third', 'finally', 'next', 'then', 'for example', 'for instance', 'in addition', 'in conclusion', 'as a result', 'on the other hand', 'similarly', 'in contrast', 'consequently']
+    const transitionCount = transitionWords.reduce((sum, t) => {
+      const re = new RegExp('\\b' + t.replace(/\s+/g, '\\s+') + '\\b', 'g')
+      const m = lowerText.match(re)
+      return sum + (m ? m.length : 0)
+    }, 0)
+    const pronounCount = (lowerText.match(/\b(he|she|it|they|them|this|that|these|those|which|who|whom)\b/g) || []).length
+    const conjunctionCount = (lowerText.match(/\b(and|but|or|so|because|although|while|if|when|since|unless)\b/g) || []).length
+    const cohesionDevices = transitionCount + pronounCount + conjunctionCount
+    const cohesionPerSentence = sentenceCount > 0 ? cohesionDevices / sentenceCount : 0
+    const cohesionScore = Math.round(Math.min(100, cohesionPerSentence * 50))
+    const cohesionLabel = cohesionScore < 25 ? 'Sparse — add transitions' : cohesionScore < 50 ? 'Adequate' : cohesionScore < 75 ? 'Strong' : 'Very strong'
+
+    // 4. Topic sentence identification — first declarative sentence of each paragraph.
+    const topicSentences: string[] = []
+    for (const para of paragraphs) {
+      const paraSentences = para.split(/[.!?]+/).map(s2 => s2.trim()).filter(s2 => s2.length > 5)
+      if (paraSentences.length === 0) continue
+      const declarative = paraSentences.find(s2 => !/^(what|why|how|when|where|who|which|can|do|does|is|are|will|could|would|should)\b/i.test(s2))
+      const candidate = (declarative || paraSentences[0])
+      topicSentences.push(candidate.length > 120 ? candidate.slice(0, 120) + '...' : candidate)
+    }
+
     // Top 5 frequent words
     const freq = new Map<string, number>()
     for (const w of words) {
@@ -238,13 +284,32 @@ export function ReadingPassageAnalyzer({ isDark }: { isDark: boolean }) {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
 
-    return { wordCount, sentenceCount, paragraphCount, avgWordsPerSentence, fleschKincaid, topWords }
+    return {
+      wordCount, sentenceCount, paragraphCount, avgWordsPerSentence, fleschKincaid,
+      lexileEstimate, varietyScore, varietyLabel, cohesionScore, cohesionLabel,
+      topicSentences, topWords,
+      transitionCount, pronounCount, conjunctionCount,
+    }
   }, [text])
 
   const statBox = (label: string, value: string | number) => (
     <div style={{ background: s.bg, borderRadius: 4, padding: '6px 8px', border: '1px solid ' + s.border, flex: '1 1 45%', minWidth: 0 }}>
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
       <div style={{ fontSize: 14, fontWeight: 700, color: s.bright, marginTop: 2 }}>{value}</div>
+    </div>
+  )
+
+  const sectionBox = (label: string, score: number, label2: string, accent: string) => (
+    <div style={{
+      background: s.bg, borderRadius: 4, padding: '6px 8px', border: '1px solid ' + s.border,
+      flex: '1 1 45%', minWidth: 0,
+    }}>
+      <div style={{ fontSize: 9, color: s.text, opacity: 0.7, textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 2 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: accent }}>{score}</span>
+        <span style={{ fontSize: 9, color: s.text }}>/100</span>
+      </div>
+      <div style={{ fontSize: 9, color: s.text, marginTop: 1 }}>{label2}</div>
     </div>
   )
 
@@ -267,6 +332,32 @@ export function ReadingPassageAnalyzer({ isDark }: { isDark: boolean }) {
           {statBox('Paragraphs', analysis.paragraphCount)}
           {statBox('Avg Words/Sent', analysis.avgWordsPerSentence.toFixed(1))}
           {statBox('Flesch-Kincaid', (analysis.fleschKincaid).toFixed(1) + ' GL')}
+          {statBox('Lexile (est.)', analysis.lexileEstimate + 'L')}
+          {sectionBox('Sentence Variety', analysis.varietyScore, analysis.varietyLabel, '#a78bfa')}
+          {sectionBox('Cohesion', analysis.cohesionScore, analysis.cohesionLabel, '#34d399')}
+          <div style={{
+            background: s.bg, borderRadius: 4, padding: '6px 8px', border: '1px solid ' + s.border,
+            flex: '1 1 100%', minWidth: 0,
+          }}>
+            <div style={{ fontSize: 9, color: s.text, opacity: 0.7, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+              Cohesive devices ({analysis.transitionCount} transitions, {analysis.pronounCount} pronouns, {analysis.conjunctionCount} conjunctions)
+            </div>
+          </div>
+          {analysis.topicSentences.length > 0 && (
+            <div style={{
+              background: s.bg, borderRadius: 4, padding: '6px 8px', border: '1px solid ' + s.border,
+              flex: '1 1 100%', minWidth: 0,
+            }}>
+              <div style={{ fontSize: 9, color: s.text, opacity: 0.7, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                Topic sentences (one per paragraph)
+              </div>
+              <ol style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                {analysis.topicSentences.map((ts, i) => (
+                  <li key={i} style={{ fontSize: 10, color: s.bright, lineHeight: 1.5, marginBottom: 2 }}>{ts}</li>
+                ))}
+              </ol>
+            </div>
+          )}
           <div style={{
             background: s.bg, borderRadius: 4, padding: '6px 8px', border: '1px solid ' + s.border,
             flex: '1 1 100%', minWidth: 0,

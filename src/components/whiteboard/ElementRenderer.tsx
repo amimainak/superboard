@@ -469,6 +469,49 @@ export const ElementRenderer = React.memo(function ElementRenderer({
             <circle cx={element.x + 14} cy={element.y + 40} r={btnR} fill={btnBg} stroke={btnBorder} strokeWidth={1} />
             <text x={element.x + 14} y={element.y + 41} textAnchor='middle' dominantBaseline='central' fontSize={13} fontWeight={700} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>↑</text>
           </g>
+          {/* Send to Back (↓) button — below Bring to Front, top left */}
+          <g
+            className={'wtb-' + element.id}
+            opacity={element.locked ? 1 : 0}
+            style={{ cursor: 'pointer' as const, transition: 'opacity 0.15s ease' }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              var store = useWhiteboardStore.getState()
+              store.pushHistory()
+              store.sendToBack(element.id)
+            }}
+            onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+            onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
+          >
+            <circle cx={element.x + 14} cy={element.y + 66} r={btnR} fill={btnBg} stroke={btnBorder} strokeWidth={1} />
+            <text x={element.x + 14} y={element.y + 67} textAnchor='middle' dominantBaseline='central' fontSize={13} fontWeight={700} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>↓</text>
+          </g>
+          {/* Reset to Default (⟲) button — below Send to Back, top left */}
+          <g
+            className={'wtb-' + element.id}
+            opacity={element.locked ? 1 : 0}
+            style={{ cursor: 'pointer' as const, transition: 'opacity 0.15s ease' }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              var store = useWhiteboardStore.getState()
+              store.pushHistory()
+              // Reset widget config to the default for its kind
+              var widgetKind = (element as any).widgetKind
+              if (widgetKind) {
+                import('@/components/whiteboard/CanvasWidgets').then(function(mod) {
+                  var defaultConfig = mod.getDefaultWidgetConfig(widgetKind)
+                  store.updateElement(element.id, { config: { ...defaultConfig } } as Partial<WhiteboardElement>)
+                })
+              }
+            }}
+            onMouseOver={(e) => { document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '1') }) }}
+            onMouseOut={(e) => { if (!element.locked) document.querySelectorAll('.wtb-' + element.id).forEach(function(el) { el.setAttribute('opacity', '0') }) }}
+          >
+            <circle cx={element.x + 14} cy={element.y + 92} r={btnR} fill={btnBg} stroke={btnBorder} strokeWidth={1} />
+            <text x={element.x + 14} y={element.y + 93} textAnchor='middle' dominantBaseline='central' fontSize={11} fill={btnColor} style={{ pointerEvents: 'none' as const, userSelect: 'none' as const }}>⟲</text>
+          </g>
         </g>
       )
     }

@@ -20,6 +20,7 @@ import { SaveAsTemplateModal } from '@/components/whiteboard/SaveAsTemplateModal
 import { MyTemplatesPanel } from '@/components/whiteboard/MyTemplatesPanel'
 import { CommunityTemplatesPanel } from '@/components/whiteboard/CommunityTemplatesPanel'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useTemplateModalStore } from '@/lib/room/template-modal-store'
 import type { TemplateFull } from '@/types'
 import {
   exportAsPng,
@@ -79,6 +80,23 @@ export default function WhiteboardClient() {
   const [myTemplatesOpen, setMyTemplatesOpen] = useState(false)
   const [communityTemplatesOpen, setCommunityTemplatesOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<TemplateFull | undefined>(undefined)
+
+  // ---- Register Phase 2 modal openers in the shared store ----
+  // This lets the right-sidebar TemplatesWidget (and any other component)
+  // open the rich modals without prop drilling.
+  const setOpenSaveModal = useTemplateModalStore((s) => s.setOpenSaveModal)
+  const setOpenMyTemplates = useTemplateModalStore((s) => s.setOpenMyTemplates)
+  const setOpenCommunityTemplates = useTemplateModalStore((s) => s.setOpenCommunityTemplates)
+  useEffect(() => {
+    setOpenSaveModal(() => () => setSaveTemplateOpen(true))
+    setOpenMyTemplates(() => () => setMyTemplatesOpen(true))
+    setOpenCommunityTemplates(() => () => setCommunityTemplatesOpen(true))
+    return () => {
+      setOpenSaveModal(null)
+      setOpenMyTemplates(null)
+      setOpenCommunityTemplates(null)
+    }
+  }, [setOpenSaveModal, setOpenMyTemplates, setOpenCommunityTemplates])
 
   // ---- Export Handlers ----
 

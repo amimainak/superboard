@@ -594,3 +594,443 @@ Stage Summary:
 - Commit: 2e70c91 pushed to main
 - Vercel deploy pending — user needs to trigger deploy manually or check GitHub integration
 - All changes verified correct in local build output
+
+---
+Task ID: CODE-AUDIT
+Agent: white-box-auditor
+Task: White-box source code audit of SuperBoard Next.js whiteboard app — feature inventory, security review, stub detection, code hygiene assessment
+
+Work Log:
+- Read package.json, middleware.ts, supabase/middleware.ts, stripe.ts, stripe/{checkout,webhook,portal,billing}/route.ts, livekit/token/route.ts, livekit/webhook/route.ts
+- Read prisma/schema.prisma (482 lines, 23 models)
+- Read src/lib/whiteboard/store.ts (1240 lines — production state store), history.ts (orphaned, @ts-nocheck), provider.ts (Yjs/Hocuspocus — unused), realtime-sync.ts (Supabase Broadcast — actually used), useYjsProvider.ts (unused)
+- Read src/components/room/RoomWhiteboard.tsx (production canvas wrapper), WhiteboardCanvas.tsx (1359 lines — real SVG canvas)
+- Read src/app/api/ai/action/route.ts (STUB), generate/route.ts (z-ai-sdk), recording/route.ts (LiveKit Egress + schema mismatch)
+- Grep-scanned all 113 API routes for stubs/TODOs/coming-soon markers
+- Verified dead code: src/components/canvas/ (8212 lines, 19 files) and src/components/toolkits/ (10 files) — neither imported by any production file
+- Verified dev artifacts at repo root: `, shrink-0` (0 bytes), `--timeout` (49KB), tool-results/, skills/, *_docs.json
+- Verified tests/ dir contains only 3 shell scripts testing runtime build infrastructure — no app unit/integration/e2e tests
+- Confirmed two parallel auth systems (@/lib/auth vs @/lib/auth-guard), two parallel templates APIs (/api/templates Supabase vs /api/room/templates Prisma)
+- Confirmed Stripe tier mismatch: checkout accepts only PRO/AGENCY; TIER_PRICE_MAP has only PRO/AGENCY; schema+usage.ts support AGENCY_STANDARD/AGENCY_PREMIUM but checkout can't reach them
+- Confirmed /api/test-prep/categories queries non-existent Prisma model (TestPrepCategory not in schema) → runtime crash
+- Confirmed /api/admin/setup-owner writes `role` column absent from User schema (has fallback)
+- Confirmed /api/auth/dev-login is a passwordless backdoor gated only by env-var presence
+
+============================================================
+A. ARCHITECTURE SUMMARY
+============================================================
+
+SuperBoard is a substantial Next.js 16 + React 19 + TypeScript collaborative whiteboard for K-12 tutoring. The **production canvas** is `src/components/whiteboard/WhiteboardCanvas.tsx` (1359 lines, real SVG-based infinite canvas with perfect-freehand strokes, hit-testing, alignment guides, multi-page support, undo/redo bounded to 50 entries). It is reached via `app/room/[roomId]/page.tsx` → `RoomWhiteboard.tsx` → `WhiteboardCanvas.tsx`. Strokes are persisted as JSON snapshots per `BoardPage` row in Postgres (Prisma), with a 3-second debounced auto-save.
+
+**What's wired up:** Full Prisma schema (23 models), Supabase Auth + RLS, Stripe checkout + webhook (with proper signature verification), LiveKit token endpoint (real JWT signing), CSRF double-submit cookie middleware, real-time chat (Supabase ChatMessage), 149+ subject widgets (Math/Physics/Chemistry/Biology/Language/Stats/EarthScience/Arts), templates CRUD, scheduling, agency management, parent portal (token-based), admin panel, recording (LiveKit Egress + signed URLs).
+
+**What's sitting unused:** Two complete alternative canvas implementations (`src/components/canvas/` — 8212 lines including Whiteboard, SuperboardCanvas, TldrawCanvas, FabricCanvas; `src/components/toolkits/` — 10 files). The Yjs/Hocuspocus collab provider (`src/lib/collab/provider.ts`, `src/hooks/useYjsProvider.ts`) is fully implemented but **never wired into the actual whiteboard store** — the production sync uses Supabase Realtime Broadcast (`realtime-sync.ts`), which is NOT a CRDT and will lose concurrent edits. The orphaned `history.ts` (marked `@ts-nocheck`) duplicates the real undo/redo in `store.ts`.
+
+============================================================
+B. FEATURE IMPLEMENTATION STATUS TABLE
+============================================================
+
+--- 1. Core canvas & drawing ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| WhiteboardCanvas | src/components/whiteboard/WhiteboardCanvas.tsx (1359L) | ✅ Real | SVG-based; perfect-freehand; alignment guides; 60fps preview sub-component |
+| LeftToolbar | src/components/whiteboard/LeftToolbar.tsx (469L) | ✅ Real | pen/highlighter/eraser/text/shapes/hand/select |
+| StylePanel | src/components/whiteboard/StylePanel.tsx (896L) | ✅ Real | color/width/opacity/text options |
+| SelectionHandles | src/components/whiteboard/SelectionHandles.tsx (330L) | ✅ Real | move/resize/rotate |
+| GridBackground | src/components/whiteboard/GridBackground.tsx (114L) | ✅ Real | dot/line grids |
+| SearchOverlay | src/components/whiteboard/SearchOverlay.tsx (347L) | ✅ Real | Ctrl+K shortcut |
+| PdfRenderer | src/components/whiteboard/PdfRenderer.tsx (55L) | 🟡 Partial | Thin wrapper; pdfjs-dist loaded but limited integration |
+| ElementRenderer | src/components/whiteboard/ElementRenderer.tsx (1207L) | ✅ Real | Uses `dangerouslySetInnerHTML` for KaTeX math (sanitized upstream) |
+
+--- 2. Undo/Redo + History ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| History stack (production) | src/lib/whiteboard/store.ts L914-971 | ✅ Real | Bounded to 50; per-page snapshots; preserves other pages |
+| HistoryManager (orphan) | src/lib/whiteboard/history.ts (70L) | 🔴 Stub | `@ts-nocheck`; references `WhiteboardEngine`/`CanvasSnapshot` that don't exist in prod path; never imported |
+| Collaborative-aware undo | — | ⚫ Missing | Undo swaps local element state, will override remote peers' edits (not CRDT-aware) |
+
+--- 3. Zoom/Pan/Viewport ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Zoom (in/out/reset/fit) | src/lib/whiteboard/store.ts | ✅ Real | Wired to TopBar; bounded |
+| Pan (space-drag + middle-mouse) | store.ts L908-911 | ✅ Real | spaceHeld state |
+| Presentation mode | RoomWhiteboard.tsx L451-477 | ✅ Real | Fullscreen overlay with zoom indicator |
+
+--- 4. Collaboration ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Yjs + Hocuspocus provider | src/lib/collab/provider.ts (123L) | 🟡 Partial | Fully implemented but NOT used by production whiteboard |
+| useYjsProvider hook | src/hooks/useYjsProvider.ts (220L) | 🟡 Partial | Implemented with retry/backoff; only imported by dead `components/canvas/Whiteboard.tsx` |
+| Supabase Broadcast sync (actual prod) | src/lib/collab/realtime-sync.ts (236L) | 🟡 Partial | Real-time but NOT a CRDT — last-write-wins broadcast via 60ms polling; concurrent edits will conflict |
+| Awareness (cursors/presence) | src/lib/collab/store.ts + RemoteCursors.tsx | ✅ Real | 12 cursor colors; hand-raise |
+| y-indexeddb persistence | provider.ts L25 | ✅ Real | But only active if Hocuspocus provider is active (it isn't in prod) |
+
+--- 5. Pages / Multi-page ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Page state | src/lib/whiteboard/store.ts L974+ | ✅ Real | addPage/clearCurrentPage; elements tagged with pageIndex |
+| PageTabs UI | src/components/whiteboard/PageTabs.tsx (76L) | ✅ Real | Switch/add/rename |
+| Page persistence | /api/rooms/[roomId]/pages (GET/PUT) | ✅ Real | BoardPage.snapshot JSON per page |
+
+--- 6. Templates ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Template CRUD (Supabase) | /api/templates, /api/templates/[templateId] | ✅ Real | Simple; used by RoomWhiteboard "Save as Template" |
+| Template CRUD (Prisma, Phase 2) | /api/room/templates, /api/room/templates/[id], /api/room/templates/community | ✅ Real | Search/filter/grade-band/tags/isPublic; 5MB snapshot cap; 50 templates/user |
+| SaveAsTemplateModal | src/components/whiteboard/SaveAsTemplateModal.tsx (385L) | ✅ Real | Create + edit |
+| CommunityTemplatesPanel | src/components/whiteboard/CommunityTemplatesPanel.tsx (280L) | ✅ Real | Browse/filter/sort |
+| MyTemplatesPanel | src/components/whiteboard/MyTemplatesPanel.tsx (358L) | ✅ Real | List/edit/duplicate/delete |
+
+--- 7. Right-side panels ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Chat | src/components/room/widgets/ChatWidget.tsx + ChatMessage table | ✅ Real | Supabase real-time; file attach/pin/delete/unread |
+| Participants | src/components/room/widgets/ParticipantsWidget.tsx (105L) | ✅ Real | Reads useCollabStore.remoteUsers |
+| Video | src/components/room/widgets/VideoWidget.tsx + /api/livekit/token | ✅ Real | LiveKitRoom + useTracks; real JWT signing |
+| Recording (in-lesson) | src/components/room/widgets/RecordingWidget.tsx (662L) | ✅ Real | Browser MediaRecorder + SVG-to-canvas; auto-segments 15min; **NOT** LiveKit Egress |
+| Recording (server-side) | /api/room/[roomId]/recording + /api/recordings | 🟡 Partial | LiveKit Egress wired but schema mismatch: writes `url` field that doesn't exist (schema has `storageUrl`); `status: egressId ? 'STARTED' : 'STARTED'` is a no-op ternary (L187) |
+| Notes | src/components/room/widgets/SessionNotesWidget.tsx (179L) + /api/rooms/[roomId]/notes + /api/lesson-notes | ✅ Real | Rich text + auto-save; previously had CORS wildcard (now fixed) |
+| AI Assistant | src/components/room/widgets/AIAssistantWidget.tsx (259L) + /api/ai/action | 🔴 Stub | Widget uses hardcoded response templates; /api/ai/action ALWAYS returns placeholder JSON even when ANTHROPIC_API_KEY is real (real call commented out L134-142) |
+| AI Canvas widgets | /api/ai/generate, /api/ai/generate-variations, /api/ai/draft-feedback, /api/ai/adapt-reading-level, /api/ai/answer-key | 🟡 Partial | /api/ai/generate uses z-ai-web-dev-sdk (real); others may fallback to placeholders |
+
+--- 8. Subject-specific widgets (149 in registry per prior worklog) ---
+| Subject | Toolkit file | Utilities file | Status |
+|---|---|---|---|
+| Math | MathToolkit.tsx (737L) | CanvasMathWidgets.tsx (4017L) | ✅ Real — 33 widgets |
+| Physics | PhysicsToolkit.tsx (391L) | physics/PhysicsUtilities.tsx (1888L) | ✅ Real — 13 widgets (pendulum, projectile, circuits, waves) |
+| Chemistry | ChemistryToolkit.tsx (373L) | chemistry/ChemistryUtilities.tsx (1554L) | ✅ Real — 12 widgets (periodic table, Lewis dot, VSEPR, titration) |
+| Biology | BiologyToolkit.tsx (375L) | biology/BiologyUtilities.tsx | ✅ Real — 13 widgets (Punnett, cell diagram, food web) |
+| Language/ELA | LanguageToolkit.tsx (660L) | CanvasLanguageWidgets.tsx (1266L) | ✅ Real — 22 widgets |
+| Statistics | StatToolkit.tsx (256L) | stat/StatUtilities.tsx | ✅ Real — 6 widgets |
+| Earth Science | EarthScienceToolkit.tsx (420L) | earthscience/EarthScienceUtilities.tsx | ✅ Real — 19 widgets |
+| Arts & Music | ArtsToolkit.tsx (660L) | CanvasArtsWidgets.tsx (980L) | ✅ Real — 14 widgets |
+
+--- 9. Bottom-right features ---
+| Feature | Component | API route | Status |
+|---|---|---|---|
+| Classroom | ClassroomToolkit.tsx (287L) | — | ✅ Real (canvas widgets only; no dedicated API) |
+| Analytics | AnalyticsWidget.tsx (217L) | /api/analytics | ✅ Real (Prisma aggregations) |
+| Parent Portal | ParentPortalWidget.tsx (249L) + /app/parent/[token]/page.tsx | /api/parent/[token] | ✅ Real — token-based, rate-limited, 4 tabs |
+| Scheduling | SchedulingWidget.tsx (298L) | /api/schedule, /api/schedule/[lessonId], /api/schedule/slot/[slotId], /api/calendar/ics/[lessonId] | ✅ Real — CRUD + ICS export |
+| Agency | AgencyWidget.tsx (382L) | /api/agency, /api/agency/analytics, /api/agency/hours, /api/agency/students, /api/agency/invite, /api/agency/subtutors | ✅ Real — full agency management |
+| Breakout Rooms | BreakoutRoomsWidget.tsx (371L) | — | 🟡 Partial — "Broadcasts to chat (full isolation requires Hocuspocus server)" — does NOT actually isolate participants into separate rooms |
+| Assessment | AssessmentWidget.tsx (705L) | — | ✅ Real — MC/TF/SA quizzes; results local + shareable via chat |
+| Library | ResourceLibraryPanel.tsx | /api/resources, /api/resources/[resourceId] | ✅ Real — agency-scoped resources |
+| Test Prep | — | /api/test-prep/categories, /api/test-prep/assign | 🔴 Broken — queries `db.testPrepCategory` model that does NOT exist in Prisma schema → runtime crash |
+| Credit Packs | AgencyAdminPanel.tsx | /api/agency/credit-packs | 🔴 Stub — "Payment integration coming soon. Packs are created immediately for testing." Status hardcoded to PENDING_PAYMENT |
+
+--- 10. Auth & Billing ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| middleware.ts | src/middleware.ts + src/lib/supabase/middleware.ts | ✅ Real | Delegates to updateSession; protects all non-public routes; CSRF double-submit; HSTS |
+| Public routes | supabase/middleware.ts L51, L110 | 🟡 Partial | `/dashboard` is in publicRoutes — anyone can hit it (AuthGate client-side rescues) |
+| Stripe checkout | /api/stripe/checkout | 🟡 Partial | Only accepts `'PRO' | 'AGENCY'` — AGENCY_STANDARD/AGENCY_PREMIUM unreachable |
+| Stripe webhook | /api/stripe/webhook | ✅ Real | Signature verified; accepts 4 tiers (PRO/AGENCY/AGENCY_STANDARD/AGENCY_PREMIUM) |
+| Stripe portal | /api/stripe/portal | ✅ Real | 503 if STRIPE_PORTAL_CONFIG_ID missing/placeholder |
+| Stripe billing | /api/stripe/billing | ✅ Real | Lists subscriptions |
+| Pricing tiers | src/lib/stripe.ts TIER_PRICE_MAP | 🟡 Partial | Only PRO + AGENCY mapped; AGENCY_STANDARD/AGENCY_PREMIUM price IDs missing |
+| Usage enforcement | src/hooks/useCredits.ts + src/lib/usage.ts | ✅ Real | 30s polling; video soft-stop at 80%/100%; AI credit deduction |
+| Referral rewards | /api/referral/claim | 🔴 Stub | `// TODO: Wire Stripe coupon/credit for 1 free month of Pro` — never wires reward |
+| Dev login backdoor | /api/auth/dev-login | 🔴 Stub | Returns user data without password; gated only by `NODE_ENV === 'production' \|\| NEXT_PUBLIC_SUPABASE_URL` — fragile |
+
+--- 11. Persistence ---
+| Feature | Source | Status | Notes |
+|---|---|---|---|
+| Prisma schema | prisma/schema.prisma (482L) | ✅ Real | 23 models (User, Room, BoardPage, Template, ChatMessage, UsageLog, RoomParticipant, Booking, ScheduleSlot, Student, AuditLog, Recording, Subscription, PlatformConfig, Invoice, ScheduledLesson, CreditPack, Homework, LessonNote, WebhookConfig, QuestionItem, AgencyMember, AgencyInvite) |
+| Stroke persistence | BoardPage.snapshot (JSON per page) | ✅ Real | Server-side via /api/rooms/[roomId]/pages PUT |
+| IndexedDB backup | src/lib/collab/provider.ts L25 (y-indexeddb) | 🟡 Partial | Only active if Hocuspocus provider runs (it doesn't in prod) |
+| Room CRUD | /api/rooms, /api/rooms/[roomId], /api/room, /api/room/[roomId], /api/room/list, /api/room/join, /api/room/from-template, /api/room/export, /api/room/participants | ✅ Real | Both Supabase-direct and Prisma implementations coexist |
+
+--- 12. API route inventory (113 routes total) ---
+Spot-classification (sampled, not exhaustive):
+- **Real & authenticated (Prisma):** /api/ai/generate, /api/agency/*, /api/schedule/*, /api/lesson-notes/*, /api/homework/*, /api/invoices/*, /api/room/templates/*, /api/rooms/[roomId]/pages, /api/rooms/[roomId]/notes, /api/questions, /api/resources, /api/recordings, /api/room/[roomId]/recording, /api/parent/[token], /api/analytics, /api/usage/*, /api/user/*, /api/auth/{login,register,logout,profile,callback,reset-password,send-reset-otp,update-password}, /api/stripe/*, /api/livekit/{token,webhook}, /api/admin/{stats,users,rooms,audit,billing,subscriptions,config,check}, /api/v1/rooms, /api/referral/{apply,route}, /api/calendar/ics/[lessonId], /api/bookings, /api/webhooks, /api/health, /api/privacy
+- **Stub returning fake data:** /api/ai/action (always placeholder), /api/agency/credit-packs (creates without payment), /api/referral/claim (TODO no reward wired)
+- **Broken:** /api/test-prep/categories (queries non-existent model), /api/test-prep/assign (likely same)
+- **Dev-only:** /api/auth/dev-login (backdoor)
+
+--- 13. Security & production-readiness ---
+| Check | Status | Notes |
+|---|---|---|
+| Hardcoded secrets | ✅ Clean | All secrets via process.env; no sk_live_/password literals |
+| Stripe webhook signature | ✅ Real | `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET!)` |
+| LiveKit token signing | ✅ Real | AccessToken + toJwt; verifies room access via Prisma |
+| LiveKit webhook auth | ✅ Real | Timing-safe comparison |
+| Recording URL signing | ✅ Real | HMAC-SHA256 + expiry + constant-time compare |
+| CSRF protection | ✅ Real | Double-submit cookie; SameSite=strict |
+| Rate limiting | ✅ Real | /api/livekit/token 5/min, /api/ai/* 20/min, /api/parent/[token] 5/15min, dev-login 5/min, v1 routes 60/min |
+| Security headers | ✅ Real | HSTS, X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy |
+| Auth on API routes | ✅ Mostly Real | requireAuth or getAuthenticatedUser on most; admin routes use requireAdmin/requireOwnerOrAdmin |
+| `dangerouslySetInnerHTML` | 🟡 Partial | 3 files: chart.tsx (Recharts), ElementRenderer.tsx (KaTeX — sanitized upstream), CanvasOverlays.tsx (DEAD CODE) |
+| SQL injection | ✅ Safe | All queries via Prisma or parameterized Supabase client; no raw SQL |
+| CORS | ✅ Fixed | /api/rooms/[roomId]/notes previously had `Access-Control-Allow-Origin: *` (now removed per AUDIT-HIGH-1) |
+| Env var fallbacks | 🟡 Partial | HOCUSPOCUS_URL → ws://localhost:3001, OWNER_EMAIL → owner@superboard.app, GEOGEBRA_API_URL → geogebra.org — all non-secrets, acceptable |
+
+--- 14. Test coverage ---
+| What | Status | Notes |
+|---|---|---|
+| tests/ directory | 🔴 Stub | Only 3 shell scripts testing runtime build infrastructure (database-runtime-build.sh, python-runtime-build.sh, python-runtime-container.sh) — these test that the build pipeline works, not the app |
+| scripts/ dev utility "tests" | 🟡 Partial | e2e-fast.ts, e2e-improved.ts, e2e-test-all-roles.ts exist as one-off scripts, not a runnable suite |
+| test-screenshots/ | ⚫ Manual | PNG screenshots from manual bug hunts |
+| Unit tests | ⚫ Missing | Zero .test.ts/.spec.ts files in src/ |
+| Integration tests | ⚫ Missing | No Playwright/Vitest/Jest config |
+| CI | ⚫ Missing | No .github/workflows test config visible |
+
+--- 15. Code hygiene ---
+| Issue | Status | Evidence |
+|---|---|---|
+| Stray `, shrink-0` file at root | 🔴 Present | 0 bytes — likely from bash typo with `, "shrink-0"` |
+| Stray `--timeout` file at root | 🔴 Present | 49776 bytes — likely from bash with `--timeout` arg |
+| tool-results/ at root | 🔴 Present | Dev artifact directory (12KB) |
+| skills/ at root | 🔴 Present | 71 skill directories — clearly developer machine artifact, should be in .gitignore |
+| *_docs.json at root | 🔴 Present | auth_config_api_docs.json (126KB), get_auth_service_config_docs.json (2MB!), google_auth_docs.json (1.3MB), management_api_docs.json (296KB), update_auth_config_docs.json (127KB) — huge vendored docs |
+| search_results_1.json, search_results_2.json | 🔴 Present | Stray dev artifacts |
+| vercel-check.json | 🟡 Present | 23KB — possibly intentional but suspicious |
+| Multiple competing canvas implementations | 🔴 Critical | src/components/canvas/ (8212 lines, 19 files: Whiteboard, SuperboardCanvas, TldrawCanvas, FabricCanvas/, etc.) is 100% DEAD CODE — never imported by production. Production uses src/components/whiteboard/WhiteboardCanvas.tsx |
+| Dead toolkits directory | 🔴 Critical | src/components/toolkits/ (10 files: PEToolkit, HistoryToolkit, HealthToolkit, etc.) — never imported by production |
+| Two parallel auth systems | 🟡 Maintainability | @/lib/auth (Bearer token) vs @/lib/auth-guard (cookie-based) — both used by different routes |
+| Two parallel templates APIs | 🟡 Maintainability | /api/templates (Supabase direct) vs /api/room/templates (Prisma) — both work, both used |
+| Orphaned history.ts | 🟡 Dead code | src/lib/whiteboard/history.ts marked `@ts-nocheck`, references WhiteboardEngine that isn't used |
+| TODO/FIXME comments | 🟡 ~15 found | AI action route, referral claim, agency credit-packs, mathpix, geogebra, auth-guard, manipulative renderer, etc. |
+
+============================================================
+C. TOP 15 MOST SERIOUS ISSUES (ranked)
+============================================================
+
+1. **[Critical]** `src/app/api/ai/action/route.ts:130-144` — AI route is a complete stub. Even when `ANTHROPIC_API_KEY` is configured, the actual API call is commented out (`// TODO: Actual Anthropic API integration`) and `generatePlaceholderResponse` is always called. This is the primary AI endpoint for 14+ AI actions in the app. The entire "AI Assistant" feature is fake.
+
+2. **[Critical]** `src/lib/collab/realtime-sync.ts:178-229` — Production real-time collaboration uses Supabase Realtime Broadcast (NOT Yjs/Hocuspocus CRDT). It polls store state at 60ms intervals and broadcasts JSON diffs. Concurrent edits will conflict (last-write-wins). The fully-implemented Yjs/Hocuspocus provider (`src/lib/collab/provider.ts`, `src/hooks/useYjsProvider.ts`) is wired but never used by the whiteboard. This contradicts the marketing of "Yjs + Hocuspocus for collaboration."
+
+3. **[Critical]** `src/app/api/auth/dev-login/route.ts:19-21` — Dev-only login endpoint returns user data (id, email, name, tier, brandingColor) WITHOUT verifying password. Gated only by `NODE_ENV === 'production' || NEXT_PUBLIC_SUPABASE_URL`. If a production deployment is misconfigured (missing Supabase URL env var), anyone can log in as ANY user by knowing their email. Major backdoor.
+
+4. **[High]** `src/app/api/test-prep/categories/route.ts:26` — Queries `db.testPrepCategory.findMany()` but `TestPrepCategory` model does NOT exist in `prisma/schema.prisma`. Every call to this route will throw a Prisma runtime error. /api/test-prep/assign likely has the same issue.
+
+5. **[High]** `src/app/api/stripe/checkout/route.ts:6` — `VALID_TIERS = ['PRO', 'AGENCY']` and `src/lib/stripe.ts:26 TIER_PRICE_MAP` only has PRO + AGENCY. The schema, usage.ts, roles.ts, plugins.ts, and stripe-billing.ts all support AGENCY_STANDARD ($39) and AGENCY_PREMIUM ($79) tiers — but users CANNOT purchase them via checkout. Half the pricing matrix is unreachable.
+
+6. **[High]** `src/app/api/room/[roomId]/recording/route.ts:182-191` — Schema mismatch: writes `url: recordingUrl` and `status: 'STARTED'`, but `Recording` model has `storageUrl` (not `url`) and documents statuses `recording | processing | ready | failed | deleted` (not `STARTED`/`STOPPED`). Prisma will reject the insert. Also line 187 `status: egressId ? 'STARTED' : 'STARTED'` is a no-op ternary — both branches return the same value.
+
+7. **[High]** `src/app/api/admin/setup-owner/route.ts:81,102` — Writes `role: 'owner'` to User table, but `User` schema has NO `role` column (only `isAdmin` boolean and `tier` string). Code has fallback (L83-90, L105-117) but it's a clear schema/code mismatch.
+
+8. **[High]** `src/components/canvas/` directory (8212 lines, 19 files) — 100% dead code. Includes Whiteboard.tsx, SuperboardCanvas.tsx, TldrawCanvas.tsx (references tldraw which isn't in package.json), FabricCanvas/index.tsx (1141L), BreakoutRoomManager.tsx, etc. Never imported by any production file. Massive maintenance burden and confusion source.
+
+9. **[High]** `src/components/toolkits/` directory (10 files: PEToolkit, HistoryToolkit, HealthToolkit, ScienceToolkit, GeneralToolkit, etc.) — 100% dead code. Multiple TODOs reference "Activate standard tool via tldraw editor" — clearly leftover from a previous architecture. Never imported.
+
+10. **[High]** Repo root dev artifacts: `, shrink-0` (0 bytes), `--timeout` (49KB), `tool-results/` dir, `skills/` dir (71 skill folders), 5 vendored `*_docs.json` files totaling ~3.9MB (including get_auth_service_config_docs.json at 2MB). These should be in .gitignore, not committed.
+
+11. **[Medium]** `src/components/room/widgets/BreakoutRoomsWidget.tsx:4` — Header comment: "Broadcasts to chat (full isolation requires Hocuspocus server)." Breakout rooms do NOT actually isolate participants into separate rooms — they just broadcast messages to chat. The feature is a UI mockup of breakout rooms, not real breakout rooms.
+
+12. **[Medium]** `src/app/api/agency/credit-packs/route.ts:90,96` — Credit pack creation returns `status: 'PENDING_PAYMENT'` with message `"Credit pack created. Payment integration coming soon."` — agencies can create unlimited "credit packs" without paying. Not production-ready billing.
+
+13. **[Medium]** `src/app/api/referral/claim/route.ts:54` — `// TODO: Wire Stripe coupon/credit for 1 free month of Pro`. Referral system tracks referral counts but never actually grants the reward. Referral UI promises rewards that don't fire.
+
+14. **[Medium]** `src/lib/supabase/middleware.ts:51,110` — `/dashboard` is in `publicRoutes` array. Unauthenticated users can hit `/dashboard` directly (AuthGate client-side rescues, but server-side it's publicly accessible). Also `/pricing` is public which is intentional, but `/dashboard` should require auth.
+
+15. **[Medium]** `src/lib/whiteboard/history.ts:1` — File starts with `@ts-nocheck` and references `WhiteboardEngine` and `CanvasSnapshot` types that don't exist in the production code path. The real history implementation is in `store.ts:914-971`. This orphaned file is dead code that misleads readers and would silently break if imported.
+
+============================================================
+D. TOP 10 STRENGTHS
+============================================================
+
+1. **Real, production-grade SVG canvas** — `WhiteboardCanvas.tsx` (1359L) with perfect-freehand strokes, hit-testing, alignment guides, multi-page, zoom/pan, 60fps preview sub-component optimization. Substantial and works.
+
+2. **Comprehensive Prisma schema** — 23 well-modeled models with proper indexes, relations, unique constraints, and `@@map()` for legacy table compatibility. Includes audit log, webhook config, credit packs, homework, lesson notes.
+
+3. **Strong Stripe webhook security** — `stripe.webhooks.constructEvent()` with proper signature verification; tier whitelist validation (`VALID_WEBHOOK_TIERS`); uses service-role client to bypass RLS for server-to-server webhook; handles checkout, subscription deleted, and invoice failed events.
+
+4. **Real LiveKit integration** — `/api/livekit/token` does proper room-access verification (tutor check + RoomParticipant lookup), signs real JWTs via `livekit-server-sdk`, rate-limited 5/min. Recording webhook uses timing-safe comparison. Recording URLs are HMAC-signed with expiry.
+
+5. **CSRF double-submit cookie** — `src/lib/supabase/middleware.ts` implements proper CSRF protection with SameSite=strict cookie, constant-time comparison via `crypto.subtle.timingSafeEqual`, and graceful init.
+
+6. **Comprehensive rate limiting** — `/api/livekit/token` (5/min), `/api/ai/*` (20/min), `/api/parent/[token]` (5/15min with brute-force protection), `/api/v1/*` (60/min), dev-login (5/min). Uses shared `rateLimit`/`checkRateLimit` modules with Upstash Redis or in-memory fallback.
+
+7. **149+ subject-specific widgets** — Per prior worklog QA, 130+ widgets tested live on canvas with zero crashes. Real domain logic: physics pendulum simulator, chemistry periodic table + Lewis dot + VSEPR, biology Punnett squares + cell diagrams, math fraction manipulatives + coordinate planes.
+
+8. **Real Stripe checkout + customer portal + billing** — Properly creates Stripe customers, persists customer IDs, validates price IDs against placeholder, returns real Stripe checkout URLs. Customer portal wired with config check.
+
+9. **Real templates system (Phase 2)** — `/api/room/templates` Prisma-backed with search/filter/grade-band/tags/isPublic, 5MB snapshot cap, 50 templates/user limit, community templates, duplicate endpoint. Full CRUD with proper auth.
+
+10. **Security-hardened middleware** — HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, Permissions-Policy scoped to camera/microphone/display-capture. Fail-closed when Supabase env vars missing (returns 503 JSON for API, redirects for pages).
+
+============================================================
+E. STUB / PLACEHOLDER INVENTORY (flat list)
+============================================================
+
+1. **`src/app/api/ai/action/route.ts:130-144,186-193`** — Always returns `generatePlaceholderResponse()`. Returns: `{ status: 'placeholder', message: 'Anthropic API not yet configured. Replace TODO_ANTHROPIC_API_KEY in .env.local', action, promptPreview }` (JSON-stringified inside `result` field of the success response). Even when `ANTHROPIC_API_KEY` is real, the actual API call is commented out.
+
+2. **`src/components/room/widgets/AIAssistantWidget.tsx:48-60`** — `getBuiltInResponse()` returns hardcoded markdown templates for explain/example/quiz/summarize actions. No external API call. The "AI" is a static template string formatter.
+
+3. **`src/app/api/agency/credit-packs/route.ts:83-96`** — Creates CreditPack with `status: 'PENDING_PAYMENT'`, returns `{ message: 'Credit pack created. Payment integration coming soon.' }`. No Stripe payment intent created.
+
+4. **`src/app/api/referral/claim/route.ts:54`** — `// TODO: Wire Stripe coupon/credit for 1 free month of Pro`. Marks referral as claimed but grants no actual reward.
+
+5. **`src/app/api/test-prep/categories/route.ts:26`** — `db.testPrepCategory.findMany()` — Prisma will throw `Cannot read properties of undefined` because the model doesn't exist. Returns 500 error.
+
+6. **`src/app/api/auth/dev-login/route.ts:40-46`** — Returns user data without password check. Response shape: `{ id, email, name, tier, brandingColor }`.
+
+7. **`src/app/api/room/[roomId]/recording/route.ts:177-178`** — On LiveKit Egress failure: `// Continue without LiveKit Egress — store a placeholder recording`. Creates DB row with `url: ''` and `egressId: null`. Recording appears in DB but has no actual video.
+
+8. **`src/lib/room/widget-registry.ts:395`** — Comment: `// Phase 3 placeholders (coming soon)`. (Per prior worklog, registry was regenerated to 141 entries with 0 mismatches, but this comment suggests some entries may still be placeholders.)
+
+9. **`src/components/dashboard/AgencyAdminPanel.tsx:317`** — UI text: `"Payment integration coming soon. Packs are created immediately for testing."`
+
+10. **`src/components/dashboard/StudentDashboard.tsx:432`** — UI text: `"This feature is coming soon. For now, use the join input above."`
+
+11. **`src/components/room/widgets/BreakoutRoomsWidget.tsx:4`** — Header comment: `"Broadcasts to chat (full isolation requires Hocuspocus server)."` — feature advertises breakout rooms but doesn't isolate participants.
+
+12. **`src/lib/whiteboard/history.ts:1`** — `@ts-nocheck` orphaned file. Dead code masquerading as a real history manager.
+
+13. **`src/components/canvas/*` (19 files, 8212 lines)** — Entire directory is dead code. Includes 4 competing canvas implementations (Whiteboard, SuperboardCanvas, TldrawCanvas, FabricCanvas) none of which are used in production.
+
+14. **`src/components/toolkits/*` (10 files)** — Entire directory is dead code.
+
+============================================================
+F. TEST COVERAGE ASSESSMENT
+============================================================
+
+**Verdict: There is no test suite. The application has ZERO automated tests.**
+
+What exists in `tests/`:
+- `database-runtime-build.sh` — bash script that creates a fake `bun` binary in a tempdir to verify the Dockerfile's `bun run db:push` invocation works. Tests the BUILD pipeline, not the app.
+- `python-runtime-build.sh` — bash script that scaffolds a fake Python project to verify the Python mini-service Dockerfile builds. Tests BUILD pipeline.
+- `python-runtime-container.sh` — bash script that tests Python runtime container startup.
+
+What exists in `scripts/` masquerading as tests:
+- `e2e-fast.ts`, `e2e-improved.ts`, `e2e-test-all-roles.ts`, `e2e-test.sh` — one-off TypeScript/shell scripts for manual end-to-end testing. Not part of a runnable suite; no test runner config.
+- `audit-report.py`, `audit-dependencies.sh`, `audit-cover.html/pdf` — security/dependency audit scripts (one-off).
+
+What's missing:
+- No `*.test.ts` or `*.spec.ts` files anywhere in `src/` (verified by file pattern search)
+- No Jest/Vitest/Playwright/TestCafe configuration in `package.json` (only `next`, `lint`, `postinstall` scripts)
+- No `.github/workflows/` CI configuration
+- No test setup file (`setupTests.ts`, `jest.config.js`, `vitest.config.ts`)
+- No coverage reports
+- The `test-screenshots/` directory contains manual bug-hunt PNGs (e.g., `bug-test-periodic-table.png`, `cursor-test-1-no-widgets.png`) — useful artifacts but not automated tests
+
+**Test setup is NOT real.** The `tests/` directory tests infrastructure, not application behavior. There is no framework, no runner, no assertions on app code. The 113 API routes, 23 Prisma models, 149 canvas widgets, and ~30,000 lines of whiteboard components have ZERO automated test coverage. This is a critical gap for a production app handling student data (FERPA/COPPA-relevant).
+
+Recommendation: Introduce Vitest for unit tests (utilities, validators, usage calculations), Playwright for E2E (critical paths: login → create room → draw → save → reload → restore), and Prisma test snapshots for schema regressions.
+
+============================================================
+END OF AUDIT
+============================================================
+
+---
+Task ID: PHASE-VERIFY
+Agent: Phase 1-4 Code-Audit Sub-agent
+Task: Verify Phases 1, 2, 3, 4 completion status against the 6-phase product plan
+
+Work Log:
+- Re-read prior audit `verify-p1-p2` entry (worklog lines 4-35) for Phase 1 (~90%, 3 gaps) and Phase 2 (100%) baselines
+- Read `src/lib/room/canvas-widget-registry.ts` (268 lines) — confirmed ALL_CANVAS_WIDGETS catalog: 35 math, 14 physics, 12 chem, 13 bio, 21 lang, 6 stat, 19 earthscience, 14 arts, 4 classroom, 3 AI = 141 widget kinds registered
+- Verified `ElementRenderer.tsx` (1208 lines) widget toolbar at lines 393-471: Close (×), Duplicate (⯑), Lock/Unlock (🔒/🔓 = Pin), Bring to Front (↑). Confirmed STILL MISSING "Send to Back" and "Reset to Default" buttons
+- Verified `WidgetPanel.tsx` + `widget-store.ts` — panel has 'dock' | 'float' | 'minimized' PanelMode but 'minimized' is tab-bar-only, NOT icon-only. Confirmed NO "already on canvas" indicator badges (grep'd toolkits, no matches)
+- Verified `src/app/WhiteboardClient.tsx` (not the path in prior worklog) — confirmed Ctrl+Shift+S → setSaveTemplateOpen + Ctrl+Shift+T → setMyTemplatesOpen at lines 194-212
+- Verified `src/lib/template-snapshot.ts` — snapshot saves `widgets` (=widget_configs), `canvas` (=canvas_layout, with isDark/showGrid/gridSize/gridType/snapToGrid), `subject` (=subject_filter). No explicit `background` field but `canvas.isDark + showGrid + gridType` covers it
+- Verified `prisma/schema.prisma` lines 146-164 — Template model has subject, gradeBand (mapped grade_band), tags[], isPublic (mapped is_public), snapshot Json, indexes
+- For Phase 3 Math: cross-checked MathToolkit.tsx panel sections (lines 80-738) against CanvasMathWidgets.tsx WIDGET_COMPONENTS map (CanvasWidgets.tsx lines 757-792). All 19 widgets present with both panel sections AND canvas renderers + Add to Board buttons
+- For Phase 3 Science: grep'd all 4 science toolkits (Physics, Chemistry, Biology, EarthScience). Every Phase 3 widget label found with sectionTitle(text, widgetKind) pattern that renders an "+ Add to Board" button. All canvas renderers registered in WIDGET_COMPONENTS map (CanvasWidgets.tsx lines 838-866)
+- CRITICAL FINDING: `PhysicsToolkit.tsx` line 264-267 still has "Ohm's Law Calculator" on K-5 (elementary) tab — plan explicitly required removal
+- For Phase 4 English: grep'd LanguageToolkit.tsx. Found 14 of 17 widgets present with Add to Board buttons. MISSING: Writing Mechanics, Decodable Passage Builder, Listening Comprehension (no widget kind, no toolkit section, no canvas renderer)
+- For Phase 4 Arts: grep'd ArtsToolkit.tsx. Found 14 of 16 widgets present. MISSING: Shape Stamp Library (K-5), Portfolio Organizer (9-12)
+- CRITICAL FINDING: `CanvasArtsWidgets.tsx` CanvasArtworkCompare (lines 246-291) does NOT have image upload — only text areas (textA, textB). Plan required "IMAGE UPLOAD for both panels"
+- For Phase 4 English Enhancement: ReadingPassageAnalyzer (LanguageUtilities.tsx lines 212-291) has only basic stats (word/sentence/paragraph counts, Flesch-Kincaid, top words). MISSING enhancements: Lexile estimate (uses Flesch-Kincaid instead), sentence variety, cohesion analysis, topic sentence ID
+- For Phase 4 English Enhancement: No evidence of Flashcards ↔ Sight Word Bank one-click integration (grep'd CanvasL3Widgets.tsx and CanvasLanguageWidgets.tsx, no matches)
+- For Phase 3 Math Enhancement: Flashcards appear ONLY on K-5 (elementary) tab in MathToolkit — plan called for Flashcards on K-5 AND 6-8 tabs (line 519 only)
+
+Stage Summary:
+
+### Phase 1 Status
+- 1A: Custom Shape System → ✅ Complete. WidgetElement system in src/lib/whiteboard/store.ts (1241 lines) + canvas-widget-registry.ts serves as the equivalent of CanvasWidgetShape/widgetShapeUtils. Per prior worklog architecture note, custom SVG canvas (NOT tldraw) is acceptable.
+- 1B: Universal "Add to Board" → ✅ Complete. Confirmed 29+ tool files have addBoardBtn / sectionTitle(...,widgetKind) pattern. Panel stays open after placement (verified in MathToolkit at line 47-49 of prior worklog).
+- 1C: L3 Interactive Canvas Widgets → ✅ Complete. CanvasQuiz, CanvasL3Flashcards in CanvasL3Widgets.tsx (736 lines); CanvasFractionCircle in CanvasMathWidgets.tsx:129; CanvasBase10Blocks in CanvasMathWidgets.tsx:2416. All have full canvas interactivity.
+- 1D: Widget Canvas Toolbar → 🟡 Partial. ElementRenderer.tsx:393-471 has Close (×=Remove from Board), Duplicate, Lock/Unlock (=Pin/Unpin), Bring to Front. STILL MISSING: "Send to Back" and "Reset to Default" (no store.sendToBack() or reset-to-default handler found).
+- 1E: Widget Panel UX → 🟡 Partial. SectionWrapper.tsx (38 lines) + useCollapsibleSections.ts handle accordion (✅). widget-store.ts:61 PanelMode includes 'minimized' but it's tab-bar-only, NOT icon-only (🟡). NO "already on canvas" indicator badges (🔴 Missing — grep'd toolkits, no onBoard/alreadyOnCanvas/badge logic).
+
+### Phase 2 Status
+- 2A: Save as Template modal + My Templates panel → ✅ Complete. SaveAsTemplateModal.tsx (title/description/subject/gradeBand/tags/isPublic/snapshot). MyTemplatesPanel.tsx with grid/search/filter/edit/duplicate/delete/toggle-public + "Start from Template".
+- 2B: Community Templates browser → ✅ Complete. CommunityTemplatesPanel.tsx with filter by subject/grade/search, sort newest/most-used, "Use This Template", author attribution.
+- 2C: Snapshot format → ✅ Complete. template-snapshot.ts saves widgets (widget_configs), canvas (canvas_layout: isDark/showGrid/gridSize/gridType/snapToGrid), subject (subject_filter). No explicit "background" field but isDark+gridType covers it.
+- 2D: Supabase/Prisma backend → ✅ Complete. schema.prisma:146-164 Template model with all fields, indexes; migration-template-phase2.sql executed.
+- 2E: Keyboard shortcuts → ✅ Complete. WhiteboardClient.tsx:201-212 Ctrl+Shift+S (save template) + Ctrl+Shift+T (my templates).
+
+### Phase 3 Status — MATH (19/19 widgets + 3/4 enhancements)
+All 19 widgets exist as panel tools with Add to Board buttons AND canvas renderers (CanvasMathWidgets.tsx WIDGET_COMPONENTS map lines 757-792, default configs/sizes lines 3940-4014).
+
+K-5 (8/8): Number Line, Place Value Chart, Analog Clock, Coin Counter, Flashcards, Base-10 Blocks, Pattern Blocks, Picture Graph — all ✅
+6-8 (5/5): Stats Toolbox, Point Plotter, Ratio Table, Scientific Calculator, Unit Converter — all ✅
+9-12 (6/6): Multi-Function Plotter, Derivative Visualizer, Conic Sections, Proof Builder, Formula Reference, Log/Exp Visualizer — all ✅
+
+Math Enhancements: 3/4 ✅
+- ✅ Function Plotter upgraded to multi-function (math-multi-function)
+- 🟡 Flashcards custom card creation in K-5 only — NOT in 6-8 tab (MathToolkit.tsx:519 elementary-only)
+- ✅ Formula Reference has Add to Board + expandable sections (FormulaPanel)
+- ✅ Proof Builder has Add to Board (export-as-image not explicitly verified but ProofPanel exists)
+
+### Phase 3 Status — SCIENCE (22/22 widgets + 4/5 enhancements)
+All 22 widgets have panel sections with Add to Board buttons (sectionTitle pattern in respective toolkits) AND canvas renderers (CanvasScienceWidgets.tsx + WIDGET_COMPONENTS map).
+
+K-5 (10/10): Simple Machines, States of Matter, Plant Life Cycle, Animal Habitats, Food Chain, Solar System, Water Cycle, Sink/Float, Rock Cycle, Observation Journal — all ✅
+6-8 (6/6): Scientific Method, Lab Report, Equation Balancer, Data Collection, Magnetism, Weather Patterns — all ✅
+9-12 (6/6): Periodic Trends, Rotational Motion, Meiosis, Dimensional Analysis, Stoichiometry, Wave Interference — all ✅
+
+Science Enhancements: 4/5
+- 🔴 Ohm's Law NOT removed from K-5 Physics tab — still present at PhysicsToolkit.tsx:264-267 (CRITICAL GAP)
+- ✅ 6-8 vs 9-12 differentiated (9-12 adds Projectile Motion, Wave Interference, Rotational Motion)
+- ✅ All Biology + Chemistry panel tools have Add to Board (every sectionTitle call passes widgetKind)
+- ✅ Statistics Toolbox integrated into Science data tools (earth-data-collection generates bar/line/scatter graphs)
+- 🟡 Titration tool (AcidBaseTitration, ChemistryUtilities.tsx:1317) has mole-based acid-base calculations but not full stoichiometry (molesAcidInit/molesBaseAdded only — no balanced-equation stoichiometry)
+
+### Phase 4 Status — ENGLISH (14/17 widgets + 1/4 enhancements)
+K-5 (3/6): Sight Word Bank ✅, CVC Word Sort ✅, Fluency Timer ✅ | Writing Mechanics 🔴, Decodable Passage Builder 🔴, Listening Comprehension 🔴
+6-8 (5/5): Argumentative Organizer ✅, Text Evidence ✅, POS Tagger ✅, Semicolon Punctuation ✅, Context Clues ✅
+9-12 (6/6): Rhetorical Analysis ✅, Logical Fallacies ✅, Citation Generator ✅, Essay Outline ✅, Reading Analyzer (=lang-reading-analyzer) ✅, TTS Preview ✅
+
+English Enhancements: 1/4 ✅
+- 🟡 Paragraph Organizer → live canvas sync — CanvasParagraphOrganizer exists (CanvasLanguageWidgets.tsx:238) but uses local state, not element.config sync
+- ✅ Story Elements Map → Story Mountain render (StoryElementsMap has risingAction/climax/fallingAction fields + showViz toggle)
+- 🔴 Flashcards ↔ Sight Word Bank one-click integration — NOT found (grep'd both files)
+- 🟡 Reading Passage Analyzer enhancements — only Flesch-Kincaid + basic stats. MISSING: Lexile estimate (uses Flesch-Kincaid), sentence variety, cohesion, topic sentence ID
+
+### Phase 4 Status — ARTS (14/16 widgets + 3/4 enhancements)
+K-5 (5/6): Elements of Art ✅, Symmetry Drawing ✅, Rhythm Builder ✅, Color Theory ✅, Artist Spotlight ✅ | Shape Stamp Library 🔴
+6-8 (5/5): Perspective Grid ✅, Value/Shading ✅, Artwork Comparison ✅, Art History Timeline ✅, Staff Notation ✅
+9-12 (4/5): Two-Point Perspective ✅, Compositional Analysis ✅, Art Criticism ✅, Chord Progression ✅ | Portfolio Organizer 🔴
+
+Arts Enhancements: 3/4 ✅
+- ✅ Color Theory has Add to Board (ArtsToolkit.tsx:394, 504, 555, 605)
+- ✅ All 4 existing tools (Color Theory, Perspective Grid, Staff Notation, Artwork Comparison) have Add to Board
+- 🔴 Artwork Comparison image upload — NOT implemented. CanvasArtworkCompare (CanvasArtsWidgets.tsx:246-291) only has textA/textB textareas, no FileReader/upload logic. Has VTS prompts ✅ but missing image upload 🔴
+- ✅ Grade differentiation — K-5/6-8/9-12 tabs show distinct tool sets
+
+### Summary Percentages
+- Phase 1: ~88% complete (3 minor UX gaps: Send to Back, Reset to Default, icon-only mode, "already on canvas" badges)
+- Phase 2: 100% complete
+- Phase 3 Math: 100% widgets (19/19) + 75% enhancements (3/4)
+- Phase 3 Science: 100% widgets (22/22) + 80% enhancements (4/5) — Ohm's Law K-5 removal is the gap
+- Phase 4 English: 82% widgets (14/17) + 25% enhancements (1/4)
+- Phase 4 Arts: 88% widgets (14/16) + 75% enhancements (3/4)
+- OVERALL Phase 3+4: 64/74 widgets present (86%) + 11/17 enhancements (65%)
+
+### Critical Issues Found
+1. **Ohm's Law still on K-5 Physics tab** — PhysicsToolkit.tsx:264-267. Plan explicitly required removal; Ohm's Law inappropriate for K-5. Easy fix: move to 6-8 tab only.
+2. **Artwork Comparison missing image upload** — CanvasArtsWidgets.tsx:246-291. Plan called for "IMAGE UPLOAD for both panels" with VTS prompts. VTS prompts exist ✅ but image upload entirely missing. Major UX gap.
+3. **3 English widgets entirely missing** — Writing Mechanics, Decodable Passage Builder, Listening Comprehension. No widget kind, no toolkit section, no canvas renderer anywhere in codebase.
+4. **2 Arts widgets entirely missing** — Shape Stamp Library (K-5), Portfolio Organizer (9-12).
+5. **Reading Analyzer not "Enhanced"** — LanguageUtilities.tsx:212-291 ReadingPassageAnalyzer has only basic stats (word/sentence/paragraph counts + Flesch-Kincaid). Plan called for Lexile estimate, sentence variety, cohesion, topic sentence ID — none implemented.
+6. **Flashcards not on 6-8 Math tab** — MathToolkit.tsx:519 only renders Flashcards in elementary tab. Plan called for Flashcards with custom card creation in both K-5 and 6-8.
+7. **No Flashcards ↔ Sight Word Bank integration** — Plan called for "one-click to create flashcard set" from Sight Word Bank. No evidence in codebase.
+8. **Phase 1D toolbar still missing 2 buttons** — Send to Back and Reset to Default not implemented in ElementRenderer.tsx (carry-over from prior audit).
+9. **Phase 1E "already on canvas" badges still missing** — no onBoard/alreadyOnCanvas logic in any toolkit (carry-over from prior audit).
+10. **lang-reading-analyzer not in canvas-widget-registry.ts** — exists in LanguageToolkit + has canvas renderer but missing from ALL_CANVAS_WIDGETS catalog. Works because CanvasLanguageWidgetRenderer handles all `lang-*` widgets, but the registry is incomplete.
+
+### Recommended Next Actions (Priority Order)
+1. **HIGH** — Fix Ohm's Law: remove from PhysicsToolkit elementary tab (line 264-267). 5-min fix.
+2. **HIGH** — Add image upload to CanvasArtworkCompare: FileReader.readAsDataURL → img src in Artwork A/B panels. ~30-min fix.
+3. **MED** — Build 3 missing English widgets: Writing Mechanics (handwriting line templates + typing practice), Decodable Passage Builder (text input + pattern highlighting), Listening Comprehension (paste passage + auto-generate questions — leverage AI service).
+4. **MED** — Build 2 missing Arts widgets: Shape Stamp Library (basic shapes + nature shapes for K-5 stamping), Portfolio Organizer (categorize artworks by theme/medium/date for 9-12).
+5. **MED** — Enhance ReadingPassageAnalyzer: add Lexile conversion from Flesch-Kincaid, sentence-length variance computation, transition-word cohesion score, topic-sentence heuristic (first sentence of paragraph).
+6. **LOW** — Add Flashcards to 6-8 Math tab in MathToolkit.
+7. **LOW** — Implement Sight Word Bank → Flashcards one-click integration.
+8. **LOW** — Add Send to Back + Reset to Default buttons to ElementRenderer widget toolbar (Phase 1D gap).
+9. **LOW** — Add "already on canvas" indicator badges to toolkit sections (Phase 1E gap).
+10. **LOW** — Add 'lang-reading-analyzer' to canvas-widget-registry.ts LANGUAGE_WIDGETS for completeness.
+

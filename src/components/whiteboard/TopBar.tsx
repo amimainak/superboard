@@ -18,6 +18,9 @@ import {
   ZoomOut,
   Maximize,
   Search,
+  LayoutTemplate,
+  Users,
+  Library,
 } from 'lucide-react'
 import './whiteboard.css'
 
@@ -56,6 +59,12 @@ interface TopBarProps {
   onToggleGridType: () => void
   onTogglePresentation: () => void
   onSearch: () => void
+  /** Templates — opens the rich SaveAsTemplateModal */
+  onSaveAsTemplate?: () => void
+  /** Templates — opens MyTemplatesPanel */
+  onMyTemplates?: () => void
+  /** Templates — opens CommunityTemplatesPanel */
+  onCommunityTemplates?: () => void
   /** When false, export menu items (PNG, JPEG, SVG, JSON) are disabled with a tooltip */
   canExport?: boolean
   /** Disable undo when nothing to undo */
@@ -99,6 +108,9 @@ export function TopBar({
   onToggleGridType,
   onTogglePresentation,
   onSearch,
+  onSaveAsTemplate,
+  onMyTemplates,
+  onCommunityTemplates,
   canExport = true,
   canUndo = true,
   canRedo = true,
@@ -215,6 +227,16 @@ export function TopBar({
       <Ico title="Search board (Ctrl+K)" isDark={isDark} onClick={onSearch} ariaLabel="Search board">
         <Search size={14} />
       </Ico>
+
+      {/* Templates dropdown — only render if at least one callback is wired */}
+      {(onSaveAsTemplate || onMyTemplates || onCommunityTemplates) && (
+        <TemplatesMenu
+          isDark={isDark}
+          onSaveAsTemplate={onSaveAsTemplate}
+          onMyTemplates={onMyTemplates}
+          onCommunityTemplates={onCommunityTemplates}
+        />
+      )}
 
       <div className="wb-top-bar-hide-mobile">
         <Ico title="Presentation" isDark={isDark} onClick={onTogglePresentation} ariaLabel="Toggle presentation mode">
@@ -395,5 +417,118 @@ function MenuItem({
         </span>
       )}
     </button>
+  )
+}
+
+// ============================================================
+// Templates Menu — dropdown for Save/My/Community template actions
+// Wired into TopBar so users can discover the rich Phase 2 modals
+// without needing to know the Ctrl+Shift+S / Ctrl+Shift+T shortcuts.
+// ============================================================
+function TemplatesMenu({
+  isDark,
+  onSaveAsTemplate,
+  onMyTemplates,
+  onCommunityTemplates,
+}: {
+  isDark: boolean
+  onSaveAsTemplate?: () => void
+  onMyTemplates?: () => void
+  onCommunityTemplates?: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: -9999, right: 0 })
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (btnRef.current?.contains(e.target as Node)) return
+      if (panelRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const handleToggle = useCallback(() => {
+    if (!btnRef.current) return
+    const r = btnRef.current.getBoundingClientRect()
+    setPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+    setOpen((v) => !v)
+  }, [])
+
+  const run = (fn?: () => void) => {
+    setOpen(false)
+    if (fn) fn()
+  }
+
+  const itemCls = `wb-menu-item wb-menu-item-${isDark ? 'dark' : 'light'}`
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        ref={btnRef}
+        title="Templates"
+        onClick={handleToggle}
+        aria-label="Templates"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`wb-ico-btn wb-ico-btn-${isDark ? 'dark' : 'light'}`}
+        style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid transparent', background: 'transparent', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', color: isDark ? '#cbd5e1' : '#475569' }}
+      >
+        <LayoutTemplate size={14} />
+      </button>
+      {open && (
+        <div
+          ref={panelRef}
+          role="menu"
+          className={`wb-menu wb-menu-${isDark ? 'dark' : 'light'}`}
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            right: pos.right,
+            minWidth: 240,
+            zIndex: 9999,
+            padding: '4px',
+            borderRadius: 8,
+            boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.45)' : '0 8px 24px rgba(0,0,0,0.12)',
+            background: isDark ? '#0f172a' : '#ffffff',
+            border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+          }}
+        >
+          <div style={{ padding: '4px 8px', fontSize: 9, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: isDark ? '#64748b' : '#94a3b8' }}>Templates</div>
+          {onSaveAsTemplate && (
+            <button role="menuitem" className={itemCls} onClick={() => run(onSaveAsTemplate)}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <LayoutTemplate size={13} /> Save Current as Template
+              </span>
+              <span className={`wb-menu-shortcut wb-menu-shortcut-${isDark ? 'dark' : 'light'}`}>Ctrl+Shift+S</span>
+            </button>
+          )}
+          {onMyTemplates && (
+            <button role="menuitem" className={itemCls} onClick={() => run(onMyTemplates)}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Users size={13} /> My Templates
+              </span>
+              <span className={`wb-menu-shortcut wb-menu-shortcut-${isDark ? 'dark' : 'light'}`}>Ctrl+Shift+T</span>
+            </button>
+          )}
+          {onCommunityTemplates && (
+            <button role="menuitem" className={itemCls} onClick={() => run(onCommunityTemplates)}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Library size={13} /> Community Templates
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

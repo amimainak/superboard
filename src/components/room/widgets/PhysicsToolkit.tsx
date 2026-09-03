@@ -257,18 +257,23 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
 
       {/* ============================================================ */}
       {/* ELEMENTARY TAB (K-5) */}
+      {/* Note: Ohm's Law removed from K-5 per Phase 3 plan — inappropriate for this age band. */}
       {/* ============================================================ */}
       {activeBand === 'elementary' && (
         <>
           <div className="toolkit-section">
-            {sectionTitle("Ohm's Law Calculator", 'phys-ohms-law')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>A simple introduction to the relationship between voltage, current, and resistance.</p>
-            <div style={{ padding: '0 12px 12px' }}><OhmsLawPanel isDark={isDark} /></div>
-          </div>
-          {/* Phase 3 new */}
-          <div className="toolkit-section">
             {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
-            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization. Great introduction to forces for young learners.</p>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Wave Simulator', 'phys-wave-sim')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore transverse waves with adjustable frequency, amplitude, and wavelength. Visual and intuitive for elementary students.</p>
+            <div style={{ padding: '0 12px 12px' }}><WaveSimPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Pendulum Simulator', 'phys-pendulum-sim')}
+            <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Watch a pendulum swing using real physics. Adjust length, gravity, and starting angle.</p>
+            <div style={{ padding: '0 12px 12px' }}><PendulumSimPanel isDark={isDark} /></div>
           </div>
         </>
       )}

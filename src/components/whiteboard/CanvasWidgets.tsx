@@ -676,6 +676,7 @@ import {
   CanvasSightWordBank, CanvasCVCWordSort, CanvasFluencyTimer, CanvasArgumentOrganizer,
   CanvasTextEvidence, CanvasSemicolonPunctuation, CanvasContextCluesExplorer, CanvasRhetoricalAnalysis,
   CanvasLogicalFallacies, CanvasCitationGenerator, CanvasEssayOutline, CanvasTTSPreview,
+  CanvasWritingMechanics, CanvasDecodablePassage, CanvasListeningComprehension,
 } from "./CanvasLanguageWidgets"
 import {
   CanvasScienceWidgetRenderer,
@@ -727,6 +728,8 @@ import {
   CanvasArtCriticism,
   CanvasTwoPointPerspective,
   CanvasChordProgression,
+  CanvasShapeStamps,
+  CanvasPortfolioOrganizer,
   CanvasTimer,
   CanvasRandomPicker,
   CanvasGraphingTool,
@@ -891,6 +894,10 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'lang-citation-gen': CanvasCitationGenerator,
   'lang-essay-outline': CanvasEssayOutline,
   'lang-tts-preview': CanvasTTSPreview,
+  // Phase 4 cleanup — 3 missing K-5 widgets
+  'lang-writing-mechanics': CanvasWritingMechanics,
+  'lang-decodable-passage': CanvasDecodablePassage,
+  'lang-listening-comp': CanvasListeningComprehension,
   'arts-elements-art': CanvasElementsOfArt,
   'arts-symmetry-drawing': CanvasSymmetryDrawing,
   'arts-rhythm-builder': CanvasRhythmBuilder,
@@ -901,6 +908,9 @@ const WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetProps>> 
   'arts-criticism': CanvasArtCriticism,
   'arts-two-point-persp': CanvasTwoPointPerspective,
   'arts-chord-progression': CanvasChordProgression,
+  // Phase 4 cleanup — 2 missing Arts widgets
+  'arts-shape-stamps': CanvasShapeStamps,
+  'arts-portfolio': CanvasPortfolioOrganizer,
 
 }
 
@@ -998,6 +1008,10 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'lang-citation-gen': return getLangWidgetDefaultConfig('lang-citation-gen')
     case 'lang-essay-outline': return getLangWidgetDefaultConfig('lang-essay-outline')
     case 'lang-tts-preview': return getLangWidgetDefaultConfig('lang-tts-preview')
+    // Phase 4 cleanup — 3 missing K-5 widgets
+    case 'lang-writing-mechanics': return getLangWidgetDefaultConfig('lang-writing-mechanics')
+    case 'lang-decodable-passage': return getLangWidgetDefaultConfig('lang-decodable-passage')
+    case 'lang-listening-comp': return getLangWidgetDefaultConfig('lang-listening-comp')
 // Science widgets
     case 'phys-formula-calc': return getScienceWidgetDefaultConfig('phys-formula-calc')
     case 'phys-wave-sim': return getScienceWidgetDefaultConfig('phys-wave-sim')
@@ -1068,6 +1082,9 @@ export function getDefaultWidgetConfig(kind: string): Record<string, unknown> {
     case 'arts-perspective-grid': return getArtsWidgetDefaultConfig('arts-perspective-grid')
     case 'arts-staff-notation': return getArtsWidgetDefaultConfig('arts-staff-notation')
     case 'arts-compare': return getArtsWidgetDefaultConfig('arts-compare')
+    // Phase 4 cleanup — 2 missing Arts widgets
+    case 'arts-shape-stamps': return getArtsWidgetDefaultConfig('arts-shape-stamps')
+    case 'arts-portfolio': return getArtsWidgetDefaultConfig('arts-portfolio')
     // Classroom widgets
     case 'classroom-timer': return getClassroomWidgetDefaultConfig('classroom-timer')
     case 'classroom-random-picker': return getClassroomWidgetDefaultConfig('classroom-random-picker')
@@ -1224,6 +1241,10 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
   case 'lang-citation-gen': return getLangWidgetDefaultSize('lang-citation-gen')
   case 'lang-essay-outline': return getLangWidgetDefaultSize('lang-essay-outline')
   case 'lang-tts-preview': return getLangWidgetDefaultSize('lang-tts-preview')
+  // Phase 4 cleanup — 3 missing K-5 widgets
+  case 'lang-writing-mechanics': return getLangWidgetDefaultSize('lang-writing-mechanics')
+  case 'lang-decodable-passage': return getLangWidgetDefaultSize('lang-decodable-passage')
+  case 'lang-listening-comp': return getLangWidgetDefaultSize('lang-listening-comp')
   // Phase 4 Arts
   case 'arts-elements-art': return getArtsWidgetDefaultSize('arts-elements-art')
   case 'arts-symmetry-drawing': return getArtsWidgetDefaultSize('arts-symmetry-drawing')
@@ -1235,6 +1256,9 @@ export function getWidgetDefaultSize(kind: string): { width: number; height: num
   case 'arts-criticism': return getArtsWidgetDefaultSize('arts-criticism')
   case 'arts-two-point-persp': return getArtsWidgetDefaultSize('arts-two-point-persp')
   case 'arts-chord-progression': return getArtsWidgetDefaultSize('arts-chord-progression')
+  // Phase 4 cleanup — 2 missing Arts widgets
+  case 'arts-shape-stamps': return getArtsWidgetDefaultSize('arts-shape-stamps')
+  case 'arts-portfolio': return getArtsWidgetDefaultSize('arts-portfolio')
     case 'math-flashcards': return getL3WidgetDefaultSize('math-flashcards')
     default: return { width: 300, height: 300 }
   }

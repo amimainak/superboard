@@ -248,6 +248,8 @@ function CanvasArtworkCompare({ element, isDark }: CanvasWidgetProps) {
   const [aspect, setAspect] = useState((config.aspect as string) ?? 'color')
   const [textA, setTextA] = useState((config.textA as string) ?? '')
   const [textB, setTextB] = useState((config.textB as string) ?? '')
+  const [imgA, setImgA] = useState((config.imgA as string) ?? '')
+  const [imgB, setImgB] = useState((config.imgB as string) ?? '')
   const updateConfig = useConfigUpdater(element.id)
   const aspects = ['color', 'composition', 'texture', 'style', 'meaning']
   const labelColor = isDark ? '#94a3b8' : '#475569'
@@ -262,6 +264,31 @@ function CanvasArtworkCompare({ element, isDark }: CanvasWidgetProps) {
     meaning: 'What is the subject matter? What story or emotion does the artwork convey? What symbols are present?',
   }
 
+  const handleImageUpload = (idx: number, file: File) => {
+    if (!file) return
+    // Validate type/size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.')
+      return
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      alert('Image must be under 4 MB.')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      if (idx === 0) { setImgA(dataUrl); updateConfig({ imgA: dataUrl }) }
+      else { setImgB(dataUrl); updateConfig({ imgB: dataUrl }) }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemoveImage = (idx: number) => {
+    if (idx === 0) { setImgA(''); updateConfig({ imgA: '' }) }
+    else { setImgB(''); updateConfig({ imgB: '' }) }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11 }}>
       <div style={{ fontWeight: 700, fontSize: 12, color: isDark ? '#e2e8f0' : '#1e293b', marginBottom: 2 }}>Artwork Comparison</div>
@@ -271,16 +298,34 @@ function CanvasArtworkCompare({ element, isDark }: CanvasWidgetProps) {
         ))}
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        {['Artwork A', 'Artwork B'].map((label, idx) => (
-          <div key={label} style={{ flex: 1, borderRadius: 6, border: '1px dashed ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'), padding: '8px 10px', minHeight: 60 }}>
-            <div style={{ fontSize: 9, fontWeight: 600, color: '#a78bfa', marginBottom: 4 }}>{label}</div>
-            <textarea value={idx === 0 ? textA : textB} onChange={(e) => {
-              const v = e.target.value
-              if (idx === 0) { setTextA(v); updateConfig({ textA: v }) }
-              else { setTextB(v); updateConfig({ textB: v }) }
-            }} placeholder="Type your observations..." style={{ width: '100%', minHeight: 48, fontSize: 10, color: labelColor, lineHeight: 1.5, outline: 'none', background: 'transparent', border: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
-          </div>
-        ))}
+        {['Artwork A', 'Artwork B'].map((label, idx) => {
+          const img = idx === 0 ? imgA : imgB
+          return (
+            <div key={label} style={{ flex: 1, borderRadius: 6, border: '1px dashed ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'), padding: '8px 10px', minHeight: 60, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ fontSize: 9, fontWeight: 600, color: '#a78bfa', marginBottom: 2 }}>{label}</div>
+              {img ? (
+                <div style={{ position: 'relative' }}>
+                  <img src={img} alt={label} style={{ width: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 4, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)' }} />
+                  <button onClick={() => handleRemoveImage(idx)} title="Remove image" style={{ position: 'absolute', top: 4, right: 4, padding: '2px 6px', borderRadius: 4, fontSize: 10, background: 'rgba(0,0,0,0.55)', color: '#fff', border: 'none', cursor: 'pointer' }}>&times;</button>
+                </div>
+              ) : (
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 48, padding: '6px 8px', borderRadius: 4, border: '1px dashed ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)'), cursor: 'pointer', fontSize: 10, color: labelColor, gap: 4 }}>
+                  <span style={{ fontSize: 14 }}>&#128247;</span> Upload image
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) handleImageUpload(idx, f)
+                    e.target.value = ''
+                  }} />
+                </label>
+              )}
+              <textarea value={idx === 0 ? textA : textB} onChange={(e) => {
+                const v = e.target.value
+                if (idx === 0) { setTextA(v); updateConfig({ textA: v }) }
+                else { setTextB(v); updateConfig({ textB: v }) }
+              }} placeholder="Type your observations..." style={{ width: '100%', minHeight: 36, fontSize: 10, color: labelColor, lineHeight: 1.5, outline: 'none', background: 'transparent', border: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+            </div>
+          )
+        })}
       </div>
       <div style={{ padding: '8px 10px', borderRadius: 6, background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.12)' }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: '#a78bfa', marginBottom: 3 }}>Guiding Prompt</div>
@@ -908,6 +953,300 @@ export const ARTS_WIDGET_KIND_LABELS: Record<string, string> = {
   'arts-criticism': 'Art Criticism Framework',
   'arts-two-point-persp': 'Two-Point Perspective',
   'arts-chord-progression': 'Chord Progression Builder',
+  // Phase 4 cleanup — 2 missing Arts widgets
+  'arts-shape-stamps': 'Shape Stamp Library',
+  'arts-portfolio': 'Portfolio Organizer',
+}
+
+// ============================================================
+// Phase 4 cleanup — 2 missing Arts widgets
+// ============================================================
+
+// --- Shape Stamp Library ---
+// Click a shape to "stamp" it onto the canvas (records the placement
+// in widget config; the tutor can then drag the stamp on the canvas
+// using the standard widget move handle).
+const SHAPE_STAMPS: Array<{ id: string; name: string; render: (size: number, color: string) => React.ReactNode }> = [
+  {
+    id: 'circle', name: 'Circle',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill={c} /></svg>,
+  },
+  {
+    id: 'square', name: 'Square',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" fill={c} /></svg>,
+  },
+  {
+    id: 'triangle', name: 'Triangle',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill={c} /></svg>,
+  },
+  {
+    id: 'star', name: 'Star',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 16.5,13.5 18.5,21 12,17 5.5,21 7.5,13.5 2,9 9,9" fill={c} /></svg>,
+  },
+  {
+    id: 'heart', name: 'Heart',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9.5C.5 6 5 2 9 4c1.5.7 2.5 2 3 3 .5-1 1.5-2.3 3-3 4-2 8.5 2 6.5 7.5C19 16.5 12 21 12 21z" fill={c} /></svg>,
+  },
+  {
+    id: 'diamond', name: 'Diamond',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill={c} /></svg>,
+  },
+  {
+    id: 'leaf', name: 'Leaf',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M20 4S8 4 4 12c-2 4 0 8 0 8s4-2 8-2c4 0 8-4 8-12 0-1 0-2 0-2z" fill={c} /></svg>,
+  },
+  {
+    id: 'flower', name: 'Flower',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><g fill={c}><circle cx="12" cy="6" r="4" /><circle cx="6" cy="12" r="4" /><circle cx="18" cy="12" r="4" /><circle cx="12" cy="18" r="4" /></g><circle cx="12" cy="12" r="3" fill="#fbbf24" /></svg>,
+  },
+  {
+    id: 'tree', name: 'Tree',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 4,14 9,14 5,20 19,20 15,14 20,14" fill={c} /><rect x="11" y="20" width="2" height="3" fill="#92400e" /></svg>,
+  },
+  {
+    id: 'arrow', name: 'Arrow',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M4 12h14M14 6l6 6-6 6" stroke={c} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+  },
+  {
+    id: 'sun', name: 'Sun',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><g fill={c} stroke={c}><circle cx="12" cy="12" r="5" /><g strokeWidth="2" strokeLinecap="round"><line x1="12" y1="2" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="22" /><line x1="2" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="22" y2="12" /><line x1="5" y1="5" x2="7" y2="7" /><line x1="17" y1="17" x2="19" y2="19" /><line x1="5" y1="19" x2="7" y2="17" /><line x1="17" y1="7" x2="19" y2="5" /></g></g></svg>,
+  },
+  {
+    id: 'moon', name: 'Moon',
+    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z" fill={c} /></svg>,
+  },
+]
+
+const STAMP_COLORS = ['#ef4444', '#f97316', '#fbbf24', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#0f172a']
+
+export function CanvasShapeStamps({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const color = (raw.color as string) || '#ef4444'
+  const size = (raw.size as number) || 48
+  const placed = (raw.placed as Array<{ id: string; shape: string; x: number; y: number; color: string; size: number }>) || []
+  const labelColor = isDark ? '#94a3b8' : '#475569'
+  const btnBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  const btnBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+
+  const handleStamp = (shapeId: string) => {
+    // Place at a pseudo-random position within the widget preview area
+    const x = 20 + Math.random() * 60 // 20-80% of preview width
+    const y = 20 + Math.random() * 60
+    const newStamp = { id: `stamp-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, shape: shapeId, x, y, color, size }
+    updateConfig({ placed: [...placed, newStamp] })
+  }
+
+  const clearStamps = () => updateConfig({ placed: [] })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11 }}>
+      <div style={{ fontWeight: 700, fontSize: 12, color: isDark ? '#e2e8f0' : '#1e293b', marginBottom: 2 }}>Shape Stamp Library</div>
+      <p style={{ fontSize: 10, color: labelColor, lineHeight: 1.4, margin: 0 }}>
+        Pick a shape, then click &quot;Stamp&quot; to place it on the preview board below. Drag the widget on the canvas to reposition the whole stamp collection.
+      </p>
+
+      {/* Color picker */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, fontWeight: 600, color: labelColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>Color:</span>
+        {STAMP_COLORS.map(c => (
+          <button
+            key={c}
+            onClick={() => updateConfig({ color: c })}
+            style={{
+              width: 18, height: 18, borderRadius: '50%', border: color === c ? '2px solid #fff' : '1px solid ' + btnBorder,
+              background: c, cursor: 'pointer', padding: 0, boxShadow: color === c ? `0 0 0 2px ${c}` : 'none',
+            }}
+            aria-label={`Color ${c}`}
+          />
+        ))}
+      </div>
+
+      {/* Size picker */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 9, fontWeight: 600, color: labelColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>Size:</span>
+        {[32, 48, 64, 80].map(sz => (
+          <button
+            key={sz}
+            onClick={() => updateConfig({ size: sz })}
+            style={{
+              padding: '3px 10px', borderRadius: 4, fontSize: 10, fontWeight: size === sz ? 700 : 500,
+              background: size === sz ? 'rgba(139,92,246,0.15)' : btnBg,
+              border: size === sz ? '1px solid rgba(139,92,246,0.3)' : '1px solid ' + btnBorder,
+              color: size === sz ? '#a78bfa' : labelColor, cursor: 'pointer',
+            }}
+          >{sz}px</button>
+        ))}
+      </div>
+
+      {/* Shape buttons */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
+        {SHAPE_STAMPS.map(s => (
+          <button
+            key={s.id}
+            onClick={() => handleStamp(s.id)}
+            title={`Stamp a ${s.name}`}
+            style={{
+              padding: 6, borderRadius: 5, fontSize: 9, fontWeight: 500, cursor: 'pointer',
+              background: btnBg, border: '1px solid ' + btnBorder, color: labelColor,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+            }}
+          >
+            {s.render(20, color)}
+            <span>{s.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Preview canvas with placed stamps */}
+      <div style={{
+        position: 'relative', minHeight: 140, borderRadius: 6,
+        background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.5)',
+        border: '1px dashed ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'),
+        overflow: 'hidden',
+      }}>
+        {placed.length === 0 ? (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: labelColor, fontSize: 10 }}>
+            Click a shape above to stamp it here
+          </div>
+        ) : (
+          placed.map(stamp => {
+            const shape = SHAPE_STAMPS.find(s => s.id === stamp.shape)
+            if (!shape) return null
+            return (
+              <div key={stamp.id} style={{ position: 'absolute', left: `${stamp.x}%`, top: `${stamp.y}%`, transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}>
+                {shape.render(stamp.size, stamp.color)}
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 9, color: labelColor }}>{placed.length} stamp{placed.length === 1 ? '' : 's'} placed</span>
+        {placed.length > 0 && (
+          <button onClick={clearStamps} style={{ padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171', cursor: 'pointer' }}>Clear all</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// --- Portfolio Organizer ---
+// Categorize artworks by theme/medium/date; add artist statements;
+// export as a simple gallery view (text-based export to clipboard).
+export function CanvasPortfolioOrganizer({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const works = (raw.works as Array<{
+    id: string; title: string; theme: string; medium: string; date: string; statement: string; img?: string
+  }>) || []
+  const sortBy = (raw.sortBy as string) || 'date' // 'date' | 'theme' | 'medium'
+  const labelColor = isDark ? '#94a3b8' : '#475569'
+  const btnBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  const btnBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+
+  const addWork = () => {
+    const newWork = {
+      id: `work-${Date.now()}`,
+      title: 'Untitled',
+      theme: '',
+      medium: '',
+      date: new Date().toISOString().slice(0, 10),
+      statement: '',
+    }
+    updateConfig({ works: [...works, newWork] })
+  }
+
+  const updateWork = (id: string, patch: Partial<typeof works[number]>) => {
+    updateConfig({ works: works.map(w => w.id === id ? { ...w, ...patch } : w) })
+  }
+
+  const removeWork = (id: string) => {
+    updateConfig({ works: works.filter(w => w.id !== id) })
+  }
+
+  const handleImageUpload = (id: string, file: File) => {
+    if (!file.type.startsWith('image/') || file.size > 4 * 1024 * 1024) return
+    const reader = new FileReader()
+    reader.onload = () => updateWork(id, { img: reader.result as string })
+    reader.readAsDataURL(file)
+  }
+
+  const sortedWorks = [...works].sort((a, b) => {
+    if (sortBy === 'date') return (a.date || '').localeCompare(b.date || '')
+    if (sortBy === 'theme') return (a.theme || '').localeCompare(b.theme || '')
+    if (sortBy === 'medium') return (a.medium || '').localeCompare(b.medium || '')
+    return 0
+  })
+
+  const exportGallery = () => {
+    const lines = sortedWorks.map((w, i) => `${i + 1}. ${w.title} (${w.medium || 'unknown medium'}, ${w.date || 'undated'})\n   Theme: ${w.theme || '—'}\n   Artist statement: ${w.statement || '—'}`)
+    const text = `Portfolio (${sortedWorks.length} works, sorted by ${sortBy})\n\n${lines.join('\n\n')}`
+    navigator.clipboard?.writeText(text).then(() => alert('Portfolio exported to clipboard!')).catch(() => alert(text))
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 11 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontWeight: 700, fontSize: 12, color: isDark ? '#e2e8f0' : '#1e293b' }}>Portfolio Organizer</span>
+        <span style={{ fontSize: 9, color: labelColor }}>{works.length} work{works.length === 1 ? '' : 's'}</span>
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <span style={{ fontSize: 9, fontWeight: 600, color: labelColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>Sort by:</span>
+        {['date', 'theme', 'medium'].map(s => (
+          <button key={s} onClick={() => updateConfig({ sortBy: s })} style={{
+            padding: '3px 8px', borderRadius: 4, fontSize: 9, fontWeight: sortBy === s ? 700 : 500,
+            background: sortBy === s ? 'rgba(139,92,246,0.15)' : btnBg,
+            border: sortBy === s ? '1px solid rgba(139,92,246,0.3)' : '1px solid ' + btnBorder,
+            color: sortBy === s ? '#a78bfa' : labelColor, cursor: 'pointer', textTransform: 'capitalize',
+          }}>{s}</button>
+        ))}
+        <button onClick={addWork} style={{ marginLeft: 'auto', padding: '3px 10px', borderRadius: 4, fontSize: 9, fontWeight: 700, background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)', color: '#34d399', cursor: 'pointer' }}>+ Add Work</button>
+        {works.length > 0 && (
+          <button onClick={exportGallery} style={{ padding: '3px 10px', borderRadius: 4, fontSize: 9, fontWeight: 600, background: btnBg, border: '1px solid ' + btnBorder, color: labelColor, cursor: 'pointer' }}>Export</button>
+        )}
+      </div>
+
+      {sortedWorks.length === 0 ? (
+        <div style={{ padding: 24, textAlign: 'center', color: labelColor, fontSize: 11, background: btnBg, borderRadius: 6, border: '1px dashed ' + btnBorder }}>
+          No works yet. Click &quot;+ Add Work&quot; to begin organizing your portfolio.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 380, overflowY: 'auto' }}>
+          {sortedWorks.map(w => (
+            <div key={w.id} style={{ padding: 8, borderRadius: 6, border: '1px solid ' + btnBorder, background: btnBg, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                {w.img ? (
+                  <img src={w.img} alt={w.title} style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+                ) : (
+                  <label style={{ width: 50, height: 50, borderRadius: 4, border: '1px dashed ' + btnBorder, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 9, color: labelColor, flexShrink: 0 }}>
+                    +Img
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                      const f = e.target.files?.[0]
+                      if (f) handleImageUpload(w.id, f)
+                      e.target.value = ''
+                    }} />
+                  </label>
+                )}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <input value={w.title} onChange={(e) => updateWork(w.id, { title: e.target.value })} placeholder="Title" style={{ fontSize: 11, fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b', background: 'transparent', border: 'none', borderBottom: '1px solid ' + btnBorder, outline: 'none', padding: '2px 0' }} />
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <input value={w.theme} onChange={(e) => updateWork(w.id, { theme: e.target.value })} placeholder="Theme" style={{ flex: 1, fontSize: 9, color: labelColor, background: 'transparent', border: 'none', borderBottom: '1px solid ' + btnBorder, outline: 'none', padding: '2px 0' }} />
+                    <input value={w.medium} onChange={(e) => updateWork(w.id, { medium: e.target.value })} placeholder="Medium" style={{ flex: 1, fontSize: 9, color: labelColor, background: 'transparent', border: 'none', borderBottom: '1px solid ' + btnBorder, outline: 'none', padding: '2px 0' }} />
+                    <input type="date" value={w.date} onChange={(e) => updateWork(w.id, { date: e.target.value })} style={{ width: 90, fontSize: 9, color: labelColor, background: 'transparent', border: 'none', borderBottom: '1px solid ' + btnBorder, outline: 'none', padding: '2px 0' }} />
+                  </div>
+                </div>
+                <button onClick={() => removeWork(w.id)} title="Remove" style={{ padding: '2px 6px', borderRadius: 3, fontSize: 10, background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', flexShrink: 0 }}>&times;</button>
+              </div>
+              <textarea value={w.statement} onChange={(e) => updateWork(w.id, { statement: e.target.value })} placeholder="Artist statement (1-2 sentences about this piece)..." style={{ fontSize: 10, color: labelColor, background: 'transparent', border: '1px solid ' + btnBorder, borderRadius: 4, outline: 'none', padding: '4px 6px', resize: 'vertical', minHeight: 30, fontFamily: 'inherit', lineHeight: 1.4 }} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export const CLASSROOM_WIDGET_KIND_LABELS: Record<string, string> = {
@@ -921,7 +1260,7 @@ export function getArtsWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'arts-color-theory': return { hue: 200, sat: 70, light: 50, harmony: 'complementary' }
     case 'arts-perspective-grid': return { vanishingX: 50, vanishingY: 40, numLines: 8 }
     case 'arts-staff-notation': return { notes: ['C4', 'E4', 'G4', 'C5'] }
-    case 'arts-compare': return { aspect: 'color', textA: '', textB: '' }
+    case 'arts-compare': return { aspect: 'color', textA: '', textB: '', imgA: '', imgB: '' }
     // Phase 4 Arts widgets
     case 'arts-elements-art': return { selected: 0 }
     case 'arts-symmetry-drawing': return { mode: 'vertical', paths: [], currentPath: '' }
@@ -933,6 +1272,9 @@ export function getArtsWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'arts-criticism': return { describe: '', analyze: '', interpret: '', judge: '' }
     case 'arts-two-point-persp': return { vp1x: 15, vp2x: 85, vpy: 40, lines: 10 }
     case 'arts-chord-progression': return { progression: ['I','V','vi','IV'], key: 'C' }
+    // Phase 4 cleanup — 2 missing Arts widgets
+    case 'arts-shape-stamps': return { color: '#ef4444', size: 48, placed: [] }
+    case 'arts-portfolio': return { works: [], sortBy: 'date' }
     default: return {}
   }
 }
@@ -942,7 +1284,7 @@ export function getArtsWidgetDefaultSize(kind: string): { width: number; height:
     case 'arts-color-theory': return { width: 280, height: 400 }
     case 'arts-perspective-grid': return { width: 280, height: 320 }
     case 'arts-staff-notation': return { width: 300, height: 320 }
-    case 'arts-compare': return { width: 360, height: 340 }
+    case 'arts-compare': return { width: 420, height: 480 }
     // Phase 4 Arts widgets
     case 'arts-elements-art': return { width: 400, height: 500 }
     case 'arts-symmetry-drawing': return { width: 440, height: 500 }
@@ -954,6 +1296,9 @@ export function getArtsWidgetDefaultSize(kind: string): { width: number; height:
     case 'arts-criticism': return { width: 420, height: 550 }
     case 'arts-two-point-persp': return { width: 460, height: 500 }
     case 'arts-chord-progression': return { width: 420, height: 480 }
+    // Phase 4 cleanup — 2 missing Arts widgets
+    case 'arts-shape-stamps': return { width: 360, height: 480 }
+    case 'arts-portfolio': return { width: 420, height: 520 }
     default: return { width: 280, height: 300 }
   }
 }
@@ -977,4 +1322,4 @@ export function getClassroomWidgetDefaultSize(kind: string): { width: number; he
 }
 
 // Individual component exports for WIDGET_COMPONENTS map
-export { CanvasColorTheory, CanvasPerspectiveGrid, CanvasStaffNotation, CanvasArtworkCompare, CanvasTimer, CanvasRandomPicker, CanvasGraphingTool, CanvasElementsOfArt, CanvasSymmetryDrawing, CanvasRhythmBuilder, CanvasArtistSpotlight, CanvasArtHistoryTimeline, CanvasValueShading, CanvasCompositionalAnalysis, CanvasArtCriticism, CanvasTwoPointPerspective, CanvasChordProgression }
+export { CanvasColorTheory, CanvasPerspectiveGrid, CanvasStaffNotation, CanvasArtworkCompare, CanvasTimer, CanvasRandomPicker, CanvasGraphingTool, CanvasElementsOfArt, CanvasSymmetryDrawing, CanvasRhythmBuilder, CanvasArtistSpotlight, CanvasArtHistoryTimeline, CanvasValueShading, CanvasCompositionalAnalysis, CanvasArtCriticism, CanvasTwoPointPerspective, CanvasChordProgression, CanvasShapeStamps, CanvasPortfolioOrganizer }

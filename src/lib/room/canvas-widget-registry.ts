@@ -112,16 +112,18 @@ const BIOLOGY_WIDGETS: CanvasWidgetEntry[] = [
 ]
 
 // ============================================================
-// Language Widgets (21 kinds)
+// Language Widgets (24 kinds)
 // ============================================================
 const LANGUAGE_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'lang-argument-organizer', label: 'lang-argument-organizer', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-citation-gen', label: 'lang-citation-gen', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-context-clues-exp', label: 'lang-context-clues-exp', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-cvc-sort', label: 'lang-cvc-sort', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'lang-decodable-passage', label: 'lang-decodable-passage', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-essay-outline', label: 'lang-essay-outline', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-figurative-language', label: 'lang-figurative-language', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-fluency-timer', label: 'lang-fluency-timer', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'lang-listening-comp', label: 'lang-listening-comp', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-logical-fallacies', label: 'lang-logical-fallacies', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-paragraph-organizer', label: 'lang-paragraph-organizer', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-phonics', label: 'lang-phonics', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
@@ -136,6 +138,7 @@ const LANGUAGE_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'lang-text-evidence', label: 'lang-text-evidence', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-tts-preview', label: 'lang-tts-preview', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'lang-vocab-flashcards', label: 'lang-vocab-flashcards', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'lang-writing-mechanics', label: 'lang-writing-mechanics', toolkit: 'language', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
 ]
 
 // ============================================================
@@ -176,7 +179,7 @@ const EARTHSCIENCE_WIDGETS: CanvasWidgetEntry[] = [
 ]
 
 // ============================================================
-// Arts & Music Widgets (14 kinds)
+// Arts & Music Widgets (16 kinds)
 // ============================================================
 const ARTS_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'arts-art-timeline', label: 'arts-art-timeline', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
@@ -188,7 +191,9 @@ const ARTS_WIDGETS: CanvasWidgetEntry[] = [
   { kind: 'arts-criticism', label: 'arts-criticism', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-elements-art', label: 'arts-elements-art', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-perspective-grid', label: 'arts-perspective-grid', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'arts-portfolio', label: 'arts-portfolio', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-rhythm-builder', label: 'arts-rhythm-builder', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
+  { kind: 'arts-shape-stamps', label: 'arts-shape-stamps', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-staff-notation', label: 'arts-staff-notation', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-symmetry-drawing', label: 'arts-symmetry-drawing', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },
   { kind: 'arts-two-point-persp', label: 'arts-two-point-persp', toolkit: 'arts', gradeBands: ['K-2', '3-5', '6-8', '9-12'], isDefault: true },

@@ -638,6 +638,10 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input ratio → auto-generates equivalent ratios with bar model.</p>
           {addBoardBtn('Add to Board', function() { addToBoard('math-ratio-table', {}) })}</div>
 
+          {/* Phase 4 cleanup — Flashcards now also on 6-8 tab (was K-5 only) */}
+          <div className="toolkit-section">{sectionTitle('Flashcards')}
+          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create custom flashcard sets for vocabulary, formulas, or math facts. Click to flip, navigate with arrows, shuffle.</p>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-flashcards', {}) })}</div>
 
         </>
       )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense, useMemo } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
@@ -285,6 +285,15 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
   const addElement = useWhiteboardStore((s) => s.addElement)
   const camera = useWhiteboardStore((s) => s.camera)
   const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  // Track which widget kinds are already on the canvas (Phase 1E: "already on canvas" badges)
+  const elements = useWhiteboardStore((s) => s.elements)
+  const onCanvasKinds = useMemo(() => {
+    const set = new Set<string>()
+    for (const el of elements) {
+      if (el.type === 'widget' && (el as any).widgetKind) set.add((el as any).widgetKind)
+    }
+    return set
+  }, [elements])
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
@@ -351,9 +360,26 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
     </div>
   )
 
-  const addBoardBtn = (widgetKind: string) => (
-    <button onClick={() => addToBoard(widgetKind)} className="toolkit-add-to-board-btn" style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: addBg, border: '1px solid ' + addBorder, color: addText, cursor: 'pointer', alignSelf: 'flex-end', flexShrink: 0 }}>+ Add to Board</button>
-  )
+  const addBoardBtn = (widgetKind: string) => {
+    const onCanvas = onCanvasKinds.has(widgetKind)
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, alignSelf: 'flex-end', flexShrink: 0 }}>
+        {onCanvas && (
+          <span
+            title={'This widget is already on the canvas'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 16, height: 16, borderRadius: '50%',
+              background: 'rgba(34,197,94,0.18)', color: '#22c55e',
+              border: '1px solid rgba(34,197,94,0.4)',
+              fontSize: 10, fontWeight: 700, lineHeight: 1,
+            }}
+          >&#10003;</span>
+        )}
+        <button onClick={() => addToBoard(widgetKind)} className="toolkit-add-to-board-btn" style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: addBg, border: '1px solid ' + addBorder, color: addText, cursor: 'pointer' }}>{onCanvas ? 'Add Another' : '+ Add to Board'}</button>
+      </div>
+    )
+  }
 
   return (
     <div className="widget-content toolkit-arts" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
@@ -488,6 +514,20 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-chord-progression')}</div>
             </>}
           </div>
+          <div className="toolkit-section">
+            {sectionTitle('Shape Stamp Library', 'all-shape-stamps')}
+            {!collapsedSections.has('all-shape-stamps') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Click basic and nature shapes to stamp them on the canvas. Pick color and size.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-shape-stamps')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Portfolio Organizer', 'all-portfolio')}
+            {!collapsedSections.has('all-portfolio') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Categorize artworks by theme, medium, and date. Add artist statements and export as text.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-portfolio')}</div>
+            </>}
+          </div>
         </>
       )}
 
@@ -538,6 +578,13 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('k5-artist-spotlight') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Famous artist bios and works. Browse cards featuring artists from different movements.</p>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-artist-spotlight')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Shape Stamp Library', 'k5-shape-stamps')}
+            {!collapsedSections.has('k5-shape-stamps') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Click basic and nature shapes (circle, square, star, leaf, flower, tree, and more) to stamp them on the canvas. Pick color and size, then stamp away.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-shape-stamps')}</div>
             </>}
           </div>
         </>
@@ -652,6 +699,13 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('912-chord-progression') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build and hear chord progressions. Explore common progressions and music theory concepts.</p>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-chord-progression')}</div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Portfolio Organizer', '912-portfolio')}
+            {!collapsedSections.has('912-portfolio') && <>
+              <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Categorize artworks by theme, medium, and date. Add artist statements and image thumbnails, then export the portfolio as text.</p>
+              <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-portfolio')}</div>
             </>}
           </div>
         </>

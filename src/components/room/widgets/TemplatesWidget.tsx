@@ -1,12 +1,20 @@
 // ============================================================
 // Superboard — Templates Library Widget
 // Browse, search, and load saved whiteboard templates.
+//
+// This right-sidebar tab uses the legacy /api/templates (Supabase-direct)
+// route for listing/loading simple templates. For the rich Phase 2
+// template experience (SaveAsTemplateModal with description/grade band/tags/
+// public toggle, My Templates panel, Community Templates browser), use the
+// buttons at the top — they open the Phase 2 modals via the
+// template-modal-store.
 // ============================================================
 
 'use client'
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { useTemplateModalStore } from '@/lib/room/template-modal-store'
 
 interface Template {
   id: string
@@ -47,13 +55,15 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
   const [templates, setTemplates] = useState<Template[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
   const isDark = useWhiteboardStore((s) => s.isDark)
   const loadState = useWhiteboardStore((s) => s.loadState)
   const setPages = useWhiteboardStore((s) => s.setPages)
-  const elements = useWhiteboardStore((s) => s.elements)
-  const pages = useWhiteboardStore((s) => s.pages)
+
+  // Phase 2 modal openers (registered by WhiteboardClient)
+  const openSaveModal = useTemplateModalStore((s) => s.openSaveModal)
+  const openMyTemplates = useTemplateModalStore((s) => s.openMyTemplates)
+  const openCommunityTemplates = useTemplateModalStore((s) => s.openCommunityTemplates)
 
   const fetchTemplates = useCallback(async () => {
     try {
@@ -106,46 +116,65 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
     loadState(allElements)
   }
 
+  // If the rich SaveAsTemplateModal is available, use it; otherwise fall back to native prompt.
   const handleSaveCurrentAsTemplate = async () => {
+    if (openSaveModal) {
+      openSaveModal()
+      return
+    }
+    // Fallback (e.g. if WhiteboardClient hasn't registered the modal opener yet)
     const name = prompt('Template name:')
     if (!name) return
     const subject = prompt('Subject (GENERAL, MATH, SCIENCE, etc.):', 'GENERAL') || 'GENERAL'
-
-    setSaving(true)
     try {
-      const pagesToSave = pages.map((page, index) => {
-        const pageElements = elements.filter((el) => el.pageIndex === index)
-        return {
-          pageIndex: index,
-          elements: pageElements,
-        }
-      })
-
       const res = await fetch('/api/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.slice(0, 50),
-          subject,
-          snapshot: { pages: pagesToSave },
-        }),
+        body: JSON.stringify({ name: name.slice(0, 50), subject, snapshot: { pages: [] } }),
       })
-
-      if (res.ok) {
-        // Refresh the template list
-        fetchTemplates()
-      } else {
-        alert('Failed to save template')
-      }
+      if (res.ok) fetchTemplates()
+      else alert('Failed to save template')
     } catch (err) {
       console.error('Failed to save template:', err)
-    } finally {
-      setSaving(false)
     }
   }
 
+  // ---- Style helpers ----
+  const accentBg = 'rgba(139,92,246,0.15)'
+  const accentBorder = 'rgba(139,92,246,0.3)'
+  const accentText = '#a78bfa'
+  const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
+  const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+  const dkText = isDark ? '#94a3b8' : '#475569'
+
   return (
     <div className="widget-content">
+      {/* Phase 2 modal shortcuts */}
+      <div style={{ padding: '8px 12px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        <button
+          onClick={handleSaveCurrentAsTemplate}
+          style={{ flex: '1 1 auto', padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600, background: accentBg, border: '1px solid ' + accentBorder, color: accentText, cursor: 'pointer' }}
+        >
+          + Save Current
+        </button>
+        {openMyTemplates && (
+          <button
+            onClick={openMyTemplates}
+            style={{ flex: '1 1 auto', padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' }}
+          >
+            My Templates
+          </button>
+        )}
+        {openCommunityTemplates && (
+          <button
+            onClick={openCommunityTemplates}
+            style={{ flex: '1 1 auto', padding: '5px 10px', borderRadius: 5, fontSize: 10, fontWeight: 600, background: dkBg, border: '1px solid ' + dkBorder, color: dkText, cursor: 'pointer' }}
+          >
+            Community
+          </button>
+        )}
+      </div>
+
       {/* Search */}
       <div style={{ padding: '10px 12px', borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}` }}>
         <div style={{ position: 'relative' }}>
@@ -202,15 +231,9 @@ export function TemplatesWidget({ roomId }: { roomId: string }) {
         )}
       </div>
 
-      {/* Save current as template button */}
-      <div style={{ padding: '10px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <button
-          className="templates-save-btn"
-          onClick={handleSaveCurrentAsTemplate}
-          disabled={saving}
-        >
-          {saving ? 'Saving...' : 'Save Current as Template'}
-        </button>
+      {/* Footer hint */}
+      <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: 10, color: isDark ? '#475569' : '#94a3b8', lineHeight: 1.4, textAlign: 'center' }}>
+        Use the buttons above for the full template experience (description, grade band, tags, sharing).
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, lazy, Suspense, useCallback } from 'react'
+import { useState, lazy, Suspense, useCallback, useMemo } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { useWidgetStore } from '@/lib/room/widget-store'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
@@ -252,6 +252,15 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const installedTools = useWidgetStore((s) => s.installedTools)
   const addElement = useWhiteboardStore((s) => s.addElement)
   const camera = useWhiteboardStore((s) => s.camera)
+  // Track which widget kinds are already on the canvas (Phase 1E: "already on canvas" badges)
+  const elements = useWhiteboardStore((s) => s.elements)
+  const onCanvasKinds = useMemo(() => {
+    const set = new Set<string>()
+    for (const el of elements) {
+      if (el.type === 'widget' && (el as any).widgetKind) set.add((el as any).widgetKind)
+    }
+    return set
+  }, [elements])
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
 
@@ -314,6 +323,18 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             background: 'rgba(168,85,247,0.15)', color: '#c084fc',
             border: '1px solid rgba(168,85,247,0.25)', textTransform: 'uppercase', letterSpacing: 0.5,
           }}>PRO</span>
+        )}
+        {widgetKind && onCanvasKinds.has(widgetKind) && (
+          <span
+            title={'This widget is already on the canvas'}
+            style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 14, height: 14, borderRadius: '50%',
+              background: 'rgba(34,197,94,0.18)', color: '#22c55e',
+              border: '1px solid rgba(34,197,94,0.4)',
+              fontSize: 9, fontWeight: 700, lineHeight: 1,
+            }}
+          >&#10003;</span>
         )}
       </div>
       {widgetKind && (
@@ -399,6 +420,15 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Fluency Timer', false, 'lang-fluency-timer')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Writing Mechanics', false, 'lang-writing-mechanics')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Decodable Passage Builder', false, 'lang-decodable-passage')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Listening Comprehension', false, 'lang-listening-comp')}
           </div>
 
           {/* --- Sentence Level --- */}
@@ -512,6 +542,16 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Fluency Timer', false, 'lang-fluency-timer')}
+          </div>
+          {/* Phase 4 cleanup — 3 missing K-5 widgets */}
+          <div className="toolkit-section">
+            {sectionTitle('Writing Mechanics', false, 'lang-writing-mechanics')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Decodable Passage Builder', false, 'lang-decodable-passage')}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Listening Comprehension', false, 'lang-listening-comp')}
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>

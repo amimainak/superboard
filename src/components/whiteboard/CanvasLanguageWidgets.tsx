@@ -595,6 +595,10 @@ const LANG_WIDGET_COMPONENTS: Record<string, React.ComponentType<CanvasWidgetPro
   'lang-citation-gen': CanvasCitationGenerator,
   'lang-essay-outline': CanvasEssayOutline,
   'lang-tts-preview': CanvasTTSPreview,
+  // Phase 4 cleanup — 3 missing K-5 widgets
+  'lang-writing-mechanics': CanvasWritingMechanics,
+  'lang-decodable-passage': CanvasDecodablePassage,
+  'lang-listening-comp': CanvasListeningComprehension,
 }
 
 export function CanvasLanguageWidgetRenderer({ element, isDark }: CanvasWidgetProps) {
@@ -641,6 +645,10 @@ export function getLangWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'lang-citation-gen': return { style: 'MLA', sourceType: 'book', fields: { author: '', title: '', container: '', publisher: '', year: '', pages: '', url: '', accessDate: '' } }
     case 'lang-essay-outline': return { template: '5para', thesis: '', points: ['','',''], conclusion: '' }
     case 'lang-tts-preview': return { text: '', rate: 1, playing: false }
+    // Phase 4 cleanup — 3 missing K-5 widgets
+    case 'lang-writing-mechanics': return { mode: 'handwriting', letter: 'Aa', typed: '' }
+    case 'lang-decodable-passage': return { text: '', enabled: { 'Vowel Team': true, 'Silent e': true, 'Digraph': true, 'Blend': true, 'CVC': true } }
+    case 'lang-listening-comp': return { passage: '', revealed: {} }
     default: return {}
   }
 }
@@ -683,6 +691,10 @@ export function getLangWidgetDefaultSize(kind: string): { width: number; height:
     case 'lang-citation-gen': return { width: 420, height: 500 }
     case 'lang-essay-outline': return { width: 420, height: 560 }
     case 'lang-tts-preview': return { width: 400, height: 350 }
+    // Phase 4 cleanup — 3 missing K-5 widgets
+    case 'lang-writing-mechanics': return { width: 420, height: 540 }
+    case 'lang-decodable-passage': return { width: 440, height: 540 }
+    case 'lang-listening-comp': return { width: 440, height: 540 }
     default: return { width: 420, height: 470 }
   }
 }
@@ -710,6 +722,43 @@ export function CanvasSightWordBank({ element, isDark }: CanvasWidgetProps) {
   const filtered = search ? words.filter(w => w.includes(search.toLowerCase())) : words
   const s = langStyles(isDark)
 
+  // Phase 4 cleanup — Sight Word Bank ↔ Flashcards integration
+  // Creates a new math-flashcards widget next to this one, pre-populated
+  // with the highlighted sight words as Q/A pairs (word → word).
+  const addElement = useWhiteboardStore((st) => st.addElement)
+  const camera = useWhiteboardStore((st) => st.camera)
+  const currentPageIndex = useWhiteboardStore((st) => st.currentPageIndex)
+
+  const sendToFlashcards = useCallback(() => {
+    if (highlighted.length === 0) return
+    // Build flashcard set: each sight word → itself (recognition practice)
+    const cards = highlighted.map(w => ({ front: w, back: w }))
+    import('@/components/whiteboard/CanvasWidgets').then((mod) => {
+      const size = mod.getWidgetDefaultSize('math-flashcards')
+      const config = { ...mod.getDefaultWidgetConfig('math-flashcards'), customCards: cards, title: `Sight Words: ${grade}` }
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+      const cx = (vw / 2 - camera.x) / camera.zoom
+      const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+      const newEl: WidgetElement = {
+        id: `wid_${Math.random().toString(36).slice(2, 11)}`,
+        type: 'widget',
+        widgetKind: 'math-flashcards',
+        config,
+        x: cx - size.width / 2 + 60, // offset to the right of center
+        y: cy - size.height / 2,
+        width: size.width,
+        height: size.height,
+        rotation: 0, opacity: 1,
+        strokeColor: isDark ? '#334155' : '#e2e8f0',
+        fillColor: isDark ? '#0f172a' : '#ffffff',
+        strokeWidth: 1, locked: false,
+        pageIndex: currentPageIndex,
+      }
+      addElement(newEl)
+    })
+  }, [highlighted, grade, addElement, camera, currentPageIndex, isDark])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, height: '100%', fontFamily: 'inherit' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -733,7 +782,22 @@ export function CanvasSightWordBank({ element, isDark }: CanvasWidgetProps) {
           )
         })}
       </div>
-      {highlighted.length > 0 && <div style={{ fontSize: 9, color: s.text }}>{highlighted.length} highlighted · Click to toggle</div>}
+      {highlighted.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, padding: '4px 0' }}>
+          <span style={{ fontSize: 9, color: s.text }}>{highlighted.length} highlighted · Click to toggle</span>
+          <button
+            onClick={sendToFlashcards}
+            title={'Create a Flashcards widget from the highlighted words'}
+            style={{
+              padding: '3px 10px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+              background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)',
+              color: '#a5b4fc', cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+          >
+            &#8594; Send to Flashcards
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -1263,4 +1327,319 @@ export const LANG_WIDGET_KIND_LABELS: Record<string, string> = {
   'lang-citation-gen': 'MLA/APA Citation Generator',
   'lang-essay-outline': 'Essay Outline Builder',
   'lang-tts-preview': 'Text-to-Speech Preview',
+  // Phase 4 — added in cleanup (3 missing K-5 widgets)
+  'lang-writing-mechanics': 'Writing Mechanics',
+  'lang-decodable-passage': 'Decodable Passage Builder',
+  'lang-listening-comp': 'Listening Comprehension',
+}
+
+// ============================================================
+// Phase 4 cleanup — 3 missing K-5 English widgets
+// ============================================================
+
+// --- Writing Mechanics ---
+// Handwriting line templates (sky/grass/dirt), letter formation guides,
+// typing practice area.
+export function CanvasWritingMechanics({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const mode = (raw.mode as string) || 'handwriting' // 'handwriting' | 'letters' | 'typing'
+  const letter = (raw.letter as string) || 'Aa'
+  const typed = (raw.typed as string) || ''
+  const s = langStyles(isDark)
+
+  // Sky/grass/dirt color bands for handwriting guidance
+  const bandStyle = (color: string, label: string) => ({
+    flex: 1,
+    background: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 6px',
+    fontSize: 9,
+    color: isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)',
+    fontWeight: 600,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Writing Mechanics</span>
+      </div>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+        {[
+          { id: 'handwriting', label: 'Handwriting Lines' },
+          { id: 'letters', label: 'Letter Formation' },
+          { id: 'typing', label: 'Typing Practice' },
+        ].map(m => (
+          <button key={m.id} onClick={() => updateConfig({ mode: m.id })} style={s.tabBtn(mode === m.id)}>{m.label}</button>
+        ))}
+      </div>
+
+      {mode === 'handwriting' && (
+        <>
+          <p style={{ fontSize: 10, color: s.text, margin: 0, lineHeight: 1.4 }}>
+            Sky / Grass / Dirt lines guide letter placement. Tall letters reach the sky, small letters stay on the grass, descending letters go into the dirt.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minHeight: 200 }}>
+            <div style={bandStyle('rgba(56,189,248,0.18)', 'Sky')}>Sky</div>
+            <div style={{ position: 'relative', height: 36, background: 'rgba(34,197,94,0.15)', borderTop: '2px dashed rgba(34,197,94,0.5)', borderBottom: '2px dashed rgba(34,197,94,0.5)' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: s.bright, fontWeight: 600 }}>Grass</div>
+            </div>
+            <div style={bandStyle('rgba(120,53,15,0.22)', 'Dirt')}>Dirt</div>
+            <div style={{ position: 'relative', height: 36, background: 'rgba(120,53,15,0.10)', borderTop: '2px dashed rgba(120,53,15,0.5)' }}>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, color: s.bright, fontWeight: 600 }}>Dirt (below)</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 9, color: s.text, lineHeight: 1.4 }}>
+            Tip: have the student draw on the canvas over these lines — tall letters (b, d, h, k, l, t) touch the sky line; small letters (a, c, e, m, n, o, r, s, u, v, w, x, z) stay on the grass; descenders (g, j, p, q, y) reach into the dirt.
+          </div>
+        </>
+      )}
+
+      {mode === 'letters' && (
+        <>
+          <p style={{ fontSize: 10, color: s.text, margin: 0, lineHeight: 1.4 }}>
+            Pick a letter to display large for formation practice. The student traces over it on the canvas.
+          </p>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(L => (
+              <button key={L} onClick={() => updateConfig({ letter: L + L.toLowerCase() })} style={s.tabBtn(letter === L + L.toLowerCase())}>{L}</button>
+            ))}
+          </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: s.surface, borderRadius: 8, border: '1px solid ' + s.border, minHeight: 180, fontSize: 140, fontWeight: 700, color: s.bright, fontFamily: 'Georgia, serif', lineHeight: 1 }}>
+            {letter}
+          </div>
+          <div style={{ fontSize: 9, color: s.text }}>Arrow prompts: top-down for vertical strokes; left-to-right for horizontal strokes; counter-clockwise for curves.</div>
+        </>
+      )}
+
+      {mode === 'typing' && (
+        <>
+          <p style={{ fontSize: 10, color: s.text, margin: 0, lineHeight: 1.4 }}>
+            Type a word or sentence for keyboarding practice. The student types it back into the input below.
+          </p>
+          <input
+            value={typed}
+            onChange={(e) => updateConfig({ typed: e.target.value })}
+            placeholder="Type a word to practice..."
+            style={s.input}
+          />
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: s.surface, borderRadius: 8, border: '1px solid ' + s.border, padding: 16, fontSize: 22, fontWeight: 600, color: s.bright, textAlign: 'center' as const, minHeight: 120, letterSpacing: 1 }}>
+            {typed || 'Type above to see the practice word here'}
+          </div>
+          <div style={{ fontSize: 9, color: s.text }}>Tip: have the student copy the word into the canvas text tool to practice keyboard-to-canvas transfer.</div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// --- Decodable Passage Builder ---
+// Input text → highlights decodable patterns (CVC, digraphs, blends,
+// vowel teams, silent e) by color.
+const DECODABLE_PATTERNS: Array<{ name: string; color: string; re: RegExp }> = [
+  // Vowel teams (long-vowel digraphs) — highlight first
+  { name: 'Vowel Team', color: 'rgba(168,85,247,0.25)', re: /\b(?:ai|ay|ea|ee|ey|oa|oe|ow|ue|ew|oo|ou|igh)/g },
+  // Silent-e pattern
+  { name: 'Silent e', color: 'rgba(59,130,246,0.22)', re: /\b\w+[aeiou]e\b/g },
+  // Consonant digraphs
+  { name: 'Digraph', color: 'rgba(34,197,94,0.22)', re: /\b(?:sh|ch|th|wh|ph|ck|ng|nk)\w*/g },
+  // Consonant blends
+  { name: 'Blend', color: 'rgba(245,158,11,0.22)', re: /\b(?:bl|br|cl|cr|dr|fl|fr|gl|gr|pl|pr|sc|sk|sl|sm|sn|sp|st|sw|tr|tw)\w*/g },
+  // CVC pattern (consonant-vowel-consonant short words)
+  { name: 'CVC', color: 'rgba(236,72,153,0.20)', re: /\b[a-z][aeiou][bcdfghjklmnpqrstvwxyz]\b/gi },
+]
+
+export function CanvasDecodablePassage({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const text = (raw.text as string) || ''
+  const enabled = (raw.enabled as Record<string, boolean>) || DECODABLE_PATTERNS.reduce((a, p) => { a[p.name] = true; return a }, {} as Record<string, boolean>)
+  const s = langStyles(isDark)
+
+  // Tokenize the text into words while keeping whitespace/punctuation
+  const tokens = text.match(/\s+|\w+([\-\'\']\w+)*|[^\w\s]+/g) || []
+
+  // For each word token, determine which pattern(s) it matches
+  // Priority: first matching pattern wins (so we don't double-color)
+  const coloredTokens = tokens.map(tok => {
+    if (/^\s+$/.test(tok) || /^[^\w\s]+$/.test(tok)) return { tok, color: null }
+    for (const p of DECODABLE_PATTERNS) {
+      if (!enabled[p.name]) continue
+      p.re.lastIndex = 0
+      // Test on the standalone word
+      const re = new RegExp('^(?:' + p.re.source + ')', 'i')
+      if (re.test(tok)) return { tok, color: p.color, label: p.name }
+    }
+    return { tok, color: null }
+  })
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Decodable Passage Builder</span>
+      </div>
+      <p style={{ fontSize: 10, color: s.text, margin: 0, lineHeight: 1.4 }}>
+        Paste a passage below. Words are color-coded by decodable pattern so early readers can spot them.
+      </p>
+      <textarea
+        value={text}
+        onChange={(e) => updateConfig({ text: e.target.value })}
+        placeholder="Type or paste a passage here..."
+        style={{ ...s.input, minHeight: 70, resize: 'vertical' as const, fontFamily: 'inherit', lineHeight: 1.5 }}
+      />
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {DECODABLE_PATTERNS.map(p => (
+          <button
+            key={p.name}
+            onClick={() => updateConfig({ enabled: { ...enabled, [p.name]: !enabled[p.name] } })}
+            style={{
+              padding: '3px 8px',
+              borderRadius: 4,
+              fontSize: 10,
+              fontWeight: 600,
+              cursor: 'pointer',
+              background: enabled[p.name] ? p.color : 'transparent',
+              border: '1px solid ' + (enabled[p.name] ? p.color : s.border),
+              color: enabled[p.name] ? s.bright : s.text,
+              opacity: enabled[p.name] ? 1 : 0.55,
+            }}
+          >
+            {p.name}
+          </button>
+        ))}
+      </div>
+      <div
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: 10,
+          background: s.surface,
+          borderRadius: 8,
+          border: '1px solid ' + s.border,
+          fontSize: 14,
+          lineHeight: 1.7,
+          color: s.bright,
+          minHeight: 100,
+        }}
+      >
+        {text ? (
+          coloredTokens.map((t, i) => (
+            <span key={i} style={t.color ? { background: t.color, padding: '1px 2px', borderRadius: 3 } : undefined}>{t.tok}</span>
+          ))
+        ) : (
+          <span style={{ color: s.text, fontSize: 11 }}>Colorized passage will appear here.</span>
+        )}
+      </div>
+      <div style={{ fontSize: 9, color: s.text }}>Tip: toggle patterns above to focus on one skill at a time.</div>
+    </div>
+  )
+}
+
+// --- Listening Comprehension ---
+// Paste a passage → auto-generate who/what/where/when/why questions.
+function generateComprehensionQuestions(passage: string): Array<{ type: string; q: string; a: string }> {
+  const sentences = passage.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 5)
+  const out: Array<{ type: string; q: string; a: string }> = []
+  if (sentences.length === 0) return out
+
+  // First sentence often establishes setting/character
+  const first = sentences[0]
+  // Capitalized non-first words often are proper nouns (who)
+  const properNouns = new Set<string>()
+  const words = first.split(/\s+/)
+  for (const w of words) {
+    const clean = w.replace(/[^A-Za-z]/g, '')
+    if (clean.length > 2 && /^[A-Z]/.test(clean) && !['The', 'A', 'An', 'It', 'He', 'She', 'They', 'We', 'I', 'This', 'That', 'These', 'Those', 'Then', 'But', 'And', 'Or', 'So', 'Because', 'When', 'Where', 'What', 'Who', 'Why', 'How'].includes(clean)) {
+      properNouns.add(clean)
+    }
+  }
+
+  // Who — about characters
+  if (properNouns.size > 0) {
+    const names = Array.from(properNouns).slice(0, 2).join(' and ')
+    out.push({ type: 'Who', q: `Who is mentioned in the beginning of the passage?`, a: names })
+  } else {
+    out.push({ type: 'Who', q: `Who is the main character in this passage?`, a: '(look for the person the passage is about)' })
+  }
+
+  // What — what is happening
+  out.push({ type: 'What', q: `What is happening in the sentence: "${first.length > 80 ? first.slice(0, 80) + '...' : first}"?`, a: '(describe the action in your own words)' })
+
+  // Where — look for location words
+  const whereMatch = passage.match(/\b(?:in|on|at|inside|outside|under|near|by|behind|beside|above|below)\s+([A-Z][a-z]+|[a-z]+)/i)
+  if (whereMatch) {
+    out.push({ type: 'Where', q: `Where does this take place?`, a: whereMatch[0] })
+  } else {
+    out.push({ type: 'Where', q: `Where does the story happen?`, a: '(find the place in the passage)' })
+  }
+
+  // When — look for time words
+  const whenMatch = passage.match(/\b(?:today|yesterday|tomorrow|morning|afternoon|evening|night|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|summer|winter|spring|fall|autumn|before|after|during|while|once|suddenly|then|now)\b/i)
+  if (whenMatch) {
+    out.push({ type: 'When', q: `When does this happen?`, a: whenMatch[0] })
+  } else {
+    out.push({ type: 'When', q: `When does the event take place?`, a: '(find a time clue in the passage)' })
+  }
+
+  // Why — inference question
+  out.push({ type: 'Why', q: `Why do you think ${properNouns.size > 0 ? Array.from(properNouns)[0] : 'the character'} acted this way?`, a: '(infer from the passage)' })
+
+  return out
+}
+
+export function CanvasListeningComprehension({ element, isDark }: CanvasWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const raw = element.config || {}
+  const passage = (raw.passage as string) || ''
+  const revealed = (raw.revealed as Record<number, boolean>) || {}
+  const s = langStyles(isDark)
+
+  const questions = React.useMemo(() => generateComprehensionQuestions(passage), [passage])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%', fontFamily: 'inherit' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Listening Comprehension</span>
+      </div>
+      <p style={{ fontSize: 10, color: s.text, margin: 0, lineHeight: 1.4 }}>
+        Paste a passage below. The widget auto-generates Who / What / Where / When / Why questions. Read the passage aloud, then ask the questions.
+      </p>
+      <textarea
+        value={passage}
+        onChange={(e) => updateConfig({ passage: e.target.value, revealed: {} })}
+        placeholder="Paste a passage for read-aloud..."
+        style={{ ...s.input, minHeight: 70, resize: 'vertical' as const, fontFamily: 'inherit', lineHeight: 1.5 }}
+      />
+      {questions.length === 0 ? (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: s.text, fontSize: 11, padding: 16, background: s.surface, borderRadius: 8, border: '1px solid ' + s.border }}>
+          Questions will appear here after you paste a passage.
+        </div>
+      ) : (
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, minHeight: 100 }}>
+          {questions.map((q, i) => (
+            <div key={i} style={{ padding: '8px 10px', background: s.surface, borderRadius: 6, border: '1px solid ' + s.border }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 700, background: 'rgba(99,102,241,0.18)', color: '#a5b4fc', textTransform: 'uppercase' as const, letterSpacing: 0.5 }}>{q.type}</span>
+                <span style={{ fontSize: 11, color: s.bright, fontWeight: 500 }}>{q.q}</span>
+              </div>
+              {revealed[i] ? (
+                <div style={{ fontSize: 10, color: s.text, paddingLeft: 4, borderLeft: '2px solid rgba(99,102,241,0.4)' }}>
+                  <strong style={{ color: s.bright }}>Suggested answer:</strong> {q.a}
+                </div>
+              ) : (
+                <button onClick={() => updateConfig({ revealed: { ...revealed, [i]: true } })} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600, background: 'transparent', border: '1px solid ' + s.border, color: s.text, cursor: 'pointer' }}>
+                  Show suggested answer
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ fontSize: 9, color: s.text }}>Tip: read the passage aloud 1-2 times, then ask each question. The student answers from memory (listening comprehension), not by re-reading.</div>
+    </div>
+  )
 }
