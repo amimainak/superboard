@@ -15,6 +15,7 @@ import {
   downloadBlob, downloadString,
 } from '@/lib/whiteboard/export'
 import { initRealtimeSync } from '@/lib/collab/realtime-sync'
+import { useCollab } from '@/hooks/useCollab'
 import { hasFeature } from '@/lib/features'
 import type { Tier } from '@/lib/validations'
 import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar'
@@ -137,34 +138,22 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
     loadPages()
   }, [roomId, loadState, setPages])
 
-  // Initialize Supabase Realtime Broadcast sync
-  useEffect(() => {
-    // Small delay to let the store initialize after page load
-    const timer = setTimeout(() => {
-      const store = useWhiteboardStore.getState()
-      realtimeCleanupRef.current = initRealtimeSync(roomId, {
-        elements: store.elements,
-        camera: store.camera,
-        pages: store.pages,
-        currentPageIndex: store.currentPageIndex,
-        addElement: store.addElement,
-        updateElement: store.updateElement,
-        removeElements: store.removeElements,
-        setCamera: store.setCamera,
-        loadState: store.loadState,
-        setPages: store.setPages,
-        setCurrentPageIndex: store.setCurrentPageIndex,
-      })
-    }, 500)
+  // Initialize collaboration: Yjs/Hocuspocus (primary) with Supabase fallback
+  const { mode: collabMode, isConnected: collabConnected, remoteUserCount } = useCollab({
+    roomId,
+    userName: 'Tutor',
+    userRole: 'tutor',
+  })
 
+  // Clean up any leftover Supabase realtime on unmount
+  useEffect(() => {
     return () => {
-      clearTimeout(timer)
       if (realtimeCleanupRef.current) {
         realtimeCleanupRef.current()
         realtimeCleanupRef.current = null
       }
     }
-  }, [roomId])
+  }, [])
 
   // Auto-save to Supabase (debounced 3s)
   const saveToSupabase = useCallback(async () => {

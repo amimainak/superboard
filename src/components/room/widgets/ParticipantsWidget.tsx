@@ -97,9 +97,11 @@ export function ParticipantsWidget({ roomId, isTutor }: ParticipantsWidgetProps)
 
       {/* Footer hint */}
       <div className={`participants-footer ${isDark ? '' : 'participants-footer-light'}`}>
-        {isConnected ? 'Connected via Hocuspocus' : 'Requires Hocuspocus server'}
-        <br />
-        {!isConnected && <span className={`participants-footer-sub ${isDark ? '' : 'participants-footer-sub-light'}`}>Coming in next update</span>}
+        {isConnected
+          ? remoteUsers.length > 0
+            ? `Connected — ${remoteUsers.length} other participant${remoteUsers.length === 1 ? '' : 's'}`
+            : 'Connected — waiting for others to join'
+          : 'Connecting to collaboration server...'}
       </div>
     </div>
   )
