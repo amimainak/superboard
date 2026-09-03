@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, type Tier } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         where: { id: auth.userId },
         select: { tier: true },
       });
-      if (!caller || !isAgencyTier(caller.tier)) {
+      if (!caller || !isAgencyTier(caller.tier as Tier)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
       // Verify the tutor is a sub-tutor under this agency

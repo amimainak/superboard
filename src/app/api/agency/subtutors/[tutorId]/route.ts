@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, type Tier } from '@/types';
 
 export async function DELETE(
   request: NextRequest,
@@ -34,7 +34,7 @@ export async function DELETE(
       select: { tier: true },
     });
 
-    if (!agency || !isAgencyTier(agency.tier)) {
+    if (!agency || !isAgencyTier(agency.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'Only Agency tier users can manage sub-tutors' },
         { status: 403 }

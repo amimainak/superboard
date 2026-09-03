@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { registerSchema, validateInput } from '@/lib/validations';
+import { registerSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {

@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, type Tier } from '@/types';
 import { z } from 'zod';
 
 const createResourceSchema = z.object({
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       select: { tier: true, parentAgencyId: true },
     });
 
-    if (!user || !isAgencyTier(user.tier)) {
+    if (!user || !isAgencyTier(user.tier as Tier)) {
       return NextResponse.json(
         { error: 'AGENCY_REQUIRED', message: 'Only agency users can upload resources' },
         { status: 403 },

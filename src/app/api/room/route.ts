@@ -14,7 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { requireAuth, verifyAuth } from '@/lib/auth';
 import { hasFeature } from '@/lib/usage';
 import { createRoomSchema, validateInput } from '@/lib/validations';
-import { isAgencyTier, type Subject, Tier } from '@/types';
+import { isAgencyTier, type Subject, type Tier } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
           where: { id: auth.userId },
           select: { tier: true },
         });
-        if (!caller || !isAgencyTier(caller.tier)) {
+        if (!caller || !isAgencyTier(caller.tier as Tier)) {
           return NextResponse.json(
             { error: 'Forbidden' },
             { status: 403 }
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
           where: { id: auth.userId },
           select: { tier: true },
         });
-        if (caller && isAgencyTier(caller.tier)) {
+        if (caller && isAgencyTier(caller.tier as Tier)) {
           const tutor = await db.user.findUnique({
             where: { id: room.tutorId },
             select: { parentAgencyId: true },

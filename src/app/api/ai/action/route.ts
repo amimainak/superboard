@@ -14,7 +14,7 @@ import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { checkAICreditLimit, incrementAICredits, hasFeature, isOverAIBudget } from '@/lib/usage';
-import { aiActionSchema, validateInput } from '@/lib/validations';
+import { aiActionSchema } from '@/lib/validations';
 import type { Tier, AIAction } from '@/types';
 import { TEXT_AI_ACTIONS, VISION_AI_ACTIONS, CREDIT_COSTS, ENHANCED_ACTION_SET } from '@/types';
 
@@ -31,9 +31,16 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ userId: string; action: string; prompt: string; imageBase64?: string; systemPrompt?: string }>(aiActionSchema, body);
-    if (!parsed.success) return parsed.response;
-    const { userId, action, prompt, imageBase64, systemPrompt } = parsed.data;
+    const parsed = aiActionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const { userId, action, prompt, imageBase64, systemPrompt } = parsed.data as {
+      userId: string; action: string; prompt: string; imageBase64?: string; systemPrompt?: string;
+    };
 
     // Security: caller can only perform AI actions on their own account
     if (userId !== auth.userId) {

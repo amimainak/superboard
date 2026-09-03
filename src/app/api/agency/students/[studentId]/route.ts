@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, type Tier } from '@/types';
 
 async function verifyAgencyAccess(auth: { userId: string; email: string | null }) {
   const agency = await db.user.findUnique({
@@ -16,7 +16,7 @@ async function verifyAgencyAccess(auth: { userId: string; email: string | null }
     select: { tier: true, parentAgencyId: true },
   });
 
-  if (!agency || !isAgencyTier(agency.tier)) {
+  if (!agency || !isAgencyTier(agency.tier as Tier)) {
     return { error: 'AGENCY_REQUIRED', message: 'Only Agency tier users can manage students' };
   }
 

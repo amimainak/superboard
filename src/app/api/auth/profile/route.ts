@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { isAgencyTier } from '@/types';
+import { isAgencyTier, type Tier } from '@/types';
 import { z } from 'zod';
 
 // SECURITY FIX (API-M09): Zod schema validation for profile PATCH
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         where: { id: auth.userId },
         select: { tier: true },
       });
-      if (!caller || !isAgencyTier(caller.tier)) {
+      if (!caller || !isAgencyTier(caller.tier as Tier)) {
         return NextResponse.json(
           { error: 'Forbidden — you can only view your own profile' },
           { status: 403 }

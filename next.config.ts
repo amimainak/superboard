@@ -34,6 +34,7 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       'lucide-react',
       '@radix-ui/react-icons',
+      'yjs',
       'perfect-freehand',
     ],
   },

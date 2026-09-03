@@ -14,7 +14,7 @@ import { db } from '@/lib/db';
 import { getCurrentUsageLog } from '@/lib/usage';
 import { requireAuth } from '@/lib/auth';
 import type { Tier } from '@/types';
-import { isAgencyTier, TIER_LIMITS } from '@/types';
+import { isAgencyTier, TIER_LIMITS, type Tier } from '@/types';
 
 /**
  * SECURITY FIX (I-05): Properly typed helper to get AI credit limit
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         where: { id: auth.userId },
         select: { tier: true },
       });
-      if (!caller || !isAgencyTier(caller.tier)) {
+      if (!caller || !isAgencyTier(caller.tier as Tier)) {
         return NextResponse.json(
           { error: 'Forbidden — you can only view your own usage' },
           { status: 403 }
