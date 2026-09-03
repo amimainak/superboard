@@ -460,7 +460,7 @@ export function CanvasMagnetism({ element, isDark }: CanvasScienceWidgetProps) {
               <rect x={m.x} y={80} width={30} height={40} fill="#3b82f6" rx={4} />
               <text x={m.x - 15} y={104} textAnchor="middle" fontSize={12} fontWeight={700} fill="#fff">{isNS ? 'N' : 'S'}</text>
               <text x={m.x + 15} y={104} textAnchor="middle" fontSize={12} fontWeight={700} fill="#fff">{isNS ? 'S' : 'N'}</text>
-              <input type="range" min={40} max={360} value={m.x} onChange={function(e) { updateMagnet(i, { x: Number(e.target.value) }) }} y={140} x={m.x - 30} width={60} style={{ cursor: 'pointer' }} />
+              <input type="range" min={40} max={360} value={m.x} onChange={function(e) { updateMagnet(i, { x: Number(e.target.value) }) }} style={{ cursor: 'pointer', position: 'absolute' as const, left: (m.x - 30) + 'px', top: '140px', width: '60px' }} />
               <text x={m.x} y={170} textAnchor="middle" fontSize={8} fill={s.text}>drag</text>
             </g>
           )
@@ -1007,8 +1007,8 @@ export function CanvasRockCycle({ element, isDark }: CanvasScienceWidgetProps) {
           <div style={{ fontSize: 9, fontWeight: 600, color: s.bright, marginBottom: 2 }}>Process: {sel.processes}</div>
           <div style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>Examples:</div>
           <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-            {sel.examples.map(function(ex) {
-              return <span key={ex} style={{ padding: '1px 6px', borderRadius: 3, fontSize: 8, background: sel.color + '15', color: sel.color }}>{ex}</span>
+            {sel!.examples.map(function(ex) {
+              return <span key={ex} style={{ padding: '1px 6px', borderRadius: 3, fontSize: 8, background: sel!.color + '15', color: sel!.color }}>{ex}</span>
             })}
           </div>
         </div>
@@ -1218,8 +1218,8 @@ export function CanvasWeatherPatterns({ element, isDark }: CanvasScienceWidgetPr
           <div style={{ fontSize: 10, color: s.text, lineHeight: 1.5 }}>{pat.desc}</div>
           <div style={{ fontSize: 10, fontWeight: 600, color: s.bright }}>Effects:</div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {pat.effects.map(function(ef) {
-              return <span key={ef} style={{ padding: '2px 6px', borderRadius: 4, fontSize: 8, background: pat.color + '15', color: pat.color, border: '1px solid ' + pat.color + '33' }}>{ef}</span>
+            {pat!.effects.map(function(ef) {
+              return <span key={ef} style={{ padding: '2px 6px', borderRadius: 4, fontSize: 8, background: pat!.color + '15', color: pat!.color, border: '1px solid ' + pat!.color + '33' }}>{ef}</span>
             })}
           </div>
         </div>

@@ -44,11 +44,10 @@ export async function logAudit(
   try {
     await db.auditLog.create({
       data: {
-        adminId,
+        userId: adminId,
         action,
-        targetType: targetType || null,
-        targetId: targetId || null,
-        metadata: metadata ? JSON.stringify(metadata) : null,
+        target: targetId || null,
+        details: metadata ? JSON.stringify(metadata) : undefined,
       },
     });
   } catch (error) {

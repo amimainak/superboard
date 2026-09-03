@@ -12,16 +12,12 @@ import { requireAuth } from '@/lib/auth';
 import { z } from 'zod';
 
 const updateInvoiceSchema = z.object({
-  description: z.string().max(5000).optional().nullable(),
-  amountCents: z.number().int().min(0).max(1_000_000_000).optional(),
+  studentName: z.string().max(300).optional(),
+  amount: z.number().min(0).max(1_000_000_000).optional(),
   currency: z.string().max(10).optional(),
   status: z.enum(['DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED']).optional(),
-  lessonHours: z.number().min(0).max(10000).optional(),
-  ratePerHourCents: z.number().int().min(0).max(100_000).optional(),
-  billingPeriodStart: z.string().datetime('Invalid date format').optional().nullable(),
-  billingPeriodEnd: z.string().datetime('Invalid date format').optional().nullable(),
+  items: z.array(z.record(z.string(), z.unknown())).optional(),
   paidAt: z.string().datetime('Invalid date format').optional().nullable(),
-  paidAmountCents: z.number().int().min(0).max(1_000_000_000).optional(),
   dueDate: z.string().datetime('Invalid date format').optional().nullable(),
   notes: z.string().max(5000).optional().nullable(),
   // Convenience: mark as paid in one step
@@ -29,6 +25,20 @@ const updateInvoiceSchema = z.object({
 });
 
 type RouteContext = { params: Promise<{ invoiceId: string }> };
+
+/** Resolve the list of creatorIds the current user is allowed to view/manage. */
+async function resolveAgencyCreatorIds(userId: string, parentAgencyId: string | null): Promise<string[]> {
+  if (parentAgencyId) {
+    // Sub-tutor: can only access their own invoices
+    return [userId];
+  }
+  // Agency owner: own invoices + any sub-tutors they manage
+  const members = await db.agencyMember.findMany({
+    where: { agencyId: userId },
+    select: { tutorId: true },
+  });
+  return [userId, ...members.map((m) => m.tutorId)];
+}
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
@@ -47,13 +57,10 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const agencyId = user.parentAgencyId || auth.userId;
+    const creatorIds = await resolveAgencyCreatorIds(auth.userId, user.parentAgencyId);
 
     const invoice = await db.invoice.findFirst({
-      where: { id: invoiceId, agencyId },
-      include: {
-        student: { select: { id: true, name: true, email: true, grade: true } },
-      },
+      where: { id: invoiceId, creatorId: { in: creatorIds } },
     });
 
     if (!invoice) {
@@ -62,8 +69,6 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({
       ...invoice,
-      billingPeriodStart: invoice.billingPeriodStart?.toISOString() ?? null,
-      billingPeriodEnd: invoice.billingPeriodEnd?.toISOString() ?? null,
       paidAt: invoice.paidAt?.toISOString() ?? null,
       dueDate: invoice.dueDate?.toISOString() ?? null,
       createdAt: invoice.createdAt.toISOString(),
@@ -102,28 +107,24 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const agencyId = user.parentAgencyId || auth.userId;
+    const creatorIds = await resolveAgencyCreatorIds(auth.userId, user.parentAgencyId);
 
     const existing = await db.invoice.findFirst({
-      where: { id: invoiceId, agencyId },
+      where: { id: invoiceId, creatorId: { in: creatorIds } },
     });
 
     if (!existing) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
 
-    // Build update data
+    // Build update data — only fields present on the Invoice model
     const updateData: Record<string, unknown> = {};
-    if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
-    if (parsed.data.amountCents !== undefined) updateData.amountCents = parsed.data.amountCents;
+    if (parsed.data.studentName !== undefined) updateData.studentName = parsed.data.studentName;
+    if (parsed.data.amount !== undefined) updateData.amount = parsed.data.amount;
     if (parsed.data.currency !== undefined) updateData.currency = parsed.data.currency;
     if (parsed.data.status !== undefined) updateData.status = parsed.data.status;
-    if (parsed.data.lessonHours !== undefined) updateData.lessonHours = parsed.data.lessonHours;
-    if (parsed.data.ratePerHourCents !== undefined) updateData.ratePerHourCents = parsed.data.ratePerHourCents;
-    if (parsed.data.billingPeriodStart !== undefined) updateData.billingPeriodStart = parsed.data.billingPeriodStart ? new Date(parsed.data.billingPeriodStart) : null;
-    if (parsed.data.billingPeriodEnd !== undefined) updateData.billingPeriodEnd = parsed.data.billingPeriodEnd ? new Date(parsed.data.billingPeriodEnd) : null;
+    if (parsed.data.items !== undefined) updateData.items = parsed.data.items;
     if (parsed.data.paidAt !== undefined) updateData.paidAt = parsed.data.paidAt ? new Date(parsed.data.paidAt) : null;
-    if (parsed.data.paidAmountCents !== undefined) updateData.paidAmountCents = parsed.data.paidAmountCents;
     if (parsed.data.dueDate !== undefined) updateData.dueDate = parsed.data.dueDate ? new Date(parsed.data.dueDate) : null;
     if (parsed.data.notes !== undefined) updateData.notes = parsed.data.notes;
 
@@ -131,21 +132,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (parsed.data.markPaid) {
       updateData.status = 'PAID';
       updateData.paidAt = new Date();
-      updateData.paidAmountCents = existing.amountCents;
     }
 
     const updated = await db.invoice.update({
       where: { id: invoiceId },
       data: updateData,
-      include: {
-        student: { select: { id: true, name: true, email: true } },
-      },
     });
 
     return NextResponse.json({
       ...updated,
-      billingPeriodStart: updated.billingPeriodStart?.toISOString() ?? null,
-      billingPeriodEnd: updated.billingPeriodEnd?.toISOString() ?? null,
       paidAt: updated.paidAt?.toISOString() ?? null,
       dueDate: updated.dueDate?.toISOString() ?? null,
       createdAt: updated.createdAt.toISOString(),
@@ -174,10 +169,10 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const agencyId = user.parentAgencyId || auth.userId;
+    const creatorIds = await resolveAgencyCreatorIds(auth.userId, user.parentAgencyId);
 
     const existing = await db.invoice.findFirst({
-      where: { id: invoiceId, agencyId },
+      where: { id: invoiceId, creatorId: { in: creatorIds } },
     });
 
     if (!existing) {

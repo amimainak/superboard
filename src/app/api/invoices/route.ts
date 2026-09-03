@@ -2,9 +2,8 @@
 // API Route: Invoices — List & Create
 // ============================================================
 // GET:  List invoices for an agency with optional filters.
-//       ?status=DRAFT&studentId=UUID&page=1&limit=50
+//       ?status=DRAFT&studentName=...&page=1&limit=50
 // POST: Create a new invoice (agency tier required).
-//       Invoice number auto-generates as INV-YYYY-NNN.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -14,36 +13,24 @@ import { isAgencyTier, type Tier } from '@/types';
 import { z } from 'zod';
 
 const createInvoiceSchema = z.object({
-  studentId: z.string().uuid().optional().nullable(),
-  description: z.string().max(5000).optional().nullable(),
-  amountCents: z.number().int().min(0, 'Amount must be non-negative').max(1_000_000_000),
+  studentName: z.string().max(300),
+  amount: z.number().min(0, 'Amount must be non-negative').max(1_000_000_000),
   currency: z.string().max(10).optional().default('USD'),
-  lessonHours: z.number().min(0).max(10000).optional().default(0),
-  ratePerHourCents: z.number().int().min(0).max(100_000).optional().default(0),
-  billingPeriodStart: z.string().datetime('Invalid date format').optional().nullable(),
-  billingPeriodEnd: z.string().datetime('Invalid date format').optional().nullable(),
+  items: z.array(z.record(z.string(), z.unknown())).optional(),
   dueDate: z.string().datetime('Invalid date format').optional().nullable(),
   notes: z.string().max(5000).optional().nullable(),
 });
 
-/**
- * Generate the next invoice number in INV-YYYY-NNN format.
- * Finds the highest NNN for the current year and increments.
- */
-async function generateInvoiceNumber(agencyId: string): Promise<string> {
-  return await db.$transaction(async (tx) => {
-    const lastInvoice = await tx.invoice.findFirst({
-      where: { agencyId },
-      orderBy: { createdAt: 'desc' },
-    });
-    let nextNum = 1;
-    if (lastInvoice && lastInvoice.invoiceNumber) {
-      const match = lastInvoice.invoiceNumber.match(/INV-(\d{4})-(\d+)$/);
-      if (match) nextNum = parseInt(match[2], 10) + 1;
-    }
-    const year = new Date().getFullYear();
-    return `INV-${year}-${String(nextNum).padStart(3, '0')}`;
+/** Resolve the list of creatorIds the current user is allowed to view/manage. */
+async function resolveAgencyCreatorIds(userId: string, parentAgencyId: string | null): Promise<string[]> {
+  if (parentAgencyId) {
+    return [userId];
+  }
+  const members = await db.agencyMember.findMany({
+    where: { agencyId: userId },
+    select: { tutorId: true },
   });
+  return [userId, ...members.map((m) => m.tutorId)];
 }
 
 export async function GET(request: NextRequest) {
@@ -53,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
-    const studentId = searchParams.get('studentId');
+    const studentName = searchParams.get('studentName');
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
 
@@ -67,34 +54,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const agencyId = user.parentAgencyId || auth.userId;
+    const creatorIds = await resolveAgencyCreatorIds(auth.userId, user.parentAgencyId);
 
     // Build where filter
-    const where: Record<string, unknown> = { agencyId };
+    const where: Record<string, unknown> = { creatorId: { in: creatorIds } };
     if (status) where.status = status;
-    if (studentId) where.studentId = studentId;
+    if (studentName) where.studentName = { contains: studentName, mode: 'insensitive' };
 
     const [invoices, totalCount] = await Promise.all([
       db.invoice.findMany({
         where,
         select: {
           id: true,
-          invoiceNumber: true,
-          description: true,
-          amountCents: true,
+          creatorId: true,
+          studentName: true,
+          amount: true,
           currency: true,
           status: true,
-          lessonHours: true,
-          ratePerHourCents: true,
-          billingPeriodStart: true,
-          billingPeriodEnd: true,
           paidAt: true,
-          paidAmountCents: true,
           dueDate: true,
+          items: true,
           notes: true,
           createdAt: true,
           updatedAt: true,
-          student: { select: { id: true, name: true, email: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -105,8 +87,6 @@ export async function GET(request: NextRequest) {
 
     const serialized = invoices.map((inv) => ({
       ...inv,
-      billingPeriodStart: inv.billingPeriodStart?.toISOString() ?? null,
-      billingPeriodEnd: inv.billingPeriodEnd?.toISOString() ?? null,
       paidAt: inv.paidAt?.toISOString() ?? null,
       dueDate: inv.dueDate?.toISOString() ?? null,
       createdAt: inv.createdAt.toISOString(),
@@ -144,10 +124,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Validation failed', details: errors }, { status: 400 });
     }
 
-    const {
-      studentId, description, amountCents, currency, lessonHours,
-      ratePerHourCents, billingPeriodStart, billingPeriodEnd, dueDate, notes,
-    } = parsed.data;
+    const { studentName, amount, currency, items, dueDate, notes } = parsed.data;
 
     // Verify agency access
     const user = await db.user.findUnique({
@@ -162,61 +139,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const agencyId = user.parentAgencyId || auth.userId;
-
-    // If studentId provided, verify student belongs to this agency
-    if (studentId) {
-      const student = await db.student.findFirst({
-        where: { id: studentId, agencyId },
-      });
-      if (!student) {
-        return NextResponse.json({ error: 'Student not found in your agency' }, { status: 404 });
-      }
-    }
-
-    // Generate invoice number
-    const invoiceNumber = await generateInvoiceNumber(agencyId);
-
     const invoice = await db.invoice.create({
       data: {
-        agencyId,
-        studentId: studentId ?? null,
-        invoiceNumber,
-        description: description ?? null,
-        amountCents,
+        creatorId: auth.userId,
+        studentName,
+        amount,
         currency,
-        lessonHours,
-        ratePerHourCents,
-        billingPeriodStart: billingPeriodStart ? new Date(billingPeriodStart) : null,
-        billingPeriodEnd: billingPeriodEnd ? new Date(billingPeriodEnd) : null,
+        items: (items ?? null) as any,
         dueDate: dueDate ? new Date(dueDate) : null,
         notes: notes ?? null,
       },
       select: {
         id: true,
-        invoiceNumber: true,
-        description: true,
-        amountCents: true,
+        creatorId: true,
+        studentName: true,
+        amount: true,
         currency: true,
         status: true,
-        lessonHours: true,
-        ratePerHourCents: true,
-        billingPeriodStart: true,
-        billingPeriodEnd: true,
         paidAt: true,
-        paidAmountCents: true,
         dueDate: true,
+        items: true,
         notes: true,
         createdAt: true,
         updatedAt: true,
-        student: { select: { id: true, name: true, email: true } },
       },
     });
 
     return NextResponse.json({
       ...invoice,
-      billingPeriodStart: invoice.billingPeriodStart?.toISOString() ?? null,
-      billingPeriodEnd: invoice.billingPeriodEnd?.toISOString() ?? null,
       paidAt: invoice.paidAt?.toISOString() ?? null,
       dueDate: invoice.dueDate?.toISOString() ?? null,
       createdAt: invoice.createdAt.toISOString(),

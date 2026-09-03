@@ -15,7 +15,10 @@ interface Jump {
 }
 
 export default function NumberLinePanel({ editor: _editor }: Props) {
-  const store = useAppStore();
+  const store = useAppStore() as ReturnType<typeof useAppStore> & {
+    room: { numberLineOpen?: boolean };
+    toggleNumberLine?: () => void;
+  };
   const [rangeMin, setRangeMin] = useState('0');
   const [rangeMax, setRangeMax] = useState('10');
   const [stepSize, setStepSize] = useState('1');
@@ -68,7 +71,7 @@ export default function NumberLinePanel({ editor: _editor }: Props) {
     <div style={{ position: 'absolute', top: 50, right: 16, zIndex: 1001, display: 'flex', flexDirection: 'column', gap: 4, padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.97)', border: '1px solid rgba(0,0,0,0.1)', backdropFilter: 'blur(12px)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', minWidth: 260, maxHeight: 480, overflowY: 'auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>Number Line</span>
-        <button onClick={() => store.toggleNumberLine()} style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X style={{ width: 14, height: 14 }} /></button>
+        <button onClick={() => store.toggleNumberLine?.()} style={{ width: 24, height: 24, borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X style={{ width: 14, height: 14 }} /></button>
       </div>
 
       {/* Range inputs */}

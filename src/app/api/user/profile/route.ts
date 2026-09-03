@@ -50,9 +50,9 @@ export async function PATCH(request: Request) {
 
     // A-03: Only extract explicitly-safe fields.
     // NEVER spread parsed directly — it could include tier, email, id if schema changes.
-    const { displayName, avatarUrl, bio, timezone, brandingColor, brandingLogoUrl } = parsed
+    const { name, avatarUrl, bio, timezone, brandingColor, brandingLogoUrl } = parsed
     const updates: Record<string, unknown> = {}
-    if (displayName !== undefined) updates.displayName = displayName
+    if (name !== undefined) updates.name = name
     if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl
     if (bio !== undefined) updates.bio = bio
     if (timezone !== undefined) updates.timezone = timezone

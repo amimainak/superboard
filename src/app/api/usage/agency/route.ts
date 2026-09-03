@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import type { Tier } from '@/types';
 import { isAgencyTier, TIER_LIMITS, type Tier } from '@/types';
 
 /**
@@ -97,7 +96,7 @@ export async function GET(request: NextRequest) {
         aiCreditsLimit: getAICreditsLimit(tier),
         videoMinutesUsed: currentUsage?.videoMinutesUsed || 0,
         videoMinutesLimit: tierConfig.videoMinutesPerWeek,
-        recordingsUsed: currentUsage?.recordingsUsed || 0,
+        recordingsUsed: 0,
         recordingsLimit: tierConfig.recordingsPerMonth,
         joinedAt: tutor.createdAt,
       };

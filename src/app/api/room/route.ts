@@ -13,7 +13,7 @@ import { db } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth, verifyAuth } from '@/lib/auth';
 import { hasFeature } from '@/lib/usage';
-import { createRoomSchema, validateInput } from '@/lib/validations';
+import { createRoomSchema } from '@/lib/validations';
 import { isAgencyTier, type Subject, type Tier } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -23,9 +23,15 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ tutorId: string; subject: string; brandingLogo?: string | null; brandingColor?: string | null }>(createRoomSchema, body);
-    if (!parsed.success) return parsed.response;
-    const { tutorId, subject, brandingLogo, brandingColor } = parsed.data;
+    const parsed = createRoomSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const { subject, brandingLogo, brandingColor } = parsed.data;
+    const tutorId = auth.userId;
 
     // Security: caller can only create rooms for themselves
     if (tutorId !== auth.userId) {

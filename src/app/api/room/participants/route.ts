@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { joinRoomSchema, validateInput } from '@/lib/validations';
+import { joinRoomSchema } from '@/lib/validations';
 import { isAgencyTier, type Tier } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -22,8 +22,13 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ roomId: string; studentIdentity: string; studentName?: string | null }>(joinRoomSchema, body);
-    if (!parsed.success) return parsed.response;
+    const parsed = joinRoomSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
     const { roomId, studentIdentity, studentName } = parsed.data;
 
     // SECURITY: Caller can only join as themselves (studentIdentity must match auth userId)

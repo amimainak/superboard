@@ -27,8 +27,13 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ id: string; email: string; name?: string | null }>(registerSchema, body);
-    if (!parsed.success) return parsed.response;
+    const parsed = registerSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
     const { id, email, name } = parsed.data;
 
     // Security: caller can only register their own account

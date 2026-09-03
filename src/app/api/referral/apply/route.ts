@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { applyReferralSchema, validateInput } from '@/lib/validations';
+import { applyReferralSchema } from '@/lib/validations';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,9 +27,14 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput<{ referralCode: string }>(applyReferralSchema, body);
-    if (!parsed.success) return parsed.response;
-    const { referralCode } = parsed.data;
+    const parsed = applyReferralSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const { code: referralCode } = parsed.data;
 
     // Fetch current user's referral status
     const currentUser = await db.user.findUnique({

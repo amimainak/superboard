@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { Editor } from '@tldraw/tldraw';
+// Editor type was from @tldraw/tldraw which is no longer installed — using a generic type
+type Editor = { getAllShapes: () => unknown[]; getCamera: () => { x: number; y: number; z: number }; setCamera: (x: number, y: number, z: number) => void; getCurrentPageBounds: () => { x: number; y: number; w: number; h: number; center: { x: number; y: number } } | null; createShapes: (shapes: unknown[]) => void; };
 import { X, Ruler, Plus, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,8 @@ export default function UnitConverter({ editor, onClose }: UnitConverterProps) {
   const addToBoard = useCallback(() => {
     const ed = editor as Editor | null;
     if (!ed || convertedValue === null) return;
-    const center = ed.getCurrentPageBounds()?.center || { x: 400, y: 300 };
+    const bounds = ed.getCurrentPageBounds();
+    const center = bounds ? { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h / 2 } : { x: 400, y: 300 };
     const shapes: any[] = [];
 
     const fromDef = CATEGORIES[category].units[fromUnit];

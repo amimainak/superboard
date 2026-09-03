@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
       where: { tutorId: auth.userId },
       include: {
         room: { select: { subject: true, isActive: true } },
-        student: { select: { name: true, email: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

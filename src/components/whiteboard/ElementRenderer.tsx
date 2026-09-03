@@ -6,7 +6,7 @@
 'use client'
 
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
-import type { WhiteboardElement, FreehandElement, LineElement, ArrowElement } from '@/lib/whiteboard/types'
+import type { WhiteboardElement, FreehandElement, LineElement, ArrowElement, TextElement } from '@/lib/whiteboard/types'
 import {
   getFreehandPath,
   diamondPath,
@@ -543,7 +543,7 @@ function catBtnStyle(active: boolean, dk: boolean, accent: string): React.CSSPro
 // ---- LaTeX Text Element ----
 // Renders KaTeX when viewing, smart input + equation library when editing
 function LatexTextElement({ element, isDark, textColor, onPointerDown, onDoubleClick, onTextChange, tool }: {
-  element: WhiteboardElement
+  element: TextElement
   isDark: boolean
   textColor: string
   onPointerDown: (e: React.PointerEvent, id: string) => void
@@ -1156,7 +1156,7 @@ function PlainTextElement({
   onTextChange,
   tool,
 }: {
-  element: WhiteboardElement
+  element: TextElement
   isDark: boolean
   textColor: string
   hasText: boolean
@@ -1210,7 +1210,6 @@ function PlainTextElement({
           height: '100%',
           fontSize: element.fontSize,
           fontFamily: element.fontFamily,
-          color: textColor,
           outline: 'none',
           lineHeight: 1.4,
           whiteSpace: 'pre-wrap',

@@ -3,7 +3,6 @@
 // ============================================================
 // GET:  Generate a .ics (iCalendar) file for a scheduled lesson.
 //       Returns text/calendar content-type with the ICS data.
-//       No auth required — lesson ID is used directly.
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -28,7 +27,6 @@ type RouteContext = { params: Promise<{ lessonId: string }> };
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     // SECURITY FIX (API-C03): Require authentication for calendar ICS.
-    // Previously leaked student/tutor emails to anyone with a lesson UUID.
     const auth = await requireAuth(_request);
     if (auth instanceof NextResponse) return auth;
 
@@ -36,54 +34,56 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     const lesson = await db.scheduledLesson.findUnique({
       where: { id: lessonId },
-      include: {
-        tutor: { select: { name: true, email: true } },
-      },
     });
 
     if (!lesson) {
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
     }
 
+    // Fetch the tutor separately (ScheduledLesson has no relation defined).
+    const tutor = await db.user.findUnique({
+      where: { id: lesson.tutorId },
+      select: { name: true, email: true },
+    });
+
     // SECURITY: Verify caller is the tutor or a registered participant
     if (lesson.tutorId !== auth.userId) {
       // Check if the caller's email matches the student email
       const callerUser = await db.user.findUnique({
         where: { id: auth.userId },
-        select: { email: true },
+        select: { email: true, tier: true, parentAgencyId: true },
       });
-      if (!callerUser || callerUser.email !== lesson.studentEmail) {
+      const isStudent = callerUser?.email && lesson.studentEmail
+        ? callerUser.email === lesson.studentEmail
+        : false;
+      if (!isStudent) {
         // Also check agency access
-        const caller = await db.user.findUnique({
-          where: { id: auth.userId },
-          select: { tier: true, parentAgencyId: true },
-        });
-        const isAgencyOwner = caller && ['AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(caller.tier || '');
-        const isAgencySubTutor = caller?.parentAgencyId && caller.parentAgencyId === lesson.tutorId;
-        if (!isAgencyOwner && !isAgencySubTutor && lesson.tutorId !== auth.userId) {
+        const isAgencyOwner = callerUser && ['AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(callerUser.tier || '');
+        const isAgencySubTutor = callerUser?.parentAgencyId && callerUser.parentAgencyId === lesson.tutorId;
+        if (!isAgencyOwner && !isAgencySubTutor) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
       }
     }
 
-    // Calculate end time
-    const start = new Date(lesson.scheduledAt);
-    const end = new Date(start.getTime() + lesson.durationMinutes * 60 * 1000);
+    // Calculate start and end times
+    const start = lesson.startTime;
+    const end = lesson.endTime ?? new Date(start.getTime() + 60 * 60 * 1000); // default 1 hour
 
     const now = formatICSDate(new Date());
     const dtStart = formatICSDate(start);
     const dtEnd = formatICSDate(end);
     const uid = `superboard-lesson-${lesson.id}@superboard.app`;
 
-    const tutorName = lesson.tutor.name || lesson.tutor.email;
+    const tutorName = tutor?.name || tutor?.email || 'Tutor';
+    const tutorEmail = tutor?.email || 'unknown@example.com';
 
     // Build description
     const descLines: string[] = [];
-    if (lesson.description) descLines.push(lesson.description);
+    if (lesson.notes) descLines.push(lesson.notes);
     if (lesson.studentName) descLines.push(`Student: ${lesson.studentName}`);
     if (lesson.studentEmail) descLines.push(`Student Email: ${lesson.studentEmail}`);
     descLines.push(`Subject: ${lesson.subject}`);
-    descLines.push(`Duration: ${lesson.durationMinutes} minutes`);
     const description = escapeICS(descLines.join('\n'));
 
     // Build ICS content
@@ -98,10 +98,10 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       `DTSTAMP:${now}`,
       `DTSTART:${dtStart}`,
       `DTEND:${dtEnd}`,
-      `SUMMARY:${escapeICS(lesson.title)}`,
+      `SUMMARY:${escapeICS(lesson.subject)}`,
       `DESCRIPTION:${description}`,
-      `ORGANIZER;CN=${escapeICS(tutorName)}:mailto:${lesson.tutor.email}`,
-      `STATUS:${lesson.status === 'CANCELLED' ? 'CANCELLED' : 'CONFIRMED'}`,
+      `ORGANIZER;CN=${escapeICS(tutorName)}:mailto:${tutorEmail}`,
+      `STATUS:${lesson.status === 'CANCELLED' || lesson.status === 'cancelled' ? 'CANCELLED' : 'CONFIRMED'}`,
       'END:VEVENT',
       'END:VCALENDAR',
     ].join('\r\n');

@@ -1,0 +1,248 @@
+.next/types/validator.ts(477,31): error TS2344: Type 'typeof import("/home/z/my-project/superboard-source/src/app/api/ai/answer-key/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/ai/answer-key">'.
+server/index.ts(135,23): error TS2339: Property 'configure' does not exist on type 'typeof Server'.
+server/index.ts(139,26): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(139,40): error TS7031: Binding element 'context' implicitly has an 'any' type.
+server/index.ts(177,21): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(177,35): error TS7031: Binding element 'context' implicitly has an 'any' type.
+server/index.ts(181,24): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(181,38): error TS7031: Binding element 'context' implicitly has an 'any' type.
+server/index.ts(185,29): error TS7031: Binding element 'awareness' implicitly has an 'any' type.
+server/index.ts(185,40): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(190,9): error TS2345: Argument of type '([clientId, state]: [any, any]) => { clientId: any; name: any; color: any; role: any; }' is not assignable to parameter of type '(value: unknown, index: number, array: unknown[]) => { clientId: any; name: any; color: any; role: any; }'.
+server/index.ts(199,36): error TS18046: 'p' is of type 'unknown'.
+server/index.ts(204,26): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(204,40): error TS7031: Binding element 'document' implicitly has an 'any' type.
+server/index.ts(220,20): error TS7031: Binding element 'document' implicitly has an 'any' type.
+server/index.ts(220,30): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(225,27): error TS7031: Binding element 'documentName' implicitly has an 'any' type.
+server/index.ts(225,41): error TS7031: Binding element 'document' implicitly has an 'any' type.
+src/app/WhiteboardClient.tsx(236,18): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'WhiteboardElement'.
+src/app/WhiteboardClient.tsx(287,16): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'WhiteboardElement'.
+src/app/WhiteboardClient.tsx(429,9): error TS2322: Type 'TemplateFull | undefined' is not assignable to type '{ id: string; name: string; description: string; subject: string; gradeBand: string; tags: string[]; isPublic: boolean; } | undefined'.
+src/app/api/admin/audit/route.ts(31,11): error TS2353: Object literal may only specify known properties, and 'admin' does not exist in type 'AuditLogInclude<DefaultArgs>'.
+src/app/api/admin/billing/route.ts(19,17): error TS2353: Object literal may only specify known properties, and 'amountMonthlyCents' does not exist in type 'SubscriptionSelect<DefaultArgs>'.
+src/app/api/admin/billing/route.ts(23,60): error TS2339: Property 'amountMonthlyCents' does not exist on type '{ status: string; userId: string; id: string; stripeSubscriptionId: string | null; createdAt: Date; updatedAt: Date; stripePriceId: string | null; currentPeriodStart: Date | null; currentPeriodEnd: Date | null; cancelAtPeriodEnd: boolean; }'.
+src/app/api/admin/billing/route.ts(35,24): error TS2339: Property 'user' does not exist on type '{ status: string; userId: string; id: string; stripeSubscriptionId: string | null; createdAt: Date; updatedAt: Date; stripePriceId: string | null; currentPeriodStart: Date | null; currentPeriodEnd: Date | null; cancelAtPeriodEnd: boolean; }'.
+src/app/api/admin/billing/route.ts(38,33): error TS2339: Property 'amountMonthlyCents' does not exist on type '{ status: string; userId: string; id: string; stripeSubscriptionId: string | null; createdAt: Date; updatedAt: Date; stripePriceId: string | null; currentPeriodStart: Date | null; currentPeriodEnd: Date | null; cancelAtPeriodEnd: boolean; }'.
+src/app/api/admin/config/public/route.ts(15,32): error TS2339: Property 'maintenanceMode' does not exist on type '{ value: JsonValue; id: string; createdAt: Date; updatedAt: Date; key: string; }'.
+src/app/api/admin/config/public/route.ts(16,33): error TS2339: Property 'announcementText' does not exist on type '{ value: JsonValue; id: string; createdAt: Date; updatedAt: Date; key: string; }'.
+src/app/api/admin/config/route.ts(23,33): error TS2353: Object literal may only specify known properties, and 'maintenanceMode' does not exist in type '(Without<PlatformConfigCreateInput, PlatformConfigUncheckedCreateInput> & PlatformConfigUncheckedCreateInput) | (Without<...> & PlatformConfigCreateInput)'.
+src/app/api/admin/config/route.ts(27,31): error TS2339: Property 'maintenanceMode' does not exist on type '{ value: JsonValue; id: string; createdAt: Date; updatedAt: Date; key: string; }'.
+src/app/api/admin/config/route.ts(28,32): error TS2339: Property 'announcementText' does not exist on type '{ value: JsonValue; id: string; createdAt: Date; updatedAt: Date; key: string; }'.
+src/app/api/admin/config/route.ts(78,31): error TS2339: Property 'maintenanceMode' does not exist on type '{ value: JsonValue; id: string; createdAt: Date; updatedAt: Date; key: string; }'.
+src/app/api/admin/config/route.ts(79,32): error TS2339: Property 'announcementText' does not exist on type '{ value: JsonValue; id: string; createdAt: Date; updatedAt: Date; key: string; }'.
+src/app/api/admin/rooms/route.ts(59,11): error TS2353: Object literal may only specify known properties, and 'updatedAt' does not exist in type 'RoomSelect<DefaultArgs>'.
+src/app/api/admin/subscriptions/route.ts(86,33): error TS2769: No overload matches this call.
+src/app/api/agency/invite/[code]/route.ts(10,39): error TS2345: Argument of type 'Request' is not assignable to parameter of type 'NextRequest'.
+src/app/api/auth/register/route.ts(30,20): error TS2304: Cannot find name 'validateInput'.
+src/app/api/auth/send-reset-otp/route.ts(66,79): error TS2551: Property 'getUserByEmail' does not exist on type 'GoTrueAdminApi'. Did you mean 'getUserById'?
+src/app/api/auth/update-password/route.ts(82,79): error TS2551: Property 'getUserByEmail' does not exist on type 'GoTrueAdminApi'. Did you mean 'getUserById'?
+src/app/api/calendar/ics/[lessonId]/route.ts(39,7): error TS2322: Type '{ tutor: { select: { name: true; email: true; }; }; }' is not assignable to type 'never'.
+src/app/api/calendar/ics/[lessonId]/route.ts(70,35): error TS2339: Property 'scheduledAt' does not exist on type '{ tutor: never; } & { status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/calendar/ics/[lessonId]/route.ts(71,51): error TS2339: Property 'durationMinutes' does not exist on type '{ tutor: never; } & { status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/calendar/ics/[lessonId]/route.ts(78,36): error TS2339: Property 'name' does not exist on type 'never'.
+src/app/api/calendar/ics/[lessonId]/route.ts(78,57): error TS2339: Property 'email' does not exist on type 'never'.
+src/app/api/calendar/ics/[lessonId]/route.ts(82,16): error TS2339: Property 'description' does not exist on type '{ tutor: never; } & { status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/calendar/ics/[lessonId]/route.ts(82,51): error TS2339: Property 'description' does not exist on type '{ tutor: never; } & { status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/calendar/ics/[lessonId]/route.ts(86,40): error TS2339: Property 'durationMinutes' does not exist on type '{ tutor: never; } & { status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/calendar/ics/[lessonId]/route.ts(101,35): error TS2339: Property 'title' does not exist on type '{ tutor: never; } & { status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/calendar/ics/[lessonId]/route.ts(103,67): error TS2339: Property 'email' does not exist on type 'never'.
+src/app/api/invoices/[invoiceId]/route.ts(53,31): error TS2353: Object literal may only specify known properties, and 'agencyId' does not exist in type 'InvoiceWhereInput'.
+src/app/api/invoices/[invoiceId]/route.ts(55,9): error TS2353: Object literal may only specify known properties, and 'student' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+src/app/api/invoices/[invoiceId]/route.ts(65,35): error TS2339: Property 'billingPeriodStart' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; dueDate: Date | null; amount: number; studentName: string; notes: string | null; items: JsonValue; creatorId: string; currency: string; paidAt: Date | null; }'.
+src/app/api/invoices/[invoiceId]/route.ts(66,33): error TS2339: Property 'billingPeriodEnd' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; dueDate: Date | null; amount: number; studentName: string; notes: string | null; items: JsonValue; creatorId: string; currency: string; paidAt: Date | null; }'.
+src/app/api/invoices/[invoiceId]/route.ts(108,31): error TS2353: Object literal may only specify known properties, and 'agencyId' does not exist in type 'InvoiceWhereInput'.
+src/app/api/invoices/[invoiceId]/route.ts(134,45): error TS2339: Property 'amountCents' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; dueDate: Date | null; amount: number; studentName: string; notes: string | null; items: JsonValue; creatorId: string; currency: string; paidAt: Date | null; }'.
+src/app/api/invoices/[invoiceId]/route.ts(141,9): error TS2353: Object literal may only specify known properties, and 'student' does not exist in type 'InvoiceInclude<DefaultArgs>'.
+src/app/api/invoices/[invoiceId]/route.ts(147,35): error TS2339: Property 'billingPeriodStart' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; dueDate: Date | null; amount: number; studentName: string; notes: string | null; items: JsonValue; creatorId: string; currency: string; paidAt: Date | null; }'.
+src/app/api/invoices/[invoiceId]/route.ts(148,33): error TS2339: Property 'billingPeriodEnd' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; dueDate: Date | null; amount: number; studentName: string; notes: string | null; items: JsonValue; creatorId: string; currency: string; paidAt: Date | null; }'.
+src/app/api/invoices/[invoiceId]/route.ts(180,31): error TS2353: Object literal may only specify known properties, and 'agencyId' does not exist in type 'InvoiceWhereInput'.
+src/app/api/invoices/route.ts(36,16): error TS2353: Object literal may only specify known properties, and 'agencyId' does not exist in type 'InvoiceWhereInput'.
+src/app/api/invoices/route.ts(40,36): error TS2339: Property 'invoiceNumber' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; creatorId: string; studentName: string; amount: number; currency: string; dueDate: Date | null; paidAt: Date | null; items: JsonValue; notes: string | null; }'.
+src/app/api/invoices/route.ts(41,33): error TS2339: Property 'invoiceNumber' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; creatorId: string; studentName: string; amount: number; currency: string; dueDate: Date | null; paidAt: Date | null; items: JsonValue; notes: string | null; }'.
+src/app/api/invoices/route.ts(82,11): error TS2353: Object literal may only specify known properties, and 'invoiceNumber' does not exist in type 'InvoiceSelect<DefaultArgs>'.
+src/app/api/invoices/route.ts(108,31): error TS2339: Property 'billingPeriodStart' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; creatorId: string; studentName: string; amount: number; currency: string; dueDate: Date | null; paidAt: Date | null; items: JsonValue; notes: string | null; }'.
+src/app/api/invoices/route.ts(109,29): error TS2339: Property 'billingPeriodEnd' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; creatorId: string; studentName: string; amount: number; currency: string; dueDate: Date | null; paidAt: Date | null; items: JsonValue; notes: string | null; }'.
+src/app/api/invoices/route.ts(182,9): error TS2353: Object literal may only specify known properties, and 'agencyId' does not exist in type '(Without<InvoiceCreateInput, InvoiceUncheckedCreateInput> & InvoiceUncheckedCreateInput) | (Without<...> & InvoiceCreateInput)'.
+src/app/api/invoices/route.ts(197,9): error TS2353: Object literal may only specify known properties, and 'invoiceNumber' does not exist in type 'InvoiceSelect<DefaultArgs>'.
+src/app/api/invoices/route.ts(218,35): error TS2339: Property 'billingPeriodStart' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; creatorId: string; studentName: string; amount: number; currency: string; dueDate: Date | null; paidAt: Date | null; items: JsonValue; notes: string | null; }'.
+src/app/api/invoices/route.ts(219,33): error TS2339: Property 'billingPeriodEnd' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; creatorId: string; studentName: string; amount: number; currency: string; dueDate: Date | null; paidAt: Date | null; items: JsonValue; notes: string | null; }'.
+src/app/api/lang/exercises/route.ts(10,39): error TS2345: Argument of type 'Request' is not assignable to parameter of type 'NextRequest'.
+src/app/api/lang/vocab/route.ts(10,39): error TS2345: Argument of type 'Request' is not assignable to parameter of type 'NextRequest'.
+src/app/api/lesson-notes/[roomId]/route.ts(31,7): error TS2322: Type '{ roomId: string; }' is not assignable to type 'LessonNoteWhereUniqueInput'.
+src/app/api/lesson-notes/[roomId]/route.ts(34,9): error TS2353: Object literal may only specify known properties, and 'student' does not exist in type 'LessonNoteInclude<DefaultArgs>'.
+src/app/api/lesson-notes/[roomId]/route.ts(59,25): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/[roomId]/route.ts(70,18): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/[roomId]/route.ts(71,21): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/[roomId]/route.ts(71,41): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/[roomId]/route.ts(124,7): error TS2322: Type '{ roomId: string; }' is not assignable to type 'LessonNoteWhereUniqueInput'.
+src/app/api/lesson-notes/[roomId]/route.ts(130,9): error TS2353: Object literal may only specify known properties, and 'studentId' does not exist in type 'Without<LessonNoteCreateInput, LessonNoteUncheckedCreateInput> & LessonNoteUncheckedCreateInput'.
+src/app/api/lesson-notes/[roomId]/route.ts(137,9): error TS2353: Object literal may only specify known properties, and 'student' does not exist in type 'LessonNoteInclude<DefaultArgs>'.
+src/app/api/lesson-notes/batch/route.ts(19,9): error TS2353: Object literal may only specify known properties, and 'student' does not exist in type 'LessonNoteInclude<DefaultArgs>'.
+src/app/api/lesson-notes/route.ts(43,11): error TS2353: Object literal may only specify known properties, and 'tutorFeedback' does not exist in type 'LessonNoteSelect<DefaultArgs>'.
+src/app/api/lesson-notes/route.ts(60,15): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/route.ts(61,18): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/route.ts(61,35): error TS2339: Property 'room' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; tutorId: string | null; roomId: string; content: string; }'.
+src/app/api/lesson-notes/route.ts(127,7): error TS2322: Type '{ roomId: string; }' is not assignable to type 'LessonNoteWhereUniqueInput'.
+src/app/api/lesson-notes/route.ts(129,9): error TS2353: Object literal may only specify known properties, and 'studentId' does not exist in type '(Without<LessonNoteUpdateInput, LessonNoteUncheckedUpdateInput> & LessonNoteUncheckedUpdateInput) | (Without<...> & LessonNoteUpdateInput)'.
+src/app/api/lesson-notes/route.ts(138,9): error TS2353: Object literal may only specify known properties, and 'studentId' does not exist in type 'Without<LessonNoteCreateInput, LessonNoteUncheckedCreateInput> & LessonNoteUncheckedCreateInput'.
+src/app/api/lesson-notes/route.ts(146,9): error TS2353: Object literal may only specify known properties, and 'student' does not exist in type 'LessonNoteInclude<DefaultArgs>'.
+src/app/api/referral/apply/route.ts(30,60): error TS2345: Argument of type 'ZodObject<{ code: ZodString; }, $strip>' is not assignable to parameter of type 'ZodType<{ referralCode: string; }, unknown, $ZodTypeInternals<{ referralCode: string; }, unknown>>'.
+src/app/api/referral/apply/route.ts(31,17): error TS2339: Property 'success' does not exist on type '{ data: null; error: string; } | { data: { referralCode: string; }; error: null; }'.
+src/app/api/referral/apply/route.ts(31,40): error TS2339: Property 'response' does not exist on type '{ data: null; error: string; } | { data: { referralCode: string; }; error: null; }'.
+src/app/api/referral/apply/route.ts(32,13): error TS2339: Property 'referralCode' does not exist on type '{ referralCode: string; } | null'.
+src/app/api/resources/[resourceId]/route.ts(45,31): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/[resourceId]/route.ts(107,31): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/[resourceId]/route.ts(124,30): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/[resourceId]/route.ts(173,31): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/[resourceId]/route.ts(181,14): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/route.ts(54,10): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/route.ts(74,10): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/resources/route.ts(77,39): error TS7006: Parameter 'r' implicitly has an 'any' type.
+src/app/api/resources/route.ts(131,31): error TS2339: Property 'resourceLibrary' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/room/participants/route.ts(25,108): error TS2345: Argument of type 'ZodObject<{ roomId: ZodString; studentIdentity: ZodOptional<ZodString>; studentName: ZodNullable<ZodOptional<ZodString>>; }, $strip>' is not assignable to parameter of type 'ZodType<{ roomId: string; studentIdentity: string; studentName?: string | null | undefined; }, unknown, $ZodTypeInternals<{ roomId: string; studentIdentity: string; studentName?: string | null | undefined; }, unknown>>'.
+src/app/api/room/participants/route.ts(26,17): error TS2339: Property 'success' does not exist on type '{ data: null; error: string; } | { data: { roomId: string; studentIdentity: string; studentName?: string | null | undefined; }; error: null; }'.
+src/app/api/room/participants/route.ts(26,40): error TS2339: Property 'response' does not exist on type '{ data: null; error: string; } | { data: { roomId: string; studentIdentity: string; studentName?: string | null | undefined; }; error: null; }'.
+src/app/api/room/participants/route.ts(27,13): error TS2339: Property 'roomId' does not exist on type '{ roomId: string; studentIdentity: string; studentName?: string | null | undefined; } | null'.
+src/app/api/room/participants/route.ts(27,21): error TS2339: Property 'studentIdentity' does not exist on type '{ roomId: string; studentIdentity: string; studentName?: string | null | undefined; } | null'.
+src/app/api/room/participants/route.ts(27,38): error TS2339: Property 'studentName' does not exist on type '{ roomId: string; studentIdentity: string; studentName?: string | null | undefined; } | null'.
+src/app/api/room/route.ts(26,133): error TS2345: Argument of type 'ZodObject<{ subject: ZodDefault<ZodEnum<{ MATH: "MATH"; SCIENCE: "SCIENCE"; LANGUAGE: "LANGUAGE"; GENERAL: "GENERAL"; PHYSICS: "PHYSICS"; CHEMISTRY: "CHEMISTRY"; BIOLOGY: "BIOLOGY"; ENGLISH: "ENGLISH"; }>>; brandingLogo: ZodOptional<...>; brandingColor: ZodOptional<...>; }, $strip>' is not assignable to parameter of type 'ZodType<{ tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; }, unknown, $ZodTypeInternals<{ tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | ... 1 more ... | undefined; }, unknown>>'.
+src/app/api/room/route.ts(27,17): error TS2339: Property 'success' does not exist on type '{ data: null; error: string; } | { data: { tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; }; error: null; }'.
+src/app/api/room/route.ts(27,40): error TS2339: Property 'response' does not exist on type '{ data: null; error: string; } | { data: { tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; }; error: null; }'.
+src/app/api/room/route.ts(28,13): error TS2339: Property 'tutorId' does not exist on type '{ tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; } | null'.
+src/app/api/room/route.ts(28,22): error TS2339: Property 'subject' does not exist on type '{ tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; } | null'.
+src/app/api/room/route.ts(28,31): error TS2339: Property 'brandingLogo' does not exist on type '{ tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; } | null'.
+src/app/api/room/route.ts(28,45): error TS2339: Property 'brandingColor' does not exist on type '{ tutorId: string; subject: string; brandingLogo?: string | null | undefined; brandingColor?: string | null | undefined; } | null'.
+src/app/api/room/templates/[id]/route.ts(194,9): error TS2322: Type 'JsonValue' is not assignable to type 'JsonNull | InputJsonValue'.
+src/app/api/schedule/[lessonId]/route.ts(12,15): error TS2305: Module '"@prisma/client"' has no exported member 'Subject'.
+src/app/api/schedule/[lessonId]/route.ts(12,24): error TS2305: Module '"@prisma/client"' has no exported member 'LessonStatus'.
+src/app/api/schedule/[lessonId]/route.ts(39,17): error TS2339: Property 'success' does not exist on type '{ data: null; error: string; } | { data: { title?: string | undefined; description?: string | null | undefined; subject?: string | undefined; scheduledAt?: string | undefined; durationMinutes?: number | undefined; status?: string | undefined; }; error: null; }'.
+src/app/api/schedule/[lessonId]/route.ts(39,40): error TS2339: Property 'response' does not exist on type '{ data: null; error: string; } | { data: { title?: string | undefined; description?: string | null | undefined; subject?: string | undefined; scheduledAt?: string | undefined; durationMinutes?: number | undefined; status?: string | undefined; }; error: null; }'.
+src/app/api/schedule/[lessonId]/route.ts(60,9): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(60,61): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(61,9): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(61,73): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(62,9): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(62,65): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(63,9): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(63,82): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(64,9): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(64,81): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(65,9): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(65,63): error TS18047: 'parsed.data' is possibly 'null'.
+src/app/api/schedule/[lessonId]/route.ts(74,22): error TS2339: Property 'title' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/schedule/[lessonId]/route.ts(75,28): error TS2339: Property 'description' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/schedule/[lessonId]/route.ts(79,28): error TS2339: Property 'scheduledAt' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/schedule/[lessonId]/route.ts(80,32): error TS2339: Property 'durationMinutes' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/schedule/[lessonId]/route.ts(81,25): error TS2339: Property 'timeZone' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/schedule/[lessonId]/route.ts(83,24): error TS2339: Property 'roomUrl' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/schedule/[lessonId]/route.ts(84,29): error TS2339: Property 'reminderSent' does not exist on type '{ status: string; id: string; createdAt: Date; updatedAt: Date; tutorId: string; subject: string; roomId: string | null; studentName: string | null; studentEmail: string | null; startTime: Date; endTime: Date | null; notes: string | null; }'.
+src/app/api/usage/agency/route.ts(11,15): error TS2300: Duplicate identifier 'Tier'.
+src/app/api/usage/agency/route.ts(12,42): error TS2300: Duplicate identifier 'Tier'.
+src/app/api/usage/agency/route.ts(100,39): error TS2339: Property 'recordingsUsed' does not exist on type '{ id: string; userId: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/app/api/usage/current/route.ts(16,15): error TS2300: Duplicate identifier 'Tier'.
+src/app/api/usage/current/route.ts(17,42): error TS2300: Duplicate identifier 'Tier'.
+src/app/api/usage/current/route.ts(78,34): error TS2339: Property 'recordingsUsed' does not exist on type '{ id: string; userId: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/app/api/usage/current/route.ts(101,32): error TS2339: Property 'recordingsUsed' does not exist on type '{ id: string; userId: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/app/api/user/profile/route.ts(53,13): error TS2339: Property 'displayName' does not exist on type '{ name?: string | undefined; avatarUrl?: string | undefined; bio?: string | undefined; timezone?: string | undefined; brandingColor?: string | undefined; brandingLogoUrl?: string | undefined; }'.
+src/app/api/webhooks/route.ts(81,17): error TS2339: Property 'success' does not exist on type '{ data: null; error: string; } | { data: { url: string; events: string[]; }; error: null; }'.
+src/app/api/webhooks/route.ts(81,40): error TS2339: Property 'response' does not exist on type '{ data: null; error: string; } | { data: { url: string; events: string[]; }; error: null; }'.
+src/app/api/webhooks/route.ts(83,13): error TS2339: Property 'url' does not exist on type '{ url: string; events: string[]; } | null'.
+src/app/api/webhooks/route.ts(83,18): error TS2339: Property 'events' does not exist on type '{ url: string; events: string[]; } | null'.
+src/app/api/webhooks/route.ts(83,26): error TS2339: Property 'secret' does not exist on type '{ url: string; events: string[]; } | null'.
+src/app/api/webhooks/route.ts(87,8): error TS7006: Parameter 'e' implicitly has an 'any' type.
+src/components/canvas/FabricCanvas/useYjsCanvasSync.ts(14,8): error TS2307: Cannot find module 'fabric' or its corresponding type declarations.
+src/components/canvas/FabricCanvas/useYjsCanvasSync.ts(15,35): error TS2307: Cannot find module './hooks' or its corresponding type declarations.
+src/components/tools/math/NumberLinePanel.tsx(28,19): error TS2339: Property 'numberLineOpen' does not exist on type 'RoomState'.
+src/components/tools/math/NumberLinePanel.tsx(71,38): error TS2339: Property 'toggleNumberLine' does not exist on type 'AppState & AppActions'.
+src/components/tools/math/UnitConverter.tsx(4,24): error TS2307: Cannot find module '@tldraw/tldraw' or its corresponding type declarations.
+src/components/whiteboard/CanvasArtsWidgets.tsx(540,17): error TS2323: Cannot redeclare exported variable 'CanvasElementsOfArt'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(567,17): error TS2323: Cannot redeclare exported variable 'CanvasSymmetryDrawing'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(615,17): error TS2323: Cannot redeclare exported variable 'CanvasRhythmBuilder'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(665,17): error TS2323: Cannot redeclare exported variable 'CanvasArtistSpotlight'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(707,17): error TS2323: Cannot redeclare exported variable 'CanvasArtHistoryTimeline'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(734,17): error TS2323: Cannot redeclare exported variable 'CanvasValueShading'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(769,17): error TS2323: Cannot redeclare exported variable 'CanvasCompositionalAnalysis'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(794,17): error TS2323: Cannot redeclare exported variable 'CanvasArtCriticism'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(825,17): error TS2323: Cannot redeclare exported variable 'CanvasTwoPointPerspective'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(878,17): error TS2323: Cannot redeclare exported variable 'CanvasChordProgression'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1030,17): error TS2323: Cannot redeclare exported variable 'CanvasShapeStamps'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1155,17): error TS2323: Cannot redeclare exported variable 'CanvasPortfolioOrganizer'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,148): error TS2323: Cannot redeclare exported variable 'CanvasElementsOfArt'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,148): error TS2484: Export declaration conflicts with exported declaration of 'CanvasElementsOfArt'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,169): error TS2323: Cannot redeclare exported variable 'CanvasSymmetryDrawing'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,169): error TS2484: Export declaration conflicts with exported declaration of 'CanvasSymmetryDrawing'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,192): error TS2323: Cannot redeclare exported variable 'CanvasRhythmBuilder'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,192): error TS2484: Export declaration conflicts with exported declaration of 'CanvasRhythmBuilder'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,213): error TS2323: Cannot redeclare exported variable 'CanvasArtistSpotlight'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,213): error TS2484: Export declaration conflicts with exported declaration of 'CanvasArtistSpotlight'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,236): error TS2323: Cannot redeclare exported variable 'CanvasArtHistoryTimeline'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,236): error TS2484: Export declaration conflicts with exported declaration of 'CanvasArtHistoryTimeline'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,262): error TS2323: Cannot redeclare exported variable 'CanvasValueShading'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,262): error TS2484: Export declaration conflicts with exported declaration of 'CanvasValueShading'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,282): error TS2323: Cannot redeclare exported variable 'CanvasCompositionalAnalysis'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,282): error TS2484: Export declaration conflicts with exported declaration of 'CanvasCompositionalAnalysis'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,311): error TS2323: Cannot redeclare exported variable 'CanvasArtCriticism'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,311): error TS2484: Export declaration conflicts with exported declaration of 'CanvasArtCriticism'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,331): error TS2323: Cannot redeclare exported variable 'CanvasTwoPointPerspective'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,331): error TS2484: Export declaration conflicts with exported declaration of 'CanvasTwoPointPerspective'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,358): error TS2323: Cannot redeclare exported variable 'CanvasChordProgression'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,358): error TS2484: Export declaration conflicts with exported declaration of 'CanvasChordProgression'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,382): error TS2323: Cannot redeclare exported variable 'CanvasShapeStamps'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,382): error TS2484: Export declaration conflicts with exported declaration of 'CanvasShapeStamps'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,401): error TS2323: Cannot redeclare exported variable 'CanvasPortfolioOrganizer'.
+src/components/whiteboard/CanvasArtsWidgets.tsx(1342,401): error TS2484: Export declaration conflicts with exported declaration of 'CanvasPortfolioOrganizer'.
+src/components/whiteboard/CanvasMathWidgets.tsx(2948,18): error TS18047: 'node' is possibly 'null'.
+src/components/whiteboard/CanvasMathWidgets.tsx(2958,25): error TS18047: 'node' is possibly 'null'.
+src/components/whiteboard/CanvasMathWidgets.tsx(3758,21): error TS2322: Type 'string | boolean' is not assignable to type 'Key | null | undefined'.
+src/components/whiteboard/CanvasMathWidgets.tsx(3758,72): error TS2464: A computed property name must be of type 'string', 'number', 'symbol', or 'any'.
+src/components/whiteboard/CanvasMathWidgets.tsx(3758,319): error TS2322: Type 'string | boolean' is not assignable to type 'Color | undefined'.
+src/components/whiteboard/CanvasScienceWidgets.tsx(463,140): error TS2322: Type '{ type: "range"; min: number; max: number; value: number; onChange: (e: ChangeEvent<HTMLInputElement>) => void; y: number; x: number; width: number; style: { cursor: "pointer"; }; }' is not assignable to type 'DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>'.
+src/components/whiteboard/CanvasScienceWidgets.tsx(1011,108): error TS18048: 'sel' is possibly 'undefined'.
+src/components/whiteboard/CanvasScienceWidgets.tsx(1011,133): error TS18048: 'sel' is possibly 'undefined'.
+src/components/whiteboard/CanvasScienceWidgets.tsx(1222,108): error TS18048: 'pat' is possibly 'undefined'.
+src/components/whiteboard/CanvasScienceWidgets.tsx(1222,133): error TS18048: 'pat' is possibly 'undefined'.
+src/components/whiteboard/CanvasScienceWidgets.tsx(1222,167): error TS18048: 'pat' is possibly 'undefined'.
+src/components/whiteboard/ElementRenderer.tsx(555,54): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(564,18): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(567,41): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(568,52): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(574,33): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(576,15): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(597,28): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(599,15): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(602,26): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(605,15): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(614,26): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(617,15): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(756,48): error TS2339: Property 'fontSize' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(804,75): error TS2339: Property 'fontSize' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(1173,26): error TS2339: Property 'text' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(1211,29): error TS2339: Property 'fontSize' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(1212,31): error TS2339: Property 'fontFamily' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(1218,30): error TS2339: Property 'textAlign' does not exist on type 'WhiteboardElement'.
+src/components/whiteboard/ElementRenderer.tsx(1225,11): error TS1117: An object literal cannot have multiple properties with the same name.
+src/components/whiteboard/MobileBottomToolbar.tsx(55,51): error TS2339: Property 'strokeColor' does not exist on type 'WhiteboardStore'.
+src/components/whiteboard/MobileBottomToolbar.tsx(56,51): error TS2339: Property 'strokeWidth' does not exist on type 'WhiteboardStore'.
+src/components/whiteboard/MobileBottomToolbar.tsx(57,54): error TS2339: Property 'setStrokeColor' does not exist on type 'WhiteboardStore'.
+src/components/whiteboard/MobileBottomToolbar.tsx(58,54): error TS2339: Property 'setStrokeWidth' does not exist on type 'WhiteboardStore'.
+src/components/whiteboard/StoryElementsMapWidget.tsx(852,90): error TS2339: Property 'teacherShowMountain' does not exist on type 'StoryMapWidgetConfig'.
+src/components/whiteboard/StoryElementsMapWidget.tsx(852,162): error TS2345: Argument of type 'boolean | undefined' is not assignable to parameter of type 'boolean'.
+src/components/whiteboard/StylePanel.tsx(880,37): error TS2352: Conversion of type 'TextElement' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/components/whiteboard/StylePanel.tsx(889,18): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'WhiteboardElement'.
+src/components/whiteboard/StylePanel.tsx(911,131): error TS2352: Conversion of type 'TextElement' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+src/components/whiteboard/StylePanel.tsx(975,18): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'WhiteboardElement'.
+src/hooks/useCollab.ts(157,28): error TS2345: Argument of type '{ id: string; name: string; color: string; role: string; cursor: { x: number; y: number; } | null; isHandRaised: boolean; }[]' is not assignable to parameter of type 'RemoteUser[]'.
+src/lib/audit.ts(47,9): error TS2353: Object literal may only specify known properties, and 'adminId' does not exist in type '(Without<AuditLogCreateInput, AuditLogUncheckedCreateInput> & AuditLogUncheckedCreateInput) | (Without<...> & AuditLogCreateInput)'.
+src/lib/rate-limit.ts(115,11): error TS18046: 'count' is of type 'unknown'.
+src/lib/supabase/middleware.ts(38,26): error TS2339: Property 'timingSafeEqual' does not exist on type 'SubtleCrypto'.
+src/lib/usage.ts(50,7): error TS2353: Object literal may only specify known properties, and 'recordingsUsed' does not exist in type 'Without<UsageLogCreateInput, UsageLogUncheckedCreateInput> & UsageLogUncheckedCreateInput'.
+src/lib/usage.ts(131,44): error TS2339: Property 'aiCostCents' does not exist on type '{ userId: string; id: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/lib/usage.ts(132,56): error TS2339: Property 'aiCostCents' does not exist on type '{ userId: string; id: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/lib/usage.ts(170,15): error TS2353: Object literal may only specify known properties, and 'monthlyAiBudgetCents' does not exist in type '(Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput)'.
+src/lib/usage.ts(182,15): error TS2353: Object literal may only specify known properties, and 'monthlyAiBudgetCents' does not exist in type 'UserSelect<DefaultArgs>'.
+src/lib/usage.ts(186,35): error TS2339: Property 'monthlyAiBudgetCents' does not exist on type '{ status: string; name: string | null; email: string; id: string; stripeCustomerId: string | null; customDomain: string | null; referralCode: string | null; tier: string; isAdmin: boolean; ... 15 more ...; updatedAt: Date; }'.
+src/lib/usage.ts(188,39): error TS2339: Property 'monthlyAiBudgetCents' does not exist on type '{ status: string; name: string | null; email: string; id: string; stripeCustomerId: string | null; customDomain: string | null; referralCode: string | null; tier: string; isAdmin: boolean; ... 15 more ...; updatedAt: Date; }'.
+src/lib/usage.ts(212,45): error TS2339: Property 'recordingsUsed' does not exist on type '{ userId: string; id: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/lib/usage.ts(213,30): error TS2339: Property 'recordingsUsed' does not exist on type '{ userId: string; id: string; periodStartDate: Date; videoMinutesUsed: number; aiCreditsUsed: number; estimatedAiSpendCents: number; }'.
+src/lib/usage.ts(225,13): error TS2353: Object literal may only specify known properties, and 'recordingsUsed' does not exist in type '(Without<UsageLogUpdateInput, UsageLogUncheckedUpdateInput> & UsageLogUncheckedUpdateInput) | (Without<...> & UsageLogUpdateInput)'.

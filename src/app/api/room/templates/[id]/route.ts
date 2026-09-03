@@ -191,7 +191,7 @@ export async function POST(
         gradeBand: original.gradeBand,
         tags: [...original.tags],
         isPublic: false, // copies start private
-        snapshot: original.snapshot,
+        snapshot: original.snapshot as any,
       },
       select: {
         id: true, name: true, description: true, subject: true,

@@ -132,11 +132,11 @@ function debounceSave(roomId: string, document: Y.Doc) {
 
 // --- Server ----------------------------------------------------------------
 
-const server = Server.configure({
+const server = new Server({
   port: PORT,
 
   // SECURITY: Verify JWT + room membership before allowing connection
-  async onAuthenticate({ documentName, context }) {
+  async onAuthenticate({ documentName, context }: { documentName: string; context?: { token?: string } }) {
     const roomId = documentName.replace('room-', '');
 
     // 1. Verify JWT token (required — no more anonymous fallback)
@@ -174,19 +174,19 @@ const server = Server.configure({
     };
   },
 
-  async onConnect({ documentName, context }) {
+  async onConnect({ documentName, context }: { documentName: string; context?: Record<string, unknown> }) {
     console.log(`[Hocuspocus] Client connected to ${documentName} (userId: ${context?.userId})`);
   },
 
-  async onDisconnect({ documentName, context }) {
+  async onDisconnect({ documentName, context }: { documentName: string; context?: Record<string, unknown> }) {
     console.log(`[Hocuspocus] Client disconnected from ${documentName} (userId: ${context?.userId})`);
   },
 
-  async onAwarenessUpdate({ awareness, documentName }) {
+  async onAwarenessUpdate({ awareness, documentName }: { awareness: any; documentName: string }) {
     const states = awareness.getStates();
     if (states.size > 0) {
       const participantCount = states.size;
-      const participantList = Array.from(states.entries()).map(
+      const participantList = (Array.from(states.entries()) as Array<[unknown, any]>).map(
         ([clientId, state]) => ({
           clientId,
           name: state?.user?.name || 'Anonymous',
@@ -196,12 +196,12 @@ const server = Server.configure({
       );
       console.log(
         `[Hocuspocus] ${documentName}: ${participantCount} participants`,
-        participantList.map((p) => p.name),
+        participantList.map((p: { name: string }) => p.name),
       );
     }
   },
 
-  async onLoadDocument({ documentName, document }) {
+  async onLoadDocument({ documentName, document }: { documentName: string; document: Y.Doc }) {
     const roomId = documentName.replace('room-', '');
     const snapshot = await fetchSnapshot(roomId, 0);
     if (snapshot) {
@@ -217,12 +217,12 @@ const server = Server.configure({
     }
   },
 
-  async onChange({ document, documentName }) {
+  async onChange({ document, documentName }: { document: Y.Doc; documentName: string }) {
     const roomId = documentName.replace('room-', '');
     debounceSave(roomId, document);
   },
 
-  async onStoreDocument({ documentName, document }) {
+  async onStoreDocument({ documentName, document }: { documentName: string; document: Y.Doc }) {
     const roomId = documentName.replace('room-', '');
     const pending = debounceTimers.get(roomId);
     if (pending) {

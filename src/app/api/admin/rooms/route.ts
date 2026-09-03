@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
           brandingLogo: true,
           brandingColor: true,
           createdAt: true,
-          updatedAt: true,
           tutor: {
             select: { id: true, name: true, email: true, tier: true },
           },

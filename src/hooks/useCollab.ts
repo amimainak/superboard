@@ -11,6 +11,7 @@ import * as Y from 'yjs'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { useCollabStore } from '@/lib/collab/store'
 import { initRealtimeSync } from '@/lib/collab/realtime-sync'
+import type { RemoteUser } from '@/lib/collab/store'
 import type { WhiteboardElement } from '@/lib/whiteboard/types'
 
 export type CollabMode = 'yjs' | 'supabase' | 'disconnected'
@@ -148,13 +149,13 @@ export function useCollab(options: UseCollabOptions): UseCollabReturn {
                   id: s.user.id || String(clientId),
                   name: s.user.name || 'Anonymous',
                   color: s.user.color || '#94a3b8',
-                  role: s.user.role || 'student',
+                  role: ((s.user.role === 'tutor' || s.user.role === 'student') ? s.user.role : 'student') as 'tutor' | 'student',
                   cursor: s.user.cursor || null,
                   isHandRaised: s.user.isHandRaised || false,
                 })
               }
             })
-            setRemoteUsers(users)
+            setRemoteUsers(users as unknown as RemoteUser[])
             setRemoteUserCount(users.length)
           }
         })

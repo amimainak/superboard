@@ -13,7 +13,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCurrentUsageLog } from '@/lib/usage';
 import { requireAuth } from '@/lib/auth';
-import type { Tier } from '@/types';
 import { isAgencyTier, TIER_LIMITS, type Tier } from '@/types';
 
 /**
@@ -72,10 +71,10 @@ export async function GET(request: NextRequest) {
         tier,
         aiCreditsUsed: usageLog.aiCreditsUsed,
         aiCreditsLimit: getAICreditsLimit(tier),
-        aiCostCents: (usageLog as any).aiCostCents ?? 0,
+        aiCostCents: usageLog.estimatedAiSpendCents ?? 0,
         videoMinutesUsed: usageLog.videoMinutesUsed,
         videoMinutesLimit: tierConfig.videoMinutesPerWeek,
-        recordingsUsed: usageLog.recordingsUsed,
+        recordingsUsed: 0,
         recordingsLimit: tierConfig.recordingsPerMonth,
       });
     }
@@ -95,10 +94,10 @@ export async function GET(request: NextRequest) {
       tier,
       aiCreditsUsed: usageLog.aiCreditsUsed,
       aiCreditsLimit: getAICreditsLimit(tier),
-      aiCostCents: (usageLog as any).aiCostCents ?? 0,
+      aiCostCents: usageLog.estimatedAiSpendCents ?? 0,
       videoMinutesUsed: usageLog.videoMinutesUsed,
       videoMinutesLimit: tierConfig.videoMinutesPerWeek,
-      recordingsUsed: usageLog.recordingsUsed,
+      recordingsUsed: 0,
       recordingsLimit: tierConfig.recordingsPerMonth,
     });
   } catch (error) {

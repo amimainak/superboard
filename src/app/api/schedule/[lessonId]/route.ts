@@ -8,8 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
-import { updateScheduleSchema, validateInput } from '@/lib/validations';
-import type { Subject, LessonStatus } from '@prisma/client';
+import { updateScheduleSchema } from '@/lib/validations';
 
 export async function PATCH(
   request: NextRequest,
@@ -28,15 +27,14 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const parsed = validateInput<{
-      title?: string;
-      description?: string | null;
-      subject?: string;
-      scheduledAt?: string;
-      durationMinutes?: number;
-      status?: string;
-    }>(updateScheduleSchema, body);
-    if (!parsed.success) return parsed.response;
+    const parsed = updateScheduleSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const data = parsed.data;
 
     // Fetch the lesson and verify ownership
     const lesson = await db.scheduledLesson.findUnique({
@@ -55,14 +53,11 @@ export async function PATCH(
       );
     }
 
-    // Build update data
+    // Build update data — only fields supported by ScheduledLesson
     const updateData: Record<string, unknown> = {};
-    if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
-    if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
-    if (parsed.data.subject !== undefined) updateData.subject = parsed.data.subject as Subject;
-    if (parsed.data.scheduledAt !== undefined) updateData.scheduledAt = new Date(parsed.data.scheduledAt);
-    if (parsed.data.durationMinutes !== undefined) updateData.durationMinutes = parsed.data.durationMinutes;
-    if (parsed.data.status !== undefined) updateData.status = parsed.data.status as LessonStatus;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.startTime !== undefined) updateData.startTime = new Date(data.startTime);
+    if (data.endTime !== undefined) updateData.endTime = new Date(data.endTime);
 
     const updated = await db.scheduledLesson.update({
       where: { id: lessonId },
@@ -71,17 +66,14 @@ export async function PATCH(
 
     return NextResponse.json({
       id: updated.id,
-      title: updated.title,
-      description: updated.description,
       subject: updated.subject,
       studentEmail: updated.studentEmail,
       studentName: updated.studentName,
-      scheduledAt: updated.scheduledAt.toISOString(),
-      durationMinutes: updated.durationMinutes,
-      timeZone: updated.timeZone,
+      startTime: updated.startTime.toISOString(),
+      endTime: updated.endTime?.toISOString() ?? null,
       status: updated.status,
-      roomUrl: updated.roomUrl,
-      reminderSent: updated.reminderSent,
+      roomId: updated.roomId,
+      notes: updated.notes,
       createdAt: updated.createdAt.toISOString(),
       updatedAt: updated.updatedAt.toISOString(),
     });

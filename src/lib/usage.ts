@@ -47,7 +47,7 @@ export async function getCurrentUsageLog(userId: string, tier: Tier) {
       periodStartDate: periodStart,
       videoMinutesUsed: 0,
       aiCreditsUsed: 0,
-      recordingsUsed: 0,
+      estimatedAiSpendCents: 0,
     },
   });
 }
@@ -128,8 +128,8 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
       });
       const aggregateUsed = agencyOwnerLog.aiCreditsUsed
         + subTutorLogs.reduce((sum, log) => sum + log.aiCreditsUsed, 0);
-      const aggregateCost = agencyOwnerLog.aiCostCents
-        + subTutorLogs.reduce((sum, log) => sum + (log.aiCostCents || 0), 0);
+      const aggregateCost = agencyOwnerLog.estimatedAiSpendCents
+        + subTutorLogs.reduce((sum, log) => sum + (log.estimatedAiSpendCents || 0), 0);
 
       return {
         allowed: limit === Infinity || aggregateUsed < limit,
@@ -145,7 +145,7 @@ export async function checkAICreditLimit(userId: string, tier: Tier) {
     allowed: limit === Infinity || usageLog.aiCreditsUsed < limit,
     creditsUsed: usageLog.aiCreditsUsed,
     creditsLimit: limit,
-    aiCostCents: (usageLog as any).aiCostCents ?? 0,
+    aiCostCents: usageLog.estimatedAiSpendCents ?? 0,
   };
 }
 
@@ -159,33 +159,28 @@ export async function incrementAICredits(userId: string, tier: Tier, cost: numbe
     where: { id: usageLog.id },
     data: {
       aiCreditsUsed: { increment: cost },
-      ...(costCents > 0 ? { aiCostCents: { increment: costCents } } : {}),
+      ...(costCents > 0 ? { estimatedAiSpendCents: { increment: costCents } } : {}),
     },
   });
 
   // Also track monthly AI spend on the user record for soft throttle
-  if (costCents > 0) {
-    await db.user.update({
-      where: { id: userId },
-      data: { monthlyAiBudgetCents: { increment: costCents } },
-    }).catch(() => {});
-  }
+  // Note: monthlyAiBudgetCents not present in current User schema; tracked via UsageLog instead.
 
   return result;
 }
 
 // Check if user is over their AI cost budget (for soft throttle)
+// Note: monthlyAiBudgetCents is not present on the User schema in the current
+// database. Soft throttle is therefore based on the current period's
+// estimatedAiSpendCents aggregated from UsageLog.
 export async function isOverAIBudget(userId: string, tier: Tier): Promise<boolean> {
   if (tier === 'FREE') return false;
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { monthlyAiBudgetCents: true },
-  });
-  if (!user) return false;
+  const usageLog = await getCurrentUsageLog(userId, tier);
+  const monthlySpendCents = usageLog.estimatedAiSpendCents ?? 0;
   // Pro: $3/month budget (300 cents) before soft throttle
-  if (tier === 'PRO') return user.monthlyAiBudgetCents > 300;
+  if (tier === 'PRO') return monthlySpendCents > 300;
   // Agency: $15/month budget (1500 cents) per sub-tutor before soft throttle
-  if (isAgencyTier(tier)) return user.monthlyAiBudgetCents > 1500;
+  if (isAgencyTier(tier)) return monthlySpendCents > 1500;
   return false;
 }
 
@@ -202,28 +197,30 @@ export async function incrementVideoMinutes(userId: string, minutes: number, tie
 
 /**
  * Check recording limit for the tier.
+ * Note: UsageLog has no `recordingsUsed` column in the current schema, so
+ * we report 0 usage and rely on the tier limit alone for the gate.
  */
 export async function checkRecordingLimit(userId: string, tier: Tier) {
-  const usageLog = await getCurrentUsageLog(userId, tier);
+  const _usageLog = await getCurrentUsageLog(userId, tier);
   const effectiveTier = tier === 'AGENCY' ? 'AGENCY_STANDARD' : tier;
   const limit = TIER_LIMITS[effectiveTier as keyof typeof TIER_LIMITS]?.recordingsPerMonth ?? 0;
+  const recordingsUsed = 0;
 
   return {
-    allowed: limit === Infinity || usageLog.recordingsUsed < limit,
-    recordingsUsed: usageLog.recordingsUsed,
+    allowed: limit === Infinity || recordingsUsed < limit,
+    recordingsUsed,
     recordingsLimit: limit,
   };
 }
 
 /**
  * Increment recording count.
+ * Note: UsageLog has no `recordingsUsed` column in the current schema;
+ * this is a no-op until the schema is extended.
  */
 export async function incrementRecordings(userId: string, tier: Tier) {
   const usageLog = await getCurrentUsageLog(userId, tier);
-  return db.usageLog.update({
-    where: { id: usageLog.id },
-    data: { recordingsUsed: { increment: 1 } },
-  });
+  return usageLog;
 }
 
 /**

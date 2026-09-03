@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
         include: {
-          admin: {
+          user: {
             select: { id: true, email: true, name: true },
           },
         },

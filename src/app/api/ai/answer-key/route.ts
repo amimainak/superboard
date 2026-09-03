@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     // --- Rate limit: 20 per minute per IP (AI cost abuse protection) ---
     const { allowed, response } = await checkRateLimit(request, 'ai-answer-key', { max: 20, windowMs: 60_000 });
-    if (!allowed) return response;
+    if (!allowed) return response as unknown as NextResponse;
 
     // --- Auth check: require authentication ---
     const auth = await requireAuth(request);

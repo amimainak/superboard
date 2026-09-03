@@ -52,10 +52,11 @@ export function MobileBottomToolbar({ isDark, currentTool, onToolChange }: Mobil
   const [showLibrary, setShowLibrary] = useState(false)
   const popoverRef = useRef<HTMLDivElement>(null)
   const libraryRef = useRef<HTMLDivElement>(null)
-  const strokeColor = useWhiteboardStore((s) => s.strokeColor)
-  const strokeWidth = useWhiteboardStore((s) => s.strokeWidth)
-  const setStrokeColor = useWhiteboardStore((s) => s.setStrokeColor)
-  const setStrokeWidth = useWhiteboardStore((s) => s.setStrokeWidth)
+  const strokeColor = useWhiteboardStore((s) => s.style.strokeColor)
+  const strokeWidth = useWhiteboardStore((s) => s.style.strokeWidth)
+  const setStyle = useWhiteboardStore((s) => s.setStyle)
+  const setStrokeColor = useCallback((color: string) => setStyle({ strokeColor: color }), [setStyle])
+  const setStrokeWidth = useCallback((width: number) => setStyle({ strokeWidth: width }), [setStyle])
 
   // Core tools — only the essentials
   const coreTools = [

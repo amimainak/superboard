@@ -11,11 +11,7 @@ import { requireAuth } from '@/lib/auth';
 import { z } from 'zod';
 
 const updateNoteSchema = z.object({
-  studentId: z.string().uuid().optional().nullable(),
   content: z.string().min(1).max(50000).optional(),
-  tutorFeedback: z.string().max(10000).optional().nullable(),
-  topicsForNext: z.string().max(5000).optional().nullable(),
-  rating: z.number().int().min(1).max(5).optional().nullable(),
 });
 
 type RouteContext = { params: Promise<{ roomId: string }> };
@@ -27,11 +23,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     const { roomId } = await context.params;
 
-    const note = await db.lessonNote.findUnique({
+    // LessonNote has no @@unique(roomId) constraint, so we use findFirst.
+    const note = await db.lessonNote.findFirst({
       where: { roomId },
       include: {
         room: { select: { id: true, subject: true, durationMinutes: true, endedAt: true, tutorId: true } },
-        student: { select: { id: true, name: true, email: true, grade: true } },
         tutor: { select: { id: true, name: true, email: true } },
       },
     });
@@ -55,10 +51,12 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       (user.tier === 'AGENCY' || user.tier === 'AGENCY_STANDARD' || user.tier === 'AGENCY_PREMIUM');
     // SECURITY FIX (API-M06): Fix sub-tutor access check — verify the room's tutor
     // is a sub-tutor under the same agency as the caller
-    const tutorAgency = await db.user.findUnique({
-      where: { id: note.room.tutorId },
-      select: { parentAgencyId: true },
-    });
+    const tutorAgency = note.room
+      ? await db.user.findUnique({
+          where: { id: note.room.tutorId },
+          select: { parentAgencyId: true },
+        })
+      : null;
     const isSubTutor = tutorAgency?.parentAgencyId === auth.userId;
 
     if (!isOwner && !isAgencyOwner && !isSubTutor) {
@@ -114,29 +112,33 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     }
 
     const updateData: Record<string, unknown> = {};
-    if (parsed.data.studentId !== undefined) updateData.studentId = parsed.data.studentId;
     if (parsed.data.content !== undefined) updateData.content = parsed.data.content;
-    if (parsed.data.tutorFeedback !== undefined) updateData.tutorFeedback = parsed.data.tutorFeedback;
-    if (parsed.data.topicsForNext !== undefined) updateData.topicsForNext = parsed.data.topicsForNext;
-    if (parsed.data.rating !== undefined) updateData.rating = parsed.data.rating;
+    updateData.tutorId = auth.userId;
 
-    const updated = await db.lessonNote.upsert({
+    // Find existing note for this room (LessonNote has no @@unique on roomId)
+    const existing = await db.lessonNote.findFirst({
       where: { roomId },
-      update: updateData,
-      create: {
-        roomId,
-        tutorId: auth.userId,
-        content: parsed.data.content || '',
-        studentId: parsed.data.studentId ?? null,
-        tutorFeedback: parsed.data.tutorFeedback ?? null,
-        topicsForNext: parsed.data.topicsForNext ?? null,
-        rating: parsed.data.rating ?? null,
-      },
-      include: {
-        room: { select: { id: true, subject: true, durationMinutes: true } },
-        student: { select: { id: true, name: true, email: true } },
-      },
+      select: { id: true },
     });
+
+    const updated = existing
+      ? await db.lessonNote.update({
+          where: { id: existing.id },
+          data: updateData,
+          include: {
+            room: { select: { id: true, subject: true, durationMinutes: true } },
+          },
+        })
+      : await db.lessonNote.create({
+          data: {
+            roomId,
+            tutorId: auth.userId,
+            content: parsed.data.content || '',
+          },
+          include: {
+            room: { select: { id: true, subject: true, durationMinutes: true } },
+          },
+        });
 
     return NextResponse.json({
       ...updated,

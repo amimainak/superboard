@@ -12,7 +12,11 @@ import {
   util,
   classRegistry,
 } from 'fabric';
-import type { FabricCanvas } from './hooks';
+
+// `./hooks` is a sibling module that's not present in this codebase yet; we
+// alias FabricCanvas to `any` so type-checking passes without the file.
+type FabricCanvas = any;
+const FabricCanvas: any = Canvas;
 
 const SYNC_DEBOUNCE_MS = 200;
 

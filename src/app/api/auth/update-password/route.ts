@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireAdmin } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
+import { db } from '@/lib/db';
 
 // Password strength: min 8 chars, at least one uppercase, one lowercase, one digit
 const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -78,12 +79,14 @@ export async function POST(request: NextRequest) {
 
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
-    // --- 5. Look up user by email (direct lookup instead of listing all users) ---
-    const { data: user, error: lookupError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-    if (lookupError || !user) {
+    // --- 5. Look up user by email (via our DB; Supabase admin API in this
+    //         version doesn't expose getUserByEmail). ---
+    const existingUser = await db.user.findUnique({ where: { email } });
+    if (!existingUser) {
       // Don't reveal whether email exists
       return NextResponse.json({ success: true });
     }
+    const user = { id: existingUser.id };
 
     // --- 6. Update password ---
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(

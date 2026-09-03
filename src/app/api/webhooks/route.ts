@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/rate-limit';
-import { validateInput, registerWebhookSchema } from '@/lib/validations';
+import { registerWebhookSchema } from '@/lib/validations';
 import crypto from 'crypto';
 
 // Allowed webhook event types
@@ -77,10 +77,15 @@ export async function POST(request: NextRequest) {
     if (auth instanceof NextResponse) return auth;
 
     const body = await request.json();
-    const parsed = validateInput(registerWebhookSchema, body);
-    if (!parsed.success) return parsed.response;
-
-    const { url, events, secret } = parsed.data;
+    const parsed = registerWebhookSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+    const { url, events } = parsed.data;
+    const secret = (body as { secret?: string } | null)?.secret;
 
     // Validate that all events are from the allowed set
     const invalidEvents = events.filter(

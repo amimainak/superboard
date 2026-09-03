@@ -30,6 +30,7 @@ import {
   downloadBlob,
   downloadString,
 } from '@/lib/whiteboard/export'
+import type { WhiteboardElement } from '@/lib/whiteboard/types'
 
 export default function WhiteboardClient() {
   const isDark = useWhiteboardStore((s) => s.isDark)
@@ -247,7 +248,7 @@ export default function WhiteboardClient() {
         textDecoration: style.textDecoration,
         textHighlight: style.textHighlight,
         textColor: style.textColor,
-      } as Record<string, unknown>)
+      } as unknown as WhiteboardElement)
     } catch (err) {
       console.warn('[TopBar fx] Failed:', err)
     }
@@ -297,7 +298,7 @@ export default function WhiteboardClient() {
       fontWeight: 'normal',
       fontStyle: 'normal',
       autoSize: false,
-    } as Record<string, unknown>)
+    } as unknown as WhiteboardElement)
   }, [addElement, camera, currentPageIndex])
 
   // ---- Keyboard Shortcuts (Phase 2E + Phase 5) ----

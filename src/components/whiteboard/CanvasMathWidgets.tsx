@@ -2939,13 +2939,14 @@ export function CanvasFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
   useEffect(function() {
     var node = graphContainerRef.current
     if (!node) return
+    var el: HTMLDivElement = node
     function onWheel(e: WheelEvent) {
       e.preventDefault()
       e.stopPropagation()
       var zoomFactor = e.deltaY > 0 ? 1.12 : 1 / 1.12
       var newXRange = Math.max(0.5, Math.min(100, xRange * zoomFactor))
       // Zoom toward cursor
-      var rect = node.getBoundingClientRect()
+      var rect = el.getBoundingClientRect()
       var relX = (e.clientX - rect.left) / rect.width
       var cursorX = effectiveXMin + relX * (effectiveXMax - effectiveXMin)
       var newPanX = panX + (cursorX - panX) * (1 - xRange / newXRange)
@@ -2954,8 +2955,8 @@ export function CanvasFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
         xRange: newXRange, panX: newPanX, panY: panY,
       })
     }
-    node.addEventListener('wheel', onWheel, { passive: false })
-    return function() { node.removeEventListener('wheel', onWheel) }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return function() { el.removeEventListener('wheel', onWheel) }
   }, [xRange, panX, panY, effectiveXMin, effectiveXMax, functions, updateConfig])
 
   var resetView = useCallback(function() {
@@ -3753,9 +3754,17 @@ export function CanvasDerivativeVisualizer({ element, isDark }: CanvasWidgetProp
         <input value={expr} onChange={function(e) { updateConfig({ expr: e.target.value }) }} style={{ flex: 1, padding: '3px 6px', borderRadius: 4, fontSize: 11, border: '1px solid ' + s.border, background: s.surface, color: s.bright, outline: 'none', fontFamily: 'monospace' }} />
       </div>
       <div style={{ display: 'flex', gap: 6, fontSize: 10 }}>
-        {[['f(x)', showF, '#34d399', 'showF'], ["f'(x)", showF1, '#f59e0b', 'showF1'], ["f''(x)", showF2, '#f87171', 'showF2']].map(function(item) {
+        {([
+          ['f(x)', showF, '#34d399', 'showF'] as [string, boolean, string, string],
+          ["f'(x)", showF1, '#f59e0b', 'showF1'] as [string, boolean, string, string],
+          ["f''(x)", showF2, '#f87171', 'showF2'] as [string, boolean, string, string],
+        ]).map(function(item) {
+          var label: string = item[0]
+          var enabled: boolean = item[1]
+          var color: string = item[2]
+          var key: string = item[3]
           return (
-            <button key={item[3]} onClick={function() { updateConfig({ [item[3]]: !item[1] }) }} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer', background: item[1] ? item[2] + '22' : s.surface, border: item[1] ? '1px solid ' + item[2] + '44' : '1px solid ' + s.border, color: item[1] ? item[2] : s.text }}>{item[0]}</button>
+            <button key={key} onClick={function() { updateConfig({ [key]: !enabled } as any) }} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer', background: enabled ? color + '22' : s.surface, border: enabled ? '1px solid ' + color + '44' : '1px solid ' + s.border, color: enabled ? color : s.text }}>{label}</button>
           )
         })}
       </div>

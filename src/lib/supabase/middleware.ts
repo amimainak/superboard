@@ -35,7 +35,7 @@ function validateCSRF(request: NextRequest): boolean {
   const a = new TextEncoder().encode(cookieToken)
   const b = new TextEncoder().encode(headerToken)
   try {
-    return crypto.subtle.timingSafeEqual(a, b)
+    return (crypto as unknown as { timingSafeEqual: (a: BufferSource, b: BufferSource) => boolean }).timingSafeEqual(a, b)
   } catch {
     return false
   }

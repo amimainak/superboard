@@ -877,7 +877,7 @@ function FxQuickButton({ isDark }: { isDark: boolean }) {
         const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0])
         if (el && el.type === 'text') {
           pushHistory()
-          const isCurrentlyLatex = (el as Record<string, unknown>).isLatex as boolean
+          const isCurrentlyLatex = (el as unknown as { isLatex?: boolean }).isLatex as boolean
           updateElement(el.id, { isLatex: !isCurrentlyLatex, width: Math.max(280, el.width || 300), height: Math.max(120, el.height || 100) })
           return
         }
@@ -901,14 +901,14 @@ function FxQuickButton({ isDark }: { isDark: boolean }) {
         textDecoration: style.textDecoration,
         textHighlight: style.textHighlight,
         textColor: style.textColor,
-      } as Record<string, unknown>)
+      } as unknown as unknown as import("@/lib/whiteboard/types").WhiteboardElement)
     } catch (err) {
       console.warn('[FxQuickButton] Failed:', err)
     }
   }, [selectedIds, updateElement, pushHistory, camera, currentPageIndex, style, addElement])
 
   const isActive = selectedIds.length === 1 &&
-    (() => { const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0]); return el?.type === 'text' && (el as Record<string, unknown>).isLatex })()
+    (() => { const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0]); return el?.type === 'text' && (el as unknown as { isLatex?: boolean }).isLatex })()
 
   return (
     <button
@@ -987,7 +987,7 @@ function InsertEquationButton({ isDark }: { isDark: boolean }) {
         textDecoration: style.textDecoration,
         textHighlight: style.textHighlight,
         textColor: style.textColor,
-      } as Record<string, unknown>)
+      } as unknown as unknown as import("@/lib/whiteboard/types").WhiteboardElement)
     } catch (err) {
       console.warn('[InsertEquation] Failed:', err)
     }

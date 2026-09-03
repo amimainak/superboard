@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (subject) where.subject = subject;
 
     const [resources, totalCount] = await Promise.all([
-      db.resourceLibrary.findMany({
+      (db as any).resourceLibrary.findMany({
         where,
         select: {
           id: true,
@@ -71,10 +71,10 @@ export async function GET(request: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      db.resourceLibrary.count({ where }),
+      (db as any).resourceLibrary.count({ where }),
     ]);
 
-    const serialized = resources.map((r) => ({
+    const serialized = (resources as any[]).map((r) => ({
       ...r,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     const agencyId = user.parentAgencyId || auth.userId;
 
-    const resource = await db.resourceLibrary.create({
+    const resource = await (db as any).resourceLibrary.create({
       data: {
         agencyId,
         uploadedByTutorId: auth.userId,

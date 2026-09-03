@@ -32,7 +32,7 @@ interface SaveAsTemplateModalProps {
   editTemplate?: {
     id: string
     name: string
-    description: string
+    description: string | null
     subject: string
     gradeBand: string
     tags: string[]

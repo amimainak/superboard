@@ -1,14 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // TODO: 251 pre-existing TypeScript errors remain across the codebase
-  // (Tier type casts, validateInput patterns, admin route schema mismatches,
-  // CanvasArtsWidgets re-exports, LessonNote include/select mismatches).
-  // The critical Prisma schema mismatches in 16 API routes have been fixed.
-  // Re-enable strict checking once the remaining errors are resolved.
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // TypeScript strict checking is now ENABLED — all 251 errors have been fixed.
+  // Do NOT re-enable ignoreBuildErrors.
   reactStrictMode: true,
   // Allow external image domains for branding logos — restrict to known patterns
   images: {

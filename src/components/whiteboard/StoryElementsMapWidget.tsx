@@ -48,6 +48,8 @@ export interface StoryMapWidgetConfig {
   teacherExplanations: [string, string, string]
   teacherPreview: boolean
   customExercises: StoryMapExercise[]
+  /** Phase 5: Show Story Mountain visualization toggle */
+  teacherShowMountain?: boolean
 }
 
 export const DEFAULT_STORY_MAP_CONFIG: StoryMapWidgetConfig = {
@@ -849,8 +851,8 @@ function TeacherMode({ isDark, config, onConfigChange, fs, s, compact }: {
             <button onClick={function () { onConfigChange({ teacherPreview: !config.teacherPreview }) }} style={s.btn(config.teacherPreview)}>
               {config.teacherPreview ? 'Hide Preview' : 'Preview as Student'}
             </button>
-            <button onClick={function () { onConfigChange({ teacherShowMountain: !config.teacherShowMountain } as Partial<StoryMapWidgetConfig>) }} style={s.btn((config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain)}>
-              {(config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain ? 'Hide Story Mountain' : 'Show Story Mountain'}
+            <button onClick={function () { onConfigChange({ teacherShowMountain: !config.teacherShowMountain } as Partial<StoryMapWidgetConfig>) }} style={s.btn((config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain ?? false)}>
+              {(config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain ?? false ? 'Hide Story Mountain' : 'Show Story Mountain'}
             </button>
           </div>
         )}
@@ -858,7 +860,7 @@ function TeacherMode({ isDark, config, onConfigChange, fs, s, compact }: {
         {/* Phase 5: Story Mountain visualization — renders the classic 5-stage mountain
             with labels for Exposition, Rising Action, Climax, Falling Action, Resolution.
             Pulls from teacher-mode fields. */}
-        {hasAnyElement && (config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain && (
+        {hasAnyElement && ((config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain ?? false) && (
           <div style={{ marginTop: 6, padding: 8, borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + s.border }}>
             <div style={{ fontSize: 9, fontWeight: 700, color: '#34d399', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Story Mountain</div>
             <svg viewBox="0 0 400 240" width="100%" style={{ display: 'block' }}>
