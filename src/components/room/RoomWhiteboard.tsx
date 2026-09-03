@@ -301,7 +301,10 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
   const currentPageName = pages[currentPageIndex]?.name || 'Page 1'
 
   const handleToggleGridType = useCallback(() => {
-    setGridType(gridType === 'dot' ? 'line' : 'dot')
+    // Phase 5: cycle through all 5 grid types
+    const all: Array<'dot' | 'line' | 'isometric' | 'lined' | 'music-staff'> = ['dot', 'line', 'isometric', 'lined', 'music-staff']
+    const idx = all.indexOf(gridType)
+    setGridType(all[(idx + 1) % all.length])
   }, [gridType, setGridType])
 
   // Save as template

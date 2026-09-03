@@ -24,7 +24,7 @@ export interface TemplateSnapshot {
     isDark: boolean
     showGrid: boolean
     gridSize: number
-    gridType: 'dot' | 'line'
+    gridType: 'dot' | 'line' | 'isometric' | 'lined' | 'music-staff'
     snapToGrid: boolean
   }
   /** Which subject filter is active (if any) */
@@ -40,7 +40,7 @@ export function extractTemplateSnapshot(options: {
   isDark: boolean
   showGrid: boolean
   gridSize: number
-  gridType: 'dot' | 'line'
+  gridType: 'dot' | 'line' | 'isometric' | 'lined' | 'music-staff'
   snapToGrid: boolean
   activeSubject?: string
 }): TemplateSnapshot {

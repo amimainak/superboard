@@ -1503,7 +1503,121 @@ const SCIENCE_PANEL_MAP: Record<string, React.LazyExoticComponent<React.Componen
   'earth-water-carbon-cycle': WaterCarbon, 'earth-solar-system': SolarSystem, 'earth-topographic-map': Topographic,
 }
 
+// ============================================================
+// Phase 5: CanvasPhScale — L3 upgrade of the pH Scale Visualizer
+// Wraps the existing PhScaleVisualizer but persists the pH value to
+// element.config so it survives reloads and template snapshots.
+// ============================================================
+const PH_EXAMPLES: Array<{ ph: number; label: string }> = [
+  { ph: 1, label: 'Stomach acid' },
+  { ph: 2, label: 'Lemon juice' },
+  { ph: 3, label: 'Cola' },
+  { ph: 5, label: 'Coffee' },
+  { ph: 7, label: 'Water' },
+  { ph: 7.4, label: 'Blood' },
+  { ph: 9, label: 'Baking soda' },
+  { ph: 12, label: 'Bleach' },
+]
+
+export function CanvasPhScale({ element, isDark }: CanvasScienceWidgetProps) {
+  const updateConfig = useConfigUpdater(element.id)
+  const cfg = element.config as { ph?: number }
+  const ph = cfg.ph ?? 7
+
+  const setPh = useCallback((newPh: number) => {
+    updateConfig({ ph: Math.round(newPh * 10) / 10 })
+  }, [updateConfig])
+
+  const concentration = Math.pow(10, -ph)
+  const classification = ph < 6.5 ? 'Acidic' : ph > 7.5 ? 'Basic' : 'Neutral'
+
+  const formatConc = (c: number): string => {
+    if (c === 0) return '0'
+    const exp = Math.floor(Math.log10(c))
+    const mantissa = c / Math.pow(10, exp)
+    return mantissa.toFixed(1) + ' × 10^' + exp + ' M'
+  }
+
+  const barW = 320
+  const barH = 24
+  const barX = 10
+  const barY = 10
+
+  const svgRef = useRef<SVGSVGElement>(null)
+  const handleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return
+    const rect = svgRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left - barX
+    const newPh = Math.max(0, Math.min(14, (x / barW) * 14))
+    setPh(newPh)
+  }, [setPh])
+
+  const s = {
+    border: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+    text: isDark ? '#94a3b8' : '#475569',
+    bright: isDark ? '#e2e8f0' : '#1e293b',
+  }
+
+  return (
+    <div style={{ padding: 8, fontFamily: 'inherit' }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: s.bright, marginBottom: 4 }}>pH Scale</div>
+      <svg ref={svgRef} width={barW + barX * 2} height={barH + 60} onClick={handleClick} style={{ display: 'block', marginBottom: 4, cursor: 'pointer' }}>
+        <defs>
+          <linearGradient id="phGradCanvas" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="14%" stopColor="#f97316" />
+            <stop offset="29%" stopColor="#eab308" />
+            <stop offset="43%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#14b8a6" />
+            <stop offset="57%" stopColor="#0ea5e9" />
+            <stop offset="71%" stopColor="#3b82f6" />
+            <stop offset="86%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+        </defs>
+        <rect x={barX} y={barY} width={barW} height={barH} rx={4} fill="url(#phGradCanvas)" stroke={s.border} strokeWidth={0.5} />
+        {Array.from({ length: 15 }, (_, i) => {
+          const x = barX + (i / 14) * barW
+          return (
+            <g key={i}>
+              <line x1={x} y1={barY + barH} x2={x} y2={barY + barH + 4} stroke={s.text} strokeWidth={0.5} />
+              <text x={x} y={barY + barH + 12} textAnchor="middle" fontSize={7} fill={s.text}>{i}</text>
+            </g>
+          )
+        })}
+        <polygon
+          points={(barX + (ph / 14) * barW) + ',' + (barY - 2) + ' ' +
+                  (barX + (ph / 14) * barW - 4) + ',' + (barY - 8) + ' ' +
+                  (barX + (ph / 14) * barW + 4) + ',' + (barY - 8)}
+          fill={isDark ? '#e2e8f0' : '#1e293b'}
+        />
+        <line x1={barX + (ph / 14) * barW} y1={barY} x2={barX + (ph / 14) * barW} y2={barY + barH}
+          stroke={isDark ? '#e2e8f0' : '#1e293b'} strokeWidth={1.5} />
+        {PH_EXAMPLES.map((ex, i) => {
+          const x = barX + (ex.ph / 14) * barW
+          return (
+            <g key={i} onClick={(e) => { e.stopPropagation(); setPh(ex.ph) }} style={{ cursor: 'pointer' }}>
+              <circle cx={x} cy={barY + barH + 22} r={3} fill={isDark ? '#34d399' : '#059669'} />
+              <text x={x} y={barY + barH + 34} textAnchor="middle" fontSize={6} fill={s.text}
+                transform={'rotate(-35,' + x + ',' + (barY + barH + 34) + ')'}>{ex.label}</text>
+            </g>
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 10, color: s.text }}>
+        <span>pH: <strong style={{ color: s.bright }}>{ph}</strong></span>
+        <span>[H+]: <strong style={{ color: s.bright }}>{formatConc(concentration)}</strong></span>
+        <span>Classification: <strong style={{ color: classification === 'Acidic' ? '#ef4444' : classification === 'Basic' ? '#a855f7' : '#14b8a6' }}>{classification}</strong></span>
+      </div>
+    </div>
+  )
+}
+
 export const CanvasScienceWidgetRenderer = React.memo(function CanvasScienceWidgetRenderer({ element, isDark }: CanvasScienceWidgetProps) {
+  // Phase 5: pH Scale has its own config-syncing canvas widget
+  if (element.widgetKind === 'chem-ph-scale') {
+    return <CanvasPhScale element={element} isDark={isDark} />
+  }
   const PanelComponent = SCIENCE_PANEL_MAP[element.widgetKind]
   if (!PanelComponent) {
     return <div style={{ padding: 12, color: '#f87171', fontSize: 12 }}>Unknown science widget: {element.widgetKind}</div>
@@ -1523,6 +1637,7 @@ export const CanvasScienceWidgetRenderer = React.memo(function CanvasScienceWidg
 
 export function getScienceWidgetDefaultConfig(kind: string): Record<string, unknown> {
   switch (kind) {
+    case 'chem-ph-scale': return { ph: 7 } // Phase 5: pH now persists via config
     case 'earth-states-matter': return { temperature: 25, substance: 'water' }
     case 'bio-food-chain': return { organisms: ['🌿 Grass', '🐛 Grasshopper', '🐸 Frog', '🐍 Snake', '🦅 Eagle'] }
     case 'earth-animal-habitats': return { matches: {} }

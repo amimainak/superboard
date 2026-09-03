@@ -72,8 +72,21 @@ const shortcutSections = [
   {
     title: 'Help',
     shortcuts: [
+      { keys: '?', action: 'Open this Dialog (Phase 5)' },
       { keys: 'Ctrl + /', action: 'Open this Dialog' },
       { keys: 'Delete / Backspace', action: 'Clear Page (no selection)' },
+    ],
+  },
+  {
+    title: 'Phase 5 — New Features',
+    shortcuts: [
+      { keys: 'Top Bar fx', action: 'Insert LaTeX equation (always visible)' },
+      { keys: 'Top Bar Sticky', action: 'Insert pre-made sticky note' },
+      { keys: 'Grid Cycle', action: 'Dot → Line → Isometric → Lined → Music Staff' },
+      { keys: 'Text Color', action: 'Picker in Text options pocket' },
+      { keys: 'Highlight', action: 'Picker in Text options pocket' },
+      { keys: 'Underline U', action: 'Now persists to element style' },
+      { keys: 'Strikethrough S', action: 'New — persists to element style' },
     ],
   },
 ]

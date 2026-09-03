@@ -2626,7 +2626,66 @@ export function CanvasBase10Blocks({ element, isDark }: CanvasWidgetProps) {
 // ============================================================
 
 export function CanvasMultiplicationGrid({ element, isDark }: CanvasWidgetProps) {
-  return <MultiplicationGrid isDark={isDark} />
+  // Phase 5: L3 upgrade — persist highlighted cell and click-to-pin
+  const cfg = element.config as { highlight?: { r: number; c: number } | null }
+  const updateConfig = useConfigUpdater(element.id)
+  const s = ws(isDark)
+  const text = isDark ? '#94a3b8' : '#475569'
+  const highlight = cfg.highlight ?? null
+
+  const setHighlight = (r: number, c: number) => {
+    // Toggle off if clicking the same cell
+    const isSame = highlight && highlight.r === r && highlight.c === c
+    updateConfig({ highlight: isSame ? null : { r, c } })
+  }
+
+  return (
+    <div style={{ padding: '4px 8px 8px', overflowX: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 11, fontWeight: 600, color: s.bright }}>Multiplication Grid</span>
+        <span style={{ fontSize: 9, color: s.text }}>Click a cell to pin the product</span>
+        {highlight && (
+          <button onClick={() => updateConfig({ highlight: null })} style={{
+            padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)', color: '#fca5a5',
+          }}>Clear pin</button>
+        )}
+        {highlight && (
+          <span style={{ fontSize: 10, color: s.text, marginLeft: 'auto' }}>
+            Pinned: <strong style={{ color: '#34d399' }}>{highlight.r + 1} × {highlight.c + 1} = {(highlight.r + 1) * (highlight.c + 1)}</strong>
+          </span>
+        )}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(13, 1fr)', gap: 1, fontSize: 9, minWidth: 280 }}>
+        <div style={{ padding: 2 }} />
+        {Array.from({ length: 12 }, (_, i) => (
+          <div key={'h-' + i} style={{ padding: 2, textAlign: 'center', fontWeight: 700, color: text, fontSize: 9 }}>{i + 1}</div>
+        ))}
+        {Array.from({ length: 12 }, (_, r) => (
+          <React.Fragment key={'row-' + r}>
+            <div style={{ padding: 2, textAlign: 'center', fontWeight: 700, color: text, fontSize: 9 }}>{r + 1}</div>
+            {Array.from({ length: 12 }, (_, c) => {
+              const isHL = highlight && (highlight.r === r || highlight.c === c)
+              const isExact = highlight && highlight.r === r && highlight.c === c
+              return (
+                <div key={r + '-' + c}
+                  onClick={() => setHighlight(r, c)}
+                  style={{
+                    padding: 2, textAlign: 'center', cursor: 'pointer',
+                    background: isExact ? 'rgba(5,150,105,0.35)' : isHL ? 'rgba(5,150,105,0.12)' : 'transparent',
+                    color: isExact ? '#34d399' : text,
+                    fontWeight: isExact ? 700 : (isHL ? 600 : 400),
+                    borderRadius: 2, fontSize: 9,
+                    border: isExact ? '1px solid rgba(5,150,105,0.6)' : '1px solid transparent',
+                  }}
+                >{(r + 1) * (c + 1)}</div>
+              )
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  )
 }
 export function CanvasCalculator({ element, isDark }: CanvasWidgetProps) {
   return <Calculator isDark={isDark} />
@@ -3952,7 +4011,7 @@ export function getMathWidgetDefaultConfig(kind: string): Record<string, unknown
     case 'math-base-10': return { ones: 0, tens: 0, hundreds: 0, thousands: 0, showRegroup: false, showExpanded: true, showWords: false }
     case 'math-multiplication-array': return { rows: 3, columns: 4 }
     case 'math-function-plotter': return { expression: 'x^2', range: 10, panX: 0, panY: 0 }
-    case 'math-multiplication-grid': return {}
+    case 'math-multiplication-grid': return { highlight: null } // Phase 5: L3 — click-to-pin now persists
     case 'math-flashcards': return {}
     case 'math-calculator': return {}
     case 'math-unit-converter': return {}

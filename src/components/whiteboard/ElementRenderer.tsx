@@ -1217,6 +1217,11 @@ function PlainTextElement({
           textAlign: element.textAlign || 'left',
           fontWeight: (element as { fontWeight?: string }).fontWeight || 'normal',
           fontStyle: (element as { fontStyle?: string }).fontStyle || 'normal',
+          // Phase 5: text decoration (underline / strikethrough), highlight, and explicit text color
+          textDecoration: (element as { textDecoration?: string }).textDecoration,
+          backgroundColor: (element as { textHighlight?: string }).textHighlight,
+          // textColor takes precedence over the inferred strokeColor-based textColor
+          color: (element as { textColor?: string }).textColor || textColor,
           cursor: 'text',
           caretColor: element.strokeColor,
         }}

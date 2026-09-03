@@ -58,6 +58,8 @@ export default function WhiteboardClient() {
   const sendToBack = useWhiteboardStore((s) => s.sendToBack)
   const addElement = useWhiteboardStore((s) => s.addElement)
   const pushHistory = useWhiteboardStore((s) => s.pushHistory)
+  const style = useWhiteboardStore((s) => s.style)
+  const updateElement = useWhiteboardStore((s) => s.updateElement)
   const toggleDark = useWhiteboardStore((s) => s.toggleDark)
   const toggleGrid = useWhiteboardStore((s) => s.toggleGrid)
   const toggleSnap = useWhiteboardStore((s) => s.toggleSnap)
@@ -203,13 +205,114 @@ export default function WhiteboardClient() {
   const currentPageName = pages[currentPageIndex]?.name || 'Page 1'
 
   const handleToggleGridType = useCallback(() => {
-    setGridType(gridType === 'dot' ? 'line' : 'dot')
+    // Phase 5: cycle through all 5 grid types
+    const all: Array<'dot' | 'line' | 'isometric' | 'lined' | 'music-staff'> = ['dot', 'line', 'isometric', 'lined', 'music-staff']
+    const idx = all.indexOf(gridType)
+    setGridType(all[(idx + 1) % all.length])
   }, [gridType, setGridType])
 
-  // ---- Keyboard Shortcuts (Phase 2E) ----
+  // ---- Phase 5: Insert LaTeX equation (top-bar fx button) ----
+  const handleInsertLatex = useCallback(() => {
+    try {
+      // If a text element is selected, toggle its LaTeX mode
+      if (selectedIds.length === 1) {
+        const el = useWhiteboardStore.getState().elements.find(e => e.id === selectedIds[0])
+        if (el && el.type === 'text') {
+          pushHistory()
+          const isCurrentlyLatex = (el as { isLatex?: boolean }).isLatex
+          updateElement(el.id, {
+            isLatex: !isCurrentlyLatex,
+            width: Math.max(280, el.width || 300),
+            height: Math.max(120, el.height || 100),
+          })
+          return
+        }
+      }
+      // Otherwise, create a new equation text element at viewport center
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+      const cx = ((vw / 2) - 150 - camera.x) / camera.zoom
+      const cy = ((vh / 2 - 60) - camera.y) / camera.zoom
+      addElement({
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+        type: 'text',
+        x: cx, y: cy, width: 300, height: 120,
+        rotation: 0, opacity: 1,
+        strokeColor: style.strokeColor, fillColor: 'transparent',
+        strokeWidth: 0, locked: false, pageIndex: currentPageIndex,
+        text: '', fontSize: style.fontSize || 20,
+        fontFamily: style.fontFamily || 'inherit',
+        textAlign: style.textAlign || 'left',
+        isLatex: true,
+        textDecoration: style.textDecoration,
+        textHighlight: style.textHighlight,
+        textColor: style.textColor,
+      } as Record<string, unknown>)
+    } catch (err) {
+      console.warn('[TopBar fx] Failed:', err)
+    }
+  }, [selectedIds, updateElement, pushHistory, camera, currentPageIndex, style, addElement])
+
+  // ---- Phase 5: Insert pre-made sticky note ----
+  const handleInsertSticky = useCallback((kind?: 'observe' | 'vocabulary' | 'question' | 'important') => {
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const cx = ((vw / 2) - 110 - camera.x) / camera.zoom
+    const cy = ((vh / 2 - 60) - camera.y) / camera.zoom
+
+    const stickyPresets: Record<string, { text: string; fill: string; stroke: string }> = {
+      observe: {
+        text: 'I observe:\n\nI think:\n\nI learned:',
+        fill: '#fef9c3',
+        stroke: '#eab308',
+      },
+      vocabulary: {
+        text: 'Key Vocabulary:\n\n• Word:\n  Definition:\n\n• Word:\n  Definition:',
+        fill: '#dbeafe',
+        stroke: '#3b82f6',
+      },
+      question: {
+        text: 'Question:\n\n?',
+        fill: '#fce7f3',
+        stroke: '#ec4899',
+      },
+      important: {
+        text: 'Important!\n\n',
+        fill: '#fee2e2',
+        stroke: '#ef4444',
+      },
+    }
+
+    const preset = stickyPresets[kind || 'observe'] || stickyPresets.observe
+    addElement({
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+      type: 'text',
+      x: cx, y: cy, width: 220, height: 180,
+      rotation: 0, opacity: 1,
+      strokeColor: preset.stroke, fillColor: preset.fill,
+      strokeWidth: 1, locked: false, pageIndex: currentPageIndex,
+      text: preset.text, fontSize: 14,
+      fontFamily: 'inherit',
+      textAlign: 'left',
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      autoSize: false,
+    } as Record<string, unknown>)
+  }, [addElement, camera, currentPageIndex])
+
+  // ---- Keyboard Shortcuts (Phase 2E + Phase 5) ----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey
+      // Phase 5: "?" key opens shortcuts dialog (no modifier needed)
+      // Skip if user is typing in an input/textarea/contentEditable
+      const target = e.target as HTMLElement
+      const isTyping = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
+      if (e.key === '?' && !isTyping) {
+        e.preventDefault()
+        setShortcutsOpen(true)
+        return
+      }
       if (!mod) return
       // Ctrl+K / Cmd+K — search
       if (e.key === 'k') {
@@ -279,6 +382,9 @@ export default function WhiteboardClient() {
           onToggleGrid={toggleGrid}
           onToggleSnap={toggleSnap}
           onToggleGridType={handleToggleGridType}
+          onSetGridType={setGridType}
+          onInsertLatex={handleInsertLatex}
+          onInsertSticky={handleInsertSticky}
           onSaveAsTemplate={() => setSaveTemplateOpen(true)}
           onMyTemplates={() => setMyTemplatesOpen(true)}
           onCommunityTemplates={() => setCommunityTemplatesOpen(true)}

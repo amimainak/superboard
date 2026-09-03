@@ -845,9 +845,81 @@ function TeacherMode({ isDark, config, onConfigChange, fs, s, compact }: {
 
         {/* Preview toggle */}
         {hasAnyElement && (
-          <button onClick={function () { onConfigChange({ teacherPreview: !config.teacherPreview }) }} style={s.btn(config.teacherPreview)}>
-            {config.teacherPreview ? 'Hide Preview' : 'Preview as Student'}
-          </button>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            <button onClick={function () { onConfigChange({ teacherPreview: !config.teacherPreview }) }} style={s.btn(config.teacherPreview)}>
+              {config.teacherPreview ? 'Hide Preview' : 'Preview as Student'}
+            </button>
+            <button onClick={function () { onConfigChange({ teacherShowMountain: !config.teacherShowMountain } as Partial<StoryMapWidgetConfig>) }} style={s.btn((config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain)}>
+              {(config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain ? 'Hide Story Mountain' : 'Show Story Mountain'}
+            </button>
+          </div>
+        )}
+
+        {/* Phase 5: Story Mountain visualization — renders the classic 5-stage mountain
+            with labels for Exposition, Rising Action, Climax, Falling Action, Resolution.
+            Pulls from teacher-mode fields. */}
+        {hasAnyElement && (config as StoryMapWidgetConfig & { teacherShowMountain?: boolean }).teacherShowMountain && (
+          <div style={{ marginTop: 6, padding: 8, borderRadius: 6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + s.border }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#34d399', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>Story Mountain</div>
+            <svg viewBox="0 0 400 240" width="100%" style={{ display: 'block' }}>
+              {/* Mountain shape */}
+              <polygon
+                points="40,210 200,20 360,210"
+                fill={isDark ? 'rgba(52,211,153,0.06)' : 'rgba(52,211,153,0.05)'}
+                stroke={isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'}
+                strokeWidth="1.5"
+              />
+              {/* Stage divider lines */}
+              <line x1="40" y1="210" x2="120" y2="115" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'} strokeWidth="1" strokeDasharray="4,3" />
+              <line x1="120" y1="115" x2="200" y2="20" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'} strokeWidth="1" strokeDasharray="4,3" />
+              <line x1="200" y1="20" x2="280" y2="115" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'} strokeWidth="1" strokeDasharray="4,3" />
+              <line x1="280" y1="115" x2="360" y2="210" stroke={isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'} strokeWidth="1" strokeDasharray="4,3" />
+
+              {/* Stage dots */}
+              <circle cx="40" cy="210" r="4" fill="#60a5fa" />
+              <circle cx="120" cy="115" r="4" fill="#fbbf24" />
+              <circle cx="200" cy="20" r="5" fill="#ef4444" />
+              <circle cx="280" cy="115" r="4" fill="#a855f7" />
+              <circle cx="360" cy="210" r="4" fill="#34d399" />
+
+              {/* Stage labels */}
+              <text x="40" y="226" textAnchor="middle" fontSize="8" fontWeight="700" fill={isDark ? '#60a5fa' : '#3b82f6'}>Exposition</text>
+              <text x="100" y="100" textAnchor="end" fontSize="8" fontWeight="700" fill={isDark ? '#fbbf24' : '#d97706'}>Rising</text>
+              <text x="200" y="14" textAnchor="middle" fontSize="8" fontWeight="700" fill="#ef4444">Climax</text>
+              <text x="300" y="100" textAnchor="start" fontSize="8" fontWeight="700" fill={isDark ? '#a855f7' : '#9333ea'}>Falling</text>
+              <text x="360" y="226" textAnchor="middle" fontSize="8" fontWeight="700" fill="#34d399">Resolution</text>
+
+              {/* Content snippets (truncated) */}
+              {config.teacherSettingPlace && (
+                <text x="40" y="200" textAnchor="middle" fontSize="6" fill={s.text}>
+                  {config.teacherSettingPlace.length > 18 ? config.teacherSettingPlace.slice(0, 16) + '…' : config.teacherSettingPlace}
+                </text>
+              )}
+              {config.teacherRisingAction && (
+                <text x="120" y="105" textAnchor="end" fontSize="6" fill={s.text}>
+                  {config.teacherRisingAction.length > 18 ? config.teacherRisingAction.slice(0, 16) + '…' : config.teacherRisingAction}
+                </text>
+              )}
+              {config.teacherClimax && (
+                <text x="200" y="34" textAnchor="middle" fontSize="6" fill={s.text}>
+                  {config.teacherClimax.length > 18 ? config.teacherClimax.slice(0, 16) + '…' : config.teacherClimax}
+                </text>
+              )}
+              {config.teacherFallingAction && (
+                <text x="280" y="105" textAnchor="start" fontSize="6" fill={s.text}>
+                  {config.teacherFallingAction.length > 18 ? config.teacherFallingAction.slice(0, 16) + '…' : config.teacherFallingAction}
+                </text>
+              )}
+              {config.teacherResolution && (
+                <text x="360" y="200" textAnchor="middle" fontSize="6" fill={s.text}>
+                  {config.teacherResolution.length > 18 ? config.teacherResolution.slice(0, 16) + '…' : config.teacherResolution}
+                </text>
+              )}
+            </svg>
+            <div style={{ fontSize: 9, color: s.text, marginTop: 4, lineHeight: 1.4 }}>
+              Tip: have students trace the mountain with the pen tool while retelling the story.
+            </div>
+          </div>
         )}
 
         {/* Student Preview */}

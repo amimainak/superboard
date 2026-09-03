@@ -29,6 +29,12 @@ export interface ElementStyle {
   textAlign?: 'left' | 'center' | 'right'
   fontWeight?: string
   fontStyle?: string
+  /** Phase 5: Text decoration — underline, line-through, etc. */
+  textDecoration?: string
+  /** Phase 5: Text highlight color (background) — distinct from element fillColor */
+  textHighlight?: string
+  /** Phase 5: Text color override (foreground). When set, used in place of strokeColor for text. */
+  textColor?: string
 }
 
 /** Tool identifiers */

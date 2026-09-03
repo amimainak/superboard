@@ -21,6 +21,9 @@ import {
   LayoutTemplate,
   Users,
   Library,
+  FunctionSquare,
+  Timer,
+  StickyNote,
 } from 'lucide-react'
 import './whiteboard.css'
 
@@ -53,10 +56,16 @@ interface TopBarProps {
   zoom: number
   showGrid: boolean
   snapToGrid: boolean
-  gridType: 'dot' | 'line'
+  gridType: 'dot' | 'line' | 'isometric' | 'lined' | 'music-staff'
   onToggleGrid: () => void
   onToggleSnap: () => void
   onToggleGridType: () => void
+  /** Phase 5: optional direct setter — when provided, replaces toggle with a dropdown */
+  onSetGridType?: (type: 'dot' | 'line' | 'isometric' | 'lined' | 'music-staff') => void
+  /** Phase 5: Insert LaTeX equation — when provided, shows an fx button in the top bar */
+  onInsertLatex?: () => void
+  /** Phase 5: Insert a sticky note — when provided, shows a sticky-note button in the top bar */
+  onInsertSticky?: (kind?: 'observe' | 'vocabulary' | 'question' | 'important') => void
   onTogglePresentation: () => void
   onSearch: () => void
   /** Templates — opens the rich SaveAsTemplateModal */
@@ -106,6 +115,9 @@ export function TopBar({
   onToggleGrid,
   onToggleSnap,
   onToggleGridType,
+  onSetGridType,
+  onInsertLatex,
+  onInsertSticky,
   onTogglePresentation,
   onSearch,
   onSaveAsTemplate,
@@ -228,6 +240,18 @@ export function TopBar({
         <Search size={14} />
       </Ico>
 
+      {/* Phase 5: Always-visible fx (LaTeX) button in the top toolbar */}
+      {onInsertLatex && (
+        <Ico title="Insert equation (LaTeX)" isDark={isDark} onClick={onInsertLatex} ariaLabel="Insert equation">
+          <FunctionSquare size={14} />
+        </Ico>
+      )}
+
+      {/* Phase 5: Sticky notes dropdown */}
+      {onInsertSticky && (
+        <StickyNotesMenu isDark={isDark} onInsert={onInsertSticky} />
+      )}
+
       {/* Templates dropdown — only render if at least one callback is wired */}
       {(onSaveAsTemplate || onMyTemplates || onCommunityTemplates) && (
         <TemplatesMenu
@@ -330,7 +354,30 @@ export function TopBar({
               </div>
               <MenuItem label={showGrid ? 'Hide Grid' : 'Show Grid'} isDark={isDark} onClick={() => { onToggleGrid(); setMenuOpen(false) }} />
               <MenuItem label={snapToGrid ? 'Disable Snap' : 'Enable Snap'} isDark={isDark} onClick={() => { onToggleSnap(); setMenuOpen(false) }} />
-              <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
+              {/* Phase 5: Grid type — dropdown if onSetGridType is provided, else legacy toggle */}
+              {onSetGridType ? (
+                <>
+                  <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`} style={{ paddingLeft: 12, paddingTop: 4, fontSize: 9, opacity: 0.6 }}>
+                    Grid type
+                  </div>
+                  {([
+                    { id: 'dot', label: 'Dots' },
+                    { id: 'line', label: 'Square Grid' },
+                    { id: 'isometric', label: 'Isometric' },
+                    { id: 'lined', label: 'Lined (Notebook)' },
+                    { id: 'music-staff', label: 'Music Staff' },
+                  ] as const).map(opt => (
+                    <MenuItem
+                      key={opt.id}
+                      label={`${gridType === opt.id ? '● ' : '  '}${opt.label}`}
+                      isDark={isDark}
+                      onClick={() => { onSetGridType(opt.id); setMenuOpen(false) }}
+                    />
+                  ))}
+                </>
+              ) : (
+                <MenuItem label={`Grid: ${gridType === 'dot' ? 'Dots' : 'Lines'}`} isDark={isDark} onClick={() => { onToggleGridType(); setMenuOpen(false) }} />
+              )}
               <MenuItem label="Zoom to Fit" isDark={isDark} shortcut="⇧1" onClick={() => { onZoomFit(); setMenuOpen(false) }} />
               {/* Help */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
@@ -527,6 +574,110 @@ function TemplatesMenu({
               </span>
             </button>
           )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================
+// Sticky Notes Menu — Phase 5
+// Dropdown to insert pre-made sticky notes:
+//   • "I observe / I think / I learned" (K-5 science, all subjects)
+//   • "Key Vocabulary" (any subject)
+//   • "Question" (any subject)
+//   • "Important" (any subject)
+// Each creates a sticky text element at viewport center with preset content.
+// ============================================================
+function StickyNotesMenu({
+  isDark,
+  onInsert,
+}: {
+  isDark: boolean
+  onInsert: (kind?: 'observe' | 'vocabulary' | 'question' | 'important') => void
+}) {
+  const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: -9999, right: 0 })
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (btnRef.current?.contains(e.target as Node)) return
+      if (panelRef.current?.contains(e.target as Node)) return
+      setOpen(false)
+    }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  const handleToggle = useCallback(() => {
+    if (!btnRef.current) return
+    const r = btnRef.current.getBoundingClientRect()
+    setPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+    setOpen((v) => !v)
+  }, [])
+
+  const run = (kind: 'observe' | 'vocabulary' | 'question' | 'important') => {
+    setOpen(false)
+    onInsert(kind)
+  }
+
+  const itemCls = `wb-menu-item wb-menu-item-${isDark ? 'dark' : 'light'}`
+
+  const options: Array<{ kind: 'observe' | 'vocabulary' | 'question' | 'important'; label: string; icon: string }> = [
+    { kind: 'observe', label: 'I observe / I think / I learned', icon: '👁' },
+    { kind: 'vocabulary', label: 'Key Vocabulary', icon: '📖' },
+    { kind: 'question', label: 'Question', icon: '?' },
+    { kind: 'important', label: 'Important', icon: '!' },
+  ]
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        ref={btnRef}
+        title="Sticky Notes"
+        onClick={handleToggle}
+        aria-label="Sticky Notes"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`wb-ico-btn wb-ico-btn-${isDark ? 'dark' : 'light'}`}
+        style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid transparent', background: 'transparent', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', color: isDark ? '#cbd5e1' : '#475569' }}
+      >
+        <StickyNote size={14} />
+      </button>
+      {open && (
+        <div
+          ref={panelRef}
+          role="menu"
+          className={`wb-menu wb-menu-${isDark ? 'dark' : 'light'}`}
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            right: pos.right,
+            minWidth: 240,
+            zIndex: 9999,
+            padding: '4px',
+            borderRadius: 8,
+            boxShadow: isDark ? '0 8px 24px rgba(0,0,0,0.45)' : '0 8px 24px rgba(0,0,0,0.12)',
+            background: isDark ? '#0f172a' : '#ffffff',
+            border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'),
+          }}
+        >
+          <div style={{ padding: '4px 8px', fontSize: 9, fontWeight: 700, letterSpacing: 0.6, textTransform: 'uppercase', color: isDark ? '#64748b' : '#94a3b8' }}>Sticky Notes</div>
+          {options.map(opt => (
+            <button key={opt.kind} role="menuitem" className={itemCls} onClick={() => run(opt.kind)}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 13 }}>{opt.icon}</span> {opt.label}
+              </span>
+            </button>
+          ))}
         </div>
       )}
     </div>

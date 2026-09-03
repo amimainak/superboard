@@ -145,7 +145,7 @@ export interface WhiteboardStore {
   isDark: boolean
   showGrid: boolean
   gridSize: number
-  gridType: 'dot' | 'line'
+  gridType: 'dot' | 'line' | 'isometric' | 'lined' | 'music-staff'
   snapToGrid: boolean
   isDrawing: boolean
   isPanning: boolean
@@ -188,7 +188,7 @@ export interface WhiteboardStore {
   toggleDark: () => void
   toggleGrid: () => void
   toggleSnap: () => void
-  setGridType: (type: 'dot' | 'line') => void
+  setGridType: (type: 'dot' | 'line' | 'isometric' | 'lined' | 'music-staff') => void
   toggleShortcuts: () => void
   setShortcutsOpen: (open: boolean) => void
 
@@ -731,6 +731,10 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
             textAlign: style.textAlign || 'left',
             fontWeight: style.fontWeight || 'normal',
             fontStyle: style.fontStyle || 'normal',
+            // Phase 5: persist text decoration, highlight, and explicit text color
+            textDecoration: style.textDecoration,
+            textHighlight: style.textHighlight,
+            textColor: style.textColor,
             autoSize: true,
           } as WhiteboardElement
           set({ isDrawing: true, currentElement: el, drawingPoints: [] })

@@ -35,7 +35,7 @@ function useConfigUpdater(elementId: string) {
 // take quizzes, view results — all state in element.config.
 // ============================================================
 
-type QuestionType = 'multiple-choice' | 'true-false' | 'short-answer'
+type QuestionType = 'multiple-choice' | 'true-false' | 'short-answer' | 'matching' | 'ordering' | 'fill-in-the-blank'
 type QuizMode = 'list' | 'take' | 'results' | 'create-q'
 
 interface CanvasQuestion {
@@ -45,6 +45,16 @@ interface CanvasQuestion {
   options: string[]
   correctAnswer: string
   explanation: string
+  /** Phase 5: For 'matching' — left items (one per row). */
+  matchLeft?: string[]
+  /** Phase 5: For 'matching' — right items (in correct order corresponding to matchLeft). */
+  matchRight?: string[]
+  /** Phase 5: For 'ordering' — items in the CORRECT order. */
+  orderItems?: string[]
+  /** Phase 5: For 'fill-in-the-blank' — list of acceptable answers (case-insensitive). */
+  acceptableAnswers?: string[]
+  /** Phase 5: Per-question time limit in seconds (0 = no limit). */
+  timeLimit?: number
 }
 
 interface CanvasQuizResult {
@@ -73,6 +83,9 @@ const Q_TYPE_LABELS: Record<QuestionType, string> = {
   'multiple-choice': 'MC',
   'true-false': 'T/F',
   'short-answer': 'SA',
+  'matching': 'Match',
+  'ordering': 'Order',
+  'fill-in-the-blank': 'Fill',
 }
 
 const QUICK_QUIZZES: Record<string, { title: string; questions: CanvasQuestion[] }> = {
@@ -126,12 +139,16 @@ export function CanvasQuiz({ element, isDark }: CanvasWidgetProps) {
 
   // ---- Question management ----
   const addQuestion = useCallback((type: QuestionType) => {
-    const q: CanvasQuestion = {
-      id: quizUid(), type, text: '',
-      options: type === 'multiple-choice' ? ['A', 'B', 'C', 'D'] : [],
-      correctAnswer: type === 'true-false' ? 'true' : (type === 'multiple-choice' ? '0' : ''),
-      explanation: '',
-    }
+    const q: CanvasQuestion = (() => {
+      const base = { id: quizUid(), type, text: '', explanation: '', timeLimit: 0 }
+      if (type === 'multiple-choice') return { ...base, options: ['A', 'B', 'C', 'D'], correctAnswer: '0' }
+      if (type === 'true-false') return { ...base, options: [], correctAnswer: 'true' }
+      if (type === 'short-answer') return { ...base, options: [], correctAnswer: '', acceptableAnswers: [] as string[] }
+      if (type === 'matching') return { ...base, options: [], correctAnswer: '', matchLeft: ['Item 1', 'Item 2', 'Item 3'], matchRight: ['Match 1', 'Match 2', 'Match 3'] }
+      if (type === 'ordering') return { ...base, options: [], correctAnswer: '', orderItems: ['First', 'Second', 'Third', 'Fourth'] }
+      // fill-in-the-blank
+      return { ...base, options: [], correctAnswer: '', acceptableAnswers: [] as string[] }
+    })()
     const newQs = [...questions, q]
     updateConfig({ questions: newQs, mode: 'create-q', activeQuestionIdx: newQs.length - 1 })
   }, [questions, updateConfig])
@@ -178,7 +195,31 @@ export function CanvasQuiz({ element, isDark }: CanvasWidgetProps) {
       let isCorrect = false
       if (q.type === 'short-answer') {
         isCorrect = ans.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
+      } else if (q.type === 'fill-in-the-blank') {
+        // Phase 5: check against all acceptable answers (case-insensitive)
+        const trimmed = ans.trim().toLowerCase()
+        isCorrect = (q.acceptableAnswers || [q.correctAnswer]).some(a => a.trim().toLowerCase() === trimmed)
+      } else if (q.type === 'matching') {
+        // Phase 5: ans is JSON { leftItem: chosenRightItem }; correct if all match the canonical pairing
+        try {
+          const chosen = JSON.parse(ans || '{}') as Record<string, string>
+          const left = q.matchLeft || []
+          const right = q.matchRight || []
+          isCorrect = left.every((l, i) => chosen[l] === right[i])
+        } catch {
+          isCorrect = false
+        }
+      } else if (q.type === 'ordering') {
+        // Phase 5: ans is JSON array; correct if it matches orderItems
+        try {
+          const arr = JSON.parse(ans || '[]') as string[]
+          const correct = q.orderItems || []
+          isCorrect = arr.length === correct.length && arr.every((v, i) => v === correct[i])
+        } catch {
+          isCorrect = false
+        }
       } else {
+        // multiple-choice, true-false
         isCorrect = ans === q.correctAnswer
       }
       return { questionId: q.id, answer: ans, isCorrect, timeSpent: 0 }
@@ -241,9 +282,9 @@ export function CanvasQuiz({ element, isDark }: CanvasWidgetProps) {
             <button onClick={() => createQuickQuiz('math')} style={s.btnSm('#a5b4fc', 'rgba(99,102,241,0.12)', 'rgba(99,102,241,0.3)')}>+ Math</button>
             <button onClick={() => createQuickQuiz('tf')} style={s.btnSm('#fbbf24', 'rgba(245,158,11,0.12)', 'rgba(245,158,11,0.3)')}>+ T/F</button>
           </div>
-          <div style={{ display: 'flex', gap: 3 }}>
-            {['multiple-choice', 'true-false', 'short-answer'].map((type) => (
-              <button key={type} onClick={() => addQuestion(type as QuestionType)} style={s.btnSm()}>+ {Q_TYPE_LABELS[type as QuestionType]}</button>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {(['multiple-choice', 'true-false', 'short-answer', 'matching', 'ordering', 'fill-in-the-blank'] as QuestionType[]).map((type) => (
+              <button key={type} onClick={() => addQuestion(type)} style={s.btnSm()}>+ {Q_TYPE_LABELS[type]}</button>
             ))}
           </div>
           {questions.length > 0 && (
@@ -343,6 +384,107 @@ export function CanvasQuiz({ element, isDark }: CanvasWidgetProps) {
               </div>
             )}
 
+            {/* Phase 5: Matching question editor */}
+            {q.type === 'matching' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 9, color: s.text }}>Match left items to right items (rows must correspond)</span>
+                {(q.matchLeft || []).map((left, mi) => (
+                  <div key={mi} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <input
+                      value={left}
+                      onChange={(e) => {
+                        const newArr = [...(q.matchLeft || [])]; newArr[mi] = e.target.value
+                        updateQuestion(activeQuestionIdx, { matchLeft: newArr })
+                      }}
+                      placeholder={`Left ${mi + 1}`}
+                      style={{ ...s.input, flex: 1 }}
+                    />
+                    <span style={{ color: s.text, fontSize: 11 }}>→</span>
+                    <input
+                      value={(q.matchRight || [])[mi] || ''}
+                      onChange={(e) => {
+                        const newArr = [...(q.matchRight || [])]; newArr[mi] = e.target.value
+                        updateQuestion(activeQuestionIdx, { matchRight: newArr })
+                      }}
+                      placeholder={`Right ${mi + 1}`}
+                      style={{ ...s.input, flex: 1 }}
+                    />
+                    <button onClick={() => {
+                      const newL = (q.matchLeft || []).filter((_, i) => i !== mi)
+                      const newR = (q.matchRight || []).filter((_, i) => i !== mi)
+                      updateQuestion(activeQuestionIdx, { matchLeft: newL, matchRight: newR })
+                    }} style={{ fontSize: 10, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                  </div>
+                ))}
+                <button onClick={() => {
+                  const n = (q.matchLeft || []).length + 1
+                  updateQuestion(activeQuestionIdx, {
+                    matchLeft: [...(q.matchLeft || []), `Item ${n}`],
+                    matchRight: [...(q.matchRight || []), `Match ${n}`],
+                  })
+                }} style={{ ...s.btnSm(), alignSelf: 'flex-start' }}>+ Add pair</button>
+              </div>
+            )}
+
+            {/* Phase 5: Ordering question editor */}
+            {q.type === 'ordering' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 9, color: s.text }}>Items in CORRECT order (student must rearrange to match)</span>
+                {(q.orderItems || []).map((item, oi) => (
+                  <div key={oi} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: s.text, width: 18 }}>{oi + 1}.</span>
+                    <input
+                      value={item}
+                      onChange={(e) => {
+                        const newArr = [...(q.orderItems || [])]; newArr[oi] = e.target.value
+                        updateQuestion(activeQuestionIdx, { orderItems: newArr })
+                      }}
+                      placeholder={`Item ${oi + 1}`}
+                      style={{ ...s.input, flex: 1 }}
+                    />
+                    <button onClick={() => {
+                      const newArr = (q.orderItems || []).filter((_, i) => i !== oi)
+                      updateQuestion(activeQuestionIdx, { orderItems: newArr })
+                    }} style={{ fontSize: 10, color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
+                  </div>
+                ))}
+                <button onClick={() => {
+                  const n = (q.orderItems || []).length + 1
+                  updateQuestion(activeQuestionIdx, { orderItems: [...(q.orderItems || []), `Item ${n}`] })
+                }} style={{ ...s.btnSm(), alignSelf: 'flex-start' }}>+ Add item</button>
+              </div>
+            )}
+
+            {/* Phase 5: Fill-in-the-blank question editor */}
+            {q.type === 'fill-in-the-blank' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={{ fontSize: 9, color: s.text }}>Use ___ in the question text to mark the blank. List all acceptable answers (case-insensitive).</span>
+                <input
+                  value={(q.acceptableAnswers || []).join(', ')}
+                  onChange={(e) => {
+                    const arr = e.target.value.split(',').map(s2 => s2.trim()).filter(Boolean)
+                    updateQuestion(activeQuestionIdx, { acceptableAnswers: arr, correctAnswer: arr[0] || '' })
+                  }}
+                  placeholder="answer1, answer2, answer3"
+                  style={{ ...s.input }}
+                />
+                <span style={{ fontSize: 9, color: s.text }}>Example question: "The capital of France is ___."</span>
+              </div>
+            )}
+
+            {/* Phase 5: Per-question time limit (all types) */}
+            <div>
+              <span style={{ fontSize: 9, color: s.text }}>Time limit (seconds, 0 = no limit)</span>
+              <input
+                type="number"
+                min={0}
+                max={600}
+                value={q.timeLimit || 0}
+                onChange={(e) => updateQuestion(activeQuestionIdx, { timeLimit: Number(e.target.value) || 0 })}
+                style={{ ...s.input, marginTop: 3, width: 80 }}
+              />
+            </div>
+
             {/* Explanation */}
             <div>
               <span style={{ fontSize: 9, color: s.text }}>Explanation (optional)</span>
@@ -429,6 +571,98 @@ export function CanvasQuiz({ element, isDark }: CanvasWidgetProps) {
             {/* Short answer */}
             {q.type === 'short-answer' && (
               <input value={currentAnswers[q.id] || ''} onChange={(e) => submitAnswer(q.id, e.target.value)} placeholder="Type your answer..." style={s.input} />
+            )}
+
+            {/* Phase 5: Matching — student picks from shuffled right items for each left item */}
+            {q.type === 'matching' && (() => {
+              const left = q.matchLeft || []
+              const right = q.matchRight || []
+              // Deterministic shuffle by question id (no useMemo — recomputed each render, cheap for small N)
+              const shuffled = (() => {
+                const arr = [...right]
+                let seed = 0
+                for (let i = 0; i < q.id.length; i++) seed = (seed * 31 + q.id.charCodeAt(i)) >>> 0
+                for (let i = arr.length - 1; i > 0; i--) {
+                  seed = (seed * 1103515245 + 12345) >>> 0
+                  const j = seed % (i + 1)
+                  ;[arr[i], arr[j]] = [arr[j], arr[i]]
+                }
+                return arr
+              })()
+              const currentMatchAnswer = (() => {
+                try { return JSON.parse(currentAnswers[q.id] || '{}') as Record<string, string> } catch { return {} as Record<string, string> }
+              })()
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {left.map((leftItem, li) => (
+                    <div key={li} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '4px 0' }}>
+                      <span style={{ flex: 1, fontSize: 11, color: s.bright }}>{leftItem}</span>
+                      <span style={{ color: s.text, fontSize: 11 }}>→</span>
+                      <select
+                        value={currentMatchAnswer[leftItem] || ''}
+                        onChange={(e) => {
+                          const next = { ...currentMatchAnswer, [leftItem]: e.target.value }
+                          submitAnswer(q.id, JSON.stringify(next))
+                        }}
+                        style={{ ...s.input, flex: 1 }}
+                      >
+                        <option value="">— pick —</option>
+                        {shuffled.map((r, ri) => <option key={ri} value={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
+            {/* Phase 5: Ordering — student rearranges items via up/down buttons */}
+            {q.type === 'ordering' && (() => {
+              const correct = q.orderItems || []
+              // If student hasn't answered yet, show a shuffled version (deterministic by question id)
+              const studentOrder = (() => {
+                if (currentAnswers[q.id]) {
+                  try {
+                    const parsed = JSON.parse(currentAnswers[q.id]) as string[]
+                    if (parsed.length === correct.length) return parsed
+                  } catch { /* fall through */ }
+                }
+                const arr = [...correct]
+                let seed = 0
+                for (let i = 0; i < q.id.length; i++) seed = (seed * 31 + q.id.charCodeAt(i)) >>> 0
+                for (let i = arr.length - 1; i > 0; i--) {
+                  seed = (seed * 1103515245 + 12345) >>> 0
+                  const j = seed % (i + 1)
+                  ;[arr[i], arr[j]] = [arr[j], arr[i]]
+                }
+                if (arr.length > 1 && arr.every((v, i) => v === correct[i])) {
+                  ;[arr[0], arr[1]] = [arr[1], arr[0]]
+                }
+                return arr
+              })()
+              const move = (idx: number, dir: -1 | 1) => {
+                const newArr = [...studentOrder]
+                const newIdx = idx + dir
+                if (newIdx < 0 || newIdx >= newArr.length) return
+                ;[newArr[idx], newArr[newIdx]] = [newArr[newIdx], newArr[idx]]
+                submitAnswer(q.id, JSON.stringify(newArr))
+              }
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {studentOrder.map((item, oi) => (
+                    <div key={oi} style={{ display: 'flex', gap: 6, alignItems: 'center', padding: '6px 8px', borderRadius: 5, background: s.surface, border: '1px solid ' + s.border }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: s.text, width: 18 }}>{oi + 1}.</span>
+                      <span style={{ flex: 1, fontSize: 11, color: s.bright }}>{item}</span>
+                      <button onClick={() => move(oi, -1)} disabled={oi === 0} style={{ fontSize: 10, padding: '2px 6px', background: 'none', border: '1px solid ' + s.border, color: s.text, cursor: 'pointer', borderRadius: 3 }}>↑</button>
+                      <button onClick={() => move(oi, 1)} disabled={oi === studentOrder.length - 1} style={{ fontSize: 10, padding: '2px 6px', background: 'none', border: '1px solid ' + s.border, color: s.text, cursor: 'pointer', borderRadius: 3 }}>↓</button>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
+            {/* Phase 5: Fill-in-the-blank */}
+            {q.type === 'fill-in-the-blank' && (
+              <input value={currentAnswers[q.id] || ''} onChange={(e) => submitAnswer(q.id, e.target.value)} placeholder="Type the missing word..." style={s.input} />
             )}
           </div>
         )}

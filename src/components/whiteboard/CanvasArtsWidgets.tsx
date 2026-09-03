@@ -963,59 +963,88 @@ export const ARTS_WIDGET_KIND_LABELS: Record<string, string> = {
 // ============================================================
 
 // --- Shape Stamp Library ---
-// Click a shape to "stamp" it onto the canvas (records the placement
-// in widget config; the tutor can then drag the stamp on the canvas
-// using the standard widget move handle).
-const SHAPE_STAMPS: Array<{ id: string; name: string; render: (size: number, color: string) => React.ReactNode }> = [
+// Phase 5: Expanded with subject-categorized stamps (Math, Science, ELA, Arts, General).
+// Click a shape to "stamp" it onto the canvas.
+type StampDef = { id: string; name: string; render: (size: number, color: string) => React.ReactNode }
+type StampCategory = { id: string; label: string; stamps: StampDef[] }
+
+const STAMP_CATEGORIES: StampCategory[] = [
   {
-    id: 'circle', name: 'Circle',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill={c} /></svg>,
+    id: 'general', label: 'General',
+    stamps: [
+      { id: 'star', name: 'Star', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 16.5,13.5 18.5,21 12,17 5.5,21 7.5,13.5 2,9 9,9" fill={c} /></svg> },
+      { id: 'check', name: 'Checkmark', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5" stroke={c} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'xmark', name: 'X Mark', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke={c} strokeWidth="3" fill="none" strokeLinecap="round" /></svg> },
+      { id: 'arrow', name: 'Arrow', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M4 12h14M14 6l6 6-6 6" stroke={c} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'heart', name: 'Heart', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9.5C.5 6 5 2 9 4c1.5.7 2.5 2 3 3 .5-1 1.5-2.3 3-3 4-2 8.5 2 6.5 7.5C19 16.5 12 21 12 21z" fill={c} /></svg> },
+      { id: 'thumbup', name: 'Thumb Up', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3H14z M7 22V11" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'lightbulb', name: 'Lightbulb', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M9 21h6M10 18h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'clock', name: 'Clock', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke={c} strokeWidth="2" fill="none" /><path d="M12 7v5l3 2" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" /></svg> },
+    ],
   },
   {
-    id: 'square', name: 'Square',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" fill={c} /></svg>,
+    id: 'math', label: 'Math',
+    stamps: [
+      { id: 'circle', name: 'Circle', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" /></svg> },
+      { id: 'square', name: 'Square', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" /></svg> },
+      { id: 'triangle', name: 'Triangle', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,3 22,21 2,21" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" /></svg> },
+      { id: 'diamond', name: 'Diamond', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" /></svg> },
+      { id: 'plus', name: 'Plus', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke={c} strokeWidth="3" strokeLinecap="round" /></svg> },
+      { id: 'minus', name: 'Minus', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M5 12h14" stroke={c} strokeWidth="3" strokeLinecap="round" /></svg> },
+      { id: 'multiply', name: 'Multiply', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke={c} strokeWidth="3" strokeLinecap="round" /></svg> },
+      { id: 'divide', name: 'Divide', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="6" r="2" fill={c} /><path d="M5 12h14" stroke={c} strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="18" r="2" fill={c} /></svg> },
+      { id: 'equals', name: 'Equals', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M5 9h14M5 15h14" stroke={c} strokeWidth="3" strokeLinecap="round" /></svg> },
+      { id: 'percent', name: 'Percent', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M19 5L5 19" stroke={c} strokeWidth="2" strokeLinecap="round" /><circle cx="7" cy="7" r="2" stroke={c} strokeWidth="2" fill="none" /><circle cx="17" cy="17" r="2" stroke={c} strokeWidth="2" fill="none" /></svg> },
+      { id: 'pi', name: 'Pi', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><text x="12" y="18" textAnchor="middle" fontSize="20" fontWeight="700" fill={c} fontFamily="serif">π</text></svg> },
+    ],
   },
   {
-    id: 'triangle', name: 'Triangle',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 22,22 2,22" fill={c} /></svg>,
+    id: 'science', label: 'Science',
+    stamps: [
+      { id: 'beaker', name: 'Beaker', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M9 3v6l-5 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-9V3M9 3h6" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'flask', name: 'Flask', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M10 3h4v4l5 12a2 2 0 0 1-2 3H7a2 2 0 0 1-2-3l5-12V3z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'test-tube', name: 'Test Tube', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M9 3v15a3 3 0 0 0 6 0V3M9 7h6" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'thermometer', name: 'Thermometer', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M14 14V4a2 2 0 1 0-4 0v10a4 4 0 1 0 4 0z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'magnet', name: 'Magnet', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M6 3v9a6 6 0 0 0 12 0V3M6 3h4v9a2 2 0 0 0 4 0V3h4" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'battery', name: 'Battery', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="8" rx="1" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" /><line x1="20" y1="11" x2="20" y2="13" stroke={c} strokeWidth="2" /><line x1="6" y1="8" x2="6" y2="16" stroke={c} strokeWidth="1" /></svg> },
+      { id: 'lightbulb', name: 'Lightbulb', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M9 21h6M10 18h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'leaf', name: 'Leaf', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M20 4S8 4 4 12c-2 4 0 8 0 8s4-2 8-2c4 0 8-4 8-12 0-1 0-2 0-2z" fill={c} /></svg> },
+      { id: 'dna', name: 'DNA', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M4 2c0 6 16 10 16 20M20 2c0 6-16 10-16 20M6 6h12M6 18h12M8 10h8M8 14h8" stroke={c} strokeWidth="1.5" fill="none" strokeLinecap="round" /></svg> },
+      { id: 'wave', name: 'Wave', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0 4 4 6 0" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" /></svg> },
+    ],
   },
   {
-    id: 'star', name: 'Star',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 15,9 22,9 16.5,13.5 18.5,21 12,17 5.5,21 7.5,13.5 2,9 9,9" fill={c} /></svg>,
+    id: 'ela', label: 'ELA',
+    stamps: [
+      { id: 'book', name: 'Book', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M4 19.5V4a1 1 0 0 1 1-1H19v18H5a1 1 0 0 1-1-1.5z M4 19.5a1 1 0 0 1 1-1.5H19" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'pencil', name: 'Pencil', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'speech', name: 'Speech Bubble', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5a8.5 8.5 0 0 1 7.9-12 8.4 8.4 0 0 1 9 8.4z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'thought', name: 'Thought Bubble', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M9 11a3 3 0 0 1 6 0 3 3 0 0 1 0 6H9a3 3 0 0 1 0-6z M7 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z" stroke={c} strokeWidth="1.5" fill={c} fillOpacity="0.2" /></svg> },
+      { id: 'exclaim', name: 'Exclaim', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><circle cx="12" cy="19" r="2" fill={c} /><path d="M12 3v12" stroke={c} strokeWidth="3" strokeLinecap="round" /></svg> },
+      { id: 'question', name: 'Question', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4 3c-1 1-1 2-1 3" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" /><circle cx="12" cy="19" r="1.5" fill={c} /></svg> },
+      { id: 'quote', name: 'Quote', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M7 7H4v6h6V7H7zM7 7c0-2 1-3 3-3M17 7h-3v6h6V7h-3zM17 7c0-2 1-3 3-3" stroke={c} strokeWidth="1.5" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'turnpage', name: 'Turn Page', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4M5 3h9l5 5v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M9 13l4 4M13 13l-4 4" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+    ],
   },
   {
-    id: 'heart', name: 'Heart',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9.5C.5 6 5 2 9 4c1.5.7 2.5 2 3 3 .5-1 1.5-2.3 3-3 4-2 8.5 2 6.5 7.5C19 16.5 12 21 12 21z" fill={c} /></svg>,
-  },
-  {
-    id: 'diamond', name: 'Diamond',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 22,12 12,22 2,12" fill={c} /></svg>,
-  },
-  {
-    id: 'leaf', name: 'Leaf',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M20 4S8 4 4 12c-2 4 0 8 0 8s4-2 8-2c4 0 8-4 8-12 0-1 0-2 0-2z" fill={c} /></svg>,
-  },
-  {
-    id: 'flower', name: 'Flower',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><g fill={c}><circle cx="12" cy="6" r="4" /><circle cx="6" cy="12" r="4" /><circle cx="18" cy="12" r="4" /><circle cx="12" cy="18" r="4" /></g><circle cx="12" cy="12" r="3" fill="#fbbf24" /></svg>,
-  },
-  {
-    id: 'tree', name: 'Tree',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 4,14 9,14 5,20 19,20 15,14 20,14" fill={c} /><rect x="11" y="20" width="2" height="3" fill="#92400e" /></svg>,
-  },
-  {
-    id: 'arrow', name: 'Arrow',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M4 12h14M14 6l6 6-6 6" stroke={c} strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>,
-  },
-  {
-    id: 'sun', name: 'Sun',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><g fill={c} stroke={c}><circle cx="12" cy="12" r="5" /><g strokeWidth="2" strokeLinecap="round"><line x1="12" y1="2" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="22" /><line x1="2" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="22" y2="12" /><line x1="5" y1="5" x2="7" y2="7" /><line x1="17" y1="17" x2="19" y2="19" /><line x1="5" y1="19" x2="7" y2="17" /><line x1="17" y1="7" x2="19" y2="5" /></g></g></svg>,
-  },
-  {
-    id: 'moon', name: 'Moon',
-    render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z" fill={c} /></svg>,
+    id: 'arts', label: 'Arts',
+    stamps: [
+      { id: 'palette', name: 'Palette', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0 0 20c1 0 2-1 2-2 0-2-2-2-2-4 0-1 1-2 2-2h2a4 4 0 0 0 4-4 10 10 0 0 0-10-8z" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.2" /><circle cx="7" cy="11" r="1" fill={c} /><circle cx="9" cy="7" r="1" fill={c} /><circle cx="14" cy="6" r="1" fill={c} /></svg> },
+      { id: 'paintbrush', name: 'Paintbrush', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M3 21c3 0 5-2 5-5 0-1-1-2-2-2-3 0-3 4-3 7zM8 16l11-11M19 5l2 2-11 11" stroke={c} strokeWidth="2" fill={c} fillOpacity="0.3" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'note-whole', name: 'Whole Note', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="6" ry="4" stroke={c} strokeWidth="2" fill="none" /></svg> },
+      { id: 'note-quarter', name: 'Quarter Note', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><ellipse cx="9" cy="17" rx="5" ry="3.5" transform="rotate(-20 9 17)" fill={c} /><path d="M14 17V4" stroke={c} strokeWidth="2" strokeLinecap="round" /></svg> },
+      { id: 'treble-clef', name: 'Treble Clef', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M12 3a4 4 0 0 0-1 8c2 0 3-2 3-4M11 11v8a3 3 0 0 0 6 0M11 11c-2 0-4 1-4 3s2 3 4 3" stroke={c} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'rest', name: 'Rest', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M7 4l5 4-3 3 5 4-3 3" stroke={c} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg> },
+      { id: 'flower', name: 'Flower', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><g fill={c}><circle cx="12" cy="6" r="4" /><circle cx="6" cy="12" r="4" /><circle cx="18" cy="12" r="4" /><circle cx="12" cy="18" r="4" /></g><circle cx="12" cy="12" r="3" fill="#fbbf24" /></svg> },
+      { id: 'tree', name: 'Tree', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><polygon points="12,2 4,14 9,14 5,20 19,20 15,14 20,14" fill={c} /><rect x="11" y="20" width="2" height="3" fill="#92400e" /></svg> },
+      { id: 'sun', name: 'Sun', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><g fill={c} stroke={c}><circle cx="12" cy="12" r="5" /><g strokeWidth="2" strokeLinecap="round"><line x1="12" y1="2" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="22" /><line x1="2" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="22" y2="12" /><line x1="5" y1="5" x2="7" y2="7" /><line x1="17" y1="17" x2="19" y2="19" /><line x1="5" y1="19" x2="7" y2="17" /><line x1="17" y1="7" x2="19" y2="5" /></g></g></svg> },
+      { id: 'moon', name: 'Moon', render: (s, c) => <svg width={s} height={s} viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z" fill={c} /></svg> },
+    ],
   },
 ]
+
+// Flat lookup map for stamp rendering by id
+const SHAPE_STAMPS: StampDef[] = STAMP_CATEGORIES.flatMap(cat => cat.stamps)
 
 const STAMP_COLORS = ['#ef4444', '#f97316', '#fbbf24', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#0f172a']
 
@@ -1079,22 +1108,31 @@ export function CanvasShapeStamps({ element, isDark }: CanvasWidgetProps) {
         ))}
       </div>
 
-      {/* Shape buttons */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 4 }}>
-        {SHAPE_STAMPS.map(s => (
-          <button
-            key={s.id}
-            onClick={() => handleStamp(s.id)}
-            title={`Stamp a ${s.name}`}
-            style={{
-              padding: 6, borderRadius: 5, fontSize: 9, fontWeight: 500, cursor: 'pointer',
-              background: btnBg, border: '1px solid ' + btnBorder, color: labelColor,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-            }}
-          >
-            {s.render(20, color)}
-            <span>{s.name}</span>
-          </button>
+      {/* Phase 5: Shape buttons grouped by category */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto', padding: 2 }}>
+        {STAMP_CATEGORIES.map(cat => (
+          <div key={cat.id}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: labelColor, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4, opacity: 0.7 }}>
+              {cat.label}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 3 }}>
+              {cat.stamps.map(s => (
+                <button
+                  key={s.id + '_' + cat.id}
+                  onClick={() => handleStamp(s.id)}
+                  title={`Stamp: ${s.name} (${cat.label})`}
+                  style={{
+                    padding: 4, borderRadius: 4, fontSize: 8, fontWeight: 500, cursor: 'pointer',
+                    background: btnBg, border: '1px solid ' + btnBorder, color: labelColor,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                  }}
+                >
+                  {s.render(18, color)}
+                  <span style={{ fontSize: 7, textAlign: 'center', lineHeight: 1 }}>{s.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 

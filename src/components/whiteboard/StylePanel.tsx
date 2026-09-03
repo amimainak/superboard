@@ -333,6 +333,10 @@ export function StylePanel() {
                   textAlign: (style.textAlign as 'left' | 'center' | 'right') || 'left',
                   fontWeight: style.fontWeight || 'normal',
                   fontStyle: style.fontStyle || 'normal',
+                  // Phase 5: new text styling fields
+                  textDecoration: style.textDecoration,
+                  textHighlight: style.textHighlight,
+                  textColor: style.textColor,
                 }}
                 setStyle={setStyle}
               />
@@ -588,26 +592,46 @@ function TextOptions({
   setStyle,
 }: {
   isDark: boolean
-  style: { fontFamily: string; fontSize: number; textAlign: 'left' | 'center' | 'right'; fontWeight: string; fontStyle: string }
-  setStyle: (s: Partial<{ fontFamily: string; fontSize: number; textAlign: 'left' | 'center' | 'right'; fontWeight: string; fontStyle: string }>) => void
+  style: { fontFamily: string; fontSize: number; textAlign: 'left' | 'center' | 'right'; fontWeight: string; fontStyle: string; textDecoration?: string; textHighlight?: string; textColor?: string }
+  setStyle: (s: Partial<{ fontFamily: string; fontSize: number; textAlign: 'left' | 'center' | 'right'; fontWeight: string; fontStyle: string; textDecoration?: string; textHighlight?: string; textColor?: string }>) => void
 }) {
   const s = style
 
-  // H2 FIX: Also apply inline formatting to selected text within contentEditable
+  // Phase 5: Apply formatting to both new elements (via store style) and current selection (contentEditable)
   const applyInlineFormat = (command: string, value?: string) => {
     try {
-      // Apply to store style (for new elements)
       if (command === 'bold') setStyle({ fontWeight: s.fontWeight === 'bold' ? 'normal' : 'bold' })
       else if (command === 'italic') setStyle({ fontStyle: s.fontStyle === 'italic' ? 'normal' : 'italic' })
-      else if (command === 'underline' || command === 'foreColor') {
-        // These only work inline, not at element level
+      else if (command === 'underline') {
+        // Phase 5: persist underline to style (was previously inline-only)
+        const isOn = s.textDecoration?.includes('underline')
+        setStyle({ textDecoration: isOn ? (s.textDecoration?.replace('underline', '').trim() || undefined) : [s.textDecoration, 'underline'].filter(Boolean).join(' ') || 'underline' })
+      }
+      else if (command === 'strikeThrough') {
+        const isOn = s.textDecoration?.includes('line-through')
+        setStyle({ textDecoration: isOn ? (s.textDecoration?.replace('line-through', '').trim() || undefined) : [s.textDecoration, 'line-through'].filter(Boolean).join(' ') || 'line-through' })
+      }
+      else if (command === 'foreColor') {
+        // textColor handled by the color picker below
+        setStyle({ textColor: value })
+      }
+      else if (command === 'hiliteColor') {
+        setStyle({ textHighlight: value })
       }
       // Also apply to any current selection in a contentEditable
-      document.execCommand(command, false, value || undefined)
+      if (command === 'foreColor' || command === 'hiliteColor') {
+        document.execCommand(command, false, value || undefined)
+      } else {
+        document.execCommand(command, false, value || undefined)
+      }
     } catch (err) {
       console.warn('[StylePanel] applyInlineFormat failed:', err)
     }
   }
+
+  // Phase 5: Color presets for text and highlight
+  const TEXT_COLORS = ['#1e293b', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#ffffff']
+  const HIGHLIGHT_COLORS = ['transparent', '#fef08a', '#bbf7d0', '#bfdbfe', '#fbcfe8', '#fed7aa', '#ddd6fe', '#a7f3d0']
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -662,12 +686,12 @@ function TextOptions({
         </div>
       </div>
 
-      {/* Alignment + Bold + Italic */}
+      {/* Alignment + Bold + Italic + Underline + Strikethrough */}
       <div>
         <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
           Format
         </div>
-        <div style={{ display: 'flex', gap: 3 }} role="group" aria-label="Text format">
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }} role="group" aria-label="Text format">
           {(['left', 'center', 'right'] as const).map((a) => (
             <button
               key={a}
@@ -726,17 +750,108 @@ function TextOptions({
           >
             <span style={{ fontStyle: 'italic', fontSize: 13 }}>I</span>
           </button>
-          {/* H2 FIX: Underline button */}
+          {/* Phase 5: Underline button — now persists to style.textDecoration */}
           <button
             onClick={() => applyInlineFormat('underline')}
+            role="radio"
+            aria-checked={!!s.textDecoration?.includes('underline')}
             aria-label="Underline"
             className={[
               'wb-opt-btn',
               `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+              s.textDecoration?.includes('underline') ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
             ].join(' ')}
           >
             <span style={{ textDecoration: 'underline', fontSize: 13 }}>U</span>
           </button>
+          {/* Phase 5: Strikethrough button */}
+          <button
+            onClick={() => applyInlineFormat('strikeThrough')}
+            role="radio"
+            aria-checked={!!s.textDecoration?.includes('line-through')}
+            aria-label="Strikethrough"
+            className={[
+              'wb-opt-btn',
+              `wb-opt-btn-${isDark ? 'dark' : 'light'}`,
+              s.textDecoration?.includes('line-through') ? `wb-opt-btn-active wb-opt-btn-active-${isDark ? 'dark' : 'light'}` : '',
+            ].join(' ')}
+          >
+            <span style={{ textDecoration: 'line-through', fontSize: 13 }}>S</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Phase 5: Text color picker */}
+      <div>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
+          Text Color
+        </div>
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+          {TEXT_COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => applyInlineFormat('foreColor', c)}
+              aria-label={`Text color ${c}`}
+              title={c}
+              style={{
+                width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', padding: 0,
+                background: c, border: s.textColor === c ? '2px solid #3b82f6' : ('1px solid ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)')),
+                boxShadow: s.textColor === c ? '0 0 0 2px rgba(59,130,246,0.4)' : 'none',
+              }}
+            />
+          ))}
+          {/* Reset to default (use strokeColor) */}
+          <button
+            onClick={() => setStyle({ textColor: undefined })}
+            title="Reset text color"
+            style={{
+              padding: '2px 6px', borderRadius: 4, fontSize: 9, cursor: 'pointer',
+              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+              border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+              color: isDark ? '#94a3b8' : '#64748b',
+            }}
+          >Reset</button>
+        </div>
+      </div>
+
+      {/* Phase 5: Highlight color picker */}
+      <div>
+        <div className={`wb-section-label wb-section-label-${isDark ? 'dark' : 'light'}`}>
+          Highlight
+        </div>
+        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'center' }}>
+          {HIGHLIGHT_COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => applyInlineFormat('hiliteColor', c)}
+              aria-label={`Highlight ${c}`}
+              title={c === 'transparent' ? 'No highlight' : c}
+              style={{
+                width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', padding: 0,
+                background: c === 'transparent' ? (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)') : c,
+                border: s.textHighlight === c ? '2px solid #3b82f6' : ('1px solid ' + (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)')),
+                boxShadow: s.textHighlight === c ? '0 0 0 2px rgba(59,130,246,0.4)' : 'none',
+                position: 'relative',
+              }}
+            >
+              {c === 'transparent' && (
+                <svg width="18" height="18" viewBox="0 0 18 18" style={{ position: 'absolute', top: 0, left: 0 }}>
+                  <line x1="2" y1="16" x2="16" y2="2" stroke="#ef4444" strokeWidth="1.5" />
+                </svg>
+              )}
+            </button>
+          ))}
+          {/* Reset highlight */}
+          <button
+            onClick={() => setStyle({ textHighlight: undefined })}
+            title="Reset highlight"
+            style={{
+              padding: '2px 6px', borderRadius: 4, fontSize: 9, cursor: 'pointer',
+              background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+              border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
+              color: isDark ? '#94a3b8' : '#64748b',
+            }}
+          >Reset</button>
         </div>
       </div>
     </div>
@@ -782,6 +897,10 @@ function FxQuickButton({ isDark }: { isDark: boolean }) {
         fontFamily: style.fontFamily || 'inherit',
         textAlign: style.textAlign || 'left',
         isLatex: true,
+        // Phase 5: persist text styling
+        textDecoration: style.textDecoration,
+        textHighlight: style.textHighlight,
+        textColor: style.textColor,
       } as Record<string, unknown>)
     } catch (err) {
       console.warn('[FxQuickButton] Failed:', err)
@@ -864,6 +983,10 @@ function InsertEquationButton({ isDark }: { isDark: boolean }) {
         fontFamily: style.fontFamily || 'inherit',
         textAlign: style.textAlign || 'left',
         isLatex: true,
+        // Phase 5: persist text styling
+        textDecoration: style.textDecoration,
+        textHighlight: style.textHighlight,
+        textColor: style.textColor,
       } as Record<string, unknown>)
     } catch (err) {
       console.warn('[InsertEquation] Failed:', err)

@@ -250,6 +250,37 @@ export function AssessmentWidget({ roomId }: { roomId: string }) {
             <button onClick={() => createQuickQuiz('tf')} style={btnStyle('#fbbf24', 'rgba(245,158,11,0.12)', 'rgba(245,158,11,0.25)')}>+ T/F</button>
             <button onClick={() => { setMode('create'); setNewTitle(''); setQuestions([]); setCurrentQIdx(0) }} style={btnStyle('#38bdf8', 'rgba(56,189,248,0.12)', 'rgba(56,189,248,0.25)')}>+ Custom</button>
           </div>
+          {/* Phase 5: Add a fresh quiz widget to the canvas */}
+          <button
+            onClick={() => {
+              const addElement = useWhiteboardStore.getState().addElement
+              const camera = useWhiteboardStore.getState().camera
+              const currentPageIndex = useWhiteboardStore.getState().currentPageIndex
+              const isDarkNow = useWhiteboardStore.getState().isDark
+              const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+              const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+              const cx = (vw / 2 - camera.x) / camera.zoom
+              const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+              addElement({
+                id: 'wid_' + Math.random().toString(36).slice(2, 11),
+                type: 'widget' as const,
+                widgetKind: 'classroom-quiz',
+                config: { title: '', questions: [], results: [], mode: 'list', activeQuestionIdx: 0, currentAnswers: {}, studentName: '', qStartTime: Date.now() },
+                x: cx - 220, y: cy - 300,
+                width: 440, height: 600,
+                rotation: 0, opacity: 1,
+                strokeColor: isDarkNow ? '#334155' : '#e2e8f0',
+                fillColor: isDarkNow ? '#0f172a' : '#ffffff',
+                strokeWidth: 1, locked: false,
+                pageIndex: currentPageIndex,
+              } as never)
+            }}
+            style={btnStyle('#34d399', 'rgba(5,150,105,0.12)', 'rgba(5,150,105,0.3)')}
+            title="Place an interactive quiz widget on the canvas (supports MC, T/F, Short Answer, Matching, Ordering, Fill-in-the-blank, per-question timer, explanations)"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 9h6M9 13h6M9 17h4" /></svg>
+            + Add Quiz to Board
+          </button>
         </div>
 
         {/* Quiz list */}
