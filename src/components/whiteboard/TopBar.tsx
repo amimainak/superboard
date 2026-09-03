@@ -27,6 +27,34 @@ import {
 } from 'lucide-react'
 import './whiteboard.css'
 
+// ============================================================
+// Shared dropdown positioning helper — prevents menus from
+// extending below the viewport or under the right-side panel.
+// Returns { top, right, maxHeight } so the menu can scroll
+// internally if it's still too tall.
+// ============================================================
+function computeDropdownPos(btnRect: DOMRect): { top: number; right: number; maxHeight: number } {
+  const vpH = window.innerHeight
+  const vpW = window.innerWidth
+  const estimatedHeight = 400 // conservative estimate; actual content may be taller
+  const spaceBelow = vpH - btnRect.bottom - 12
+  const spaceAbove = btnRect.top - 12
+  let top: number
+  let maxHeight: number
+  if (spaceBelow >= estimatedHeight || spaceBelow >= spaceAbove) {
+    // Open downward
+    top = btnRect.bottom + 6
+    maxHeight = Math.max(160, spaceBelow - 6)
+  } else {
+    // Open upward
+    top = Math.max(8, btnRect.top - 6 - Math.min(spaceAbove, estimatedHeight))
+    maxHeight = Math.max(160, btnRect.top - 6 - 8)
+  }
+  let right = vpW - btnRect.right
+  if (right < 8) right = 8
+  return { top, right, maxHeight }
+}
+
 interface TopBarProps {
   isDark: boolean
   onUndo: () => void
@@ -130,20 +158,12 @@ export function TopBar({
   const [menuOpen, setMenuOpen] = React.useState(false)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
   const menuPanelRef = useRef<HTMLDivElement>(null)
-  const [menuPos, setMenuPos] = useState({ top: -9999, right: 0 })
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number; maxHeight?: number }>({ top: -9999, right: 0 })
 
   useEffect(() => {
     if (!menuOpen || !moreBtnRef.current) return
     const rect = moreBtnRef.current.getBoundingClientRect()
-    let top = rect.bottom + 6
-    let right = window.innerWidth - rect.right
-    // Clamp to viewport
-    if (top + 400 > window.innerHeight) {
-      top = rect.top - 6 - Math.min(400, window.innerHeight - 16)
-      if (top < 8) top = 8
-    }
-    if (right < 8) right = 8
-    setMenuPos({ top, right })
+    setMenuPos(computeDropdownPos(rect))
   }, [menuOpen])
 
   // Close menu on click outside (no full-viewport backdrop that blocks other UI)
@@ -302,7 +322,7 @@ export function TopBar({
             role="menu"
             aria-label="Actions menu"
             onMouseDown={(e) => e.stopPropagation()}
-            style={{ position: 'fixed', top: menuPos.top, right: menuPos.right }}
+            style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, maxHeight: menuPos.maxHeight ?? undefined, overflowY: menuPos.maxHeight ? 'auto' : undefined }}
           >
               {/* Page — most visible at top */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
@@ -486,7 +506,7 @@ function TemplatesMenu({
   const [open, setOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ top: -9999, right: 0 })
+  const [pos, setPos] = useState<{ top: number; right: number; maxHeight?: number }>({ top: -9999, right: 0 })
 
   useEffect(() => {
     if (!open) return
@@ -507,7 +527,7 @@ function TemplatesMenu({
   const handleToggle = useCallback(() => {
     if (!btnRef.current) return
     const r = btnRef.current.getBoundingClientRect()
-    setPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+    setPos(computeDropdownPos(r))
     setOpen((v) => !v)
   }, [])
 
@@ -542,6 +562,8 @@ function TemplatesMenu({
             top: pos.top,
             right: pos.right,
             minWidth: 240,
+            maxHeight: pos.maxHeight ?? undefined,
+            overflowY: pos.maxHeight ? 'auto' : undefined,
             zIndex: 9999,
             padding: '4px',
             borderRadius: 8,
@@ -599,7 +621,7 @@ function StickyNotesMenu({
   const [open, setOpen] = useState(false)
   const btnRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ top: -9999, right: 0 })
+  const [pos, setPos] = useState<{ top: number; right: number; maxHeight?: number }>({ top: -9999, right: 0 })
 
   useEffect(() => {
     if (!open) return
@@ -620,7 +642,7 @@ function StickyNotesMenu({
   const handleToggle = useCallback(() => {
     if (!btnRef.current) return
     const r = btnRef.current.getBoundingClientRect()
-    setPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+    setPos(computeDropdownPos(r))
     setOpen((v) => !v)
   }, [])
 
@@ -662,6 +684,8 @@ function StickyNotesMenu({
             top: pos.top,
             right: pos.right,
             minWidth: 240,
+            maxHeight: pos.maxHeight ?? undefined,
+            overflowY: pos.maxHeight ? 'auto' : undefined,
             zIndex: 9999,
             padding: '4px',
             borderRadius: 8,
