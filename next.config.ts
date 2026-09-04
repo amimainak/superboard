@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   // TypeScript strict checking is now ENABLED — all 251 errors have been fixed.
   // Do NOT re-enable ignoreBuildErrors.
   reactStrictMode: true,
-  output: "standalone",
   // Allow external image domains for branding logos — restrict to known patterns
   images: {
     remotePatterns: [
