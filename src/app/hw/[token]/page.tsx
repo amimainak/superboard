@@ -65,3 +65,4 @@ export default async function HomeworkPage({ params }: { params: Promise<{ token
 
   return <HomeworkStudent initialData={homeworkData} />
 }
+// Trigger redeploy for Prisma client regeneration
