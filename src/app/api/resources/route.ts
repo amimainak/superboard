@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     if (subject) where.subject = subject;
 
     const [resources, totalCount] = await Promise.all([
-      (db as any).resourceLibrary.findMany({
+      db.resourceLibrary.findMany({
         where,
         select: {
           id: true,
@@ -65,13 +65,13 @@ export async function GET(request: NextRequest) {
           downloadCount: true,
           createdAt: true,
           updatedAt: true,
-          uploadedByTutorId: true,
+          uploadedBy: true,
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      (db as any).resourceLibrary.count({ where }),
+      db.resourceLibrary.count({ where }),
     ]);
 
     const serialized = (resources as any[]).map((r) => ({
@@ -128,10 +128,10 @@ export async function POST(request: NextRequest) {
 
     const agencyId = user.parentAgencyId || auth.userId;
 
-    const resource = await (db as any).resourceLibrary.create({
+    const resource = await db.resourceLibrary.create({
       data: {
         agencyId,
-        uploadedByTutorId: auth.userId,
+        uploadedBy: auth.userId,
         name,
         description: description ?? null,
         category,
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
         downloadCount: true,
         createdAt: true,
         updatedAt: true,
-        uploadedByTutorId: true,
+        uploadedBy: true,
       },
     });
 

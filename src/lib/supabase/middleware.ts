@@ -53,7 +53,8 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
     )
     const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
-    const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/')
+    const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/') ||
+    (request.nextUrl.pathname.startsWith('/api/homework-assignments/') && request.nextUrl.pathname.split('/').length === 4 && request.method === 'PUT')
 
     if (!isPublicRoute && !isRoomRoute && !isHomeworkApi) {
       // API routes: return 401 JSON instead of redirecting to HTML login page
@@ -113,7 +114,8 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
   )
   const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
-  const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/')
+  const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/') ||
+    (request.nextUrl.pathname.startsWith('/api/homework-assignments/') && request.nextUrl.pathname.split('/').length === 4 && request.method === 'PUT')
 
   if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi) {
     // API routes: return 401 JSON instead of redirecting to HTML login page

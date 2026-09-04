@@ -3,12 +3,17 @@
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
   try {
+    // Rate limit: 20 requests per minute per IP (brute-force protection)
+    const { allowed, response } = await checkRateLimit(request, 'hw-by-token', { max: 20, windowMs: 60_000 })
+    if (!allowed) return response as unknown as NextResponse
+
     const { token } = await params
 
     const assignment = await db.homeworkAssignment.findUnique({

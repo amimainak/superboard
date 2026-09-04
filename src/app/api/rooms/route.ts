@@ -54,25 +54,26 @@ export async function POST(request: Request) {
       update: {},
     })
 
-    // Create room
-    const room = await db.room.create({
-      data: {
-        tutorId: user.id,
-        subject,
-        brandingLogo: brandingLogo || null,
-        brandingColor: brandingColor || null,
-        isActive: true,
-        startedAt: new Date(),
-      },
-    })
-
-    // Create first board page
-    await db.boardPage.create({
-      data: {
-        roomId: room.id,
-        pageIndex: 0,
-        snapshot: { elements: [], camera: { x: 0, y: 0, zoom: 1 } },
-      },
+    // Create room + first board page in a transaction
+    const room = await db.$transaction(async (tx) => {
+      const r = await tx.room.create({
+        data: {
+          tutorId: user.id,
+          subject,
+          brandingLogo: brandingLogo || null,
+          brandingColor: brandingColor || null,
+          isActive: true,
+          startedAt: new Date(),
+        },
+      })
+      await tx.boardPage.create({
+        data: {
+          roomId: r.id,
+          pageIndex: 0,
+          snapshot: { elements: [], camera: { x: 0, y: 0, zoom: 1 } } as unknown as object,
+        },
+      })
+      return r
     })
 
     return NextResponse.json(room, { status: 201 })

@@ -42,7 +42,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     const agencyId = user.parentAgencyId || auth.userId;
 
-    const resource = await (db as any).resourceLibrary.findFirst({
+    const resource = await db.resourceLibrary.findFirst({
       where: { id: resourceId, agencyId },
       select: {
         id: true,
@@ -56,7 +56,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         downloadCount: true,
         createdAt: true,
         updatedAt: true,
-        uploadedByTutorId: true,
+        uploadedBy: true,
       },
     });
 
@@ -104,7 +104,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const agencyId = user.parentAgencyId || auth.userId;
 
-    const existing = await (db as any).resourceLibrary.findFirst({
+    const existing = await db.resourceLibrary.findFirst({
       where: { id: resourceId, agencyId },
     });
 
@@ -121,7 +121,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (parsed.data.fileType !== undefined) updateData.fileType = parsed.data.fileType;
     if (parsed.data.fileSize !== undefined) updateData.fileSize = parsed.data.fileSize;
 
-    const updated = await (db as any).resourceLibrary.update({
+    const updated = await db.resourceLibrary.update({
       where: { id: resourceId },
       data: updateData,
       select: {
@@ -136,7 +136,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         downloadCount: true,
         createdAt: true,
         updatedAt: true,
-        uploadedByTutorId: true,
+        uploadedBy: true,
       },
     });
 
@@ -170,7 +170,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
 
     const agencyId = user.parentAgencyId || auth.userId;
 
-    const existing = await (db as any).resourceLibrary.findFirst({
+    const existing = await db.resourceLibrary.findFirst({
       where: { id: resourceId, agencyId },
     });
 
@@ -178,7 +178,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
     }
 
-    await (db as any).resourceLibrary.delete({ where: { id: resourceId } });
+    await db.resourceLibrary.delete({ where: { id: resourceId } });
 
     return NextResponse.json({ success: true, message: 'Resource deleted' });
   } catch (error) {

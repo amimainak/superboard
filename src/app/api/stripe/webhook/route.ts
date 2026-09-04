@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         await db.user.update({
           where: { id: userId },
           data: { tier, stripeCustomerId: customerId, updatedAt: new Date() },
-        }).catch(e => console.error(`[Webhook] Failed to update user ${userId}:`, e))
+        })
         break
       }
       case 'customer.subscription.deleted': {
@@ -45,7 +45,7 @@ export async function POST(request: Request) {
         await db.user.updateMany({
           where: { stripeCustomerId: customerId },
           data: { tier: 'FREE', updatedAt: new Date() },
-        }).catch(e => console.error(`[Webhook] Failed to revert tier:`, e))
+        })
         break
       }
       case 'invoice.payment_failed': {

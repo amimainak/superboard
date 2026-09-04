@@ -61,6 +61,8 @@ model User {
   creditPacks        CreditPack[]
   homeworkAssigned   Homework[]           @relation("HomeworkTutor")
   homeworkAssignments HomeworkAssignment[] @relation("HwAssignmentTutor")
+  resourceAgencies     ResourceLibrary[] @relation("ResourceAgency")
+  resourceUploads      ResourceLibrary[] @relation("ResourceUploader")
   lessonNotes        LessonNote[]
   invoicesCreated    Invoice[]            @relation("InvoiceCreator")
   subscriptions      Subscription[]
@@ -526,4 +528,78 @@ model HomeworkAssignment {
   @@index([studentId])
   @@index([status])
   @@index([assignmentToken])
+}
+
+// ── Resource Library (agency-scoped resources) ──
+
+model ResourceLibrary {
+  id            String   @id @default(uuid())
+  agencyId      String
+  uploadedBy    String
+  name          String
+  description   String?  @db.Text
+  category      String   @default("general")
+  subject       String   @default("GENERAL")
+  fileUrl       String
+  fileType      String   @default("file")
+  fileSize      Int      @default(0)
+  downloadCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  agency     User      @relation("ResourceAgency", fields: [agencyId], references: [id], onDelete: Cascade)
+  uploader   User      @relation("ResourceUploader", fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  @@index([agencyId])
+  @@index([subject])
+  @@index([category])
+}
+
+// ── Language exercise data (lang routes) ──
+
+model LanguageExercise {
+  id            String   @id @default(uuid()) @map("id")
+  widgetKind    String   @map("widget_kind")
+  difficulty    String   @default("beginner") @map("difficulty")
+  band          String   @default("K-5") @map("band")
+  discriminator String?  @map("discriminator")
+  question      String   @db.Text @map("question")
+  options       Json?    @map("options")
+  answer        String?  @map("answer")
+  explanation   String?  @db.Text @map("explanation")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([widgetKind])
+  @@index([difficulty])
+  @@index([band])
+  @@map("language_exercises")
+}
+
+model StudentMastery {
+  id           String   @id @default(uuid()) @map("id")
+  userId       String   @map("user_id")
+  roomId       String?  @map("room_id")
+  widgetKind   String   @map("widget_kind")
+  questionId   String?  @map("question_id")
+  correct      Boolean  @map("correct")
+  answeredAt   DateTime @default(now()) @map("answered_at")
+
+  @@index([userId])
+  @@index([roomId])
+  @@index([widgetKind])
+  @@map("student_mastery")
+}
+
+model VocabCard {
+  id           String   @id @default(uuid()) @map("id")
+  pos          String   @default("noun") @map("pos")
+  level        String   @default("K-5") @map("level")
+  word         String   @map("word")
+  definition   String   @db.Text @map("definition")
+  example      String?  @db.Text @map("example")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([pos])
+  @@index([level])
+  @@map("vocab_cards")
 }

@@ -37,6 +37,11 @@ export async function PATCH(
     const parsed = updateRoomSchema.safeParse(body)
     if (!parsed.success) return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 })
 
+    // Ownership check — prevent IDOR
+    const existing = await db.room.findUnique({ where: { id: roomId }, select: { tutorId: true } })
+    if (!existing) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (existing.tutorId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
     const updates: Record<string, unknown> = { ...parsed.data }
     if (updates.isActive === false && !updates.endedAt) {
       updates.endedAt = new Date()
@@ -62,6 +67,11 @@ export async function DELETE(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // Ownership check — prevent IDOR
+    const existing = await db.room.findUnique({ where: { id: roomId }, select: { tutorId: true } })
+    if (!existing) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (existing.tutorId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     await db.room.update({
       where: { id: roomId },

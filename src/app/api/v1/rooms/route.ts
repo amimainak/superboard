@@ -63,24 +63,26 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'brandingColor must be a hex color like #ff0000' }, { status: 400 })
     }
 
-    const room = await db.room.create({
-      data: {
-        tutorId: auth.userId,
-        subject,
-        brandingLogo: brandingLogo || null,
-        brandingColor: brandingColor || null,
-        durationMinutes: durationMinutes ?? 60,
-        isActive: true,
-        startedAt: new Date(),
-      },
-    })
-
-    await db.boardPage.create({
-      data: {
-        roomId: room.id,
-        pageIndex: 0,
-        snapshot: { elements: [], camera: { x: 0, y: 0, zoom: 1 } },
-      },
+    const room = await db.$transaction(async (tx) => {
+      const r = await tx.room.create({
+        data: {
+          tutorId: auth.userId,
+          subject,
+          brandingLogo: brandingLogo || null,
+          brandingColor: brandingColor || null,
+          durationMinutes: durationMinutes ?? 60,
+          isActive: true,
+          startedAt: new Date(),
+        },
+      })
+      await tx.boardPage.create({
+        data: {
+          roomId: r.id,
+          pageIndex: 0,
+          snapshot: { elements: [], camera: { x: 0, y: 0, zoom: 1 } } as unknown as object,
+        },
+      })
+      return r
     })
 
     return NextResponse.json({ room }, { status: 201 })

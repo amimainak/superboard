@@ -72,6 +72,32 @@ export async function PUT(
       return NextResponse.json({ saved: true, status: updated.status })
     }
 
+    // --- Student submit (token-based, no auth required) ---
+    if (body.action === 'submit' && body.token) {
+      const assignment = await db.homeworkAssignment.findUnique({ where: { id } })
+      if (!assignment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      if (assignment.assignmentToken !== body.token) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
+      }
+      // Can only submit from in_progress or returned
+      if (assignment.status !== 'in_progress' && assignment.status !== 'returned') {
+        return NextResponse.json({ error: 'Assignment is not in a submittable state' }, { status: 403 })
+      }
+      const now = new Date()
+      const late = assignment.dueAt ? now > assignment.dueAt : false
+      const updated = await db.homeworkAssignment.update({
+        where: { id },
+        data: {
+          status: 'submitted',
+          submittedAt: now,
+          late,
+          studentSnapshot: body.studentSnapshot || assignment.studentSnapshot,
+          updatedAt: now,
+        },
+      })
+      return NextResponse.json({ success: true, submittedAt: updated.submittedAt, late: updated.late })
+    }
+
     // --- Tutor actions (auth required) ---
     if (body.action) {
       const auth = await requireAuth(request)
@@ -83,25 +109,6 @@ export async function PUT(
       if (assignment.tutorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
       switch (body.action) {
-        case 'submit': {
-          // Student submit (via token)
-          if (!body.token || assignment.assignmentToken !== body.token) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 403 })
-          }
-          const now = new Date()
-          const late = assignment.dueAt ? now > assignment.dueAt : false
-          const updated = await db.homeworkAssignment.update({
-            where: { id },
-            data: {
-              status: 'submitted',
-              submittedAt: now,
-              late,
-              studentSnapshot: body.studentSnapshot || assignment.studentSnapshot,
-              updatedAt: now,
-            },
-          })
-          return NextResponse.json({ success: true, submittedAt: updated.submittedAt, late: updated.late })
-        }
         case 'review': {
           // Tutor marks as reviewed
           await db.homeworkAssignment.update({

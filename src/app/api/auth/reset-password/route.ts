@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 
-const PRODUCTION_URL = 'https://superboard-three.vercel.app/login'
+const PRODUCTION_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://superboard-three.vercel.app') + '/login'
 
 export async function POST(request: NextRequest) {
   try {

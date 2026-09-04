@@ -27,12 +27,19 @@ export async function GET(
 
     const { roomId } = await params
 
-    // Verify the room exists — participants can read chat
+    // Verify the room exists and user has access
     const room = await db.room.findUnique({
       where: { id: roomId },
-      select: { id: true },
+      select: { id: true, tutorId: true },
     })
     if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    // Ownership check: tutor or participant
+    if (room.tutorId !== auth.userId) {
+      const participant = await db.roomParticipant.findFirst({
+        where: { roomId, userId: auth.userId },
+      }).catch(() => null)
+      if (!participant) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const messages = await db.chatMessage.findMany({
       where: { roomId },
@@ -67,12 +74,18 @@ export async function POST(
 
     const { roomId } = await params
 
-    // Verify the room exists
+    // Verify the room exists and user has access
     const room = await db.room.findUnique({
       where: { id: roomId },
-      select: { id: true },
+      select: { id: true, tutorId: true },
     })
     if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (room.tutorId !== auth.userId) {
+      const participant = await db.roomParticipant.findFirst({
+        where: { roomId, userId: auth.userId },
+      }).catch(() => null)
+      if (!participant) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     const body = await request.json().catch(() => ({}))
     const { content, senderLabel, fileUrl, fileName } = body as {
