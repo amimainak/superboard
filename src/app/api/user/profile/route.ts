@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { parseBody, updateProfileSchema } from '@/lib/validations'
 
 export async function GET() {
   try {
@@ -8,27 +8,21 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile } = await (supabase as any)
-      .from('User')
-      .select('*')
-      .eq('id', user.id)
-      .single()
+    const profile = await db.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true, email: true, name: true, tier: true, isAdmin: true,
+        brandingLogoUrl: true, brandingColor: true, agencyName: true,
+        parentAgencyId: true, installedWidgets: true,
+      },
+    })
 
     if (!profile) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: newProfile, error } = await (supabase as any)
-        .from('User')
-        .insert({
-          id: user.id,
-          email: (user.email ?? ''),
-          name: user.user_metadata?.name || (user.email ?? '').split('@')[0],
-        })
-        .select()
-        .single()
-
-      if (error) throw error
-      return NextResponse.json(newProfile)
+      // Auto-create profile if missing
+      const created = await db.user.create({
+        data: { id: user.id, email: user.email ?? '', tier: 'FREE' },
+      })
+      return NextResponse.json(created)
     }
 
     return NextResponse.json(profile)
@@ -45,30 +39,18 @@ export async function PATCH(request: Request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { data: parsed, error: parseError } = parseBody(updateProfileSchema, body)
-    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
-
-    // A-03: Only extract explicitly-safe fields.
-    // NEVER spread parsed directly — it could include tier, email, id if schema changes.
-    const { name, avatarUrl, bio, timezone, brandingColor, brandingLogoUrl } = parsed
+    // Whitelist allowed fields
+    const allowedFields = ['name', 'brandingLogoUrl', 'brandingColor', 'agencyName']
     const updates: Record<string, unknown> = {}
-    if (name !== undefined) updates.name = name
-    if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl
-    if (bio !== undefined) updates.bio = bio
-    if (timezone !== undefined) updates.timezone = timezone
-    if (brandingColor !== undefined) updates.brandingColor = brandingColor
-    if (brandingLogoUrl !== undefined) updates.brandingLogoUrl = brandingLogoUrl
+    for (const key of allowedFields) {
+      if (body[key] !== undefined) updates[key] = body[key]
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('User')
-      .update(updates)
-      .eq('id', user.id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return NextResponse.json(data)
+    const updated = await db.user.update({
+      where: { id: user.id },
+      data: updates,
+    })
+    return NextResponse.json(updated)
   } catch (err: unknown) {
     console.error('[PATCH /api/user/profile]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

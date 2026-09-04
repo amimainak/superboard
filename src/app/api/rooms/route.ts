@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { parseBody, createRoomSchema } from '@/lib/validations'
+import { createRoomSchema } from '@/lib/validations'
 import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: Request) {
@@ -13,20 +14,17 @@ export async function GET(request: Request) {
     const status = searchParams.get('status')
     const subject = searchParams.get('subject')
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = supabase as any
-    let query = sb
-      .from('Room')
-      .select('*, pages:BoardPage(count)')
-      .eq('tutorId', user.id)
-      .order('createdAt', { ascending: false })
+    const where: Record<string, unknown> = { tutorId: user.id }
+    if (status) where.isActive = status === 'active'
+    if (subject) where.subject = subject
 
-    if (status) query = query.eq('isActive', status === 'active')
-    if (subject) query = query.eq('subject', subject)
+    const rooms = await db.room.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: { _count: { select: { pages: true } } },
+    })
 
-    const { data, error } = await query
-    if (error) throw error
-    return NextResponse.json(data)
+    return NextResponse.json(rooms)
   } catch (err: unknown) {
     console.error('[GET /api/rooms]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -44,43 +42,40 @@ export async function POST(request: Request) {
     if (!allowed) return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
 
     const body = await request.json()
-    const { data: parsed, error: parseError } = parseBody(createRoomSchema, body)
-    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+    const parsed = createRoomSchema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 })
 
-    const { subject, brandingLogo, brandingColor } = parsed
+    const { subject, brandingLogo, brandingColor } = parsed.data
 
     // Ensure User record exists (auto-create on first room creation)
-    // Only insert if missing — never overwrite existing tier/isAdmin
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = supabase as any
-    await sb.from('User').upsert(
-      { id: user.id, email: user.email ?? '' },
-      { onConflict: 'id', defaultToNull: false, ignoreDuplicates: true }
-    )
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('Room')
-      .insert({
-        tutorId: user.id,
-        subject,
-        brandingLogo,
-        brandingColor,
-        isActive: true,
-        startedAt: new Date().toISOString(),
-      })
-      .select()
-      .single()
-
-    if (error) throw error
-
-    await (supabase as any).from('BoardPage').insert({
-      roomId: data.id,
-      pageIndex: 0,
-      snapshot: { elements: [], camera: { x: 0, y: 0, zoom: 1 } },
+    await db.user.upsert({
+      where: { id: user.id },
+      create: { id: user.id, email: user.email ?? '', tier: 'FREE' },
+      update: {},
     })
 
-    return NextResponse.json(data, { status: 201 })
+    // Create room
+    const room = await db.room.create({
+      data: {
+        tutorId: user.id,
+        subject,
+        brandingLogo: brandingLogo || null,
+        brandingColor: brandingColor || null,
+        isActive: true,
+        startedAt: new Date(),
+      },
+    })
+
+    // Create first board page
+    await db.boardPage.create({
+      data: {
+        roomId: room.id,
+        pageIndex: 0,
+        snapshot: { elements: [], camera: { x: 0, y: 0, zoom: 1 } },
+      },
+    })
+
+    return NextResponse.json(room, { status: 201 })
   } catch (err: unknown) {
     console.error('[POST /api/rooms]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

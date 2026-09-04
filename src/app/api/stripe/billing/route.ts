@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAuthenticatedUser } from '@/lib/auth-guard'
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { stripe } from '@/lib/stripe'
 
 export async function GET() {
@@ -8,17 +8,12 @@ export async function GET() {
     const { user, response } = await getAuthenticatedUser()
     if (response) return response
 
-    const supabase = await createClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: profile } = await (supabase as any)
-      .from('User')
-      .select('tier, stripeCustomerId')
-      .eq('id', user!.id)
-      .single()
+    const profile = await db.user.findUnique({
+      where: { id: user!.id },
+      select: { tier: true, stripeCustomerId: true },
+    })
 
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
+    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
     let subscriptionStatus: string | null = null
     let currentPeriodEnd: string | null = null
@@ -30,23 +25,18 @@ export async function GET() {
           status: 'all',
           limit: 1,
         })
-
         if (subscriptions.data.length > 0) {
           const sub = subscriptions.data[0]
-          subscriptionStatus = sub.status // 'active' | 'canceled' | 'past_due' | ...
+          subscriptionStatus = sub.status
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const cpe = (sub as any).current_period_end as number | undefined
-          currentPeriodEnd = cpe
-            ? new Date(cpe * 1000).toISOString()
-            : null
+          currentPeriodEnd = cpe ? new Date(cpe * 1000).toISOString() : null
         }
       } catch (err) {
-        // Stripe may not be configured (test mode); return tier only
         console.warn('[GET /api/stripe/billing] Could not fetch subscription:', err)
       }
     }
 
-    // Mask the customer ID: show first 4 and last 4 chars only
     const rawId = profile.stripeCustomerId || ''
     const maskedCustomerId = rawId.length > 8
       ? `${rawId.slice(0, 4)}${'•'.repeat(rawId.length - 8)}${rawId.slice(-4)}`

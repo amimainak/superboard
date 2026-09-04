@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
+
+const ALLOWED_WIDGETS = ['chat', 'participants', 'video', 'recording', 'notes', 'ai', 'math', 'physics', 'chemistry', 'biology', 'language', 'statistics', 'earthscience', 'arts', 'classroom']
 
 export async function GET() {
   try {
@@ -7,14 +10,20 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: profile } = await (supabase as any)
-      .from('User')
-      .select('installedWidgets')
-      .eq('id', user.id)
-      .single()
+    const u = await db.user.findUnique({
+      where: { id: user.id },
+      select: { installedWidgets: true },
+    })
 
-    const installed = profile?.installedWidgets || []
-    return NextResponse.json({ installedTools: installed })
+    let widgets: string[] = []
+    if (u?.installedWidgets && typeof u.installedWidgets === 'object') {
+      const installed = u.installedWidgets as Record<string, unknown>
+      if (Array.isArray(installed.widgets)) {
+        widgets = installed.widgets.filter((w: unknown) => typeof w === 'string' && ALLOWED_WIDGETS.includes(w as string)) as string[]
+      }
+    }
+
+    return NextResponse.json({ widgets })
   } catch (err: unknown) {
     console.error('[GET /api/user/widgets]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -28,27 +37,19 @@ export async function PUT(request: Request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const installedTools: string[] = body.installedTools || []
+    if (!Array.isArray(body.widgets)) {
+      return NextResponse.json({ error: 'widgets must be an array' }, { status: 400 })
+    }
 
-    // Validate: only allow known marketplace tool IDs
-    const ALLOWED_IDS = [
-      'lang-root-morphology',
-      'lang-active-passive',
-      'lang-reading-strategies',
-      'lang-grammar-diagnostic',
-      'lang-spelling-patterns',
-    ]
-    const validTools = installedTools.filter((id: string) => ALLOWED_IDS.includes(id))
+    // Validate widget IDs
+    const widgets = body.widgets.filter((w: string) => typeof w === 'string' && ALLOWED_WIDGETS.includes(w))
 
-    const { data, error } = await (supabase as any)
-      .from('User')
-      .update({ installedWidgets: validTools })
-      .eq('id', user.id)
-      .select('installedWidgets')
-      .single()
+    await db.user.update({
+      where: { id: user.id },
+      data: { installedWidgets: { widgets } },
+    })
 
-    if (error) throw error
-    return NextResponse.json({ installedTools: data?.installedWidgets || validTools })
+    return NextResponse.json({ widgets })
   } catch (err: unknown) {
     console.error('[PUT /api/user/widgets]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

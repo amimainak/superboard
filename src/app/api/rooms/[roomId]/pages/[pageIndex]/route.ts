@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { parseBody, upsertPageSchema } from '@/lib/validations'
+import { upsertPageSchema } from '@/lib/validations'
 import { getAuthenticatedUser } from '@/lib/auth-guard'
 
 export async function GET(
@@ -14,24 +14,15 @@ export async function GET(
     const { roomId, pageIndex } = await params
     const pageIndexNum = parseInt(pageIndex)
     if (isNaN(pageIndexNum) || pageIndexNum < 0) return NextResponse.json({ error: 'Invalid page index' }, { status: 400 })
-    const supabase = await createClient()
 
-    // Verify room ownership
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: room } = await (supabase as any).from('Room').select('tutorId').eq('id', roomId).single()
+    const room = await db.room.findUnique({ where: { id: roomId }, select: { tutorId: true } })
     if (!room || room.tutorId !== user?.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('BoardPage')
-      .select('*')
-      .eq('roomId', roomId)
-      .eq('pageIndex', pageIndexNum)
-      .single()
-
-    if (error) throw error
-    if (!data) return NextResponse.json({ error: 'Page not found' }, { status: 404 })
-    return NextResponse.json(data)
+    const page = await db.boardPage.findUnique({
+      where: { roomId_pageIndex: { roomId, pageIndex: pageIndexNum } },
+    })
+    if (!page) return NextResponse.json({ error: 'Page not found' }, { status: 404 })
+    return NextResponse.json(page)
   } catch (err: unknown) {
     console.error('[GET /api/rooms/[roomId]/pages/[pageIndex]]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -49,29 +40,22 @@ export async function PUT(
     const { roomId, pageIndex } = await params
     const pageIndexNum = parseInt(pageIndex)
     if (isNaN(pageIndexNum) || pageIndexNum < 0) return NextResponse.json({ error: 'Invalid page index' }, { status: 400 })
-    const supabase = await createClient()
 
-    // Verify room ownership
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: room } = await (supabase as any).from('Room').select('tutorId').eq('id', roomId).single()
+    const room = await db.room.findUnique({ where: { id: roomId }, select: { tutorId: true } })
     if (!room || room.tutorId !== user?.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { data: parsed, error: parseError } = parseBody(upsertPageSchema, body)
-    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+    const parsed = upsertPageSchema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 })
 
-    const { snapshot } = parsed
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('BoardPage')
-      .upsert(
-        { roomId, pageIndex: pageIndexNum, snapshot },
-        { onConflict: 'roomId,pageIndex' }
-      )
-
-    if (error) throw error
-    return NextResponse.json(data)
+    const { snapshot } = parsed.data
+    const snapshotData = snapshot as unknown as object
+    const page = await db.boardPage.upsert({
+      where: { roomId_pageIndex: { roomId, pageIndex: pageIndexNum } },
+      create: { roomId, pageIndex: pageIndexNum, snapshot: snapshotData },
+      update: { snapshot: snapshotData },
+    })
+    return NextResponse.json(page)
   } catch (err: unknown) {
     console.error('[PUT /api/rooms/[roomId]/pages/[pageIndex]]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

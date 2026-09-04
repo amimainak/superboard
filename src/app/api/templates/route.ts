@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { parseBody, createTemplateSchema } from '@/lib/validations'
+import { createTemplateSchema } from '@/lib/validations'
 
 export async function GET(request: Request) {
   try {
@@ -8,24 +9,14 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { searchParams } = new URL(request.url)
-    const subject = searchParams.get('subject')
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let query: any = (supabase as any)
-      .from('Template')
-      .select('*')
-      .eq('tutorId', user.id)
-      .order('createdAt', { ascending: false })
-
-    if (subject) query = query.eq('subject', subject)
-
-    const { data, error } = await query
-    if (error) throw error
-    return NextResponse.json(data)
+    const templates = await db.template.findMany({
+      where: { tutorId: user.id },
+      orderBy: { createdAt: 'desc' },
+    })
+    return NextResponse.json(templates)
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[GET /api/templates]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -36,22 +27,20 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { data: parsed, error: parseError } = parseBody(createTemplateSchema, body)
-    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+    const parsed = createTemplateSchema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 })
 
-    const { name, subject, snapshot } = parsed
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('Template')
-      .insert({ tutorId: user.id, name, subject, snapshot })
-      .select()
-      .single()
-
-    if (error) throw error
-    return NextResponse.json(data, { status: 201 })
+    const template = await db.template.create({
+      data: {
+        tutorId: user.id,
+        name: parsed.data.name,
+        subject: parsed.data.subject || 'GENERAL',
+        snapshot: (parsed.data.snapshot || {}) as unknown as object,
+      },
+    })
+    return NextResponse.json(template, { status: 201 })
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('[POST /api/templates]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

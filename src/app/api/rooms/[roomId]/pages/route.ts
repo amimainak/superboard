@@ -1,6 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { parseBody, savePagesSchema } from '@/lib/validations'
+import { savePagesSchema } from '@/lib/validations'
 import { getAuthenticatedUser } from '@/lib/auth-guard'
 
 export async function GET(
@@ -12,21 +12,14 @@ export async function GET(
     if (response) return response
 
     const { roomId } = await params
-    const supabase = await createClient()
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: room } = await (supabase as any).from('Room').select('tutorId').eq('id', roomId).single()
+    const room = await db.room.findUnique({ where: { id: roomId }, select: { tutorId: true } })
     if (!room || room.tutorId !== user?.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('BoardPage')
-      .select('*')
-      .eq('roomId', roomId)
-      .order('pageIndex', { ascending: true })
-
-    if (error) throw error
-    return NextResponse.json(data)
+    const pages = await db.boardPage.findMany({
+      where: { roomId },
+      orderBy: { pageIndex: 'asc' },
+    })
+    return NextResponse.json(pages)
   } catch (err: unknown) {
     console.error('[GET /api/rooms/[roomId]/pages]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -42,27 +35,22 @@ export async function PUT(
     if (response) return response
 
     const { roomId } = await params
-    const supabase = await createClient()
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: room } = await (supabase as any).from('Room').select('tutorId').eq('id', roomId).single()
+    const room = await db.room.findUnique({ where: { id: roomId }, select: { tutorId: true } })
     if (!room || room.tutorId !== user?.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { data: parsed, error: parseError } = parseBody(savePagesSchema, body)
-    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+    const parsed = savePagesSchema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 })
 
-    const pages = parsed.pages
-
-    // Use upsert instead of delete+insert to prevent data loss on failure
+    const pages = parsed.data.pages
     if (pages && pages.length > 0) {
-      const rows = pages.map((p: { pageIndex: number; snapshot: any }) => ({
-        roomId,
-        pageIndex: p.pageIndex,
-        snapshot: p.snapshot,
-      }))
-      const { error } = await (supabase as any).from('BoardPage').upsert(rows, { onConflict: 'roomId,pageIndex' })
-      if (error) throw error
+      for (const p of pages) {
+        await db.boardPage.upsert({
+          where: { roomId_pageIndex: { roomId, pageIndex: p.pageIndex } },
+          create: { roomId, pageIndex: p.pageIndex, snapshot: p.snapshot as unknown as object },
+          update: { snapshot: p.snapshot as unknown as object },
+        })
+      }
     }
 
     return NextResponse.json({ success: true, count: pages?.length || 0 })

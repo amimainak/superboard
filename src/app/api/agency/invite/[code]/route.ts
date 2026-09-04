@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 
-// GET: Get invite details by code
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
@@ -11,58 +11,26 @@ export async function GET(
   if (authCheck instanceof NextResponse) return authCheck
   try {
     const { code } = await params
-    const supabase = await createClient()
+    const invite = await db.agencyInvite.findUnique({
+      where: { code },
+      select: { id: true, code: true, invitedEmail: true, status: true, expiresAt: true, createdAt: true },
+    })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = supabase as any
+    if (!invite) return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
+    if (new Date(invite.expiresAt) < new Date()) return NextResponse.json({ error: 'Invite expired' }, { status: 410 })
+    if (invite.status !== 'pending') return NextResponse.json({ error: `Invite already ${invite.status}` }, { status: 400 })
 
-    const { data: invite, error } = await sb
-      .from('AgencyInvite')
-      .select(`
-        id,
-        code,
-        invitedEmail,
-        status,
-        expiresAt,
-        createdAt
-      `)
-      .eq('code', code)
-      .single()
-
-    if (error || !invite) {
-      return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
-    }
-
-    // Check expiry
-    if (new Date(invite.expiresAt) < new Date()) {
-      return NextResponse.json({ error: 'Invite expired' }, { status: 410 })
-    }
-
-    // Check status
-    if (invite.status !== 'PENDING') {
-      return NextResponse.json({ error: `Invite already ${invite.status}` }, { status: 400 })
-    }
-
-    // SECURITY: Only the invited user (or an admin) can view invite details
     if (invite.invitedEmail && authCheck.email && authCheck.email.toLowerCase() !== invite.invitedEmail.toLowerCase()) {
       return NextResponse.json({ error: 'You do not have access to this invite' }, { status: 403 })
     }
 
-    return NextResponse.json({
-      id: invite.id,
-      code: invite.code,
-      invitedEmail: invite.invitedEmail,
-      status: invite.status,
-      expiresAt: invite.expiresAt,
-      createdAt: invite.createdAt,
-    })
+    return NextResponse.json(invite)
   } catch (err: unknown) {
     console.error('[GET /api/agency/invite/[code]]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// POST: Accept invite — insert into AgencyMember, update AgencyInvite status
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ code: string }> }
@@ -73,62 +41,29 @@ export async function POST(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = supabase as any
-
-    // Fetch the invite
-    const { data: invite, error: inviteError } = await sb
-      .from('AgencyInvite')
-      .select('*')
-      .eq('code', code)
-      .single()
-
-    if (inviteError || !invite) {
-      return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
-    }
-
-    // Check status
-    if (invite.status !== 'pending') {
-      return NextResponse.json({ error: `Invite already ${invite.status}` }, { status: 400 })
-    }
-
-    // Check expiry
-    if (new Date(invite.expiresAt) < new Date()) {
-      return NextResponse.json({ error: 'Invite expired' }, { status: 410 })
-    }
-
-    // CRITICAL: Verify the invite was sent to this user's email
+    const invite = await db.agencyInvite.findUnique({ where: { code } })
+    if (!invite) return NextResponse.json({ error: 'Invite not found' }, { status: 404 })
+    if (invite.status !== 'pending') return NextResponse.json({ error: `Invite already ${invite.status}` }, { status: 400 })
+    if (new Date(invite.expiresAt) < new Date()) return NextResponse.json({ error: 'Invite expired' }, { status: 410 })
     if (invite.invitedEmail && user.email && user.email.toLowerCase() !== invite.invitedEmail.toLowerCase()) {
       return NextResponse.json({ error: 'This invite was sent to a different email address' }, { status: 403 })
     }
 
     // Update user's parentAgencyId
-    await sb
-      .from('User')
-      .update({ parentAgencyId: invite.agencyId })
-      .eq('id', user.id)
+    await db.user.update({ where: { id: user.id }, data: { parentAgencyId: invite.agencyId } })
 
-    // Insert into AgencyMember
-    const { error: memberError } = await sb
-      .from('AgencyMember')
-      .insert({
-        agencyId: invite.agencyId,
-        tutorId: user.id,
-      })
-
-    if (memberError) {
-      // Possibly already a member
-      if (memberError.code === '23505') {
+    // Insert into AgencyMember (handle duplicate)
+    try {
+      await db.agencyMember.create({ data: { agencyId: invite.agencyId, tutorId: user.id } })
+    } catch (e) {
+      if (String(e).includes('Unique constraint')) {
         return NextResponse.json({ error: 'Already a member of this agency' }, { status: 409 })
       }
-      throw memberError
+      throw e
     }
 
     // Update invite status
-    await sb
-      .from('AgencyInvite')
-      .update({ status: 'accepted', recipientId: user.id })
-      .eq('id', invite.id)
+    await db.agencyInvite.update({ where: { id: invite.id }, data: { status: 'accepted', recipientId: user.id } })
 
     return NextResponse.json({ success: true, agencyId: invite.agencyId })
   } catch (err: unknown) {

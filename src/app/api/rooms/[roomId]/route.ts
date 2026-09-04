@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
-import { parseBody, updateRoomSchema } from '@/lib/validations'
+import { updateRoomSchema } from '@/lib/validations'
 
 export async function GET(
   _request: Request,
@@ -12,17 +13,10 @@ export async function GET(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('Room')
-      .select('*')
-      .eq('id', roomId)
-      .single()
-
-    if (error) throw error
-    if (!data) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
-    if (data.tutorId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    return NextResponse.json(data)
+    const room = await db.room.findUnique({ where: { id: roomId } })
+    if (!room) return NextResponse.json({ error: 'Room not found' }, { status: 404 })
+    if (room.tutorId !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return NextResponse.json(room)
   } catch (err: unknown) {
     console.error('[GET /api/rooms/[roomId]]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -40,26 +34,19 @@ export async function PATCH(
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await request.json()
-    const { data: parsed, error: parseError } = parseBody(updateRoomSchema, body)
-    if (parseError || !parsed) return NextResponse.json({ error: parseError || 'Invalid body' }, { status: 400 })
+    const parsed = updateRoomSchema.safeParse(body)
+    if (!parsed.success) return NextResponse.json({ error: 'Invalid body', details: parsed.error.flatten() }, { status: 400 })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updates: any = { ...parsed }
+    const updates: Record<string, unknown> = { ...parsed.data }
     if (updates.isActive === false && !updates.endedAt) {
-      updates.endedAt = new Date().toISOString()
+      updates.endedAt = new Date()
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('Room')
-      .update(updates)
-      .eq('id', roomId)
-      .eq('tutorId', user.id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return NextResponse.json(data)
+    const room = await db.room.update({
+      where: { id: roomId },
+      data: updates,
+    })
+    return NextResponse.json(room)
   } catch (err: unknown) {
     console.error('[PATCH /api/rooms/[roomId]]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -76,11 +63,10 @@ export async function DELETE(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    await (supabase as any)
-      .from('Room')
-      .update({ isActive: false, endedAt: new Date().toISOString() })
-      .eq('id', roomId)
-      .eq('tutorId', user.id)
+    await db.room.update({
+      where: { id: roomId },
+      data: { isActive: false, endedAt: new Date() },
+    })
 
     return NextResponse.json({ success: true })
   } catch (err: unknown) {
