@@ -48,13 +48,14 @@ export async function updateSession(request: NextRequest) {
   // Fail closed: if Supabase env vars are missing, redirect non-public routes to /login
   // instead of letting all requests through without auth.
   if (!supabaseUrl || !supabaseKey) {
-    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health']
+    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw']
     const isPublicRoute = publicRoutes.some(route =>
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
     )
     const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
+    const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/')
 
-    if (!isPublicRoute && !isRoomRoute) {
+    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi) {
       // API routes: return 401 JSON instead of redirecting to HTML login page
       if (request.nextUrl.pathname.startsWith('/api/')) {
         const response = NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
@@ -107,13 +108,14 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health']
+  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw']
   const isPublicRoute = publicRoutes.some(route =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
   )
   const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
+  const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/')
 
-  if (!user && !isPublicRoute && !isRoomRoute) {
+  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi) {
     // API routes: return 401 JSON instead of redirecting to HTML login page
     if (request.nextUrl.pathname.startsWith('/api/')) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -24,6 +24,7 @@ import {
   FunctionSquare,
   Timer,
   StickyNote,
+  ClipboardList,
 } from 'lucide-react'
 import './whiteboard.css'
 
@@ -94,6 +95,8 @@ interface TopBarProps {
   onInsertLatex?: () => void
   /** Phase 5: Insert a sticky note — when provided, shows a sticky-note button in the top bar */
   onInsertSticky?: (kind?: 'observe' | 'vocabulary' | 'question' | 'important') => void
+  /** Phase F-04: Assign current board as homework */
+  onAssignHomework?: () => void
   onTogglePresentation: () => void
   onSearch: () => void
   /** Templates — opens the rich SaveAsTemplateModal */
@@ -146,6 +149,7 @@ export function TopBar({
   onSetGridType,
   onInsertLatex,
   onInsertSticky,
+  onAssignHomework,
   onTogglePresentation,
   onSearch,
   onSaveAsTemplate,
@@ -270,6 +274,13 @@ export function TopBar({
       {/* Phase 5: Sticky notes dropdown */}
       {onInsertSticky && (
         <StickyNotesMenu isDark={isDark} onInsert={onInsertSticky} />
+      )}
+
+      {/* F-04: Assign as Homework */}
+      {onAssignHomework && (
+        <Ico title="Assign as Homework" isDark={isDark} onClick={onAssignHomework} ariaLabel="Assign as Homework">
+          <ClipboardList size={14} />
+        </Ico>
       )}
 
       {/* Templates dropdown — only render if at least one callback is wired */}

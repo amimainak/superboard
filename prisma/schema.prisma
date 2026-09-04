@@ -60,6 +60,7 @@ model User {
   students           Student[]            @relation("AgencyOwnerStudent")
   creditPacks        CreditPack[]
   homeworkAssigned   Homework[]           @relation("HomeworkTutor")
+  homeworkAssignments HomeworkAssignment[] @relation("HwAssignmentTutor")
   lessonNotes        LessonNote[]
   invoicesCreated    Invoice[]            @relation("InvoiceCreator")
   subscriptions      Subscription[]
@@ -282,6 +283,7 @@ model Student {
   updatedAt         DateTime  @updatedAt
 
   agency User @relation("AgencyOwnerStudent", fields: [agencyId], references: [id], onDelete: Cascade)
+  homeworkAssignments HomeworkAssignment[] @relation("HwAssignmentStudent")
 
   @@unique([agencyId, email])
   @@index([agencyId])
@@ -479,4 +481,49 @@ model QuestionItem {
 
   @@index([tutorId])
   @@index([subject])
+}
+
+// ── Homework Assignment (F-04 v1.3 — standalone board snapshot) ──
+
+model HomeworkAssignment {
+  id              String   @id @default(uuid())
+  tutorId         String
+  studentId       String?
+  sourceRoomId    String?
+
+  // Identity & access
+  assignmentToken String   @unique
+
+  // Content (three separate snapshots — never merged)
+  sourceSnapshot  Json     // the board as assigned (immutable)
+  studentSnapshot Json     // student's work (updated by autosave)
+  feedbackSnapshot Json?   // tutor's annotations (separate layer)
+
+  // Metadata
+  title           String
+  description     String?  @db.Text
+
+  // Status machine: assigned → in_progress → submitted → returned → reviewed
+  status          String   @default("assigned")
+  submittedAt     DateTime?
+  late            Boolean  @default(false)
+
+  // Two-date model
+  dueAt           DateTime?
+  submitUntil     DateTime  // dueAt + 7d, or createdAt + 30d
+  viewUntil       DateTime  // submitUntil + 90d
+
+  // Parent communication
+  parentNotifyOnReview Boolean @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tutor           User      @relation("HwAssignmentTutor", fields: [tutorId], references: [id], onDelete: Cascade)
+  student         Student?  @relation("HwAssignmentStudent", fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([tutorId])
+  @@index([studentId])
+  @@index([status])
+  @@index([assignmentToken])
 }

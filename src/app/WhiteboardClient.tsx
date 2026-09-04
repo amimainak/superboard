@@ -301,6 +301,41 @@ export default function WhiteboardClient() {
     } as unknown as WhiteboardElement)
   }, [addElement, camera, currentPageIndex])
 
+  // ---- F-04: Assign as Homework ----
+  const [homeworkModalOpen, setHomeworkModalOpen] = useState(false)
+  const [homeworkLink, setHomeworkLink] = useState<string | null>(null)
+  const [homeworkCreating, setHomeworkCreating] = useState(false)
+
+  const handleAssignHomework = useCallback(() => {
+    setHomeworkLink(null)
+    setHomeworkModalOpen(true)
+  }, [])
+
+  const handleCreateHomework = useCallback(async () => {
+    setHomeworkCreating(true)
+    try {
+      const snapshot = { elements, camera, pages: pages.map((p, i) => ({ ...p, pageIndex: i })) }
+      const res = await fetch('/api/homework-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceSnapshot: snapshot,
+          title: `Homework — ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+        }),
+      })
+      if (res.ok) {
+        const { assignment } = await res.json()
+        setHomeworkLink(`${window.location.origin}/hw/${assignment.assignmentToken}`)
+      } else {
+        alert('Failed to create homework assignment')
+      }
+    } catch {
+      alert('Failed to create homework assignment')
+    } finally {
+      setHomeworkCreating(false)
+    }
+  }, [elements, camera, pages])
+
   // ---- Keyboard Shortcuts (Phase 2E + Phase 5) ----
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -386,6 +421,7 @@ export default function WhiteboardClient() {
           onSetGridType={setGridType}
           onInsertLatex={handleInsertLatex}
           onInsertSticky={handleInsertSticky}
+          onAssignHomework={handleAssignHomework}
           onSaveAsTemplate={() => setSaveTemplateOpen(true)}
           onMyTemplates={() => setMyTemplatesOpen(true)}
           onCommunityTemplates={() => setCommunityTemplatesOpen(true)}
@@ -440,6 +476,59 @@ export default function WhiteboardClient() {
         open={communityTemplatesOpen}
         onClose={() => setCommunityTemplatesOpen(false)}
       />
+
+      {/* F-04: Assign as Homework modal */}
+      {homeworkModalOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 12, padding: 24, maxWidth: 440, width: '90%',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)', fontFamily: 'system-ui, sans-serif',
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Assign as Homework</h2>
+            {!homeworkLink ? (
+              <>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 16 }}>
+                  This will create a homework assignment from the current board. Your student will get a link to complete the work independently — no account needed.
+                </p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => setHomeworkModalOpen(false)}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Cancel
+                  </button>
+                  <button onClick={handleCreateHomework} disabled={homeworkCreating}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: homeworkCreating ? '#94a3b8' : '#3b82f6', color: '#fff', fontSize: 13, fontWeight: 600, cursor: homeworkCreating ? 'not-allowed' : 'pointer' }}>
+                    {homeworkCreating ? 'Creating...' : 'Create Assignment'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>Share this link with your student:</p>
+                <div style={{
+                  padding: '10px 12px', background: '#f1f5f9', borderRadius: 6,
+                  fontSize: 12, fontFamily: 'monospace', wordBreak: 'break-all', marginBottom: 16,
+                  border: '1px solid #e2e8f0',
+                }}>
+                  {homeworkLink}
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => { navigator.clipboard?.writeText(homeworkLink); }}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#3b82f6', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Copy Link
+                  </button>
+                  <button onClick={() => setHomeworkModalOpen(false)}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                    Done
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Search Overlay */}
       {searchOpen && <SearchOverlay key={searchKey} onClose={() => setSearchKey(0)} isDark={isDark} />}
