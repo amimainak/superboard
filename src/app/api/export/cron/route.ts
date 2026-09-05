@@ -30,13 +30,18 @@ const MAX_JOBS_PER_RUN = 3  // keep each cron invocation under the timeout
 const MAX_ZIP_SIZE_BYTES = 8 * 1024 * 1024  // 8MB cap — DB storage limit for base64
 
 export async function GET(request: NextRequest) {
-  // Auth: secret header
+  // Auth: secret header. Vercel Cron doesn't automatically inject one,
+  // so we check both the Bearer pattern and the x-vercel-cron header.
+  // The secret is stored in CRON_SECRET (or EXPORT_CRON_SECRET for
+  // backwards compat).
   const authHeader = request.headers.get('authorization')
-  const secret = process.env.EXPORT_CRON_SECRET
+  const secret = process.env.CRON_SECRET || process.env.EXPORT_CRON_SECRET
   if (!secret) {
-    return NextResponse.json({ error: 'EXPORT_CRON_SECRET not configured' }, { status: 500 })
+    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 })
   }
-  if (authHeader !== `Bearer ${secret}`) {
+  // Accept either "Bearer <secret>" or raw "<secret>"
+  const provided = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
+  if (provided !== secret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
