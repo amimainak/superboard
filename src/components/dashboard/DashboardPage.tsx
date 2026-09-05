@@ -87,10 +87,12 @@ import {
   ChevronDown,
   Receipt,
   ClipboardList,
+  Library,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BillingPanel } from './BillingPanel';
 import { SavedBoardsPanel } from './SavedBoardsPanel';
+import { BoardLibrary } from '@/components/library/BoardLibrary';
 import { TemplatesPanel } from './TemplatesPanel';
 import { AgencyAdminPanel } from './AgencyAdminPanel';
 import { MyRoomsPanel } from './MyRoomsPanel';
@@ -113,6 +115,7 @@ import { StudentProgressPanel } from './StudentProgressPanel';
 
 type DashboardView =
   | 'overview'
+  | 'library'
   | 'analytics'
   | 'lessons'
   | 'schedule'
@@ -145,6 +148,7 @@ interface NavGroup {
 function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
   const common: NavItem[] = [
     { id: 'overview', label: 'Overview', icon: Home, description: 'Dashboard overview' },
+    { id: 'library', label: 'Board Library', icon: Library, description: 'Search & manage saved boards' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Usage analytics & insights' },
     { id: 'lessons', label: 'My Lessons', icon: BookOpen, description: 'Active and past lessons' },
   ];
@@ -818,6 +822,12 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                   </Button>
                 </div>
                 <MyRoomsPanel userId={user.id} onCreateLesson={() => setShowNewLesson(true)} />
+              </div>
+            )}
+
+            {activeView === 'library' && (
+              <div className="animate-fade-in-up">
+                <BoardLibrary isDark={isDark} />
               </div>
             )}
 

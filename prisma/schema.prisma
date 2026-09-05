@@ -117,6 +117,13 @@ model Room {
   brandingColor   String?
   createdAt       DateTime  @default(now())
 
+  // Library fields (F-01 Board Library)
+  title           String?   // tutor-named board title
+  studentName     String?   // who this board is for
+  isArchived      Boolean   @default(false)
+  lastOpenedAt    DateTime?
+  tags            String[]  @default([])
+
   // Relations
   tutor        User              @relation(fields: [tutorId], references: [id], onDelete: Cascade)
   pages        BoardPage[]
@@ -124,9 +131,11 @@ model Room {
   participants  RoomParticipant[]
   recordings   Recording[]
   lessonNotes  LessonNote[]
+  boardVersions BoardVersion[]
 
   @@index([tutorId])
   @@index([isActive])
+  @@index([isArchived])
 }
 
 // ── Board Page ──
@@ -602,4 +611,19 @@ model VocabCard {
   @@index([pos])
   @@index([level])
   @@map("vocab_cards")
+}
+
+// ── Board Version History (F-01 — capped at 10 per board) ──
+
+model BoardVersion {
+  id         String   @id @default(uuid())
+  boardId    String   // = Room.id
+  snapshot   Json     // full board state at this point in time
+  versionNum Int      // 1, 2, 3... (10 max, oldest deleted when 11th is created)
+  createdAt  DateTime @default(now())
+
+  board      Room     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, versionNum])
+  @@index([boardId])
 }
