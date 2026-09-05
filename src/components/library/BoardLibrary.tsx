@@ -6,6 +6,8 @@
 // ============================================================
 
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTutorPreferences } from '@/hooks/useTutorPreferences'
+import { StartLessonDialog } from '@/components/dashboard/start-lesson/StartLessonDialog'
 
 interface Board {
   id: string
@@ -30,6 +32,7 @@ interface LibraryResponse {
 }
 
 export function BoardLibrary({ isDark }: { isDark: boolean }) {
+  const { prefs } = useTutorPreferences()
   const [data, setData] = useState<LibraryResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -38,6 +41,7 @@ export function BoardLibrary({ isDark }: { isDark: boolean }) {
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null)
   const [versions, setVersions] = useState<Array<{ id: string; versionNum: number; createdAt: string }>>([])
   const [showVersions, setShowVersions] = useState(false)
+  const [startLessonBoard, setStartLessonBoard] = useState<Board | null>(null)
 
   const s = {
     bg: isDark ? '#0f172a' : '#ffffff',
@@ -272,7 +276,30 @@ export function BoardLibrary({ isDark }: { isDark: boolean }) {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'center' }}>
+                {/* Start Lesson — gated by preference, primary action */}
+                {prefs.startLessonFromLibrary && !board.isArchived && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setStartLessonBoard(board) }}
+                    title="Start a new lesson from this board"
+                    style={{
+                      ...btnStyle(s),
+                      background: 'linear-gradient(135deg, #059669, #0891b2)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '4px 10px',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                    Start
+                  </button>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedBoard(board); setShowVersions(true); fetchVersions(board.id) }}
                   title="Version history"
@@ -346,6 +373,17 @@ export function BoardLibrary({ isDark }: { isDark: boolean }) {
             )}
           </div>
         </div>
+      )}
+
+      {/* Start Lesson Dialog (library mode) */}
+      {startLessonBoard && (
+        <StartLessonDialog
+          mode="library"
+          open={!!startLessonBoard}
+          onOpenChange={(open) => { if (!open) setStartLessonBoard(null) }}
+          boardId={startLessonBoard.id}
+          boardTitle={startLessonBoard.title || 'Untitled board'}
+        />
       )}
     </div>
   )

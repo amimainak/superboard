@@ -44,6 +44,11 @@ model User {
   agencyName            String?
   // Widget system
   installedWidgets      Json?
+  // Tutor preferences (feature toggles, defaults, etc.)
+  // Shape: { startLessonFromProfile?: bool, startLessonFromLibrary?: bool, ... }
+  // Missing key = feature default (true for feature flags). Adding new
+  // preferences requires no migration — just read with a default here.
+  preferences           Json?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 

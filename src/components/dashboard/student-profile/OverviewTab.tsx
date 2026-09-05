@@ -4,12 +4,14 @@
 
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { BookOpen, Clock, ClipboardList, Activity, Calendar } from 'lucide-react'
+import { BookOpen, Clock, ClipboardList, Activity, Calendar, Play, Sparkles } from 'lucide-react'
 import { subjectMeta } from '@/lib/subject-meta'
+import { useTutorPreferences } from '@/hooks/useTutorPreferences'
+import { StartLessonDialog } from '../start-lesson/StartLessonDialog'
 import type { StudentProfile, StudentStats, TimelineEvent } from '../StudentProfilePanel'
 
 interface Props {
@@ -60,6 +62,9 @@ function eventDescription(e: TimelineEvent): string {
 import { Check, RefreshCw, StickyNote } from 'lucide-react'
 
 export function OverviewTab({ student, stats, timeline }: Props) {
+  const { prefs } = useTutorPreferences()
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   const homeworkCompletionRate = stats.homework.total > 0
     ? Math.round(((stats.homework.submitted + stats.homework.reviewed) / stats.homework.total) * 100)
     : 0
@@ -68,6 +73,38 @@ export function OverviewTab({ student, stats, timeline }: Props) {
 
   return (
     <div className="space-y-5">
+      {/* Start Next Lesson — the most important button in the product.
+          Gated by the startLessonFromProfile preference. */}
+      {prefs.startLessonFromProfile && (
+        <button
+          onClick={() => setDialogOpen(true)}
+          className="w-full group relative overflow-hidden rounded-2xl p-5 text-left transition-all hover:shadow-lg hover:shadow-emerald-500/10 border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50"
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform flex-shrink-0">
+              <Play className="w-5 h-5 fill-current" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                Start Next Lesson
+                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              </h3>
+              <p className="text-sm text-gray-600 mt-0.5">
+                Pick a saved board and begin today&apos;s lesson with {student.name || 'this student'} — pre-filled with your choice.
+              </p>
+              <p className="text-[11px] text-gray-500 mt-1.5">
+                A copy is made — your original board stays untouched.
+              </p>
+            </div>
+            <div className="text-emerald-600 group-hover:translate-x-1 transition-transform flex-shrink-0 mt-1">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </button>
+      )}
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -172,6 +209,15 @@ export function OverviewTab({ student, stats, timeline }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* Start Lesson Dialog */}
+      <StartLessonDialog
+        mode="profile"
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        studentId={student.id}
+        studentName={student.name || 'this student'}
+      />
     </div>
   )
 }

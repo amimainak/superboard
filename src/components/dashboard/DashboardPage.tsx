@@ -90,6 +90,7 @@ import {
   Library,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { authFetch } from '@/lib/auth-fetch';
 import { BillingPanel } from './BillingPanel';
 import { SavedBoardsPanel } from './SavedBoardsPanel';
 import { BoardLibrary } from '@/components/library/BoardLibrary';
@@ -211,6 +212,39 @@ function SettingsPanel({
   toggleDark: () => void;
   onClose: () => void;
 }) {
+  // ---- Tutor preferences (F-06) ----
+  const [prefs, setPrefs] = useState<{ startLessonFromProfile: boolean; startLessonFromLibrary: boolean }>({
+    startLessonFromProfile: true,
+    startLessonFromLibrary: true,
+  });
+  const [prefsLoading, setPrefsLoading] = useState(true);
+  const [prefsSaving, setPrefsSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    authFetch('/api/user/preferences')
+      .then((r) => r.json())
+      .then((d) => { if (d?.preferences) setPrefs(d.preferences); })
+      .catch(() => {})
+      .finally(() => setPrefsLoading(false));
+  }, []);
+
+  const togglePref = async (key: 'startLessonFromProfile' | 'startLessonFromLibrary', value: boolean) => {
+    setPrefs((p) => ({ ...p, [key]: value }));
+    setPrefsSaving(key);
+    try {
+      await authFetch('/api/user/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch {
+      // Revert on failure
+      setPrefs((p) => ({ ...p, [key]: !value }));
+    } finally {
+      setPrefsSaving(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Account Information */}
@@ -272,6 +306,63 @@ function SettingsPanel({
               <Button variant="outline" className="w-full rounded-xl" onClick={() => { window.location.href = '/?admin=1'; }}>
                 <Shield className="w-4 h-4 mr-2" /> Open Admin Panel
               </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Teaching Preferences (F-06) */}
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-emerald-500" />
+            Teaching Preferences
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {prefsLoading ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Loading preferences...</p>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0 mr-3">
+                  <p className="text-sm font-medium">&ldquo;Start Next Lesson&rdquo; on student profiles</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Show the prominent one-click button on each student&apos;s profile that opens today&apos;s lesson pre-filled with a saved board.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => togglePref('startLessonFromProfile', !prefs.startLessonFromProfile)}
+                  disabled={prefsSaving === 'startLessonFromProfile'}
+                  className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
+                    prefs.startLessonFromProfile ? 'bg-emerald-500' : 'bg-gray-300'
+                  } ${prefsSaving === 'startLessonFromProfile' ? 'opacity-50' : ''}`}
+                  aria-label="Toggle Start Next Lesson on student profiles"
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${prefs.startLessonFromProfile ? 'translate-x-6' : ''}`} />
+                </button>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0 mr-3">
+                  <p className="text-sm font-medium">&ldquo;Start&rdquo; button on board library rows</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Show a quick-start button next to each saved board so you can launch a new lesson from it without leaving the library.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => togglePref('startLessonFromLibrary', !prefs.startLessonFromLibrary)}
+                  disabled={prefsSaving === 'startLessonFromLibrary'}
+                  className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
+                    prefs.startLessonFromLibrary ? 'bg-emerald-500' : 'bg-gray-300'
+                  } ${prefsSaving === 'startLessonFromLibrary' ? 'opacity-50' : ''}`}
+                  aria-label="Toggle Start button on board library"
+                >
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${prefs.startLessonFromLibrary ? 'translate-x-6' : ''}`} />
+                </button>
+              </div>
             </>
           )}
         </CardContent>
