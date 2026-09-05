@@ -63,13 +63,15 @@ export async function DELETE(
       );
     }
 
-    // Remove from agency: null out parentAgencyId and reset tier to FREE
-    await db.user.update({
-      where: { id: tutorId },
-      data: {
-        parentAgencyId: null,
-        tier: 'FREE',
-      },
+    // Remove from agency: null out parentAgencyId, reset tier, delete AgencyMember row
+    await db.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: tutorId },
+        data: { parentAgencyId: null, tier: 'FREE' },
+      });
+      await tx.agencyMember.deleteMany({
+        where: { tutorId, agencyId: auth.userId },
+      });
     });
 
     return NextResponse.json({

@@ -161,10 +161,11 @@ export function BreakoutRoomsWidget({ roomId }: { roomId: string }) {
       const sb = getSupabaseBrowserClient()
       const { data: { user } } = await sb.auth.getUser()
       const label = user ? 'Tutor' : 'Host'
-      await (sb as any).from('ChatMessage').insert({
-        roomId, senderLabel: label, content,
-        senderId: user?.id || null,
-      })
+      await fetch(`/api/rooms/${roomId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, senderLabel: label, senderId: user?.id || null }),
+      }).catch(err => console.error('Broadcast failed:', err))
     } catch (err) {
       console.error('Failed to send broadcast:', err)
     }

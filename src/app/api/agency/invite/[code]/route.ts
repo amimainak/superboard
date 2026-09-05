@@ -49,21 +49,19 @@ export async function POST(
       return NextResponse.json({ error: 'This invite was sent to a different email address' }, { status: 403 })
     }
 
-    // Update user's parentAgencyId
-    await db.user.update({ where: { id: user.id }, data: { parentAgencyId: invite.agencyId } })
-
-    // Insert into AgencyMember (handle duplicate)
+    // All three writes in a single transaction — atomic
     try {
-      await db.agencyMember.create({ data: { agencyId: invite.agencyId, tutorId: user.id } })
+      await db.$transaction(async (tx) => {
+        await tx.user.update({ where: { id: user.id }, data: { parentAgencyId: invite.agencyId } })
+        await tx.agencyMember.create({ data: { agencyId: invite.agencyId, tutorId: user.id } })
+        await tx.agencyInvite.update({ where: { id: invite.id }, data: { status: 'accepted', recipientId: user.id } })
+      })
     } catch (e) {
       if (String(e).includes('Unique constraint')) {
         return NextResponse.json({ error: 'Already a member of this agency' }, { status: 409 })
       }
       throw e
     }
-
-    // Update invite status
-    await db.agencyInvite.update({ where: { id: invite.id }, data: { status: 'accepted', recipientId: user.id } })
 
     return NextResponse.json({ success: true, agencyId: invite.agencyId })
   } catch (err: unknown) {

@@ -84,6 +84,10 @@ export async function PUT(
         return NextResponse.json({ error: 'Assignment is not in a submittable state' }, { status: 403 })
       }
       const now = new Date()
+      // Check hard deadline (submitUntil)
+      if (now > assignment.submitUntil) {
+        return NextResponse.json({ error: 'Submission window closed' }, { status: 403 })
+      }
       const late = assignment.dueAt ? now > assignment.dueAt : false
       const updated = await db.homeworkAssignment.update({
         where: { id },

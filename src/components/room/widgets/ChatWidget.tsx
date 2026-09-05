@@ -197,12 +197,11 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
     if (!input.trim() || !senderLabel || isMuted) return
     const content = input.trim()
     setInput('')
-    await sbAny(supabase).from('ChatMessage').insert({
-      roomId,
-      senderLabel,
-      content,
-      senderId: senderId,
-    })
+    await fetch(`/api/rooms/${roomId}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, senderLabel, senderId }),
+    }).catch(err => console.error('Chat send failed:', err))
   }
 
   // File upload handler
@@ -236,13 +235,11 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
         reader.readAsDataURL(file)
       })
 
-      await sbAny(supabase).from('ChatMessage').insert({
-        roomId,
-        senderLabel,
-        content: `📷 ${file.name}`,
-        fileUrl: dataUrl,
-        senderId: senderId,
-      })
+      await fetch(`/api/rooms/${roomId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: `📷 ${file.name}`, senderLabel, senderId, fileUrl: dataUrl, fileName: file.name }),
+      }).catch(err => console.error('File message failed:', err))
     } catch (err) {
       console.error('File upload failed:', err)
       alert('Failed to send image.')
@@ -255,10 +252,11 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   // Toggle pin on a message (tutor's own messages only)
   const handleTogglePin = async (msg: ChatMessage) => {
     const newPinned = !msg.isPinned
-    await sbAny(supabase)
-      .from('ChatMessage')
-      .update({ isPinned: newPinned })
-      .eq('id', msg.id)
+    await fetch(`/api/rooms/${roomId}/chat/${msg.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isPinned: newPinned }),
+    }).catch(err => console.error('Pin toggle failed:', err))
 
     setMessages((prev) =>
       prev.map((m) => (m.id === msg.id ? { ...m, isPinned: newPinned } : m))
@@ -268,7 +266,9 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
   // Delete own message
   const handleDeleteMessage = async (msg: ChatMessage) => {
     if (!confirm('Delete this message?')) return
-    await sbAny(supabase).from('ChatMessage').delete().eq('id', msg.id)
+    await fetch(`/api/rooms/${roomId}/chat/${msg.id}`, {
+      method: 'DELETE',
+    }).catch(err => console.error('Delete failed:', err))
     setMessages((prev) => prev.filter((m) => m.id !== msg.id))
   }
 

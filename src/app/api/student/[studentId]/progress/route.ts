@@ -41,8 +41,13 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     // Sub-tutor: can see students in their agency
     const agencyId = user.parentAgencyId || (isAgencyTier(user.tier as Tier) ? auth.userId : null);
 
+    // Security: non-agency users cannot access student progress
+    if (!agencyId) {
+      return NextResponse.json({ error: 'Forbidden — agency access required' }, { status: 403 });
+    }
+
     const student = await db.student.findFirst({
-      where: agencyId ? { id: studentId, agencyId } : { id: studentId },
+      where: { id: studentId, agencyId },
       select: {
         id: true, name: true, email: true,
         agencyId: true, isActive: true, createdAt: true,

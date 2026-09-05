@@ -82,12 +82,15 @@ export function WaitingRoom({
         ? user.email.split('@')[0]
         : 'Student'
 
-      await sbAny(supabase).from('ChatMessage').insert({
-        roomId,
-        senderLabel: `🔔 ${label}`,
-        content: '👋 Knock knock! The student is waiting for you.',
-        senderId: user?.id ?? null,
-      })
+      await fetch(`/api/rooms/${roomId}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: '👋 Knock knock! The student is waiting for you.',
+          senderLabel: `🔔 ${label}`,
+          senderId: user?.id ?? null,
+        }),
+      }).catch(err => console.error('Knock failed:', err))
 
       setKnockSent(true)
       setKnockCooldown(30) // 30s cooldown
