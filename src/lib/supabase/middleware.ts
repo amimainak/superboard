@@ -48,15 +48,17 @@ export async function updateSession(request: NextRequest) {
   // Fail closed: if Supabase env vars are missing, redirect non-public routes to /login
   // instead of letting all requests through without auth.
   if (!supabaseUrl || !supabaseKey) {
-    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw']
+    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join']
     const isPublicRoute = publicRoutes.some(route =>
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
     )
     const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
     const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/') ||
     (request.nextUrl.pathname.startsWith('/api/homework-assignments/') && request.nextUrl.pathname.split('/').length === 4 && request.method === 'PUT')
+    // F-05: public join-by-token endpoint — token is the auth, no session required
+    const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
 
-    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi) {
+    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi) {
       // API routes: return 401 JSON instead of redirecting to HTML login page
       if (request.nextUrl.pathname.startsWith('/api/')) {
         const response = NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
@@ -109,15 +111,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw']
+  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join']
   const isPublicRoute = publicRoutes.some(route =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
   )
   const isRoomRoute = request.nextUrl.pathname.startsWith('/room/')
   const isHomeworkApi = request.nextUrl.pathname.startsWith('/api/homework-assignments/by-token/') ||
     (request.nextUrl.pathname.startsWith('/api/homework-assignments/') && request.nextUrl.pathname.split('/').length === 4 && request.method === 'PUT')
+  // F-05: public join-by-token endpoint — token is the auth, no session required
+  const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
 
-  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi) {
+  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi) {
     // API routes: return 401 JSON instead of redirecting to HTML login page
     if (request.nextUrl.pathname.startsWith('/api/')) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -137,7 +141,9 @@ export async function updateSession(request: NextRequest) {
   // SECURITY: CSRF validation for mutating API requests
   // Only validates when csrf-token cookie exists (graceful init).
   // SameSite=strict on the cookie already blocks cross-origin sends.
+  // F-05: skip CSRF for public join-by-token (students have no session/cookie)
   const isApiMutate = request.nextUrl.pathname.startsWith('/api/') &&
+    request.nextUrl.pathname !== '/api/room/join-by-token' &&
     ['POST', 'PATCH', 'DELETE', 'PUT'].includes(request.method)
   if (isApiMutate && request.cookies.has(CSRF_COOKIE) && !validateCSRF(request)) {
     const response = NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 })
