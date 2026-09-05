@@ -258,19 +258,24 @@ export default function HomeworkStudent({ initialData }: HomeworkStudentProps) {
       {/* Page tabs */}
       <PageTabs />
 
-      {/* Submit bar */}
+      {/* Submit bar — tablet-friendly (44px min touch target) */}
       {!isReadOnly && data.status !== 'submitted' && data.status !== 'reviewed' && (
         <div style={{
-          padding: '8px 16px', borderTop: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
+          padding: '12px 16px', borderTop: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
           background: isDark ? '#0f172a' : '#ffffff', display: 'flex', justifyContent: 'center',
+          // Safe area inset for iPhone home indicator + iPad bottom
+          paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
         }}>
           <button
             onClick={() => setShowSubmitDialog(true)}
             style={{
-              padding: '10px 32px', borderRadius: 10, border: 'none',
+              padding: '14px 40px', borderRadius: 12, border: 'none',
               background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-              color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
+              minHeight: 48,  // Apple HIG touch target
+              touchAction: 'manipulation',  // no double-tap zoom
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             Submit to Tutor

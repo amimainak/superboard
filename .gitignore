@@ -13,7 +13,7 @@ mini-services/
 skills/
 preserve/
 tool-results/
-download/
+/download/
 *.db
 *.pid
 next-env.d.ts

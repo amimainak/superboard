@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
   // Fail closed: if Supabase env vars are missing, redirect non-public routes to /login
   // instead of letting all requests through without auth.
   if (!supabaseUrl || !supabaseKey) {
-    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join']
+    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join', '/your-data']
     const isPublicRoute = publicRoutes.some(route =>
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
     )
@@ -57,8 +57,10 @@ export async function updateSession(request: NextRequest) {
     (request.nextUrl.pathname.startsWith('/api/homework-assignments/') && request.nextUrl.pathname.split('/').length === 4 && request.method === 'PUT')
     // F-05: public join-by-token endpoint — token is the auth, no session required
     const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
+    // F-07: export cron endpoint — secret-protected, no user session
+    const isExportCron = request.nextUrl.pathname === '/api/export/cron' && request.method === 'GET'
 
-    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi) {
+    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron) {
       // API routes: return 401 JSON instead of redirecting to HTML login page
       if (request.nextUrl.pathname.startsWith('/api/')) {
         const response = NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
@@ -111,7 +113,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join']
+  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join', '/your-data']
   const isPublicRoute = publicRoutes.some(route =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
   )
@@ -120,8 +122,10 @@ export async function updateSession(request: NextRequest) {
     (request.nextUrl.pathname.startsWith('/api/homework-assignments/') && request.nextUrl.pathname.split('/').length === 4 && request.method === 'PUT')
   // F-05: public join-by-token endpoint — token is the auth, no session required
   const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
+  // F-07: export cron endpoint — secret-protected, no user session
+  const isExportCron = request.nextUrl.pathname === '/api/export/cron' && request.method === 'GET'
 
-  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi) {
+  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron) {
     // API routes: return 401 JSON instead of redirecting to HTML login page
     if (request.nextUrl.pathname.startsWith('/api/')) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

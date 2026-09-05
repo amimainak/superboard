@@ -1,21 +1,71 @@
 // ============================================================
 // API: Homework Assignment by ID — Get, Update, Submit, Review
 // ============================================================
+// F-05+ changes:
+//   • First autosave now sets openedAt (if null) AND flips status
+//     from 'assigned' to 'in_progress' — so we know the student
+//     actually opened the link, not just received it.
+//   • Status transitions fire idempotent email notifications:
+//       - submit   → tutor gets "X submitted" email
+//       - return   → student/parent gets "X returned" email
+//       - review   → student/parent gets "X reviewed" email (if
+//                    parentNotifyOnReview was set at creation time)
+//   • Notifications are best-effort: if email fails, the status
+//     transition still succeeds. We log to HomeworkNotification for
+//     idempotency so retries don't double-send.
+// ============================================================
+
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
-import crypto from 'crypto'
+import { sendHomeworkNotification } from '@/lib/email/homework-notifications'
 
+type RouteContext = { params: Promise<{ id: string }> }
+
+// ----------------------------------------------------------------
+// Helper: build the public homework URL for email links.
+// Uses the VERCEL_URL env var (set by Vercel automatically) or
+// falls back to a configured production URL.
+// ----------------------------------------------------------------
+function getHomeworkUrl(token: string): string {
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) return `https://${vercelUrl}/hw/${token}`
+  const publicUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (publicUrl) return `${publicUrl}/hw/${token}`
+  // Last resort — relative URL won't work in email, but at least
+  // the link is present and the tutor can copy-paste
+  return `/hw/${token}`
+}
+
+// ----------------------------------------------------------------
+// Helper: load tutor + student info needed for email notifications
+// ----------------------------------------------------------------
+async function loadNotificationContext(assignmentId: string) {
+  const assignment = await db.homeworkAssignment.findUnique({
+    where: { id: assignmentId },
+    select: {
+      id: true,
+      assignmentToken: true,
+      title: true,
+      dueAt: true,
+      parentNotifyOnReview: true,
+      tutor: { select: { id: true, name: true, email: true } },
+      student: { select: { id: true, name: true, email: true, parentEmail: true } },
+    },
+  })
+  if (!assignment) return null
+  return assignment
+}
+
+// ----------------------------------------------------------------
 // GET — tutor fetches assignment for review
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ----------------------------------------------------------------
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const auth = await requireAuth(request)
     if (auth instanceof NextResponse) return auth
     const userId = (auth as { userId: string }).userId
-    const { id } = await params
+    const { id } = await context.params
 
     const assignment = await db.homeworkAssignment.findUnique({
       where: { id },
@@ -31,13 +81,12 @@ export async function GET(
   }
 }
 
-// PUT — autosave student work OR update feedback OR change status
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ----------------------------------------------------------------
+// PUT — autosave student work OR submit OR tutor actions
+// ----------------------------------------------------------------
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const { id } = await params
+    const { id } = await context.params
     const body = await request.json()
 
     // --- Autosave student work (no auth — token-based) ---
@@ -56,9 +105,14 @@ export async function PUT(
         return NextResponse.json({ error: 'Submission window closed' }, { status: 403 })
       }
 
+      const now = new Date()
       const updateData: Record<string, unknown> = {
         studentSnapshot: body.studentSnapshot,
-        updatedAt: new Date(),
+        updatedAt: now,
+      }
+      // F-05+: set openedAt on first autosave (if null)
+      if (!assignment.openedAt) {
+        updateData.openedAt = now
       }
       // Flip from 'assigned' to 'in_progress' on first save
       if (assignment.status === 'assigned') {
@@ -69,7 +123,7 @@ export async function PUT(
         where: { id },
         data: updateData,
       })
-      return NextResponse.json({ saved: true, status: updated.status })
+      return NextResponse.json({ saved: true, status: updated.status, openedAt: updated.openedAt })
     }
 
     // --- Student submit (token-based, no auth required) ---
@@ -99,6 +153,26 @@ export async function PUT(
           updatedAt: now,
         },
       })
+
+      // Fire "submitted" notification to tutor (best-effort, non-blocking)
+      const ctx = await loadNotificationContext(id)
+      if (ctx) {
+        const tutorName = ctx.tutor.name || ctx.tutor.email || 'Your tutor'
+        const studentName = ctx.student?.name || ctx.student?.email || 'Student'
+        // Don't await — fire and forget so the student's submit doesn't wait on email
+        sendHomeworkNotification({
+          assignmentId: id,
+          event: 'submitted',
+          recipientEmail: ctx.tutor.email,
+          tutorName,
+          studentName,
+          assignmentTitle: ctx.title,
+          assignmentUrl: getHomeworkUrl(ctx.assignmentToken),
+          late,
+          submittedAt: now.toISOString(),
+        }).catch((e) => console.error('[Notify submitted]', e))
+      }
+
       return NextResponse.json({ success: true, submittedAt: updated.submittedAt, late: updated.late })
     }
 
@@ -114,23 +188,63 @@ export async function PUT(
 
       switch (body.action) {
         case 'review': {
-          // Tutor marks as reviewed
           await db.homeworkAssignment.update({
             where: { id },
             data: { status: 'reviewed', updatedAt: new Date() },
           })
+
+          // Fire "reviewed" notification to student/parent (if opted in)
+          const ctx = await loadNotificationContext(id)
+          if (ctx && ctx.parentNotifyOnReview) {
+            const tutorName = ctx.tutor.name || ctx.tutor.email || 'Your tutor'
+            const studentName = ctx.student?.name || ctx.student?.email || 'Student'
+            // Prefer parent email, fall back to student email
+            const recipient = ctx.student?.parentEmail || ctx.student?.email
+            if (recipient) {
+              sendHomeworkNotification({
+                assignmentId: id,
+                event: 'reviewed',
+                recipientEmail: recipient,
+                tutorName,
+                studentName,
+                assignmentTitle: ctx.title,
+                assignmentUrl: getHomeworkUrl(ctx.assignmentToken),
+              }).catch((e) => console.error('[Notify reviewed]', e))
+            }
+          }
+
           return NextResponse.json({ success: true, status: 'reviewed' })
         }
         case 'return': {
-          // Tutor returns for edits
           await db.homeworkAssignment.update({
             where: { id },
             data: { status: 'returned', updatedAt: new Date() },
           })
+
+          // Fire "returned" notification to student/parent
+          const ctx = await loadNotificationContext(id)
+          if (ctx) {
+            const tutorName = ctx.tutor.name || ctx.tutor.email || 'Your tutor'
+            const studentName = ctx.student?.name || ctx.student?.email || 'Student'
+            const recipient = ctx.student?.parentEmail || ctx.student?.email
+            if (recipient) {
+              sendHomeworkNotification({
+                assignmentId: id,
+                event: 'returned',
+                recipientEmail: recipient,
+                tutorName,
+                studentName,
+                assignmentTitle: ctx.title,
+                assignmentUrl: getHomeworkUrl(ctx.assignmentToken),
+              }).catch((e) => console.error('[Notify returned]', e))
+            }
+          }
+
           return NextResponse.json({ success: true, status: 'returned' })
         }
         case 'save-feedback': {
-          // Tutor saves feedback layer
+          // Tutor saves feedback layer — no notification (the tutor
+          // will explicitly review or return when ready to notify)
           await db.homeworkAssignment.update({
             where: { id },
             data: { feedbackSnapshot: body.feedbackSnapshot, updatedAt: new Date() },
@@ -149,16 +263,15 @@ export async function PUT(
   }
 }
 
+// ----------------------------------------------------------------
 // DELETE — tutor deletes assignment
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ----------------------------------------------------------------
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
     const auth = await requireAuth(request)
     if (auth instanceof NextResponse) return auth
     const userId = (auth as { userId: string }).userId
-    const { id } = await params
+    const { id } = await context.params
 
     const assignment = await db.homeworkAssignment.findUnique({ where: { id } })
     if (!assignment) return NextResponse.json({ error: 'Not found' }, { status: 404 })

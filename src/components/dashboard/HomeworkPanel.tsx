@@ -1,342 +1,254 @@
 // ============================================================
-// HomeworkPanel — Full homework management for tutors & agencies
+// HomeworkPanel — Full homework management (F-04+ unified)
 // ============================================================
-'use client';
+// Migrated from the old /api/homework system to /api/homework-assignments
+// which has the full state machine, board snapshots, and token-based
+// student access.
+//
+// Status flow: assigned → in_progress → submitted → returned → reviewed
+// The tutor can:
+//   • Create a new assignment from a saved board (picks board + student)
+//   • View all assignments with status filter
+//   • Open the homework review view (the /hw/[token] page in tutor mode)
+//   • Mark reviewed or return with one click
+// ============================================================
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { authFetch } from '@/lib/auth-fetch';
-import { subjectMeta } from '@/lib/subject-meta';
-import { isAgencyTier } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  BookOpen,
-  Plus,
-  Loader2,
-  FileText,
-  CheckCircle,
-  Clock,
-  Eye,
-  Star,
-  Send,
-  ClipboardCheck,
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+'use client'
 
-// ------------------------------------------------------------------
-// Types
-// ------------------------------------------------------------------
-interface HomeworkItem {
-  id: string;
-  title: string;
-  description: string | null;
-  student: { id: string; name: string; email: string } | null;
-  tutor: { id: string; name: string | null; email: string } | null;
-  subject: string;
-  status: 'PENDING' | 'SUBMITTED' | 'GRADED' | 'OVERDUE';
-  dueDate: string | null;
-  grade: string | null;
-  tutorFeedback: string | null;
-  createdAt: string;
-  updatedAt: string;
+import React, { useEffect, useState, useCallback } from 'react'
+import { authFetch } from '@/lib/auth-fetch'
+import { subjectMeta } from '@/lib/subject-meta'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
+  BookOpen, Plus, Loader2, CheckCircle, Clock, Eye, Send, RotateCcw, Check, ExternalLink, Search,
+} from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { StartLessonDialog } from './start-lesson/StartLessonDialog'
+
+// ----------------------------------------------------------------
+// Types — match /api/homework-assignments response
+// ----------------------------------------------------------------
+interface Assignment {
+  id: string
+  assignmentToken: string
+  title: string
+  description: string | null
+  status: string  // assigned | in_progress | submitted | returned | reviewed
+  late: boolean
+  dueAt: string | null
+  submitUntil: string
+  viewUntil: string
+  openedAt: string | null
+  submittedAt: string | null
+  createdAt: string
+  student: { id: string; name: string | null; email: string } | null
 }
 
 interface StudentOption {
-  id: string;
-  name: string;
-  email: string;
+  id: string
+  name: string | null
+  email: string
 }
 
-interface CreateForm {
-  title: string;
-  description: string;
-  studentEmail: string;
-  subject: string;
-  dueDate: string;
+interface BoardOption {
+  id: string
+  title: string | null
+  subject: string
+  _count?: { pages: number }
+  lastOpenedAt: string | null
 }
 
-interface GradeForm {
-  tutorFeedback: string;
-  grade: string;
+// Status display config
+const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  assigned:     { label: 'Assigned',   cls: 'bg-slate-100 text-slate-700' },
+  in_progress:  { label: 'In progress', cls: 'bg-amber-100 text-amber-700' },
+  submitted:    { label: 'Submitted',  cls: 'bg-blue-100 text-blue-700' },
+  returned:     { label: 'Returned',   cls: 'bg-purple-100 text-purple-700' },
+  reviewed:     { label: 'Reviewed',   cls: 'bg-emerald-100 text-emerald-700' },
 }
 
-const STATUS_OPTIONS = ['ALL', 'PENDING', 'SUBMITTED', 'GRADED', 'OVERDUE'] as const;
+const STATUS_FILTERS = ['ALL', 'assigned', 'in_progress', 'submitted', 'returned', 'reviewed'] as const
 
-const EMPTY_CREATE: CreateForm = {
-  title: '',
-  description: '',
-  studentEmail: '',
-  subject: 'MATH',
-  dueDate: '',
-};
-
-const EMPTY_GRADE: GradeForm = {
-  tutorFeedback: '',
-  grade: '',
-};
-
-// ------------------------------------------------------------------
-// Helpers
-// ------------------------------------------------------------------
-function statusBadge(status: HomeworkItem['status']) {
-  const map: Record<HomeworkItem['status'], { cls: string; label: string }> = {
-    PENDING: {
-      cls: 'bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px] px-2 py-0 rounded-full font-medium',
-      label: 'Pending',
-    },
-    SUBMITTED: {
-      cls: 'bg-blue-100 text-blue-700 hover:bg-blue-100 text-[10px] px-2 py-0 rounded-full font-medium',
-      label: 'Submitted',
-    },
-    GRADED: {
-      cls: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-[10px] px-2 py-0 rounded-full font-medium',
-      label: 'Graded',
-    },
-    OVERDUE: {
-      cls: 'bg-red-100 text-red-600 hover:bg-red-100 text-[10px] px-2 py-0 rounded-full font-medium',
-      label: 'Overdue',
-    },
-  };
-  const { cls, label } = map[status];
-  return <Badge className={cls}>{label}</Badge>;
-}
-
-function formatDate(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function isOverdue(dueDate: string | null, status: string) {
-  if (!dueDate || status === 'GRADED' || status === 'SUBMITTED') return false;
-  return new Date(dueDate) < new Date();
-}
-
-// ------------------------------------------------------------------
+// ----------------------------------------------------------------
 // Component
-// ------------------------------------------------------------------
-type Props = { userId: string; agencyId?: string; userTier?: string };
+// ----------------------------------------------------------------
+type Props = { userId: string; agencyId?: string; userTier?: string }
 
-export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
-  const isAgency = userTier ? isAgencyTier(userTier as any) : false;
-  const { toast } = useToast();
+export function HomeworkPanel({ userId }: Props) {
+  const { toast } = useToast()
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
-  // My homework
-  const [myHomework, setMyHomework] = useState<HomeworkItem[]>([]);
-  // Agency all homework
-  const [agencyHomework, setAgencyHomework] = useState<HomeworkItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [students, setStudents] = useState<StudentOption[]>([]);
-
-  // Create dialog
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateForm>(EMPTY_CREATE);
-  const [creating, setCreating] = useState(false);
-
-  // Grade dialog
-  const [gradeOpen, setGradeOpen] = useState(false);
-  const [gradeForm, setGradeForm] = useState<GradeForm>(EMPTY_GRADE);
-  const [gradingItem, setGradingItem] = useState<HomeworkItem | null>(null);
-  const [grading, setGrading] = useState(false);
+  // Create dialog state
+  const [createOpen, setCreateOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [students, setStudents] = useState<StudentOption[]>([])
+  const [boards, setBoards] = useState<BoardOption[]>([])
+  const [boardSearch, setBoardSearch] = useState('')
+  const [createForm, setCreateForm] = useState({
+    title: '',
+    description: '',
+    studentId: '',
+    sourceBoardId: '',
+    dueDate: '',
+    parentNotifyOnReview: true,
+  })
 
   // Action loading
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  // ---- Fetch homework ----
-  // The API automatically returns agency-wide data for agency owners,
-  // and only own homework for tutors. We split on the client side.
-  const fetchHomework = useCallback(async () => {
+  // ---- Fetch assignments ----
+  const fetchAssignments = useCallback(async () => {
     try {
-      const res = await authFetch('/api/homework?limit=100');
-      if (!res.ok) return;
-      const data = await res.json();
-      const items: HomeworkItem[] = (data.homeworks || []).map((h: any) => {
-        if (h.status === 'PENDING' && isOverdue(h.dueDate, h.status)) {
-          return { ...h, status: 'OVERDUE' as const };
-        }
-        return h;
-      });
-      // For agency view: split into mine vs all
-      if (isAgency) {
-        setMyHomework(items.filter((h) => h.tutor?.id === userId));
-        setAgencyHomework(items);
-      } else {
-        setMyHomework(items);
-      }
-    } catch {
-      // silent
-    }
-  }, [userId, isAgency]);
-
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    await fetchHomework();
-    setLoading(false);
-  }, [fetchHomework]);
-
-  // ---- Fetch students ----
-  const fetchStudents = useCallback(async () => {
-    try {
-      const res = await authFetch('/api/agency/students?status=active&limit=200');
-      if (!res.ok) return;
-      const data = await res.json();
-      setStudents((data.students || []).map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        email: s.email,
-      })));
-    } catch {
-      // silent
-    }
-  }, []);
+      const res = await authFetch('/api/homework-assignments?limit=100')
+      if (!res.ok) return
+      const data = await res.json()
+      setAssignments(data.assignments || [])
+    } catch { /* silent */ }
+  }, [])
 
   useEffect(() => {
-    fetchAll();
-    fetchStudents();
-  }, [fetchAll, fetchStudents]);
+    fetchAssignments().finally(() => setLoading(false))
+  }, [fetchAssignments])
 
-  // Re-filter when userId changes
+  // ---- Fetch students + boards when create dialog opens ----
   useEffect(() => {
-    if (isAgency && agencyHomework.length > 0) {
-      setMyHomework(agencyHomework.filter((h) => h.tutor?.id === userId));
-    }
-  }, [userId, isAgency, agencyHomework]);
+    if (!createOpen) return
+    // Load students
+    authFetch('/api/agency/students?status=active&limit=200')
+      .then((r) => r.json())
+      .then((d) => setStudents(d.students || []))
+      .catch(() => {})
+    // Load boards
+    authFetch('/api/library?limit=100&sort=recent')
+      .then((r) => r.json())
+      .then((d) => setBoards((d.boards || []).filter((b: BoardOption) => true)))
+      .catch(() => {})
+  }, [createOpen])
 
-  // ---- Get active list ----
-  const homework = isAgency ? agencyHomework : myHomework;
+  // ---- Filtered assignments ----
   const filtered = statusFilter === 'ALL'
-    ? homework
-    : homework.filter((h) => h.status === statusFilter);
+    ? assignments
+    : assignments.filter((a) => a.status === statusFilter)
 
-  // ---- Create ----
+  // ---- Filtered boards (search) ----
+  const filteredBoards = boardSearch.trim()
+    ? boards.filter((b) =>
+        (b.title || '').toLowerCase().includes(boardSearch.toLowerCase()) ||
+        b.subject.toLowerCase().includes(boardSearch.toLowerCase())
+      )
+    : boards
+
+  // ---- Create assignment ----
   const handleCreate = async () => {
-    if (!createForm.title.trim() || !createForm.studentEmail.trim() || !createForm.dueDate) {
-      toast({ title: 'Please fill in title, student email, and due date', variant: 'destructive' });
-      return;
+    if (!createForm.title.trim()) {
+      toast({ title: 'Please add a title', variant: 'destructive' })
+      return
     }
-    setCreating(true);
+    if (!createForm.sourceBoardId) {
+      toast({ title: 'Please pick a board to assign', variant: 'destructive' })
+      return
+    }
+    setCreating(true)
     try {
-      // Find student by email
-      const matchedStudent = students.find(
-        (s) => s.email.toLowerCase() === createForm.studentEmail.trim().toLowerCase()
-      );
-      const body: Record<string, unknown> = {
-        title: createForm.title,
-        description: createForm.description || null,
-        subject: createForm.subject,
-        dueDate: new Date(createForm.dueDate).toISOString(),
-        studentId: matchedStudent?.id || null,
-      };
-      const res = await authFetch('/api/homework', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const bodyText = await res.text().catch(() => '');
-        throw new Error(bodyText || 'Failed to create homework');
+      // Fetch the board's current snapshot
+      const boardRes = await authFetch(`/api/room/export?roomId=${createForm.sourceBoardId}`)
+      if (!boardRes.ok) throw new Error('Failed to load board contents')
+      const boardData = await boardRes.json()
+
+      // Build the snapshot in the format the homework system expects
+      const snapshot = {
+        elements: boardData.pages?.[0]?.snapshot?.elements || [],
+        camera: boardData.pages?.[0]?.snapshot?.camera || { x: 0, y: 0, zoom: 1 },
+        pages: (boardData.pages || []).map((p: { pageIndex: number; snapshot: { elements: unknown[]; camera: { x: number; y: number; zoom: number } } }, i: number) => ({
+          ...p.snapshot,
+          pageIndex: i,
+        })),
       }
-      toast({ title: 'Homework assigned!', description: createForm.title });
-      setCreateForm(EMPTY_CREATE);
-      setCreateOpen(false);
-      fetchAll();
-    } catch (err: any) {
-      toast({ title: 'Failed to create homework', description: err?.message || 'Please try again.', variant: 'destructive' });
+
+      const res = await authFetch('/api/homework-assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceSnapshot: snapshot,
+          sourceRoomId: createForm.sourceBoardId,
+          title: createForm.title,
+          description: createForm.description || undefined,
+          studentId: createForm.studentId || undefined,
+          dueAt: createForm.dueDate ? new Date(createForm.dueDate).toISOString() : undefined,
+          parentNotifyOnReview: createForm.parentNotifyOnReview,
+          notify: true,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to create assignment')
+      }
+      const { assignment } = await res.json()
+      const link = `${window.location.origin}/hw/${assignment.assignmentToken}`
+      toast({
+        title: 'Homework assigned!',
+        description: 'Link copied to clipboard — send it to the student.',
+      })
+      // Copy link to clipboard
+      try { await navigator.clipboard.writeText(link) } catch { /* silent */ }
+      setCreateForm({ title: '', description: '', studentId: '', sourceBoardId: '', dueDate: '', parentNotifyOnReview: true })
+      setCreateOpen(false)
+      fetchAssignments()
+    } catch (e: unknown) {
+      toast({
+        title: 'Failed to create homework',
+        description: e instanceof Error ? e.message : 'Please try again.',
+        variant: 'destructive',
+      })
     } finally {
-      setCreating(false);
+      setCreating(false)
     }
-  };
+  }
 
-  // ---- Grade ----
-  const openGradeDialog = (item: HomeworkItem) => {
-    setGradingItem(item);
-    setGradeForm({
-      tutorFeedback: item.tutorFeedback || '',
-      grade: item.grade || '',
-    });
-    setGradeOpen(true);
-  };
-
-  const handleGrade = async () => {
-    if (!gradingItem) return;
-    setGrading(true);
+  // ---- Tutor actions: review / return ----
+  const handleAction = async (id: string, action: 'review' | 'return') => {
+    setActionLoading(`${id}-${action}`)
     try {
-      const res = await authFetch(`/api/homework/${gradingItem.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'GRADED', ...gradeForm }),
-      });
-      if (!res.ok) throw new Error('Failed to grade');
-      toast({ title: 'Homework graded!', description: gradingItem.title });
-      setGradeOpen(false);
-      setGradingItem(null);
-      fetchAll();
+      const res = await authFetch(`/api/homework-assignments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      toast({ title: action === 'review' ? 'Marked as reviewed' : 'Returned to student' })
+      fetchAssignments()
     } catch {
-      toast({ title: 'Failed to grade homework', variant: 'destructive' });
+      toast({ title: 'Action failed', variant: 'destructive' })
     } finally {
-      setGrading(false);
+      setActionLoading(null)
     }
-  };
+  }
 
-  // ---- Mark submitted ----
-  const handleMarkSubmitted = async (id: string) => {
-    setActionLoading(id);
+  // ---- Copy link ----
+  const handleCopyLink = async (token: string) => {
+    const link = `${window.location.origin}/hw/${token}`
     try {
-      const res = await authFetch(`/api/homework/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'SUBMITTED' }),
-      });
-      if (!res.ok) throw new Error('Failed to update');
-      toast({ title: 'Marked as submitted' });
-      fetchAll();
+      await navigator.clipboard.writeText(link)
+      toast({ title: 'Link copied', description: 'Send it to the student' })
     } catch {
-      toast({ title: 'Failed to update status', variant: 'destructive' });
-    } finally {
-      setActionLoading(null);
+      toast({ title: 'Copy failed — long-press the link', variant: 'destructive' })
     }
-  };
+  }
 
-  // ---- Mark graded (quick action) ----
-  const handleMarkGraded = async (id: string) => {
-    setActionLoading(id);
-    try {
-      const res = await authFetch(`/api/homework/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'GRADED' }),
-      });
-      if (!res.ok) throw new Error('Failed to update');
-      toast({ title: 'Marked as graded' });
-      fetchAll();
-    } catch {
-      toast({ title: 'Failed to update status', variant: 'destructive' });
-    } finally {
-      setActionLoading(null);
-    }
-  };
-
-  // ---- Loading ----
+  // ---- Loading state ----
   if (loading) {
     return (
       <Card className="rounded-2xl border border-border bg-card shadow-sm">
@@ -360,167 +272,21 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
-
-  // ---- Render table ----
-  const renderTable = (items: HomeworkItem[]) => {
-    if (items.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <CheckCircle className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No homework matches this filter.</p>
-        </div>
-      );
-    }
-    return (
-      <div className="rounded-xl border overflow-hidden max-h-[420px] overflow-y-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b sticky top-0 z-10">
-            <tr>
-              <th className="text-left px-4 py-2.5 font-semibold text-xs">Title</th>
-              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden sm:table-cell">Student</th>
-              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden md:table-cell">Subject</th>
-              <th className="text-left px-4 py-2.5 font-semibold text-xs">Status</th>
-              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden lg:table-cell">Due Date</th>
-              <th className="text-left px-4 py-2.5 font-semibold text-xs hidden lg:table-cell">Grade</th>
-              <th className="px-4 py-2.5" />
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((hw) => {
-              const meta = subjectMeta[hw.subject] || subjectMeta.GENERAL;
-              return (
-                <tr key={hw.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-md ${meta.gradient} flex items-center justify-center shrink-0`}>
-                        <meta.icon className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-xs truncate max-w-[140px]">{hw.title}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs hidden sm:table-cell">
-                    <div>
-                      <p className="font-medium">{hw.student?.name || '—'}</p>
-                      <p className="text-[10px] text-muted-foreground">{hw.student?.email}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground hidden md:table-cell">{meta.label}</td>
-                  <td className="px-4 py-3">{statusBadge(hw.status)}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatDate(hw.dueDate)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-xs font-medium hidden lg:table-cell">
-                    {hw.grade ? (
-                      <span className="flex items-center gap-1 text-emerald-600">
-                        <Star className="w-3 h-3" />
-                        {hw.grade}
-                      </span>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      {hw.status === 'SUBMITTED' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 rounded-lg hover:bg-emerald-100 hover:text-emerald-700"
-                          title="Grade"
-                          onClick={() => openGradeDialog(hw)}
-                        >
-                          <Star className="w-3.5 h-3.5" />
-                        </Button>
-                      )}
-                      {hw.status === 'PENDING' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600"
-                          title="Mark Submitted"
-                          disabled={actionLoading === hw.id}
-                          onClick={() => handleMarkSubmitted(hw.id)}
-                        >
-                          {actionLoading === hw.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
-                          ) : (
-                            <Send className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
-                      )}
-                      {hw.status === 'OVERDUE' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 rounded-lg hover:bg-blue-50 hover:text-blue-600"
-                          title="Mark Submitted"
-                          disabled={actionLoading === hw.id}
-                          onClick={() => handleMarkSubmitted(hw.id)}
-                        >
-                          {actionLoading === hw.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
-                          ) : (
-                            <Send className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
-                      )}
-                      {hw.status === 'SUBMITTED' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-700"
-                          title="Mark Graded"
-                          disabled={actionLoading === hw.id}
-                          onClick={() => handleMarkGraded(hw.id)}
-                        >
-                          {actionLoading === hw.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
-                          ) : (
-                            <ClipboardCheck className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 w-7 p-0 rounded-lg hover:bg-gray-100"
-                        title="View details"
-                        onClick={() => openGradeDialog(hw)}
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
 
   // ---- Render ----
   return (
     <Card className="rounded-2xl border border-border bg-card shadow-sm">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
               <BookOpen className="w-4 h-4 text-emerald-600" />
             </div>
             Homework
-            {homework.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-xs font-medium">
-                {homework.length}
-              </Badge>
+            {assignments.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs font-medium">{assignments.length}</Badge>
             )}
           </CardTitle>
 
@@ -534,212 +300,251 @@ export function HomeworkPanel({ userId, agencyId, userTier }: Props) {
                 Assign
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-2xl sm:max-w-md">
+            <DialogContent className="rounded-2xl sm:max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Plus className="w-5 h-5 text-emerald-500" />
                   Assign Homework
                 </DialogTitle>
-                <DialogDescription>Create a new homework assignment for a student.</DialogDescription>
+                <DialogDescription>Pick a saved board and a student. The student gets a personal link to work on at home.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-2">
+                {/* Title */}
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Title</Label>
+                  <Label className="text-sm font-medium mb-1 block">Title</Label>
                   <Input
-                    placeholder="e.g. Chapter 5 Practice Problems"
+                    placeholder="e.g. Fractions Practice — Chapter 5"
                     value={createForm.title}
                     onChange={(e) => setCreateForm((p) => ({ ...p, title: e.target.value }))}
                     className="rounded-xl"
                   />
                 </div>
+
+                {/* Description */}
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Description</Label>
+                  <Label className="text-sm font-medium mb-1 block">Instructions (optional)</Label>
                   <Textarea
-                    placeholder="Instructions or details..."
+                    placeholder="Any instructions for the student..."
                     value={createForm.description}
                     onChange={(e) => setCreateForm((p) => ({ ...p, description: e.target.value }))}
-                    className="rounded-xl min-h-[80px]"
+                    className="rounded-xl min-h-[60px]"
                   />
                 </div>
+
+                {/* Student */}
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Student Email</Label>
-                  <Input
-                    type="email"
-                    placeholder="student@example.com"
-                    value={createForm.studentEmail}
-                    onChange={(e) => setCreateForm((p) => ({ ...p, studentEmail: e.target.value }))}
-                    className="rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Subject</Label>
-                  <Select value={createForm.subject} onValueChange={(v) => setCreateForm((p) => ({ ...p, subject: v }))}>
-                    <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                  <Label className="text-sm font-medium mb-1 block">Student</Label>
+                  <Select
+                    value={createForm.studentId}
+                    onValueChange={(v) => setCreateForm((p) => ({ ...p, studentId: v }))}
+                  >
+                    <SelectTrigger className="rounded-xl"><SelectValue placeholder="Pick a student (optional)" /></SelectTrigger>
                     <SelectContent>
-                      {Object.entries(subjectMeta).map(([key, meta]) => (
-                        <SelectItem key={key} value={key}>{meta.label}</SelectItem>
+                      {students.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name || s.email}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Linking a student lets you track their progress and sends them an email.</p>
                 </div>
+
+                {/* Board picker */}
                 <div>
-                  <Label className="text-sm font-medium text-muted-foreground mb-1 block">Due Date</Label>
-                  <Input
-                    type="date"
-                    value={createForm.dueDate}
-                    onChange={(e) => setCreateForm((p) => ({ ...p, dueDate: e.target.value }))}
-                    className="rounded-xl"
-                  />
+                  <Label className="text-sm font-medium mb-1 block">Pick a board to assign</Label>
+                  <div className="relative mb-2">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search boards..."
+                      value={boardSearch}
+                      onChange={(e) => setBoardSearch(e.target.value)}
+                      className="rounded-xl pl-9 h-9 text-sm"
+                    />
+                  </div>
+                  <div className="rounded-xl border max-h-[180px] overflow-y-auto">
+                    {filteredBoards.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-6">No saved boards. Save a board first, then assign it as homework.</p>
+                    ) : filteredBoards.map((b) => (
+                      <button
+                        key={b.id}
+                        onClick={() => setCreateForm((p) => ({ ...p, sourceBoardId: b.id }))}
+                        className={`w-full text-left px-3 py-2 hover:bg-muted/50 transition-colors border-b last:border-0 ${createForm.sourceBoardId === b.id ? 'bg-emerald-50/50' : ''}`}
+                      >
+                        <p className="text-sm font-medium truncate">{b.title || 'Untitled board'}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {subjectMeta[b.subject]?.label ?? b.subject}
+                          {b._count?.pages ? ` · ${b._count.pages}p` : ''}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Due date + notify */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm font-medium mb-1 block">Due date (optional)</Label>
+                    <Input
+                      type="date"
+                      value={createForm.dueDate}
+                      onChange={(e) => setCreateForm((p) => ({ ...p, dueDate: e.target.value }))}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer pb-2">
+                      <input
+                        type="checkbox"
+                        checked={createForm.parentNotifyOnReview}
+                        onChange={(e) => setCreateForm((p) => ({ ...p, parentNotifyOnReview: e.target.checked }))}
+                        className="w-4 h-4 rounded"
+                      />
+                      Email parent when reviewed
+                    </label>
+                  </div>
+                </div>
+
                 <Button
                   onClick={handleCreate}
-                  disabled={creating}
+                  disabled={creating || !createForm.title.trim() || !createForm.sourceBoardId}
                   className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
                 >
                   {creating && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Assign Homework
+                  {creating ? 'Creating...' : 'Assign homework'}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
       </CardHeader>
-
-      <CardContent>
-        {homework.length === 0 && myHomework.length === 0 && (!isAgency || agencyHomework.length === 0) ? (
-          <div className="text-center py-10">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-7 h-7 text-emerald-400" />
-            </div>
-            <h3 className="text-sm font-semibold text-card-foreground">No homework assigned</h3>
-            <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first homework assignment.</p>
-            <Button
-              onClick={() => setCreateOpen(true)}
-              className="rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
-              size="sm"
+      <CardContent className="space-y-4">
+        {/* Status filter chips */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {STATUS_FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              className={`text-xs px-3 py-1 rounded-full font-medium transition-colors ${
+                statusFilter === f
+                  ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                  : 'bg-muted/50 text-muted-foreground hover:bg-muted border border-transparent'
+              }`}
             >
-              <Plus className="w-4 h-4" />
-              Assign Homework
-            </Button>
+              {f === 'ALL' ? 'All' : STATUS_CONFIG[f]?.label || f}
+            </button>
+          ))}
+        </div>
+
+        {/* Assignment list */}
+        {filtered.length === 0 ? (
+          <div className="text-center py-8">
+            <CheckCircle className="w-8 h-8 text-emerald-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">
+              {assignments.length === 0
+                ? 'No homework yet. Click "Assign" to create your first.'
+                : 'No homework matches this filter.'}
+            </p>
           </div>
         ) : (
-          <>
-            {/* Tabs for agency view */}
-            {isAgency && (
-              <Tabs
-                defaultValue="mine"
-                className="w-full mb-4"
-                onValueChange={() => {
-                  setStatusFilter('ALL');
-                }}
-              >
-                <TabsList className="w-full grid grid-cols-2 rounded-xl">
-                  <TabsTrigger value="mine" className="rounded-lg text-xs font-medium">
-                    My Homework
-                  </TabsTrigger>
-                  <TabsTrigger value="agency" className="rounded-lg text-xs font-medium">
-                    Agency All
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="mine" className="mt-3">
-                  <StatusFilterButtons statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
-                  {renderTable(
-                    (statusFilter === 'ALL' ? myHomework : myHomework.filter((h) => h.status === statusFilter))
-                  )}
-                </TabsContent>
-                <TabsContent value="agency" className="mt-3">
-                  <StatusFilterButtons statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
-                  {renderTable(
-                    (statusFilter === 'ALL' ? agencyHomework : agencyHomework.filter((h) => h.status === statusFilter))
-                  )}
-                </TabsContent>
-              </Tabs>
-            )}
+          <div className="rounded-xl border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 border-b">
+                <tr>
+                  <th className="text-left px-4 py-2.5 font-semibold text-xs">Title</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-xs hidden sm:table-cell">Student</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-xs">Status</th>
+                  <th className="text-left px-4 py-2.5 font-semibold text-xs hidden lg:table-cell">Due</th>
+                  <th className="px-4 py-2.5" />
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((hw) => {
+                  const statusCfg = STATUS_CONFIG[hw.status] || STATUS_CONFIG.assigned
+                  return (
+                    <tr key={hw.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-xs truncate max-w-[160px]">{hw.title}</p>
+                        {hw.late && (
+                          <span className="text-[10px] text-red-600">Late</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-xs hidden sm:table-cell">
+                        <p className="font-medium">{hw.student?.name || '—'}</p>
+                        <p className="text-[10px] text-muted-foreground">{hw.student?.email}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={`text-[10px] rounded-full border-0 ${statusCfg.cls}`}>{statusCfg.label}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {hw.dueAt ? new Date(hw.dueAt).toLocaleDateString() : '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1 justify-end">
+                          {/* Open in new tab (tutor review view) */}
+                          <a
+                            href={`/hw/${hw.assignmentToken}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="h-7 w-7 inline-flex items-center justify-center rounded-lg hover:bg-muted text-muted-foreground hover:text-emerald-600"
+                            title="Open homework (review view)"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </a>
 
-            {/* Non-agency: simple filter + table */}
-            {!isAgency && (
-              <>
-                <StatusFilterButtons statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
-                {renderTable(filtered)}
-              </>
-            )}
-          </>
+                          {/* Copy link */}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 rounded-lg hover:bg-muted"
+                            title="Copy student link"
+                            onClick={() => handleCopyLink(hw.assignmentToken)}
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </Button>
+
+                          {/* Review action */}
+                          {hw.status === 'submitted' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 rounded-lg hover:bg-emerald-50 hover:text-emerald-700"
+                              title="Mark reviewed"
+                              disabled={actionLoading === `${hw.id}-review`}
+                              onClick={() => handleAction(hw.id, 'review')}
+                            >
+                              {actionLoading === `${hw.id}-review`
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <Check className="w-3.5 h-3.5" />}
+                            </Button>
+                          )}
+
+                          {/* Return action */}
+                          {(hw.status === 'submitted' || hw.status === 'reviewed') && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0 rounded-lg hover:bg-purple-50 hover:text-purple-700"
+                              title="Return for edits"
+                              disabled={actionLoading === `${hw.id}-return`}
+                              onClick={() => handleAction(hw.id, 'return')}
+                            >
+                              {actionLoading === `${hw.id}-return`
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <RotateCcw className="w-3.5 h-3.5" />}
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </CardContent>
-
-      {/* Grade Dialog */}
-      <Dialog open={gradeOpen} onOpenChange={setGradeOpen}>
-        <DialogContent className="rounded-2xl sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-emerald-500" />
-              {gradingItem?.status === 'SUBMITTED' ? 'Grade Homework' : 'Homework Details'}
-            </DialogTitle>
-            <DialogDescription>
-              {gradingItem?.title} — {gradingItem?.student?.name || 'Unknown'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            {gradingItem?.description && (
-              <div className="rounded-xl bg-muted/50 p-3">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
-                <p className="text-sm">{gradingItem.description}</p>
-              </div>
-            )}
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground mb-1 block">Grade</Label>
-              <Input
-                placeholder="e.g. A, 95%, 8/10"
-                value={gradeForm.grade}
-                onChange={(e) => setGradeForm((p) => ({ ...p, grade: e.target.value }))}
-                className="rounded-xl"
-                disabled={gradingItem?.status === 'GRADED'}
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground mb-1 block">Feedback</Label>
-              <Textarea
-                placeholder="Your feedback for the student..."
-                value={gradeForm.tutorFeedback}
-                onChange={(e) => setGradeForm((p) => ({ ...p, tutorFeedback: e.target.value }))}
-                className="rounded-xl min-h-[100px]"
-                disabled={gradingItem?.status === 'GRADED'}
-              />
-            </div>
-            {gradingItem?.status !== 'GRADED' && (
-              <Button
-                onClick={handleGrade}
-                disabled={grading}
-                className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all hover:-translate-y-0.5 text-sm gap-2"
-              >
-                {grading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Submit Grade
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </Card>
-  );
-}
-
-// ------------------------------------------------------------------
-// Status Filter Buttons (extracted for reuse in tabs)
-// ------------------------------------------------------------------
-function StatusFilterButtons({ statusFilter, setStatusFilter }: { statusFilter: string; setStatusFilter: (v: string) => void }) {
-  return (
-    <div className="flex items-center gap-2 mb-4 flex-wrap">
-      {STATUS_OPTIONS.map((s) => (
-        <Button
-          key={s}
-          variant={statusFilter === s ? 'default' : 'outline'}
-          size="sm"
-          className={`rounded-lg text-xs h-7 px-2.5 ${statusFilter === s ? 'gradient-primary border-0 text-white' : ''}`}
-          onClick={() => setStatusFilter(s)}
-        >
-          {s === 'ALL' ? 'All' : s.charAt(0) + s.slice(1).toLowerCase()}
-        </Button>
-      ))}
-    </div>
-  );
+  )
 }

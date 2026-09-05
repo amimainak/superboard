@@ -71,6 +71,7 @@ model User {
   lessonNotes        LessonNote[]
   invoicesCreated    Invoice[]            @relation("InvoiceCreator")
   subscriptions      Subscription[]
+  exportJobs         ExportJob[]
 
   @@index([parentAgencyId])
 }
@@ -544,6 +545,7 @@ model HomeworkAssignment {
 
   // Status machine: assigned → in_progress → submitted → returned → reviewed
   status          String   @default("assigned")
+  openedAt        DateTime?  // F-05+ — when student first opened the link (null until first open)
   submittedAt     DateTime?
   late            Boolean  @default(false)
 
@@ -560,11 +562,56 @@ model HomeworkAssignment {
 
   tutor           User      @relation("HwAssignmentTutor", fields: [tutorId], references: [id], onDelete: Cascade)
   student         Student?  @relation("HwAssignmentStudent", fields: [studentId], references: [id], onDelete: SetNull)
+  notifications   HomeworkNotification[]
 
   @@index([tutorId])
   @@index([studentId])
   @@index([status])
   @@index([assignmentToken])
+}
+
+// ── Homework Notification Log (idempotency for email notifications) ──
+// Tracks which notifications have been sent for which assignment, so
+// we never double-send (e.g. if a status transition fires twice or
+// the cron reprocesses a job).
+model HomeworkNotification {
+  id           String   @id @default(uuid())
+  assignmentId String
+  event        String   // assigned, opened, submitted, returned, reviewed
+  channel      String   @default("email") // future: sms, push, etc.
+  recipient    String   // email address the notification was sent to
+  sentAt       DateTime @default(now())
+
+  assignment HomeworkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, event, channel, recipient])
+  @@index([assignmentId])
+}
+
+// ── Export Job (F-07 Full Data Export) ──
+// Async background job for bulk data export. Tutor clicks "Export
+// everything" → row inserted with status 'pending' → Vercel Cron
+// picks it up, processes, marks 'completed' or 'failed', emails
+// the tutor a signed download URL.
+model ExportJob {
+  id           String    @id @default(uuid())
+  userId       String
+  status       String    @default("pending")  // pending | processing | completed | failed
+  format       String    @default("zip+pdf")  // future-proofing
+  boardCount   Int       @default(0)          // how many boards were included
+  fileSizeBytes Int      @default(0)
+  downloadUrl  String?   // signed URL or storage path
+  storagePath  String?   // internal: where we stored the file
+  error        String?   @db.Text
+  requestedAt  DateTime  @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([requestedAt])
 }
 
 // ── Resource Library (agency-scoped resources) ──

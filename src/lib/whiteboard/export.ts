@@ -120,7 +120,7 @@ export function exportAsJson(elements: WhiteboardElement[]): string {
 /**
  * Build SVG string for export — supports ALL element types.
  */
-function buildExportSvg(
+export function buildExportSvg(
   elements: WhiteboardElement[],
   width: number,
   height: number,

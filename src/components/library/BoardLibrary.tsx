@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useTutorPreferences } from '@/hooks/useTutorPreferences'
 import { StartLessonDialog } from '@/components/dashboard/start-lesson/StartLessonDialog'
+import { AssignHomeworkDialog } from '@/components/dashboard/start-lesson/AssignHomeworkDialog'
 
 interface Board {
   id: string
@@ -42,6 +43,7 @@ export function BoardLibrary({ isDark }: { isDark: boolean }) {
   const [versions, setVersions] = useState<Array<{ id: string; versionNum: number; createdAt: string }>>([])
   const [showVersions, setShowVersions] = useState(false)
   const [startLessonBoard, setStartLessonBoard] = useState<Board | null>(null)
+  const [assignHomeworkBoard, setAssignHomeworkBoard] = useState<Board | null>(null)
 
   const s = {
     bg: isDark ? '#0f172a' : '#ffffff',
@@ -300,6 +302,29 @@ export function BoardLibrary({ isDark }: { isDark: boolean }) {
                     Start
                   </button>
                 )}
+                {/* Assign Homework — always available, secondary action */}
+                {!board.isArchived && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setAssignHomeworkBoard(board) }}
+                    title="Assign this board as homework"
+                    style={{
+                      ...btnStyle(s),
+                      background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+                      color: 'white',
+                      border: 'none',
+                      padding: '4px 10px',
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                    HW
+                  </button>
+                )}
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedBoard(board); setShowVersions(true); fetchVersions(board.id) }}
                   title="Version history"
@@ -383,6 +408,17 @@ export function BoardLibrary({ isDark }: { isDark: boolean }) {
           onOpenChange={(open) => { if (!open) setStartLessonBoard(null) }}
           boardId={startLessonBoard.id}
           boardTitle={startLessonBoard.title || 'Untitled board'}
+        />
+      )}
+
+      {/* Assign Homework Dialog (library mode) */}
+      {assignHomeworkBoard && (
+        <AssignHomeworkDialog
+          mode="library"
+          open={!!assignHomeworkBoard}
+          onOpenChange={(open) => { if (!open) setAssignHomeworkBoard(null) }}
+          boardId={assignHomeworkBoard.id}
+          boardTitle={assignHomeworkBoard.title || 'Untitled board'}
         />
       )}
     </div>

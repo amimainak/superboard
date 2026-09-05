@@ -75,6 +75,10 @@ import {
   Zap,
   Crown,
   Shield,
+  Download,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
   LayoutDashboard,
   Home,
   FolderOpen,
@@ -220,6 +224,11 @@ function SettingsPanel({
   const [prefsLoading, setPrefsLoading] = useState(true);
   const [prefsSaving, setPrefsSaving] = useState<string | null>(null);
 
+  // ---- Data export (F-07) ----
+  const [exportState, setExportState] = useState<'idle' | 'requesting' | 'pending' | 'processing' | 'completed' | 'failed'>('idle');
+  const [exportJobId, setExportJobId] = useState<string | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+
   useEffect(() => {
     authFetch('/api/user/preferences')
       .then((r) => r.json())
@@ -243,6 +252,51 @@ function SettingsPanel({
     } finally {
       setPrefsSaving(null);
     }
+  };
+
+  // ---- Export handlers (F-07) ----
+  const handleRequestExport = async () => {
+    setExportState('requesting');
+    setExportError(null);
+    try {
+      const res = await authFetch('/api/export/request', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Failed to request export');
+      }
+      setExportJobId(data.jobId);
+      setExportState('pending');
+      // Start polling for status
+      pollExportStatus(data.jobId);
+    } catch (e: unknown) {
+      setExportState('failed');
+      setExportError(e instanceof Error ? e.message : 'Please try again.');
+    }
+  };
+
+  const pollExportStatus = async (jobId: string) => {
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes at 5s intervals
+    const poll = async () => {
+      attempts++;
+      try {
+        const res = await authFetch(`/api/export/status/${jobId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setExportState(data.status);
+        if (data.status === 'completed' || data.status === 'failed') {
+          if (data.status === 'failed') setExportError(data.error || 'Export failed');
+          return;
+        }
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 5000);
+        }
+      } catch {
+        // Network blip — keep polling
+        if (attempts < maxAttempts) setTimeout(poll, 5000);
+      }
+    };
+    setTimeout(poll, 3000); // first check after 3s
   };
 
   return (
@@ -365,6 +419,86 @@ function SettingsPanel({
               </div>
             </>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Your Data (F-07 Full Data Export) */}
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Download className="w-5 h-5 text-emerald-500" />
+            Your Data
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-4">
+            <p className="text-sm text-emerald-900 leading-relaxed">
+              <strong>Your data is yours.</strong> Export everything — every board as a PDF, plus a portable JSON of your students, homework, and notes — in one click. We never delete anything when you export; this is a copy, not a migration.
+            </p>
+          </div>
+
+          {exportState === 'idle' && (
+            <Button
+              onClick={handleRequestExport}
+              className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-md shadow-emerald-500/20 gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export all my data
+            </Button>
+          )}
+
+          {(exportState === 'requesting' || exportState === 'pending' || exportState === 'processing') && (
+            <div className="flex items-center justify-center gap-3 py-3">
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+              <span className="text-sm text-muted-foreground">
+                {exportState === 'requesting' && 'Starting export...'}
+                {exportState === 'pending' && 'Queued — we\'ll email you when it\'s ready...'}
+                {exportState === 'processing' && 'Building your export...'}
+              </span>
+            </div>
+          )}
+
+          {exportState === 'completed' && exportJobId && (
+            <div className="space-y-3">
+              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3">
+                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-emerald-900">Your export is ready!</p>
+                  <p className="text-xs text-emerald-700 mt-0.5">We&apos;ve also emailed you a link. The download will expire if you request a new export.</p>
+                </div>
+              </div>
+              <a
+                href={`/api/export/download/${exportJobId}`}
+                className="flex items-center justify-center gap-2 w-full rounded-xl gradient-primary text-white font-semibold py-2.5 shadow-md shadow-emerald-500/20"
+              >
+                <Download className="w-4 h-4" />
+                Download ZIP
+              </a>
+            </div>
+          )}
+
+          {exportState === 'failed' && (
+            <div className="space-y-3">
+              <div className="rounded-xl bg-red-50 border border-red-200 p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-red-900">Export failed</p>
+                  <p className="text-xs text-red-700 mt-0.5">{exportError || 'Please try again.'}</p>
+                </div>
+              </div>
+              <Button
+                onClick={handleRequestExport}
+                variant="outline"
+                className="w-full rounded-xl"
+              >
+                Try again
+              </Button>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground text-center">
+            Exports include all your boards as PDFs + a portable JSON. Usually ready in a few minutes.
+          </p>
         </CardContent>
       </Card>
     </div>
