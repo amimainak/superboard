@@ -42,9 +42,16 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Eye,
 } from 'lucide-react';
 
-export function StudentManagementPanel({ agencyUserId }: { agencyUserId: string }) {
+interface StudentManagementPanelProps {
+  agencyUserId: string;
+  /** Optional callback — when provided, each row shows a "View Profile" button. */
+  onViewProfile?: (studentId: string, studentName: string) => void;
+}
+
+export function StudentManagementPanel({ agencyUserId, onViewProfile }: StudentManagementPanelProps) {
   const [students, setStudents] = useState<StudentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('active');
@@ -417,8 +424,22 @@ export function StudentManagementPanel({ agencyUserId }: { agencyUserId: string 
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
                   <td className="px-4 py-3">
-                    <p className="font-medium">{student.name}</p>
-                    <p className="text-xs text-muted-foreground">{student.email}</p>
+                    {onViewProfile ? (
+                      <button
+                        onClick={() => onViewProfile(student.id, student.name || student.email)}
+                        className="text-left group"
+                      >
+                        <p className="font-medium group-hover:text-emerald-600 group-hover:underline transition-colors">
+                          {student.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{student.email}</p>
+                      </button>
+                    ) : (
+                      <>
+                        <p className="font-medium">{student.name}</p>
+                        <p className="text-xs text-muted-foreground">{student.email}</p>
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     {student.isActive ? (
@@ -472,6 +493,17 @@ export function StudentManagementPanel({ agencyUserId }: { agencyUserId: string 
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 justify-end">
+                        {onViewProfile && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-muted-foreground hover:text-emerald-600"
+                            title="View profile"
+                            onClick={() => onViewProfile(student.id, student.name || student.email)}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                         {student.isActive ? (
                           <Button
                             size="sm"

@@ -293,12 +293,35 @@ model Student {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  // ── F-05 Student Profile fields ──
+  // Parent / guardian contact (separate from student email)
+  parentName        String?
+  parentEmail       String?
+  parentPhone       String?
+
+  // Consent flags — tutor records what they have permission for
+  consentPhoto      Boolean   @default(false)
+  consentVideo      Boolean   @default(false)
+  consentRecording  Boolean   @default(false)
+  consentMarketing  Boolean   @default(false)
+  consentAt         DateTime?  // when consent was last recorded
+
+  // Academic context
+  gradeLevel        String?    // free-form: "Grade 5", "Year 6", "K"
+  subjects          String[]   @default([])
+  notes             String?    @db.Text  // free-form tutor notes about the student
+
+  // Per-student join link — token is opaque, revocable, and tied to isActive
+  joinToken         String?    @unique
+  joinTokenGeneratedAt DateTime?
+
   agency User @relation("AgencyOwnerStudent", fields: [agencyId], references: [id], onDelete: Cascade)
   homeworkAssignments HomeworkAssignment[] @relation("HwAssignmentStudent")
 
   @@unique([agencyId, email])
   @@index([agencyId])
   @@index([email])
+  @@index([joinToken])
 }
 
 // ── Audit Log (admin action trail) ──

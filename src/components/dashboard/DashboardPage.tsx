@@ -107,7 +107,8 @@ import { LessonNotesPanel } from './LessonNotesPanel';
 import { ResourceLibraryPanel } from './ResourceLibraryPanel';
 import { InvoicePanel } from './InvoicePanel';
 import { AgencyAnalyticsPanel } from './AgencyAnalyticsPanel';
-import { StudentProgressPanel } from './StudentProgressPanel';
+import { StudentProfilePanel } from './StudentProfilePanel';
+import { StudentManagementPanel } from './StudentManagementPanel';
 
 // ============================================================
 // Types
@@ -122,6 +123,7 @@ type DashboardView =
   | 'resources'
   | 'recordings'
   | 'agency'
+  | 'students'
   | 'billing'
   | 'settings'
   | 'homework'
@@ -155,6 +157,7 @@ function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
 
   const workspace: NavItem[] = [
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Upcoming & past lessons' },
+    { id: 'students', label: 'Students', icon: Users, description: 'Student roster & profiles' },
     { id: 'recordings', label: 'Recordings', icon: Video, description: 'Lesson recordings' },
     { id: 'homework', label: 'Homework', icon: GraduationCap, description: 'Assignments & grading' },
     { id: 'lesson-notes', label: 'Lesson Notes', icon: FileText, description: 'Post-lesson notes & feedback' },
@@ -950,7 +953,27 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             )}
 
             {/* ============================================================
-                VIEW: Agency (Sub-tutors + Students)
+                VIEW: Students (Roster) — top-level, available to all tutors
+                ============================================================ */}
+            {activeView === 'students' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Students</h3>
+                  <p className="text-sm text-muted-foreground">Your student roster — click any student to view their full profile, timeline, and join link.</p>
+                </div>
+                <StudentManagementPanel
+                  agencyUserId={user?.id || ''}
+                  onViewProfile={(studentId, studentName) => {
+                    setProgressStudentId(studentId);
+                    setProgressStudentName(studentName);
+                    setActiveView('student-progress');
+                  }}
+                />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Agency (Sub-tutors + Students) — agency tier only
                 ============================================================ */}
             {activeView === 'agency' && isAgencyTier(tier) && (
               <div className="space-y-6 animate-fade-in-up">
@@ -976,14 +999,14 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             )}
 
             {/* ============================================================
-                VIEW: Student Progress
+                VIEW: Student Profile (full page, replaces old StudentProgressPanel)
                 ============================================================ */}
             {activeView === 'student-progress' && progressStudentId && (
               <div className="space-y-6 animate-fade-in-up">
-                <StudentProgressPanel
+                <StudentProfilePanel
                   studentId={progressStudentId}
                   studentName={progressStudentName || ''}
-                  onBack={() => { setProgressStudentId(null); setProgressStudentName(null); setActiveView('agency'); }}
+                  onBack={() => { setProgressStudentId(null); setProgressStudentName(null); setActiveView('students'); }}
                 />
               </div>
             )}
