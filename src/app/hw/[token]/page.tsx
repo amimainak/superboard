@@ -1,8 +1,10 @@
 // ============================================================
 // /hw/[token] — Student homework page (server component)
 // Validates token, loads assignment, renders client component
+// F-09: Loads tutor branding for the header
 // ============================================================
 import { db } from '@/lib/db'
+import { getBranding } from '@/lib/branding'
 import HomeworkStudent from '@/components/homework/HomeworkStudent'
 
 export const dynamic = 'force-dynamic'
@@ -24,6 +26,7 @@ export default async function HomeworkPage({ params }: { params: Promise<{ token
       studentSnapshot: true,
       feedbackSnapshot: true,
       submittedAt: true,
+      tutorId: true,
     },
   })
 
@@ -49,6 +52,9 @@ export default async function HomeworkPage({ params }: { params: Promise<{ token
     )
   }
 
+  // Load tutor branding
+  const branding = await getBranding(assignment.tutorId)
+
   const homeworkData = {
     id: assignment.id,
     token,
@@ -63,6 +69,5 @@ export default async function HomeworkPage({ params }: { params: Promise<{ token
     submittedAt: assignment.submittedAt?.toISOString() || null,
   }
 
-  return <HomeworkStudent initialData={homeworkData} />
+  return <HomeworkStudent initialData={homeworkData} branding={branding} />
 }
-// Trigger redeploy for Prisma client regeneration

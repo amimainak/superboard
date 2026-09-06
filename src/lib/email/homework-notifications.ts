@@ -62,6 +62,35 @@ export async function sendHomeworkNotification(params: NotifyParams): Promise<{ 
     return { sent: false, reason: 'already sent (idempotent skip)' }
   }
 
+  // F-09: Load tutor branding for the email header
+  const assignment = await db.homeworkAssignment.findUnique({
+    where: { id: assignmentId },
+    select: { tutorId: true },
+  })
+  let branding: { displayName: string; logoUrl: string | null; color: string; isPro: boolean } | null = null
+  if (assignment) {
+    const user = await db.user.findUnique({
+      where: { id: assignment.tutorId },
+      select: {
+        displayName: true,
+        name: true,
+        email: true,
+        brandingLogoUrl: true,
+        brandingColor: true,
+        tier: true,
+      },
+    })
+    if (user) {
+      const isPro = ['PRO', 'AGENCY', 'AGENCY_STANDARD', 'AGENCY_PREMIUM'].includes(user.tier)
+      branding = {
+        displayName: user.displayName || user.name || user.email,
+        logoUrl: user.brandingLogoUrl,
+        color: user.brandingColor || '#059669',
+        isPro,
+      }
+    }
+  }
+
   // Pick the right template — all templates now require recipientEmail
   const templateData = {
     tutorName: params.tutorName,
@@ -69,6 +98,7 @@ export async function sendHomeworkNotification(params: NotifyParams): Promise<{ 
     assignmentTitle: params.assignmentTitle,
     assignmentUrl: params.assignmentUrl,
     recipientEmail,
+    branding,
   }
 
   let template: { subject: string; html: string }

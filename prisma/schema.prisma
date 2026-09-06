@@ -42,6 +42,10 @@ model User {
   brandingLogoUrl       String?
   brandingColor         String?
   agencyName            String?
+  // F-09 Custom Branding — display name shown on parent-facing surfaces
+  // (e.g., "Sarah's Tutoring"). Pro-only feature. When null, falls back
+  // to the tutor's name or email.
+  displayName           String?
   // Widget system
   installedWidgets      Json?
   // Tutor preferences (feature toggles, defaults, etc.)
@@ -637,6 +641,85 @@ model EmailSuppression {
   @@unique([email, reason])
   @@index([email])
   @@index([reason])
+}
+
+// ── Session Recap (F-10 — private tutor notes after each lesson) ──
+// Auto-drafted from board content + lesson notes. Never sent to
+// parents — this is the tutor's working memory. Used to compile
+// Term Reports later.
+model SessionRecap {
+  id          String   @id @default(uuid())
+  roomId      String   @unique  // one recap per lesson
+  tutorId     String
+  studentId   String?
+  // Structured data extracted from the board
+  topics      String[]  @default([])
+  strengths   String[]  @default([])
+  growthAreas String[]  @default([])
+  nextSteps   String?   @db.Text
+  // AI-generated narrative (optional — tutor can write their own)
+  narrative   String?   @db.Text
+  aiGenerated Boolean   @default(false)
+  // Workflow: draft → approved → (used in term reports)
+  status      String   @default("draft")  // draft | approved | dismissed
+  approvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tutorId])
+  @@index([studentId])
+  @@index([status])
+}
+
+// ── Term Report (F-10 — compiled from recaps, sent to parent) ──
+// On-demand branded PDF. Requires explicit consent per report
+// (because it's about a child).
+model TermReport {
+  id          String   @id @default(uuid())
+  tutorId     String
+  studentId   String
+  startDate   DateTime
+  endDate     DateTime
+  // Compiled content
+  summary     String   @db.Text  // the polished narrative
+  lessonsCount Int
+  subjectsCovered String[]  @default([])
+  highlights  String[]  @default([])
+  // Consent + delivery
+  consentRecorded Boolean @default(false)
+  consentAt   DateTime?
+  sentToParent Boolean @default(false)
+  sentAt      DateTime?
+  parentEmail String?
+  // The rendered PDF (stored as base64, like exports)
+  pdfStorage  String?
+  createdAt   DateTime @default(now())
+
+  @@index([tutorId])
+  @@index([studentId])
+}
+
+// ── Certificate (F-11 — branded achievement certificates) ──
+// Tutor-issued. Photo consent is per-certificate.
+model Certificate {
+  id          String   @id @default(uuid())
+  tutorId     String
+  studentId   String?
+  studentName String  // denormalized — survives if student is deleted
+  templateId  String  // which template was used
+  title       String  // "10-Lesson Milestone", "Fractions Master", etc.
+  subtitle    String? // "Awarded for completing 10 lessons"
+  // Student photo (only with per-certificate consent)
+  photoUrl    String?  // null = use initials avatar
+  photoConsent Boolean @default(false)
+  photoConsentAt DateTime?
+  // Issued
+  issuedAt    DateTime @default(now())
+  // PDF storage (base64, like exports)
+  pdfStorage  String?
+
+  @@index([tutorId])
+  @@index([studentId])
 }
 
 // ── Resource Library (agency-scoped resources) ──

@@ -196,6 +196,158 @@ function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
 }
 
 // ============================================================
+// Branding Card (F-09 — Pro feature)
+// ============================================================
+
+function BrandingCard({ tier, user }: { tier: Tier; user: User }) {
+  const { toast } = useToast();
+  const isPro = tier === 'PRO' || isAgencyTier(tier);
+
+  const [displayName, setDisplayName] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [color, setColor] = useState('#059669');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    // Load current branding from /api/user/profile
+    authFetch('/api/user/profile')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.displayName) setDisplayName(d.displayName);
+        if (d?.brandingLogoUrl) setLogoUrl(d.brandingLogoUrl);
+        if (d?.brandingColor) setColor(d.brandingColor);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await authFetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displayName: displayName.trim() || null,
+          brandingLogoUrl: logoUrl.trim() || null,
+          brandingColor: color,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      toast({ title: 'Branding saved', description: 'Your changes are live on all parent-facing surfaces.' });
+    } catch {
+      toast({ title: 'Failed to save branding', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="rounded-2xl border border-border bg-card shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Palette className="w-5 h-5 text-emerald-500" />
+          Custom Branding
+          {!isPro && (
+            <Badge variant="secondary" className="ml-1 text-[10px] rounded-full bg-amber-100 text-amber-700">Pro</Badge>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {!isPro ? (
+          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
+            <p className="text-sm text-amber-900 font-medium">Upgrade to Pro to brand your experience</p>
+            <p className="text-xs text-amber-700 mt-1">
+              Pro tutors get their logo and display name on every parent-facing surface — waiting room, homework page, emails, certificates. No &ldquo;Powered by&rdquo; footer.
+            </p>
+            <Button
+              size="sm"
+              className="mt-3 rounded-xl gradient-primary border-0 text-white text-xs"
+              onClick={() => { /* TODO: link to pricing/upgrade */ }}
+            >
+              Upgrade to Pro
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Preview */}
+            <div className="rounded-xl border border-border p-4 bg-muted/30">
+              <div className="flex items-center gap-3">
+                {logoUrl ? (
+                  <img src={logoUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl"
+                    style={{ background: `linear-gradient(135deg, ${color}, #0891b2)` }}
+                  >
+                    {(displayName || user.email || 'S').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-semibold">{displayName || 'Your Tutoring Business'}</p>
+                  <p className="text-xs text-muted-foreground">This is what parents see</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Display name */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Display name</Label>
+              <Input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g., Sarah's Tutoring"
+                className="rounded-xl h-9 text-sm"
+                maxLength={100}
+              />
+              <p className="text-[11px] text-muted-foreground">Shown on the waiting room, homework page, emails, and certificates.</p>
+            </div>
+
+            {/* Logo URL */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Logo URL</Label>
+              <Input
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://example.com/logo.png"
+                className="rounded-xl h-9 text-sm"
+              />
+              <p className="text-[11px] text-muted-foreground">Upload your logo to any image host and paste the URL here. Square images work best.</p>
+            </div>
+
+            {/* Brand color */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium">Brand color</Label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="w-9 h-9 rounded-lg border border-border cursor-pointer"
+                />
+                <Input
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="rounded-xl h-9 text-sm w-32 font-mono"
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm gap-1.5"
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+              {saving ? 'Saving...' : 'Save branding'}
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================
 // Settings Panel (extracted inline)
 // ============================================================
 
@@ -394,6 +546,9 @@ function SettingsPanel({
           )}
         </CardContent>
       </Card>
+
+      {/* Custom Branding (F-09 — Pro feature) */}
+      <BrandingCard tier={tier} user={user} />
 
       {/* Teaching Preferences (F-06) */}
       <Card className="rounded-2xl border border-border bg-card shadow-sm">

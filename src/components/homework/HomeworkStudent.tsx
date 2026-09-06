@@ -31,11 +31,19 @@ interface HomeworkData {
   submittedAt: string | null
 }
 
-interface HomeworkStudentProps {
-  initialData: HomeworkData
+interface Branding {
+  displayName: string
+  logoUrl: string | null
+  color: string
+  isPro: boolean
 }
 
-export default function HomeworkStudent({ initialData }: HomeworkStudentProps) {
+interface HomeworkStudentProps {
+  initialData: HomeworkData
+  branding?: Branding | null
+}
+
+export default function HomeworkStudent({ initialData, branding }: HomeworkStudentProps) {
   const [data, setData] = useState<HomeworkData>(initialData)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [showSubmitDialog, setShowSubmitDialog] = useState(false)
@@ -44,6 +52,9 @@ export default function HomeworkStudent({ initialData }: HomeworkStudentProps) {
   const [showReturnedBanner, setShowReturnedBanner] = useState(false)
   const [isReadOnly, setIsReadOnly] = useState(initialData.isViewOnly)
   const lastSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const brandColor = branding?.color || '#059669'
+  const brandName = branding?.displayName || 'Superboard'
 
   const loadState = useWhiteboardStore((s) => s.loadState)
   const elements = useWhiteboardStore((s) => s.elements)
@@ -138,21 +149,29 @@ export default function HomeworkStudent({ initialData }: HomeworkStudentProps) {
       background: isDark ? '#0f172a' : '#f8fafc',
       fontFamily: 'system-ui, -apple-system, sans-serif',
     }}>
-      {/* Header bar */}
+      {/* Header bar — branded with tutor's logo + name */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '8px 16px', borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
         background: isDark ? '#0f172a' : '#ffffff', flexShrink: 0,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>📝</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Brand logo or initials mark */}
+          {branding?.logoUrl ? (
+            <img src={branding.logoUrl} alt={brandName} style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'cover' }} />
+          ) : (
+            <div style={{
+              width: 28, height: 28, borderRadius: 6,
+              background: `linear-gradient(135deg, ${brandColor}, #0891b2)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontSize: 13, fontWeight: 800,
+            }}>
+              {brandName.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
             <div style={{ fontSize: 14, fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b' }}>{data.title}</div>
-            {dueText && (
-              <div style={{ fontSize: 11, color: data.late ? '#ef4444' : '#64748b' }}>
-                {data.late ? 'Late — ' : 'Due '} {dueText}
-              </div>
-            )}
+            <div style={{ fontSize: 10, color: '#94a3b8' }}>{brandName}</div>
           </div>
         </div>
 

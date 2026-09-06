@@ -2,6 +2,7 @@
 
 // ============================================================
 // JoinClient — handles the actual room join + UI states
+// F-09: Branded with the tutor's logo + display name
 // ============================================================
 
 import { useEffect, useState, useCallback } from 'react'
@@ -16,13 +17,21 @@ type Status =
   | 'ACCOUNT_PAUSED'    // 403
   | 'ERROR'             // network / unknown
 
+interface Branding {
+  displayName: string
+  logoUrl: string | null
+  color: string
+  isPro: boolean
+}
+
 interface Props {
   initialStatus: Status
   studentName: string | null
   token?: string
+  branding: Branding | null
 }
 
-export default function JoinClient({ initialStatus, studentName, token }: Props) {
+export default function JoinClient({ initialStatus, studentName, token, branding }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState<Status>(initialStatus)
 
@@ -58,6 +67,11 @@ export default function JoinClient({ initialStatus, studentName, token }: Props)
     }
   }, [token, router])
 
+  // Branding helpers
+  const brandColor = branding?.color || '#059669'
+  const brandName = branding?.displayName || 'Superboard'
+  const isPro = branding?.isPro ?? false
+
   // Auto-attempt on mount if the link is valid
   useEffect(() => {
     if (initialStatus === 'LINK_VALID') {
@@ -80,25 +94,40 @@ export default function JoinClient({ initialStatus, studentName, token }: Props)
         textAlign: 'center',
       }}
     >
-      {/* Logo */}
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          borderRadius: 14,
-          background: 'linear-gradient(135deg, #059669, #0891b2)',
-          margin: '0 auto 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 8px 24px rgba(5, 150, 105, 0.25)',
-        }}
-      >
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-          <path d="M12 19l7-7 3 3-7 7-3-3z" />
-          <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" />
-        </svg>
-      </div>
+      {/* Brand logo — tutor's logo if Pro+uploaded, else brand-colored mark */}
+      {branding?.logoUrl ? (
+        <img
+          src={branding.logoUrl}
+          alt={brandName}
+          style={{
+            width: 64, height: 64, borderRadius: 16, objectFit: 'cover',
+            margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 14,
+            background: `linear-gradient(135deg, ${brandColor}, #0891b2)`,
+            margin: '0 auto 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: `0 8px 24px ${brandColor}40`,
+          }}
+        >
+          <span style={{ color: 'white', fontSize: 24, fontWeight: 800 }}>
+            {brandName.charAt(0).toUpperCase()}
+          </span>
+        </div>
+      )}
+
+      {/* Brand name */}
+      <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 24px', fontWeight: 500 }}>
+        {brandName}
+      </p>
 
       {/* JOINING / LINK_VALID — spinner */}
       {(status === 'LINK_VALID' || status === 'JOINING' || status === 'REDIRECTING') && (
@@ -139,7 +168,7 @@ export default function JoinClient({ initialStatus, studentName, token }: Props)
           <button
             onClick={attemptJoin}
             style={{
-              background: '#059669',
+              background: brandColor,
               color: 'white',
               border: 'none',
               borderRadius: 12,
@@ -194,7 +223,7 @@ export default function JoinClient({ initialStatus, studentName, token }: Props)
           <button
             onClick={attemptJoin}
             style={{
-              background: '#059669',
+              background: brandColor,
               color: 'white',
               border: 'none',
               borderRadius: 12,
@@ -202,12 +231,19 @@ export default function JoinClient({ initialStatus, studentName, token }: Props)
               fontSize: 15,
               fontWeight: 600,
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+              boxShadow: `0 4px 12px ${brandColor}4d`,
             }}
           >
             Try again
           </button>
         </>
+      )}
+
+      {/* F-09: "Powered by" footer for non-Pro tutors */}
+      {!isPro && (
+        <p style={{ fontSize: 11, color: '#cbd5e1', margin: '40px 0 0' }}>
+          Powered by <span style={{ fontWeight: 600, color: '#94a3b8' }}>Superboard</span>
+        </p>
       )}
     </div>
   )

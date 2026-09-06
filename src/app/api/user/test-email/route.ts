@@ -15,6 +15,7 @@ import { db } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
 import { sendEmail, isEmailInDevMode, getFromAddress } from '@/lib/email/client'
 import { testEmail } from '@/lib/email/templates'
+import { getBranding } from '@/lib/branding'
 
 // In-memory rate limit (per user, 1/min) — simple and sufficient
 const _lastSent = new Map<string, number>()
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
     const content = testEmail({
       tutorName: user.name || user.email,
       recipientEmail: user.email,
+      branding: await getBranding(userId),
     })
 
     const result = await sendEmail({

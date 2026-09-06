@@ -20,14 +20,42 @@ interface BaseEmailData {
   assignmentTitle: string
   assignmentUrl: string
   recipientEmail: string  // needed to generate the unsubscribe token
+  // F-09: Optional branding for email header
+  branding?: EmailBranding | null
 }
 
-const WRAPPER = (title: string, bodyHtml: string, recipientEmail: string, transactional: boolean): string => {
+// F-09: Optional branding for email header
+interface EmailBranding {
+  displayName: string
+  logoUrl: string | null
+  color: string
+  isPro: boolean
+}
+
+const WRAPPER = (
+  title: string,
+  bodyHtml: string,
+  recipientEmail: string,
+  transactional: boolean,
+  branding?: EmailBranding | null,
+): string => {
   const unsubToken = generateUnsubscribeToken(recipientEmail)
   const unsubUrl = `${getBaseUrl()}/unsubscribe/${unsubToken}`
   const footerNote = transactional
     ? `You're receiving this because a homework assignment involves you or your child. <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe from optional notifications</a> (you'll still receive essential assignment notices).`
     : `You're receiving this email at ${recipientEmail}. <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>`
+
+  // F-09: Branded header — tutor's logo + name if Pro, else generic Superboard
+  const brandName = branding?.displayName || 'Superboard'
+  const brandColor = branding?.color || '#059669'
+  const headerContent = branding?.logoUrl
+    ? `<img src="${branding.logoUrl}" alt="${escapeHtml(brandName)}" style="width:32px;height:32px;border-radius:8px;object-fit:cover;" />`
+    : `<div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,${brandColor},#0891b2);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-size:16px;font-weight:800;">${escapeHtml(brandName.charAt(0).toUpperCase())}</span></div>`
+
+  // F-09: "Powered by" footer for non-Pro tutors
+  const poweredByFooter = (!branding || !branding.isPro)
+    ? `<tr><td style="padding:8px 32px 16px;border-top:1px solid #f1f5f9;"><p style="margin:0;font-size:11px;color:#cbd5e1;text-align:center;">Powered by <span style="font-weight:600;color:#94a3b8;">Superboard</span></p></td></tr>`
+    : ''
 
   return `
 <!DOCTYPE html>
@@ -38,13 +66,11 @@ const WRAPPER = (title: string, bodyHtml: string, recipientEmail: string, transa
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
 
-        <!-- Header -->
-        <tr><td style="background:linear-gradient(135deg,#059669,#0891b2);padding:24px 32px;">
+        <!-- Header — branded -->
+        <tr><td style="background:linear-gradient(135deg,${brandColor},#0891b2);padding:24px 32px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
-            </div>
-            <span style="color:white;font-size:18px;font-weight:700;">Superboard</span>
+            ${headerContent}
+            <span style="color:white;font-size:18px;font-weight:700;">${escapeHtml(brandName)}</span>
           </div>
         </td></tr>
 
@@ -60,12 +86,17 @@ const WRAPPER = (title: string, bodyHtml: string, recipientEmail: string, transa
             ${footerNote}
           </p>
         </td></tr>
+        ${poweredByFooter}
       </table>
     </td></tr>
   </table>
 </body>
 </html>
 `
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 function getBaseUrl(): string {
@@ -104,7 +135,7 @@ export function homeworkAssignedEmail(data: BaseEmailData & { dueDate?: string |
   `
   return {
     subject: `📋 New homework from ${data.tutorName}: ${data.assignmentTitle}`,
-    html: WRAPPER('You have new homework', body, data.recipientEmail, true),
+    html: WRAPPER('You have new homework', body, data.recipientEmail, true, data.branding),
   }
 }
 
@@ -123,7 +154,7 @@ export function homeworkOpenedEmail(data: BaseEmailData): { subject: string; htm
   `
   return {
     subject: `👀 ${data.studentName} opened "${data.assignmentTitle}"`,
-    html: WRAPPER('Homework opened', body, data.recipientEmail, false),
+    html: WRAPPER('Homework opened', body, data.recipientEmail, false, data.branding),
   }
 }
 
@@ -147,7 +178,7 @@ export function homeworkSubmittedEmail(data: BaseEmailData & { late: boolean; su
   `
   return {
     subject: `✅ ${data.studentName} submitted "${data.assignmentTitle}"`,
-    html: WRAPPER('Homework submitted', body, data.recipientEmail, true),
+    html: WRAPPER('Homework submitted', body, data.recipientEmail, true, data.branding),
   }
 }
 
@@ -166,7 +197,7 @@ export function homeworkReturnedEmail(data: BaseEmailData): { subject: string; h
   `
   return {
     subject: `↩️ ${data.tutorName} returned your homework: ${data.assignmentTitle}`,
-    html: WRAPPER('Homework returned', body, data.recipientEmail, true),
+    html: WRAPPER('Homework returned', body, data.recipientEmail, true, data.branding),
   }
 }
 
@@ -185,7 +216,7 @@ export function homeworkReviewedEmail(data: BaseEmailData): { subject: string; h
   `
   return {
     subject: `🎉 ${data.tutorName} reviewed your homework: ${data.assignmentTitle}`,
-    html: WRAPPER('Homework reviewed', body, data.recipientEmail, false),
+    html: WRAPPER('Homework reviewed', body, data.recipientEmail, false, data.branding),
   }
 }
 
@@ -198,6 +229,7 @@ export function exportReadyEmail(data: {
   downloadUrl: string
   fileSizeMb: number
   recipientEmail: string
+  branding?: EmailBranding | null
 }): { subject: string; html: string } {
   const body = `
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#475569;">
@@ -213,14 +245,14 @@ export function exportReadyEmail(data: {
   `
   return {
     subject: `📦 Your Superboard data export is ready`,
-    html: WRAPPER('Your data export is ready', body, data.recipientEmail, false),
+    html: WRAPPER('Your data export is ready', body, data.recipientEmail, false, data.branding),
   }
 }
 
 // ----------------------------------------------------------------
 // 7. Test email — sent when the tutor clicks "Send test email"
 // ----------------------------------------------------------------
-export function testEmail(data: { tutorName: string; recipientEmail: string }): { subject: string; html: string } {
+export function testEmail(data: { tutorName: string; recipientEmail: string; branding?: EmailBranding | null }): { subject: string; html: string } {
   const body = `
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#475569;">
       Hi ${data.tutorName}, this is a test email from Superboard. If you&apos;re reading this, your email setup is working correctly.
@@ -240,7 +272,7 @@ export function testEmail(data: { tutorName: string; recipientEmail: string }): 
   `
   return {
     subject: `✉️ Superboard email test — it works!`,
-    html: WRAPPER('Email test', body, data.recipientEmail, false),
+    html: WRAPPER('Email test', body, data.recipientEmail, false, data.branding),
   }
 }
 

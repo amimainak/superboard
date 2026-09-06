@@ -25,6 +25,7 @@ import { db } from '@/lib/db'
 import { buildExportZip } from '@/lib/export/build-export-zip'
 import { sendEmail } from '@/lib/email/client'
 import { exportReadyEmail } from '@/lib/email/templates'
+import { getBranding } from '@/lib/branding'
 
 const MAX_JOBS_PER_RUN = 3  // keep each cron invocation under the timeout
 const MAX_ZIP_SIZE_BYTES = 8 * 1024 * 1024  // 8MB cap — DB storage limit for base64
@@ -107,6 +108,7 @@ export async function GET(request: NextRequest) {
         })
         if (user?.email) {
           const downloadUrl = `${getBaseUrl()}/api/export/download/${job.id}`
+          const branding = await getBranding(job.userId)
           try {
             const emailContent = exportReadyEmail({
               tutorName: user.name || user.email,
@@ -114,6 +116,7 @@ export async function GET(request: NextRequest) {
               downloadUrl,
               fileSizeMb: totalSize / 1024 / 1024,
               recipientEmail: user.email,
+              branding,
             })
             await sendEmail({
               to: user.email,

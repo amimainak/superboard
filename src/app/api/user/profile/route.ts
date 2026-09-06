@@ -40,7 +40,7 @@ export async function PATCH(request: Request) {
 
     const body = await request.json()
     // Whitelist allowed fields
-    const allowedFields = ['name', 'brandingLogoUrl', 'brandingColor', 'agencyName']
+    const allowedFields = ['name', 'brandingLogoUrl', 'brandingColor', 'agencyName', 'displayName']
     const updates: Record<string, unknown> = {}
     for (const key of allowedFields) {
       if (body[key] !== undefined) updates[key] = body[key]

@@ -18,6 +18,7 @@ import { requireAuth } from '@/lib/auth'
 import { buildExportZip } from '@/lib/export/build-export-zip'
 import { sendEmail } from '@/lib/email/client'
 import { exportReadyEmail } from '@/lib/email/templates'
+import { getBranding } from '@/lib/branding'
 
 const RATE_LIMIT_MS = 60 * 60 * 1000  // 1 hour
 const INLINE_THRESHOLD = 8  // boards under this count → try inline
@@ -111,12 +112,14 @@ export async function POST(request: NextRequest) {
         const user = await db.user.findUnique({ where: { id: userId }, select: { email: true, name: true } })
         if (user?.email) {
           const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://superboard.app')
+          const branding = await getBranding(userId)
           const emailContent = exportReadyEmail({
             tutorName: user.name || user.email,
             boardCount: processed,
             downloadUrl: `${baseUrl}/api/export/download/${job.id}`,
             fileSizeMb: totalSize / 1024 / 1024,
             recipientEmail: user.email,
+            branding,
           })
           sendEmail({ to: user.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {})
         }
