@@ -53,3 +53,26 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
 }
+
+// F6: Delete a certificate
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) return auth
+    const userId = (auth as { userId: string }).userId
+    const { certificateId } = await context.params
+
+    const cert = await db.certificate.findUnique({
+      where: { id: certificateId },
+      select: { tutorId: true },
+    })
+    if (!cert) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (cert.tutorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    await db.certificate.delete({ where: { id: certificateId } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[Certificate DELETE]', error)
+    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+  }
+}

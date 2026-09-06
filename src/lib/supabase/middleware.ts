@@ -181,6 +181,27 @@ export async function updateSession(request: NextRequest) {
   supabaseResponse.headers.set('Permissions-Policy', 'camera=(self), microphone=(self), display-capture=(self)')
   supabaseResponse.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
 
+  // S3: Content-Security-Policy — prevents XSS by restricting script/image/style sources.
+  // 'unsafe-inline' needed for: Next.js inline styles, styled-components, SVG styles.
+  // 'unsafe-eval' needed for: some dev-mode Next.js hot reload (removed in production builds).
+  // data: needed for: canvas data URLs, inline SVG backgrounds.
+  // blob: needed for: MediaRecorder (student video recording), image previews.
+  // ws:/wss: needed for: Supabase Realtime + Hocuspocus WebSocket connections.
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    "media-src 'self' blob: data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com",
+    "frame-src 'self' https://www.geogebra.org",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ')
+  supabaseResponse.headers.set('Content-Security-Policy', csp)
+
   // Ensure CSRF cookie is set on every authenticated response
   ensureCSRFCookie(supabaseResponse)
 

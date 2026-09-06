@@ -9,7 +9,7 @@
 
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/client'
 
 /**
@@ -70,5 +70,3 @@ export function useRecordingListener(roomId: string) {
   return studentRecording
 }
 
-// Need useRef import
-import { useRef } from 'react'

@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAuth } from '@/lib/auth'
 import { sendHomeworkNotification } from '@/lib/email/homework-notifications'
+import { rateLimit } from '@/lib/rate-limit'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -91,6 +92,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     // --- Autosave student work (no auth — token-based) ---
     if (body.studentSnapshot !== undefined && body.token) {
+      // S4: Rate limit autosave — 1 save per 2 seconds per assignment
+      const { allowed } = rateLimit(`hw-autosave:${id}`, 30, 60_000) // 30 saves/min max
+      if (!allowed) {
+        return NextResponse.json({ error: 'Saving too fast — please slow down.' }, { status: 429 })
+      }
+
       const assignment = await db.homeworkAssignment.findUnique({ where: { id } })
       if (!assignment) return NextResponse.json({ error: 'Not found' }, { status: 404 })
       if (assignment.assignmentToken !== body.token) {

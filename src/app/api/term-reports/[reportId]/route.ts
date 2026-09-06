@@ -1,5 +1,5 @@
 // ============================================================
-// API: Term Report by ID — Download PDF
+// API: Term Report by ID — Download PDF + Delete
 // ============================================================
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
@@ -43,6 +43,29 @@ export async function GET(request: NextRequest, context: RouteContext) {
     })
   } catch (error) {
     console.error('[Term Report Download GET]', error)
+    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+  }
+}
+
+// F7: Delete a term report
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  try {
+    const auth = await requireAuth(request)
+    if (auth instanceof NextResponse) return auth
+    const userId = (auth as { userId: string }).userId
+    const { reportId } = await context.params
+
+    const report = await db.termReport.findUnique({
+      where: { id: reportId },
+      select: { tutorId: true },
+    })
+    if (!report) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (report.tutorId !== userId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+    await db.termReport.delete({ where: { id: reportId } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[Term Report DELETE]', error)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
 }

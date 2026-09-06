@@ -327,6 +327,7 @@ model Student {
 
   agency User @relation("AgencyOwnerStudent", fields: [agencyId], references: [id], onDelete: Cascade)
   homeworkAssignments HomeworkAssignment[] @relation("HwAssignmentStudent")
+  scheduledLessons ScheduledLesson[] @relation("ScheduledLessonStudent")
 
   @@unique([agencyId, email])
   @@index([agencyId])
@@ -442,6 +443,7 @@ model ScheduledLesson {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   reminders   ReminderLog[]
+  student     Student?  @relation("ScheduledLessonStudent", fields: [studentId], references: [id], onDelete: SetNull)
 
   @@index([tutorId])
   @@index([status])

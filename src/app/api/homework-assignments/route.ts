@@ -50,7 +50,25 @@ export async function GET(request: NextRequest) {
       where,
       orderBy: { createdAt: 'desc' },
       take: 100,
-      include: { student: true },
+      // P2: Exclude large JSON snapshots from list query — they can be
+      // several MB each. Only load them in the single-item GET.
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        late: true,
+        dueAt: true,
+        createdAt: true,
+        updatedAt: true,
+        submittedAt: true,
+        openedAt: true,
+        studentId: true,
+        assignmentToken: true,
+        student: {
+          select: { id: true, name: true, email: true },
+        },
+      },
     })
 
     return NextResponse.json({ assignments })
