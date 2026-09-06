@@ -13,6 +13,7 @@ import {
   AutoSaveIndicator,
 } from '@/components/room/widgets'
 import { useWidgetStore } from '@/lib/room/widget-store'
+import { LessonRecorder } from '@/components/room/recording/LessonRecorder'
 import '@/components/room/widgets/widgets.css'
 
 const WhiteboardClient = dynamic(() => import('@/components/room/RoomWhiteboard'), {
@@ -58,6 +59,7 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null)
   const [saveTrigger, setSaveTrigger] = useState(0)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('saved')
+  const [studentRecording, setStudentRecording] = useState(false)
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -148,6 +150,32 @@ export default function RoomPage() {
 
         {/* Widget Toggle Buttons — top-right overlay */}
         <WidgetToggleBar />
+
+        {/* Lesson Recorder — top-right overlay (next to widget toggles) */}
+        <div style={{
+          position: 'absolute', top: 12, right: 200, zIndex: 10,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <LessonRecorder
+            roomId={roomId}
+            onRecordingStateChange={setStudentRecording}
+          />
+        </div>
+
+        {/* Recording indicator — shown to tutor when student is recording */}
+        {studentRecording && (
+          <div style={{
+            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 10,
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '4px 12px', borderRadius: 20,
+            background: '#dc2626', color: 'white', fontSize: 12, fontWeight: 600,
+            boxShadow: '0 2px 8px rgba(220,38,38,0.3)',
+            animation: 'pulse 2s infinite',
+          }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'white' }} />
+            Student is recording
+          </div>
+        )}
 
         {/* Raise Hand — positioned via CSS (widgets.css responsive) */}
         <div className="raise-hand-wrapper">

@@ -912,31 +912,3 @@ Recommendation: Introduce Vitest for unit tests (utilities, validators, usage ca
 ============================================================
 END OF AUDIT
 ============================================================
-
----
-Task ID: F-08
-Agent: main
-Task: Email hardening — production-ready wiring for custom domain
-
-Work Log:
-- Schema: EmailSuppression model (id, email, reason, source, eventDetails, createdAt). Unique on (email, reason). Tracks bounced/complained/unsubscribed addresses.
-- src/lib/email/suppression.ts: isSuppressed(), suppressEmail(), unsuppressEmail() helpers.
-- sendEmail() now checks suppression list before every send (bypassSuppression flag for test emails).
-- POST /api/webhooks/resend: receives Resend bounce + complaint webhooks. Secret-protected (RESEND_WEBHOOK_SECRET). Auto-suppresses bounced/complained addresses.
-- /unsubscribe/[token]: public page with HMAC token lookup. Server component finds email by verifying token against Student.parentEmail, Student.email, User.email. Client component handles confirm/already-unsubscribed/invalid states.
-- POST /api/unsubscribe: public endpoint, token is the auth. Adds to suppression list with reason 'unsubscribe'.
-- src/lib/email/unsubscribe-token.ts: generateUnsubscribeToken() = HMAC-SHA256 of email using UNSUBSCRIBE_SECRET. Deterministic, can't be reversed, no separate token DB.
-- All 7 email templates now include unsubscribe link in footer. Transactional emails (assigned, returned) note that unsubscribing only stops optional notifications.
-- POST /api/user/test-email: sends test email to tutor's own address. Bypasses suppression. Rate-limited 1/min.
-- GET /api/user/email-status: returns configured/devMode/fromAddress/domain for Settings UI.
-- Settings → new Notifications card: email status indicator (amber=dev mode, green=production), send test email button with feedback, notification list, note about parent unsubscribe.
-- URL generation audit: all email URL generators now prefer NEXT_PUBLIC_SITE_URL over VERCEL_URL so links point to the custom domain when configured.
-- Middleware: /unsubscribe/*, /api/unsubscribe, /api/webhooks/resend all exempt from user auth + CSRF.
-
-Stage Summary:
-- 1 new Prisma model (EmailSuppression)
-- 5 new routes: /unsubscribe/[token] (page), /api/unsubscribe (POST), /api/webhooks/resend (POST), /api/user/test-email (POST), /api/user/email-status (GET)
-- 3 new env vars on Vercel: RESEND_WEBHOOK_SECRET, UNSUBSCRIBE_SECRET (CRON_SECRET already set)
-- Email system is production-ready — when custom domain is verified in Resend, just update RESEND_FROM_ADDRESS + NEXT_PUBLIC_SITE_URL and everything works
-- Deployed to https://superboard-three.vercel.app (latest commit 3811201)
-- All smoke tests passing

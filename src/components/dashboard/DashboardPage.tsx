@@ -75,12 +75,6 @@ import {
   Zap,
   Crown,
   Shield,
-  Download,
-  CheckCircle,
-  AlertCircle,
-  Loader2,
-  Mail,
-  Send,
   LayoutDashboard,
   Home,
   FolderOpen,
@@ -93,13 +87,13 @@ import {
   ChevronDown,
   Receipt,
   ClipboardList,
+  Award,
+  FileBarChart,
   Library,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { authFetch } from '@/lib/auth-fetch';
 import { BillingPanel } from './BillingPanel';
 import { SavedBoardsPanel } from './SavedBoardsPanel';
-import { BoardLibrary } from '@/components/library/BoardLibrary';
 import { TemplatesPanel } from './TemplatesPanel';
 import { AgencyAdminPanel } from './AgencyAdminPanel';
 import { MyRoomsPanel } from './MyRoomsPanel';
@@ -115,7 +109,9 @@ import { ResourceLibraryPanel } from './ResourceLibraryPanel';
 import { InvoicePanel } from './InvoicePanel';
 import { AgencyAnalyticsPanel } from './AgencyAnalyticsPanel';
 import { StudentProfilePanel } from './StudentProfilePanel';
-import { StudentManagementPanel } from './StudentManagementPanel';
+import { RecapPanel } from './RecapPanel';
+import { CertificatePanel } from './CertificatePanel';
+import { TermReportPanel } from './TermReportPanel';
 
 // ============================================================
 // Types
@@ -123,7 +119,6 @@ import { StudentManagementPanel } from './StudentManagementPanel';
 
 type DashboardView =
   | 'overview'
-  | 'library'
   | 'analytics'
   | 'lessons'
   | 'schedule'
@@ -136,7 +131,10 @@ type DashboardView =
   | 'homework'
   | 'lesson-notes'
   | 'invoices'
-  | 'student-progress';
+  | 'student-progress'
+  | 'recaps'
+  | 'certificates'
+  | 'reports';
 
 // ============================================================
 // Navigation Items
@@ -157,17 +155,18 @@ interface NavGroup {
 function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
   const common: NavItem[] = [
     { id: 'overview', label: 'Overview', icon: Home, description: 'Dashboard overview' },
-    { id: 'library', label: 'Board Library', icon: Library, description: 'Search & manage saved boards' },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Usage analytics & insights' },
     { id: 'lessons', label: 'My Lessons', icon: BookOpen, description: 'Active and past lessons' },
   ];
 
   const workspace: NavItem[] = [
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Upcoming & past lessons' },
-    { id: 'students', label: 'Students', icon: Users, description: 'Student roster & profiles' },
     { id: 'recordings', label: 'Recordings', icon: Video, description: 'Lesson recordings' },
     { id: 'homework', label: 'Homework', icon: GraduationCap, description: 'Assignments & grading' },
     { id: 'lesson-notes', label: 'Lesson Notes', icon: FileText, description: 'Post-lesson notes & feedback' },
+    { id: 'recaps', label: 'Recaps', icon: ClipboardList, description: 'Session recaps & review' },
+    { id: 'certificates', label: 'Certificates', icon: Award, description: 'Issue achievement certificates' },
+    { id: 'reports', label: 'Term Reports', icon: FileBarChart, description: 'Compile & send progress reports' },
   ];
 
   const resources: NavItem[] = isAgencyTier(tier) ? [
@@ -196,158 +195,6 @@ function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
 }
 
 // ============================================================
-// Branding Card (F-09 — Pro feature)
-// ============================================================
-
-function BrandingCard({ tier, user }: { tier: Tier; user: User }) {
-  const { toast } = useToast();
-  const isPro = tier === 'PRO' || isAgencyTier(tier);
-
-  const [displayName, setDisplayName] = useState('');
-  const [logoUrl, setLogoUrl] = useState('');
-  const [color, setColor] = useState('#059669');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    // Load current branding from /api/user/profile
-    authFetch('/api/user/profile')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d?.displayName) setDisplayName(d.displayName);
-        if (d?.brandingLogoUrl) setLogoUrl(d.brandingLogoUrl);
-        if (d?.brandingColor) setColor(d.brandingColor);
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await authFetch('/api/user/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          displayName: displayName.trim() || null,
-          brandingLogoUrl: logoUrl.trim() || null,
-          brandingColor: color,
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to save');
-      toast({ title: 'Branding saved', description: 'Your changes are live on all parent-facing surfaces.' });
-    } catch {
-      toast({ title: 'Failed to save branding', variant: 'destructive' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Card className="rounded-2xl border border-border bg-card shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Palette className="w-5 h-5 text-emerald-500" />
-          Custom Branding
-          {!isPro && (
-            <Badge variant="secondary" className="ml-1 text-[10px] rounded-full bg-amber-100 text-amber-700">Pro</Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {!isPro ? (
-          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
-            <p className="text-sm text-amber-900 font-medium">Upgrade to Pro to brand your experience</p>
-            <p className="text-xs text-amber-700 mt-1">
-              Pro tutors get their logo and display name on every parent-facing surface — waiting room, homework page, emails, certificates. No &ldquo;Powered by&rdquo; footer.
-            </p>
-            <Button
-              size="sm"
-              className="mt-3 rounded-xl gradient-primary border-0 text-white text-xs"
-              onClick={() => { /* TODO: link to pricing/upgrade */ }}
-            >
-              Upgrade to Pro
-            </Button>
-          </div>
-        ) : (
-          <>
-            {/* Preview */}
-            <div className="rounded-xl border border-border p-4 bg-muted/30">
-              <div className="flex items-center gap-3">
-                {logoUrl ? (
-                  <img src={logoUrl} alt="Logo" className="w-12 h-12 rounded-xl object-cover" />
-                ) : (
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl"
-                    style={{ background: `linear-gradient(135deg, ${color}, #0891b2)` }}
-                  >
-                    {(displayName || user.email || 'S').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-semibold">{displayName || 'Your Tutoring Business'}</p>
-                  <p className="text-xs text-muted-foreground">This is what parents see</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Display name */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Display name</Label>
-              <Input
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="e.g., Sarah's Tutoring"
-                className="rounded-xl h-9 text-sm"
-                maxLength={100}
-              />
-              <p className="text-[11px] text-muted-foreground">Shown on the waiting room, homework page, emails, and certificates.</p>
-            </div>
-
-            {/* Logo URL */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Logo URL</Label>
-              <Input
-                value={logoUrl}
-                onChange={(e) => setLogoUrl(e.target.value)}
-                placeholder="https://example.com/logo.png"
-                className="rounded-xl h-9 text-sm"
-              />
-              <p className="text-[11px] text-muted-foreground">Upload your logo to any image host and paste the URL here. Square images work best.</p>
-            </div>
-
-            {/* Brand color */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Brand color</Label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-9 h-9 rounded-lg border border-border cursor-pointer"
-                />
-                <Input
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="rounded-xl h-9 text-sm w-32 font-mono"
-                />
-              </div>
-            </div>
-
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-              className="w-full rounded-xl gradient-primary border-0 text-white font-semibold text-sm gap-1.5"
-            >
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-              {saving ? 'Saving...' : 'Save branding'}
-            </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// ============================================================
 // Settings Panel (extracted inline)
 // ============================================================
 
@@ -370,117 +217,6 @@ function SettingsPanel({
   toggleDark: () => void;
   onClose: () => void;
 }) {
-  // ---- Tutor preferences (F-06) ----
-  const [prefs, setPrefs] = useState<{ startLessonFromProfile: boolean; startLessonFromLibrary: boolean }>({
-    startLessonFromProfile: true,
-    startLessonFromLibrary: true,
-  });
-  const [prefsLoading, setPrefsLoading] = useState(true);
-  const [prefsSaving, setPrefsSaving] = useState<string | null>(null);
-
-  // ---- Data export (F-07) ----
-  const [exportState, setExportState] = useState<'idle' | 'requesting' | 'pending' | 'processing' | 'completed' | 'failed'>('idle');
-  const [exportJobId, setExportJobId] = useState<string | null>(null);
-  const [exportError, setExportError] = useState<string | null>(null);
-
-  // ---- Email status (F-08) ----
-  const [emailStatus, setEmailStatus] = useState<{ configured: boolean; devMode: boolean; fromAddress: string; domain: string } | null>(null);
-  const [sendingTest, setSendingTest] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  useEffect(() => {
-    authFetch('/api/user/preferences')
-      .then((r) => r.json())
-      .then((d) => { if (d?.preferences) setPrefs(d.preferences); })
-      .catch(() => {})
-      .finally(() => setPrefsLoading(false));
-    // Fetch email status
-    authFetch('/api/user/email-status')
-      .then((r) => r.json())
-      .then((d) => { if (d) setEmailStatus(d); })
-      .catch(() => {});
-  }, []);
-
-  const handleSendTestEmail = async () => {
-    setSendingTest(true);
-    setTestResult(null);
-    try {
-      const res = await authFetch('/api/user/test-email', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTestResult({ success: true, message: `Sent to ${data.sentTo}${data.devMode ? ' (dev mode — check server logs)' : ''}` });
-      } else {
-        setTestResult({ success: false, message: data.details || data.error || 'Failed to send' });
-      }
-    } catch {
-      setTestResult({ success: false, message: 'Network error' });
-    } finally {
-      setSendingTest(false);
-    }
-  };
-
-  const togglePref = async (key: 'startLessonFromProfile' | 'startLessonFromLibrary', value: boolean) => {
-    setPrefs((p) => ({ ...p, [key]: value }));
-    setPrefsSaving(key);
-    try {
-      await authFetch('/api/user/preferences', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ [key]: value }),
-      });
-    } catch {
-      // Revert on failure
-      setPrefs((p) => ({ ...p, [key]: !value }));
-    } finally {
-      setPrefsSaving(null);
-    }
-  };
-
-  // ---- Export handlers (F-07) ----
-  const handleRequestExport = async () => {
-    setExportState('requesting');
-    setExportError(null);
-    try {
-      const res = await authFetch('/api/export/request', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Failed to request export');
-      }
-      setExportJobId(data.jobId);
-      setExportState('pending');
-      // Start polling for status
-      pollExportStatus(data.jobId);
-    } catch (e: unknown) {
-      setExportState('failed');
-      setExportError(e instanceof Error ? e.message : 'Please try again.');
-    }
-  };
-
-  const pollExportStatus = async (jobId: string) => {
-    let attempts = 0;
-    const maxAttempts = 60; // 5 minutes at 5s intervals
-    const poll = async () => {
-      attempts++;
-      try {
-        const res = await authFetch(`/api/export/status/${jobId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        setExportState(data.status);
-        if (data.status === 'completed' || data.status === 'failed') {
-          if (data.status === 'failed') setExportError(data.error || 'Export failed');
-          return;
-        }
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 5000);
-        }
-      } catch {
-        // Network blip — keep polling
-        if (attempts < maxAttempts) setTimeout(poll, 5000);
-      }
-    };
-    setTimeout(poll, 3000); // first check after 3s
-  };
-
   return (
     <div className="space-y-6">
       {/* Account Information */}
@@ -544,229 +280,6 @@ function SettingsPanel({
               </Button>
             </>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Custom Branding (F-09 — Pro feature) */}
-      <BrandingCard tier={tier} user={user} />
-
-      {/* Teaching Preferences (F-06) */}
-      <Card className="rounded-2xl border border-border bg-card shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-emerald-500" />
-            Teaching Preferences
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {prefsLoading ? (
-            <p className="text-xs text-muted-foreground text-center py-4">Loading preferences...</p>
-          ) : (
-            <>
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-sm font-medium">&ldquo;Start Next Lesson&rdquo; on student profiles</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Show the prominent one-click button on each student&apos;s profile that opens today&apos;s lesson pre-filled with a saved board.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => togglePref('startLessonFromProfile', !prefs.startLessonFromProfile)}
-                  disabled={prefsSaving === 'startLessonFromProfile'}
-                  className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
-                    prefs.startLessonFromProfile ? 'bg-emerald-500' : 'bg-gray-300'
-                  } ${prefsSaving === 'startLessonFromProfile' ? 'opacity-50' : ''}`}
-                  aria-label="Toggle Start Next Lesson on student profiles"
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${prefs.startLessonFromProfile ? 'translate-x-6' : ''}`} />
-                </button>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0 mr-3">
-                  <p className="text-sm font-medium">&ldquo;Start&rdquo; button on board library rows</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Show a quick-start button next to each saved board so you can launch a new lesson from it without leaving the library.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => togglePref('startLessonFromLibrary', !prefs.startLessonFromLibrary)}
-                  disabled={prefsSaving === 'startLessonFromLibrary'}
-                  className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
-                    prefs.startLessonFromLibrary ? 'bg-emerald-500' : 'bg-gray-300'
-                  } ${prefsSaving === 'startLessonFromLibrary' ? 'opacity-50' : ''}`}
-                  aria-label="Toggle Start button on board library"
-                >
-                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${prefs.startLessonFromLibrary ? 'translate-x-6' : ''}`} />
-                </button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Notifications (F-08 Email) */}
-      <Card className="rounded-2xl border border-border bg-card shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Mail className="w-5 h-5 text-emerald-500" />
-            Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Email status indicator */}
-          {emailStatus && (
-            <div className={`rounded-xl border p-4 ${emailStatus.devMode ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
-              <div className="flex items-start gap-3">
-                {emailStatus.devMode ? (
-                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${emailStatus.devMode ? 'text-amber-900' : 'text-emerald-900'}`}>
-                    {emailStatus.devMode ? 'Email is in testing mode' : 'Email is live'}
-                  </p>
-                  <p className={`text-xs mt-0.5 ${emailStatus.devMode ? 'text-amber-700' : 'text-emerald-700'}`}>
-                    {emailStatus.devMode
-                      ? <>Sending from <code className="bg-amber-100 px-1 rounded">{emailStatus.fromAddress}</code>. Only your account email can receive messages. Verify a custom domain in Resend to send to parents/students.</>
-                      : <>Sending from <code className="bg-emerald-100 px-1 rounded">{emailStatus.fromAddress}</code>. All notifications will reach parents and students.</>}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Test email button */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <p className="text-sm font-medium">Send a test email</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Verify your email setup is working. Delivered to your account email.</p>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-xl gap-1.5"
-              onClick={handleSendTestEmail}
-              disabled={sendingTest}
-            >
-              {sendingTest ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-              {sendingTest ? 'Sending...' : 'Send test'}
-            </Button>
-          </div>
-          {testResult && (
-            <div className={`rounded-lg p-3 text-xs ${testResult.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-              {testResult.success ? '✓ ' : '✗ '}{testResult.message}
-            </div>
-          )}
-
-          <Separator />
-
-          {/* Notification preferences */}
-          <div>
-            <p className="text-sm font-medium mb-2">What you&apos;ll receive</p>
-            <div className="space-y-2.5">
-              {[
-                { label: 'Homework submitted', desc: 'When a student hands in homework', icon: '✅' },
-                { label: 'Homework assigned', desc: 'When you assign homework to a student', icon: '📋' },
-                { label: 'Export ready', desc: 'When your data export is ready for download', icon: '📦' },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <span className="text-base">{item.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium">{item.label}</p>
-                    <p className="text-[11px] text-muted-foreground">{item.desc}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px] rounded-full">On</Badge>
-                </div>
-              ))}
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-3">
-              Parents and students receive homework notifications separately. They can unsubscribe via the link in every email.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Your Data (F-07 Full Data Export) */}
-      <Card className="rounded-2xl border border-border bg-card shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Download className="w-5 h-5 text-emerald-500" />
-            Your Data
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-xl bg-emerald-50/50 border border-emerald-100 p-4">
-            <p className="text-sm text-emerald-900 leading-relaxed">
-              <strong>Your data is yours.</strong> Export everything — every board as a PDF, plus a portable JSON of your students, homework, and notes — in one click. We never delete anything when you export; this is a copy, not a migration.
-            </p>
-          </div>
-
-          {exportState === 'idle' && (
-            <Button
-              onClick={handleRequestExport}
-              className="w-full rounded-xl gradient-primary border-0 text-white font-semibold shadow-md shadow-emerald-500/20 gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Export all my data
-            </Button>
-          )}
-
-          {(exportState === 'requesting' || exportState === 'pending' || exportState === 'processing') && (
-            <div className="flex items-center justify-center gap-3 py-3">
-              <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
-              <span className="text-sm text-muted-foreground">
-                {exportState === 'requesting' && 'Starting export...'}
-                {exportState === 'pending' && 'Queued — we\'ll email you when it\'s ready...'}
-                {exportState === 'processing' && 'Building your export...'}
-              </span>
-            </div>
-          )}
-
-          {exportState === 'completed' && exportJobId && (
-            <div className="space-y-3">
-              <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-emerald-900">Your export is ready!</p>
-                  <p className="text-xs text-emerald-700 mt-0.5">We&apos;ve also emailed you a link. The download will expire if you request a new export.</p>
-                </div>
-              </div>
-              <a
-                href={`/api/export/download/${exportJobId}`}
-                className="flex items-center justify-center gap-2 w-full rounded-xl gradient-primary text-white font-semibold py-2.5 shadow-md shadow-emerald-500/20"
-              >
-                <Download className="w-4 h-4" />
-                Download ZIP
-              </a>
-            </div>
-          )}
-
-          {exportState === 'failed' && (
-            <div className="space-y-3">
-              <div className="rounded-xl bg-red-50 border border-red-200 p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-red-900">Export failed</p>
-                  <p className="text-xs text-red-700 mt-0.5">{exportError || 'Please try again.'}</p>
-                </div>
-              </div>
-              <Button
-                onClick={handleRequestExport}
-                variant="outline"
-                className="w-full rounded-xl"
-              >
-                Try again
-              </Button>
-            </div>
-          )}
-
-          <p className="text-xs text-muted-foreground text-center">
-            Exports include all your boards as PDFs + a portable JSON. Usually ready in a few minutes.
-          </p>
         </CardContent>
       </Card>
     </div>
@@ -1321,12 +834,6 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
               </div>
             )}
 
-            {activeView === 'library' && (
-              <div className="animate-fade-in-up">
-                <BoardLibrary isDark={isDark} />
-              </div>
-            )}
-
             {/* ============================================================
                 VIEW: Resources (Saved Boards + Templates)
                 ============================================================ */}
@@ -1446,27 +953,46 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
             )}
 
             {/* ============================================================
-                VIEW: Students (Roster) — top-level, available to all tutors
+                VIEW: Recaps
                 ============================================================ */}
-            {activeView === 'students' && (
+            {activeView === 'recaps' && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
-                  <h3 className="text-lg font-bold">Students</h3>
-                  <p className="text-sm text-muted-foreground">Your student roster — click any student to view their full profile, timeline, and join link.</p>
+                  <h3 className="text-lg font-bold">Session Recaps</h3>
+                  <p className="text-sm text-muted-foreground">Auto-drafted after each lesson. Review, edit, and approve to make them available for term reports.</p>
                 </div>
-                <StudentManagementPanel
-                  agencyUserId={user?.id || ''}
-                  onViewProfile={(studentId, studentName) => {
-                    setProgressStudentId(studentId);
-                    setProgressStudentName(studentName);
-                    setActiveView('student-progress');
-                  }}
-                />
+                <RecapPanel />
               </div>
             )}
 
             {/* ============================================================
-                VIEW: Agency (Sub-tutors + Students) — agency tier only
+                VIEW: Certificates
+                ============================================================ */}
+            {activeView === 'certificates' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Certificates</h3>
+                  <p className="text-sm text-muted-foreground">Issue printable, branded achievement certificates for your students.</p>
+                </div>
+                <CertificatePanel />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Term Reports
+                ============================================================ */}
+            {activeView === 'reports' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Term Reports</h3>
+                  <p className="text-sm text-muted-foreground">Compile approved session recaps into a polished, branded PDF for parents.</p>
+                </div>
+                <TermReportPanel />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Agency (Sub-tutors + Students)
                 ============================================================ */}
             {activeView === 'agency' && isAgencyTier(tier) && (
               <div className="space-y-6 animate-fade-in-up">
