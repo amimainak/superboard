@@ -47,8 +47,11 @@ interface CreateForm {
   title: string;
   subject: string;
   studentEmail: string;
+  studentId: string;
   scheduledAt: string;
   durationMinutes: number;
+  timezone: string;
+  remindersEnabled: boolean;
 }
 
 const DURATIONS = [15, 30, 45, 60, 90, 120];
@@ -57,8 +60,11 @@ const EMPTY_FORM: CreateForm = {
   title: '',
   subject: 'MATH',
   studentEmail: '',
+  studentId: '',
   scheduledAt: '',
   durationMinutes: 60,
+  timezone: typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC',
+  remindersEnabled: true,
 };
 
 // ------------------------------------------------------------------
@@ -158,7 +164,18 @@ export function SchedulePanel({ userId }: Props) {
     try {
       const res = await authFetch('/api/schedule', {
         method: 'POST',
-        body: JSON.stringify({ ...form, tutorId: userId }),
+        body: JSON.stringify({
+          title: form.title,
+          studentName: form.title,
+          subject: form.subject,
+          studentEmail: form.studentEmail || null,
+          studentId: form.studentId || null,
+          scheduledAt: form.scheduledAt,
+          endTime: form.scheduledAt ? new Date(new Date(form.scheduledAt).getTime() + form.durationMinutes * 60000).toISOString() : null,
+          timezone: form.timezone,
+          remindersEnabled: form.remindersEnabled,
+          tutorId: userId,
+        }),
       });
       if (!res.ok) {
         const body = await res.text().catch(() => '');
@@ -197,8 +214,11 @@ export function SchedulePanel({ userId }: Props) {
       title: lesson.title,
       subject: lesson.subject,
       studentEmail: lesson.studentEmail ?? '',
-      scheduledAt: lesson.scheduledAt.slice(0, 16), // datetime-local format
+      studentId: '',
+      scheduledAt: lesson.scheduledAt.slice(0, 16),
       durationMinutes: lesson.durationMinutes,
+      timezone: 'UTC',
+      remindersEnabled: true,
     });
     setEditDialogOpen(true);
   };

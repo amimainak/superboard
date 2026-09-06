@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Play, Pause, RotateCcw, Loader2 } from 'lucide-react'
 import type { WhiteboardElement } from '@/lib/whiteboard/types'
+import { ElementRenderer } from '@/components/whiteboard/ElementRenderer'
 
 interface BoardEvent {
   id: string
@@ -148,23 +149,23 @@ export function BoardReplay({ roomId }: Props) {
 
   return (
     <div className="space-y-3">
-      {/* Canvas preview — render elements as SVG */}
+      {/* Canvas preview — render elements using the full ElementRenderer */}
       <div className="rounded-xl border border-border overflow-hidden bg-slate-50" style={{ aspectRatio: '16/10' }}>
         <svg width="100%" height="100%" viewBox="0 0 1200 750" style={{ background: '#f8fafc' }}>
-          {/* Render elements — simplified, just show that something is happening */}
-          {elementList.map((el) => {
-            // Basic rendering — in production, use ElementRenderer
-            if (el.type === 'rectangle') {
-              return <rect key={el.id} x={el.x} y={el.y} width={el.width} height={el.height} fill={el.fillColor || 'none'} stroke={el.strokeColor} strokeWidth={el.strokeWidth} opacity={el.opacity} />
-            }
-            if (el.type === 'ellipse') {
-              return <ellipse key={el.id} cx={el.x + el.width / 2} cy={el.y + el.height / 2} rx={el.width / 2} ry={el.height / 2} fill={el.fillColor || 'none'} stroke={el.strokeColor} strokeWidth={el.strokeWidth} opacity={el.opacity} />
-            }
-            if (el.type === 'text' && el.text) {
-              return <text key={el.id} x={el.x} y={el.y + 20} fill={el.strokeColor} fontSize={el.fontSize || 14} opacity={el.opacity}>{el.text}</text>
-            }
-            return null
-          })}
+          {/* F8: Use the full ElementRenderer so ALL element types render
+              (freehand, shapes, text, sticky notes, lines, arrows, etc.) */}
+          {elementList.map((el) => (
+            <ElementRenderer
+              key={el.id}
+              element={el}
+              isSelected={false}
+              onPointerDown={() => {}}
+              onDoubleClick={() => {}}
+              cameraZoom={1}
+              tool="select"
+              isDark={false}
+            />
+          ))}
         </svg>
       </div>
 
