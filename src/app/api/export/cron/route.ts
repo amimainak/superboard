@@ -113,6 +113,7 @@ export async function GET(request: NextRequest) {
               boardCount,
               downloadUrl,
               fileSizeMb: totalSize / 1024 / 1024,
+              recipientEmail: user.email,
             })
             await sendEmail({
               to: user.email,
@@ -153,9 +154,10 @@ export async function GET(request: NextRequest) {
 }
 
 function getBaseUrl(): string {
-  const vercelUrl = process.env.VERCEL_URL
-  if (vercelUrl) return `https://${vercelUrl}`
+  // Prefer NEXT_PUBLIC_SITE_URL (custom domain) over VERCEL_URL
   const publicUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (publicUrl) return publicUrl
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) return `https://${vercelUrl}`
   return 'https://superboard.app'
 }

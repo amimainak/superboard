@@ -27,10 +27,12 @@ const createSchema = z.object({
 })
 
 function getHomeworkUrl(token: string): string {
-  const vercelUrl = process.env.VERCEL_URL
-  if (vercelUrl) return `https://${vercelUrl}/hw/${token}`
+  // Prefer NEXT_PUBLIC_SITE_URL (custom domain) over VERCEL_URL (deployment URL)
+  // so email links point to the branded domain when configured.
   const publicUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (publicUrl) return `${publicUrl}/hw/${token}`
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) return `https://${vercelUrl}/hw/${token}`
   return `/hw/${token}`
 }
 

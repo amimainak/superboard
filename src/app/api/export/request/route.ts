@@ -110,12 +110,13 @@ export async function POST(request: NextRequest) {
         // Send email too (best-effort)
         const user = await db.user.findUnique({ where: { id: userId }, select: { email: true, name: true } })
         if (user?.email) {
-          const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.NEXT_PUBLIC_SITE_URL || 'https://superboard.app')
+          const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://superboard.app')
           const emailContent = exportReadyEmail({
             tutorName: user.name || user.email,
             boardCount: processed,
             downloadUrl: `${baseUrl}/api/export/download/${job.id}`,
             fileSizeMb: totalSize / 1024 / 1024,
+            recipientEmail: user.email,
           })
           sendEmail({ to: user.email, subject: emailContent.subject, html: emailContent.html }).catch(() => {})
         }

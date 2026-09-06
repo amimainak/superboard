@@ -4,16 +4,32 @@
 // Each template is a pure function: data in, { subject, html } out.
 // No external dependencies — plain HTML strings with inline styles
 // (email clients don't support <style> tags reliably).
+//
+// Every template includes an unsubscribe link in the footer.
+// The link is /unsubscribe/[token] where token = HMAC of the
+// recipient's email. Transactional emails (assigned, returned) note
+// that unsubscribing only stops optional notifications — the tutor
+// can still assign homework.
 // ============================================================
+
+import { generateUnsubscribeToken } from '../unsubscribe-token'
 
 interface BaseEmailData {
   tutorName: string
   studentName: string
   assignmentTitle: string
   assignmentUrl: string
+  recipientEmail: string  // needed to generate the unsubscribe token
 }
 
-const WRAPPER = (title: string, bodyHtml: string): string => `
+const WRAPPER = (title: string, bodyHtml: string, recipientEmail: string, transactional: boolean): string => {
+  const unsubToken = generateUnsubscribeToken(recipientEmail)
+  const unsubUrl = `${getBaseUrl()}/unsubscribe/${unsubToken}`
+  const footerNote = transactional
+    ? `You're receiving this because a homework assignment involves you or your child. <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe from optional notifications</a> (you'll still receive essential assignment notices).`
+    : `You're receiving this email at ${recipientEmail}. <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>`
+
+  return `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
@@ -41,8 +57,7 @@ const WRAPPER = (title: string, bodyHtml: string): string => `
         <!-- Footer -->
         <tr><td style="padding:16px 32px 24px;border-top:1px solid #f1f5f9;">
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;">
-            You're receiving this because ${'${recipientReason}'}.
-            <a href="${'${unsubscribeUrl}'}" style="color:#64748b;text-decoration:underline;">Manage notifications</a>
+            ${footerNote}
           </p>
         </td></tr>
       </table>
@@ -50,7 +65,17 @@ const WRAPPER = (title: string, bodyHtml: string): string => `
   </table>
 </body>
 </html>
-`.replace('${recipientReason}', 'a homework assignment involves you or your child').replace('${unsubscribeUrl}', 'https://superboard.app/settings/notifications')
+`
+}
+
+function getBaseUrl(): string {
+  // Prefer NEXT_PUBLIC_SITE_URL (custom domain) over VERCEL_URL
+  const publicUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (publicUrl) return publicUrl
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) return `https://${vercelUrl}`
+  return 'https://superboard.app'
+}
 
 const ctaButton = (text: string, url: string): string => `
   <a href="${url}" style="display:inline-block;background:#059669;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;margin:16px 0;">${text}</a>
@@ -79,15 +104,12 @@ export function homeworkAssignedEmail(data: BaseEmailData & { dueDate?: string |
   `
   return {
     subject: `📋 New homework from ${data.tutorName}: ${data.assignmentTitle}`,
-    html: WRAPPER('You have new homework', body),
+    html: WRAPPER('You have new homework', body, data.recipientEmail, true),
   }
 }
 
 // ----------------------------------------------------------------
 // 2. Assignment opened — internal info (tutor, optional)
-//    Only sent if the tutor explicitly opts in. Skipping for now
-//    to avoid notification fatigue — the 'submitted' email is the
-//    real signal. Including the template for future use.
 // ----------------------------------------------------------------
 export function homeworkOpenedEmail(data: BaseEmailData): { subject: string; html: string } {
   const body = `
@@ -101,7 +123,7 @@ export function homeworkOpenedEmail(data: BaseEmailData): { subject: string; htm
   `
   return {
     subject: `👀 ${data.studentName} opened "${data.assignmentTitle}"`,
-    html: WRAPPER('Homework opened', body),
+    html: WRAPPER('Homework opened', body, data.recipientEmail, false),
   }
 }
 
@@ -125,7 +147,7 @@ export function homeworkSubmittedEmail(data: BaseEmailData & { late: boolean; su
   `
   return {
     subject: `✅ ${data.studentName} submitted "${data.assignmentTitle}"`,
-    html: WRAPPER('Homework submitted', body),
+    html: WRAPPER('Homework submitted', body, data.recipientEmail, true),
   }
 }
 
@@ -144,7 +166,7 @@ export function homeworkReturnedEmail(data: BaseEmailData): { subject: string; h
   `
   return {
     subject: `↩️ ${data.tutorName} returned your homework: ${data.assignmentTitle}`,
-    html: WRAPPER('Homework returned', body),
+    html: WRAPPER('Homework returned', body, data.recipientEmail, true),
   }
 }
 
@@ -163,7 +185,7 @@ export function homeworkReviewedEmail(data: BaseEmailData): { subject: string; h
   `
   return {
     subject: `🎉 ${data.tutorName} reviewed your homework: ${data.assignmentTitle}`,
-    html: WRAPPER('Homework reviewed', body),
+    html: WRAPPER('Homework reviewed', body, data.recipientEmail, false),
   }
 }
 
@@ -175,13 +197,14 @@ export function exportReadyEmail(data: {
   boardCount: number
   downloadUrl: string
   fileSizeMb: number
+  recipientEmail: string
 }): { subject: string; html: string } {
   const body = `
     <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#475569;">
       Hi ${data.tutorName}, your data export is ready. It includes ${data.boardCount} board${data.boardCount !== 1 ? 's' : ''} as PDFs (${data.fileSizeMb.toFixed(1)} MB total) plus a portable JSON of all your data.
     </p>
     <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#64748b;">
-      The download link will expire in 7 days. Save the file somewhere safe if you want to keep it longer.
+      The download link will expire if you request a new export. Save the file somewhere safe if you want to keep it longer.
     </p>
     ${ctaButton('Download my data', data.downloadUrl)}
     <p style="margin:16px 0 0;font-size:13px;color:#94a3b8;">
@@ -190,6 +213,34 @@ export function exportReadyEmail(data: {
   `
   return {
     subject: `📦 Your Superboard data export is ready`,
-    html: WRAPPER('Your data export is ready', body),
+    html: WRAPPER('Your data export is ready', body, data.recipientEmail, false),
   }
 }
+
+// ----------------------------------------------------------------
+// 7. Test email — sent when the tutor clicks "Send test email"
+// ----------------------------------------------------------------
+export function testEmail(data: { tutorName: string; recipientEmail: string }): { subject: string; html: string } {
+  const body = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#475569;">
+      Hi ${data.tutorName}, this is a test email from Superboard. If you&apos;re reading this, your email setup is working correctly.
+    </p>
+    <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#64748b;">
+      You&apos;ll receive emails like this when:
+    </p>
+    <ul style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#64748b;padding-left:20px;">
+      <li>A student submits homework</li>
+      <li>You assign homework to a student</li>
+      <li>A homework assignment is reviewed or returned</li>
+      <li>Your data export is ready for download</li>
+    </ul>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">
+      You can manage which emails you receive in Settings → Notifications.
+    </p>
+  `
+  return {
+    subject: `✉️ Superboard email test — it works!`,
+    html: WRAPPER('Email test', body, data.recipientEmail, false),
+  }
+}
+

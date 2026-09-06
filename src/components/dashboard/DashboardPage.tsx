@@ -79,6 +79,8 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
+  Mail,
+  Send,
   LayoutDashboard,
   Home,
   FolderOpen,
@@ -229,13 +231,41 @@ function SettingsPanel({
   const [exportJobId, setExportJobId] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
 
+  // ---- Email status (F-08) ----
+  const [emailStatus, setEmailStatus] = useState<{ configured: boolean; devMode: boolean; fromAddress: string; domain: string } | null>(null);
+  const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
   useEffect(() => {
     authFetch('/api/user/preferences')
       .then((r) => r.json())
       .then((d) => { if (d?.preferences) setPrefs(d.preferences); })
       .catch(() => {})
       .finally(() => setPrefsLoading(false));
+    // Fetch email status
+    authFetch('/api/user/email-status')
+      .then((r) => r.json())
+      .then((d) => { if (d) setEmailStatus(d); })
+      .catch(() => {});
   }, []);
+
+  const handleSendTestEmail = async () => {
+    setSendingTest(true);
+    setTestResult(null);
+    try {
+      const res = await authFetch('/api/user/test-email', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTestResult({ success: true, message: `Sent to ${data.sentTo}${data.devMode ? ' (dev mode — check server logs)' : ''}` });
+      } else {
+        setTestResult({ success: false, message: data.details || data.error || 'Failed to send' });
+      }
+    } catch {
+      setTestResult({ success: false, message: 'Network error' });
+    } finally {
+      setSendingTest(false);
+    }
+  };
 
   const togglePref = async (key: 'startLessonFromProfile' | 'startLessonFromLibrary', value: boolean) => {
     setPrefs((p) => ({ ...p, [key]: value }));
@@ -419,6 +449,89 @@ function SettingsPanel({
               </div>
             </>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Notifications (F-08 Email) */}
+      <Card className="rounded-2xl border border-border bg-card shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Mail className="w-5 h-5 text-emerald-500" />
+            Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Email status indicator */}
+          {emailStatus && (
+            <div className={`rounded-xl border p-4 ${emailStatus.devMode ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
+              <div className="flex items-start gap-3">
+                {emailStatus.devMode ? (
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium ${emailStatus.devMode ? 'text-amber-900' : 'text-emerald-900'}`}>
+                    {emailStatus.devMode ? 'Email is in testing mode' : 'Email is live'}
+                  </p>
+                  <p className={`text-xs mt-0.5 ${emailStatus.devMode ? 'text-amber-700' : 'text-emerald-700'}`}>
+                    {emailStatus.devMode
+                      ? <>Sending from <code className="bg-amber-100 px-1 rounded">{emailStatus.fromAddress}</code>. Only your account email can receive messages. Verify a custom domain in Resend to send to parents/students.</>
+                      : <>Sending from <code className="bg-emerald-100 px-1 rounded">{emailStatus.fromAddress}</code>. All notifications will reach parents and students.</>}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Test email button */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <p className="text-sm font-medium">Send a test email</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Verify your email setup is working. Delivered to your account email.</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl gap-1.5"
+              onClick={handleSendTestEmail}
+              disabled={sendingTest}
+            >
+              {sendingTest ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              {sendingTest ? 'Sending...' : 'Send test'}
+            </Button>
+          </div>
+          {testResult && (
+            <div className={`rounded-lg p-3 text-xs ${testResult.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+              {testResult.success ? '✓ ' : '✗ '}{testResult.message}
+            </div>
+          )}
+
+          <Separator />
+
+          {/* Notification preferences */}
+          <div>
+            <p className="text-sm font-medium mb-2">What you&apos;ll receive</p>
+            <div className="space-y-2.5">
+              {[
+                { label: 'Homework submitted', desc: 'When a student hands in homework', icon: '✅' },
+                { label: 'Homework assigned', desc: 'When you assign homework to a student', icon: '📋' },
+                { label: 'Export ready', desc: 'When your data export is ready for download', icon: '📦' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-3">
+                  <span className="text-base">{item.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">{item.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{item.desc}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] rounded-full">On</Badge>
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-3">
+              Parents and students receive homework notifications separately. They can unsubscribe via the link in every email.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

@@ -614,6 +614,31 @@ model ExportJob {
   @@index([requestedAt])
 }
 
+// ── Email Suppression List (F-08 email hardening) ──
+// Tracks email addresses that should NEVER receive email from us:
+//   • Bounced (hard bounce — address doesn't exist)
+//   • Complaint (recipient marked as spam)
+//   • Unsubscribed (parent/student opted out via /unsubscribe/[token])
+//
+// Checked before every sendEmail() call. This protects deliverability
+// (sending to known-bad addresses tanks your sender reputation) and
+// ensures legal compliance (CAN-SPAM/GDPR require honoring unsubscribes).
+model EmailSuppression {
+  id           String   @id @default(uuid())
+  email        String   // always stored lowercase (normalized in code)
+  reason       String   // bounce | complaint | unsubscribe
+  // For bounces/complaints: the Resend event ID. For unsubscribes:
+  // a token derived from the email (so we can look up by token without
+  // exposing the raw email in the URL).
+  source       String?  // resend | manual | unsubscribe-link
+  eventDetails Json?    @db.JsonB  // raw Resend webhook payload for debugging
+  createdAt    DateTime @default(now())
+
+  @@unique([email, reason])
+  @@index([email])
+  @@index([reason])
+}
+
 // ── Resource Library (agency-scoped resources) ──
 
 model ResourceLibrary {

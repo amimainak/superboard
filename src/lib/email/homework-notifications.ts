@@ -62,51 +62,38 @@ export async function sendHomeworkNotification(params: NotifyParams): Promise<{ 
     return { sent: false, reason: 'already sent (idempotent skip)' }
   }
 
-  // Pick the right template
+  // Pick the right template — all templates now require recipientEmail
+  const templateData = {
+    tutorName: params.tutorName,
+    studentName: params.studentName,
+    assignmentTitle: params.assignmentTitle,
+    assignmentUrl: params.assignmentUrl,
+    recipientEmail,
+  }
+
   let template: { subject: string; html: string }
   switch (event) {
     case 'assigned':
       template = homeworkAssignedEmail({
-        tutorName: params.tutorName,
-        studentName: params.studentName,
-        assignmentTitle: params.assignmentTitle,
-        assignmentUrl: params.assignmentUrl,
+        ...templateData,
         dueDate: params.dueDate ?? null,
       })
       break
     case 'opened':
-      template = homeworkOpenedEmail({
-        tutorName: params.tutorName,
-        studentName: params.studentName,
-        assignmentTitle: params.assignmentTitle,
-        assignmentUrl: params.assignmentUrl,
-      })
+      template = homeworkOpenedEmail(templateData)
       break
     case 'submitted':
       template = homeworkSubmittedEmail({
-        tutorName: params.tutorName,
-        studentName: params.studentName,
-        assignmentTitle: params.assignmentTitle,
-        assignmentUrl: params.assignmentUrl,
+        ...templateData,
         late: params.late ?? false,
         submittedAt: params.submittedAt ?? new Date().toISOString(),
       })
       break
     case 'returned':
-      template = homeworkReturnedEmail({
-        tutorName: params.tutorName,
-        studentName: params.studentName,
-        assignmentTitle: params.assignmentTitle,
-        assignmentUrl: params.assignmentUrl,
-      })
+      template = homeworkReturnedEmail(templateData)
       break
     case 'reviewed':
-      template = homeworkReviewedEmail({
-        tutorName: params.tutorName,
-        studentName: params.studentName,
-        assignmentTitle: params.assignmentTitle,
-        assignmentUrl: params.assignmentUrl,
-      })
+      template = homeworkReviewedEmail(templateData)
       break
   }
 

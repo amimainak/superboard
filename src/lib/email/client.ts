@@ -2,14 +2,18 @@
 // Email Service — Resend wrapper with graceful fallback
 // ============================================================
 // Single sendEmail() entry point used by all notification paths.
-// If RESEND_API_KEY is not set, emails are logged (dev mode) instead
-// of sent — so the app never crashes for missing config.
+//
+// Safety checks before every send:
+//   1. If RESEND_API_KEY is not set → log to console (dev mode)
+//   2. If the recipient is on the EmailSuppression list → skip silently
+//      (protects deliverability + legal compliance)
 //
 // FROM address: uses RESEND_FROM_ADDRESS env var, or falls back to
 // a sensible default. The domain must be verified in Resend.
 // ============================================================
 
 import { Resend } from 'resend'
+import { isSuppressed } from './suppression'
 
 let _client: Resend | null = null
 
@@ -25,6 +29,9 @@ export interface SendEmailParams {
   subject: string
   html: string
   replyTo?: string
+  // Set to true to bypass the suppression list check (e.g., for the
+  // tutor's own test email). Default false.
+  bypassSuppression?: boolean
 }
 
 export interface SendEmailResult {
@@ -33,10 +40,22 @@ export interface SendEmailResult {
   error?: string
   // In dev mode (no API key), this is true — the email was "sent" to the log
   devMode: boolean
+  // True if the recipient is suppressed (bounced/complained/unsubscribed)
+  suppressed?: boolean
+  suppressionReason?: string
 }
 
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
   const from = process.env.RESEND_FROM_ADDRESS || 'Superboard <notifications@superboard.app>'
+
+  // 1. Suppression list check (unless explicitly bypassed)
+  if (!params.bypassSuppression) {
+    const reason = await isSuppressed(params.to)
+    if (reason) {
+      console.log(`[Email] Suppressed — skipping send to ${params.to} (reason: ${reason})`)
+      return { sent: false, devMode: false, suppressed: true, suppressionReason: reason }
+    }
+  }
 
   const client = getClient()
   if (!client) {
@@ -76,7 +95,19 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   }
 }
 
-// Convenience: check if email is configured
+// Convenience: check if email is configured (API key present)
 export function isEmailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY
+}
+
+// Convenience: check if we're using the Resend onboarding domain (testing only)
+// vs a real verified custom domain (production).
+export function isEmailInDevMode(): boolean {
+  const from = process.env.RESEND_FROM_ADDRESS || ''
+  return from.includes('onboarding@resend.dev')
+}
+
+// Convenience: get the from address (for display in Settings)
+export function getFromAddress(): string {
+  return process.env.RESEND_FROM_ADDRESS || 'Superboard <notifications@superboard.app>'
 }

@@ -48,7 +48,7 @@ export async function updateSession(request: NextRequest) {
   // Fail closed: if Supabase env vars are missing, redirect non-public routes to /login
   // instead of letting all requests through without auth.
   if (!supabaseUrl || !supabaseKey) {
-    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join', '/your-data']
+    const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join', '/your-data', '/unsubscribe']
     const isPublicRoute = publicRoutes.some(route =>
       request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
     )
@@ -59,8 +59,12 @@ export async function updateSession(request: NextRequest) {
     const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
     // F-07: export cron endpoint — secret-protected, no user session
     const isExportCron = request.nextUrl.pathname === '/api/export/cron' && request.method === 'GET'
+    // F-08: public unsubscribe endpoint — token is the auth
+    const isUnsubscribeApi = request.nextUrl.pathname === '/api/unsubscribe' && request.method === 'POST'
+    // F-08: Resend webhook — secret-protected, no user session
+    const isResendWebhook = request.nextUrl.pathname === '/api/webhooks/resend' && request.method === 'POST'
 
-    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron) {
+    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron && !isUnsubscribeApi && !isResendWebhook) {
       // API routes: return 401 JSON instead of redirecting to HTML login page
       if (request.nextUrl.pathname.startsWith('/api/')) {
         const response = NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
@@ -113,7 +117,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join', '/your-data']
+  const publicRoutes = ['/', '/login', '/signup', '/dashboard', '/pricing', '/api/health', '/hw', '/join', '/your-data', '/unsubscribe']
   const isPublicRoute = publicRoutes.some(route =>
     request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(route + '/')
   )
@@ -124,8 +128,12 @@ export async function updateSession(request: NextRequest) {
   const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
   // F-07: export cron endpoint — secret-protected, no user session
   const isExportCron = request.nextUrl.pathname === '/api/export/cron' && request.method === 'GET'
+  // F-08: public unsubscribe endpoint — token is the auth
+  const isUnsubscribeApi = request.nextUrl.pathname === '/api/unsubscribe' && request.method === 'POST'
+  // F-08: Resend webhook — secret-protected, no user session
+  const isResendWebhook = request.nextUrl.pathname === '/api/webhooks/resend' && request.method === 'POST'
 
-  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron) {
+  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron && !isUnsubscribeApi && !isResendWebhook) {
     // API routes: return 401 JSON instead of redirecting to HTML login page
     if (request.nextUrl.pathname.startsWith('/api/')) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -146,8 +154,11 @@ export async function updateSession(request: NextRequest) {
   // Only validates when csrf-token cookie exists (graceful init).
   // SameSite=strict on the cookie already blocks cross-origin sends.
   // F-05: skip CSRF for public join-by-token (students have no session/cookie)
+  // F-08: skip CSRF for public unsubscribe + Resend webhook
   const isApiMutate = request.nextUrl.pathname.startsWith('/api/') &&
     request.nextUrl.pathname !== '/api/room/join-by-token' &&
+    request.nextUrl.pathname !== '/api/unsubscribe' &&
+    request.nextUrl.pathname !== '/api/webhooks/resend' &&
     ['POST', 'PATCH', 'DELETE', 'PUT'].includes(request.method)
   if (isApiMutate && request.cookies.has(CSRF_COOKIE) && !validateCSRF(request)) {
     const response = NextResponse.json({ error: 'CSRF validation failed' }, { status: 403 })

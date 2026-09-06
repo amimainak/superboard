@@ -24,14 +24,14 @@ type RouteContext = { params: Promise<{ id: string }> }
 
 // ----------------------------------------------------------------
 // Helper: build the public homework URL for email links.
-// Uses the VERCEL_URL env var (set by Vercel automatically) or
-// falls back to a configured production URL.
+// Prefers NEXT_PUBLIC_SITE_URL (custom domain) so email links point
+// to the branded domain when configured. Falls back to VERCEL_URL.
 // ----------------------------------------------------------------
 function getHomeworkUrl(token: string): string {
-  const vercelUrl = process.env.VERCEL_URL
-  if (vercelUrl) return `https://${vercelUrl}/hw/${token}`
   const publicUrl = process.env.NEXT_PUBLIC_SITE_URL
   if (publicUrl) return `${publicUrl}/hw/${token}`
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) return `https://${vercelUrl}/hw/${token}`
   // Last resort — relative URL won't work in email, but at least
   // the link is present and the tutor can copy-paste
   return `/hw/${token}`
