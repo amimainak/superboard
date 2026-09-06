@@ -744,6 +744,25 @@ model Certificate {
   @@index([studentId])
 }
 
+// ── Board Event Log (F-13 — board replay) ──
+// Timestamped element deltas for replay playback. Each event is an
+// add/update/remove of a whiteboard element. Very small data
+// (~200-500 bytes per event) vs video (~100-500MB per hour).
+//
+// Retention: 90 days free, forever Pro (enforced by a cleanup cron).
+model BoardEvent {
+  id        String   @id @default(uuid())
+  roomId    String
+  pageIndex Int
+  eventType String   // add | update | remove
+  elementId String
+  elementData Json?  @db.JsonB  // the element snapshot (for add/update), null for remove
+  timestamp DateTime @default(now())
+
+  @@index([roomId, pageIndex, timestamp])
+  @@index([roomId, timestamp])
+}
+
 // ── Resource Library (agency-scoped resources) ──
 
 model ResourceLibrary {
