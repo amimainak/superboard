@@ -427,17 +427,39 @@ model ScheduledLesson {
   tutorId     String
   studentName String?
   studentEmail String?
+  studentId   String?   // F-12: FK to Student for reminder targeting
   subject     String    @default("GENERAL")
   startTime   DateTime
   endTime     DateTime?
   status      String    @default("scheduled") // scheduled | completed | cancelled
   roomId      String?
   notes       String?   @db.Text
+  // F-12: Reminder system fields
+  timezone    String    @default("UTC")  // family's timezone for reminder timing
+  reminder24hSent Boolean @default(false)
+  reminder1hSent  Boolean @default(false)
+  remindersEnabled Boolean @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  reminders   ReminderLog[]
 
   @@index([tutorId])
   @@index([status])
+  @@index([startTime])
+}
+
+// ── Reminder Log (F-12 — idempotency for scheduling reminders) ──
+model ReminderLog {
+  id          String   @id @default(uuid())
+  scheduledLessonId String
+  reminderType String  // "24h" | "1h"
+  sentAt      DateTime @default(now())
+  recipientEmail String
+
+  scheduledLesson ScheduledLesson @relation(fields: [scheduledLessonId], references: [id], onDelete: Cascade)
+
+  @@unique([scheduledLessonId, reminderType])
+  @@index([scheduledLessonId])
 }
 
 // ── Credit Pack (agency credit system) ──

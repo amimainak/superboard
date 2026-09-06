@@ -99,6 +99,46 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+// ----------------------------------------------------------------
+// 8. Lesson reminder — sent to parent 24h and 1h before lesson
+// ----------------------------------------------------------------
+export function lessonReminderEmail(data: {
+  studentName: string
+  tutorName: string
+  subject: string
+  startTime: string  // ISO
+  durationMinutes: number
+  timezone: string
+  joinUrl: string | null  // student's join link, if available
+  recipientEmail: string
+  branding?: EmailBranding | null
+  reminderType: '24h' | '1h'
+}): { subject: string; html: string } {
+  const lessonTime = new Date(data.startTime).toLocaleString('en-US', {
+    weekday: 'long', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+    timeZone: data.timezone,
+  })
+  const is24h = data.reminderType === '24h'
+  const body = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#475569;">
+      ${is24h ? 'Tomorrow' : 'In about 1 hour'}, ${data.studentName} has a ${data.subject.toLowerCase()} lesson with ${data.tutorName}.
+    </p>
+    <div style="background:#f1f5f9;border-radius:8px;padding:16px;margin:16px 0;">
+      <p style="margin:0;font-size:14px;color:#1e293b;"><strong>${lessonTime}</strong></p>
+      <p style="margin:4px 0 0;font-size:13px;color:#64748b;">${data.durationMinutes} minutes • ${data.timezone}</p>
+    </div>
+    ${data.joinUrl ? ctaButton('Join lesson', data.joinUrl) : '<p style="font-size:13px;color:#64748b;">Your tutor will send the join link when it\'s time for the lesson.</p>'}
+    <p style="margin:16px 0 0;font-size:13px;color:#94a3b8;">
+      ${is24h ? 'See you tomorrow!' : 'See you soon!'}
+    </p>
+  `
+  return {
+    subject: `${is24h ? '⏰ Tomorrow' : '🔔 Starting soon'}: ${data.studentName}'s ${data.subject} lesson`,
+    html: WRAPPER('Lesson reminder', body, data.recipientEmail, true, data.branding),
+  }
+}
+
 function getBaseUrl(): string {
   // Prefer NEXT_PUBLIC_SITE_URL (custom domain) over VERCEL_URL
   const publicUrl = process.env.NEXT_PUBLIC_SITE_URL

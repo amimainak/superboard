@@ -59,12 +59,14 @@ export async function updateSession(request: NextRequest) {
     const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
     // F-07: export cron endpoint — secret-protected, no user session
     const isExportCron = request.nextUrl.pathname === '/api/export/cron' && request.method === 'GET'
+    // F-12: reminders cron endpoint — secret-protected, no user session
+    const isRemindersCron = request.nextUrl.pathname === '/api/reminders/cron' && request.method === 'GET'
     // F-08: public unsubscribe endpoint — token is the auth
     const isUnsubscribeApi = request.nextUrl.pathname === '/api/unsubscribe' && request.method === 'POST'
     // F-08: Resend webhook — secret-protected, no user session
     const isResendWebhook = request.nextUrl.pathname === '/api/webhooks/resend' && request.method === 'POST'
 
-    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron && !isUnsubscribeApi && !isResendWebhook) {
+    if (!isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron && !isRemindersCron && !isUnsubscribeApi && !isResendWebhook) {
       // API routes: return 401 JSON instead of redirecting to HTML login page
       if (request.nextUrl.pathname.startsWith('/api/')) {
         const response = NextResponse.json({ error: 'Service unavailable' }, { status: 503 })
@@ -128,12 +130,14 @@ export async function updateSession(request: NextRequest) {
   const isJoinByTokenApi = request.nextUrl.pathname === '/api/room/join-by-token' && request.method === 'POST'
   // F-07: export cron endpoint — secret-protected, no user session
   const isExportCron = request.nextUrl.pathname === '/api/export/cron' && request.method === 'GET'
+  // F-12: reminders cron endpoint — secret-protected, no user session
+  const isRemindersCron = request.nextUrl.pathname === '/api/reminders/cron' && request.method === 'GET'
   // F-08: public unsubscribe endpoint — token is the auth
   const isUnsubscribeApi = request.nextUrl.pathname === '/api/unsubscribe' && request.method === 'POST'
   // F-08: Resend webhook — secret-protected, no user session
   const isResendWebhook = request.nextUrl.pathname === '/api/webhooks/resend' && request.method === 'POST'
 
-  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron && !isUnsubscribeApi && !isResendWebhook) {
+  if (!user && !isPublicRoute && !isRoomRoute && !isHomeworkApi && !isJoinByTokenApi && !isExportCron && !isRemindersCron && !isUnsubscribeApi && !isResendWebhook) {
     // API routes: return 401 JSON instead of redirecting to HTML login page
     if (request.nextUrl.pathname.startsWith('/api/')) {
       const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
