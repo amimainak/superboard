@@ -89,6 +89,7 @@ import {
   ClipboardList,
   Award,
   FileBarChart,
+  Play,
   Library,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -112,6 +113,7 @@ import { StudentProfilePanel } from './StudentProfilePanel';
 import { RecapPanel } from './RecapPanel';
 import { CertificatePanel } from './CertificatePanel';
 import { TermReportPanel } from './TermReportPanel';
+import { ReplayPanel } from './ReplayPanel';
 
 // ============================================================
 // Types
@@ -134,7 +136,8 @@ type DashboardView =
   | 'student-progress'
   | 'recaps'
   | 'certificates'
-  | 'reports';
+  | 'reports'
+  | 'replay';
 
 // ============================================================
 // Navigation Items
@@ -167,6 +170,7 @@ function getNavItems(tier: Tier, isAdmin: boolean): NavGroup[] {
     { id: 'recaps', label: 'Recaps', icon: ClipboardList, description: 'Session recaps & review' },
     { id: 'certificates', label: 'Certificates', icon: Award, description: 'Issue achievement certificates' },
     { id: 'reports', label: 'Term Reports', icon: FileBarChart, description: 'Compile & send progress reports' },
+    { id: 'replay', label: 'Replay', icon: Play, description: 'Watch past lesson replays' },
   ];
 
   const resources: NavItem[] = isAgencyTier(tier) ? [
@@ -988,6 +992,19 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                   <p className="text-sm text-muted-foreground">Compile approved session recaps into a polished, branded PDF for parents.</p>
                 </div>
                 <TermReportPanel />
+              </div>
+            )}
+
+            {/* ============================================================
+                VIEW: Replay
+                ============================================================ */}
+            {activeView === 'replay' && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h3 className="text-lg font-bold">Lesson Replay</h3>
+                  <p className="text-sm text-muted-foreground">Watch past lessons unfold — the drawing, the writing, exactly as it happened.</p>
+                </div>
+                <ReplayPanel />
               </div>
             )}
 

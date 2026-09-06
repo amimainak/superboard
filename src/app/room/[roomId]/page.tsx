@@ -14,6 +14,7 @@ import {
 } from '@/components/room/widgets'
 import { useWidgetStore } from '@/lib/room/widget-store'
 import { LessonRecorder } from '@/components/room/recording/LessonRecorder'
+import { useRecordingBroadcaster, useRecordingListener } from '@/hooks/useRecordingIndicator'
 import '@/components/room/widgets/widgets.css'
 
 const WhiteboardClient = dynamic(() => import('@/components/room/RoomWhiteboard'), {
@@ -59,7 +60,9 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null)
   const [saveTrigger, setSaveTrigger] = useState(0)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('saved')
-  const [studentRecording, setStudentRecording] = useState(false)
+  // F-14: Realtime recording indicator — broadcast (student) + listen (tutor)
+  const { setRecordingState } = useRecordingBroadcaster(roomId)
+  const studentRecording = useRecordingListener(roomId)
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -158,7 +161,7 @@ export default function RoomPage() {
         }}>
           <LessonRecorder
             roomId={roomId}
-            onRecordingStateChange={setStudentRecording}
+            onRecordingStateChange={(isRecording) => setRecordingState(isRecording)}
           />
         </div>
 
