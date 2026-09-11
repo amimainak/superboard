@@ -475,7 +475,7 @@ export function CanvasMagnetism({ element, isDark }: CanvasScienceWidgetProps) {
               <rect x={m.x} y={80} width={30} height={40} fill="#3b82f6" rx={4} />
               <text x={m.x - 15} y={104} textAnchor="middle" fontSize={12} fontWeight={700} fill="#fff">{isNS ? 'N' : 'S'}</text>
               <text x={m.x + 15} y={104} textAnchor="middle" fontSize={12} fontWeight={700} fill="#fff">{isNS ? 'S' : 'N'}</text>
-              <input type="range" min={40} max={360} value={m.x} onChange={function(e) { updateMagnet(i, { x: Number(e.target.value) }) }} y={140} x={m.x - 30} width={60} style={{ cursor: 'pointer' }} />
+              <input type="range" min={40} max={360} value={m.x} onChange={function(e) { updateMagnet(i, { x: Number(e.target.value) }) }} style={{ position: 'absolute', left: m.x - 30, top: 140, width: 60, cursor: 'pointer' }} />
               <text x={m.x} y={170} textAnchor="middle" fontSize={8} fill={s.text}>drag</text>
             </g>
           )
@@ -1015,19 +1015,22 @@ export function CanvasRockCycle({ element, isDark }: CanvasScienceWidgetProps) {
           </g>
         })}
       </svg>
-      {sel && (
-        <div style={{ padding: 8, background: sel.color + '11', borderRadius: 8, border: '1px solid ' + sel.color + '33', overflow: 'auto' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: sel.color, marginBottom: 3 }}>{sel.label} Rock</div>
-          <div style={{ fontSize: 9, color: s.text, lineHeight: 1.4, marginBottom: 4 }}>{sel.formation}</div>
-          <div style={{ fontSize: 9, fontWeight: 600, color: s.bright, marginBottom: 2 }}>Process: {sel.processes}</div>
+      {sel && (() => {
+        const r = sel!
+        return (
+        <div style={{ padding: 8, background: r.color + '11', borderRadius: 8, border: '1px solid ' + r.color + '33', overflow: 'auto' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: r.color, marginBottom: 3 }}>{r.label} Rock</div>
+          <div style={{ fontSize: 9, color: s.text, lineHeight: 1.4, marginBottom: 4 }}>{r.formation}</div>
+          <div style={{ fontSize: 9, fontWeight: 600, color: s.bright, marginBottom: 2 }}>Process: {r.processes}</div>
           <div style={{ fontSize: 9, fontWeight: 600, color: s.bright }}>Examples:</div>
           <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-            {sel.examples.map(function(ex) {
-              return <span key={ex} style={{ padding: '1px 6px', borderRadius: 3, fontSize: 8, background: sel.color + '15', color: sel.color }}>{ex}</span>
+            {r.examples.map(function(ex) {
+              return <span key={ex} style={{ padding: '1px 6px', borderRadius: 3, fontSize: 8, background: r.color + '15', color: r.color }}>{ex}</span>
             })}
           </div>
         </div>
-      )}
+        )
+      })()}
     </div>
   )
 }
@@ -1222,23 +1225,26 @@ export function CanvasWeatherPatterns({ element, isDark }: CanvasScienceWidgetPr
           )
         })}
       </div>
-      {pat && (
+      {pat && (() => {
+        const p = pat!
+        return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, overflow: 'auto' }}>
           {/* Symbol display */}
           <div style={{ background: s.surface, borderRadius: 8, border: '1px solid ' + s.border, padding: 8 }}>
             <div style={{ fontSize: 9, color: s.text, marginBottom: 4 }}>Weather Map Symbol:</div>
-            <svg width={200} height={70} viewBox="0 0 200 70" style={{ display: 'block', margin: '0 auto' }}>{pat.svgIcon}</svg>
-            <div style={{ fontSize: 8, color: s.text, textAlign: 'center', marginTop: 2 }}>{pat.symbol}</div>
+            <svg width={200} height={70} viewBox="0 0 200 70" style={{ display: 'block', margin: '0 auto' }}>{p.svgIcon}</svg>
+            <div style={{ fontSize: 8, color: s.text, textAlign: 'center', marginTop: 2 }}>{p.symbol}</div>
           </div>
-          <div style={{ fontSize: 10, color: s.text, lineHeight: 1.5 }}>{pat.desc}</div>
+          <div style={{ fontSize: 10, color: s.text, lineHeight: 1.5 }}>{p.desc}</div>
           <div style={{ fontSize: 10, fontWeight: 600, color: s.bright }}>Effects:</div>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {pat.effects.map(function(ef) {
-              return <span key={ef} style={{ padding: '2px 6px', borderRadius: 4, fontSize: 8, background: pat.color + '15', color: pat.color, border: '1px solid ' + pat.color + '33' }}>{ef}</span>
+            {p.effects.map(function(ef) {
+              return <span key={ef} style={{ padding: '2px 6px', borderRadius: 4, fontSize: 8, background: p.color + '15', color: p.color, border: '1px solid ' + p.color + '33' }}>{ef}</span>
             })}
           </div>
         </div>
-      )}
+        )
+      })()}
       {!pat && <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, color: s.text }}>Click a weather pattern above to learn more</div>}
     </div>
   )

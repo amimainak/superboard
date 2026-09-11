@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "tsBuildInfoFile": null
+  },
+  "include": [
+    "src/components/room/widgets/**/*.ts",
+    "src/components/room/widgets/**/*.tsx",
+    "src/components/room/WidgetPanel.tsx",
+    "src/components/room/WidgetBrowseModal.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "server",
+    "src/app/api",
+    "src/components/tools",
+    "src/components/canvas",
+    "src/components/whiteboard",
+    "src/components/toolkits"
+  ]
+}

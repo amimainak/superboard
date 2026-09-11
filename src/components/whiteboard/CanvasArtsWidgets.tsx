@@ -977,4 +977,5 @@ export function getClassroomWidgetDefaultSize(kind: string): { width: number; he
 }
 
 // Individual component exports for WIDGET_COMPONENTS map
-export { CanvasColorTheory, CanvasPerspectiveGrid, CanvasStaffNotation, CanvasArtworkCompare, CanvasTimer, CanvasRandomPicker, CanvasGraphingTool, CanvasElementsOfArt, CanvasSymmetryDrawing, CanvasRhythmBuilder, CanvasArtistSpotlight, CanvasArtHistoryTimeline, CanvasValueShading, CanvasCompositionalAnalysis, CanvasArtCriticism, CanvasTwoPointPerspective, CanvasChordProgression }
+// Note: CanvasElementsOfArt through CanvasChordProgression are already declared with `export function` above
+export { CanvasColorTheory, CanvasPerspectiveGrid, CanvasStaffNotation, CanvasArtworkCompare, CanvasTimer, CanvasRandomPicker, CanvasGraphingTool }

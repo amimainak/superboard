@@ -80,14 +80,28 @@ function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
   // Panel uses the SAME unified component as canvas, with local state
   const [config, setConfig] = useState<VocabWidgetConfig>({ ...DEFAULT_VOCAB_CONFIG })
   return (
-    <P1Panel>
-      <VocabFlashcardsWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <VocabFlashcardsWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Mode: <b style={{ color: '#34d399' }}>{config.mode}</b> | Card {config.cardIndex + 1}</div>
+        <div>Step 2: {!config.flipped ? 'Read the word, try to recall the meaning' : 'Flipped — check the definition'}</div>
+        <div>Step 3: {!config.flipped ? 'Click card to flip and verify' : 'Were you right? Click Next to continue'}</div>
+        <div>Step 4: Level: {config.filterLevel} | {config.filterPos.length} POS filter{config.filterPos.length !== 1 ? 's' : ''}</div>
+        <div>Step 5: Use the word in your own sentence to remember it</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Vocabulary builds through exposure, not memorization. Learn word parts (prefix/root/suffix). Read widely — context is how the brain learns best. Spaced repetition strengthens memory.
+      </div>
+    </>
   )
 }
 function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
@@ -96,107 +110,221 @@ function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
 function StoryElementsMapPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<StoryMapWidgetConfig>({ ...DEFAULT_STORY_MAP_CONFIG })
   return (
-    <P1Panel>
-      <StoryElementsMapWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <StoryElementsMapWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selected !== null ? 'Answer selected — click Check' : 'Click an answer choice'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see result' : 'Click Check to verify'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: Theme — what is the message or lesson?</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Every story has: characters (who), setting (where/when), plot (what happens), conflict (the problem), theme (the message). Map these to understand HOW the author constructed the story.
+      </div>
+    </>
   )
 }
 function SentenceStructureBuilderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<SentenceStructureWidgetConfig>({ ...DEFAULT_SENTENCE_CONFIG })
   return (
-    <P1Panel>
-      <SentenceStructureWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <SentenceStructureWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selected !== null ? 'Answer selected' : 'Click an answer'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see result' : 'Click Check to verify'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: One independent = Simple; two + FANBOYS = Compound</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A sentence = subject + predicate. One independent clause = Simple. Two + FANBOYS = Compound. Independent + dependent = Complex. Good writers mix all types for variety.
+      </div>
+    </>
   )
 }
 function FigurativeLanguageFinderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<FigLangWidgetConfig>({ ...DEFAULT_FIGLANG_CONFIG })
   return (
-    <P1Panel>
-      <FigurativeLanguageWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <FigurativeLanguageWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selected !== null ? 'Answer selected' : 'Click an answer'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see result' : 'Click Check to verify'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: Word sounds like its meaning (buzz)? → ONOMATOPOEIA</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Figurative language creates vivid images. Simile (like/as), Metaphor (is), Personification (human qualities), Hyperbole (exaggeration). Identification: look for signal words, then check if comparison/exaggeration is happening.
+      </div>
+    </>
   )
 }
 function PhonicsDecodingBuilderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<PhonicsWidgetConfig>({ ...DEFAULT_PHONICS_CONFIG })
   return (
-    <P1Panel>
-      <PhonicsBuilderWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <PhonicsBuilderWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selected !== null ? 'Answer selected — click Check' : 'Click an answer choice'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see if you were right' : 'Click Check to verify your answer'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: Sound out each syllable left to right</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> English spelling follows patterns, not random rules. Digraphs (sh, ch) = one sound. Blends (st, bl) = two sounds. Silent letters (kn, wr) = written but not spoken. Teach the pattern, not each word.
+      </div>
+    </>
   )
 }
 function PartsOfSpeechTaggerPanel({ isDark }: { isDark: boolean }) {
   // Panel uses the SAME unified component as canvas, with local state
   const [config, setConfig] = useState<POSWidgetConfig>({ ...DEFAULT_POS_CONFIG })
   return (
-    <P1Panel>
-      <POSTaggerWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <POSTaggerWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Sentence: "{config.sentence.substring(0, 40)}{config.sentence.length > 40 ? '...' : ''}"</div>
+        <div>Step 2: Tagged: <b style={{ color: '#34d399' }}>{config.tagged.length}</b> words</div>
+        <div>Step 3: {config.selectedIdx !== null ? 'Selected: ' + (config.tagged[config.selectedIdx]?.text ?? '') + ' → ' + (config.tagged[config.selectedIdx]?.pos ?? '') : 'Click a word to see its part of speech'}</div>
+        <div>Step 4: Mode: {config.advanced ? 'Advanced' : 'Basic'} tagging</div>
+        <div>Step 5: Replaces a noun (he, she, it)? → PRONOUN</div>
+        <div>Step 6: Shows relationship (in, on, under)? → PREPOSITION</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Don't memorize word lists — use test questions. "The" before a word → likely noun. Takes "-ed" → likely verb. Answers "what kind?" → likely adjective. Context matters — "run" can be both!
+      </div>
+    </>
   )
 }
 function SentenceExpansionToolPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<ExpansionWidgetConfig>({ ...DEFAULT_EXPANSION_CONFIG })
   return (
-    <P1Panel>
-      <SentenceExpansionWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <SentenceExpansionWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selected !== null ? 'Answer selected' : 'Click an answer'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see result' : 'Click Check to verify'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: Check: does each addition add meaning or just clutter?</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Expand by adding: adjectives (what kind), adverbs (how), phrases (where/when). "Dog ran" → "The excited dog ran quickly across the park." Each addition should add meaning, not clutter.
+      </div>
+    </>
   )
 }
 function PunctuationInteractivePanel({ isDark }: { isDark: boolean }) {
   // Panel uses the SAME unified component as canvas, with local state
   const [config, setConfig] = useState<PunctWidgetConfig>({ ...DEFAULT_PUNCT_CONFIG })
   return (
-    <P1Panel>
-      <PunctuationPracticeWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <PunctuationPracticeWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selected !== null ? 'Answer selected — click Check' : 'Click an answer choice'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see result' : 'Click Check to verify'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: Two complete sentences? → Semicolon (;)</div>
+        <div>Step 6: Possession or contraction? → Apostrophe (')</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Punctuation follows rules, not pauses. Each mark has a specific job: period = complete thought, comma = separates, semicolon = joins related sentences, apostrophe = possession/contraction.
+      </div>
+    </>
   )
 }
 function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<ParagraphOrganizerWidgetConfig>({ ...DEFAULT_PARAORG_CONFIG })
   return (
-    <P1Panel>
-      <ParagraphOrganizerWidget
-        isDark={isDark}
-        config={config}
-        onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
-        compact
-      />
-    </P1Panel>
+    <>
+      <P1Panel>
+        <ParagraphOrganizerWidget
+          isDark={isDark}
+          config={config}
+          onConfigChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+          compact
+        />
+      </P1Panel>
+      {/* Dynamic How It Works — references actual config state */}
+      <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Exercise {config.currentIndex + 1} | Mode: <b style={{ color: '#34d399' }}>{config.mode}</b></div>
+        <div>Step 2: {config.selectedOrder.length > 0 ? config.selectedOrder.length + ' step' + (config.selectedOrder.length !== 1 ? 's' : '') + ' ordered' : 'Click steps in order'}</div>
+        <div>Step 3: {config.checked ? 'Checked — see result' : 'Click Check to verify'}</div>
+        <div>Step 4: Score: <b style={{ color: '#34d399' }}>{config.score}</b>/{config.totalAttempted}</div>
+        <div>Step 5: Conclude — restate or extend the main idea</div>
+      </div>
+      <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A paragraph = topic sentence + evidence + explanation + conclusion. Like a mini-essay: introduce, prove, explain, wrap up. Every sentence must serve the topic — if it doesn't, cut it.
+      </div>
+    </>
   )
 }
 
@@ -382,51 +510,14 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Phonics & Decoding', false, 'lang-phonics')}
             <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Look at the word — identify letter patterns</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> English spelling follows patterns, not random rules. Digraphs (sh, ch) = one sound. Blends (st, bl) = two sounds. Silent letters (kn, wr) = written but not spoken. Teach the pattern, not each word.
-            </div>
-              <div>Step 2: Find digraphs (sh, ch, th) — one sound, two letters</div>
-              <div>Step 3: Find blends (st, bl) — two sounds together</div>
-              <div>Step 4: Sound out each syllable left to right</div>
-              <div>Step 5: Blend syllables to read the whole word</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Read the word on the front of the card</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> Vocabulary builds through exposure, not memorization. Learn word parts (prefix/root/suffix). Read widely — context is how the brain learns best. Spaced repetition strengthens memory.
-            </div>
-              <div>Step 2: Try to recall the meaning before flipping</div>
-              <div>Step 3: Flip to check — were you right?</div>
-              <div>Step 4: Break the word into parts (prefix + root + suffix)</div>
-              <div>Step 5: Use the word in your own sentence to remember it</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
             <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: States a fact? → Period (.)</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> Punctuation follows rules, not pauses. Each mark has a specific job: period = complete thought, comma = separates, semicolon = joins related sentences, apostrophe = possession/contraction.
-            </div>
-              <div>Step 2: Asks a question? → Question Mark (?)</div>
-              <div>Step 3: Strong emotion? → Exclamation (!)</div>
-              <div>Step 4: Listing items? → Commas between</div>
-              <div>Step 5: Two complete sentences? → Semicolon (;)</div>
-              <div>Step 6: Possession or contraction? → Apostrophe (')</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Sight Word Bank', false, 'lang-sight-words')}
@@ -445,51 +536,14 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
             <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Person, place, thing, idea? → NOUN</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> Don't memorize word lists — use test questions. "The" before a word → likely noun. Takes "-ed" → likely verb. Answers "what kind?" → likely adjective. Context matters — "run" can be both!
-            </div>
-              <div>Step 2: Action or state of being? → VERB</div>
-              <div>Step 3: Describes a noun (what kind)? → ADJECTIVE</div>
-              <div>Step 4: Describes a verb (how, when)? → ADVERB</div>
-              <div>Step 5: Replaces a noun (he, she, it)? → PRONOUN</div>
-              <div>Step 6: Shows relationship (in, on, under)? → PREPOSITION</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Sentence Structure', false, 'lang-sentence-structure')}
             <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Find the subject (who or what?)</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> A sentence = subject + predicate. One independent clause = Simple. Two + FANBOYS = Compound. Independent + dependent = Complex. Good writers mix all types for variety.
-            </div>
-              <div>Step 2: Find the verb (what does it do?)</div>
-              <div>Step 3: One subject + one verb = independent clause</div>
-              <div>Step 4: Starts with because/although/when? → dependent</div>
-              <div>Step 5: One independent = Simple; two + FANBOYS = Compound</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
             <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Start with a simple sentence (Subject + Verb)</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> Expand by adding: adjectives (what kind), adverbs (how), phrases (where/when). "Dog ran" → "The excited dog ran quickly across the park." Each addition should add meaning, not clutter.
-            </div>
-              <div>Step 2: Add adjectives — describe the noun (what kind?)</div>
-              <div>Step 3: Add adverbs — describe the verb (how? when?)</div>
-              <div>Step 4: Add prepositional phrases (where? when?)</div>
-              <div>Step 5: Check: does each addition add meaning or just clutter?</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Semicolon & Advanced Punctuation', false, 'lang-semicolon-punct')}
@@ -505,50 +559,14 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Uses "like" or "as" to compare? → SIMILE</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> Figurative language creates vivid images. Simile (like/as), Metaphor (is), Personification (human qualities), Hyperbole (exaggeration). Identification: look for signal words, then check if comparison/exaggeration is happening.
-            </div>
-              <div>Step 2: Says X IS Y (direct comparison)? → METAPHOR</div>
-              <div>Step 3: Non-human thing doing human actions? → PERSONIFICATION</div>
-              <div>Step 4: Extreme exaggeration? → HYPERBOLE</div>
-              <div>Step 5: Word sounds like its meaning (buzz)? → ONOMATOPOEIA</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Paragraph Organizer', false, 'lang-paragraph-organizer')}
             <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Write a topic sentence (main idea)</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> A paragraph = topic sentence + evidence + explanation + conclusion. Like a mini-essay: introduce, prove, explain, wrap up. Every sentence must serve the topic — if it doesn't, cut it.
-            </div>
-              <div>Step 2: Add evidence (facts, examples, quotes)</div>
-              <div>Step 3: Explain how the evidence supports the topic</div>
-              <div>Step 4: Add more evidence + explanation if needed</div>
-              <div>Step 5: Conclude — restate or extend the main idea</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Story Elements Map', false, 'lang-story-elements')}
             <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Characters — who is in the story?</div>
-
-            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-              💡 <b>Insight:</b> Every story has: characters (who), setting (where/when), plot (what happens), conflict (the problem), theme (the message). Map these to understand HOW the author constructed the story.
-            </div>
-              <div>Step 2: Setting — where and when?</div>
-              <div>Step 3: Plot — what happens? (beginning, middle, end)</div>
-              <div>Step 4: Conflict — what is the problem?</div>
-              <div>Step 5: Theme — what is the message or lesson?</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Reading Passage Analyzer', false, 'lang-reading-analyzer')}
@@ -613,51 +631,18 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Phonics & Decoding', false, 'lang-phonics')}
             <div style={{ padding: '0 12px 12px' }}><PhonicsDecodingBuilderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Look at the word — identify letter patterns</div>
-              <div>Step 2: Find digraphs (sh, ch, th) — one sound, two letters</div>
-              <div>Step 3: Find blends (st, bl) — two sounds together</div>
-              <div>Step 4: Sound out each syllable left to right</div>
-              <div>Step 5: Blend syllables to read the whole word</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Read the word on the front of the card</div>
-              <div>Step 2: Try to recall the meaning before flipping</div>
-              <div>Step 3: Flip to check — were you right?</div>
-              <div>Step 4: Break the word into parts (prefix + root + suffix)</div>
-              <div>Step 5: Use the word in your own sentence to remember it</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
             <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: States a fact? → Period (.)</div>
-              <div>Step 2: Asks a question? → Question Mark (?)</div>
-              <div>Step 3: Strong emotion? → Exclamation (!)</div>
-              <div>Step 4: Listing items? → Commas between</div>
-              <div>Step 5: Two complete sentences? → Semicolon (;)</div>
-              <div>Step 6: Possession or contraction? → Apostrophe (')</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Story Elements Map', false, 'lang-story-elements')}
             <div style={{ padding: '0 12px 12px' }}><StoryElementsMapPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Characters — who is in the story?</div>
-              <div>Step 2: Setting — where and when?</div>
-              <div>Step 3: Plot — what happens? (beginning, middle, end)</div>
-              <div>Step 4: Conflict — what is the problem?</div>
-              <div>Step 5: Theme — what is the message or lesson?</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Sight Word Bank', false, 'lang-sight-words')}
@@ -691,39 +676,14 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
             <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Person, place, thing, idea? → NOUN</div>
-              <div>Step 2: Action or state of being? → VERB</div>
-              <div>Step 3: Describes a noun (what kind)? → ADJECTIVE</div>
-              <div>Step 4: Describes a verb (how, when)? → ADVERB</div>
-              <div>Step 5: Replaces a noun (he, she, it)? → PRONOUN</div>
-              <div>Step 6: Shows relationship (in, on, under)? → PREPOSITION</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Sentence Structure', false, 'lang-sentence-structure')}
             <div style={{ padding: '0 12px 12px' }}><SentenceStructureBuilderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Find the subject (who or what?)</div>
-              <div>Step 2: Find the verb (what does it do?)</div>
-              <div>Step 3: One subject + one verb = independent clause</div>
-              <div>Step 4: Starts with because/although/when? → dependent</div>
-              <div>Step 5: One independent = Simple; two + FANBOYS = Compound</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
             <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Start with a simple sentence (Subject + Verb)</div>
-              <div>Step 2: Add adjectives — describe the noun (what kind?)</div>
-              <div>Step 3: Add adverbs — describe the verb (how? when?)</div>
-              <div>Step 4: Add prepositional phrases (where? when?)</div>
-              <div>Step 5: Check: does each addition add meaning or just clutter?</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Semicolon & Advanced Punctuation', false, 'lang-semicolon-punct')}
@@ -732,51 +692,18 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Read the word on the front of the card</div>
-              <div>Step 2: Try to recall the meaning before flipping</div>
-              <div>Step 3: Flip to check — were you right?</div>
-              <div>Step 4: Break the word into parts (prefix + root + suffix)</div>
-              <div>Step 5: Use the word in your own sentence to remember it</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Punctuation Practice', false, 'lang-punctuation')}
             <div style={{ padding: '0 12px 12px' }}><PunctuationInteractivePanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: States a fact? → Period (.)</div>
-              <div>Step 2: Asks a question? → Question Mark (?)</div>
-              <div>Step 3: Strong emotion? → Exclamation (!)</div>
-              <div>Step 4: Listing items? → Commas between</div>
-              <div>Step 5: Two complete sentences? → Semicolon (;)</div>
-              <div>Step 6: Possession or contraction? → Apostrophe (')</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Paragraph Organizer', false, 'lang-paragraph-organizer')}
             <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Write a topic sentence (main idea)</div>
-              <div>Step 2: Add evidence (facts, examples, quotes)</div>
-              <div>Step 3: Explain how the evidence supports the topic</div>
-              <div>Step 4: Add more evidence + explanation if needed</div>
-              <div>Step 5: Conclude — restate or extend the main idea</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Uses "like" or "as" to compare? → SIMILE</div>
-              <div>Step 2: Says X IS Y (direct comparison)? → METAPHOR</div>
-              <div>Step 3: Non-human thing doing human actions? → PERSONIFICATION</div>
-              <div>Step 4: Extreme exaggeration? → HYPERBOLE</div>
-              <div>Step 5: Word sounds like its meaning (buzz)? → ONOMATOPOEIA</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Context Clues Explorer', false, 'lang-context-clues-exp')}
@@ -813,27 +740,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Parts of Speech Tagger', false, 'lang-pos-tagger')}
             <div style={{ padding: '0 12px 12px' }}><PartsOfSpeechTaggerPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Person, place, thing, idea? → NOUN</div>
-              <div>Step 2: Action or state of being? → VERB</div>
-              <div>Step 3: Describes a noun (what kind)? → ADJECTIVE</div>
-              <div>Step 4: Describes a verb (how, when)? → ADVERB</div>
-              <div>Step 5: Replaces a noun (he, she, it)? → PRONOUN</div>
-              <div>Step 6: Shows relationship (in, on, under)? → PREPOSITION</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Figurative Language', false, 'lang-figurative-language')}
             <div style={{ padding: '0 12px 12px' }}><FigurativeLanguageFinderPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Uses "like" or "as" to compare? → SIMILE</div>
-              <div>Step 2: Says X IS Y (direct comparison)? → METAPHOR</div>
-              <div>Step 3: Non-human thing doing human actions? → PERSONIFICATION</div>
-              <div>Step 4: Extreme exaggeration? → HYPERBOLE</div>
-              <div>Step 5: Word sounds like its meaning (buzz)? → ONOMATOPOEIA</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Rhetorical Analysis Framework', false, 'lang-rhetorical-analysis')}
@@ -845,38 +755,14 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Sentence Expansion', false, 'lang-sentence-expansion')}
             <div style={{ padding: '0 12px 12px' }}><SentenceExpansionToolPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Start with a simple sentence (Subject + Verb)</div>
-              <div>Step 2: Add adjectives — describe the noun (what kind?)</div>
-              <div>Step 3: Add adverbs — describe the verb (how? when?)</div>
-              <div>Step 4: Add prepositional phrases (where? when?)</div>
-              <div>Step 5: Check: does each addition add meaning or just clutter?</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Paragraph Organizer', false, 'lang-paragraph-organizer')}
             <div style={{ padding: '0 12px 12px' }}><ParagraphOrganizerPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Write a topic sentence (main idea)</div>
-              <div>Step 2: Add evidence (facts, examples, quotes)</div>
-              <div>Step 3: Explain how the evidence supports the topic</div>
-              <div>Step 4: Add more evidence + explanation if needed</div>
-              <div>Step 5: Conclude — restate or extend the main idea</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Vocabulary Flashcards', false, 'lang-vocab-flashcards')}
             <div style={{ padding: '0 12px 12px' }}><VocabularyFlashcardsPanel isDark={isDark} /></div>
-            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-              <div>Step 1: Read the word on the front of the card</div>
-              <div>Step 2: Try to recall the meaning before flipping</div>
-              <div>Step 3: Flip to check — were you right?</div>
-              <div>Step 4: Break the word into parts (prefix + root + suffix)</div>
-              <div>Step 5: Use the word in your own sentence to remember it</div>
-            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Reading Passage Analyzer', false, 'lang-reading-analyzer')}

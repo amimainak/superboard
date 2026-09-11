@@ -2901,13 +2901,14 @@ export function CanvasFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
   useEffect(function() {
     var node = graphContainerRef.current
     if (!node) return
+    var el = node // capture non-null ref for closure
     function onWheel(e: WheelEvent) {
       e.preventDefault()
       e.stopPropagation()
       var zoomFactor = e.deltaY > 0 ? 1.12 : 1 / 1.12
       var newXRange = Math.max(0.5, Math.min(100, xRange * zoomFactor))
       // Zoom toward cursor
-      var rect = node.getBoundingClientRect()
+      var rect = el.getBoundingClientRect()
       var relX = (e.clientX - rect.left) / rect.width
       var cursorX = effectiveXMin + relX * (effectiveXMax - effectiveXMin)
       var newPanX = panX + (cursorX - panX) * (1 - xRange / newXRange)
@@ -2916,8 +2917,8 @@ export function CanvasFunctionPlotter({ element, isDark }: CanvasWidgetProps) {
         xRange: newXRange, panX: newPanX, panY: panY,
       })
     }
-    node.addEventListener('wheel', onWheel, { passive: false })
-    return function() { node.removeEventListener('wheel', onWheel) }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return function() { el.removeEventListener('wheel', onWheel) }
   }, [xRange, panX, panY, effectiveXMin, effectiveXMax, functions, updateConfig])
 
   var resetView = useCallback(function() {
@@ -3716,8 +3717,11 @@ export function CanvasDerivativeVisualizer({ element, isDark }: CanvasWidgetProp
       </div>
       <div style={{ display: 'flex', gap: 6, fontSize: 10 }}>
         {[['f(x)', showF, '#34d399', 'showF'], ["f'(x)", showF1, '#f59e0b', 'showF1'], ["f''(x)", showF2, '#f87171', 'showF2']].map(function(item) {
+          var key = item[3] as string
+          var color = item[2] as string
+          var active = item[1] as boolean
           return (
-            <button key={item[3]} onClick={function() { updateConfig({ [item[3]]: !item[1] }) }} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer', background: item[1] ? item[2] + '22' : s.surface, border: item[1] ? '1px solid ' + item[2] + '44' : '1px solid ' + s.border, color: item[1] ? item[2] : s.text }}>{item[0]}</button>
+            <button key={key} onClick={function() { updateConfig({ [key]: !active }) }} style={{ padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, cursor: 'pointer', background: active ? color + '22' : s.surface, border: active ? '1px solid ' + color + '44' : '1px solid ' + s.border, color: active ? color : s.text }}>{item[0]}</button>
           )
         })}
       </div>

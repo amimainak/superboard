@@ -110,7 +110,7 @@ function ColorTheoryInline({ isDark }: { isDark: boolean }) {
         <div>Step 2: Saturation = <b>{sat}%</b>, Lightness = <b>{light}%</b></div>
         <div>Step 3: Harmony: <b style={{ textTransform: 'capitalize' }}>{harmony}</b> ({harmonyHexes.length} color{harmonyHexes.length !== 1 ? 's' : ''})</div>
         <div>Step 4: Complementary hue = <b>{Math.round((hue + 180) % 360)}°</b></div>
-        <div>Step 5: Current color: <b style={{ color: '#34d399' }}>#{hslToHex(hue, sat, light).toUpperCase()}</b></div>
+        <div>Step 5: Current color: <b style={{ color: '#34d399' }}>{hslToHex(hue, sat, light).toUpperCase()}</b></div>
         <div>Step 6: Value scale shows lightness dark → light (9 steps)</div>
       </div>
     </div>
