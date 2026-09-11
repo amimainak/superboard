@@ -707,18 +707,17 @@ export function PhScaleVisualizer({ isDark }: { isDark: boolean }) {
           </button>
         ))}
       </div>
-                {/* Step-by-step derivation */}
+                {/* Dynamic step-by-step — updates with pH value */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: [H⁺] is the hydrogen ion concentration</div>
-          <div>Step 2: pH = -log₁₀([H⁺])</div>
-          <div>Step 3: Take the log of [H⁺]</div>
-          <div>Step 4: Negate it (the minus makes acids pH &lt; 7)</div>
-          <div>Step 5: pH &lt; 7 = acidic, pH = 7 = neutral, pH &gt; 7 = basic</div>
-          <div>Step 6: Each pH unit = 10× difference in [H⁺]</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: [H⁺] = {formatConc(concentration)}</div>
+        <div>Step 2: pH = -log₁₀({formatConc(concentration)})</div>
+        <div>Step 3: log₁₀ = {Math.log10(concentration).toFixed(2)}</div>
+        <div>Step 4: pH = -({Math.log10(concentration).toFixed(2)}) = <b style={{ color: isDark ? '#34d399' : '#059669' }}>{ph.toFixed(1)}</b></div>
+        <div>Step 5: {ph < 7 ? 'Acidic (pH &lt; 7)' : ph === 7 ? 'Neutral (pH = 7)' : 'Basic (pH &gt; 7)'}</div>
       </div>
 {/* Instructional insight */}
-      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> pH is logarithmic: each unit = 10× difference. pH 3 is 10× more acidic than pH 4. The scale compresses 14 orders of magnitude to 0-14.
       </div>
 </div>
