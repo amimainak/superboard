@@ -952,14 +952,21 @@ export function MolarMassCalculator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, marginTop: 6, opacity: 0.6 }}>
         Supports parentheses: Ca(OH)2, Al2(SO4)3, Fe2(SO4)3
       </div>
-                {/* Step-by-step derivation */}
+                {/* Dynamic step-by-step — updates with formula input */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Parse the chemical formula (e.g., H₂O = 2 H + 1 O)</div>
-          <div>Step 2: Look up atomic mass for each element from periodic table</div>
-          <div>Step 3: Multiply: count × atomic mass = subtotal for each element</div>
-          <div>Step 4: Sum all subtotals = molar mass (g/mol)</div>
-          <div>Step 5: This tells you the mass of 6.022×10²³ molecules (one mole)</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Formula: {formula}</div>
+        {result && !hasError ? (
+          <>
+            <div>Step 2: Parsed elements: {result.breakdown.map(b => b.element + '(' + b.count + ')').join(', ')}</div>
+            {result.breakdown.map((b, i) => (
+              <div key={i}>Step {3 + i}: {b.count} × {b.atomicWeight} = {parseFloat(b.subtotal.toFixed(3))} g/mol</div>
+            ))}
+            <div>Step {3 + result.breakdown.length}: Total = <b style={{ color: isDark ? '#34d399' : '#059669' }}>{parseFloat(result.total.toFixed(3))} g/mol</b></div>
+          </>
+        ) : (
+          <div style={{ color: isDark ? '#64748b' : '#94a3b8' }}>Enter a valid formula to see element-by-element breakdown</div>
+        )}
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
