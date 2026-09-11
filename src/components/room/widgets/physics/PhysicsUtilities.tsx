@@ -264,25 +264,42 @@ export function PhysicsFormulaCalculator({ isDark }: { isDark: boolean }) {
       <button onClick={handleCalc} style={{ ...s.btn(true), padding: '4px 8px', alignSelf: 'flex-start', fontWeight: 600 }}>
         Calculate
       </button>
-      {result && (
+      {result && !result.startsWith('Error') && (
         <div style={{ fontSize: 12, fontWeight: 700, color: s.accent, padding: '4px 8px', background: 'rgba(5,150,105,0.08)', borderRadius: 4, wordBreak: 'break-all' }}>
           {result}
         </div>
       )}
-                {/* Step-by-step derivation */}
+      {result && result.startsWith('Error') && (
+        <div style={{ fontSize: 12, fontWeight: 700, color: '#f87171', padding: '4px 8px', background: 'rgba(248,113,113,0.08)', borderRadius: 4 }}>
+          {result}
+        </div>
+      )}
+      {/* Dynamic step-by-step — updates with actual input values */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Select the physics formula you want to explore</div>
-          <div>Step 2: Choose which variable to solve for</div>
-          <div>Step 3: Enter the known values with correct units</div>
-          <div>Step 4: The formula rearranges to isolate the unknown</div>
-          <div>Step 5: Substitute values and calculate</div>
-          <div>Step 6: Check units — the result must have the correct unit</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Formula: {formula.equation}</div>
+        <div>Step 2: Solve for {solveFor}</div>
+        {formula.variables.filter(v => v.key !== solveFor).map((v, i) => (
+          <div key={i}>Step {3 + i}: {v.label.split('(')[0].trim()} = {values[v.key] || '?'} {v.unit}</div>
+        ))}
+        {result && !result.startsWith('Error') && (
+          <div>Step {3 + formula.variables.filter(v => v.key !== solveFor).length}: {result}</div>
+        )}
+        {!result && <div style={{ color: isDark ? '#64748b' : '#94a3b8' }}>Click Calculate to see the full derivation with your values</div>}
       </div>
-{/* Instructional insight */}
-      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-        💡 <b>Insight:</b> Force = mass × acceleration. Heavier objects need more force to accelerate — that's why trucks need bigger engines.
-      </div>
+      {/* Unit analysis */}
+      {formula.units && (
+        <div style={{ marginTop: 4, padding: '4px 8px', borderRadius: 4, fontSize: 11, background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.2)', color: '#60a5fa' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 }}>Unit Analysis</div>
+          {formula.units}
+        </div>
+      )}
+      {/* Instructional insight */}
+      {formula.insight && (
+        <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+          💡 <b>Insight:</b> {formula.insight}
+        </div>
+      )}
 </div>
   )
 }
@@ -393,18 +410,17 @@ export function WaveSimulator({ isDark }: { isDark: boolean }) {
         <span>T = 1/f = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b></span>
         <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} m/s</b></span>
       </div>
-                {/* Step-by-step derivation */}
+      {/* Dynamic step-by-step — updates with slider values */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Frequency (f) = how many waves pass per second (Hz)</div>
-          <div>Step 2: Wavelength (λ) = distance between wave peaks (m)</div>
-          <div>Step 3: Period T = 1/f (time for one complete wave)</div>
-          <div>Step 4: Wave speed v = f × λ (meters of wave per second)</div>
-          <div>Step 5: Adjust sliders to see how f and λ affect v</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: f = {frequency.toFixed(1)} Hz, λ = {wavelength} m</div>
+        <div>Step 2: T = 1/f = 1/{frequency.toFixed(1)} = <b style={{ color: s.accent }}>{period.toFixed(3)} s</b></div>
+        <div>Step 3: v = f × λ = {frequency.toFixed(1)} × {wavelength} = <b style={{ color: s.accent }}>{waveSpeed.toFixed(1)} m/s</b></div>
+        <div>Step 4: Amplitude A = {amplitude} m (wave height)</div>
       </div>
-{/* Instructional insight */}
-      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
-        💡 <b>Insight:</b> v = f×λ. If 2 waves pass per second, each 60m long, then 120m of wave passes per second — that's velocity!
+      {/* Instructional insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> v = f×λ. If {frequency.toFixed(1)} waves pass per second, each {wavelength}m long, then {(frequency * wavelength).toFixed(1)}m of wave passes per second — that's velocity!
       </div>
 </div>
   )
@@ -544,18 +560,17 @@ export function PendulumSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         {'\u03B8'}(t) = {'\u03B8\u2080'} {'\u00B7'} cos({'\u221A'}(g/L) {'\u00B7'} t) &nbsp;|&nbsp; T = 2{'\u03C0'}{'\u221A'}(L/g)
       </div>
-                {/* Step-by-step derivation */}
+      {/* Dynamic step-by-step — updates with slider values */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Length (L) determines how far the bob swings</div>
-          <div>Step 2: Gravity (g) pulls the bob back to center</div>
-          <div>Step 3: Period T = 2π√(L/g) — derive: L/g gives the ratio</div>
-          <div>Step 4: Take square root of L/g</div>
-          <div>Step 5: Multiply by 2π to get full period</div>
-          <div>Step 6: Notice: mass does NOT appear in the formula!</div>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: L = {length.toFixed(1)} m, g = {gravity.toFixed(1)} m/s²</div>
+        <div>Step 2: L/g = {length.toFixed(1)}/{gravity.toFixed(1)} = {(length / gravity).toFixed(4)}</div>
+        <div>Step 3: √(L/g) = √{(length / gravity).toFixed(4)} = {Math.sqrt(length / gravity).toFixed(4)}</div>
+        <div>Step 4: T = 2π × {Math.sqrt(length / gravity).toFixed(4)} = <b style={{ color: s.accent }}>{period.toFixed(3)} s</b></div>
+        <div>Step 5: Mass does NOT appear — period is independent of mass!</div>
       </div>
-{/* Instructional insight */}
-      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+      {/* Instructional insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Period depends only on length and gravity — NOT mass. Gravity pulls harder on heavy objects, but they resist more. The effects cancel (Galileo's discovery).
       </div>
 </div>
