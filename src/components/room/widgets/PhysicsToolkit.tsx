@@ -18,6 +18,24 @@ const FreeBodyDiagramLazy = lazy(() => import('./physics/PhysicsUtilities').then
 const RayDiagramLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.RayDiagramOptics })))
 const EnergyBarChartsLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.EnergyBarCharts })))
 const InteractiveGraphingLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.InteractiveGraphingTool })))
+// K-5 widgets
+const PushPullLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.PushPullPlayground })))
+const SoundWaveLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.SoundWaveMaker })))
+const LightShadowLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.LightAndShadow })))
+const GravityDropLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.GravityDrop })))
+const FrictionRampLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.FrictionRamp })))
+// 6-8 widgets
+const SpeedAccelLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.SpeedVelocityAcceleration })))
+const DensityLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.DensityExplorer })))
+const HeatTransferLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.HeatTransferExplorer })))
+const LightColorLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.LightColorMixing })))
+const SimpleMachinesLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.SimpleMachinesExplorer })))
+// 9-12 widgets
+const MomentumLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.MomentumCollisionsExplorer })))
+const SHMSpringLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.SHMSpringExplorer })))
+const ElectricFieldLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.ElectricFieldExplorer })))
+const MagneticFieldLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.MagneticFieldExplorer })))
+const QuantumLazy = lazy(() => import('./physics/PhysicsUtilities').then(m => ({ default: m.QuantumExplorer })))
 
 // Stable wrapper components (no remount on re-render)
 function FormulaCalcPanel({ isDark }: { isDark: boolean }) {
@@ -52,6 +70,54 @@ function EnergyBarChartsPanel({ isDark }: { isDark: boolean }) {
 }
 function InteractiveGraphingPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><InteractiveGraphingLazy isDark={isDark} /></Suspense>
+}
+// K-5 panels
+function PushPullPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PushPullLazy isDark={isDark} /></Suspense>
+}
+function SoundWavePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><SoundWaveLazy isDark={isDark} /></Suspense>
+}
+function LightShadowPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><LightShadowLazy isDark={isDark} /></Suspense>
+}
+function GravityDropPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><GravityDropLazy isDark={isDark} /></Suspense>
+}
+function FrictionRampPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><FrictionRampLazy isDark={isDark} /></Suspense>
+}
+// 6-8 panels
+function SpeedAccelPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><SpeedAccelLazy isDark={isDark} /></Suspense>
+}
+function DensityPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><DensityLazy isDark={isDark} /></Suspense>
+}
+function HeatTransferPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><HeatTransferLazy isDark={isDark} /></Suspense>
+}
+function LightColorPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><LightColorLazy isDark={isDark} /></Suspense>
+}
+function SimpleMachinesPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><SimpleMachinesLazy isDark={isDark} /></Suspense>
+}
+// 9-12 panels
+function MomentumPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><MomentumLazy isDark={isDark} /></Suspense>
+}
+function SHMSpringPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><SHMSpringLazy isDark={isDark} /></Suspense>
+}
+function ElectricFieldPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ElectricFieldLazy isDark={isDark} /></Suspense>
+}
+function MagneticFieldPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><MagneticFieldLazy isDark={isDark} /></Suspense>
+}
+function QuantumPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><QuantumLazy isDark={isDark} /></Suspense>
 }
 
 
@@ -252,6 +318,87 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
             {sectionTitle('Wave Interference', 'phys-wave-interference')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Two-source wave simulation showing constructive/destructive patterns.</p>
           </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — K-5 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🚗 Push & Pull Playground', 'phys-push-pull')}
+            <div style={{ padding: '0 12px 12px' }}><PushPullPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎸 Sound Wave Maker', 'phys-sound-wave')}
+            <div style={{ padding: '0 12px 12px' }}><SoundWavePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('💡 Light & Shadow', 'phys-light-shadow')}
+            <div style={{ padding: '0 12px 12px' }}><LightShadowPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🍎 Gravity Drop', 'phys-gravity-drop')}
+            <div style={{ padding: '0 12px 12px' }}><GravityDropPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📐 Friction Ramp', 'phys-friction-ramp')}
+            <div style={{ padding: '0 12px 12px' }}><FrictionRampPanel isDark={isDark} /></div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — 6-8 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🏎️ Speed, Velocity & Acceleration', 'phys-speed-accel')}
+            <div style={{ padding: '0 12px 12px' }}><SpeedAccelPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧊 Density Explorer', 'phys-density')}
+            <div style={{ padding: '0 12px 12px' }}><DensityPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔥 Heat Transfer Explorer', 'phys-heat-transfer')}
+            <div style={{ padding: '0 12px 12px' }}><HeatTransferPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎨 Light & Color Mixing', 'phys-light-color')}
+            <div style={{ padding: '0 12px 12px' }}><LightColorPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚙️ Simple Machines Explorer', 'phys-simple-machines')}
+            <div style={{ padding: '0 12px 12px' }}><SimpleMachinesPanel isDark={isDark} /></div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — 9-12 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎱 Momentum & Collisions', 'phys-momentum')}
+            <div style={{ padding: '0 12px 12px' }}><MomentumPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌀 SHM Spring Explorer', 'phys-shm-spring')}
+            <div style={{ padding: '0 12px 12px' }}><SHMSpringPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚡ Electric Field Explorer', 'phys-electric-field')}
+            <div style={{ padding: '0 12px 12px' }}><ElectricFieldPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧲 Magnetic Field Explorer', 'phys-magnetic-field')}
+            <div style={{ padding: '0 12px 12px' }}><MagneticFieldPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚛️ Quantum Explorer', 'phys-quantum')}
+            <div style={{ padding: '0 12px 12px' }}><QuantumPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -269,6 +416,31 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
+          </div>
+
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🚗 Push & Pull Playground', 'phys-push-pull')}
+            <div style={{ padding: '0 12px 12px' }}><PushPullPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎸 Sound Wave Maker', 'phys-sound-wave')}
+            <div style={{ padding: '0 12px 12px' }}><SoundWavePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('💡 Light & Shadow', 'phys-light-shadow')}
+            <div style={{ padding: '0 12px 12px' }}><LightShadowPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🍎 Gravity Drop', 'phys-gravity-drop')}
+            <div style={{ padding: '0 12px 12px' }}><GravityDropPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📐 Friction Ramp', 'phys-friction-ramp')}
+            <div style={{ padding: '0 12px 12px' }}><FrictionRampPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -318,6 +490,31 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Magnetism Simulator', 'phys-magnetism')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place magnets and see field lines with attract/repel visualization.</p>
+          </div>
+
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🏎️ Speed, Velocity & Acceleration', 'phys-speed-accel')}
+            <div style={{ padding: '0 12px 12px' }}><SpeedAccelPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧊 Density Explorer', 'phys-density')}
+            <div style={{ padding: '0 12px 12px' }}><DensityPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔥 Heat Transfer Explorer', 'phys-heat-transfer')}
+            <div style={{ padding: '0 12px 12px' }}><HeatTransferPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎨 Light & Color Mixing', 'phys-light-color')}
+            <div style={{ padding: '0 12px 12px' }}><LightColorPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚙️ Simple Machines Explorer', 'phys-simple-machines')}
+            <div style={{ padding: '0 12px 12px' }}><SimpleMachinesPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -384,6 +581,31 @@ export function PhysicsToolkit({ roomId: _roomId }: PhysicsToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Rotational Motion', 'phys-rotational-motion')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Torque, angular velocity, moment of inertia with interactive sliders.</p>
+          </div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎱 Momentum & Collisions', 'phys-momentum')}
+            <div style={{ padding: '0 12px 12px' }}><MomentumPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌀 SHM Spring Explorer', 'phys-shm-spring')}
+            <div style={{ padding: '0 12px 12px' }}><SHMSpringPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚡ Electric Field Explorer', 'phys-electric-field')}
+            <div style={{ padding: '0 12px 12px' }}><ElectricFieldPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧲 Magnetic Field Explorer', 'phys-magnetic-field')}
+            <div style={{ padding: '0 12px 12px' }}><MagneticFieldPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚛️ Quantum Explorer', 'phys-quantum')}
+            <div style={{ padding: '0 12px 12px' }}><QuantumPanel isDark={isDark} /></div>
           </div>
         </>
       )}
