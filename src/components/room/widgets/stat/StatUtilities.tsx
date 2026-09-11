@@ -1972,7 +1972,7 @@ export function HypothesisTestExplorer({ isDark }: ToolProps) {
   const [sampleStd, setSampleStd] = useState(15)
   const [n, setN] = useState(30)
   const [alphaIdx, setAlphaIdx] = useState(0)
-  const [showStep, setShowStep] = useState(6)
+  const [showStep, setShowStep] = useState(1)
 
   const alpha = alphaIdx === 0 ? 0.05 : 0.01
   const stdError = sampleStd / Math.sqrt(n)
@@ -2061,7 +2061,13 @@ export function HypothesisTestExplorer({ isDark }: ToolProps) {
         ))}
         <span style={{ fontSize: 9, color: s.text, marginLeft: 4 }}>{ALT_OPTIONS.find(a => a.type === altType)!.label}</span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+      {/* Step 2 reveal hint */}
+      {showStep < 2 && (
+        <div style={{ fontSize: 10, color: s.text, fontStyle: 'italic', opacity: 0.7 }}>
+          → Next: enter sample data (advance to Step 2)
+        </div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, opacity: showStep >= 2 ? 1 : 0.3, pointerEvents: showStep >= 2 ? 'auto' : 'none' as const }}>
         <label style={{ fontSize: 10, color: s.text, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span>Sample mean (x̄)</span>
           <input type="number" value={sampleMean} step={1} onChange={e => setSampleMean(Number(e.target.value))} style={{ ...s.input, fontFamily: 'monospace' }} />
@@ -2075,8 +2081,14 @@ export function HypothesisTestExplorer({ isDark }: ToolProps) {
           <input type="number" value={n} step={1} min={2} onChange={e => setN(Number(e.target.value))} style={{ ...s.input, fontFamily: 'monospace' }} />
         </label>
       </div>
-      {/* SVG */}
-      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+      {/* Step 3 reveal hint */}
+      {showStep === 2 && (
+        <div style={{ fontSize: 10, color: s.text, fontStyle: 'italic', opacity: 0.7 }}>
+          → Next: compute the z test statistic (advance to Step 3)
+        </div>
+      )}
+      {/* SVG — revealed at Step 3 (test statistic) */}
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg, opacity: showStep >= 3 ? 1 : 0.3, transition: 'opacity 0.2s' }}>
         {[0.25, 0.5, 0.75].map(f => (
           <line key={f} x1={pad.l} y1={sy(f * maxY)} x2={svgW - pad.r} y2={sy(f * maxY)} stroke={gridColor} strokeWidth={0.5} />
         ))}
@@ -2116,21 +2128,39 @@ export function HypothesisTestExplorer({ isDark }: ToolProps) {
           <text key={t} x={sx(t)} y={svgH - pad.b + 21} fontSize={7} fill={axisColor} textAnchor="middle">{t}</text>
         ))}
       </svg>
-      {/* Stats */}
-      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px', fontSize: 10 }}>
+      {/* Stats — revealed progressively: z-stat/SE/z-crit at Step 3, p-value at Step 4 */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px', fontSize: 10, opacity: showStep >= 3 ? 1 : 0.3, transition: 'opacity 0.2s' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>z-stat</span><span style={s.statValue}>{zStat.toFixed(3)}</span></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>p-value</span><span style={s.statValue}>{pValue.toFixed(4)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', opacity: showStep >= 4 ? 1 : 0.4 }}><span style={s.statLabel}>p-value</span><span style={s.statValue}>{showStep >= 4 ? pValue.toFixed(4) : '—'}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>z-crit</span><span style={s.statValue}>{altType === 'neq' ? `±${zCrit}` : `${zCrit}`}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>SE</span><span style={s.statValue}>{stdError.toFixed(3)}</span></div>
       </div>
-      {/* Decision banner */}
-      <div style={{ padding: '5px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, textAlign: 'center' as const, background: reject ? 'rgba(248,113,113,0.12)' : 'rgba(34,197,94,0.12)', border: '1px solid ' + (reject ? 'rgba(248,113,113,0.3)' : 'rgba(34,197,94,0.3)'), color: reject ? '#f87171' : '#22c55e' }}>
-        {reject ? `✗ REJECT H₀ — p (${pValue.toFixed(4)}) < α (${alpha})` : `✓ FAIL TO REJECT H₀ — p (${pValue.toFixed(4)}) ≥ α (${alpha})`}
-      </div>
-      {/* Step reveal controls */}
+      {/* Step 4 reveal hint */}
+      {showStep === 3 && (
+        <div style={{ fontSize: 10, color: s.text, fontStyle: 'italic', opacity: 0.7 }}>
+          → Next: compute the p-value and compare to α (advance to Step 4)
+        </div>
+      )}
+      {/* Decision banner — revealed at Step 5 */}
+      {showStep >= 5 ? (
+        <div style={{ padding: '5px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, textAlign: 'center' as const, background: reject ? 'rgba(248,113,113,0.12)' : 'rgba(34,197,94,0.12)', border: '1px solid ' + (reject ? 'rgba(248,113,113,0.3)' : 'rgba(34,197,94,0.3)'), color: reject ? '#f87171' : '#22c55e' }}>
+          {reject ? `✗ REJECT H₀ — p (${pValue.toFixed(4)}) < α (${alpha})` : `✓ FAIL TO REJECT H₀ — p (${pValue.toFixed(4)}) ≥ α (${alpha})`}
+        </div>
+      ) : (
+        <div style={{ padding: '5px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, textAlign: 'center' as const, background: s.bg, border: '1px dashed ' + s.border, color: s.text, opacity: 0.4 }}>
+          Decision: reveal at Step 5
+        </div>
+      )}
+      {/* Step reveal controls — progressive disclosure walker */}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <button onClick={() => setShowStep(p => Math.max(1, p - 1))} style={s.btn(false)}>← Prev</button>
-        <span style={{ fontSize: 10, color: s.text }}>Step {showStep} of 6</span>
+        <span style={{ fontSize: 10, color: s.text }}>Step {showStep} of 6 — {
+          showStep === 1 ? 'Hypotheses' :
+          showStep === 2 ? 'Sample data' :
+          showStep === 3 ? 'Test statistic' :
+          showStep === 4 ? 'P-value' :
+          showStep === 5 ? 'Decision' : 'Interpretation'
+        }</span>
         <button onClick={() => setShowStep(p => Math.min(6, p + 1))} style={s.btn(false)}>Next →</button>
         <button onClick={() => setShowStep(6)} style={{ ...s.btn(showStep === 6), marginLeft: 'auto' }}>Show All</button>
       </div>
@@ -2239,6 +2269,8 @@ export function CentralLimitTheoremDemo({ isDark }: ToolProps) {
   }, [isAuto])
 
   function drawManual() { drawSomeRef.current(5) }
+  function draw50() { drawSomeRef.current(50) }
+  function draw100() { drawSomeRef.current(100) }
   function resetSamples() { setSampleMeans([]); setIsAuto(false) }
 
   const sampleCount = sampleMeans.length
@@ -2342,11 +2374,19 @@ export function CentralLimitTheoremDemo({ isDark }: ToolProps) {
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Samples</span><span style={s.statValue}>{sampleCount}</span></div>
       </div>
       {/* Buttons */}
-      <div style={{ display: 'flex', gap: 6 }}>
-        <button onClick={drawManual} style={{ ...s.btn(true), padding: '4px 10px', fontWeight: 600 }}>Draw 5</button>
-        <button onClick={() => setIsAuto(p => !p)} style={{ ...s.btn(isAuto), padding: '4px 10px' }}>{isAuto ? '■ Stop' : '▶ Auto'}</button>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        <button onClick={drawManual} style={{ ...s.btn(true), padding: '4px 8px', fontWeight: 600 }}>Draw 5</button>
+        <button onClick={draw50} style={{ ...s.btn(true), padding: '4px 8px', fontWeight: 600, background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', color: '#a78bfa' }}>Draw 50</button>
+        <button onClick={draw100} style={{ ...s.btn(true), padding: '4px 8px', fontWeight: 600, background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', color: '#a78bfa' }}>Draw 100</button>
+        <button onClick={() => setIsAuto(p => !p)} style={{ ...s.btn(isAuto), padding: '4px 8px' }}>{isAuto ? '■ Stop' : '▶ Auto'}</button>
         <button onClick={resetSamples} style={{ ...s.btn(false), color: '#f87171', marginLeft: 'auto' }}>Reset</button>
       </div>
+      {/* CLT rule-of-thumb note */}
+      {sampleCount >= 30 && (
+        <div style={{ padding: '4px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700, textAlign: 'center' as const, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}>
+          ✓ 30+ samples drawn — normal shape emerging!
+        </div>
+      )}
       {/* How it works */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>

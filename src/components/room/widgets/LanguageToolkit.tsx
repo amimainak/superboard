@@ -68,6 +68,20 @@ const ReadingComprehensionStrategiesLazy = lazy(() => import('./language/Languag
 const GrammarErrorDiagnosticLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.GrammarErrorDiagnostic })))
 const SpellingPatternsLazy = lazy(() => import('./language/LanguagePhase2Utilities').then(m => ({ default: m.SpellingPatterns })))
 
+// Phase 4 — K-5 Interactive Manipulatives
+const SoundWallBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SoundWallBuilder })))
+const DecodableTextReaderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.DecodableTextReader })))
+const SightWordOrthographicMapLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.SightWordOrthographicMap })))
+// Phase 4 — 6-8 Reading & Writing
+const DigitalAnnotationToolLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.DigitalAnnotationTool })))
+const CitationGeneratorIntroLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.CitationGeneratorIntro })))
+const PeerReviewChecklistLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.PeerReviewChecklist })))
+// Phase 4 — 9-12 Composition & Analysis
+const ThesisStatementBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.ThesisStatementBuilder })))
+const CounterargumentBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.CounterargumentBuilder })))
+const CloseReadingFrameworkLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.CloseReadingFramework })))
+const EssayOutlineBuilderLazy = lazy(() => import('./language/LanguageUtilities').then(m => ({ default: m.EssayOutlineBuilder })))
+
 // ============================================================
 // Stable wrappers (prevent remount on re-render)
 // ============================================================
@@ -345,6 +359,40 @@ function SpellingPatternsPanel({ isDark }: { isDark: boolean }) {
   return <P1Panel><SpellingPatternsLazy isDark={isDark} /></P1Panel>
 }
 
+// Phase 4 wrappers — K-5
+function SoundWallBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><SoundWallBuilderLazy isDark={isDark} /></P1Panel>
+}
+function DecodableTextReaderPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><DecodableTextReaderLazy isDark={isDark} /></P1Panel>
+}
+function SightWordOrthographicMapPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><SightWordOrthographicMapLazy isDark={isDark} /></P1Panel>
+}
+// Phase 4 wrappers — 6-8
+function DigitalAnnotationToolPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><DigitalAnnotationToolLazy isDark={isDark} /></P1Panel>
+}
+function CitationGeneratorIntroPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><CitationGeneratorIntroLazy isDark={isDark} /></P1Panel>
+}
+function PeerReviewChecklistPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><PeerReviewChecklistLazy isDark={isDark} /></P1Panel>
+}
+// Phase 4 wrappers — 9-12
+function ThesisStatementBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><ThesisStatementBuilderLazy isDark={isDark} /></P1Panel>
+}
+function CounterargumentBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><CounterargumentBuilderLazy isDark={isDark} /></P1Panel>
+}
+function CloseReadingFrameworkPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><CloseReadingFrameworkLazy isDark={isDark} /></P1Panel>
+}
+function EssayOutlineBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <P1Panel><EssayOutlineBuilderLazy isDark={isDark} /></P1Panel>
+}
+
 // ============================================================
 // Types & Constants
 // ============================================================
@@ -606,6 +654,57 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             {sectionTitle('Text-to-Speech Preview', false, 'lang-tts-preview')}
           </div>
 
+          {/* --- Phase 4 Tools (K-5 / 6-8 / 9-12 grouped) --- */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sound Wall Builder', false, 'lang-sound-wall')}
+            <div style={{ padding: '0 12px 12px' }}><SoundWallBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Decodable Text Reader', false, 'lang-decodable-reader')}
+            <div style={{ padding: '0 12px 12px' }}><DecodableTextReaderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sight Word Orthographic Map', false, 'lang-sight-word-ortho')}
+            <div style={{ padding: '0 12px 12px' }}><SightWordOrthographicMapPanel isDark={isDark} /></div>
+          </div>
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Reading & Writing
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Digital Annotation Tool', false, 'lang-digital-annotation')}
+            <div style={{ padding: '0 12px 12px' }}><DigitalAnnotationToolPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Citation Generator (Intro)', false, 'lang-citation-intro')}
+            <div style={{ padding: '0 12px 12px' }}><CitationGeneratorIntroPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Peer Review Checklist', false, 'lang-peer-review')}
+            <div style={{ padding: '0 12px 12px' }}><PeerReviewChecklistPanel isDark={isDark} /></div>
+          </div>
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Composition & Analysis
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Thesis Statement Builder', false, 'lang-thesis-builder')}
+            <div style={{ padding: '0 12px 12px' }}><ThesisStatementBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Counterargument Builder', false, 'lang-counterargument')}
+            <div style={{ padding: '0 12px 12px' }}><CounterargumentBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Close Reading Framework (TP-CASTT)', false, 'lang-close-reading')}
+            <div style={{ padding: '0 12px 12px' }}><CloseReadingFrameworkPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Essay Outline Builder (5-Paragraph)', false, 'lang-essay-outline-builder')}
+            <div style={{ padding: '0 12px 12px' }}><EssayOutlineBuilderPanel isDark={isDark} /></div>
+          </div>
+
           {/* Phase 2: Marketplace (installed only) */}
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
@@ -652,6 +751,23 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Fluency Timer', false, 'lang-fluency-timer')}
+          </div>
+
+          {/* --- K-5 Interactive Manipulatives (Phase 4) --- */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sound Wall Builder', false, 'lang-sound-wall')}
+            <div style={{ padding: '0 12px 12px' }}><SoundWallBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Decodable Text Reader', false, 'lang-decodable-reader')}
+            <div style={{ padding: '0 12px 12px' }}><DecodableTextReaderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Sight Word Orthographic Map', false, 'lang-sight-word-ortho')}
+            <div style={{ padding: '0 12px 12px' }}><SightWordOrthographicMapPanel isDark={isDark} /></div>
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
@@ -716,6 +832,23 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Text-to-Speech Preview', false, 'lang-tts-preview')}
+          </div>
+
+          {/* --- 6-8 Reading & Writing (Phase 4) --- */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Reading & Writing
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Digital Annotation Tool', false, 'lang-digital-annotation')}
+            <div style={{ padding: '0 12px 12px' }}><DigitalAnnotationToolPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Citation Generator (Intro)', false, 'lang-citation-intro')}
+            <div style={{ padding: '0 12px 12px' }}><CitationGeneratorIntroPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Peer Review Checklist', false, 'lang-peer-review')}
+            <div style={{ padding: '0 12px 12px' }}><PeerReviewChecklistPanel isDark={isDark} /></div>
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>
@@ -790,6 +923,27 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Text-to-Speech Preview', false, 'lang-tts-preview')}
+          </div>
+
+          {/* --- 9-12 Composition & Analysis (Phase 4) --- */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Composition & Analysis
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Thesis Statement Builder', false, 'lang-thesis-builder')}
+            <div style={{ padding: '0 12px 12px' }}><ThesisStatementBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Counterargument Builder', false, 'lang-counterargument')}
+            <div style={{ padding: '0 12px 12px' }}><CounterargumentBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Close Reading Framework (TP-CASTT)', false, 'lang-close-reading')}
+            <div style={{ padding: '0 12px 12px' }}><CloseReadingFrameworkPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Essay Outline Builder (5-Paragraph)', false, 'lang-essay-outline-builder')}
+            <div style={{ padding: '0 12px 12px' }}><EssayOutlineBuilderPanel isDark={isDark} /></div>
           </div>
           {visibleP2.length > 0 && (
             <div style={{ marginTop: 4 }}>

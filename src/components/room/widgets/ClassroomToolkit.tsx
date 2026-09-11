@@ -10,6 +10,15 @@ import type { WidgetElement } from '@/lib/whiteboard/types'
 const TimerStopwatchLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.TimerStopwatch })))
 const GraphingToolLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.InteractiveGraphingTool })))
 const StudentPickerLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.RandomStudentPicker })))
+// Phase 4 — Universal classroom tools
+const GroupMakerLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.GroupMaker })))
+const ExitTicketLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.ExitTicket })))
+const PomodoroTimerLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.PomodoroTimer })))
+const VoiceLevelMeterLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.VoiceLevelMeter })))
+const TokenBoardLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.TokenBoard })))
+const QuickPollLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.QuickPoll })))
+const ThinkPairShareTimerLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.ThinkPairShareTimer })))
+const BingoCardGeneratorLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.BingoCardGenerator })))
 
 // Stable wrapper components (no remount on re-render)
 function TimerStopwatchPanel({ isDark }: { isDark: boolean }) {
@@ -20,6 +29,31 @@ function GraphingToolPanel({ isDark }: { isDark: boolean }) {
 }
 function StudentPickerPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><StudentPickerLazy isDark={isDark} /></Suspense>
+}
+// Phase 4 wrappers
+function GroupMakerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><GroupMakerLazy isDark={isDark} /></Suspense>
+}
+function ExitTicketPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ExitTicketLazy isDark={isDark} /></Suspense>
+}
+function PomodoroTimerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PomodoroTimerLazy isDark={isDark} /></Suspense>
+}
+function VoiceLevelMeterPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><VoiceLevelMeterLazy isDark={isDark} /></Suspense>
+}
+function TokenBoardPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TokenBoardLazy isDark={isDark} /></Suspense>
+}
+function QuickPollPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><QuickPollLazy isDark={isDark} /></Suspense>
+}
+function ThinkPairShareTimerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ThinkPairShareTimerLazy isDark={isDark} /></Suspense>
+}
+function BingoCardGeneratorPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><BingoCardGeneratorLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -174,6 +208,56 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
               </div>
             )}
           </div>
+
+          {/* --- Phase 4 — Universal Classroom Tools --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Group Maker', 'all-group-maker')}
+            {!collapsedSections.has('all-group-maker') && <>
+              <div style={{ padding: '0 12px 8px' }}><GroupMakerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Exit Ticket', 'all-exit-ticket')}
+            {!collapsedSections.has('all-exit-ticket') && <>
+              <div style={{ padding: '0 12px 8px' }}><ExitTicketPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Pomodoro Timer', 'all-pomodoro')}
+            {!collapsedSections.has('all-pomodoro') && <>
+              <div style={{ padding: '0 12px 8px' }}><PomodoroTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Voice Level Meter', 'all-voice-level')}
+            {!collapsedSections.has('all-voice-level') && <>
+              <div style={{ padding: '0 12px 8px' }}><VoiceLevelMeterPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Token Board', 'all-token-board')}
+            {!collapsedSections.has('all-token-board') && <>
+              <div style={{ padding: '0 12px 8px' }}><TokenBoardPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Quick Poll', 'all-quick-poll')}
+            {!collapsedSections.has('all-quick-poll') && <>
+              <div style={{ padding: '0 12px 8px' }}><QuickPollPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Think-Pair-Share Timer', 'all-think-pair-share')}
+            {!collapsedSections.has('all-think-pair-share') && <>
+              <div style={{ padding: '0 12px 8px' }}><ThinkPairShareTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Bingo Card Generator', 'all-bingo')}
+            {!collapsedSections.has('all-bingo') && <>
+              <div style={{ padding: '0 12px 8px' }}><BingoCardGeneratorPanel isDark={isDark} /></div>
+            </>}
+          </div>
         </>
       )}
 
@@ -204,6 +288,56 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-quiz')}</div>
               </div>
             )}
+          </div>
+
+          {/* --- Phase 4 — Universal Classroom Tools --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Group Maker', 'k5-group-maker')}
+            {!collapsedSections.has('k5-group-maker') && <>
+              <div style={{ padding: '0 12px 8px' }}><GroupMakerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Exit Ticket', 'k5-exit-ticket')}
+            {!collapsedSections.has('k5-exit-ticket') && <>
+              <div style={{ padding: '0 12px 8px' }}><ExitTicketPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Pomodoro Timer', 'k5-pomodoro')}
+            {!collapsedSections.has('k5-pomodoro') && <>
+              <div style={{ padding: '0 12px 8px' }}><PomodoroTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Voice Level Meter', 'k5-voice-level')}
+            {!collapsedSections.has('k5-voice-level') && <>
+              <div style={{ padding: '0 12px 8px' }}><VoiceLevelMeterPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Token Board', 'k5-token-board')}
+            {!collapsedSections.has('k5-token-board') && <>
+              <div style={{ padding: '0 12px 8px' }}><TokenBoardPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Quick Poll', 'k5-quick-poll')}
+            {!collapsedSections.has('k5-quick-poll') && <>
+              <div style={{ padding: '0 12px 8px' }}><QuickPollPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Think-Pair-Share Timer', 'k5-think-pair-share')}
+            {!collapsedSections.has('k5-think-pair-share') && <>
+              <div style={{ padding: '0 12px 8px' }}><ThinkPairShareTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Bingo Card Generator', 'k5-bingo')}
+            {!collapsedSections.has('k5-bingo') && <>
+              <div style={{ padding: '0 12px 8px' }}><BingoCardGeneratorPanel isDark={isDark} /></div>
+            </>}
           </div>
         </>
       )}
@@ -243,6 +377,56 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
               </div>
             )}
           </div>
+
+          {/* --- Phase 4 — Universal Classroom Tools --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Group Maker', '68-group-maker')}
+            {!collapsedSections.has('68-group-maker') && <>
+              <div style={{ padding: '0 12px 8px' }}><GroupMakerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Exit Ticket', '68-exit-ticket')}
+            {!collapsedSections.has('68-exit-ticket') && <>
+              <div style={{ padding: '0 12px 8px' }}><ExitTicketPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Pomodoro Timer', '68-pomodoro')}
+            {!collapsedSections.has('68-pomodoro') && <>
+              <div style={{ padding: '0 12px 8px' }}><PomodoroTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Voice Level Meter', '68-voice-level')}
+            {!collapsedSections.has('68-voice-level') && <>
+              <div style={{ padding: '0 12px 8px' }}><VoiceLevelMeterPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Token Board', '68-token-board')}
+            {!collapsedSections.has('68-token-board') && <>
+              <div style={{ padding: '0 12px 8px' }}><TokenBoardPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Quick Poll', '68-quick-poll')}
+            {!collapsedSections.has('68-quick-poll') && <>
+              <div style={{ padding: '0 12px 8px' }}><QuickPollPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Think-Pair-Share Timer', '68-think-pair-share')}
+            {!collapsedSections.has('68-think-pair-share') && <>
+              <div style={{ padding: '0 12px 8px' }}><ThinkPairShareTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Bingo Card Generator', '68-bingo')}
+            {!collapsedSections.has('68-bingo') && <>
+              <div style={{ padding: '0 12px 8px' }}><BingoCardGeneratorPanel isDark={isDark} /></div>
+            </>}
+          </div>
         </>
       )}
 
@@ -280,6 +464,56 @@ export function ClassroomToolkit({ roomId: _roomId }: ClassroomToolkitProps) {
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('classroom-quiz')}</div>
               </div>
             )}
+          </div>
+
+          {/* --- Phase 4 — Universal Classroom Tools --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Group Maker', '912-group-maker')}
+            {!collapsedSections.has('912-group-maker') && <>
+              <div style={{ padding: '0 12px 8px' }}><GroupMakerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Exit Ticket', '912-exit-ticket')}
+            {!collapsedSections.has('912-exit-ticket') && <>
+              <div style={{ padding: '0 12px 8px' }}><ExitTicketPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Pomodoro Timer', '912-pomodoro')}
+            {!collapsedSections.has('912-pomodoro') && <>
+              <div style={{ padding: '0 12px 8px' }}><PomodoroTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Voice Level Meter', '912-voice-level')}
+            {!collapsedSections.has('912-voice-level') && <>
+              <div style={{ padding: '0 12px 8px' }}><VoiceLevelMeterPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Token Board', '912-token-board')}
+            {!collapsedSections.has('912-token-board') && <>
+              <div style={{ padding: '0 12px 8px' }}><TokenBoardPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Quick Poll', '912-quick-poll')}
+            {!collapsedSections.has('912-quick-poll') && <>
+              <div style={{ padding: '0 12px 8px' }}><QuickPollPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Think-Pair-Share Timer', '912-think-pair-share')}
+            {!collapsedSections.has('912-think-pair-share') && <>
+              <div style={{ padding: '0 12px 8px' }}><ThinkPairShareTimerPanel isDark={isDark} /></div>
+            </>}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Bingo Card Generator', '912-bingo')}
+            {!collapsedSections.has('912-bingo') && <>
+              <div style={{ padding: '0 12px 8px' }}><BingoCardGeneratorPanel isDark={isDark} /></div>
+            </>}
           </div>
         </>
       )}

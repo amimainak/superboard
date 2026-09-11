@@ -3341,3 +3341,1231 @@ export function ParagraphOrganizer({ isDark }: { isDark: boolean }) {
 </div>
   )
 }
+
+
+// ============================================================
+// 11. SoundWallBuilder (K-5)
+// ============================================================
+
+interface PhonemeEntry {
+  symbol: string
+  label: string
+  position: 'front' | 'mid' | 'back'
+  description: string
+  examples: string[]
+  mouth: string
+}
+
+const PHONEME_WALL: PhonemeEntry[] = [
+  { symbol: '/a/', label: 'short a', position: 'front', description: 'Open mouth, low vowel — like in "cat"', examples: ['cat', 'hat', 'map', 'bag'], mouth: 'Jaw drops, tongue low and forward' },
+  { symbol: '/e/', label: 'short e', position: 'front', description: 'Relaxed front vowel — like in "bed"', examples: ['bed', 'red', 'net', 'leg'], mouth: 'Mouth slightly open, tongue forward' },
+  { symbol: '/i/', label: 'short i', position: 'front', description: 'High front vowel — like in "pig"', examples: ['pig', 'sit', 'lid', 'fin'], mouth: 'Lips slightly spread, tongue high forward' },
+  { symbol: '/o/', label: 'short o', position: 'back', description: 'Rounded open vowel — like in "dog"', examples: ['dog', 'log', 'pot', 'fox'], mouth: 'Jaw drops, lips slightly rounded' },
+  { symbol: '/u/', label: 'short u', position: 'back', description: 'Relaxed back vowel — like in "sun"', examples: ['sun', 'bug', 'run', 'cup'], mouth: 'Mouth slightly open, tongue back' },
+  { symbol: '/sh/', label: 'sh digraph', position: 'front', description: 'Quiet fricative — like in "ship"', examples: ['ship', 'fish', 'wash', 'shop'], mouth: 'Lips rounded and pushed out, teeth close' },
+  { symbol: '/ch/', label: 'ch digraph', position: 'front', description: 'Affricate — like in "chip"', examples: ['chip', 'chin', 'chop', 'rich'], mouth: 'Tongue touches roof, then releases' },
+  { symbol: '/th/', label: 'th digraph', position: 'front', description: 'Dental fricative — like in "thin" or "this"', examples: ['thin', 'this', 'bath', 'with'], mouth: 'Tongue tip between teeth' },
+  { symbol: '/ng/', label: 'ng digraph', position: 'back', description: 'Nasal — like in "sing"', examples: ['sing', 'ring', 'long', 'king'], mouth: 'Back of tongue touches roof, air through nose' },
+  { symbol: '/er/', label: 'r-controlled', position: 'mid', description: 'R-colored vowel — like in "her"', examples: ['her', 'bird', 'turn', 'fur'], mouth: 'Tongue pulled back and slightly up' },
+]
+
+const POSITION_COLOR: Record<'front' | 'mid' | 'back', { col: string, bg: string, bd: string }> = {
+  front: { col: '#fb923c', bg: 'rgba(251,146,60,0.15)', bd: 'rgba(251,146,60,0.4)' },
+  mid: { col: '#a78bfa', bg: 'rgba(167,139,250,0.15)', bd: 'rgba(167,139,250,0.4)' },
+  back: { col: '#34d399', bg: 'rgba(52,211,153,0.15)', bd: 'rgba(52,211,153,0.4)' },
+}
+
+function segmentWord(word: string): string[] {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '')
+  if (!w) return []
+  const known: Record<string, string[]> = {
+    cat: ['c', 'a', 't'], dog: ['d', 'o', 'g'], ship: ['sh', 'i', 'p'], chip: ['ch', 'i', 'p'],
+    fish: ['f', 'i', 'sh'], this: ['th', 'i', 's'], sing: ['s', 'i', 'ng'], her: ['h', 'er'],
+    bird: ['b', 'ir', 'd'], sun: ['s', 'u', 'n'], hat: ['h', 'a', 't'], bed: ['b', 'e', 'd'],
+    pig: ['p', 'i', 'g'], log: ['l', 'o', 'g'], ring: ['r', 'i', 'ng'], chop: ['ch', 'o', 'p'],
+    thin: ['th', 'i', 'n'], shop: ['sh', 'o', 'p'], wash: ['w', 'a', 'sh'], chin: ['ch', 'i', 'n'],
+    map: ['m', 'a', 'p'], bag: ['b', 'a', 'g'], red: ['r', 'e', 'd'], net: ['n', 'e', 't'],
+    sit: ['s', 'i', 't'], lid: ['l', 'i', 'd'], fin: ['f', 'i', 'n'], pot: ['p', 'o', 't'],
+    fox: ['f', 'o', 'x'], bug: ['b', 'u', 'g'], run: ['r', 'u', 'n'], cup: ['c', 'u', 'p'],
+    frog: ['f', 'r', 'o', 'g'], truck: ['t', 'r', 'u', 'k'], flag: ['f', 'l', 'a', 'g'],
+    grass: ['g', 'r', 'a', 's'], street: ['s', 't', 'r', 'ee', 't'], blue: ['b', 'l', 'oo'],
+  }
+  if (known[w]) return known[w]
+  const phonemes: string[] = []
+  let i = 0
+  while (i < w.length) {
+    const two = w.slice(i, i + 2)
+    if (['sh', 'ch', 'th', 'ng', 'er', 'ir', 'ar', 'or', 'oo', 'ee', 'ea', 'ou', 'ow', 'ai', 'ay', 'oi', 'oy', 'ph', 'wh'].includes(two)) {
+      phonemes.push(two)
+      i += 2
+    } else {
+      phonemes.push(w[i])
+      i += 1
+    }
+  }
+  return phonemes
+}
+
+export function SoundWallBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [selected, setSelected] = useState<PhonemeEntry | null>(PHONEME_WALL[0])
+  const [mode, setMode] = useState<'wall' | 'practice'>('wall')
+  const [practiceWord, setPracticeWord] = useState('')
+  const segmented = useMemo(() => practiceWord ? segmentWord(practiceWord) : [], [practiceWord])
+  const posColor = selected ? POSITION_COLOR[selected.position] : POSITION_COLOR.front
+  const mouthDotX = selected?.position === 'front' ? 80 : selected?.position === 'mid' ? 140 : 200
+  const mouthDotY = selected?.position === 'back' ? 90 : 60
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 2, marginBottom: 6 }}>
+        <button onClick={() => setMode('wall')} style={s.btn(mode === 'wall')}>Sound Wall</button>
+        <button onClick={() => setMode('practice')} style={s.btn(mode === 'practice')}>Practice</button>
+      </div>
+
+      {mode === 'wall' && (
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3, marginBottom: 8 }}>
+            {PHONEME_WALL.map((p, i) => {
+              const c = POSITION_COLOR[p.position]
+              const isActive = selected?.symbol === p.symbol
+              return (
+                <button key={i} onClick={() => setSelected(p)} style={{
+                  padding: '4px 2px', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer' as const,
+                  background: isActive ? c.bg : s.bg,
+                  border: '1px solid ' + (isActive ? c.bd : s.border),
+                  color: isActive ? c.col : s.text,
+                }}>{p.symbol}</button>
+              )
+            })}
+          </div>
+
+          {selected && (
+            <>
+              <div style={{ padding: 6, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, marginBottom: 6 }}>
+                <svg width="100%" viewBox="0 0 280 130" style={{ display: 'block' }}>
+                  <path d="M40 65 Q40 25 90 20 L200 20 Q240 25 240 65 L240 95 Q200 110 140 110 Q80 110 40 95 Z"
+                    fill={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'} stroke={s.border} strokeWidth="1.5" />
+                  <ellipse cx="140" cy="70" rx="55" ry="20" fill="none" stroke={posColor.col} strokeWidth="2" />
+                  <circle cx={mouthDotX} cy={mouthDotY} r="7" fill={posColor.col} />
+                  <text x={mouthDotX} y={mouthDotY - 12} fontSize="10" fill={posColor.col} textAnchor="middle" fontWeight="700">
+                    {selected.position.toUpperCase()}
+                  </text>
+                  <text x="80" y="125" fontSize="8" fill={s.text} textAnchor="middle">FRONT</text>
+                  <text x="140" y="125" fontSize="8" fill={s.text} textAnchor="middle">MID</text>
+                  <text x="200" y="125" fontSize="8" fill={s.text} textAnchor="middle">BACK</text>
+                </svg>
+                <div style={{ fontSize: 10, color: s.bright, fontWeight: 600, textAlign: 'center' as const }}>
+                  {selected.mouth}
+                </div>
+              </div>
+
+              <div style={{ padding: '6px 8px', borderRadius: 4, background: posColor.bg, border: '1px solid ' + posColor.bd, marginBottom: 6 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: posColor.col }}>{selected.symbol} — {selected.label}</div>
+                <div style={{ fontSize: 10, color: s.bright, marginTop: 3 }}>{selected.description}</div>
+              </div>
+
+              <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 3 }}>EXAMPLE WORDS</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                {selected.examples.map((w, i) => (
+                  <span key={i} style={{ fontSize: 11, fontWeight: 600, color: posColor.col, background: posColor.bg, padding: '2px 7px', borderRadius: 3, border: '1px solid ' + posColor.bd }}>{w}</span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {mode === 'practice' && (
+        <div>
+          <div style={{ fontSize: 10, color: s.text, marginBottom: 4 }}>Type a word to break it into phonemes:</div>
+          <input value={practiceWord} onChange={(e) => setPracticeWord(e.target.value)} placeholder="e.g. cat, ship, sing..." style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+          {practiceWord && (
+            <div style={{ marginTop: 8, padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 6 }}>PHONEMES ({segmented.length})</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
+                {segmented.map((ph, i) => {
+                  const wall = PHONEME_WALL.find(p => p.symbol.replace(/\//g, '') === ph)
+                  const c = wall ? POSITION_COLOR[wall.position] : { col: '#94a3b8', bg: 'rgba(148,163,184,0.12)', bd: 'rgba(148,163,184,0.3)' }
+                  return (
+                    <div key={i} style={{ padding: '6px 12px', borderRadius: 5, fontSize: 18, fontWeight: 700, background: c.bg, border: '2px solid ' + c.bd, color: c.col }}>
+                      {ph}
+                    </div>
+                  )
+                })}
+              </div>
+              <div style={{ marginTop: 6, fontSize: 10, color: s.text, textAlign: 'center' as const }}>
+                {segmented.length > 0 ? <>{practiceWord} → {segmented.length} sounds: {segmented.join(' · ')}</> : 'Type a word above'}
+              </div>
+            </div>
+          )}
+          <div style={{ marginTop: 6, fontSize: 9, color: s.text, opacity: 0.7, fontStyle: 'italic' }}>
+            Tip: Try short words like "cat", "ship", "sing", "this"
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Mode — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{mode === 'wall' ? 'Sound Wall' : 'Practice'}</b></div>
+        <div>Step 2: {mode === 'wall' ? <>Selected sound: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{selected?.symbol}</b> ({selected?.label})</> : <>Word: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{practiceWord || '—'}</b></>}</div>
+        <div>Step 3: {mode === 'wall' ? <>Tongue position: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{selected?.position}</b> of mouth</> : <>Phoneme count: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{segmented.length}</b></>}</div>
+        <div>Step 4: {mode === 'wall' ? <>Say the sound while feeling where your tongue touches</> : <>Segmentation: {segmented.length > 0 ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{segmented.join(' · ')}</b> : '—'}</>}</div>
+        <div>Step 5: {mode === 'wall' ? <>Examples: {selected?.examples.join(', ')}</> : <>Each phoneme is a separate sound to blend together</>}</div>
+        <div>Step 6: Practice saying each sound slowly, then blend them together into the word</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Phonemes are the smallest sound units in speech. The mouth shape changes for each one. Hearing and producing sounds precisely is the foundation for reading and spelling.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 12. DecodableTextReader (K-5)
+// ============================================================
+
+const DECODABLE_PRESETS = [
+  { title: 'CVC Words', text: 'The cat sat on a mat. A dog ran to the log. The pig had a wig.' },
+  { title: 'Digraphs', text: 'The ship went to the shop. A fish swam in the dish. The chin had a thin shell.' },
+  { title: 'Blends', text: 'The frog jumped on the grass. A truck went down the street. The flag flew in the blue sky.' },
+]
+
+function classifyWord(word: string): 'cvc' | 'digraph' | 'blend' | 'other' {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '')
+  if (w.length < 3) return 'other'
+  const hasDigraph = /sh|ch|th|wh|ph/.test(w)
+  const hasBlend = /^(bl|br|cl|cr|dr|fl|fr|gl|gr|pl|pr|sc|sk|sl|sm|sn|sp|st|sw|tr|tw|scr|spr|str)/.test(w) ||
+    /(nd|nt|st|sk|sp|mp|nk|ft|lt|pt|ct)$/.test(w)
+  const isCVC = w.length === 3 && /[aeiou]/.test(w[1]) && !/[aeiou]/.test(w[0]) && !/[aeiou]/.test(w[2])
+  if (hasDigraph) return 'digraph'
+  if (hasBlend) return 'blend'
+  if (isCVC) return 'cvc'
+  return 'other'
+}
+
+const WORD_COLORS: Record<'cvc' | 'digraph' | 'blend' | 'other', { col: string, bg: string }> = {
+  cvc: { col: '#3b82f6', bg: 'rgba(59,130,246,0.15)' },
+  digraph: { col: '#22c55e', bg: 'rgba(34,197,94,0.15)' },
+  blend: { col: '#a855f7', bg: 'rgba(168,85,247,0.15)' },
+  other: { col: '#94a3b8', bg: 'transparent' },
+}
+
+export function DecodableTextReader({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [presetIdx, setPresetIdx] = useState(0)
+  const [text, setText] = useState(DECODABLE_PRESETS[0].text)
+  const [selectedWord, setSelectedWord] = useState<string | null>(null)
+
+  const words = useMemo(() => text.split(/\s+/).filter(Boolean), [text])
+  const stats = useMemo(() => {
+    const c: Record<'cvc' | 'digraph' | 'blend' | 'other', number> = { cvc: 0, digraph: 0, blend: 0, other: 0 }
+    for (const w of words) c[classifyWord(w)]++
+    return c
+  }, [words])
+
+  const selectedSounds = useMemo(() => selectedWord ? segmentWord(selectedWord) : [], [selectedWord])
+
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 3 }}>PRESETS</div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {DECODABLE_PRESETS.map((p, i) => (
+          <button key={i} onClick={() => { setPresetIdx(i); setText(p.text); setSelectedWord(null) }} style={s.btn(presetIdx === i)}>{p.title}</button>
+        ))}
+      </div>
+
+      <textarea value={text} onChange={(e) => { setText(e.target.value); setSelectedWord(null) }} rows={3} style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 60, lineHeight: 1.5, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+
+      <div style={{ display: 'flex', gap: 8, marginTop: 6, marginBottom: 6, flexWrap: 'wrap', fontSize: 9 }}>
+        <span style={{ color: WORD_COLORS.cvc.col, fontWeight: 600 }}>■ CVC ({stats.cvc})</span>
+        <span style={{ color: WORD_COLORS.digraph.col, fontWeight: 600 }}>■ Digraph ({stats.digraph})</span>
+        <span style={{ color: WORD_COLORS.blend.col, fontWeight: 600 }}>■ Blend ({stats.blend})</span>
+      </div>
+
+      <div style={{ padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, fontSize: 13, lineHeight: 1.8 }}>
+        {words.map((w, i) => {
+          const type = classifyWord(w)
+          const c = WORD_COLORS[type]
+          const cleaned = w.replace(/[^a-zA-Z]/g, '')
+          const isSelected = selectedWord === cleaned
+          return (
+            <span key={i} onClick={() => setSelectedWord(cleaned)} style={{
+              color: type === 'other' ? s.bright : c.col,
+              background: isSelected ? c.bg : (type === 'other' ? 'transparent' : c.bg),
+              padding: '1px 3px', borderRadius: 2, cursor: 'pointer' as const,
+              borderBottom: type === 'other' ? 'none' : '2px solid ' + c.col,
+              fontWeight: type === 'other' ? 400 : 600,
+            }}>{w} </span>
+          )
+        })}
+      </div>
+
+      {selectedWord && (
+        <div style={{ marginTop: 6, padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 6 }}>SEGMENTING: {selectedWord.toUpperCase()}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
+            {selectedSounds.map((ph, i) => (
+              <div key={i} style={{ padding: '4px 10px', borderRadius: 4, fontSize: 14, fontWeight: 700, background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: '#4ade80' }}>{ph}</div>
+            ))}
+            {selectedSounds.length === 0 && <div style={{ fontSize: 11, color: s.text }}>No segmentation available</div>}
+          </div>
+          <div style={{ marginTop: 4, fontSize: 10, color: s.text, textAlign: 'center' as const }}>
+            Say each sound slowly: {selectedSounds.join(' — ')}
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Preset — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{DECODABLE_PRESETS[presetIdx].title}</b></div>
+        <div>Step 2: Word count — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{words.length}</b> total words in passage</div>
+        <div>Step 3: Pattern counts — <b style={{ color: '#3b82f6' }}>{stats.cvc}</b> CVC, <b style={{ color: '#22c55e' }}>{stats.digraph}</b> digraphs, <b style={{ color: '#a855f7' }}>{stats.blend}</b> blends</div>
+        <div>Step 4: {selectedWord ? <>Selected word: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{selectedWord}</b></> : 'Click any word to segment it into sounds'}</div>
+        <div>Step 5: {selectedWord ? <>Phonemes: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{selectedSounds.join(' · ') || '—'}</b></> : 'Highlighted by phonics pattern — blue=CVC, green=digraph, purple=blend'}</div>
+        <div>Step 6: Read slowly, blending each sound: c-a-t → cat</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Decodable text uses patterns students have learned. CVC builds phoneme blending. Digraphs are two letters making one sound. Blends keep both sounds together.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 13. SightWordOrthographicMap (K-5)
+// ============================================================
+
+const SIGHT_WORDS: { word: string, mapping: [string, string][] }[] = [
+  { word: 'the', mapping: [['t', '/t/'], ['h', 'silent'], ['e', '/uh/']] },
+  { word: 'said', mapping: [['s', '/s/'], ['ai', '/e/'], ['d', '/d/']] },
+  { word: 'was', mapping: [['w', '/w/'], ['a', '/u/'], ['s', '/z/']] },
+  { word: 'of', mapping: [['o', '/u/'], ['f', '/v/']] },
+  { word: 'are', mapping: [['a', '/ah/'], ['r', '/r/'], ['e', 'silent']] },
+]
+
+type SightPhase = 'show' | 'cover' | 'type' | 'checked'
+
+export function SightWordOrthographicMap({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [activeIdx, setActiveIdx] = useState<number | null>(null)
+  const [phase, setPhase] = useState<SightPhase>('show')
+  const [typed, setTyped] = useState('')
+  const [score, setScore] = useState({ correct: 0, attempts: 0 })
+
+  const active = activeIdx !== null ? SIGHT_WORDS[activeIdx] : null
+  const lastCorrect = phase === 'checked' && !!active && typed.trim().toLowerCase() === active.word.toLowerCase()
+
+  const startPractice = (i: number) => {
+    setActiveIdx(i)
+    setPhase('show')
+    setTyped('')
+  }
+  const check = () => {
+    if (!active) return
+    const correct = typed.trim().toLowerCase() === active.word.toLowerCase()
+    setScore({ correct: score.correct + (correct ? 1 : 0), attempts: score.attempts + 1 })
+    setPhase('checked')
+  }
+  const close = () => { setActiveIdx(null); setPhase('show'); setTyped('') }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, padding: '4px 8px', borderRadius: 4, background: s.bg, border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 10, color: s.text }}>Score: <b style={{ color: '#34d399' }}>{score.correct}</b>/{score.attempts}</div>
+        <div style={{ fontSize: 10, color: s.text }}>Accuracy: <b style={{ color: '#34d399' }}>{score.attempts === 0 ? '—' : Math.round(score.correct / score.attempts * 100) + '%'}</b></div>
+      </div>
+
+      <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>CLICK A WORD TO PRACTICE</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+        {SIGHT_WORDS.map((sw, i) => (
+          <button key={i} onClick={() => startPractice(i)} style={{
+            padding: '6px 10px', borderRadius: 5, fontSize: 13, fontWeight: 700, cursor: 'pointer' as const,
+            background: activeIdx === i ? 'rgba(34,197,94,0.12)' : s.bg,
+            border: '1px solid ' + (activeIdx === i ? 'rgba(34,197,94,0.4)' : s.border),
+            color: activeIdx === i ? '#34d399' : s.bright,
+          }}>{sw.word}</button>
+        ))}
+      </div>
+
+      {active && (
+        <div style={{ padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+          {phase === 'show' && (
+            <div>
+              <div style={{ fontSize: 10, color: s.text, marginBottom: 6 }}>Look at the word and spell it out loud:</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: s.bright, textAlign: 'center' as const, letterSpacing: 4, marginBottom: 8 }}>{active.word}</div>
+              <button onClick={() => setPhase('cover')} style={{ ...s.btn(true), width: '100%', padding: '6px', fontWeight: 600 }}>Cover It</button>
+            </div>
+          )}
+          {phase === 'cover' && (
+            <div>
+              <div style={{ fontSize: 10, color: s.text, marginBottom: 6 }}>The word is covered. Picture it in your mind:</div>
+              <div style={{ fontSize: 28, fontWeight: 700, color: s.text, textAlign: 'center' as const, letterSpacing: 4, marginBottom: 8, background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', padding: 6, borderRadius: 4 }}>▓▓▓▓</div>
+              <button onClick={() => setPhase('type')} style={{ ...s.btn(true), width: '100%', padding: '6px', fontWeight: 600 }}>Write From Memory</button>
+            </div>
+          )}
+          {phase === 'type' && (
+            <div>
+              <div style={{ fontSize: 10, color: s.text, marginBottom: 6 }}>Type the word you saw:</div>
+              <input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus style={{ ...s.input, width: '100%', fontSize: 18, textAlign: 'center' as const, padding: '6px', boxSizing: 'border-box' }} />
+              <button onClick={check} disabled={!typed.trim()} style={{ ...s.btn(true), width: '100%', padding: '6px', fontWeight: 600, marginTop: 6, opacity: typed.trim() ? 1 : 0.5 }}>Check</button>
+            </div>
+          )}
+          {phase === 'checked' && (
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: lastCorrect ? '#34d399' : '#f87171', textAlign: 'center' as const, marginBottom: 6 }}>
+                {lastCorrect ? '✓ Correct!' : '✗ Try Again'}
+              </div>
+              <div style={{ fontSize: 11, color: s.text, textAlign: 'center' as const, marginBottom: 4 }}>
+                You wrote: <b style={{ color: lastCorrect ? '#34d399' : '#f87171' }}>{typed || '(blank)'}</b>
+              </div>
+              {!lastCorrect && <div style={{ fontSize: 11, color: s.bright, textAlign: 'center' as const, marginBottom: 6 }}>Correct: <b>{active.word}</b></div>}
+              <button onClick={close} style={{ ...s.btn(false), width: '100%', padding: '6px', fontWeight: 600 }}>Done</button>
+            </div>
+          )}
+
+          <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid ' + s.border }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 5 }}>ORTHOGRAPHIC MAP</div>
+            <div style={{ display: 'flex', gap: 4, justifyContent: 'center', flexWrap: 'wrap' }}>
+              {active.mapping.map(([letter, sound], i) => (
+                <div key={i} style={{ textAlign: 'center' as const }}>
+                  <div style={{ padding: '4px 8px', borderRadius: 4, fontSize: 16, fontWeight: 700, background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa', marginBottom: 2 }}>{letter}</div>
+                  <div style={{ fontSize: 9, color: sound === 'silent' ? '#f87171' : s.text, fontStyle: 'italic' }}>{sound}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Phase — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{phase}</b>{active ? <>, word: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{active.word}</b></> : ', no word selected'}</div>
+        <div>Step 2: {active ? <>Look carefully at the word, say each letter aloud</> : 'Click a sight word above to begin'}</div>
+        <div>Step 3: {active ? <>Cover it and try to picture it in your mind</> : '—'}</div>
+        <div>Step 4: {active ? <>Type the word from memory: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{typed || '(not yet typed)'}</b></> : '—'}</div>
+        <div>Step 5: {phase === 'checked' ? <>{lastCorrect ? '✓ Matched — orthographic map strengthening!' : '✗ Mismatch — study the letter-sound map below'}</> : 'Check verifies spelling against the original'}</div>
+        <div>Step 6: Score so far — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{score.correct}</b> correct out of <b style={{ color: isDark ? '#34d399' : '#059669' }}>{score.attempts}</b></div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Sight words often break phonics rules. Cover-Write-Check builds the orthographic map — connecting letters to sounds in memory. Repeated retrieval makes them automatic.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 14. DigitalAnnotationTool (6-8)
+// ============================================================
+
+const ANNOTATION_PRESETS = [
+  { title: 'Fog', text: 'The fog crept in on cat feet. It covered the harbor and the city, then moved on. No one noticed when it left, but the air felt different — emptier, somehow.' },
+  { title: 'Immigration', text: 'When we arrived, my grandmother held my hand tightly. The new city was loud and bright. She did not speak the language, but she knew the way. Every step was a small act of courage.' },
+  { title: 'Climate', text: 'The ice melted faster this year. Scientists warned that the permafrost was collapsing. Villagers watched their homes sink into the ground. Something had to change, and soon.' },
+]
+
+type AnnotationType = 'question' | 'important' | 'connection' | 'vocabulary'
+
+interface Annotation {
+  start: number
+  end: number
+  text: string
+  type: AnnotationType
+}
+
+const ANNOT_TYPES: { type: AnnotationType, label: string, icon: string, col: string, bg: string }[] = [
+  { type: 'question', label: 'Question', icon: '?', col: '#3b82f6', bg: 'rgba(59,130,246,0.2)' },
+  { type: 'important', label: 'Important', icon: '!', col: '#ef4444', bg: 'rgba(239,68,68,0.2)' },
+  { type: 'connection', label: 'Connection', icon: '🔗', col: '#a855f7', bg: 'rgba(168,85,247,0.2)' },
+  { type: 'vocabulary', label: 'Vocabulary', icon: '📖', col: '#f59e0b', bg: 'rgba(245,158,11,0.2)' },
+]
+
+export function DigitalAnnotationTool({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [presetIdx, setPresetIdx] = useState(0)
+  const [text, setText] = useState(ANNOTATION_PRESETS[0].text)
+  const [annotations, setAnnotations] = useState<Annotation[]>([])
+  const [selection, setSelection] = useState<{ start: number, end: number, text: string } | null>(null)
+  const textareaRef = React.useRef<HTMLTextAreaElement | null>(null)
+
+  const handleSelect = () => {
+    const ta = textareaRef.current
+    if (!ta) return
+    const start = ta.selectionStart
+    const end = ta.selectionEnd
+    if (start === end) { setSelection(null); return }
+    setSelection({ start, end, text: text.slice(start, end) })
+  }
+
+  const annotate = (type: AnnotationType) => {
+    if (!selection) return
+    setAnnotations([...annotations, { ...selection, type }])
+    setSelection(null)
+  }
+
+  const removeAnno = (i: number) => {
+    setAnnotations(annotations.filter((_, idx) => idx !== i))
+  }
+
+  const counts = useMemo(() => {
+    const c: Record<AnnotationType, number> = { question: 0, important: 0, connection: 0, vocabulary: 0 }
+    for (const a of annotations) c[a.type]++
+    return c
+  }, [annotations])
+
+  const renderHighlighted = (): React.ReactNode => {
+    if (annotations.length === 0) return <span style={{ color: s.bright }}>{text}</span>
+    const sorted = [...annotations].sort((a, b) => a.start - b.start)
+    const parts: React.ReactNode[] = []
+    let cursor = 0
+    sorted.forEach((a, i) => {
+      if (a.start > cursor) parts.push(<span key={'p' + i} style={{ color: s.bright }}>{text.slice(cursor, a.start)}</span>)
+      const def = ANNOT_TYPES.find(t => t.type === a.type)!
+      parts.push(
+        <span key={'a' + i} style={{
+          background: def.bg, color: def.col, padding: '1px 2px', borderRadius: 2,
+          borderBottom: '2px solid ' + def.col, fontWeight: 600,
+        }} title={def.label}>{text.slice(a.start, a.end)}</span>
+      )
+      cursor = a.end
+    })
+    if (cursor < text.length) parts.push(<span key="end" style={{ color: s.bright }}>{text.slice(cursor)}</span>)
+    return parts
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 3 }}>PRESETS</div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {ANNOTATION_PRESETS.map((p, i) => (
+          <button key={i} onClick={() => { setPresetIdx(i); setText(p.text); setAnnotations([]); setSelection(null) }} style={s.btn(presetIdx === i)}>{p.title}</button>
+        ))}
+      </div>
+
+      <div style={{ fontSize: 9, color: s.text, marginBottom: 3 }}>1. Select text below ↓  2. Pick an annotation type</div>
+      <textarea ref={textareaRef} value={text} onChange={(e) => { setText(e.target.value); setAnnotations([]) }} onSelect={handleSelect} onMouseUp={handleSelect} onKeyUp={handleSelect}
+        rows={4} style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 70, lineHeight: 1.6, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+
+      {selection && (
+        <div style={{ marginTop: 6, padding: 6, borderRadius: 4, background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.3)' }}>
+          <div style={{ fontSize: 10, color: '#34d399', marginBottom: 4 }}>Selected: "{selection.text}"</div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            {ANNOT_TYPES.map(at => (
+              <button key={at.type} onClick={() => annotate(at.type)} style={{
+                padding: '3px 6px', borderRadius: 3, fontSize: 10, fontWeight: 600, cursor: 'pointer' as const,
+                background: at.bg, border: '1px solid ' + at.col, color: at.col,
+              }}>{at.icon} {at.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: 6, padding: 8, borderRadius: 4, background: s.bg, border: '1px solid ' + s.border, fontSize: 11, lineHeight: 1.8 }}>
+        {renderHighlighted()}
+      </div>
+
+      <div style={{ marginTop: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 3 }}>ANNOTATIONS ({annotations.length})</div>
+        {annotations.length === 0 ? (
+          <div style={{ fontSize: 10, color: s.text, opacity: 0.7, fontStyle: 'italic' }}>No annotations yet. Select text above to start.</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {annotations.map((a, i) => {
+              const def = ANNOT_TYPES.find(t => t.type === a.type)!
+              return (
+                <div key={i} style={{ display: 'flex', gap: 5, alignItems: 'flex-start', padding: '4px 6px', borderRadius: 3, background: def.bg, border: '1px solid ' + def.col }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: def.col }}>{def.icon}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 10, color: s.bright, fontWeight: 600 }}>"{a.text.length > 30 ? a.text.slice(0, 30) + '…' : a.text}"</div>
+                    <div style={{ fontSize: 9, color: def.col, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.3 }}>{def.label}</div>
+                  </div>
+                  <button onClick={() => removeAnno(i)} style={{ fontSize: 10, color: '#f87171', background: 'transparent', border: 'none', cursor: 'pointer' as const, padding: '0 4px' }}>×</button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 6, display: 'flex', gap: 5, flexWrap: 'wrap', fontSize: 9 }}>
+        {ANNOT_TYPES.map(at => (
+          <span key={at.type} style={{ color: at.col, fontWeight: 600 }}>{at.icon} {counts[at.type]}</span>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Preset — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{ANNOTATION_PRESETS[presetIdx].title}</b></div>
+        <div>Step 2: {selection ? <>Text selected: "<b style={{ color: isDark ? '#34d399' : '#059669' }}>{selection.text}</b>"</> : 'Drag-select a phrase in the passage above'}</div>
+        <div>Step 3: {selection ? 'Pick an annotation type (?/!/🔗/📖) to mark it' : 'Annotations so far — ' + annotations.length}</div>
+        <div>Step 4: Counts — <b style={{ color: '#3b82f6' }}>?</b> {counts.question}, <b style={{ color: '#ef4444' }}>!</b> {counts.important}, <b style={{ color: '#a855f7' }}>🔗</b> {counts.connection}, <b style={{ color: '#f59e0b' }}>📖</b> {counts.vocabulary}</div>
+        <div>Step 5: Each annotation appears in the margin sidebar with the highlighted quote</div>
+        <div>Step 6: Use annotations to track thinking — questions for confusion, ! for key ideas, 🔗 for text-to-self/world, 📖 for new words</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Annotating is conversation with text. Questions reveal confusion. Marks flag importance. Connections build meaning. Active reading beats passive reading every time.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 15. CitationGeneratorIntro (6-8)
+// ============================================================
+
+type SourceType = 'book' | 'website' | 'article'
+
+const SOURCE_FIELDS: Record<SourceType, { key: string, label: string, placeholder: string }[]> = {
+  book: [
+    { key: 'author', label: 'Author', placeholder: 'Last, First' },
+    { key: 'title', label: 'Title', placeholder: 'Book Title' },
+    { key: 'publisher', label: 'Publisher', placeholder: 'Publisher Name' },
+    { key: 'year', label: 'Year', placeholder: '2020' },
+  ],
+  website: [
+    { key: 'author', label: 'Author', placeholder: 'Last, First (optional)' },
+    { key: 'title', label: 'Page Title', placeholder: 'Article Title' },
+    { key: 'site', label: 'Site Name', placeholder: 'Website Name' },
+    { key: 'url', label: 'URL', placeholder: 'https://...' },
+    { key: 'accessed', label: 'Accessed Date', placeholder: 'Day Mon. Year' },
+  ],
+  article: [
+    { key: 'author', label: 'Author', placeholder: 'Last, First' },
+    { key: 'title', label: 'Article Title', placeholder: 'Article Title' },
+    { key: 'journal', label: 'Journal', placeholder: 'Journal Name' },
+    { key: 'volume', label: 'Volume', placeholder: 'vol. 12' },
+    { key: 'year', label: 'Year', placeholder: '2020' },
+    { key: 'pages', label: 'Pages', placeholder: 'pp. 1-15' },
+  ],
+}
+
+const SOURCE_EXAMPLES: Record<SourceType, Record<string, string>> = {
+  book: { author: 'Smith, John', title: 'The History of Reading', publisher: 'Penguin Books', year: '2020' },
+  website: { author: 'Jones, Mary', title: 'How to Cite Sources', site: 'Writing Center', url: 'https://example.com/cite', accessed: '15 Mar. 2024' },
+  article: { author: 'Lee, Anna', title: 'Reading in the Digital Age', journal: 'Journal of Education', volume: 'vol. 12', year: '2021', pages: 'pp. 45-60' },
+}
+
+function buildCitation(type: SourceType, vals: Record<string, string>): string {
+  const v = vals
+  if (type === 'book') {
+    const parts: string[] = []
+    if (v.author) parts.push(v.author)
+    if (v.title) parts.push(`<i>${v.title}</i>`)
+    if (v.publisher) parts.push(v.publisher)
+    if (v.year) parts.push(v.year)
+    return parts.join('. ') + (parts.length ? '.' : '')
+  }
+  if (type === 'website') {
+    const parts: string[] = []
+    if (v.author) parts.push(v.author)
+    if (v.title) parts.push(`"${v.title}"`)
+    if (v.site) parts.push(`<i>${v.site}</i>`)
+    const accessPart: string[] = []
+    if (v.url) accessPart.push(v.url)
+    if (v.accessed) accessPart.push(`Accessed ${v.accessed}`)
+    if (accessPart.length) parts.push(accessPart.join(', '))
+    return parts.join('. ') + (parts.length ? '.' : '')
+  }
+  const parts: string[] = []
+  if (v.author) parts.push(v.author)
+  if (v.title) parts.push(`"${v.title}"`)
+  const journalPart: string[] = []
+  if (v.journal) journalPart.push(`<i>${v.journal}</i>`)
+  if (v.volume) journalPart.push(v.volume)
+  if (v.year) journalPart.push(v.year)
+  if (v.pages) journalPart.push(v.pages)
+  if (journalPart.length) parts.push(journalPart.join(', '))
+  return parts.join('. ') + (parts.length ? '.' : '')
+}
+
+function CitationDisplay({ html, isDark }: { html: string, isDark: boolean }) {
+  const parts: React.ReactNode[] = []
+  const regex = /<i>(.*?)<\/i>/g
+  let lastIdx = 0
+  let m: RegExpExecArray | null
+  let i = 0
+  while ((m = regex.exec(html)) !== null) {
+    if (m.index > lastIdx) parts.push(<span key={'t' + i}>{html.slice(lastIdx, m.index)}</span>)
+    parts.push(<i key={'i' + i} style={{ fontStyle: 'italic' }}>{m[1]}</i>)
+    lastIdx = m.index + m[0].length
+    i++
+  }
+  if (lastIdx < html.length) parts.push(<span key="end">{html.slice(lastIdx)}</span>)
+  if (parts.length === 0) return <span style={{ color: isDark ? '#94a3b8' : '#475569', fontStyle: 'italic' }}>Fill in fields to see citation...</span>
+  return <span>{parts}</span>
+}
+
+export function CitationGeneratorIntro({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [sourceType, setSourceType] = useState<SourceType>('book')
+  const [values, setValues] = useState<Record<string, string>>({})
+
+  const fields = SOURCE_FIELDS[sourceType]
+  const citation = useMemo(() => buildCitation(sourceType, values), [sourceType, values])
+  const filledCount = fields.filter(f => (values[f.key] || '').trim()).length
+
+  const loadExample = () => setValues(SOURCE_EXAMPLES[sourceType])
+  const clearAll = () => setValues({})
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {(['book', 'website', 'article'] as SourceType[]).map(t => (
+          <button key={t} onClick={() => { setSourceType(t); setValues({}) }} style={s.btn(sourceType === t)}>{t.charAt(0).toUpperCase() + t.slice(1)}</button>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        <button onClick={loadExample} style={{ ...s.btn(false), fontSize: 10 }}>Load Example</button>
+        <button onClick={clearAll} style={{ ...s.btn(false), fontSize: 10 }}>Clear</button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 8 }}>
+        {fields.map(f => (
+          <div key={f.key}>
+            <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>{f.label}</div>
+            <input value={values[f.key] || ''} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} placeholder={f.placeholder} style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+          </div>
+        ))}
+      </div>
+
+      <div style={{ padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>MLA CITATION ({filledCount}/{fields.length} fields)</div>
+        <div style={{ fontSize: 11, lineHeight: 1.6, color: s.bright, paddingLeft: 16, textIndent: -16 }}>
+          <CitationDisplay html={citation} isDark={isDark} />
+        </div>
+      </div>
+
+      <div style={{ padding: 6, borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>ANATOMY OF A CITATION</div>
+        <div style={{ fontSize: 10, lineHeight: 1.7, color: s.bright }}>
+          <div><b style={{ color: '#60a5fa' }}>Author</b> — who wrote it (gives credit)</div>
+          <div><b style={{ color: '#34d399' }}>Title</b> — what it's called (italics for books, quotes for articles)</div>
+          {sourceType === 'book' && <div><b style={{ color: '#fb923c' }}>Publisher</b> — who produced it</div>}
+          {sourceType === 'website' && <div><b style={{ color: '#fb923c' }}>Site Name</b> — where it lives online</div>}
+          {sourceType === 'article' && <div><b style={{ color: '#fb923c' }}>Journal</b> — the publication it appeared in</div>}
+          <div><b style={{ color: '#a855f7' }}>Date/Year</b> — when it was published</div>
+          {sourceType === 'website' && <div><b style={{ color: '#f87171' }}>URL + Accessed</b> — so readers can find it</div>}
+          {sourceType === 'article' && <div><b style={{ color: '#f87171' }}>Volume + Pages</b> — where in the journal</div>}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Source type — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{sourceType}</b></div>
+        <div>Step 2: Fields to fill — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{fields.length}</b>, completed: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{filledCount}</b></div>
+        <div>Step 3: MLA format = Author. <i>Title</i>. Publisher, Year.</div>
+        <div>Step 4: Each field has a slot — author first, then title (italics for books, quotes for articles)</div>
+        <div>Step 5: Periods separate each piece; titles of long works (books, sites) are italicized</div>
+        <div>Step 6: Live citation: {citation ? <i style={{ color: isDark ? '#34d399' : '#059669' }}>{citation.replace(/<[^>]+>/g, '')}</i> : '—'}</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Citations give credit and let readers find sources. MLA = Modern Language Association style — used in humanities. Consistency matters more than memorization.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 16. PeerReviewChecklist (6-8)
+// ============================================================
+
+const ESSAY_PRESETS = [
+  { title: 'Strong Essay', text: 'School uniforms should be required because they reduce bullying. When everyone wears the same clothes, students cannot judge each other by brands. For example, a 2018 study found bullying dropped 30% in uniform schools. Furthermore, uniforms save families money. Therefore, all schools should adopt uniforms to create a fairer environment.' },
+  { title: 'Missing Thesis', text: 'I think school is okay. Some classes are fun. Lunch is the best part. My friends are there. The teachers are nice. We learn about history and math and science. Sometimes homework is hard but I get it done. School is just a part of life.' },
+  { title: 'No Evidence', text: 'Homework should be banned. It is too much work. Kids are tired. We need time to play. Parents agree with me. Teachers should know better. Homework is bad for everyone. So it should stop.' },
+]
+
+interface ChecklistItem {
+  key: string
+  label: string
+  description: string
+}
+
+const PEER_CHECKLIST: ChecklistItem[] = [
+  { key: 'thesis', label: 'Clear Thesis', description: 'Is there a main claim in the introduction?' },
+  { key: 'evidence', label: 'Evidence', description: 'Are there facts, examples, or quotes to support claims?' },
+  { key: 'transitions', label: 'Transitions', description: 'Do sentences and paragraphs flow with linking words?' },
+  { key: 'conclusion', label: 'Strong Conclusion', description: 'Does the ending wrap up and leave an impression?' },
+]
+
+export function PeerReviewChecklist({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [presetIdx, setPresetIdx] = useState(0)
+  const [essay, setEssay] = useState(ESSAY_PRESETS[0].text)
+  const [checks, setChecks] = useState<Record<string, boolean>>({})
+  const [comments, setComments] = useState<Record<string, string>>({})
+
+  const wordCount = useMemo(() => essay.split(/\s+/).filter(Boolean).length, [essay])
+  const checkedCount = Object.values(checks).filter(Boolean).length
+  const commentCount = Object.values(comments).filter(c => c && c.trim()).length
+
+  const feedback = useMemo(() => {
+    const lines: string[] = []
+    if (checks.thesis) lines.push('✓ Strong thesis — reader knows your position')
+    else lines.push('✗ Add a clear thesis stating your main claim')
+    if (checks.evidence) lines.push('✓ Evidence present — claims are backed up')
+    else lines.push('✗ Add evidence (facts, examples, quotes) to support each reason')
+    if (checks.transitions) lines.push('✓ Smooth transitions — ideas connect')
+    else lines.push('✗ Add transition words (furthermore, however, therefore)')
+    if (checks.conclusion) lines.push('✓ Strong conclusion — wraps up effectively')
+    else lines.push('✗ Strengthen the conclusion — restate and leave an impression')
+    return lines
+  }, [checks])
+
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 3 }}>ESSAY PRESETS</div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {ESSAY_PRESETS.map((p, i) => (
+          <button key={i} onClick={() => { setPresetIdx(i); setEssay(p.text); setChecks({}); setComments({}) }} style={s.btn(presetIdx === i)}>{p.title}</button>
+        ))}
+      </div>
+
+      <textarea value={essay} onChange={(e) => setEssay(e.target.value)} rows={5} style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 80, lineHeight: 1.6, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+      <div style={{ fontSize: 9, color: s.text, marginTop: 2, textAlign: 'right' as const }}>{wordCount} words</div>
+
+      <div style={{ marginTop: 6, fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>REVIEW CHECKLIST ({checkedCount}/{PEER_CHECKLIST.length})</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {PEER_CHECKLIST.map(item => {
+          const checked = !!checks[item.key]
+          return (
+            <div key={item.key} style={{ padding: 6, borderRadius: 4, background: checked ? 'rgba(34,197,94,0.08)' : s.bg, border: '1px solid ' + (checked ? 'rgba(34,197,94,0.3)' : s.border) }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                <button onClick={() => setChecks({ ...checks, [item.key]: !checked })} style={{
+                  width: 18, height: 18, borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer' as const,
+                  background: checked ? 'rgba(34,197,94,0.2)' : 'transparent',
+                  border: '1.5px solid ' + (checked ? '#34d399' : s.border),
+                  color: '#34d399', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                }}>{checked ? '✓' : ''}</button>
+                <div style={{ fontSize: 11, fontWeight: 700, color: checked ? '#34d399' : s.bright }}>{item.label}</div>
+              </div>
+              <div style={{ fontSize: 9, color: s.text, marginBottom: 4, fontStyle: 'italic' }}>{item.description}</div>
+              <input value={comments[item.key] || ''} onChange={(e) => setComments({ ...comments, [item.key]: e.target.value })} placeholder="Add a comment for the author..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', fontSize: 10 }} />
+            </div>
+          )
+        })}
+      </div>
+
+      <div style={{ marginTop: 6, padding: 8, borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>FEEDBACK SUMMARY</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, lineHeight: 1.5 }}>
+          {feedback.map((line, i) => (
+            <div key={i} style={{ color: line.startsWith('✓') ? '#34d399' : '#f87171', fontWeight: 600 }}>{line}</div>
+          ))}
+        </div>
+        {commentCount > 0 && (
+          <div style={{ marginTop: 6, paddingTop: 6, borderTop: '1px solid ' + s.border, fontSize: 9, color: s.text }}>
+            Comments added on: {PEER_CHECKLIST.filter(c => (comments[c.key] || '').trim()).map(c => c.label).join(', ')}
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Preset — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{ESSAY_PRESETS[presetIdx].title}</b></div>
+        <div>Step 2: Essay length — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{wordCount}</b> words</div>
+        <div>Step 3: Checklist progress — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{checkedCount}</b> of <b style={{ color: isDark ? '#34d399' : '#059669' }}>{PEER_CHECKLIST.length}</b> criteria met</div>
+        <div>Step 4: Each item: read → check yes/no → leave specific feedback</div>
+        <div>Step 5: Feedback auto-generates — {checkedCount}/{PEER_CHECKLIST.length} ✓, {PEER_CHECKLIST.length - checkedCount} ✗</div>
+        <div>Step 6: Specific comments help the writer revise — be kind and concrete</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Good peer review is specific and kind. Don't just say "good job" — point to what works and what to improve. Writers grow from concrete feedback, not vague praise.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 17. ThesisStatementBuilder (9-12)
+// ============================================================
+
+export function ThesisStatementBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [topic, setTopic] = useState('school uniforms')
+  const [position, setPosition] = useState<'for' | 'against' | 'neutral'>('for')
+  const [counter, setCounter] = useState('uniforms limit self-expression')
+  const [reasons, setReasons] = useState(['reduce bullying', 'save families money', 'create equality'])
+
+  const positionLabel = position === 'for' ? `${topic} should be required` : position === 'against' ? `${topic} should not be required` : `${topic} has both benefits and drawbacks`
+  const filledReasons = reasons.filter(r => r.trim())
+  const reasonStr = filledReasons.length === 1 ? filledReasons[0] : filledReasons.length > 1 ? filledReasons.slice(0, -1).join(', ') + ', and ' + filledReasons[filledReasons.length - 1] : ''
+
+  const thesis = useMemo(() => {
+    if (!topic || filledReasons.length < 1) return ''
+    return `Although ${counter || '[counterargument]'}, ${positionLabel} because ${reasonStr}.`
+  }, [topic, counter, positionLabel, reasonStr, filledReasons.length])
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
+        <div>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>TOPIC</div>
+          <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. school uniforms" style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>POSITION</div>
+          <div style={{ display: 'flex', gap: 3 }}>
+            {(['for', 'against', 'neutral'] as const).map(p => (
+              <button key={p} onClick={() => setPosition(p)} style={s.btn(position === p)}>{p}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>COUNTERARGUMENT (opposing view)</div>
+          <input value={counter} onChange={(e) => setCounter(e.target.value)} placeholder="e.g. uniforms limit self-expression" style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>3 REASONS</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {reasons.map((r, i) => (
+              <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#fb923c', minWidth: 14 }}>{i + 1}.</span>
+                <input value={r} onChange={(e) => setReasons(reasons.map((rr, idx) => idx === i ? e.target.value : rr))} placeholder={`Reason ${i + 1}`} style={{ ...s.input, flex: 1, boxSizing: 'border-box' }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: 8, borderRadius: 6, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.3)', marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#34d399', letterSpacing: 0.5, marginBottom: 4 }}>DRAFT THESIS</div>
+        <div style={{ fontSize: 12, lineHeight: 1.7, color: s.bright }}>
+          {thesis ? (
+            <>
+              <span style={{ color: '#f87171', fontWeight: 600 }}>Although {counter || '[counterargument]'}</span>, <span style={{ color: '#60a5fa', fontWeight: 600 }}>{positionLabel}</span> <span style={{ color: '#34d399', fontWeight: 600 }}>because {reasonStr}</span>.
+            </>
+          ) : (
+            <span style={{ color: s.text, fontStyle: 'italic' }}>Fill in fields to build your thesis...</span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ padding: 6, borderRadius: 4, background: s.bg, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>PARTS OF A STRONG THESIS</div>
+        <div style={{ fontSize: 10, lineHeight: 1.7, color: s.bright }}>
+          <div><span style={{ color: '#f87171', fontWeight: 700 }}>● Counterargument</span> — acknowledges the other side (builds credibility)</div>
+          <div><span style={{ color: '#60a5fa', fontWeight: 700 }}>● Claim</span> — your position on the topic (clear and debatable)</div>
+          <div><span style={{ color: '#34d399', fontWeight: 700 }}>● Reasoning</span> — 2-3 reasons why (a roadmap for your essay)</div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Topic — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{topic || '—'}</b></div>
+        <div>Step 2: Position — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{position}</b> ({positionLabel})</div>
+        <div>Step 3: Counterargument — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{counter || '—'}</b></div>
+        <div>Step 4: Reasons filled — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{filledReasons.length}</b>/3</div>
+        <div>Step 5: Pattern: "Although [counter], [claim] because [reasons]"</div>
+        <div>Step 6: Thesis length — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{thesis ? thesis.split(/\s+/).length : 0}</b> words (aim for 1-2 sentences)</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A strong thesis is debatable, specific, and previewable. Acknowledging the counterargument shows you've considered multiple views — it builds trust with the reader before you argue.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 18. CounterargumentBuilder (9-12)
+// ============================================================
+
+export function CounterargumentBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [mainArg, setMainArg] = useState('School uniforms should be required in all public schools.')
+  const [opposite, setOpposite] = useState('uniforms suppress student individuality and self-expression')
+  const [rebuttal, setRebuttal] = useState('students express individuality through art, music, and ideas — not just clothing')
+
+  const counterStmt = useMemo(() => {
+    if (!opposite || !rebuttal) return ''
+    return `Some might argue that ${opposite}. However, ${rebuttal}.`
+  }, [opposite, rebuttal])
+
+  const strengths = useMemo(() => {
+    return [
+      { label: 'Main argument stated', ok: mainArg.trim().length > 0 },
+      { label: 'Opposite view acknowledged', ok: opposite.trim().length > 0 },
+      { label: 'Rebuttal provided', ok: rebuttal.trim().length > 0 },
+      { label: 'Rebuttal addresses the opposite view', ok: opposite.trim().length > 0 && rebuttal.trim().length > 0 },
+    ]
+  }, [mainArg, opposite, rebuttal])
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
+        <div>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>YOUR MAIN ARGUMENT</div>
+          <textarea value={mainArg} onChange={(e) => setMainArg(e.target.value)} rows={2} placeholder="State your thesis..." style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 40, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: '#f87171', marginBottom: 1, fontWeight: 600 }}>OPPOSITE VIEW (steelman the other side)</div>
+          <textarea value={opposite} onChange={(e) => setOpposite(e.target.value)} rows={2} placeholder="What would the other side say?" style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 40, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 9, color: '#34d399', marginBottom: 1, fontWeight: 600 }}>YOUR REBUTTAL (why the opposite is incomplete or wrong)</div>
+          <textarea value={rebuttal} onChange={(e) => setRebuttal(e.target.value)} rows={2} placeholder="How do you respond?" style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 40, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+        </div>
+      </div>
+
+      <div style={{ padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>COUNTERARGUMENT PARAGRAPH</div>
+        <div style={{ fontSize: 12, lineHeight: 1.7, color: s.bright }}>
+          {counterStmt ? (
+            <>
+              <span style={{ color: '#f87171', fontWeight: 600 }}>Some might argue that {opposite}</span>. <span style={{ color: '#34d399', fontWeight: 600 }}>However, {rebuttal}</span>.
+            </>
+          ) : (
+            <span style={{ color: s.text, fontStyle: 'italic' }}>Fill in the opposite view and your rebuttal...</span>
+          )}
+        </div>
+      </div>
+
+      <div style={{ padding: 6, borderRadius: 4, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 4 }}>STRENGTH CHECK</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {strengths.map((c, i) => (
+            <div key={i} style={{ fontSize: 10, color: c.ok ? '#34d399' : '#f87171', fontWeight: 600 }}>
+              {c.ok ? '✓' : '✗'} {c.label}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: 6, borderRadius: 4, background: 'rgba(96,165,250,0.06)', border: '1px solid rgba(96,165,250,0.2)', marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#60a5fa', letterSpacing: 0.5, marginBottom: 4 }}>WHY ACKNOWLEDGE COUNTERARGUMENTS?</div>
+        <div style={{ fontSize: 10, lineHeight: 1.7, color: s.bright }}>
+          <div>● Builds <b>credibility</b> — you've considered other views</div>
+          <div>● Creates <b>tension</b> — makes your argument feel necessary</div>
+          <div>● Strengthens <b>rebuttal</b> — preempts objections</div>
+          <div>● Shows <b>nuance</b> — real issues have multiple sides</div>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Main argument — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{mainArg ? mainArg.slice(0, 40) + (mainArg.length > 40 ? '…' : '') : '—'}</b></div>
+        <div>Step 2: Opposite view — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{opposite || '—'}</b></div>
+        <div>Step 3: Rebuttal — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{rebuttal || '—'}</b></div>
+        <div>Step 4: Pattern: "Some might argue [opposite]. However, [rebuttal]."</div>
+        <div>Step 5: Strength checks passed — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{strengths.filter(c => c.ok).length}</b>/{strengths.length}</div>
+        <div>Step 6: Steelman = present the other side fairly, then rebut — never strawman</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Acknowledging counterarguments doesn't weaken your case — it strengthens it. A "steelmanned" counter (the best version of the other side) makes your rebuttal more credible. Readers trust writers who engage seriously with opposing views.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 19. CloseReadingFramework (9-12)
+// ============================================================
+
+const CLOSE_READING_PRESETS = [
+  {
+    title: 'Fire and Ice',
+    author: 'Robert Frost',
+    text: 'Some say the world will end in fire,\nSome say in ice.\nFrom what I\'ve tasted of desire\nI hold with those who favor fire.\nBut if it had to perish twice,\nI think I know enough of hate\nTo say that for destruction ice\nIs also great\nAnd would suffice.'
+  },
+  {
+    title: 'Dreams',
+    author: 'Langston Hughes',
+    text: 'Hold fast to dreams\nFor if dreams die\nLife is a broken-winged bird\nThat cannot fly.\n\nHold fast to dreams\nFor when dreams go\nLife is a barren field\nFrozen with snow.'
+  },
+  {
+    title: 'I Have a Dream (excerpt)',
+    author: 'Martin Luther King Jr.',
+    text: 'I have a dream that one day this nation will rise up and live out the true meaning of its creed: "We hold these truths to be self-evident, that all men are created equal."'
+  },
+]
+
+interface TpcasttStep {
+  key: string
+  letter: string
+  name: string
+  prompt: string
+}
+
+const TPCASTT_STEPS: TpcasttStep[] = [
+  { key: 'title1', letter: 'T', name: 'Title', prompt: 'Predict: What does the title suggest before reading?' },
+  { key: 'paraphrase', letter: 'P', name: 'Paraphrase', prompt: 'Restate the text in your own words' },
+  { key: 'connotation', letter: 'C', name: 'Connotation', prompt: 'Word choice — what feelings do specific words carry?' },
+  { key: 'attitude', letter: 'A', name: 'Attitude', prompt: 'Tone — what is the speaker\'s attitude?' },
+  { key: 'shifts', letter: 'S', name: 'Shifts', prompt: 'Where do changes occur — in tone, subject, or speaker?' },
+  { key: 'title2', letter: 'T', name: 'Title (Revisit)', prompt: 'Now re-read the title — does it mean something new?' },
+  { key: 'theme', letter: 'T', name: 'Theme', prompt: 'What is the central message about life or human nature?' },
+]
+
+export function CloseReadingFramework({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [presetIdx, setPresetIdx] = useState(0)
+  const [stepIdx, setStepIdx] = useState(0)
+  const [responses, setResponses] = useState<Record<string, string>>({})
+
+  const current = CLOSE_READING_PRESETS[presetIdx]
+  const step = TPCASTT_STEPS[stepIdx]
+  const filledCount = TPCASTT_STEPS.filter(st => (responses[st.key] || '').trim()).length
+
+  return (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 3 }}>CHOOSE A TEXT</div>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {CLOSE_READING_PRESETS.map((p, i) => (
+          <button key={i} onClick={() => { setPresetIdx(i); setResponses({}); setStepIdx(0) }} style={s.btn(presetIdx === i)}>{p.title}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: s.bright, marginBottom: 2 }}>{current.title}</div>
+        <div style={{ fontSize: 9, color: s.text, marginBottom: 4, fontStyle: 'italic' }}>by {current.author}</div>
+        <div style={{ fontSize: 11, lineHeight: 1.7, color: s.bright, whiteSpace: 'pre-wrap' as const }}>{current.text}</div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 2, marginBottom: 6, flexWrap: 'wrap' }}>
+        {TPCASTT_STEPS.map((st, i) => {
+          const filled = !!(responses[st.key] || '').trim()
+          return (
+            <button key={i} onClick={() => setStepIdx(i)} style={{
+              width: 32, height: 28, borderRadius: 4, fontSize: 10, fontWeight: 700, cursor: 'pointer' as const,
+              background: i === stepIdx ? 'rgba(96,165,250,0.15)' : (filled ? 'rgba(34,197,94,0.12)' : s.bg),
+              border: '1px solid ' + (i === stepIdx ? 'rgba(96,165,250,0.4)' : (filled ? 'rgba(34,197,94,0.3)' : s.border)),
+              color: i === stepIdx ? '#60a5fa' : (filled ? '#34d399' : s.text),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>{st.letter}{filled ? '✓' : ''}</button>
+          )
+        })}
+      </div>
+
+      <div style={{ padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+          <div style={{ width: 22, height: 22, borderRadius: 4, background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.4)', color: '#60a5fa', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{step.letter}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: s.bright }}>{step.name}</div>
+        </div>
+        <div style={{ fontSize: 10, color: s.text, marginBottom: 4, fontStyle: 'italic' }}>{step.prompt}</div>
+        <textarea value={responses[step.key] || ''} onChange={(e) => setResponses({ ...responses, [step.key]: e.target.value })} rows={3} placeholder="Type your analysis here..." style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 50, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+          <button onClick={() => setStepIdx(Math.max(0, stepIdx - 1))} disabled={stepIdx === 0} style={{ ...s.btn(false), opacity: stepIdx === 0 ? 0.4 : 1 }}>← Prev</button>
+          <span style={{ fontSize: 10, color: s.text, fontWeight: 600 }}>{stepIdx + 1}/{TPCASTT_STEPS.length}</span>
+          <button onClick={() => setStepIdx(Math.min(TPCASTT_STEPS.length - 1, stepIdx + 1))} disabled={stepIdx === TPCASTT_STEPS.length - 1} style={{ ...s.btn(false), opacity: stepIdx === TPCASTT_STEPS.length - 1 ? 0.4 : 1 }}>Next →</button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Text — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{current.title}</b> by {current.author}</div>
+        <div>Step 2: Current step — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{step.letter}: {step.name}</b> ({stepIdx + 1}/{TPCASTT_STEPS.length})</div>
+        <div>Step 3: Steps completed — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{filledCount}</b>/{TPCASTT_STEPS.length}</div>
+        <div>Step 4: T = Title (predict), P = Paraphrase (restate), C = Connotation (word choice)</div>
+        <div>Step 5: A = Attitude (tone), S = Shifts (changes), T = Title again, T = Theme</div>
+        <div>Step 6: Close reading moves from surface (literal) to depth (interpretive) — each step peels a layer</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Close reading slows down to see how meaning is made. TP-CASTT forces attention to language, structure, and shifting perspective. The title often means something different after reading — that's the point.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 20. EssayOutlineBuilder (9-12)
+// ============================================================
+
+interface BodyPara {
+  topic: string
+  evidence: string
+  analysis: string
+  transition: string
+}
+
+export function EssayOutlineBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [thesis, setThesis] = useState('School uniforms should be required because they reduce bullying, save families money, and create equality.')
+  const [hook, setHook] = useState('Imagine waking up every morning and never worrying about what to wear.')
+  const [context, setContext] = useState('Across the country, schools debate whether uniforms improve the learning environment.')
+  const [bodies, setBodies] = useState<BodyPara[]>([
+    { topic: 'Uniforms reduce bullying by removing brand-based judgments', evidence: 'A 2018 study found bullying dropped 30% in uniform schools', analysis: 'When clothes are equal, students focus on character not labels', transition: 'Beyond reducing bullying, uniforms also help families financially' },
+    { topic: 'Uniforms save families money on school clothes', evidence: 'Parents spend an average of $200 less per child per year', analysis: 'This frees up money for educational expenses like books and field trips', transition: 'Financial relief is just one part of the broader equality uniforms create' },
+    { topic: 'Uniforms create visual equality among students', evidence: 'In uniform schools, teachers report fewer instances of class-based teasing', analysis: 'When everyone looks the same, socioeconomic differences become invisible', transition: 'These three benefits together make a strong case for uniforms' },
+  ])
+  const [conclusionThought, setConclusionThought] = useState('School uniforms build a fairer, more focused community where students can thrive.')
+  const [showExport, setShowExport] = useState(false)
+
+  const outlineText = useMemo(() => {
+    const lines: string[] = []
+    lines.push('I. INTRODUCTION')
+    lines.push(`   A. Hook: ${hook}`)
+    lines.push(`   B. Context: ${context}`)
+    lines.push(`   C. Thesis: ${thesis}`)
+    lines.push('')
+    bodies.forEach((b, i) => {
+      lines.push(`${['II', 'III', 'IV'][i]}. BODY PARAGRAPH ${i + 1}`)
+      lines.push(`   A. Topic Sentence: ${b.topic}`)
+      lines.push(`   B. Evidence: ${b.evidence}`)
+      lines.push(`   C. Analysis: ${b.analysis}`)
+      lines.push(`   D. Transition: ${b.transition}`)
+      lines.push('')
+    })
+    lines.push('V. CONCLUSION')
+    lines.push('   A. Restate Thesis (in new words)')
+    lines.push(`   B. Synthesize: ${conclusionThought}`)
+    lines.push('   C. Call to Action / Final Thought')
+    return lines.join('\n')
+  }, [thesis, hook, context, bodies, conclusionThought])
+
+  const updateBody = (i: number, field: keyof BodyPara, val: string) => {
+    setBodies(bodies.map((b, idx) => idx === i ? { ...b, [field]: val } : b))
+  }
+
+  const bodiesComplete = bodies.filter(b => b.topic.trim() && b.evidence.trim() && b.analysis.trim()).length
+  const filledCount = (thesis.trim() ? 1 : 0) + (hook.trim() ? 1 : 0) + (context.trim() ? 1 : 0) + bodiesComplete + (conclusionThought.trim() ? 1 : 0)
+
+  return (
+    <div>
+      <div style={{ padding: 6, borderRadius: 4, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', marginBottom: 4 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#60a5fa', letterSpacing: 0.5, marginBottom: 3 }}>INTRODUCTION</div>
+        <input value={hook} onChange={(e) => setHook(e.target.value)} placeholder="Hook (grab attention)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+        <input value={context} onChange={(e) => setContext(e.target.value)} placeholder="Context (background info)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+        <textarea value={thesis} onChange={(e) => setThesis(e.target.value)} rows={2} placeholder="Thesis (main claim + reasons)..." style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 30, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+      </div>
+
+      {bodies.map((b, i) => (
+        <div key={i} style={{ padding: 6, borderRadius: 4, background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 4 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#a855f7', letterSpacing: 0.5, marginBottom: 3 }}>BODY {i + 1}</div>
+          <input value={b.topic} onChange={(e) => updateBody(i, 'topic', e.target.value)} placeholder="Topic sentence..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+          <input value={b.evidence} onChange={(e) => updateBody(i, 'evidence', e.target.value)} placeholder="Evidence (fact/quote)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+          <input value={b.analysis} onChange={(e) => updateBody(i, 'analysis', e.target.value)} placeholder="Analysis (why it matters)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+          <input value={b.transition} onChange={(e) => updateBody(i, 'transition', e.target.value)} placeholder="Transition to next paragraph..." style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+        </div>
+      ))}
+
+      <div style={{ padding: 6, borderRadius: 4, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#34d399', letterSpacing: 0.5, marginBottom: 3 }}>CONCLUSION</div>
+        <textarea value={conclusionThought} onChange={(e) => setConclusionThought(e.target.value)} rows={2} placeholder="Final thought (synthesize + call to action)..." style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 30, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+      </div>
+
+      <button onClick={() => setShowExport(!showExport)} style={{ ...s.btn(true), width: '100%', padding: '5px', fontWeight: 600, marginBottom: 6 }}>
+        {showExport ? '▾ Hide' : '▸ Show'} Full Outline
+      </button>
+
+      {showExport && (
+        <div style={{ padding: 8, borderRadius: 4, background: isDark ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.04)', border: '1px solid ' + s.border, marginBottom: 6, maxHeight: 200, overflow: 'auto' }}>
+          <pre style={{ fontSize: 10, lineHeight: 1.5, color: s.bright, margin: 0, fontFamily: 'monospace', whiteSpace: 'pre-wrap' as const }}>{outlineText}</pre>
+        </div>
+      )}
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Intro — Hook: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{hook ? '✓' : '✗'}</b>, Context: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{context ? '✓' : '✗'}</b>, Thesis: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{thesis ? '✓' : '✗'}</b></div>
+        <div>Step 2: Body paragraphs — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{bodies.length}</b> total, fully filled: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{bodiesComplete}</b></div>
+        <div>Step 3: Each body = Topic Sentence → Evidence → Analysis → Transition</div>
+        <div>Step 4: Conclusion — Restate thesis → Synthesize main points → Call to action</div>
+        <div>Step 5: Outline sections filled — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{filledCount}</b>/6 main sections</div>
+        <div>Step 6: {showExport ? 'Full outline shown above — copy into a doc to draft' : 'Toggle "Show Full Outline" to see/export the assembled outline'}</div>
+      </div>
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A 5-paragraph essay is a scaffold, not a formula. Intro sets up, bodies prove with evidence, conclusion synthesizes. The structure makes thinking visible — each part has a job.
+      </div>
+    </div>
+  )
+}

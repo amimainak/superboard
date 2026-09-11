@@ -14,6 +14,20 @@ const WaterCarbonLazy = lazy(() => import('./earthscience/EarthScienceUtilities'
 const SolarSystemLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.SolarSystemScale })))
 const TopographicLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.TopographicMapTool })))
 
+// Phase 4 — K-5
+const WeatherObservationLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.WeatherObservationTool })))
+const SeasonsModelLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.SeasonsModel })))
+const RockSorterLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.RockSorter })))
+// Phase 4 — 6-8
+const LayeredEarthLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.LayeredEarthCrossSection })))
+const MoonPhaseLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.MoonPhaseSimulator })))
+const EclipseModelLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.EclipseModel })))
+// Phase 4 — 9-12
+const AtmosphericLapseLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.AtmosphericLapseRate })))
+const CoriolisEffectLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.CoriolisEffectSimulator })))
+const SeismographReaderLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.SeismographReader })))
+const StarLifeCycleLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.StarLifeCycleExplorer })))
+
 // Stable wrapper components (no remount on re-render)
 function RockCyclePanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><RockCycleLazy isDark={isDark} /></Suspense>
@@ -32,6 +46,40 @@ function SolarSystemPanel({ isDark }: { isDark: boolean }) {
 }
 function TopographicPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><TopographicLazy isDark={isDark} /></Suspense>
+}
+
+// Phase 4 wrappers — K-5
+function WeatherObservationPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><WeatherObservationLazy isDark={isDark} /></Suspense>
+}
+function SeasonsModelPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><SeasonsModelLazy isDark={isDark} /></Suspense>
+}
+function RockSorterPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><RockSorterLazy isDark={isDark} /></Suspense>
+}
+// Phase 4 wrappers — 6-8
+function LayeredEarthPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><LayeredEarthLazy isDark={isDark} /></Suspense>
+}
+function MoonPhasePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><MoonPhaseLazy isDark={isDark} /></Suspense>
+}
+function EclipseModelPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><EclipseModelLazy isDark={isDark} /></Suspense>
+}
+// Phase 4 wrappers — 9-12
+function AtmosphericLapsePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><AtmosphericLapseLazy isDark={isDark} /></Suspense>
+}
+function CoriolisEffectPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><CoriolisEffectLazy isDark={isDark} /></Suspense>
+}
+function SeismographReaderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><SeismographReaderLazy isDark={isDark} /></Suspense>
+}
+function StarLifeCyclePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><StarLifeCycleLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -235,6 +283,50 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
             {sectionTitle('Dimensional Analysis', 'sci-dimensional-analysis')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Unit conversion tool with step-by-step cancellation.</p>
           </div>
+
+          {/* --- Phase 4 — K-5 --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Weather Observation Tool', 'earth-weather-observation')}
+            <div style={{ padding: '0 12px 12px' }}><WeatherObservationPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Seasons Model', 'earth-seasons-model')}
+            <div style={{ padding: '0 12px 12px' }}><SeasonsModelPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rock Sorter', 'earth-rock-sorter')}
+            <div style={{ padding: '0 12px 12px' }}><RockSorterPanel isDark={isDark} /></div>
+          </div>
+          {/* --- Phase 4 — 6-8 --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Layered Earth Cross-Section', 'earth-layered-earth')}
+            <div style={{ padding: '0 12px 12px' }}><LayeredEarthPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Moon Phase Simulator', 'earth-moon-phase')}
+            <div style={{ padding: '0 12px 12px' }}><MoonPhasePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Eclipse Model', 'earth-eclipse-model')}
+            <div style={{ padding: '0 12px 12px' }}><EclipseModelPanel isDark={isDark} /></div>
+          </div>
+          {/* --- Phase 4 — 9-12 --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Atmospheric Lapse Rate', 'earth-atmospheric-lapse')}
+            <div style={{ padding: '0 12px 12px' }}><AtmosphericLapsePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Coriolis Effect Simulator', 'earth-coriolis-effect')}
+            <div style={{ padding: '0 12px 12px' }}><CoriolisEffectPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Seismograph Reader', 'earth-seismograph-reader')}
+            <div style={{ padding: '0 12px 12px' }}><SeismographReaderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Star Life Cycle Explorer', 'earth-star-life-cycle')}
+            <div style={{ padding: '0 12px 12px' }}><StarLifeCyclePanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -276,6 +368,20 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Observation Journal', 'sci-observation-journal')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Record date, location, weather, and observations.</p>
+          </div>
+
+          {/* --- Phase 4 — K-5 --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Weather Observation Tool', 'earth-weather-observation')}
+            <div style={{ padding: '0 12px 12px' }}><WeatherObservationPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Seasons Model', 'earth-seasons-model')}
+            <div style={{ padding: '0 12px 12px' }}><SeasonsModelPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Rock Sorter', 'earth-rock-sorter')}
+            <div style={{ padding: '0 12px 12px' }}><RockSorterPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -338,6 +444,20 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Lab Report Template', 'sci-lab-report')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Structured lab report with hypothesis, data, analysis, conclusion.</p>
+          </div>
+
+          {/* --- Phase 4 — 6-8 --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Layered Earth Cross-Section', 'earth-layered-earth')}
+            <div style={{ padding: '0 12px 12px' }}><LayeredEarthPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Moon Phase Simulator', 'earth-moon-phase')}
+            <div style={{ padding: '0 12px 12px' }}><MoonPhasePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Eclipse Model', 'earth-eclipse-model')}
+            <div style={{ padding: '0 12px 12px' }}><EclipseModelPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -412,6 +532,24 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
           <div className="toolkit-section">
             {sectionTitle('Dimensional Analysis', 'sci-dimensional-analysis')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Unit conversion tool with step-by-step cancellation.</p>
+          </div>
+
+          {/* --- Phase 4 — 9-12 --- */}
+          <div className="toolkit-section">
+            {sectionTitle('Atmospheric Lapse Rate', 'earth-atmospheric-lapse')}
+            <div style={{ padding: '0 12px 12px' }}><AtmosphericLapsePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Coriolis Effect Simulator', 'earth-coriolis-effect')}
+            <div style={{ padding: '0 12px 12px' }}><CoriolisEffectPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Seismograph Reader', 'earth-seismograph-reader')}
+            <div style={{ padding: '0 12px 12px' }}><SeismographReaderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('Star Life Cycle Explorer', 'earth-star-life-cycle')}
+            <div style={{ padding: '0 12px 12px' }}><StarLifeCyclePanel isDark={isDark} /></div>
           </div>
         </>
       )}

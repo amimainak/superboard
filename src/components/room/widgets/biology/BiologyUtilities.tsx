@@ -3766,12 +3766,36 @@ export function PhotosynthesisEquationBuilder({ isDark }: { isDark: boolean }) {
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
   }, [complete])
 
+  // Auto-place: clicking a card immediately tries to place it in the LEFTMOST empty slot.
+  // If wrong, the card is still marked "selected" so the tutor can manually click any slot (fallback).
   const handleCardClick = (cardId: string) => {
     if (Object.values(placements).includes(cardId) || complete) return
-    setSelectedCard(cardId === selectedCard ? null : cardId)
-    setLastAction(null)
+    // Toggle off if same card clicked again
+    if (cardId === selectedCard) {
+      setSelectedCard(null)
+      setLastAction(null)
+      return
+    }
+    // Find the leftmost empty slot
+    const leftmostEmpty = PHOTOSYNTHESIS_SLOTS.find(s => !placements[s.id])
+    if (leftmostEmpty && leftmostEmpty.correctId === cardId) {
+      // Correct auto-place — lock it in green
+      setPlacements({ ...placements, [leftmostEmpty.id]: cardId })
+      setSelectedCard(null)
+      setLastAction('correct')
+      setWrongSlot(null)
+    } else if (leftmostEmpty) {
+      // Wrong — shake the leftmost empty slot, keep the card selected for manual fallback
+      setWrongSlot(leftmostEmpty.id)
+      setLastAction('wrong')
+      setSelectedCard(cardId)
+      setTimeout(() => setWrongSlot(null), 500)
+    } else {
+      setSelectedCard(cardId)
+    }
   }
 
+  // Manual fallback: click molecule (auto-place may have failed) → click a specific slot.
   const handleSlotClick = (slotId: number) => {
     if (selectedCard === null || placements[slotId] || complete) return
     const slot = PHOTOSYNTHESIS_SLOTS[slotId]
@@ -3843,9 +3867,29 @@ export function PhotosynthesisEquationBuilder({ isDark }: { isDark: boolean }) {
 
       {/* Molecule cards */}
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>
-          {selectedCard ? '✓ Card selected — now click a slot' : 'Click a molecule, then click a slot'}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text }}>
+            💡 Tip: Click a molecule to auto-place it in the next slot
+          </div>
+          {placedCount > 0 && !complete && (
+            <button onClick={reset} style={{
+              padding: '2px 8px', borderRadius: 3, fontSize: 10, fontWeight: 700, cursor: 'pointer',
+              background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#f87171',
+            }}>✗ Clear All</button>
+          )}
         </div>
+        {lastAction && !complete && (
+          <div style={{
+            fontSize: 10, fontWeight: 700, marginBottom: 3, padding: '2px 6px', borderRadius: 3,
+            color: lastAction === 'correct' ? '#22c55e' : '#ef4444',
+            background: lastAction === 'correct' ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
+            border: '1px solid ' + (lastAction === 'correct' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'),
+          }}>
+            {lastAction === 'correct'
+              ? '✓ Correct!'
+              : '✗ Wrong slot — think about what goes IN (left) vs OUT (right)' + (selectedCard ? ' — or click a specific slot' : '')}
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3 }}>
           {PHOTOSYNTHESIS_MOLECULES.map(m => {
             const isPlaced = Object.values(placements).includes(m.id)
@@ -3855,11 +3899,13 @@ export function PhotosynthesisEquationBuilder({ isDark }: { isDark: boolean }) {
                 padding: '4px 2px', fontSize: 9, fontWeight: 700,
                 minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
                 background: isPlaced ? 'rgba(34,197,94,0.12)' : isSelected ? 'rgba(167,139,250,0.22)' : s.bg,
-                border: '1px solid ' + (isPlaced ? 'rgba(34,197,94,0.45)' : isSelected ? 'rgba(167,139,250,0.55)' : s.border),
+                border: '2px solid ' + (isPlaced ? 'rgba(34,197,94,0.45)' : isSelected ? 'rgba(167,139,250,0.85)' : s.border),
                 color: isPlaced ? '#22c55e' : isSelected ? '#a78bfa' : s.bright, borderRadius: 3,
                 cursor: isPlaced || complete ? 'default' : 'pointer',
                 opacity: isPlaced ? 0.55 : 1,
                 lineHeight: 1.15,
+                boxShadow: isSelected ? '0 0 0 2px rgba(167,139,250,0.25)' : 'none',
+                transition: 'border-color 0.1s, box-shadow 0.1s',
               }}>
                 {m.shortLabel}
               </button>
@@ -3927,7 +3973,7 @@ export function PhotosynthesisEquationBuilder({ isDark }: { isDark: boolean }) {
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
         <div>Step 1: Equation: ? + ? + ? → ? + ? (5 molecules to place)</div>
         <div>Step 2: Placed: <b>{placedCount}/5</b> | Correct: <b>{correctCount}</b></div>
-        <div>Step 3: {lastAction === 'correct' ? '✓ Correct placement!' : lastAction === 'wrong' ? '✗ Wrong slot — think about what goes IN vs what comes OUT' : 'Click a molecule, then click a slot'}</div>
+        <div>Step 3: {lastAction === 'correct' ? '✓ Correct — auto-placed in the next slot!' : lastAction === 'wrong' ? '✗ Wrong slot — think about what goes IN vs what comes OUT' : '💡 Click a molecule to auto-place it in the next slot'}</div>
         <div>Step 4: {complete ? 'Complete! 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂' : 'Reactants (inputs) on the LEFT, products (outputs) on the RIGHT'}</div>
         <div>Step 5: {complete ? '6 carbon atoms in (CO₂) = 6 carbon atoms out (C₆H₁₂O₆) — balanced!' : 'Light energy drives the reaction but is NOT a molecule'}</div>
         <div>Step 6: Plants make glucose (food) from sunlight — they are the base of every food chain</div>
