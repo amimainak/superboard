@@ -368,6 +368,15 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 })}
               </div>
               {addBoardBtn('Add to Board', function() { addToBoard('math-function-plotter', { expression: plotterExpr, range: plotterRange }) })}
+              {/* Step-by-step */}
+              <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
+                <div>Step 1: Choose a function type (x², sin, etc.) or type your own</div>
+                <div>Step 2: The graph plots y = f(x) for each x value in the range</div>
+                <div>Step 3: Steep parts = rapid change; flat parts = slow change</div>
+                <div>Step 4: Where the curve crosses the x-axis = roots (y = 0)</div>
+                <div>Step 5: The shape reveals behavior: parabola = one min/max, cubic = S-curve</div>
+              </div>
               {/* Insight */}
               <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
                 💡 <b>How to read graphs:</b> The curve shows y for every x. Steep parts = rapid change. Flat parts = slow change. Where it crosses the x-axis = where y=0 (roots). The shape reveals the function's behavior — a parabola (x²) has one minimum, a cubic (x³) goes up-then-down-then-up.
@@ -418,6 +427,14 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Interactive Number Line')}
             <div style={{ padding: '0 12px 12px' }}><NumberLineEnhancedPanel isDark={isDark} /></div>
+            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
+              <div>Step 1: Choose the range (0-10, 0-20, 0-50, 0-100)</div>
+              <div>Step 2: Click on the line to place a dot at a specific number</div>
+              <div>Step 3: Use jumps (+2, -3, +5) to show addition/subtraction as movement</div>
+              <div>Step 4: Positive jumps move RIGHT; negative jumps move LEFT</div>
+              <div>Step 5: Drag dots to reposition; select + Delete to remove</div>
+            </div>
             <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
               💡 <b>Why number lines matter:</b> The number line makes abstract numbers visual. Positive = right, negative = left. Jumps show addition (right) and subtraction (left). It builds the foundation for understanding signed numbers, absolute value, and inequalities.
             </div>
@@ -425,6 +442,14 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Fraction Bars')}
             <div style={{ padding: '0 12px 12px' }}><FractionBarEnhancedPanel isDark={isDark} /></div>
+            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
+              <div>Step 1: Choose the denominator (how many equal parts)</div>
+              <div>Step 2: Click segments to shade them — each shaded part = 1/denominator</div>
+              <div>Step 3: The numerator = number of shaded parts</div>
+              <div>Step 4: Change denominator to find equivalent fractions (3/4 = 6/8)</div>
+              <div>Step 5: Use Compare mode to see two fractions side by side</div>
+            </div>
             <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
               💡 <b>Why fraction bars work:</b> Visual models make fractions concrete — you can SEE that 3/4 = 6/8 because the shaded areas match. Equivalent fractions aren't just a rule; they're the same amount cut into different-sized pieces. This builds intuition before algorithms.
             </div>
@@ -432,6 +457,14 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Shape Builder')}
             <div style={{ padding: '0 12px 12px' }}><ShapeBuilderPanelRender isDark={isDark} /></div>
+            <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+              <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
+              <div>Step 1: Select a shape type (triangle, rectangle, circle, etc.)</div>
+              <div>Step 2: Click on the canvas to place the shape</div>
+              <div>Step 3: Toggle Show Dimensions to see side lengths</div>
+              <div>Step 4: Toggle Show Angles to see interior angles</div>
+              <div>Step 5: Drag to move; use dimensions to calculate area and perimeter</div>
+            </div>
             <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
               💡 <b>What shapes teach:</b> Every shape has properties — sides, angles, symmetry. A triangle is rigid (used in bridges). A circle has constant width (used in wheels). Measuring dimensions and angles builds the foundation for area, perimeter, and the Pythagorean theorem.
             </div>
