@@ -714,12 +714,10 @@ export function ScienceUnitConverter({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify the unit you have and the unit you want</div>
-          <div>Step 2: Find the conversion factor (e.g., 1 km = 1000 m)</div>
-          <div>Step 3: Set up as a fraction: (1000 m / 1 km) = 1</div>
-          <div>Step 4: Multiply your value by this fraction</div>
-          <div>Step 5: The old unit cancels, leaving the new unit</div>
-          <div>Step 6: Always verify units cancel correctly</div>
+          <div>Step 1: Category: {category}</div>
+          <div>Step 2: Convert {inputValue} {fromUnit} → {toUnit}</div>
+          <div>Step 3: Result: {outputValue} {toUnit}</div>
+          <div>Step 4: Verify: units cancel correctly</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -910,12 +908,12 @@ export function ProjectileMotionSimulator({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Horizontal velocity is CONSTANT (no horizontal force)</div>
-          <div>Step 2: Vertical velocity changes due to gravity (g = 9.8 m/s²)</div>
-          <div>Step 3: Time of flight depends only on vertical: t = 2v₀sin(θ)/g</div>
-          <div>Step 4: Range = v₀² × sin(2θ) / g</div>
-          <div>Step 5: Maximum range occurs at 45° (sin(90°) = 1)</div>
-          <div>Step 6: The two motions are INDEPENDENT — analyze separately</div>
+          <div>Step 1: v₀ = {velocity} m/s, θ = {angle}°</div>
+          <div>Step 2: Horizontal: constant {velocity * Math.cos(angle * Math.PI / 180).toFixed(2)} m/s</div>
+          <div>Step 3: Vertical: {velocity * Math.sin(angle * Math.PI / 180).toFixed(2)} m/s initial, g = 9.8 m/s²</div>
+          <div>Step 4: Range = v₀² × sin(2θ) / g = {((velocity * velocity * Math.sin(2 * angle * Math.PI / 180)) / 9.8).toFixed(2)} m</div>
+          <div>Step 5: {angle === 45 ? 'At 45° — maximum range!' : 'Max range at 45°'}</div>
+          <div>Step 6: Horizontal and vertical are INDEPENDENT</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

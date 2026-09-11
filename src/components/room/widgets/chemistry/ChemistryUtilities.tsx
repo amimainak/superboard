@@ -377,12 +377,11 @@ export function PeriodicTableExplorer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Find the element by atomic number (number of protons)</div>
-          <div>Step 2: Row (period) = number of electron shells</div>
-          <div>Step 3: Column (group) = number of valence electrons</div>
-          <div>Step 4: Valence electrons determine chemical behavior</div>
-          <div>Step 5: Metals (left) lose electrons; Nonmetals (right) gain them</div>
-          <div>Step 6: Noble gases (Group 18) are stable — full valence shell</div>
+          <div>Step 1: {selectedEl ? 'Selected: ' + selectedEl.name + ' (' + selectedEl.symbol + ')' : 'Click an element to explore'}</div>
+          <div>Step 2: {selectedEl ? 'Atomic #: ' + selectedEl.z + ', Mass: ' + selectedEl.mass : 'Row = shells, Column = valence electrons'}</div>
+          <div>Step 3: {selectedEl ? 'Category: ' + selectedEl.category : 'Valence electrons determine chemistry'}</div>
+          <div>Step 4: {selectedEl ? 'Electron config: ' + selectedEl.config : 'Metals lose, nonmetals gain electrons'}</div>
+          <div>Step 5: Noble gases (Group 18) = stable, full valence</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1252,13 +1251,12 @@ export function MolecularGeometryVSEPR({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Draw the Lewis structure (count electron domains)</div>
-          <div>Step 2: Count bonding pairs AND lone pairs on central atom</div>
-          <div>Step 3: Electron domains repel → arrange for maximum distance</div>
-          <div>Step 4: 2 domains = linear (180°), 3 = trigonal (120°)</div>
-          <div>Step 5: 4 domains = tetrahedral (109.5°), 6 = octahedral (90°)</div>
-          <div>Step 6: Lone pairs take more space → compress bond angles</div>
-          <div>Step 7: Molecular shape = arrangement of ATOMS (not electron domains)</div>
+          <div>Step 1: {selectedMolecule ? 'Molecule: ' + selectedMolecule : 'Select a molecule'}</div>
+          <div>Step 2: {selectedMolecule ? 'See 3D structure above' : 'Choose from CH4, NH3, H2O, etc.'}</div>
+          <div>Step 3: Electron domains repel → maximum distance</div>
+          <div>Step 4: 4 domains = tetrahedral (109.5°)</div>
+          <div>Step 5: Lone pairs compress bond angles</div>
+          <div>Step 6: Shape = arrangement of atoms (not electrons)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
