@@ -385,6 +385,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Look at the word — identify letter patterns</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> English spelling follows patterns, not random rules. Digraphs (sh, ch) = one sound. Blends (st, bl) = two sounds. Silent letters (kn, wr) = written but not spoken. Teach the pattern, not each word.
+            </div>
               <div>Step 2: Find digraphs (sh, ch, th) — one sound, two letters</div>
               <div>Step 3: Find blends (st, bl) — two sounds together</div>
               <div>Step 4: Sound out each syllable left to right</div>
@@ -397,6 +401,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Read the word on the front of the card</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Vocabulary builds through exposure, not memorization. Learn word parts (prefix/root/suffix). Read widely — context is how the brain learns best. Spaced repetition strengthens memory.
+            </div>
               <div>Step 2: Try to recall the meaning before flipping</div>
               <div>Step 3: Flip to check — were you right?</div>
               <div>Step 4: Break the word into parts (prefix + root + suffix)</div>
@@ -409,6 +417,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: States a fact? → Period (.)</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Punctuation follows rules, not pauses. Each mark has a specific job: period = complete thought, comma = separates, semicolon = joins related sentences, apostrophe = possession/contraction.
+            </div>
               <div>Step 2: Asks a question? → Question Mark (?)</div>
               <div>Step 3: Strong emotion? → Exclamation (!)</div>
               <div>Step 4: Listing items? → Commas between</div>
@@ -436,6 +448,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Person, place, thing, idea? → NOUN</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Don't memorize word lists — use test questions. "The" before a word → likely noun. Takes "-ed" → likely verb. Answers "what kind?" → likely adjective. Context matters — "run" can be both!
+            </div>
               <div>Step 2: Action or state of being? → VERB</div>
               <div>Step 3: Describes a noun (what kind)? → ADJECTIVE</div>
               <div>Step 4: Describes a verb (how, when)? → ADVERB</div>
@@ -449,6 +465,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Find the subject (who or what?)</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> A sentence = subject + predicate. One independent clause = Simple. Two + FANBOYS = Compound. Independent + dependent = Complex. Good writers mix all types for variety.
+            </div>
               <div>Step 2: Find the verb (what does it do?)</div>
               <div>Step 3: One subject + one verb = independent clause</div>
               <div>Step 4: Starts with because/although/when? → dependent</div>
@@ -461,6 +481,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Start with a simple sentence (Subject + Verb)</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Expand by adding: adjectives (what kind), adverbs (how), phrases (where/when). "Dog ran" → "The excited dog ran quickly across the park." Each addition should add meaning, not clutter.
+            </div>
               <div>Step 2: Add adjectives — describe the noun (what kind?)</div>
               <div>Step 3: Add adverbs — describe the verb (how? when?)</div>
               <div>Step 4: Add prepositional phrases (where? when?)</div>
@@ -484,6 +508,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Uses "like" or "as" to compare? → SIMILE</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Figurative language creates vivid images. Simile (like/as), Metaphor (is), Personification (human qualities), Hyperbole (exaggeration). Identification: look for signal words, then check if comparison/exaggeration is happening.
+            </div>
               <div>Step 2: Says X IS Y (direct comparison)? → METAPHOR</div>
               <div>Step 3: Non-human thing doing human actions? → PERSONIFICATION</div>
               <div>Step 4: Extreme exaggeration? → HYPERBOLE</div>
@@ -496,6 +524,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Write a topic sentence (main idea)</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> A paragraph = topic sentence + evidence + explanation + conclusion. Like a mini-essay: introduce, prove, explain, wrap up. Every sentence must serve the topic — if it doesn't, cut it.
+            </div>
               <div>Step 2: Add evidence (facts, examples, quotes)</div>
               <div>Step 3: Explain how the evidence supports the topic</div>
               <div>Step 4: Add more evidence + explanation if needed</div>
@@ -508,6 +540,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Characters — who is in the story?</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Every story has: characters (who), setting (where/when), plot (what happens), conflict (the problem), theme (the message). Map these to understand HOW the author constructed the story.
+            </div>
               <div>Step 2: Setting — where and when?</div>
               <div>Step 3: Plot — what happens? (beginning, middle, end)</div>
               <div>Step 4: Conflict — what is the problem?</div>
@@ -520,6 +556,10 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Read for literal meaning — what does it say?</div>
+
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Insight:</b> Good readers are metacognitive: they predict, question, clarify, and summarize WHILE reading. Start with literal (what it says), then inferential (what it means), then evaluative (is it good). Don't skip to evaluation.
+            </div>
               <div>Step 2: Infer — what does it imply between the lines?</div>
               <div>Step 3: Evaluate — is the argument valid?</div>
               <div>Step 4: Identify the author's purpose</div>
