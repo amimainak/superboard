@@ -17,6 +17,23 @@ const VSEPRLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => 
 const GasLawsLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.GasLawsSimulator })))
 const TitrationLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.AcidBaseTitration })))
 const IonFormationLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.IonFormationVisualizer })))
+// K-5 widgets
+const StatesOfMatterLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.StatesOfMatterExplorer })))
+const MixturesSolutionsLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.MixturesAndSolutions })))
+const PropertiesMaterialsLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.PropertiesOfMaterials })))
+const ReversibleIrreversibleLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.ReversibleIrreversibleChanges })))
+const KitchenChemLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.KitchenChemistry })))
+// 6-8 widgets
+const AtomBuilderLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.AtomBuilder })))
+const ConservationMassLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.ConservationOfMass })))
+const DensityColumnLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.DensityColumn })))
+const PhaseChangeLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.PhaseChangeGraph })))
+const AcidBaseIndicatorsLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.AcidBaseIndicators })))
+// 9-12 widgets
+const NuclearChemLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.NuclearChemistryExplorer })))
+const ThermochemistryLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.ThermochemistryExplorer })))
+const ElectrochemLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.ElectrochemistryExplorer })))
+const OrganicFuncGroupsLazy = lazy(() => import('./chemistry/ChemistryUtilities').then(m => ({ default: m.OrganicFunctionalGroupsExplorer })))
 
 // Stable wrapper components (no remount on re-render)
 function PeriodicTablePanel({ isDark }: { isDark: boolean }) {
@@ -48,6 +65,51 @@ function TitrationPanel({ isDark }: { isDark: boolean }) {
 }
 function IonFormationPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><IonFormationLazy isDark={isDark} /></Suspense>
+}
+// K-5 panels
+function StatesOfMatterPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><StatesOfMatterLazy isDark={isDark} /></Suspense>
+}
+function MixturesSolutionsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><MixturesSolutionsLazy isDark={isDark} /></Suspense>
+}
+function PropertiesMaterialsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PropertiesMaterialsLazy isDark={isDark} /></Suspense>
+}
+function ReversibleIrreversiblePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ReversibleIrreversibleLazy isDark={isDark} /></Suspense>
+}
+function KitchenChemPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><KitchenChemLazy isDark={isDark} /></Suspense>
+}
+// 6-8 panels
+function AtomBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><AtomBuilderLazy isDark={isDark} /></Suspense>
+}
+function ConservationMassPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ConservationMassLazy isDark={isDark} /></Suspense>
+}
+function DensityColumnPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><DensityColumnLazy isDark={isDark} /></Suspense>
+}
+function PhaseChangePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PhaseChangeLazy isDark={isDark} /></Suspense>
+}
+function AcidBaseIndicatorsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><AcidBaseIndicatorsLazy isDark={isDark} /></Suspense>
+}
+// 9-12 panels
+function NuclearChemPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><NuclearChemLazy isDark={isDark} /></Suspense>
+}
+function ThermochemPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ThermochemistryLazy isDark={isDark} /></Suspense>
+}
+function ElectrochemPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ElectrochemLazy isDark={isDark} /></Suspense>
+}
+function OrganicFuncGroupsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><OrganicFuncGroupsLazy isDark={isDark} /></Suspense>
 }
 
 
@@ -247,6 +309,83 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             {sectionTitle('Stoichiometry Calculator', 'chem-stoichiometry')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input balanced equation + known quantity → calculates all other quantities.</p>
           </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — K-5 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧊 States of Matter Explorer', 'chem-states-matter')}
+            <div style={{ padding: '0 12px 12px' }}><StatesOfMatterPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧂 Mixtures & Solutions', 'chem-mixtures')}
+            <div style={{ padding: '0 12px 12px' }}><MixturesSolutionsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔩 Properties of Materials', 'chem-properties')}
+            <div style={{ padding: '0 12px 12px' }}><PropertiesMaterialsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔄 Reversible & Irreversible Changes', 'chem-reversible')}
+            <div style={{ padding: '0 12px 12px' }}><ReversibleIrreversiblePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 Kitchen Chemistry', 'chem-kitchen')}
+            <div style={{ padding: '0 12px 12px' }}><KitchenChemPanel isDark={isDark} /></div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — 6-8 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚛️ Atom Builder', 'chem-atom-builder')}
+            <div style={{ padding: '0 12px 12px' }}><AtomBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Conservation of Mass', 'chem-conservation-mass')}
+            <div style={{ padding: '0 12px 12px' }}><ConservationMassPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 Density Column', 'chem-density-column')}
+            <div style={{ padding: '0 12px 12px' }}><DensityColumnPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📈 Phase Change Graph', 'chem-phase-change')}
+            <div style={{ padding: '0 12px 12px' }}><PhaseChangePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎨 Acid-Base Indicators', 'chem-indicators')}
+            <div style={{ padding: '0 12px 12px' }}><AcidBaseIndicatorsPanel isDark={isDark} /></div>
+          </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — 9-12 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('☢️ Nuclear Chemistry Explorer', 'chem-nuclear')}
+            <div style={{ padding: '0 12px 12px' }}><NuclearChemPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle("🔥 Thermochemistry (Hess's Law)", 'chem-thermochemistry')}
+            <div style={{ padding: '0 12px 12px' }}><ThermochemPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔋 Electrochemistry (Galvanic Cell)', 'chem-electrochem')}
+            <div style={{ padding: '0 12px 12px' }}><ElectrochemPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Organic Functional Groups', 'chem-organic')}
+            <div style={{ padding: '0 12px 12px' }}><OrganicFuncGroupsPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -264,6 +403,31 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             {sectionTitle('Ion Formation Visualizer', 'chem-ion-formation')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Watch atoms gain or lose electrons to become ions! Pick an element and see the transformation.</p>
             <div style={{ padding: '0 12px 12px' }}><IonFormationPanel isDark={isDark} /></div>
+          </div>
+
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧊 States of Matter Explorer', 'chem-states-matter')}
+            <div style={{ padding: '0 12px 12px' }}><StatesOfMatterPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧂 Mixtures & Solutions', 'chem-mixtures')}
+            <div style={{ padding: '0 12px 12px' }}><MixturesSolutionsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔩 Properties of Materials', 'chem-properties')}
+            <div style={{ padding: '0 12px 12px' }}><PropertiesMaterialsPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔄 Reversible & Irreversible Changes', 'chem-reversible')}
+            <div style={{ padding: '0 12px 12px' }}><ReversibleIrreversiblePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 Kitchen Chemistry', 'chem-kitchen')}
+            <div style={{ padding: '0 12px 12px' }}><KitchenChemPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -301,6 +465,31 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
             {sectionTitle('Molecular Geometry (VSEPR)', 'chem-vsepr')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore 3D molecular shapes using VSEPR theory. See bond angles and polarity.</p>
             <div style={{ padding: '0 12px 12px' }}><VSEPRPanel isDark={isDark} /></div>
+          </div>
+
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚛️ Atom Builder', 'chem-atom-builder')}
+            <div style={{ padding: '0 12px 12px' }}><AtomBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Conservation of Mass', 'chem-conservation-mass')}
+            <div style={{ padding: '0 12px 12px' }}><ConservationMassPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 Density Column', 'chem-density-column')}
+            <div style={{ padding: '0 12px 12px' }}><DensityColumnPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📈 Phase Change Graph', 'chem-phase-change')}
+            <div style={{ padding: '0 12px 12px' }}><PhaseChangePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎨 Acid-Base Indicators', 'chem-indicators')}
+            <div style={{ padding: '0 12px 12px' }}><AcidBaseIndicatorsPanel isDark={isDark} /></div>
           </div>
         </>
       )}
@@ -365,6 +554,27 @@ export function ChemistryToolkit({ roomId: _roomId }: ChemistryToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Stoichiometry Calculator', 'chem-stoichiometry')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input balanced equation + known quantity → calculates all other quantities.</p>
+          </div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('☢️ Nuclear Chemistry Explorer', 'chem-nuclear')}
+            <div style={{ padding: '0 12px 12px' }}><NuclearChemPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle("🔥 Thermochemistry (Hess's Law)", 'chem-thermochemistry')}
+            <div style={{ padding: '0 12px 12px' }}><ThermochemPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔋 Electrochemistry (Galvanic Cell)', 'chem-electrochem')}
+            <div style={{ padding: '0 12px 12px' }}><ElectrochemPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Organic Functional Groups', 'chem-organic')}
+            <div style={{ padding: '0 12px 12px' }}><OrganicFuncGroupsPanel isDark={isDark} /></div>
           </div>
         </>
       )}
