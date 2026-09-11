@@ -87,11 +87,11 @@ export function Calculator({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify what operation you need</div>
-          <div>Step 2: Apply PEMDAS: Parentheses → Exponents → Multiply/Divide → Add/Subtract</div>
-          <div>Step 3: Work left to right for same-precedence operations</div>
-          <div>Step 4: Parentheses override normal order — do them first</div>
-          <div>Step 5: Check your answer by estimating (is it reasonable?)</div>
+          <div>Step 1: Expression: {display}</div>
+          <div>Step 2: {expr ? 'Previous: ' + expr : 'Enter an expression'}</div>
+          <div>Step 3: Apply PEMDAS: Parentheses → Exponents → ×÷ → +−</div>
+          <div>Step 4: Work left to right for same precedence</div>
+          <div>Step 5: Check: is the result reasonable?</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -425,12 +425,11 @@ export function Base10Blocks({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Each small cube = 1 (ones place)</div>
-          <div>Step 2: A rod of 10 = 10 (tens place)</div>
-          <div>Step 3: A flat of 100 = 100 (hundreds place)</div>
-          <div>Step 4: A large cube of 1000 = 1000 (thousands)</div>
-          <div>Step 5: Regrouping: 10 ones → 1 ten, 10 tens → 1 hundred</div>
-          <div>Step 6: This is why we "carry" in addition</div>
+          <div>Step 1: Base-10: each position is 10× the previous</div>
+          <div>Step 2: Ones (1) → Tens (10) → Hundreds (100) → Thousands (1000)</div>
+          <div>Step 3: 10 ones = 1 ten, 10 tens = 1 hundred</div>
+          <div>Step 4: Regrouping = exchanging (10 pennies = 1 dime)</div>
+          <div>Step 5: This is why we "carry" in addition</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

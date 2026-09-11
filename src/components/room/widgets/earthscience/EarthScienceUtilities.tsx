@@ -341,12 +341,11 @@ export function WeatherMapReader({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Find High pressure (H) — sinking air → clear, dry weather</div>
-          <div>Step 2: Find Low pressure (L) — rising air → clouds, storms</div>
-          <div>Step 3: Cold front (triangles) — cold air pushes warm air up → storms</div>
-          <div>Step 4: Warm front (semicircles) — warm air slides over cold → gradual rain</div>
-          <div>Step 5: Isobars (lines) connect equal pressure — closer = stronger wind</div>
-          <div>Step 6: Wind flows from High to Low (pressure gradient)</div>
+          <div>Step 1: {selectedFeature ? 'Selected: ' + selectedFeature.type : 'Click a weather feature on the map'}</div>
+          <div>Step 2: {selectedFeature ? selectedFeature.desc : 'H = high pressure (clear), L = low (storms)'}</div>
+          <div>Step 3: Cold fronts: sudden storms (blue triangles)</div>
+          <div>Step 4: Warm fronts: gradual rain (red semicircles)</div>
+          <div>Step 5: Wind flows from High to Low pressure</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -492,13 +491,11 @@ export function WaterCarbonCycle({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Evaporation — sun heats water → water vapor rises</div>
-          <div>Step 2: Condensation — vapor cools → forms clouds</div>
-          <div>Step 3: Precipitation — water falls as rain/snow</div>
-          <div>Step 4: Runoff — water flows back to oceans</div>
-          <div>Step 5: Transpiration — plants release water vapor</div>
-          <div>Step 6: Carbon: photosynthesis removes CO₂, respiration adds it</div>
-          <div>Step 7: Both are closed cycles — nothing is lost</div>
+          <div>Step 1: {selectedProcess ? 'Selected: ' + selectedProcess : 'Click a process in the cycle'}</div>
+          <div>Step 2: Evaporation → Condensation → Precipitation → Runoff</div>
+          <div>Step 3: Transpiration — plants release water vapor</div>
+          <div>Step 4: Carbon cycle: photosynthesis ↔ respiration</div>
+          <div>Step 5: Both are CLOSED cycles — nothing is lost</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -878,12 +875,11 @@ export function TopographicMapTool({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Contour lines connect points of equal elevation</div>
-          <div>Step 2: Close lines = steep slope (big change in short distance)</div>
-          <div>Step 3: Wide spacing = gentle slope</div>
-          <div>Step 4: V-shapes point upstream (contours bend up-valley)</div>
-          <div>Step 5: Concentric circles = hill (numbers increase inward) or depression</div>
-          <div>Step 6: Numbers tell you the elevation — read the contour interval</div>
+          <div>Step 1: Terrain: {terrain} preset</div>
+          <div>Step 2: Click on the map to see elevation at that point</div>
+          <div>Step 3: Close contour lines = steep slope</div>
+          <div>Step 4: Wide spacing = gentle slope</div>
+          <div>Step 5: V-shapes point upstream</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

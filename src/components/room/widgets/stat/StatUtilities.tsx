@@ -204,12 +204,12 @@ export function DataTable({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Enter your data values</div>
-          <div>Step 2: To find mean: add all values, divide by count</div>
-          <div>Step 3: To find median: sort, find middle value</div>
-          <div>Step 4: To find mode: which value appears most?</div>
-          <div>Step 5: Range = maximum − minimum</div>
-          <div>Step 6: Each measure tells a different story about the data</div>
+          <div>Step 1: Data: {data.length} values {sorted ? '(sorted)' : '(unsorted)'}</div>
+          <div>Step 2: Mean = {stats.sum} ÷ {stats.count} = <b>{stats.mean.toFixed(2)}</b></div>
+          <div>Step 3: Median = <b>{stats.median}</b> (middle value when sorted)</div>
+          <div>Step 4: Mode = {stats.mode.length > 0 ? stats.mode.join(', ') : 'None (all unique)'}</div>
+          <div>Step 5: Range = {stats.max} − {stats.min} = <b>{stats.range}</b></div>
+          <div>Step 6: Std Dev = <b>{stats.stdev.toFixed(4)}</b> (spread of data)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -303,12 +303,12 @@ export function HistogramBuilder({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Determine the range of your data (min to max)</div>
-          <div>Step 2: Choose a bin size (width of each bar)</div>
-          <div>Step 3: Create bins: [min, min+bin), [min+bin, min+2×bin), etc.</div>
-          <div>Step 4: Count how many values fall in each bin</div>
-          <div>Step 5: Draw bars — height = frequency (count)</div>
-          <div>Step 6: The SHAPE reveals patterns: bell, skewed, bimodal</div>
+          <div>Step 1: Data range: {Math.min(...data)} to {Math.max(...data)}</div>
+          <div>Step 2: Bin size: {binSize}</div>
+          <div>Step 3: Number of bins: {Math.ceil((Math.max(...data) - Math.min(...data)) / binSize)}</div>
+          <div>Step 4: Count values in each bin (see bars above)</div>
+          <div>Step 5: Tallest bar = most common range</div>
+          <div>Step 6: Shape reveals distribution pattern</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -404,13 +404,12 @@ export function BoxPlotGenerator({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Sort the data from smallest to largest</div>
-          <div>Step 2: Find median (Q2) — splits data in half</div>
-          <div>Step 3: Find Q1 — median of the lower half</div>
-          <div>Step 4: Find Q3 — median of the upper half</div>
-          <div>Step 5: IQR = Q3 − Q1 (the middle 50%)</div>
-          <div>Step 6: Outlier fence: Q1 − 1.5×IQR and Q3 + 1.5×IQR</div>
-          <div>Step 7: Draw box from Q1 to Q3, line at median, whiskers to extremes</div>
+          <div>Step 1: Sorted: {sortedData.slice(0, 5).join(', ')}...{sortedData.length > 5 ? '(' + sortedData.length + ' values)' : ''}</div>
+          <div>Step 2: Q1 = <b>{q1}</b>, Median (Q2) = <b>{q2}</b>, Q3 = <b>{q3}</b></div>
+          <div>Step 3: IQR = {q3} − {q1} = <b>{iqr}</b></div>
+          <div>Step 4: Lower fence = {q1} − 1.5×{iqr} = <b>{q1 - 1.5 * iqr}</b></div>
+          <div>Step 5: Upper fence = {q3} + 1.5×{iqr} = <b>{q3 + 1.5 * iqr}</b></div>
+          <div>Step 6: Outliers: {outliers.length > 0 ? outliers.join(', ') : 'None'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -528,13 +527,11 @@ export function ScatterPlot({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Plot each (x, y) data point on the graph</div>
-          <div>Step 2: Observe the pattern — going up? down? scattered?</div>
-          <div>Step 3: Up-right = positive correlation</div>
-          <div>Step 4: Down-right = negative correlation</div>
-          <div>Step 5: No pattern = no correlation</div>
-          <div>Step 6: Draw a line of best fit: y = mx + b</div>
-          <div>Step 7: Correlation ≠ causation — always check the context</div>
+          <div>Step 1: {points.length} data points plotted</div>
+          <div>Step 2: Correlation r = <b>{regression.r.toFixed(4)}</b> ({regression.r > 0.7 ? 'strong positive' : regression.r > 0.3 ? 'weak positive' : regression.r < -0.7 ? 'strong negative' : regression.r < -0.3 ? 'weak negative' : 'no correlation'})</div>
+          <div>Step 3: Line: y = {regression.slope.toFixed(3)}x + {regression.intercept.toFixed(3)}</div>
+          <div>Step 4: r² = <b>{regression.r2.toFixed(4)}</b> ({(regression.r2 * 100).toFixed(1)}% of variation explained)</div>
+          <div>Step 5: Correlation ≠ causation — check context</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -672,12 +669,11 @@ export function NormalDist({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: The bell curve is centered at the mean (μ)</div>
-          <div>Step 2: Width is determined by standard deviation (σ)</div>
-          <div>Step 3: 68% of data falls within 1σ of the mean</div>
-          <div>Step 4: 95% within 2σ, 99.7% within 3σ</div>
-          <div>Step 5: To find probability: convert to z-score (z = (x−μ)/σ)</div>
-          <div>Step 6: Look up z in the standard normal table</div>
+          <div>Step 1: μ = {mu}, σ = {sigma}</div>
+          <div>Step 2: z = (x − μ) / σ = ({x} − {mu}) / {sigma} = <b>{((x - mu) / sigma).toFixed(4)}</b></div>
+          <div>Step 3: P(Z &lt; {((x - mu) / sigma).toFixed(2)}) = <b>{probBelow.toFixed(4)}</b></div>
+          <div>Step 4: P = <b>{(probBelow * 100).toFixed(2)}%</b></div>
+          <div>Step 5: 68% within 1σ, 95% within 2σ, 99.7% within 3σ</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -837,12 +833,11 @@ export function ProbabilitySimulator({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify the sample space (all possible outcomes)</div>
-          <div>Step 2: Count favorable outcomes (what you want)</div>
-          <div>Step 3: P = favorable / total</div>
-          <div>Step 4: Run many trials — experimental probability</div>
-          <div>Step 5: Compare to theoretical probability</div>
-          <div>Step 6: More trials → experimental gets closer to theoretical</div>
+          <div>Step 1: Scenario: {currentScenario} ({outcomes.length} possible outcomes)</div>
+          <div>Step 2: Favorable: {favorable}, Total: {total}</div>
+          <div>Step 3: P = {favorable}/{total} = <b>{probability.toFixed(4)}</b> = <b>{(probability * 100).toFixed(2)}%</b></div>
+          <div>Step 4: {simulationResult ? 'Experimental: ' + (simulationResult.favorable / simulationResult.total).toFixed(4) + ' (' + simulationResult.favorable + '/' + simulationResult.total + ')' : 'Run simulation to compare'}</div>
+          <div>Step 5: More trials → closer to theoretical {probability.toFixed(4)}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
