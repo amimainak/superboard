@@ -87,11 +87,13 @@ export function Calculator({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Expression: {display}</div>
-          <div>Step 2: {expr ? 'Previous: ' + expr : 'Enter an expression'}</div>
-          <div>Step 3: Apply PEMDAS: Parentheses → Exponents → ×÷ → +−</div>
-          <div>Step 4: Work left to right for same precedence</div>
-          <div>Step 5: Check: is the result reasonable?</div>
+          <div>Step 1: Current entry: <code style={{ fontFamily: 'monospace' }}>{display}</code></div>
+          <div>Step 2: {expr ? <span>Last evaluated: <code style={{ fontFamily: 'monospace' }}>{expr} {display}</code></span> : 'Press = to evaluate the entry'}</div>
+          <div>Step 3: Apply PEMDAS to: <code style={{ fontFamily: 'monospace' }}>{display.replace(/[^0-9+\-*/.() ]/g, '') || '?'}</code> (Parentheses → Exponents → ×÷ → +−)</div>
+          <div>Step 4: Work left-to-right for same precedence (e.g., × and ÷)</div>
+          {expr && !expr.includes('Error')
+            ? <div>Step 5: Result: <b style={{ color: accentText }}>{display}</b></div>
+            : <div style={{ color: subText }}>Step 5: {expr && expr.includes('Error') ? 'Last evaluation errored — check syntax' : 'Press = to see the result'}</div>}
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -147,6 +149,31 @@ export function UnitConverter({ isDark }: { isDark: boolean }) {
   const numVal = parseFloat(value)
   const result = isNaN(numVal) ? '\u2014' : String(Math.round(convert(numVal, fromUnit, toUnit) * 1000000) / 1000000)
 
+  // Dynamic step helpers
+  const isTemp = category === 'Temperature'
+  const factors = UNITS[category]
+  const conversionFactor = !isTemp && factors?.[fromUnit] && factors?.[toUnit]
+    ? factors[fromUnit] / factors[toUnit]
+    : null
+  const factorStr = conversionFactor !== null
+    ? String(Math.round(conversionFactor * 1000000) / 1000000)
+    : '?'
+  const tempFormulaText = (from: string, to: string): string => {
+    const v = value || '?'
+    if (from === to) return `${from} = ${to} (no change needed)`
+    if (from === 'C' && to === 'F') return `F = ${v} × 9/5 + 32`
+    if (from === 'F' && to === 'C') return `C = (${v} − 32) × 5/9`
+    if (from === 'C' && to === 'K') return `K = ${v} + 273.15`
+    if (from === 'K' && to === 'C') return `C = ${v} − 273.15`
+    if (from === 'F' && to === 'K') return `K = (${v} − 32) × 5/9 + 273.15`
+    if (from === 'K' && to === 'F') return `F = (${v} − 273.15) × 9/5 + 32`
+    return '?'
+  }
+  const computedValue = !isNaN(numVal) ? convert(numVal, fromUnit, toUnit) : null
+  const computedStr = computedValue !== null
+    ? String(Math.round(computedValue * 1000000) / 1000000)
+    : '?'
+
   const select = (val: string, onChange: (v: string) => void, options: string[]) => (
     <select value={val} onChange={(e) => onChange(e.target.value)}
       style={{
@@ -187,12 +214,24 @@ export function UnitConverter({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Write down what you have (e.g., 5 km)</div>
-          <div>Step 2: Find the conversion: 1 km = 1000 m</div>
-          <div>Step 3: Write as fraction: (1000 m / 1 km)</div>
-          <div>Step 4: Multiply: 5 km × (1000 m / 1 km)</div>
-          <div>Step 5: km cancels → answer in meters</div>
-          <div>Step 6: Always verify the unit you DON'T want cancels out</div>
+          <div>Step 1: Input: <b>{value || '?'}</b> {fromUnit} (category: {category})</div>
+          <div>Step 2: {isTemp
+            ? <span>Temperature formula ({fromUnit} → {toUnit}): <code style={{ fontFamily: 'monospace' }}>{tempFormulaText(fromUnit, toUnit)}</code></span>
+            : <span>Conversion factor: 1 {fromUnit} = <b>{factorStr}</b> {toUnit}</span>}</div>
+          {isTemp ? (
+            <>
+              <div>Step 3: Substitute {value || '?'} {fromUnit} into the formula</div>
+              <div>Step 4: Compute → <b>{computedStr}</b> {toUnit}</div>
+              <div>Step 5: Verify sign and magnitude make sense for temperature</div>
+            </>
+          ) : (
+            <>
+              <div>Step 3: Write as fraction: (<b>{factorStr}</b> {toUnit} / 1 {fromUnit})</div>
+              <div>Step 4: Multiply: {value || '?'} {fromUnit} × (<b>{factorStr}</b> {toUnit} / 1 {fromUnit})</div>
+              <div>Step 5: {fromUnit} cancels → <b>{computedStr}</b> {toUnit}</div>
+            </>
+          )}
+          <div>Step 6: Answer: <b style={{ color: activeText }}>{result}</b> {toUnit}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -295,6 +334,13 @@ export function FormulaReference({ band, isDark }: { band: string; isDark: boole
 
   const sections = FORMULAS[band] || {}
   const lower = search.toLowerCase()
+  const totalFormulas = Object.values(sections).reduce((sum, arr) => sum + arr.length, 0)
+  const totalSections = Object.keys(sections).length
+  const filteredCount = Object.entries(sections).reduce((sum, [section, formulas]) =>
+    sum + formulas.filter(f =>
+      !lower || f.name.toLowerCase().includes(lower) || f.formula.toLowerCase().includes(lower) || section.toLowerCase().includes(lower)
+    ).length, 0)
+  const bandLabel = band === 'elementary' ? 'Elementary' : band === 'middle' ? 'Middle School' : band === 'highschool' ? 'High School' : band
 
   return (
     <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -328,12 +374,14 @@ export function FormulaReference({ band, isDark }: { band: string; isDark: boole
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify what you're solving for</div>
-          <div>Step 2: Find the formula that relates known and unknown variables</div>
-          <div>Step 3: Rearrange the formula to isolate the unknown</div>
-          <div>Step 4: Substitute the known values</div>
-          <div>Step 5: Calculate and check units</div>
-          <div>Step 6: Verify the answer is reasonable (does it make sense?)</div>
+          <div>Step 1: Selected band: <b>{bandLabel}</b> ({totalFormulas} formulas across {totalSections} sections)</div>
+          <div>Step 2: {search
+            ? <span>Searching for "<b>{search}</b>" — found <b style={{ color: '#34d399' }}>{filteredCount}</b> match{filteredCount !== 1 ? 's' : ''}</span>
+            : <span>No search filter — showing all <b>{totalFormulas}</b> formulas</span>}</div>
+          <div>Step 3: Identify the variable you're solving for (the unknown)</div>
+          <div>Step 4: Find the formula above that relates the known and unknown variables</div>
+          <div>Step 5: Rearrange to isolate the unknown, then substitute known values</div>
+          <div>Step 6: Calculate and verify — do the units and magnitude make sense?</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -382,12 +430,22 @@ export function MultiplicationGrid({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Find the first number on the left column</div>
-          <div>Step 2: Find the second number on the top row</div>
-          <div>Step 3: Follow the row and column to where they meet</div>
-          <div>Step 4: That intersection = the product</div>
-          <div>Step 5: The diagonal (1,4,9,16...) = perfect squares (n×n)</div>
-          <div>Step 6: Multiplication = repeated addition (3×4 = 4+4+4)</div>
+          <div>Step 1: {highlight
+            ? <span>First number (left column): <b>{highlight.r + 1}</b></span>
+            : 'Hover any cell to highlight a row × column pair'}</div>
+          <div>Step 2: {highlight
+            ? <span>Second number (top row): <b>{highlight.c + 1}</b></span>
+            : 'Move your cursor over the grid to begin'}</div>
+          <div>Step 3: {highlight
+            ? <span>Follow row {highlight.r + 1} and column {highlight.c + 1} to their intersection</span>
+            : 'The intersection of a row and column is the product'}</div>
+          <div>Step 4: {highlight
+            ? <span>Product: <b style={{ color: '#34d399' }}>{(highlight.r + 1) * (highlight.c + 1)}</b> (= {highlight.r + 1} × {highlight.c + 1})</span>
+            : 'Hover to see the product for any pair'}</div>
+          <div>Step 5: {highlight && highlight.r === highlight.c
+            ? <span>You're on the diagonal — <b style={{ color: '#34d399' }}>{highlight.r + 1}² = {(highlight.r + 1) * (highlight.c + 1)}</b> is a perfect square</span>
+            : 'Diagonal cells (1,4,9,16...) = perfect squares (n × n)'}</div>
+          <div>Step 6: Multiplication = repeated addition (3×4 = 4+4+4 = 12)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -403,6 +461,15 @@ export function Base10Blocks({ isDark }: { isDark: boolean }) {
   const bg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
   const text = isDark ? '#94a3b8' : '#475569'
+
+  // Dynamic step data — mirrors the block types shown above
+  const blockTypes = [
+    { name: 'Thousands', shape: '10×10×10', value: 1000 },
+    { name: 'Hundreds', shape: '10×10', value: 100 },
+    { name: 'Tens Rod', shape: '10×1', value: 10 },
+    { name: 'Ones Unit', shape: '1×1', value: 1 },
+  ]
+  const totalValue = blockTypes.reduce((s, b) => s + b.value, 0)
 
   return (
     <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -425,11 +492,11 @@ export function Base10Blocks({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Base-10: each position is 10× the previous</div>
-          <div>Step 2: Ones (1) → Tens (10) → Hundreds (100) → Thousands (1000)</div>
-          <div>Step 3: 10 ones = 1 ten, 10 tens = 1 hundred</div>
-          <div>Step 4: Regrouping = exchanging (10 pennies = 1 dime)</div>
-          <div>Step 5: This is why we "carry" in addition</div>
+          <div>Step 1: Base-10 means each position is 10× the previous (one place value = 10 of the next-smaller)</div>
+          {blockTypes.map((b, i) => (
+            <div key={b.name}>Step {2 + i}: <b>{b.name}</b> ({b.shape}) = <b style={{ color: '#34d399' }}>{b.value.toLocaleString()}</b> unit{b.value !== 1 ? 's' : ''}</div>
+          ))}
+          <div>Step 6: One of each block = <b>{totalValue.toLocaleString()}</b> units. 10 of any block = 1 of the next larger — that's why we "carry" in addition</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -491,12 +558,18 @@ export function Flashcards({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Read the front of the card (the question/term)</div>
-          <div>Step 2: Try to recall the answer BEFORE flipping</div>
-          <div>Step 3: Flip to check — were you right?</div>
-          <div>Step 4: If wrong, read the answer and explanation</div>
-          <div>Step 5: Review wrong cards more frequently (spaced repetition)</div>
-          <div>Step 6: The brain strengthens memory through effortful recall</div>
+          <div>Step 1: Card <b>{(index % cards.length) + 1}</b> / {cards.length} — question: <code style={{ fontFamily: 'monospace' }}>{card.front}</code></div>
+          <div>Step 2: {flipped
+            ? 'Card is flipped — answer revealed below'
+            : 'Try to recall the answer BEFORE flipping the card'}</div>
+          <div>Step 3: {flipped
+            ? <span>Answer: <b style={{ color: '#34d399' }}>{card.back}</b></span>
+            : 'Click the card to flip and check your answer'}</div>
+          <div>Step 4: {flipped
+            ? 'Were you right? If wrong, study the answer before moving on'
+            : 'Use Prev / Next to navigate the deck'}</div>
+          <div>Step 5: Review wrong cards more frequently (spaced repetition flattens the forgetting curve)</div>
+          <div>Step 6: Effortful recall — not re-reading — is what strengthens memory</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -529,6 +602,12 @@ export function ProofBuilder({ isDark }: { isDark: boolean }) {
     border: '1px solid ' + border, background: bg, color: text, outline: 'none',
   }
 
+  // Dynamic step stats derived from the user's proof
+  const completeSteps = steps.filter(s => s.statement.trim() && s.reason.trim()).length
+  const partialSteps = steps.filter(s => s.statement.trim() && !s.reason.trim()).length
+  const emptySteps = steps.filter(s => !s.statement.trim()).length
+  const isComplete = steps.length > 0 && completeSteps === steps.length && completeSteps > 0
+
   return (
     <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', gap: 4, fontSize: 10, fontWeight: 700, color: subText, textTransform: 'uppercase', letterSpacing: 0.5 }}>
@@ -559,11 +638,13 @@ export function ProofBuilder({ isDark }: { isDark: boolean }) {
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
           <div>Step 1: State what you need to prove (the conclusion)</div>
-          <div>Step 2: List what you know (the given/assumptions)</div>
-          <div>Step 3: Find a logical path from given to conclusion</div>
-          <div>Step 4: Each step must follow from the previous (justified)</div>
-          <div>Step 5: Use definitions, theorems, and axioms as justification</div>
-          <div>Step 6: If any step is unjustified, the proof fails</div>
+          <div>Step 2: List what you know (the given / assumptions)</div>
+          <div>Step 3: Your proof has <b>{steps.length}</b> step{steps.length !== 1 ? 's' : ''} — <b style={{ color: '#34d399' }}>{completeSteps}</b> fully justified, <b>{partialSteps}</b> missing a reason, <b>{emptySteps}</b> empty</div>
+          <div>Step 4: Each step must follow logically from the previous one (justified)</div>
+          <div>Step 5: Use definitions, theorems, and axioms as justification (e.g., "Given", "SAS", "Substitution")</div>
+          <div>Step 6: {isComplete
+            ? <span><b style={{ color: '#34d399' }}>✓ Every step is justified — your proof is complete!</b></span>
+            : <span>A proof is complete only when every step has both a statement and a reason — fill in the gaps above</span>}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

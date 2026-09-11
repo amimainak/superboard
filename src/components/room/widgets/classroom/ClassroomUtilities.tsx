@@ -241,12 +241,18 @@ export function TimerStopwatch({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Set the target time for the activity</div>
-          <div>Step 2: Start the timer when the activity begins</div>
-          <div>Step 3: Pomodoro technique: 25 min focused work + 5 min break</div>
-          <div>Step 4: The brain cannot sustain focus for long periods</div>
-          <div>Step 5: Breaks improve retention and reduce fatigue</div>
-          <div>Step 6: After 4 cycles, take a longer break (15-30 min)</div>
+          <div>Step 1: Mode: <b>{mode === 'timer' ? 'Timer' : 'Stopwatch'}</b></div>
+          <div>Step 2: {mode === 'timer'
+            ? <>Target: <b>{timerMin} min {timerSec} sec</b> ({fmt(timerTotalMs)})</>
+            : <>Elapsed: <b style={{ color: '#34d399' }}>{fmt(swElapsed)}</b>{swRunning ? ' (running)' : ''}</>}</div>
+          <div>Step 3: {mode === 'timer'
+            ? <>Remaining: <b style={{ color: timerColor }}>{fmt(timerRemaining)}</b> ({(timerFrac * 100).toFixed(0)}%)</>
+            : <>Laps: <b>{laps.length}</b>{laps.length > 0 ? ' — last: ' + fmt(laps[0]) : ''}</>}</div>
+          <div>Step 4: Status: <b>{mode === 'timer'
+            ? (timerDone ? 'Done!' : timerRunning ? 'Running' : 'Paused')
+            : (swRunning ? 'Running' : 'Stopped')}</b></div>
+          <div>Step 5: Pomodoro technique: 25 min focused work + 5 min break (conceptual)</div>
+          <div>Step 6: After 4 cycles, take a longer break (15-30 min) (conceptual)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -492,12 +498,18 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Plot each (x, y) point on the coordinate plane</div>
-          <div>Step 2: Look at the pattern — does it go up or down?</div>
-          <div>Step 3: Draw a line of best fit through the points</div>
-          <div>Step 4: Slope = rise/run = Δy/Δx</div>
-          <div>Step 5: y-intercept = where the line crosses the y-axis</div>
-          <div>Step 6: Equation: y = mx + b (m = slope, b = intercept)</div>
+          <div>Step 1: Chart type: <b>{chartType}</b> with <b>{n}</b> point{n !== 1 ? 's' : ''}{n === 0 ? ' (enter X,Y values above)' : ''}</div>
+          <div>Step 2: X range: [{xMin.toFixed(1)}, {xMax.toFixed(1)}] · Y range: [{yMin.toFixed(1)}, {yMax.toFixed(1)}]</div>
+          <div>Step 3: Pattern: <b>{n < 2 ? '?' : reg.r > 0.7 ? 'positive (up)' : reg.r < -0.7 ? 'negative (down)' : 'weak/no linear'}</b></div>
+          <div>Step 4: {showFit && n >= 2
+            ? <>Slope (m) = <b>{reg.slope.toFixed(3)}</b> (rise/run = Δy/Δx)</>
+            : <>Slope = rise/run = Δy/Δx <i>(toggle Best Fit to compute)</i></>}</div>
+          <div>Step 5: {showFit && n >= 2
+            ? <>y-intercept (b) = <b>{reg.intercept.toFixed(3)}</b></>
+            : <>y-intercept = where the line crosses the y-axis <i>(toggle Best Fit)</i></>}</div>
+          <div>Step 6: {showFit && n >= 2
+            ? <>Equation: <b style={{ color: '#34d399' }}>y = {reg.slope.toFixed(2)}x {reg.intercept >= 0 ? '+ ' : '− '}{Math.abs(reg.intercept).toFixed(2)}</b> (r = {reg.r.toFixed(3)})</>
+            : <>Equation: y = mx + b (m = slope, b = intercept) <i>(need 2+ points + Best Fit)</i></>}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -677,12 +689,20 @@ export function RandomStudentPicker({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Enter all student names (one per line)</div>
-          <div>Step 2: Click "Pick 1" to randomly select a student</div>
-          <div>Step 3: The selection is truly random — everyone has equal chance</div>
-          <div>Step 4: Remove picked option prevents repeats until reset</div>
-          <div>Step 5: This ensures equitable participation</div>
-          <div>Step 6: Students stay engaged — they might be called next</div>
+          <div>Step 1: Entered: <b>{allNames.length}</b> name{allNames.length !== 1 ? 's' : ''}{allNames.length === 0 ? ' (one per line above)' : ''}</div>
+          <div>Step 2: {spinning
+            ? <>Spinning... <b>{spinName}</b></>
+            : picked
+              ? <>Last picked: <b style={{ color: '#34d399' }}>{picked}</b></>
+              : <>Click "Pick 1" to randomly select a student</>}</div>
+          <div>Step 3: Available to pick: <b>{available.length}</b> / {allNames.length}{removePicked ? ' (remove-on-pick ON)' : ''}</div>
+          <div>Step 4: {removePicked
+            ? <>Already picked: <b>{pickedSet.size}</b> — these are excluded until reset</>
+            : <>Remove-Picked is OFF — names can repeat (equal chance each draw)</>}</div>
+          <div>Step 5: {groups.length > 0
+            ? <>Groups: <b>{groups.length}</b> group{groups.length !== 1 ? 's' : ''} of ~{groupSize} ({groups.map(g => g.length).join('+')})</>
+            : <>Groups: none yet (click "Pick Group" with group size = {groupSize})</>}</div>
+          <div>Step 6: Recent picks: <b>{history.length > 0 ? history.slice(0, 3).join(', ') + (history.length > 3 ? ` … (+${history.length - 3} more)` : '') : 'none yet'}</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

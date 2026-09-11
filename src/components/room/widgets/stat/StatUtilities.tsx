@@ -303,12 +303,12 @@ export function HistogramBuilder({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Data range: {Math.min(...data)} to {Math.max(...data)}</div>
-          <div>Step 2: Bin size: {binSize}</div>
-          <div>Step 3: Number of bins: {Math.ceil((Math.max(...data) - Math.min(...data)) / binSize)}</div>
-          <div>Step 4: Count values in each bin (see bars above)</div>
-          <div>Step 5: Tallest bar = most common range</div>
-          <div>Step 6: Shape reveals distribution pattern</div>
+          <div>Step 1: Data: {data.length} values, range: <b>{data.length > 0 ? Math.min(...data) : '?'}</b> to <b>{data.length > 0 ? Math.max(...data) : '?'}</b></div>
+          <div>Step 2: Number of bins: <b>{bins}</b></div>
+          <div>Step 3: Bin width: <b>{histogram ? histogram.binWidth.toFixed(2) : '?'}</b> (= range ÷ bins)</div>
+          <div>Step 4: Counts per bin: {histogram ? '[' + histogram.bucketCounts.join(', ') + ']' : '?'}</div>
+          <div>Step 5: Tallest bar: <b style={{ color: s.accent }}>{histogram ? histogram.maxCount : '?'}</b> value(s) = most common range</div>
+          <div>Step 6: Shape reveals distribution pattern (bell, skewed, bimodal)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -527,10 +527,10 @@ export function ScatterPlot({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: {points.length} data points plotted</div>
-          <div>Step 2: Correlation r = <b>{regression.r.toFixed(4)}</b> ({regression.r > 0.7 ? 'strong positive' : regression.r > 0.3 ? 'weak positive' : regression.r < -0.7 ? 'strong negative' : regression.r < -0.3 ? 'weak negative' : 'no correlation'})</div>
-          <div>Step 3: Line: y = {regression.slope.toFixed(3)}x + {regression.intercept.toFixed(3)}</div>
-          <div>Step 4: r² = <b>{regression.r2.toFixed(4)}</b> ({(regression.r2 * 100).toFixed(1)}% of variation explained)</div>
+          <div>Step 1: {n} data point(s) plotted {showRegression ? '(regression line ON)' : '(regression line OFF)'}</div>
+          <div>Step 2: Correlation r = <b>{reg ? reg.r.toFixed(4) : '?'}</b> ({reg ? (reg.r > 0.7 ? 'strong positive' : reg.r > 0.3 ? 'weak positive' : reg.r < -0.7 ? 'strong negative' : reg.r < -0.3 ? 'weak negative' : 'no correlation') : '?'})</div>
+          <div>Step 3: Line: y = {reg ? reg.slope.toFixed(3) : '?'}x {reg ? (reg.intercept >= 0 ? '+ ' : '− ') + Math.abs(reg.intercept).toFixed(3) : '?'}</div>
+          <div>Step 4: r² = <b style={{ color: s.accent }}>{reg ? reg.r2.toFixed(4) : '?'}</b> ({reg ? (reg.r2 * 100).toFixed(1) : '?'}% of variation explained)</div>
           <div>Step 5: Correlation ≠ causation — check context</div>
       </div>
 {/* Instructional insight */}
@@ -669,10 +669,10 @@ export function NormalDist({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: μ = {mu}, σ = {sigma}</div>
-          <div>Step 2: z = (x − μ) / σ = ({x} − {mu}) / {sigma} = <b>{((x - mu) / sigma).toFixed(4)}</b></div>
-          <div>Step 3: P(Z &lt; {((x - mu) / sigma).toFixed(2)}) = <b>{probBelow.toFixed(4)}</b></div>
-          <div>Step 4: P = <b>{(probBelow * 100).toFixed(2)}%</b></div>
+          <div>Step 1: μ = <b>{mu.toFixed(1)}</b>, σ = <b>{sigma.toFixed(1)}</b></div>
+          <div>Step 2: Shade region: x ∈ [<b>{clampedFrom.toFixed(2)}</b>, <b>{clampedTo.toFixed(2)}</b>] {shading ? '' : '(shading OFF)'}</div>
+          <div>Step 3: z-scores: z₁ = <b>{((clampedFrom - mu) / sigma).toFixed(4)}</b>, z₂ = <b>{((clampedTo - mu) / sigma).toFixed(4)}</b></div>
+          <div>Step 4: P({clampedFrom.toFixed(2)} &lt; X &lt; {clampedTo.toFixed(2)}) = <b style={{ color: s.accent }}>{area.toFixed(4)}</b> ({(area * 100).toFixed(2)}%)</div>
           <div>Step 5: 68% within 1σ, 95% within 2σ, 99.7% within 3σ</div>
       </div>
 {/* Instructional insight */}

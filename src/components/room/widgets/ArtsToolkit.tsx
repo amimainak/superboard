@@ -103,6 +103,16 @@ function ColorTheoryInline({ isDark }: { isDark: boolean }) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 1 }}><span style={{ fontSize: 7, color: isDark ? '#71717a' : '#9ca3af' }}>Dark</span><span style={{ fontSize: 7, color: isDark ? '#71717a' : '#9ca3af' }}>Light</span></div>
       </div>
+      {/* How It Works (dynamic) */}
+      <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + btnBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: labelColor, marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Hue = <b>{hue}</b>° ({hue < 60 ? 'red' : hue < 120 ? 'yellow' : hue < 180 ? 'green' : hue < 240 ? 'cyan' : hue < 300 ? 'blue' : 'magenta'})</div>
+        <div>Step 2: Saturation = <b>{sat}%</b>, Lightness = <b>{light}%</b></div>
+        <div>Step 3: Harmony: <b style={{ textTransform: 'capitalize' }}>{harmony}</b> ({harmonyHexes.length} color{harmonyHexes.length !== 1 ? 's' : ''})</div>
+        <div>Step 4: Complementary hue = <b>{Math.round((hue + 180) % 360)}°</b></div>
+        <div>Step 5: Current color: <b style={{ color: '#34d399' }}>#{hslToHex(hue, sat, light).toUpperCase()}</b></div>
+        <div>Step 6: Value scale shows lightness dark → light (9 steps)</div>
+      </div>
     </div>
   )
 }
@@ -151,6 +161,15 @@ function PerspectiveGridInline({ isDark }: { isDark: boolean }) {
           return <line key={i} x1={vanishingX * 2 - 200 * spread} y1={y} x2={vanishingX * 2 + 200 * spread} y2={y} stroke={isDark ? 'rgba(139,92,246,0.15)' : 'rgba(139,92,246,0.12)'} strokeWidth="0.5" />
         })}
       </svg>
+      {/* How It Works (dynamic) */}
+      <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: labelColor, marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: VP at (<b>{vanishingX}%</b>, <b>{vanishingY}%</b>)</div>
+        <div>Step 2: Horizon at y=<b>{vanishingY}%</b> ({vanishingY < 40 ? 'looking down' : vanishingY > 60 ? 'looking up' : 'eye level'})</div>
+        <div>Step 3: <b>{numLines}</b> converging line{numLines !== 1 ? 's' : ''} radiating to VP</div>
+        <div>Step 4: Closer to VP = smaller (foreshortening)</div>
+        <div>Step 5: Adjust VP sliders to change perspective angle</div>
+      </div>
     </div>
   )
 }
@@ -213,6 +232,16 @@ function StaffNotationInline({ isDark }: { isDark: boolean }) {
         <button onClick={clearNotes} style={{ padding: '3px 10px', borderRadius: 5, fontSize: 9, fontWeight: 600, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', cursor: 'pointer' }}>Clear</button>
         <span style={{ fontSize: 9, color: labelColor, lineHeight: '22px' }}>{notes.length}/16 notes</span>
       </div>
+      {/* How It Works (dynamic) */}
+      <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + btnBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: labelColor, marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Treble clef — lines: E-G-B-D-F, spaces: F-A-C-E</div>
+        <div>Step 2: <b>{notes.length}</b> note{notes.length !== 1 ? 's' : ''} on staff (max 16)</div>
+        <div>Step 3: {notes.length > 0 ? <>Current: <b style={{ color: '#34d399' }}>{notes.join(' - ')}</b></> : 'Click note buttons to add notes'}</div>
+        <div>Step 4: Higher on staff = higher pitch (C4 → G5)</div>
+        <div>Step 5: A4 = 440 Hz (standard tuning reference)</div>
+        <div>Step 6: Build melody left to right</div>
+      </div>
     </div>
   )
 }
@@ -254,6 +283,16 @@ function ArtCompareInline({ isDark }: { isDark: boolean }) {
       <div style={{ padding: '8px 10px', borderRadius: 6, background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.12)' }}>
         <div style={{ fontSize: 9, fontWeight: 600, color: '#a78bfa', marginBottom: 3 }}>Guiding Prompt</div>
         <div style={{ fontSize: 10, color: labelColor, lineHeight: 1.5 }}>{prompts[aspect]}</div>
+      </div>
+      {/* How It Works (dynamic) */}
+      <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + btnBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: labelColor, marginBottom: 3 }}>How It Works</div>
+        <div>Step 1: Current aspect: <b style={{ color: '#a78bfa', textTransform: 'capitalize' }}>{aspect}</b> ({aspects.indexOf(aspect) + 1}/{aspects.length})</div>
+        <div>Step 2: Observe Artwork A focusing on <b>{aspect}</b></div>
+        <div>Step 3: Observe Artwork B in the same aspect</div>
+        <div>Step 4: Guiding prompt: <b style={{ color: '#34d399' }}>{prompts[aspect].length > 64 ? prompts[aspect].slice(0, 64) + '…' : prompts[aspect]}</b></div>
+        <div>Step 5: Note similarities AND differences</div>
+        <div>Step 6: Judge based on evidence, not preference</div>
       </div>
     </div>
   )
@@ -391,7 +430,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('all-color') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Explore color harmonies, HSL values, and value scales. Great for teaching color theory fundamentals.</p>
               <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Hue = {hue} deg ({hue < 60 ? "red" : hue < 120 ? "yellow" : hue < 180 ? "green" : hue < 240 ? "cyan" : hue < 300 ? "blue" : "magenta"})</div><div>Step 2: Saturation = {sat}%, Lightness = {light}%</div><div>Step 3: Harmony: {harmony}</div><div>Step 4: Complementary hue = {Math.round((hue + 180) % 360)} deg</div><div>Step 5: Current color: #{hslToHex(hue, sat, light)}</div><div>Step 6: Value scale shows lightness dark to light</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Complementary colors stimulate different cone cells simultaneously, creating maximum visual energy. Analogous colors create calm - that is why sunsets feel peaceful.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
             </>}
@@ -401,7 +440,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('all-perspective') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Create one-point perspective grids. Adjust vanishing point and line count for drawing exercises.</p>
               <div style={{ padding: '0 12px 8px' }}><PerspectiveGridInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: VP at ({vanishingX}%, {vanishingY}%)</div><div>Step 2: Horizon at y={vanishingY}% ({vanishingY < 40 ? "looking down" : vanishingY > 60 ? "looking up" : "eye level"})</div><div>Step 3: {numLines} converging lines to VP</div><div>Step 4: Closer to VP = smaller (foreshortening)</div><div>Step 5: Adjust VP to change perspective angle</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Perspective works because distant objects project smaller images on your retina. Parallel lines in 3D converge in 2D.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-perspective-grid')}</div>
             </>}
@@ -411,7 +450,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('all-staff') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Build melodies on a treble clef staff. Click notes to add them to your composition.</p>
               <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Treble clef - lines: E-G-B-D-F, spaces: F-A-C-E</div><div>Step 2: {notes.length} note{notes.length !== 1 ? "s" : ""} on staff</div><div>Step 3: {notes.length > 0 ? "Current: " + notes.join(" - ") : "Click buttons to add notes"}</div><div>Step 4: Higher on staff = higher pitch</div><div>Step 5: A4 = 440 Hz (standard tuning)</div><div>Step 6: Build melody left to right</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Music is math - every interval is a frequency ratio. Octave = 2:1, fifth = 3:2. Pythagoras discovered pleasing sounds come from simple ratios.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
             </>}
@@ -421,7 +460,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('all-compare') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Compare two artworks using guided prompts for color, composition, texture, style, and meaning.</p>
               <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Select an aspect (Color, Composition, Texture, Style, Meaning)</div><div>Step 2: Observe Artwork A in that aspect</div><div>Step 3: Observe Artwork B in the same aspect</div><div>Step 4: Use the guiding prompt to compare</div><div>Step 5: Note similarities AND differences</div><div>Step 6: Judge based on evidence, not preference</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Formal analysis uses elements and principles as vocabulary. Systematic comparison moves beyond "I like it" to understanding WHY a work is effective.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
             </>}
@@ -529,7 +568,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('k5-color') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Learn about colors! Mix hues and see harmonies.</p>
               <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Hue = {hue} deg ({hue < 60 ? "red" : hue < 120 ? "yellow" : hue < 180 ? "green" : hue < 240 ? "cyan" : hue < 300 ? "blue" : "magenta"})</div><div>Step 2: Saturation = {sat}%, Lightness = {light}%</div><div>Step 3: Harmony: {harmony}</div><div>Step 4: Complementary hue = {Math.round((hue + 180) % 360)} deg</div><div>Step 5: Current color: #{hslToHex(hue, sat, light)}</div><div>Step 6: Value scale shows lightness dark to light</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Complementary colors stimulate different cone cells simultaneously, creating maximum visual energy. Analogous colors create calm - that is why sunsets feel peaceful.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
             </>}
@@ -539,7 +578,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {!collapsedSections.has('k5-staff') && <>
               <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Place notes on the staff to create simple melodies.</p>
               <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Treble clef - lines: E-G-B-D-F, spaces: F-A-C-E</div><div>Step 2: {notes.length} note{notes.length !== 1 ? "s" : ""} on staff</div><div>Step 3: {notes.length > 0 ? "Current: " + notes.join(" - ") : "Click buttons to add notes"}</div><div>Step 4: Higher on staff = higher pitch</div><div>Step 5: A4 = 440 Hz (standard tuning)</div><div>Step 6: Build melody left to right</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Music is math - every interval is a frequency ratio. Octave = 2:1, fifth = 3:2. Pythagoras discovered pleasing sounds come from simple ratios.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
             </>}
@@ -584,7 +623,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Color Theory Explorer', '68-color')}
             {!collapsedSections.has('68-color') && <>
               <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Hue = {hue} deg ({hue < 60 ? "red" : hue < 120 ? "yellow" : hue < 180 ? "green" : hue < 240 ? "cyan" : hue < 300 ? "blue" : "magenta"})</div><div>Step 2: Saturation = {sat}%, Lightness = {light}%</div><div>Step 3: Harmony: {harmony}</div><div>Step 4: Complementary hue = {Math.round((hue + 180) % 360)} deg</div><div>Step 5: Current color: #{hslToHex(hue, sat, light)}</div><div>Step 6: Value scale shows lightness dark to light</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Complementary colors stimulate different cone cells simultaneously, creating maximum visual energy. Analogous colors create calm - that is why sunsets feel peaceful.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
             </>}
@@ -593,7 +632,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Perspective Grid', '68-perspective')}
             {!collapsedSections.has('68-perspective') && <>
               <div style={{ padding: '0 12px 8px' }}><PerspectiveGridInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: VP at ({vanishingX}%, {vanishingY}%)</div><div>Step 2: Horizon at y={vanishingY}% ({vanishingY < 40 ? "looking down" : vanishingY > 60 ? "looking up" : "eye level"})</div><div>Step 3: {numLines} converging lines to VP</div><div>Step 4: Closer to VP = smaller (foreshortening)</div><div>Step 5: Adjust VP to change perspective angle</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Perspective works because distant objects project smaller images on your retina. Parallel lines in 3D converge in 2D.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-perspective-grid')}</div>
             </>}
@@ -602,7 +641,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Staff Notation Builder', '68-staff')}
             {!collapsedSections.has('68-staff') && <>
               <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Treble clef - lines: E-G-B-D-F, spaces: F-A-C-E</div><div>Step 2: {notes.length} note{notes.length !== 1 ? "s" : ""} on staff</div><div>Step 3: {notes.length > 0 ? "Current: " + notes.join(" - ") : "Click buttons to add notes"}</div><div>Step 4: Higher on staff = higher pitch</div><div>Step 5: A4 = 440 Hz (standard tuning)</div><div>Step 6: Build melody left to right</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Music is math - every interval is a frequency ratio. Octave = 2:1, fifth = 3:2. Pythagoras discovered pleasing sounds come from simple ratios.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
             </>}
@@ -611,7 +650,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Artwork Comparison', '68-compare')}
             {!collapsedSections.has('68-compare') && <>
               <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Select an aspect (Color, Composition, Texture, Style, Meaning)</div><div>Step 2: Observe Artwork A in that aspect</div><div>Step 3: Observe Artwork B in the same aspect</div><div>Step 4: Use the guiding prompt to compare</div><div>Step 5: Note similarities AND differences</div><div>Step 6: Judge based on evidence, not preference</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Formal analysis uses elements and principles as vocabulary. Systematic comparison moves beyond "I like it" to understanding WHY a work is effective.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
             </>}
@@ -642,7 +681,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Color Theory Explorer', '912-color')}
             {!collapsedSections.has('912-color') && <>
               <div style={{ padding: '0 12px 8px' }}><ColorTheoryInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Hue = {hue} deg ({hue < 60 ? "red" : hue < 120 ? "yellow" : hue < 180 ? "green" : hue < 240 ? "cyan" : hue < 300 ? "blue" : "magenta"})</div><div>Step 2: Saturation = {sat}%, Lightness = {light}%</div><div>Step 3: Harmony: {harmony}</div><div>Step 4: Complementary hue = {Math.round((hue + 180) % 360)} deg</div><div>Step 5: Current color: #{hslToHex(hue, sat, light)}</div><div>Step 6: Value scale shows lightness dark to light</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Complementary colors stimulate different cone cells simultaneously, creating maximum visual energy. Analogous colors create calm - that is why sunsets feel peaceful.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-color-theory')}</div>
             </>}
@@ -651,7 +690,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Perspective Grid', '912-perspective')}
             {!collapsedSections.has('912-perspective') && <>
               <div style={{ padding: '0 12px 8px' }}><PerspectiveGridInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: VP at ({vanishingX}%, {vanishingY}%)</div><div>Step 2: Horizon at y={vanishingY}% ({vanishingY < 40 ? "looking down" : vanishingY > 60 ? "looking up" : "eye level"})</div><div>Step 3: {numLines} converging lines to VP</div><div>Step 4: Closer to VP = smaller (foreshortening)</div><div>Step 5: Adjust VP to change perspective angle</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Perspective works because distant objects project smaller images on your retina. Parallel lines in 3D converge in 2D.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-perspective-grid')}</div>
             </>}
@@ -660,7 +699,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Staff Notation Builder', '912-staff')}
             {!collapsedSections.has('912-staff') && <>
               <div style={{ padding: '0 12px 8px' }}><StaffNotationInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Treble clef - lines: E-G-B-D-F, spaces: F-A-C-E</div><div>Step 2: {notes.length} note{notes.length !== 1 ? "s" : ""} on staff</div><div>Step 3: {notes.length > 0 ? "Current: " + notes.join(" - ") : "Click buttons to add notes"}</div><div>Step 4: Higher on staff = higher pitch</div><div>Step 5: A4 = 440 Hz (standard tuning)</div><div>Step 6: Build melody left to right</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Music is math - every interval is a frequency ratio. Octave = 2:1, fifth = 3:2. Pythagoras discovered pleasing sounds come from simple ratios.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-staff-notation')}</div>
             </>}
@@ -669,7 +708,7 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
             {sectionTitle('Artwork Comparison', '912-compare')}
             {!collapsedSections.has('912-compare') && <>
               <div style={{ padding: '0 12px 8px' }}><ArtCompareInline isDark={isDark} /></div>
-              <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}><div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div><div>Step 1: Select an aspect (Color, Composition, Texture, Style, Meaning)</div><div>Step 2: Observe Artwork A in that aspect</div><div>Step 3: Observe Artwork B in the same aspect</div><div>Step 4: Use the guiding prompt to compare</div><div>Step 5: Note similarities AND differences</div><div>Step 6: Judge based on evidence, not preference</div></div>
+
               <div style={{ padding: '6px 8px', margin: '0 12px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>💡 <b>Insight:</b> Formal analysis uses elements and principles as vocabulary. Systematic comparison moves beyond "I like it" to understanding WHY a work is effective.</div>
               <div style={{ padding: '0 12px 12px', display: 'flex', justifyContent: 'flex-end' }}>{addBoardBtn('arts-compare')}</div>
             </>}

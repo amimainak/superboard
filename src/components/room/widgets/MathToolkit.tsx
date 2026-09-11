@@ -371,11 +371,11 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               {/* Step-by-step */}
               <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
                 <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
-                <div>Step 1: Choose a function type (x², sin, etc.) or type your own</div>
-                <div>Step 2: The graph plots y = f(x) for each x value in the range</div>
-                <div>Step 3: Steep parts = rapid change; flat parts = slow change</div>
-                <div>Step 4: Where the curve crosses the x-axis = roots (y = 0)</div>
-                <div>Step 5: The shape reveals behavior: parabola = one min/max, cubic = S-curve</div>
+                <div>Step 1: Current: <b style={{ color: '#34d399' }}>f(x) = {plotterExpr || '?'}</b></div>
+                <div>Step 2: Range: x ∈ [<b>-{plotterRange}</b>, <b>+{plotterRange}</b>]</div>
+                <div>Step 3: Shape: {plotterExpr.includes('^2') && !plotterExpr.includes('^3') ? <b>parabola (one min/max)</b> : plotterExpr.includes('^3') ? <b>cubic (S-curve)</b> : plotterExpr.includes('sin') || plotterExpr.includes('cos') ? <b>periodic wave</b> : plotterExpr.includes('abs') ? <b>V-shape</b> : plotterExpr.includes('sqrt') ? <b>radical curve</b> : plotterExpr.includes('1/x') ? <b>hyperbola (asymptote at x=0)</b> : <b>linear / custom</b>}</div>
+                <div>Step 4: Curve crosses x-axis where y = 0 (roots)</div>
+                <div>Step 5: Steep parts = rapid change; flat parts = slow change</div>
               </div>
               {/* Insight */}
               <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

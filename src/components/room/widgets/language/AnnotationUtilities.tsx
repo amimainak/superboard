@@ -111,6 +111,11 @@ export function WritingAnnotationRubric({ isDark }: { isDark: boolean }) {
     })
   }
 
+  const ratedCount = Object.keys(selected).length
+  const ratedLevels = Object.values(selected)
+  const avg = ratedLevels.length > 0 ? ratedLevels.reduce((a, b) => a + b, 0) / ratedLevels.length : 0
+  const ratingLabel = (c: string) => selected[c] !== undefined ? PROFICIENCY_LEVELS[selected[c]] : 'not rated'
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '130px repeat(4, 1fr)', gap: 1, borderRadius: 8, overflow: 'hidden', border: `1px solid ${t.border}` }}>
@@ -149,12 +154,12 @@ export function WritingAnnotationRubric({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Read the rubric criteria before writing</div>
-          <div>Step 2: Content — is the main idea clear and developed?</div>
-          <div>Step 3: Organization — logical flow with transitions?</div>
-          <div>Step 4: Language — varied vocabulary and sentence structure?</div>
-          <div>Step 5: Mechanics — correct spelling, grammar, punctuation?</div>
-          <div>Step 6: Self-assess using the rubric before submitting</div>
+          <div>Step 1: Rubric: <b>{RUBRIC_CRITERIA.length}</b> criteria × <b>{PROFICIENCY_LEVELS.length}</b> proficiency levels</div>
+          <div>Step 2: Self-assessed so far: <b>{ratedCount}</b>/{RUBRIC_CRITERIA.length} criteria</div>
+          <div>Step 3: Ideas / Content: <b>{ratingLabel('Ideas / Content')}</b></div>
+          <div>Step 4: Organization: <b>{ratingLabel('Organization')}</b></div>
+          <div>Step 5: Style / Voice: <b>{ratingLabel('Style / Voice')}</b> · Conventions: <b>{ratingLabel('Conventions')}</b></div>
+          <div>Step 6: {ratedCount === RUBRIC_CRITERIA.length ? <span>Overall level: <b style={{ color: '#34d399' }}>{PROFICIENCY_LEVELS[Math.round(avg)]}</b> (avg {avg.toFixed(1)}/{PROFICIENCY_LEVELS.length - 1})</span> : <span>Rate <b>{RUBRIC_CRITERIA.length - ratedCount}</b> more to see overall score</span>}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -186,6 +191,10 @@ export function GrammarChecklist({ isDark }: { isDark: boolean }) {
     else setChecked(new Set(GRAMMAR_ITEMS.map((_, i) => i)))
   }
 
+  const pct = (checked.size / GRAMMAR_ITEMS.length) * 100
+  const firstUncheckedIdx = GRAMMAR_ITEMS.findIndex((_, i) => !checked.has(i))
+  const remaining = GRAMMAR_ITEMS.length - checked.size
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -210,12 +219,12 @@ export function GrammarChecklist({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Check subject-verb agreement (he runs, they run)</div>
-          <div>Step 2: Check pronoun case (I vs me, who vs whom)</div>
-          <div>Step 3: Check for fragments (incomplete sentences)</div>
-          <div>Step 4: Check for run-ons (two sentences joined incorrectly)</div>
-          <div>Step 5: Check homophones (their/there/they're, its/it's)</div>
-          <div>Step 6: Read aloud — errors often sound wrong</div>
+          <div>Step 1: Total checklist items: <b>{GRAMMAR_ITEMS.length}</b> common grammar rules</div>
+          <div>Step 2: Items checked: <b>{checked.size}</b>/{GRAMMAR_ITEMS.length} ({pct.toFixed(0)}%)</div>
+          <div>Step 3: Items remaining: <b>{remaining}</b> rule{remaining !== 1 ? 's' : ''} to review</div>
+          <div>Step 4: Next unchecked: <b>{firstUncheckedIdx >= 0 ? GRAMMAR_ITEMS[firstUncheckedIdx] : 'all checked ✓'}</b></div>
+          <div>Step 5: Common rules — subject-verb agreement, pronoun case, fragments, run-ons, homophones</div>
+          <div>Step 6: {checked.size === GRAMMAR_ITEMS.length ? <span>Self-check complete: <b style={{ color: '#34d399' }}>all {GRAMMAR_ITEMS.length} rules verified ✓</b></span> : <span>Read aloud — errors often sound wrong to the ear</span>}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -245,6 +254,9 @@ export function WritingPromptGenerator({ isDark }: { isDark: boolean }) {
     setCategory(cat)
     setPromptIdx(0)
   }
+
+  const currentIdx = currentPrompts.length > 0 ? (promptIdx % currentPrompts.length) + 1 : 0
+  const promptPreview = currentPrompt.length > 100 ? currentPrompt.slice(0, 100) + '…' : currentPrompt
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -283,12 +295,12 @@ export function WritingPromptGenerator({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Read the prompt carefully</div>
-          <div>Step 2: Identify the task (describe, argue, narrate, explain)</div>
-          <div>Step 3: Brainstorm ideas related to the prompt</div>
-          <div>Step 4: Choose your strongest idea</div>
-          <div>Step 5: Plan your structure (introduction, body, conclusion)</div>
-          <div>Step 6: The best prompts have tension — conflict, choice, or mystery</div>
+          <div>Step 1: Selected category: <b>{category}</b> ({categories.length} categories available)</div>
+          <div>Step 2: Prompts in "{category}": <b>{currentPrompts.length}</b></div>
+          <div>Step 3: Current prompt position: <b>{currentIdx}</b>/{currentPrompts.length}</div>
+          <div>Step 4: Prompt text: "<i>{promptPreview}</i>"</div>
+          <div>Step 5: Identify the task — describe, argue, narrate, or explain — and brainstorm ideas</div>
+          <div>Step 6: Best prompts have tension — conflict, choice, or mystery — click <b style={{ color: '#34d399' }}>Generate Prompt</b> for another</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

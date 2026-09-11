@@ -130,12 +130,12 @@ export function RockCycleDiagram({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Igneous — forms from cooling magma/lava</div>
-          <div>Step 2: Weathering breaks rock into sediments</div>
-          <div>Step 3: Sediments compact and cement → Sedimentary rock</div>
+          <div>Step 1: Selected: {selectedRock ? selectedRock.name + ' rock' : selectedProcess ? selectedProcess.label.replace(/\n/g, ' ') + ' process' : '? — click a rock box or arrow'}</div>
+          <div>Step 2: {selectedRock ? 'How it forms: ' + selectedRock.forms : selectedProcess ? selectedProcess.desc : 'Igneous — forms from cooling magma/lava'}</div>
+          <div>Step 3: {selectedProcess ? 'Path: ' + selectedProcess.from + ' → ' + selectedProcess.to : 'Weathering breaks rock into sediments'}</div>
           <div>Step 4: Heat and pressure (no melting) → Metamorphic rock</div>
           <div>Step 5: Extreme heat melts rock back into magma</div>
-          <div>Step 6: The cycle repeats — Earth's crust recycles endlessly</div>
+          <div>Step 6: {selectedRock ? 'Examples: ' + selectedRock.examples : "The cycle repeats — Earth's crust recycles endlessly"}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -211,12 +211,12 @@ export function PlateTectonicsMap({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Earth's crust = plates floating on the mantle</div>
-          <div>Step 2: Convergent boundary — plates collide → mountains/volcanoes</div>
-          <div>Step 3: Divergent boundary — plates separate → new crust forms</div>
-          <div>Step 4: Transform boundary — plates slide past → earthquakes</div>
+          <div>Step 1: Selected: {b ? b.type + ' boundary (' + b.id + ')' : '? — click a colored boundary line'}</div>
+          <div>Step 2: Type: {b ? b.type : 'Convergent / Divergent / Transform'}</div>
+          <div>Step 3: {b ? 'What happens: ' + b.what : "Earth's crust = plates floating on the mantle"}</div>
+          <div>Step 4: Convergent → mountains/volcanoes; Divergent → new crust; Transform → earthquakes</div>
           <div>Step 5: Subduction = one plate dives under another (oceanic under continental)</div>
-          <div>Step 6: Ring of Fire = subduction zones around Pacific</div>
+          <div>Step 6: {b ? 'Example: ' + b.example : 'Ring of Fire = subduction zones around Pacific'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -341,11 +341,11 @@ export function WeatherMapReader({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: {selectedFeature ? 'Selected: ' + selectedFeature.type : 'Click a weather feature on the map'}</div>
-          <div>Step 2: {selectedFeature ? selectedFeature.desc : 'H = high pressure (clear), L = low (storms)'}</div>
-          <div>Step 3: Cold fronts: sudden storms (blue triangles)</div>
-          <div>Step 4: Warm fronts: gradual rain (red semicircles)</div>
-          <div>Step 5: Wind flows from High to Low pressure</div>
+          <div>Step 1: {feat ? 'Selected: ' + feat.label + ' (' + feat.id + ')' : 'Click a weather feature on the map'}</div>
+          <div>Step 2: {feat ? feat.desc : 'H = high pressure (clear), L = low (storms)'}</div>
+          <div>Step 3: {feat && feat.id === 'coldfront' ? '★ Cold front active — sudden storms (blue triangles)' : 'Cold fronts: sudden storms (blue triangles)'}</div>
+          <div>Step 4: {feat && feat.id === 'warmfront' ? '★ Warm front active — gradual rain (red semicircles)' : 'Warm fronts: gradual rain (red semicircles)'}</div>
+          <div>Step 5: {feat && (feat.id === 'highP' || feat.id === 'lowP') ? '★ ' + feat.label + ' — wind flows from H to L' : 'Wind flows from High to Low pressure'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -491,11 +491,11 @@ export function WaterCarbonCycle({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: {selectedProcess ? 'Selected: ' + selectedProcess : 'Click a process in the cycle'}</div>
-          <div>Step 2: Evaporation → Condensation → Precipitation → Runoff</div>
-          <div>Step 3: Transpiration — plants release water vapor</div>
-          <div>Step 4: Carbon cycle: photosynthesis ↔ respiration</div>
-          <div>Step 5: Both are CLOSED cycles — nothing is lost</div>
+          <div>Step 1: Cycle: {tab} | Selected: {sel ? sel.label : '? — click a process or reservoir'}</div>
+          <div>Step 2: {tab === 'water' ? 'Path: Evaporation → Condensation → Precipitation → Runoff' : 'Path: Atmosphere → Photosynthesis → Organisms → Respiration → Atmosphere'}</div>
+          <div>Step 3: {sel ? 'Selected step: ' + sel.desc : (tab === 'water' ? 'Transpiration — plants release water vapor' : 'Combustion — burning fossil fuels releases CO₂')}</div>
+          <div>Step 4: {tab === 'water' ? 'Solar energy drives evaporation' : 'Photosynthesis ↔ respiration balance CO₂'}</div>
+          <div>Step 5: Both are CLOSED cycles — nothing is lost (conservation of matter)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -599,11 +599,11 @@ export function SolarSystemScale({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Inner planets (Mercury-Mars) — rocky, close to Sun</div>
-          <div>Step 2: Outer planets (Jupiter-Neptune) — gas/ice giants, far</div>
-          <div>Step 3: Kepler's Law: T² ∝ r³ — farther = slower orbit</div>
-          <div>Step 4: Mercury: 88 days; Earth: 365 days; Neptune: 165 years</div>
-          <div>Step 5: Gravity decreases with distance² (inverse square)</div>
+          <div>Step 1: View: {view === 'size' ? 'Relative Size' : 'Relative Distance'} | Selected: {planet ? planet.name : '? — click a planet'}</div>
+          <div>Step 2: {planet ? planet.name + ' — ' + planet.distance + ' million km from Sun, ' + planet.diameter.toLocaleString() + ' km diameter' : 'Inner planets (Mercury–Mars) — rocky, close to Sun'}</div>
+          <div>Step 3: {planet ? 'Group: ' + (['Mercury', 'Venus', 'Earth', 'Mars'].includes(planet.name) ? 'Inner (rocky/terrestrial)' : 'Outer (gas/ice giant)') : 'Outer planets (Jupiter–Neptune) — gas/ice giants, far'}</div>
+          <div>Step 4: Kepler's Law: T² ∝ r³ — farther = slower orbit</div>
+          <div>Step 5: {planet ? 'Fun fact: ' + planet.fact : 'Gravity decreases with distance² (inverse square)'}</div>
           <div>Step 6: This is why outer planets orbit slowly</div>
       </div>
 {/* Instructional insight */}
@@ -875,11 +875,11 @@ export function TopographicMapTool({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Terrain: {terrain} preset</div>
-          <div>Step 2: Click on the map to see elevation at that point</div>
-          <div>Step 3: Close contour lines = steep slope</div>
+          <div>Step 1: Terrain: {preset} preset | {clickPoint ? 'point at (' + clickPoint.x.toFixed(0) + ', ' + clickPoint.y.toFixed(0) + ') → ~' + clickPoint.elev + 'm' : 'no point selected'}</div>
+          <div>Step 2: {crossSection ? 'Cross-section drawn: (' + crossSection.x1.toFixed(0) + ',' + crossSection.y1.toFixed(0) + ') → (' + crossSection.x2.toFixed(0) + ',' + crossSection.y2.toFixed(0) + ')' : 'Click on the map for elevation, drag to draw a cross-section'}</div>
+          <div>Step 3: {presetInfo ? presetInfo.desc : 'Close contour lines = steep slope'}</div>
           <div>Step 4: Wide spacing = gentle slope</div>
-          <div>Step 5: V-shapes point upstream</div>
+          <div>Step 5: V-shapes point upstream (river preset)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

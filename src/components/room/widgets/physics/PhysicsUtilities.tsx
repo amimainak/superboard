@@ -1039,13 +1039,10 @@ export function OhmsLawCalculator({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify which two values you know (V, I, or R)</div>
+          <div>Step 1: Known values — V = {fields.V || '?'} V, I = {fields.I || '?'} A, R = {fields.R || '?'} Ω</div>
           <div>Step 2: Ohm's Law: V = I × R (voltage = current × resistance)</div>
-          <div>Step 3: Rearrange to solve for the unknown:</div>
-          <div>   To find V: V = I × R</div>
-          <div>   To find I: I = V / R</div>
-          <div>   To find R: R = V / I</div>
-          <div>Step 4: Substitute and calculate with correct units</div>
+          <div>Step 3: Rearrange to solve for the unknown ({calculated ? `solving for ${calculated}` : 'enter any two values'}):  V = I×R  |  I = V/R  |  R = V/I</div>
+          <div>Step 4: {calculated === 'V' ? <>V = I × R = {fields.I} × {fields.R} = <b style={{ color: s.accent }}>{fields.V} V</b></> : calculated === 'I' ? <>I = V / R = {fields.V} / {fields.R} = <b style={{ color: s.accent }}>{fields.I} A</b></> : calculated === 'R' ? <>R = V / I = {fields.V} / {fields.I} = <b style={{ color: s.accent }}>{fields.R} Ω</b></> : <span style={{ color: isDark ? '#64748b' : '#94a3b8' }}>Enter any two values — the third is computed automatically</span>}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1287,12 +1284,12 @@ export function CircuitDiagramBuilder({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Series circuit — current is the SAME everywhere</div>
-          <div>Step 2: Series resistance: R_total = R₁ + R₂ + R₃...</div>
-          <div>Step 3: Parallel circuit — voltage is the SAME across branches</div>
-          <div>Step 4: Parallel resistance: 1/R_total = 1/R₁ + 1/R₂...</div>
-          <div>Step 5: Use Ohm's Law (V=IR) on the total resistance</div>
-          <div>Step 6: In parallel, total resistance is LESS than any individual</div>
+          <div>Step 1: Components placed: {components.length} total — {battery ? `1 battery (${battery.value} V)` : 'no battery'}, {resistors.length} resistor{resistors.length !== 1 ? 's' : ''}, {wires.length} wire{wires.length !== 1 ? 's' : ''}</div>
+          <div>Step 2: Series resistance adds: R_total = {resistors.length > 0 ? resistors.map(r => (r.value || 0) + ' Ω').join(' + ') : '0 Ω'} = <b style={{ color: s.accent }}>{totalR} Ω</b></div>
+          <div>Step 3: {battery ? <>Battery voltage: V = <b style={{ color: s.accent }}>{battery.value} V</b></> : 'Add a battery to supply voltage'}</div>
+          <div>Step 4: Ohm's Law on total resistance: I = V / R = {seriesV ?? '?'}/{totalR} = {seriesI !== null ? <b style={{ color: s.accent }}>{seriesI.toFixed(3)} A</b> : <span style={{ color: isDark ? '#64748b' : '#94a3b8' }}>add battery + resistor + 2 wires</span>}</div>
+          <div>Step 5: In a series circuit, current is the SAME through every component (no branching)</div>
+          <div>Step 6: In parallel, voltage is the same across each branch — total resistance is LESS than any individual</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1477,13 +1474,13 @@ export function FreeBodyDiagramBuilder({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Isolate the object — draw it alone</div>
-          <div>Step 2: Draw gravity (weight = mg) pointing DOWN</div>
-          <div>Step 3: Draw normal force (surface pushes back) perpendicular to surface</div>
-          <div>Step 4: Draw applied forces (pushes, pulls) in their directions</div>
-          <div>Step 5: Draw friction opposing motion</div>
-          <div>Step 6: If ΣF = 0, object is stationary or constant velocity</div>
-          <div>Step 7: If ΣF ≠ 0, object accelerates (F = ma)</div>
+          <div>Step 1: Isolate the object — {objectShape === 'rect' ? 'rectangle' : 'circle'} with {forces.length} force{forces.length !== 1 ? 's' : ''} acting on it</div>
+          <div>Step 2: {forces.length > 0 ? `Forces drawn: ${forces.map(f => f.label).join(', ')}` : 'Click force buttons above to add forces (Weight, Normal, Friction, etc.)'}</div>
+          <div>Step 3: {forces.length > 0 ? `Sum horizontal: ΣFx = ${netFx.toFixed(1)} N` : 'ΣFx will be computed once forces are added'}</div>
+          <div>Step 4: {forces.length > 0 ? `Sum vertical: ΣFy = ${netFy.toFixed(1)} N` : 'ΣFy will be computed once forces are added'}</div>
+          <div>Step 5: {forces.length > 0 ? <span>|F_net| = √(ΣFx² + ΣFy²) = √({netFx.toFixed(1)}² + {netFy.toFixed(1)}²) = <b style={{ color: s.accent }}>{netMag.toFixed(1)} N</b></span> : 'Net force magnitude appears here once forces exist'}</div>
+          <div>Step 6: {balanced === true ? '✓ Equilibrium! ΣF = 0 → no acceleration (Newton\'s 1st Law)' : balanced === false ? 'Not in equilibrium — ΣF ≠ 0 → object accelerates' : 'Click "Check Balance" to test if the object is in equilibrium'}</div>
+          <div>Step 7: If ΣF ≠ 0, use F = ma to find acceleration (Newton's 2nd Law)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1678,12 +1675,12 @@ export function RayDiagramOptics({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Draw the lens/mirror and principal axis</div>
-          <div>Step 2: Ray 1: parallel to axis → refracts through focal point</div>
-          <div>Step 3: Ray 2: through center of lens → continues straight</div>
-          <div>Step 4: Ray 3: through focal point → refracts parallel to axis</div>
-          <div>Step 5: Where rays converge = real image location</div>
-          <div>Step 6: Where rays appear to diverge from = virtual image</div>
+          <div>Step 1: Setup: {optType.replace('_', ' ')}, f = {focalLength} cm, do = {objDist} cm, ho = {objHeight} cm</div>
+          <div>Step 2: Thin lens equation: 1/f = 1/do + 1/di → 1/{focalLength} = 1/{objDist} + 1/di</div>
+          <div>Step 3: Solve for di: 1/di = 1/f − 1/do = {denom.toFixed(4)}</div>
+          <div>Step 4: di = 1/{denom.toFixed(4)} = {isFinite(di) ? <b style={{ color: s.accent }}>{di.toFixed(2)} cm</b> : <b style={{ color: s.accent }}>∞ (image at infinity)</b>}</div>
+          <div>Step 5: Magnification m = −di/do = −{isFinite(di) ? di.toFixed(2) : '∞'}/{objDist} = {m.toFixed(2)} → hi = <b style={{ color: s.accent }}>{imgHeight.toFixed(2)} cm</b></div>
+          <div>Step 6: Image is {isReal ? 'REAL (rays converge on the opposite side)' : 'VIRTUAL (rays appear to diverge)'}, {isUpright ? 'upright' : 'inverted'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1828,12 +1825,12 @@ export function EnergyBarCharts({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify the initial state — what energy exists?</div>
-          <div>Step 2: Identify the final state — what energy exists now?</div>
-          <div>Step 3: Energy is conserved: E_initial = E_final</div>
-          <div>Step 4: If PE decreases, KE must increase (and vice versa)</div>
-          <div>Step 5: Some energy becomes thermal (heat) due to friction</div>
-          <div>Step 6: Total height of bars must be EQUAL (conservation)</div>
+          <div>Step 1: Total energy budget: E_total = <b style={{ color: s.accent }}>{totalEnergy.toFixed(1)} J</b></div>
+          <div>Step 2: Initial state — KE={initial.ke.toFixed(1)}, GPE={initial.gpe.toFixed(1)}, EPE={initial.epe.toFixed(1)}, Thermal={initial.thermal.toFixed(1)} → Sum = <b style={{ color: initialOk ? s.accent : '#f87171' }}>{initialTotal.toFixed(1)} J {initialOk ? '✓' : '≠ E'}</b></div>
+          <div>Step 3: Final state — KE={final.ke.toFixed(1)}, GPE={final.gpe.toFixed(1)}, EPE={final.epe.toFixed(1)}, Thermal={final.thermal.toFixed(1)} → Sum = <b style={{ color: finalOk ? s.accent : '#f87171' }}>{finalTotal.toFixed(1)} J {finalOk ? '✓' : '≠ E'}</b></div>
+          <div>Step 4: Conservation check: E_initial ({initialTotal.toFixed(1)}) {conserved ? '=' : '≠'} E_final ({finalTotal.toFixed(1)})</div>
+          <div>Step 5: {conserved ? '✓ Energy is conserved — initial and final totals match' : '⚠ Not conserved — adjust bars so both sums equal E_total'}</div>
+          <div>Step 6: Total height of bars must be EQUAL — energy is never created or destroyed (1st Law of Thermodynamics)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -2041,12 +2038,12 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Plot each (x, y) point on the coordinate plane</div>
-          <div>Step 2: Look at the pattern — does it go up or down?</div>
-          <div>Step 3: Draw a line of best fit through the points</div>
-          <div>Step 4: Slope = rise/run = Δy/Δx</div>
-          <div>Step 5: y-intercept = where the line crosses the y-axis</div>
-          <div>Step 6: Equation: y = mx + b (m = slope, b = intercept)</div>
+          <div>Step 1: {pts.length} data point{pts.length !== 1 ? 's' : ''} plotted{pts.length > 0 ? `: ${pts.map(p => `(${p.x}, ${p.y})`).join(', ')}` : ' — enter X and Y values above'}</div>
+          <div>Step 2: X range: {xMin.toFixed(1)} to {xMax.toFixed(1)} (mean x̄ = {xMean.toFixed(1)}); Y range: {yMin.toFixed(1)} to {yMax.toFixed(1)} (mean ȳ = {yMean.toFixed(1)})</div>
+          <div>Step 3: {pts.length >= 2 ? `Slope m = Σ((x−x̄)(y−ȳ)) / Σ((x−x̄)²) = ${bestFitSlope.toFixed(3)}` : 'Need ≥ 2 points to compute slope'}</div>
+          <div>Step 4: {pts.length >= 2 ? `y-intercept b = ȳ − m·x̄ = ${yMean.toFixed(2)} − ${bestFitSlope.toFixed(2)} × ${xMean.toFixed(2)} = ${bestFitIntercept.toFixed(3)}` : 'Need ≥ 2 points to compute y-intercept'}</div>
+          <div>Step 5: {showBestFit && pts.length >= 2 ? <span>Best-fit equation: y = <b style={{ color: s.accent }}>{bestFitSlope.toFixed(2)}x + {bestFitIntercept.toFixed(2)}</b></span> : 'Toggle "Best Fit" to display the regression line'}</div>
+          <div>Step 6: Pattern: {bestFitSlope > 0.01 ? 'increasing (positive slope)' : bestFitSlope < -0.01 ? 'decreasing (negative slope)' : pts.length >= 2 ? 'flat (zero slope)' : '— (need ≥ 2 points)'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

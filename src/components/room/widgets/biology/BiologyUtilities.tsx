@@ -808,12 +808,12 @@ export function BodySystemsExplorer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify the body system (circulatory, respiratory, etc.)</div>
-          <div>Step 2: Find the main organs in that system</div>
-          <div>Step 3: Trace the flow (blood, air, food, signals)</div>
-          <div>Step 4: Identify what the system takes in and puts out</div>
-          <div>Step 5: Find connections to OTHER systems</div>
-          <div>Step 6: No system works alone — they're all interconnected</div>
+          <div>Step 1: Selected system: <b>{active ? active.name : '?'}</b> {active ? '' : '(click a system above)'}</div>
+          <div>Step 2: Main organs: {active ? active.organs.join(', ') : '?'}</div>
+          <div>Step 3: Function: {active ? active.function : '?'}</div>
+          <div>Step 4: Fun fact: {active ? active.funFact : '?'}</div>
+          <div>Step 5: Find connections to OTHER systems (e.g., {active ? active.name + ' ↔ circulatory/nervous' : '?'})</div>
+          <div>Step 6: No system works alone — they're all <b>interconnected</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1071,11 +1071,11 @@ export function EcologyFoodWeb({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Ecosystem: {ecosystem} — {selectedOrg ? 'Selected: ' + selectedOrg : 'click an organism'}</div>
-          <div>Step 2: Producers capture sun energy (plants/algae)</div>
-          <div>Step 3: Primary consumers eat producers (~10% energy transfer)</div>
-          <div>Step 4: Secondary consumers eat primary (~1% of original)</div>
-          <div>Step 5: Arrows show energy FLOW direction</div>
+          <div>Step 1: Ecosystem: <b>{data.label}</b> | Selected: <b>{selectedOrg ? orgMap[selectedOrg]?.name : 'none'}</b> {selectedOrg ? '(' + LEVEL_LABELS[orgMap[selectedOrg].level] + ')' : '(click an organism)'}</div>
+          <div>Step 2: Producers ({data.organisms.filter(o => o.level === 'producer').length}): {data.organisms.filter(o => o.level === 'producer').map(o => o.name).join(', ')}</div>
+          <div>Step 3: Primary consumers ({data.organisms.filter(o => o.level === 'primary').length}): {data.organisms.filter(o => o.level === 'primary').map(o => o.name).join(', ')}</div>
+          <div>Step 4: Secondary consumers ({data.organisms.filter(o => o.level === 'secondary').length}): {data.organisms.filter(o => o.level === 'secondary').map(o => o.name).join(', ')}</div>
+          <div>Step 5: Arrows show energy FLOW direction {selectedOrg ? '— ' + orgMap[selectedOrg]?.name + ' has ' + relatedConns.length + ' connection(s)' : ''}</div>
           <div>Step 6: Only ~10% transfers per level — limits chain length</div>
       </div>
 {/* Instructional insight */}
@@ -1342,12 +1342,12 @@ export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Generation {gen} | Population: {bugs.length} | Environment hue: {envHue}°</div>
-          <div>Step 2: Bugs vary in color (hue) — some match environment, some don\'t</div>
-          <div>Step 3: Bugs closer to environment hue = better camouflage = survive</div>
-          <div>Step 4: Click "Next Generation" — survivors reproduce</div>
-          <div>Step 5: Favorable color becomes MORE common each generation</div>
-          <div>Step 6: No goal — just what works in environment hue {envHue}°</div>
+          <div>Step 1: Generation <b>{gen}</b> | Population: <b>{bugs.length}</b> | Environment hue: <b>{envHue}°</b></div>
+          <div>Step 2: Trait stats — Mean: <b>{meanHue.toFixed(0)}°</b>, Avg fitness: <b>{meanFitness.toFixed(0)}</b>/360, Best: <b>{bestFit.toFixed(0)}</b>/360</div>
+          <div>Step 3: Bugs closer to env hue {envHue}° = better camouflage = survive</div>
+          <div>Step 4: Click "Next Generation" — top 15 survive + 5 mutated offspring (pop resets to 20)</div>
+          <div>Step 5: Favorable color (near {envHue}°) becomes MORE common each generation</div>
+          <div>Step 6: No goal — just what works in environment hue <b>{envHue}°</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1752,13 +1752,13 @@ export function PhotosynthesisRespiration({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Photosynthesis: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂</div>
-          <div>Step 2: Chloroplasts capture light energy in chlorophyll</div>
-          <div>Step 3: Water is split → oxygen released, hydrogen used</div>
-          <div>Step 4: CO₂ is fixed into glucose (Calvin cycle)</div>
-          <div>Step 5: Respiration: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP</div>
-          <div>Step 6: Mitochondria release energy stored in glucose</div>
-          <div>Step 7: They're OPPOSITES — the energy cycle of life</div>
+          <div>Step 1: Photosynthesis: 6CO₂ + 6H₂O + <b>{lightIntensity}%</b> light → C₆H₁₂O₆ + 6O₂</div>
+          <div>Step 2: Selected part: <b>{selPart ? selPart.label : '?'}</b> {selPart ? '— ' + selPart.desc : '(click any part in either diagram)'}</div>
+          <div>Step 3: Chloroplasts capture light energy (intensity: <b>{lightIntensity}%</b>) in chlorophyll</div>
+          <div>Step 4: Water is split → oxygen released, hydrogen used</div>
+          <div>Step 5: CO₂ is fixed into glucose (Calvin cycle)</div>
+          <div>Step 6: Respiration: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP</div>
+          <div>Step 7: They're OPPOSITES — the energy <b>cycle of life</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1842,12 +1842,12 @@ export function HumanBodyInteractive({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: {selected ? 'System: ' + selected : 'Click a body system to explore'}</div>
-          <div>Step 2: {selected ? 'Trace the path through ' + selected : 'Select a system first'}</div>
-          <div>Step 3: Find where exchange happens</div>
-          <div>Step 4: What does it regulate?</div>
+          <div>Step 1: Selected: <b>{selPart ? selPart.name : '?'}</b> {selPart ? '(' + selPart.system + ')' : '(click a body part on the figure)'}</div>
+          <div>Step 2: Function: {selPart ? selPart.function : '?'}</div>
+          <div>Step 3: Fun fact: {selPart ? selPart.fact : '?'}</div>
+          <div>Step 4: Find where exchange happens (e.g., lungs for O₂/CO₂, intestines for nutrients)</div>
           <div>Step 5: Homeostasis = maintaining stable internal conditions</div>
-          <div>Step 6: Feedback loops: sensor → control center → effector</div>
+          <div>Step 6: Feedback loops: sensor → control center → <b>effector</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

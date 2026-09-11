@@ -174,12 +174,12 @@ export function VocabularyFlashcards({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Read the word</div>
-          <div>Step 2: Break it into parts (prefix + root + suffix)</div>
-          <div>Step 3: Use the roots to infer meaning</div>
-          <div>Step 4: Read the sentence context for confirmation</div>
-          <div>Step 5: Flip to check the definition</div>
-          <div>Step 6: Use the word in your own sentence to cement it</div>
+          <div>Step 1: Card {index + 1} of {total}{mode === 'study' && total > 0 ? <> — front: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{current.word}</b> ({current.pos})</> : ' — no cards yet'}</div>
+          <div>Step 2: {!flipped ? 'Try to recall the meaning before flipping' : <>Flipped — definition: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{current.definition}</b></>}</div>
+          <div>Step 3: {!flipped ? 'Click the card to flip and check' : <>Example: &quot;{current.example}&quot;</>}</div>
+          <div>Step 4: Break <b style={{ color: isDark ? '#34d399' : '#059669' }}>{current.word}</b> into parts (prefix + root + suffix)</div>
+          <div>Step 5: Use the roots to infer meaning, then verify against the definition above</div>
+          <div>Step 6: Use <b style={{ color: isDark ? '#34d399' : '#059669' }}>{current.word}</b> in your own sentence to cement it</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -303,12 +303,12 @@ export function ReadingPassageAnalyzer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Read for literal meaning — what does it say?</div>
-          <div>Step 2: Infer — what does it imply (between the lines)?</div>
-          <div>Step 3: Evaluate — is the argument valid? Do you agree?</div>
-          <div>Step 4: Identify the author's purpose (inform, persuade, entertain)</div>
-          <div>Step 5: Find the main idea and supporting details</div>
-          <div>Step 6: Don't skip to evaluation — build from literal to inferential</div>
+          <div>Step 1: Input — {text.trim() ? <>{text.trim().split(/\s+/).length} words pasted</> : <span style={{ opacity: 0.6 }}>no text yet</span>}</div>
+          <div>Step 2: {analysis ? <>Counts: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{analysis.wordCount}</b> words / {analysis.sentenceCount} sentences / {analysis.paragraphCount} paragraphs</> : 'Paste text to analyze'}</div>
+          <div>Step 3: {analysis ? <>Avg {analysis.avgWordsPerSentence.toFixed(1)} words per sentence</> : '?'}</div>
+          <div>Step 4: {analysis ? <>Flesch-Kincaid grade level: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{analysis.fleschKincaid.toFixed(1)}</b> GL</> : '?'}</div>
+          <div>Step 5: {analysis && analysis.topWords.length > 0 ? <>Top words: {analysis.topWords.map(([w, c]) => w + ' (' + c + ')').join(', ')}</> : 'No top words yet'}</div>
+          <div>Step 6: Read literally first, then infer, then evaluate — don&apos;t skip to evaluation</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -479,12 +479,12 @@ export function StoryElementsMap({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Characters — who is in the story?</div>
-          <div>Step 2: Setting — where and when does it take place?</div>
-          <div>Step 3: Plot — what happens? (beginning, middle, end)</div>
-          <div>Step 4: Conflict — what is the problem?</div>
-          <div>Step 5: Theme — what is the message or lesson?</div>
-          <div>Step 6: How do the elements interact? (setting affects plot)</div>
+          <div>Step 1: {data.title || data.author ? <>Title: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{data.title || '?'}</b>{data.author ? <> by {data.author}</> : null}</> : 'Title/author not specified'}</div>
+          <div>Step 2: {data.protagonist || data.antagonist ? <>Characters: {data.protagonist || '?'} (protagonist) vs {data.antagonist || '?'} (antagonist)</> : 'Characters not specified'}</div>
+          <div>Step 3: {data.settingTime || data.settingPlace ? <>Setting: {data.settingTime || '?'} @ {data.settingPlace || '?'}</> : 'Setting not specified'}</div>
+          <div>Step 4: Conflict — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{data.conflictType}</b></div>
+          <div>Step 5: Plot — Rising: {data.risingAction ? truncate(data.risingAction, 30) : '?'} | Climax: {data.climax ? truncate(data.climax, 30) : '?'} | Resolution: {data.resolution ? truncate(data.resolution, 30) : '?'}</div>
+          <div>Step 6: Theme — {data.theme ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{data.theme}</b> : <span style={{ opacity: 0.6 }}>not specified</span>}{showViz ? ' (mountain visualized above)' : ' — click "Visualize Story Mountain"'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -656,10 +656,10 @@ export function SentenceStructureBuilder({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Find the subject (who or what is the sentence about?)</div>
-          <div>Step 2: Find the verb (what does the subject do?)</div>
-          <div>Step 3: One subject + one verb = independent clause</div>
-          <div>Step 4: Does it start with because/although/when? → dependent clause</div>
+          <div>Step 1: Structure type — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{bank.label}</b></div>
+          <div>Step 2: Built sentence — {built.length > 0 ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{built.join(' ')}</b> : <span style={{ opacity: 0.6 }}>no words added yet</span>}</div>
+          <div>Step 3: Word count: {built.length} {built.length === 1 ? 'token' : 'tokens'}</div>
+          <div>Step 4: {breakdown ? <span style={{ color: isDark ? '#34d399' : '#059669' }}>{breakdown}</span> : 'Add words to see structure analysis'}</div>
           <div>Step 5: One independent clause = Simple sentence</div>
           <div>Step 6: Two independent + FANBOYS = Compound</div>
           <div>Step 7: Independent + dependent = Complex</div>
@@ -893,12 +893,12 @@ export function FigurativeLanguageFinder({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Does it use "like" or "as" to compare? → SIMILE</div>
-          <div>Step 2: Does it say X IS Y (direct comparison)? → METAPHOR</div>
-          <div>Step 3: Does a non-human thing do human actions? → PERSONIFICATION</div>
-          <div>Step 4: Is it an extreme exaggeration? → HYPERBOLE</div>
-          <div>Step 5: Does the word sound like its meaning (buzz, crash)? → ONOMATOPOEIA</div>
-          <div>Step 6: Do words start with the same sound? → ALLITERATION</div>
+          <div>Step 1: Input — {text.trim() ? <>{text.trim().split(/\s+/).length} words pasted</> : <span style={{ opacity: 0.6 }}>no text yet</span>}</div>
+          <div>Step 2: Active types: {activeTypes.size === 0 ? <span style={{ opacity: 0.6 }}>none selected — toggle types above</span> : <b style={{ color: isDark ? '#34d399' : '#059669' }}>{Array.from(activeTypes).join(', ')}</b>}</div>
+          <div>Step 3: Findings: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{findings.length}</b> {findings.length === 1 ? 'match' : 'matches'}</div>
+          <div>Step 4: {findings.length > 0 ? <>Found types: {Array.from(new Set(findings.map((f) => f.type))).join(', ')}</> : 'No matches yet'}</div>
+          <div>Step 5: &quot;like&quot;/&quot;as&quot; → SIMILE; X IS Y → METAPHOR; non-human doing human actions → PERSONIFICATION</div>
+          <div>Step 6: Extreme exaggeration → HYPERBOLE; word sounds like its meaning → ONOMATOPOEIA; same starting sound → ALLITERATION</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1279,12 +1279,12 @@ export function PhonicsDecodingBuilder({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Look at the word — identify letter patterns</div>
-          <div>Step 2: Find digraphs (sh, ch, th, wh) — one sound, two letters</div>
-          <div>Step 3: Find blends (st, bl, tr) — two sounds blended</div>
-          <div>Step 4: Find silent letters (kn, wr, mb) — written but not spoken</div>
-          <div>Step 5: Sound out each syllable from left to right</div>
-          <div>Step 6: Blend syllables together to read the word</div>
+          <div>Step 1: Active tab — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{tab}</b></div>
+          <div>Step 2: {word ? <>Word built: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{word}</b> ({phs.length} phoneme{phs.length === 1 ? '' : 's'})</> : <span style={{ opacity: 0.6 }}>click letter tiles to build a word</span>}</div>
+          <div>Step 3: {phs.length > 0 ? <>Phonemes: {phs.map((p) => '/' + p.t + '/').join(' ')}</> : '?'}</div>
+          <div>Step 4: {wordOr ? <>Onset + Rime: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{wordOr.onset}</b> + <b style={{ color: isDark ? '#34d399' : '#059669' }}>{wordOr.rime}</b></> : 'Word too short for onset-rime split'}</div>
+          <div>Step 5: {tab === 'Syllable Types' ? <>Selected: {SYLL_DATA[sylIdx].name} ({SYLL_DATA[sylIdx].pat}) — ex: {SYLL_DATA[sylIdx].ex}</> : tab === 'Word Families' ? <>Family: {FAM_DATA[famIdx].rime} — {FAM_DATA[famIdx].words.length} words</> : 'Sound out each syllable from left to right'}</div>
+          <div>Step 6: {tab === 'Digraphs & Blends' ? 'Digraphs = 1 sound (sh, ch); Blends = 2 sounds (st, bl)' : 'Blend the sounds together to read the whole word'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1628,13 +1628,13 @@ export function PartsOfSpeechTagger({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Is it a person, place, thing, or idea? → NOUN</div>
-          <div>Step 2: Does it show action or state of being? → VERB</div>
-          <div>Step 3: Does it describe a noun (what kind, how many)? → ADJECTIVE</div>
-          <div>Step 4: Does it describe a verb (how, when, where)? → ADVERB</div>
-          <div>Step 5: Does it replace a noun (he, she, it, they)? → PRONOUN</div>
-          <div>Step 6: Does it show relationship (in, on, under, to)? → PREPOSITION</div>
-          <div>Step 7: Test: context matters — "run" can be noun or verb</div>
+          <div>Step 1: Input — {sentence.trim() ? <>{sentence.trim().split(/\s+/).length} words</> : <span style={{ opacity: 0.6 }}>type a sentence</span>}</div>
+          <div>Step 2: Mode — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{advanced ? 'Advanced (11 POS)' : 'Beginner (8 POS)'}</b></div>
+          <div>Step 3: {tagged.length > 0 ? <>Tagged: {tagged.length} terms</> : 'Click "Tag Sentence" to analyze'}</div>
+          <div>Step 4: {tagged.length > 0 ? <>Skeleton (nouns+verbs): <b style={{ color: isDark ? '#34d399' : '#059669' }}>{tagged.filter((t) => t.pos === 'Noun' || t.pos === 'Verb').map((t) => t.text).join(' ') || 'none'}</b></> : '?'}</div>
+          <div>Step 5: {selectedIdx !== null && tagged[selectedIdx] ? <>Selected: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{tagged[selectedIdx].text}</b> → {tagged[selectedIdx].pos}</> : 'Click a tagged word for its explanation'}</div>
+          <div>Step 6: Test questions: &quot;the&quot; before = noun; takes &quot;-ed&quot; = verb; answers &quot;what kind?&quot; = adjective</div>
+          <div>Step 7: Context matters — &quot;run&quot; can be noun or verb depending on use</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -2122,12 +2122,12 @@ export function SentenceExpansionTool({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Start with a simple sentence (Subject + Verb)</div>
-          <div>Step 2: Add adjectives — describe the noun (what kind?)</div>
-          <div>Step 3: Add adverbs — describe the verb (how? when? where?)</div>
-          <div>Step 4: Add prepositional phrases (where? when?)</div>
-          <div>Step 5: Add relative clauses (which/that/who)</div>
-          <div>Step 6: Check: does each addition add meaning or just clutter?</div>
+          <div>Step 1: Base sentence — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{baseSentence}</b></div>
+          <div>Step 2: Active tab — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{tab === 'expand' ? 'Expand' : 'Transform'}</b></div>
+          <div>Step 3: {tab === 'expand' ? (steps.length > 0 ? <>Expansions added: {steps.length}</> : 'No expansions yet — click "+ Adjective" etc.') : <>Compound conj: {compoundConj} | Complex conj: {complexConj}</>}</div>
+          <div>Step 4: {tab === 'expand' && steps.length > 0 ? <>Latest: +{steps[steps.length - 1].type} (&quot;{steps[steps.length - 1].addedText}&quot;)</> : tab === 'transform' ? <>Companion: &quot;{companion}&quot;</> : '?'}</div>
+          <div>Step 5: Current sentence — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{currentSentence}</b></div>
+          <div>Step 6: Check — does each addition add meaning, or just clutter?</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -2937,13 +2937,13 @@ export function PunctuationInteractive({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Does it state a fact? → PERIOD (.)</div>
-          <div>Step 2: Does it ask a question? → QUESTION MARK (?)</div>
-          <div>Step 3: Is there strong emotion? → EXCLAMATION (!)</div>
-          <div>Step 4: Listing 3+ items? → COMMAS between items</div>
-          <div>Step 5: Two complete sentences related? → SEMICOLON (;)</div>
-          <div>Step 6: Introducing a list or explanation? → COLON (:)</div>
-          <div>Step 7: Possession or contraction? → APOSTROPHE (')</div>
+          <div>Step 1: Active tab — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{tab === 'rules' ? 'Rules' : 'Practice'}</b></div>
+          <div>Step 2: {tab === 'rules' ? (expandedIdx !== null ? <>Viewing rule: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{PUNCT_RULES_DATA[expandedIdx].name}</b> ({PUNCT_RULES_DATA[expandedIdx].mark})</> : 'Click a punctuation rule above to expand') : <>Exercise {Math.min(step + 1, order.length)} of {order.length}</>}</div>
+          <div>Step 3: {tab === 'practice' && exercise ? <>Prompt: &quot;{exercise.prompt}&quot; — sentence: &quot;{exercise.sentence}&quot;</> : tab === 'practice' ? <>Practice complete — final score: {score}/{order.length}</> : '?'}</div>
+          <div>Step 4: {tab === 'practice' && exercise ? <>Selected: {selected !== null ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{exercise.options[selected]}</b> : 'none — pick an option'}</> : '?'}</div>
+          <div>Step 5: {tab === 'practice' ? <>Score: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{score}</b>/{step + (checked ? 1 : 0)}{checked ? (isCorrectAnswer ? ' ✓' : ' ✗') : ''}</> : '?'}</div>
+          <div>Step 6: Conceptual — two related sentences = SEMICOLON (;); introduces a list = COLON (:)</div>
+          <div>Step 7: Conceptual — possession or contraction = APOSTROPHE (&apos;)</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -3327,12 +3327,12 @@ export function ParagraphOrganizer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Write a topic sentence (main idea)</div>
-          <div>Step 2: Add evidence (facts, examples, quotes)</div>
-          <div>Step 3: Explain the evidence (how does it support the topic?)</div>
-          <div>Step 4: Add more evidence + explanation if needed</div>
-          <div>Step 5: Write a concluding sentence (restate or extend)</div>
-          <div>Step 6: Check: every sentence must relate to the topic</div>
+          <div>Step 1: Paragraph type — <b style={{ color: isDark ? '#34d399' : '#059669' }}>{currentType.name}</b> ({currentType.sections.length} sections)</div>
+          <div>Step 2: Sections filled: {currentType.sections.filter((sec) => (values[sec.key] || '').trim()).length} / {currentType.sections.length}</div>
+          <div>Step 3: {currentType.sections[0] ? <>Topic: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{(values[currentType.sections[0].key] || '').trim() || '?'}</b></> : '?'}</div>
+          <div>Step 4: Evidence — fill in supporting sections with facts, examples, or quotes</div>
+          <div>Step 5: {previewText ? <>Preview ready — {previewText.split(/\s+/).filter(Boolean).length} words</> : <span style={{ opacity: 0.6 }}>no preview yet (fill in sections)</span>}</div>
+          <div>Step 6: {showPreview ? 'Preview shown above' : (hasContent ? 'Click "Paragraph Preview" to see the assembled paragraph' : 'Fill in sections to enable preview')}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

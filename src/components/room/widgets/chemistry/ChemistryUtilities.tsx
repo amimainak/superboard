@@ -377,10 +377,10 @@ export function PeriodicTableExplorer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: {selectedEl ? 'Selected: ' + selectedEl.name + ' (' + selectedEl.symbol + ')' : 'Click an element to explore'}</div>
-          <div>Step 2: {selectedEl ? 'Atomic #: ' + selectedEl.z + ', Mass: ' + selectedEl.mass : 'Row = shells, Column = valence electrons'}</div>
-          <div>Step 3: {selectedEl ? 'Category: ' + selectedEl.category : 'Valence electrons determine chemistry'}</div>
-          <div>Step 4: {selectedEl ? 'Electron config: ' + selectedEl.config : 'Metals lose, nonmetals gain electrons'}</div>
+          <div>Step 1: {selElem ? 'Selected: ' + selElem.nm + ' (' + selElem.s + ')' : 'Click an element to explore'}</div>
+          <div>Step 2: {selElem ? 'Atomic #: ' + selElem.n + ', Mass: ' + selElem.m + ' u' : 'Row = shells, Column = valence electrons'}</div>
+          <div>Step 3: {selElem ? 'Category: ' + catLabel(selElem.cat) : 'Valence electrons determine chemistry'}</div>
+          <div>Step 4: {selElem ? 'Electron config: ' + selElem.ec : 'Metals lose, nonmetals gain electrons'}</div>
           <div>Step 5: Noble gases (Group 18) = stable, full valence</div>
       </div>
 {/* Instructional insight */}
@@ -503,6 +503,16 @@ export function ChemicalEquationBalancer({ isDark }: { isDark: boolean }) {
     return counts
   }, [result, reactants, products])
 
+  // Derived values for dynamic step display
+  const unbalancedEls = Object.entries(beforeCounts)
+    .filter(([_, c]) => c.l !== c.r)
+    .map(([el]) => el)
+  const balancedStr = result
+    ? result.slice(0, reactants.length).map((c, i) => c + reactants[i]).join(' + ') +
+      ' \u2192 ' +
+      result.slice(reactants.length).map((c, i) => c + products[i]).join(' + ')
+    : null
+
   return (
     <div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
@@ -565,13 +575,13 @@ export function ChemicalEquationBalancer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Write the unbalanced equation</div>
-          <div>Step 2: Count atoms of each element on BOTH sides</div>
-          <div>Step 3: Find elements that are unbalanced (different counts)</div>
-          <div>Step 4: Add coefficients (numbers in front) — NEVER change subscripts</div>
-          <div>Step 5: Start with the most complex molecule</div>
-          <div>Step 6: Recount after each coefficient change</div>
-          <div>Step 7: Repeat until all elements balance</div>
+          <div>Step 1: Equation: <b style={{ color: s.bright }}>{reactStr || '?'}</b> {'\u2192'} <b style={{ color: s.bright }}>{prodStr || '?'}</b></div>
+          <div>Step 2: Reactants parsed: {reactants.length ? reactants.join(' + ') : '(none)'}</div>
+          <div>Step 3: Products parsed: {products.length ? products.join(' + ') : '(none)'}</div>
+          <div>Step 4: Atom counts (reactant | product): {Object.keys(beforeCounts).length ? Object.entries(beforeCounts).map(([el, c]) => el + ': ' + c.l + ' | ' + c.r).join(', ') : '\u2014'}</div>
+          <div>Step 5: Unbalanced elements: {unbalancedEls.length ? unbalancedEls.join(', ') : (attempted && result ? 'none \u2014 balanced!' : '\u2014')}</div>
+          <div>Step 6: After coefficients: {!attempted ? '(click Balance)' : afterCounts ? Object.entries(afterCounts).map(([el, c]) => el + ': ' + c.l + '=' + c.r).join(', ') : 'could not balance (coeff > 20)'}</div>
+          <div>Step 7: Balanced: {balancedStr ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{balancedStr}</b> : (attempted ? 'no solution found' : 'click Balance')}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -817,6 +827,10 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
 
   const isOp = mode === 'add' || mode === 'sub' || mode === 'mul' || mode === 'div'
 
+  // Live preview of scientific notation from input1 (no button click required)
+  const parsedNum = parseNumberInput(input1)
+  const previewSci = parsedNum !== null ? toSciNotation(parsedNum) : null
+
   return (
     <div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
@@ -863,12 +877,12 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Move the decimal to after the first non-zero digit</div>
-          <div>Step 2: Count how many places you moved it</div>
-          <div>Step 3: If you moved LEFT, exponent is POSITIVE (big number)</div>
-          <div>Step 4: If you moved RIGHT, exponent is NEGATIVE (small number)</div>
-          <div>Step 5: Write as: mantissa × 10^exponent</div>
-          <div>Step 6: The mantissa must be between 1 and 10</div>
+          <div>Step 1: Input: <b style={{ color: s.bright }}>{input1 || '?'}</b></div>
+          <div>Step 2: Parsed value: {parsedNum === null ? (input1 ? '? (invalid)' : '(enter a number)') : parsedNum.toString()}</div>
+          <div>Step 3: Move decimal after first non-zero digit {'\u2192'} mantissa: {previewSci ? previewSci.mantissa : '?'}</div>
+          <div>Step 4: Exponent (places moved): {previewSci ? previewSci.exponent + (previewSci.exponent >= 0 ? ' (moved left \u2192 positive)' : ' (moved right \u2192 negative)') : '?'}</div>
+          <div>Step 5: Scientific form: {previewSci ? previewSci.mantissa + ' \u00d7 10^' + previewSci.exponent : '?'}</div>
+          <div>Step 6: Result: {result ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{result.sci}</b> : '(click a mode button)'}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1171,13 +1185,13 @@ export function LewisDotStructureBuilder({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Count total valence electrons (group number for main group)</div>
-          <div>Step 2: Place the least electronegative atom in center (never H)</div>
-          <div>Step 3: Connect atoms with single bonds (2 electrons each)</div>
-          <div>Step 4: Distribute remaining electrons to outer atoms first</div>
-          <div>Step 5: Check: does each atom have an octet? (8 valence electrons)</div>
-          <div>Step 6: If not, form double/triple bonds by sharing lone pairs</div>
-          <div>Step 7: Verify total electron count matches Step 1</div>
+          <div>Step 1: {mode === 'atom' ? 'Element: ' + currentElement.name + ' (' + currentElement.sym + ', Z=' + currentElement.z + ')' : 'Molecule: ' + ex.label} — Total valence e⁻: <b style={{ color: s.bright }}>{totalValence}</b></div>
+          <div>Step 2: {mode === 'atom' ? 'Valence electrons: ' + currentElement.val + ' (group number)' : 'Central atom: ' + ex.central + ' (least electronegative, never H)'}</div>
+          <div>Step 3: {mode === 'atom' ? 'Draw ' + currentElement.val + ' dot(s) around symbol ' + currentElement.sym : 'Connect ' + ex.terminals.reduce((sum, t) => sum + t.count, 0) + ' terminal atom(s) with bonds = ' + (totalBonds * 2) + ' e⁻ shared'}</div>
+          <div>Step 4: {mode === 'atom' ? 'Lone pairs: ' + lonePairsCount : 'Distribute remaining ' + (totalValence - totalBonds * 2) + ' e⁻ → ' + lonePairsCount + ' lone pair(s) on central ' + ex.central}</div>
+          <div>Step 5: {mode === 'atom' ? 'Octet check: ' + currentElement.val + '/8' + (currentElement.val === 8 ? ' ✓' : currentElement.val === 2 ? ' (duet for H/He)' : '') : 'Octet on central ' + ex.central + ': ' + (totalBonds * 2 + lonePairsCount * 2) + '/8' + (totalBonds * 2 + lonePairsCount * 2 === 8 ? ' ✓' : '')}</div>
+          <div>Step 6: {mode === 'atom' ? 'Single atom — bonding N/A' : 'Bond types: ' + ex.terminals.map(t => t.sym + ' ' + (t.bonds === 1 ? 'single' : t.bonds === 2 ? 'double' : 'triple')).join(', ')}</div>
+          <div>Step 7: Verification: {totalValence} total e⁻ accounted for {mode === 'molecule' ? '(' + (totalBonds * 2) + ' bonding + ' + (lonePairsCount * 2) + ' lone)' : ''} {mode === 'molecule' && totalBonds * 2 + lonePairsCount * 2 === totalValence ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>✓ matches</b> : ''}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1251,8 +1265,8 @@ export function MolecularGeometryVSEPR({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: {selectedMolecule ? 'Molecule: ' + selectedMolecule : 'Select a molecule'}</div>
-          <div>Step 2: {selectedMolecule ? 'See 3D structure above' : 'Choose from CH4, NH3, H2O, etc.'}</div>
+          <div>Step 1: {d ? 'Molecule: ' + d.formula + ' — ' + d.geometry : 'Select a molecule'}</div>
+          <div>Step 2: {d ? 'See 3D structure above (' + d.hybridization + ', ' + d.bondAngle + ')' : 'Choose from CH4, NH3, H2O, etc.'}</div>
           <div>Step 3: Electron domains repel → maximum distance</div>
           <div>Step 4: 4 domains = tetrahedral (109.5°)</div>
           <div>Step 5: Lone pairs compress bond angles</div>
@@ -1405,12 +1419,12 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Boyle's Law: P₁V₁ = P₂V₂ (constant T) — squeeze = less volume</div>
-          <div>Step 2: Charles' Law: V₁/T₁ = V₂/T₂ (constant P) — heat = expand</div>
-          <div>Step 3: Gay-Lussac: P₁/T₁ = P₂/T₂ (constant V) — heat = more pressure</div>
-          <div>Step 4: Combined: PV/T = constant</div>
-          <div>Step 5: Ideal Gas Law: PV = nRT (n = moles, R = gas constant)</div>
-          <div>Step 6: Temperature must be in Kelvin (K = °C + 273.15)</div>
+          <div>Step 1: Variables: P = {displayP.toFixed(2)} atm, V = {displayV.toFixed(2)} L, T = {displayT.toFixed(2)} K, n = {displayN.toFixed(2)} mol</div>
+          <div>Step 2: Locked: {locked.size === 3 ? [...locked].join(', ') + ' (computing ' + (result ? result.key : '?') + ')' : 'need 3 locked — currently ' + locked.size}</div>
+          <div>Step 3: Gas constant R = {R} L·atm/(mol·K); Ideal gas law: PV = nRT</div>
+          <div>Step 4: Substitute: ({displayP.toFixed(2)}) × ({displayV.toFixed(2)}) = ({displayN.toFixed(2)}) × ({R}) × ({displayT.toFixed(2)})</div>
+          <div>Step 5: LHS (PV) = <b style={{ color: s.bright }}>{(displayP * displayV).toFixed(2)}</b> | RHS (nRT) = <b style={{ color: s.bright }}>{(displayN * R * displayT).toFixed(2)}</b></div>
+          <div>Step 6: {result ? 'Computed ' + result.key + ' = ' : 'Lock exactly 3 variables to compute the 4th'}{result ? <b style={{ color: isDark ? '#34d399' : '#059669' }}>{parseFloat(result.val.toFixed(4))}</b> : ''}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1567,13 +1581,13 @@ export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Write the balanced neutralization reaction</div>
-          <div>Step 2: At equivalence point: moles acid = moles base</div>
-          <div>Step 3: Use M₁V₁ = M₂V₂ (molarity × volume)</div>
-          <div>Step 4: Before equivalence: excess acid → low pH</div>
-          <div>Step 5: At equivalence: sudden pH jump (steep curve)</div>
-          <div>Step 6: After equivalence: excess base → high pH</div>
-          <div>Step 7: Indicator changes color at the equivalence point</div>
+          <div>Step 1: Reaction: HA + BOH → BA + H₂O (acid + base → salt + water)</div>
+          <div>Step 2: Acid: {acidConc.toFixed(2)} M × {acidVol.toFixed(0)} mL = {(molesAcidInit * 1000).toFixed(3)} mmol | Base added: {baseConc.toFixed(2)} M × {baseAdded.toFixed(1)} mL = {(molesBaseAdded * 1000).toFixed(3)} mmol</div>
+          <div>Step 3: Equivalence volume (M₁V₁ = M₂V₂): <b style={{ color: s.bright }}>{equivVol.toFixed(2)} mL</b></div>
+          <div>Step 4: Status: {baseAdded < equivVol - 0.5 ? 'before equivalence — excess acid, pH = ' + pH.toFixed(2) : Math.abs(baseAdded - equivVol) < 0.5 ? 'AT equivalence — pH ≈ 7' : 'past equivalence — excess base, pH = ' + pH.toFixed(2)}</div>
+          <div>Step 5: {Math.abs(baseAdded - equivVol) < 0.5 ? 'Sudden pH jump at equivalence (steep curve)' : 'pH curve ' + (baseAdded < equivVol ? 'rising slowly (buffered)' : 'flattening (excess base)')}</div>
+          <div>Step 6: Total volume: {totalVol.toFixed(1)} mL | Current pH: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{pH.toFixed(2)}</b></div>
+          <div>Step 7: Indicator should change color near equivalence pH (≈7); current pH = {pH.toFixed(2)}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1685,12 +1699,12 @@ export function IonFormationVisualizer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Find the element's valence electrons (group number)</div>
-          <div>Step 2: Goal: achieve noble gas configuration (8 valence)</div>
-          <div>Step 3: Metals (1-3 valence) → LOSE electrons → positive ion</div>
-          <div>Step 4: Nonmetals (5-7 valence) → GAIN electrons → negative ion</div>
-          <div>Step 5: Charge = valence - 8 (or 8 - valence for metals)</div>
-          <div>Step 6: Opposite charges attract → ionic bond forms</div>
+          <div>Step 1: Element: <b style={{ color: s.bright }}>{elem.name} ({elem.sym}, Z={elem.z})</b> — electron config: {elem.config}</div>
+          <div>Step 2: Valence electrons: {shells[shells.length - 1]} (outermost shell) — goal: noble gas config {elem.ionConfig}</div>
+          <div>Step 3: {isGain ? 'Nonmetal — needs to GAIN electrons' : 'Metal — needs to LOSE electrons'}: {isGain ? 'gaining' : 'losing'} {electronChange} e⁻</div>
+          <div>Step 4: Process: {elem.name} {isGain ? 'gains' : 'loses'} {electronChange} electron{electronChange > 1 ? 's' : ''} → ion config: {elem.ionConfig}</div>
+          <div>Step 5: Charge: {isGain ? '+' + electronChange + ' extra e⁻ → ' + elem.charge : electronChange + ' fewer e⁻ → ' + elem.charge}</div>
+          <div>Step 6: Result: <b style={{ color: isDark ? '#34d399' : '#059669' }}>{elem.sym}{elem.charge} ion</b> — opposite charges attract → ionic bond</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>

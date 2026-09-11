@@ -209,12 +209,12 @@ export function RootMorphologyExplorer({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Break the word into parts (prefix + root + suffix)</div>
-          <div>Step 2: Identify the root (the core meaning)</div>
-          <div>Step 3: Look up the root origin (Greek or Latin)</div>
-          <div>Step 4: The prefix modifies the root (re = again, un = not)</div>
-          <div>Step 5: The suffix shows the part of speech (-tion = noun, -ly = adverb)</div>
-          <div>Step 6: Combine: prefix + root meaning + suffix = word meaning</div>
+          <div>Step 1: Search: <b>"{searchTerm.trim() || '—'}"</b> — showing <b>{filteredRoots.length}</b> of {Object.keys(ROOT_DATABASE).length} roots</div>
+          <div>Step 2: Selected root: <b>{selectedRoot || '?'}</b>{selectedData && <span> ({selectedData.origin}: <i>{selectedData.meaning}</i>)</span>}</div>
+          <div>Step 3: Word family: <b>{selectedData ? selectedData.examples.length : 0}</b> related words</div>
+          <div>Step 4: Prefixes detected in examples: <b>{analysis.prefixes.length > 0 ? analysis.prefixes.join(', ') : '(none)'}</b></div>
+          <div>Step 5: Suffixes detected in examples: <b>{analysis.suffixes.length > 0 ? analysis.suffixes.join(', ') : '(none)'}</b></div>
+          <div>Step 6: Decoded meaning: <b style={{ color: s.bright }}>{selectedData ? selectedData.meaning : 'select a root to decode'}</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -443,12 +443,12 @@ export function ActivePassiveVoice({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Find the subject — is it doing the action (active)?</div>
-          <div>Step 2: Or is the action happening TO the subject (passive)?</div>
-          <div>Step 3: Active: "The dog bit the man" (dog = subject doing action)</div>
-          <div>Step 4: Passive: "The man was bitten" (man = subject receiving)</div>
-          <div>Step 5: Passive uses "was/were + past participle"</div>
-          <div>Step 6: Use active for clarity and impact; passive to hide the actor</div>
+          <div>Step 1: Input sentence: "<b>{input.trim() || '?'}</b>"</div>
+          <div>Step 2: Detected target voice: <b>{result ? result.voice : '?'}</b>{result && <span> ({result.tense})</span>}</div>
+          <div>Step 3: Subject: <b>{result?.subject || '?'}</b> — Verb: <b>{result?.verb || '?'}</b></div>
+          <div>Step 4: Object / Agent: <b>{result?.object || '?'}</b>{result?.agent && <span> (by {result.agent})</span>}</div>
+          <div>Step 5: {result ? <span>Transformation produced <b>{result.steps.length}</b> micro-steps above</span> : 'Click → Passive or → Active to transform'}</div>
+          <div>Step 6: Transformed: <b style={{ color: s.bright }}>{result ? result.transformed : 'awaiting transform'}</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -535,6 +535,11 @@ export function ReadingComprehensionStrategies({ isDark }: { isDark: boolean }) 
     }))
   }, [])
 
+  const filledCount = currentStrategy
+    ? currentStrategy.steps.filter((_, idx) => (answers[currentStrategy.id]?.[idx] || '').trim().length > 0).length
+    : 0
+  const totalSteps = currentStrategy ? currentStrategy.steps.length : 0
+
   return (
     <div style={{ padding: '8px 0' }}>
       {/* Strategy selector */}
@@ -600,12 +605,12 @@ export function ReadingComprehensionStrategies({ isDark }: { isDark: boolean }) 
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Predict — what will happen next based on context?</div>
-          <div>Step 2: Question — what don't you understand? What confuses you?</div>
-          <div>Step 3: Clarify — reread, use context clues, look up words</div>
-          <div>Step 4: Summarize — what was the main point of this section?</div>
-          <div>Step 5: Connect — how does this relate to what you already know?</div>
-          <div>Step 6: These strategies work together — use them simultaneously</div>
+          <div>Step 1: Active framework: <b>{currentStrategy ? currentStrategy.label : 'none selected'}</b></div>
+          <div>Step 2: Prompts in this framework: <b>{totalSteps}</b> ({currentStrategy ? currentStrategy.steps.map(s => s.label).join(' · ') : '—'})</div>
+          <div>Step 3: Prompts answered: <b>{filledCount}</b>/{totalSteps}</div>
+          <div>Step 4: {currentStrategy ? <span>Remaining: <b>{totalSteps - filledCount}</b> prompt{totalSteps - filledCount !== 1 ? 's' : ''} — predict, question, clarify, summarize, connect</span> : 'Select a framework to begin'}</div>
+          <div>Step 5: Strategies work together — use them simultaneously while reading</div>
+          <div>Step 6: Reading progress: <b style={{ color: s.bright }}>{currentStrategy ? <span>{filledCount}/{totalSteps} prompts filled</span> : 'pick a framework to start'}</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -794,6 +799,11 @@ export function GrammarErrorDiagnostic({ isDark }: { isDark: boolean }) {
   const errorCount = issues.filter(i => i.severity === 'error').length
   const warnCount = issues.filter(i => i.severity === 'warning').length
   const infoCount = issues.filter(i => i.severity === 'info').length
+  const svCount = issues.filter(i => i.type === 'Subject-Verb Agreement').length
+  const tenseCount = issues.filter(i => i.type === 'Tense Consistency').length
+  const structCount = issues.filter(i => i.type === 'Comma Splice' || i.type === 'Run-on Sentence').length
+  const mechCount = issues.filter(i => i.type === 'Capitalization' || i.type === 'Punctuation' || i.type === 'Article Usage' || i.type === 'Double Word').length
+  const sentenceCount = analyzed ? input.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0).length : 0
 
   const severityColor = (sev: string) => {
     switch (sev) {
@@ -872,12 +882,12 @@ export function GrammarErrorDiagnostic({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Read the sentence carefully</div>
-          <div>Step 2: Check subject-verb agreement (singular/plural match?)</div>
-          <div>Step 3: Check pronoun agreement (singular they? he/she consistency?)</div>
-          <div>Step 4: Check homophones (its/it's, there/their/they're)</div>
-          <div>Step 5: Check for fragments and run-ons</div>
-          <div>Step 6: Read aloud — errors often sound wrong to the ear</div>
+          <div>Step 1: {analyzed ? <span>Scanned input: <b>{input.length}</b> chars across <b>{sentenceCount}</b> sentence{sentenceCount !== 1 ? 's' : ''}</span> : <span>Input length: <b>{input.length}</b> chars — click Analyze Grammar to scan</span>}</div>
+          <div>Step 2: Subject-verb agreement issues: <b>{analyzed ? svCount : '?'}</b> (he/she/it has vs have, doesn't vs don't)</div>
+          <div>Step 3: Tense consistency issues: <b>{analyzed ? tenseCount : '?'}</b> (mixed past/present in same sentence)</div>
+          <div>Step 4: Comma splices & run-ons: <b>{analyzed ? structCount : '?'}</b> (two clauses joined incorrectly)</div>
+          <div>Step 5: Mechanics (capitalization, punctuation, articles, double words): <b>{analyzed ? mechCount : '?'}</b></div>
+          <div>Step 6: {analyzed ? <span>Result: <b style={{ color: s.bright }}>{errorCount} error{errorCount !== 1 ? 's' : ''} · {warnCount} warning{warnCount !== 1 ? 's' : ''} · {infoCount} suggestion{infoCount !== 1 ? 's' : ''}</b></span> : <span>Read aloud — errors often sound wrong to the ear</span>}</div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
@@ -1084,12 +1094,12 @@ export function SpellingPatterns({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Identify the sound you hear</div>
-          <div>Step 2: Check common patterns: "i before e except after c"</div>
-          <div>Step 3: Silent e makes the vowel long (hat → hate)</div>
-          <div>Step 4: Doubling rule: CVC + suffix → double (run → running)</div>
-          <div>Step 5: When two vowels go walking, the first one talks (boat, rain)</div>
-          <div>Step 6: Learn the PATTERN, not each individual word</div>
+          <div>Step 1: Search: <b>"{searchTerm.trim() || '—'}"</b> — showing <b>{filteredPatterns.length}</b> of {SPELLING_PATTERNS.length} patterns</div>
+          <div>Step 2: Selected pattern: <b>{selectedPattern ? selectedPattern.label : 'none'}</b></div>
+          <div>Step 3: Rule: {selectedPattern ? <span><i>{selectedPattern.rule.slice(0, 80)}{selectedPattern.rule.length > 80 ? '…' : ''}</i></span> : 'select a pattern to see its rule'}</div>
+          <div>Step 4: Examples: <b>{selectedPattern ? selectedPattern.examples.length : 0}</b>{selectedPattern && expandedExamples.has(selectedPattern.id) ? ' (expanded)' : ''}</div>
+          <div>Step 5: Exceptions listed: <b>{selectedPattern ? selectedPattern.exceptions.length : 0}</b></div>
+          <div>Step 6: Grade bands: <b style={{ color: s.bright }}>{selectedPattern ? selectedPattern.gradeBands.join(', ') : '?'}</b></div>
       </div>
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
