@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 
 // ============================================================
 // Shared math helpers (no external deps — pure implementations)
@@ -863,5 +863,907 @@ export function ProbabilitySimulator({ isDark }: ToolProps) {
         💡 <b>Insight:</b> Law of Large Numbers: more trials → closer to theoretical. 10 coin flips: maybe 7 heads. 10,000: very close to 5,000.
       </div>
 </div>
+  )
+}
+
+// ============================================================
+// 7. PICTOGRAPH BUILDER  (K-5)
+// ============================================================
+
+const PICTOGRAPH_ICONS = ['🍎', '⭐', '🐶', '🚗', '🎨']
+
+type PictoCategory = { name: string; count: number }
+
+export function PictographBuilder({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [title, setTitle] = useState('Favorite Fruit')
+  const [icon, setIcon] = useState('🍎')
+  const [scale, setScale] = useState(1)
+  const [categories, setCategories] = useState<PictoCategory[]>([
+    { name: 'Apples', count: 6 },
+    { name: 'Bananas', count: 4 },
+    { name: 'Cherries', count: 8 },
+  ])
+
+  const updateCat = (i: number, field: 'name' | 'count', val: string) => {
+    setCategories(prev => prev.map((c, idx) => {
+      if (idx !== i) return c
+      if (field === 'count') return { ...c, count: Math.max(0, parseInt(val) || 0) }
+      return { ...c, name: val }
+    }))
+  }
+  const addCat = () => setCategories(prev => [...prev, { name: 'New', count: 0 }])
+  const removeCat = (i: number) => setCategories(prev => prev.filter((_, idx) => idx !== i))
+
+  const total = categories.reduce((sum, c) => sum + c.count, 0)
+  const maxCat = categories.length > 0 ? categories.reduce((a, b) => a.count >= b.count ? a : b) : null
+  const minCat = categories.length > 0 ? categories.reduce((a, b) => a.count <= b.count ? a : b) : null
+  const avg = categories.length > 0 ? total / categories.length : 0
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Pictograph title..." style={{ ...s.input, width: '100%' }} />
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>Icon:</span>
+        {PICTOGRAPH_ICONS.map(ic => (
+          <button key={ic} onClick={() => setIcon(ic)} style={{ ...s.btn(icon === ic), fontSize: 14, padding: '2px 8px' }}>{ic}</button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>Scale:</span>
+        {[1, 2, 5, 10].map(n => (
+          <button key={n} onClick={() => setScale(n)} style={s.btn(scale === n)}>1 = {n}</button>
+        ))}
+      </div>
+      {/* Categories editor */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {categories.map((cat, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <input value={cat.name} onChange={e => updateCat(i, 'name', e.target.value)} style={{ ...s.input, flex: 1 }} />
+            <input type="number" value={cat.count} onChange={e => updateCat(i, 'count', e.target.value)} style={{ ...s.input, width: 50 }} />
+            <button onClick={() => removeCat(i)} style={{ ...s.btn(false), color: '#f87171' }}>✕</button>
+          </div>
+        ))}
+        <button onClick={addCat} style={{ ...s.btn(false), alignSelf: 'flex-start' }}>+ Add category</button>
+      </div>
+      {/* Pictograph */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: s.bright, marginBottom: 4 }}>{title}</div>
+        <div style={{ fontSize: 9, color: s.text, marginBottom: 6 }}>Each {icon} = {scale} item{scale > 1 ? 's' : ''}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {categories.map((cat, i) => {
+            const iconCount = Math.ceil(cat.count / scale)
+            return (
+              <div key={i}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: s.bright, marginBottom: 2 }}>
+                  <span>{cat.name}</span>
+                  <span style={{ fontFamily: 'monospace' }}>{cat.count} = {iconCount} {icon}</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', fontSize: 13, lineHeight: 1.1, letterSpacing: 0.5 }}>
+                  {Array.from({ length: Math.min(iconCount, 30) }).map((_, j) => (
+                    <span key={j}>{icon}</span>
+                  ))}
+                  {iconCount > 30 && <span style={{ fontSize: 10, color: s.text, marginLeft: 4 }}>+{iconCount - 30} more</span>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Title: "{title}" | Icon: {icon} | Scale: 1 icon = {scale} items</div>
+        <div>Step 2: {categories.length} categories:{' '}{categories.map((c, idx) => (
+          <span key={idx}>{idx > 0 ? ', ' : ''}{c.name}</span>
+        ))}</div>
+        <div>Step 3: Most: {maxCat?.name ?? '—'} with {maxCat?.count ?? 0} items ({Math.ceil((maxCat?.count ?? 0) / scale)} icons)</div>
+        <div>Step 4: Least: {minCat?.name ?? '—'} with {minCat?.count ?? 0} items ({Math.ceil((minCat?.count ?? 0) / scale)} icons)</div>
+        <div>Step 5: Total items: {total} | Average: {avg.toFixed(1)} per category</div>
+        <div>Step 6: Pictographs show data with pictures — each icon = {scale} items (scale helps fit large numbers)</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Pictographs use pictures to show data. The scale (1 icon = N items) lets us display large numbers with just a few pictures — making comparisons easy to see at a glance.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 8. BAR GRAPH MAKER  (K-5)
+// ============================================================
+
+const BAR_COLORS = [
+  { name: 'Blue', hex: '#60a5fa' },
+  { name: 'Green', hex: '#34d399' },
+  { name: 'Red', hex: '#f87171' },
+  { name: 'Orange', hex: '#fb923c' },
+  { name: 'Purple', hex: '#a78bfa' },
+]
+
+export function BarGraphMaker({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [labels, setLabels] = useState('Mon, Tue, Wed, Thu, Fri')
+  const [values, setValues] = useState('4, 7, 3, 8, 5')
+  const [color, setColor] = useState(BAR_COLORS[0].hex)
+  const [orientation, setOrientation] = useState<'v' | 'h'>('v')
+
+  const cats = useMemo(() => {
+    const labelsArr = labels.split(',').map(x => x.trim()).filter(Boolean)
+    const valuesArr = values.split(',').map(x => parseFloat(x.trim())).filter(n => !isNaN(n))
+    const n = Math.min(labelsArr.length, valuesArr.length)
+    return Array.from({ length: n }, (_, i) => ({ label: labelsArr[i], value: valuesArr[i] }))
+  }, [labels, values])
+
+  const maxVal = cats.length > 0 ? Math.max(...cats.map(c => c.value)) : 0
+  const minVal = cats.length > 0 ? Math.min(...cats.map(c => c.value)) : 0
+  const total = cats.reduce((sum, c) => sum + c.value, 0)
+  const avg = cats.length > 0 ? total / cats.length : 0
+  const maxCat = cats.length > 0 ? cats.find(c => c.value === maxVal) : undefined
+  const minCat = cats.length > 0 ? cats.find(c => c.value === minVal) : undefined
+  const range = maxVal - minVal
+  const niceMax = Math.max(1, Math.ceil(maxVal * 1.1))
+
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+
+  const svgW = 280, svgH = 130
+  const padL = 30, padR = 12, padT = 10, padB = 22
+  const plotW = svgW - padL - padR
+  const plotH = svgH - padT - padB
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <input value={labels} onChange={e => setLabels(e.target.value)} placeholder="Labels (comma-separated)" style={{ ...s.input, width: '100%' }} />
+        <input value={values} onChange={e => setValues(e.target.value)} placeholder="Values (comma-separated)" style={{ ...s.input, width: '100%' }} />
+      </div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: s.text }}>Color:</span>
+        {BAR_COLORS.map(c => (
+          <button key={c.hex} onClick={() => setColor(c.hex)} style={{
+            ...s.btn(color === c.hex),
+            background: color === c.hex ? c.hex + '33' : undefined,
+            border: color === c.hex ? '1px solid ' + c.hex : undefined,
+          }}>
+            <span style={{ color: c.hex }}>●</span> {c.name}
+          </button>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button onClick={() => setOrientation('v')} style={s.btn(orientation === 'v')}>Vertical</button>
+        <button onClick={() => setOrientation('h')} style={s.btn(orientation === 'h')}>Horizontal</button>
+      </div>
+      {/* Bar graph SVG */}
+      {cats.length > 0 && (
+        <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+          {/* Grid */}
+          {[0, 0.25, 0.5, 0.75, 1].map(f => (
+            <line key={'g' + f} x1={padL} y1={padT + plotH - f * plotH} x2={svgW - padR} y2={padT + plotH - f * plotH} stroke={gridColor} strokeWidth={0.5} />
+          ))}
+          {/* Y axis labels */}
+          {[0, 0.25, 0.5, 0.75, 1].map(f => (
+            <text key={'y' + f} x={padL - 3} y={padT + plotH - f * plotH + 3} fontSize={7} fill={axisColor} textAnchor="end">
+              {Math.round(f * niceMax)}
+            </text>
+          ))}
+          {orientation === 'v' ? (
+            <>
+              {cats.map((cat, i) => {
+                const barW = plotW / cats.length
+                const x = padL + i * barW
+                const barH = (cat.value / niceMax) * plotH
+                const y = padT + plotH - barH
+                return (
+                  <g key={i}>
+                    <rect x={x + 2} y={y} width={barW - 4} height={barH} fill={color} rx={2} opacity={0.85} />
+                    <text x={x + barW / 2} y={y - 2} fontSize={7} fill={axisColor} textAnchor="middle">{cat.value}</text>
+                    <text x={x + barW / 2} y={svgH - padB + 11} fontSize={7} fill={axisColor} textAnchor="middle">{cat.label}</text>
+                  </g>
+                )
+              })}
+            </>
+          ) : (
+            <>
+              {cats.map((cat, i) => {
+                const barH = plotH / cats.length
+                const y = padT + i * barH
+                const barW = (cat.value / niceMax) * plotW
+                return (
+                  <g key={i}>
+                    <rect x={padL + 1} y={y + 2} width={barW} height={barH - 4} fill={color} rx={2} opacity={0.85} />
+                    <text x={padL + barW + 3} y={y + barH / 2 + 2} fontSize={7} fill={axisColor} textAnchor="start">{cat.value}</text>
+                    <text x={padL - 3} y={y + barH / 2 + 2} fontSize={7} fill={axisColor} textAnchor="end">{cat.label}</text>
+                  </g>
+                )
+              })}
+            </>
+          )}
+          {/* Axes */}
+          <line x1={padL} y1={padT + plotH} x2={svgW - padR} y2={padT + plotH} stroke={axisColor} strokeWidth={1} />
+          <line x1={padL} y1={padT} x2={padL} y2={padT + plotH} stroke={axisColor} strokeWidth={1} />
+        </svg>
+      )}
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: {cats.length} categories plotted | Max value: {maxVal}</div>
+        <div>Step 2: Scale: 0 to {niceMax} (axis goes up to the largest value)</div>
+        <div>Step 3: Tallest bar: {maxCat?.label ?? '—'} = {maxVal} | Shortest bar: {minCat?.label ?? '—'} = {minVal}</div>
+        <div>Step 4: Range: {maxVal} − {minVal} = {range}</div>
+        <div>Step 5: Total: {total} | Average: {avg.toFixed(1)}</div>
+        <div>Step 6: Bar graphs make comparison easy — taller = more, shorter = less</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Bar graphs turn numbers into pictures — your eyes can compare bar heights faster than reading a table. The axis scale is the key that unlocks the meaning of every bar.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 9. LINE PLOT WITH FRACTIONS  (K-5)
+// ============================================================
+
+const LINE_PLOT_HALF_VALUES = Array.from({ length: 11 }, (_, i) => i / 2) // 0, 0.5, 1, ..., 5
+
+export function LinePlotFractions({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [data, setData] = useState<number[]>([1, 1.5, 2, 2, 2.5])
+  const [inputValue, setInputValue] = useState('')
+
+  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = e.currentTarget
+    const rect = svg.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const svgX = (x / rect.width) * 280
+    const padL = 25, padR = 15
+    const plotW = 280 - padL - padR
+    const val = ((svgX - padL) / plotW) * 5
+    if (val < -0.25 || val > 5.25) return
+    const rounded = Math.round(val * 2) / 2
+    if (rounded >= 0 && rounded <= 5) {
+      setData(prev => [...prev, rounded])
+    }
+  }
+
+  const addValue = () => {
+    const v = parseFloat(inputValue)
+    if (!isNaN(v) && v >= 0 && v <= 5) {
+      const rounded = Math.round(v * 2) / 2
+      setData(prev => [...prev, rounded])
+      setInputValue('')
+    }
+  }
+  const removeLast = () => setData(prev => prev.slice(0, -1))
+  const clearAll = () => setData([])
+
+  const freq = useMemo(() => {
+    const m = new Map<number, number>()
+    LINE_PLOT_HALF_VALUES.forEach(v => m.set(v, 0))
+    data.forEach(v => m.set(v, (m.get(v) || 0) + 1))
+    return m
+  }, [data])
+
+  const maxFreq = Math.max(...freq.values(), 1)
+  const modeEntries = useMemo(() => {
+    const max = Math.max(...freq.values(), 0)
+    if (max <= 1) return [] as number[]
+    return [...freq.entries()].filter(([, f]) => f === max).map(([v]) => v)
+  }, [freq])
+  const modeCount = modeEntries.length > 0 ? Math.max(...freq.values()) : 0
+
+  const min = data.length > 0 ? Math.min(...data) : 0
+  const max = data.length > 0 ? Math.max(...data) : 0
+
+  const formatVal = (v: number) => {
+    if (Number.isInteger(v)) return String(v)
+    const whole = Math.floor(v)
+    return whole + '½'
+  }
+
+  const padL = 25, padR = 15, padT = 10, padB = 22
+  const svgW = 280, svgH = 130
+  const plotW = svgW - padL - padR
+  const plotH = svgH - padT - padB
+  const xForVal = (v: number) => padL + (v / 5) * plotW
+
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const xColor = isDark ? '#f87171' : '#dc2626'
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg, cursor: 'pointer' }} onClick={handleClick}>
+        {/* Grid */}
+        {LINE_PLOT_HALF_VALUES.map(v => {
+          const x = xForVal(v)
+          return <line key={'g' + v} x1={x} y1={padT} x2={x} y2={padT + plotH} stroke={gridColor} strokeWidth={0.5} strokeDasharray={Number.isInteger(v) ? '' : '2 2'} />
+        })}
+        {/* X stacks */}
+        {LINE_PLOT_HALF_VALUES.map(v => {
+          const count = freq.get(v) || 0
+          const x = xForVal(v)
+          return Array.from({ length: count }).map((_, i) => {
+            const y = padT + plotH - 8 - i * 9
+            return (
+              <text key={v + '-' + i} x={x} y={y + 4} fontSize={13} fontWeight={700} fill={xColor} textAnchor="middle">X</text>
+            )
+          })
+        })}
+        {/* Number line */}
+        <line x1={padL} y1={padT + plotH} x2={svgW - padR} y2={padT + plotH} stroke={axisColor} strokeWidth={1.5} />
+        {/* Tick marks and labels */}
+        {LINE_PLOT_HALF_VALUES.map(v => {
+          const x = xForVal(v)
+          const isWhole = Number.isInteger(v)
+          return (
+            <g key={'t' + v}>
+              <line x1={x} y1={padT + plotH} x2={x} y2={padT + plotH + (isWhole ? 5 : 3)} stroke={axisColor} strokeWidth={1} />
+              {isWhole && <text x={x} y={padT + plotH + 13} fontSize={7} fill={axisColor} textAnchor="middle">{v}</text>}
+            </g>
+          )
+        })}
+        {/* ½ labels between integers */}
+        {[0.5, 1.5, 2.5, 3.5, 4.5].map(v => {
+          const x = xForVal(v)
+          return <text key={'half' + v} x={x} y={padT + plotH + 13} fontSize={6} fill={axisColor} textAnchor="middle">½</text>
+        })}
+      </svg>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="Add value (0, 0.5, 1, 1.5...)" style={{ ...s.input, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter') addValue() }} />
+        <button onClick={addValue} style={s.btn(false)}>Add</button>
+        <button onClick={removeLast} style={s.btn(false)}>Undo</button>
+        <button onClick={clearAll} style={{ ...s.btn(false), color: '#f87171' }}>Clear</button>
+      </div>
+      <div style={{ fontSize: 10, color: s.text, padding: '4px 8px', borderRadius: 6, background: s.bg }}>
+        Click the number line to add an X at the nearest ½ mark. Max stack: {maxFreq}.
+      </div>
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: {data.length} data point(s) on the line plot</div>
+        <div>Step 2: Range: {formatVal(min)} to {formatVal(max)} | Scale: ½ unit markings</div>
+        <div>Step 3: Most frequent (mode): {modeEntries.length > 0 ? modeEntries.map(formatVal).join(', ') : 'None'} {modeEntries.length > 0 ? '(appears ' + modeCount + ' times)' : '(no value repeats)'}</div>
+        <div>Step 4: {data.length} values placed — Xs stack vertically for repeated values</div>
+        <div>Step 5: Click the number line to add a data point at that ½ mark</div>
+        <div>Step 6: Line plots show how data is distributed — clusters show common values</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A line plot puts every data point on a number line. When the same value appears many times, the Xs stack up — so the tallest stack shows the most common value.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 10. TALLY CHART CONVERTER  (K-5)
+// ============================================================
+
+type TallyCat = { name: string; count: number }
+
+export function TallyChartConverter({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [categories, setCategories] = useState<TallyCat[]>([
+    { name: 'Apples', count: 7 },
+    { name: 'Bananas', count: 5 },
+    { name: 'Cherries', count: 3 },
+  ])
+  const [showGraph, setShowGraph] = useState(false)
+
+  const addTally = (i: number) => setCategories(prev => prev.map((c, idx) => idx === i ? { ...c, count: c.count + 1 } : c))
+  const removeTally = (i: number) => setCategories(prev => prev.map((c, idx) => idx === i ? { ...c, count: Math.max(0, c.count - 1) } : c))
+  const updateName = (i: number, name: string) => setCategories(prev => prev.map((c, idx) => idx === i ? { ...c, name } : c))
+  const addCat = () => setCategories(prev => [...prev, { name: 'New', count: 0 }])
+  const removeCat = (i: number) => setCategories(prev => prev.filter((_, idx) => idx !== i))
+
+  const total = categories.reduce((sum, c) => sum + c.count, 0)
+  const maxCat = categories.length > 0 ? categories.reduce((a, b) => a.count >= b.count ? a : b) : null
+  const minCat = categories.length > 0 ? categories.reduce((a, b) => a.count <= b.count ? a : b) : null
+
+  // Render tally marks as SVG (4 verticals + 1 diagonal slash per group of 5)
+  const renderTally = (count: number) => {
+    const lines: React.ReactNode[] = []
+    const lineColor = isDark ? '#e2e8f0' : '#1e293b'
+    const groups = Math.floor(count / 5)
+    const remainder = count % 5
+    const spacing = 4
+    const groupSpacing = 8
+    let x = 0
+    for (let g = 0; g < groups; g++) {
+      for (let i = 0; i < 4; i++) {
+        lines.push(<line key={g + '-v' + i} x1={x + i * spacing} y1={0} x2={x + i * spacing} y2={20} stroke={lineColor} strokeWidth={1.5} />)
+      }
+      lines.push(<line key={g + '-d'} x1={x - 1} y1={20} x2={x + 3 * spacing + 1} y2={0} stroke={lineColor} strokeWidth={1.5} />)
+      x += 4 * spacing + groupSpacing
+    }
+    for (let i = 0; i < remainder; i++) {
+      lines.push(<line key={'r-' + i} x1={x + i * spacing} y1={0} x2={x + i * spacing} y2={20} stroke={lineColor} strokeWidth={1.5} />)
+    }
+    const width = Math.max(x + remainder * spacing + 2, 20)
+    return { lines, width }
+  }
+
+  const maxCount = Math.max(...categories.map(c => c.count), 1)
+  const barColors = ['#60a5fa', '#34d399', '#f87171', '#fbbf24', '#a78bfa', '#fb923c']
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Categories editor */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {categories.map((cat, i) => {
+          const tally = renderTally(cat.count)
+          return (
+            <div key={i} style={{ padding: '4px 6px', borderRadius: 4, background: s.bg, border: '1px solid ' + s.border }}>
+              <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 3 }}>
+                <input value={cat.name} onChange={e => updateName(i, e.target.value)} style={{ ...s.input, flex: 1 }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: s.bright, fontFamily: 'monospace', minWidth: 24, textAlign: 'right' as const }}>{cat.count}</span>
+                <button onClick={() => addTally(i)} style={{ ...s.btn(false), padding: '2px 8px', fontWeight: 700 as const }}>+</button>
+                <button onClick={() => removeTally(i)} style={{ ...s.btn(false), padding: '2px 8px' }}>−</button>
+                <button onClick={() => removeCat(i)} style={{ ...s.btn(false), color: '#f87171' }}>✕</button>
+              </div>
+              <svg viewBox={"0 0 " + tally.width + ' 22'} style={{ width: '100%', height: 22, display: 'block' }} preserveAspectRatio="xMinYMid meet">
+                {tally.lines}
+              </svg>
+            </div>
+          )
+        })}
+        <button onClick={addCat} style={{ ...s.btn(false), alignSelf: 'flex-start' }}>+ Add category</button>
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button onClick={() => setShowGraph(p => !p)} style={s.btn(showGraph)}>{showGraph ? 'Hide' : 'Show'} Bar Graph</button>
+      </div>
+      {/* Bar graph */}
+      {showGraph && categories.length > 0 && (
+        <svg viewBox="0 0 280 110" style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+          {categories.map((cat, i) => {
+            const barW = 230 / categories.length
+            const x = 42 + i * barW
+            const barH = (cat.count / maxCount) * 75
+            const y = 80 - barH
+            return (
+              <g key={i}>
+                <rect x={x + 1} y={y} width={barW - 2} height={barH} fill={barColors[i % barColors.length]} rx={2} opacity={0.85} />
+                <text x={x + barW / 2} y={y - 3} fontSize={7} fill={axisColor} textAnchor="middle">{cat.count}</text>
+                <text x={x + barW / 2} y={94} fontSize={7} fill={axisColor} textAnchor="middle">{cat.name}</text>
+              </g>
+            )
+          })}
+          <line x1={40} y1={80} x2={275} y2={80} stroke={axisColor} strokeWidth={1} />
+        </svg>
+      )}
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: {categories.length} categories in the tally chart</div>
+        <div>Step 2:{' '}{categories.map((c, idx) => (
+          <span key={idx}>{idx > 0 ? ', ' : ''}{c.name}: {c.count}</span>
+        ))}</div>
+        <div>Step 3: Tally groups: each group of 5 = 𝍸 (slash through 4 verticals)</div>
+        <div>Step 4: Most: {maxCat?.name ?? '—'} ({maxCat?.count ?? 0}) | Least: {minCat?.name ?? '—'} ({minCat?.count ?? 0})</div>
+        <div>Step 5: Total: {total} | {showGraph ? 'Bar graph shown below' : 'Click "Show Bar Graph" to visualize'}</div>
+        <div>Step 6: Tally marks → bar graph: same data, different picture</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Tally marks count in groups of 5 — quick to read at a glance. The same data can be shown as tallies, a bar graph, or numbers — each form makes different patterns easy to see.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 11. MEAN AS FAIR SHARE  (K-5)
+// ============================================================
+
+export function MeanAsFairShare({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [stacks, setStacks] = useState<number[]>([2, 5, 3, 6])
+  const [redistributed, setRedistributed] = useState(false)
+  const stacksRef = useRef<number[]>(stacks)
+  const timeoutRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    stacksRef.current = stacks
+  }, [stacks])
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) window.clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
+  const total = stacks.reduce((a, b) => a + b, 0)
+  const mean = stacks.length > 0 ? total / stacks.length : 0
+  const meanFloor = Math.floor(mean)
+  const meanCeil = Math.ceil(mean)
+  const meanStr = Number.isInteger(mean) ? String(mean) : mean.toFixed(2)
+  const meanDisplay = meanFloor === meanCeil ? String(meanFloor) : meanFloor + ' or ' + meanCeil
+
+  const updateStack = (i: number, delta: number) => {
+    setStacks(prev => prev.map((v, idx) => idx === i ? Math.max(0, v + delta) : v))
+    setRedistributed(false)
+  }
+  const addStack = () => {
+    if (stacks.length < 8) {
+      setStacks(prev => [...prev, 1])
+      setRedistributed(false)
+    }
+  }
+  const removeStack = () => {
+    if (stacks.length > 2) {
+      setStacks(prev => prev.slice(0, -1))
+      setRedistributed(false)
+    }
+  }
+  const reset = () => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+    setStacks([2, 5, 3, 6])
+    setRedistributed(false)
+  }
+
+  const redistribute = () => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+    setRedistributed(false)
+    const step = () => {
+      const current = stacksRef.current
+      const t = current.reduce((a, b) => a + b, 0)
+      const m = t / current.length
+      const floor = Math.floor(m)
+      const ceil = Math.ceil(m)
+      let maxIdx = -1, maxVal = -Infinity
+      let minIdx = -1, minVal = Infinity
+      for (let i = 0; i < current.length; i++) {
+        if (current[i] > ceil && current[i] > maxVal) { maxIdx = i; maxVal = current[i] }
+        if (current[i] < floor && current[i] < minVal) { minIdx = i; minVal = current[i] }
+      }
+      if (maxIdx === -1 || minIdx === -1) {
+        setRedistributed(true)
+        return
+      }
+      const next = [...current]
+      next[maxIdx] -= 1
+      next[minIdx] += 1
+      stacksRef.current = next
+      setStacks(next)
+      timeoutRef.current = window.setTimeout(step, 450)
+    }
+    step()
+  }
+
+  const aboveAvg = stacks.filter(v => v > mean).length
+  const belowAvg = stacks.filter(v => v < mean).length
+
+  // SVG layout
+  const svgW = 280, svgH = 130
+  const stackW = 28
+  const gap = stacks.length > 1 ? (svgW - 20 - stacks.length * stackW) / (stacks.length - 1) : 0
+  const totalW = stacks.length * stackW + Math.max(stacks.length - 1, 0) * gap
+  const startX = (svgW - totalW) / 2
+  const baseY = 108
+  const blockH = 8
+
+  const blockColor = isDark ? '#34d399' : '#059669'
+  const aboveColor = '#f87171'
+  const meanColor = isDark ? '#fbbf24' : '#d97706'
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* SVG */}
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {/* Mean line */}
+        <line x1={5} y1={baseY - mean * blockH} x2={svgW - 5} y2={baseY - mean * blockH} stroke={meanColor} strokeWidth={1} strokeDasharray="4 2" />
+        <text x={svgW - 5} y={baseY - mean * blockH - 3} fontSize={8} fill={meanColor} textAnchor="end" fontWeight={700}>Mean = {meanStr}</text>
+        {/* Stacks */}
+        {stacks.map((count, i) => {
+          const x = startX + i * (stackW + gap)
+          return (
+            <g key={i}>
+              {Array.from({ length: count }).map((_, j) => {
+                const y = baseY - (j + 1) * blockH
+                const isAbove = j + 1 > mean
+                const fill = isAbove && !redistributed ? aboveColor : blockColor
+                return <rect key={j} x={x} y={y} width={stackW} height={blockH - 1} fill={fill} rx={1} opacity={0.85} />
+              })}
+              {/* Base line */}
+              <line x1={x - 2} y1={baseY} x2={x + stackW + 2} y2={baseY} stroke={axisColor} strokeWidth={1} />
+              {/* Label */}
+              <text x={x + stackW / 2} y={baseY + 12} fontSize={8} fill={axisColor} textAnchor="middle">#{i + 1}</text>
+              <text x={x + stackW / 2} y={baseY + 22} fontSize={11} fontWeight={700} fill={isDark ? '#e2e8f0' : '#1e293b'} textAnchor="middle">{count}</text>
+            </g>
+          )
+        })}
+      </svg>
+      {/* Controls */}
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button onClick={redistribute} style={{
+          padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+          background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)',
+          color: '#34d399', cursor: 'pointer',
+        }}>Redistribute</button>
+        <button onClick={addStack} style={s.btn(false)}>+ Stack</button>
+        <button onClick={removeStack} style={s.btn(false)}>− Stack</button>
+        <button onClick={reset} style={{ ...s.btn(false), color: '#f87171' }}>Reset</button>
+      </div>
+      {/* Per-stack +/- buttons */}
+      <div style={{ display: 'flex', gap: 4 }}>
+        {stacks.map((_, i) => (
+          <div key={i} style={{ display: 'flex', gap: 2, flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+            <button onClick={() => updateStack(i, +1)} style={{ ...s.btn(false), padding: '1px 4px', fontSize: 11 }}>+</button>
+            <button onClick={() => updateStack(i, -1)} style={{ ...s.btn(false), padding: '1px 4px', fontSize: 11 }}>−</button>
+          </div>
+        ))}
+      </div>
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: {stacks.length} stacks: {stacks.join(', ')} blocks each</div>
+        <div>Step 2: Total blocks = {total} | Number of stacks = {stacks.length}</div>
+        <div>Step 3: Mean = total ÷ stacks = {total} ÷ {stacks.length} = {meanStr}</div>
+        <div>Step 4: {redistributed ? 'All stacks equalized at ' + meanDisplay + ' — that is the FAIR SHARE' : 'Click "Redistribute" to share blocks fairly'}</div>
+        <div>Step 5: Above average: {aboveAvg} | Below average: {belowAvg}</div>
+        <div>Step 6: The mean is the "fair share" — if you redistribute equally, everyone gets the mean</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> The mean is the "fair share" — what each stack would have if you moved blocks around until everyone had the same amount. Total ÷ count = mean, every time.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 12. CUSTOM SPINNER  (K-5)
+// ============================================================
+
+type SpinnerSection = { label: string; color: string; size: number }
+const SPINNER_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#fb923c']
+
+export function CustomSpinner({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [sections, setSections] = useState<SpinnerSection[]>([
+    { label: 'Red', color: '#ef4444', size: 50 },
+    { label: 'Blue', color: '#3b82f6', size: 30 },
+    { label: 'Green', color: '#22c55e', size: 20 },
+  ])
+  const [results, setResults] = useState<Record<string, number>>({})
+  const [totalSpins, setTotalSpins] = useState(0)
+  const [lastResult, setLastResult] = useState<SpinnerSection | null>(null)
+  const [rotation, setRotation] = useState(0)
+  const [spinning, setSpinning] = useState(false)
+  const rafRef = useRef<number | null>(null)
+  const rotRef = useRef(0)
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    }
+  }, [])
+
+  const totalSize = sections.reduce((sum, sec) => sum + sec.size, 0)
+
+  const updateSection = (i: number, field: keyof SpinnerSection, val: string | number) => {
+    setSections(prev => prev.map((sec, idx) => {
+      if (idx !== i) return sec
+      if (field === 'size') return { ...sec, size: Math.max(1, parseInt(String(val)) || 1) }
+      if (field === 'color') return { ...sec, color: String(val) }
+      return { ...sec, label: String(val) }
+    }))
+  }
+  const addSection = () => {
+    if (sections.length < 6) {
+      const usedColors = new Set(sections.map(sec => sec.color))
+      const nextColor = SPINNER_COLORS.find(c => !usedColors.has(c)) || SPINNER_COLORS[sections.length % SPINNER_COLORS.length]
+      setSections(prev => [...prev, { label: 'S' + (prev.length + 1), color: nextColor, size: 20 }])
+    }
+  }
+  const removeSection = (i: number) => {
+    if (sections.length > 2) {
+      setSections(prev => prev.filter((_, idx) => idx !== i))
+    }
+  }
+
+  const spin = useCallback(() => {
+    if (spinning || sections.length === 0 || totalSize === 0) return
+    // Pick weighted winner
+    const rand = Math.random() * totalSize
+    let acc = 0
+    let winnerIdx = 0
+    for (let i = 0; i < sections.length; i++) {
+      acc += sections[i].size
+      if (rand <= acc) {
+        winnerIdx = i
+        break
+      }
+    }
+    const winner = sections[winnerIdx]
+    // Compute winner's angle range in unrotated wheel (starts at -90 = top)
+    let startAngle = -90
+    for (let i = 0; i < winnerIdx; i++) {
+      startAngle += (sections[i].size / totalSize) * 360
+    }
+    const endAngle = startAngle + (winner.size / totalSize) * 360
+    const targetWithinSection = startAngle + Math.random() * (endAngle - startAngle)
+    // We want this angle to be at the top (-90) after rotation
+    const desiredFinalRot = -90 - targetWithinSection
+    // Add 4+ full rotations for visual effect
+    const minTarget = rotRef.current + 360 * 4
+    let targetAngle = desiredFinalRot
+    const diff = minTarget - targetAngle
+    const fullTurnsToAdd = Math.ceil(diff / 360)
+    targetAngle += fullTurnsToAdd * 360
+
+    setSpinning(true)
+    const startAngleAnim = rotRef.current
+    const duration = 1500
+    const startTime = performance.now()
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime
+      const t = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      const angle = startAngleAnim + (targetAngle - startAngleAnim) * eased
+      setRotation(angle)
+      rotRef.current = angle
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(animate)
+      } else {
+        setSpinning(false)
+        setLastResult(winner)
+        setResults(prev => ({ ...prev, [winner.label]: (prev[winner.label] || 0) + 1 }))
+        setTotalSpins(prev => prev + 1)
+      }
+    }
+    rafRef.current = requestAnimationFrame(animate)
+  }, [spinning, sections, totalSize])
+
+  const reset = () => {
+    setResults({})
+    setTotalSpins(0)
+    setLastResult(null)
+  }
+
+  // Compute section paths
+  const sectionPaths = useMemo(() => {
+    let startAngle = -90
+    return sections.map((sec) => {
+      const angleSize = (sec.size / Math.max(totalSize, 1)) * 360
+      const endAngle = startAngle + angleSize
+      const startRad = (startAngle * Math.PI) / 180
+      const endRad = (endAngle * Math.PI) / 180
+      const r = 55
+      const x1 = r * Math.cos(startRad)
+      const y1 = r * Math.sin(startRad)
+      const x2 = r * Math.cos(endRad)
+      const y2 = r * Math.sin(endRad)
+      const largeArc = angleSize > 180 ? 1 : 0
+      const path = 'M0,0 L' + x1.toFixed(2) + ',' + y1.toFixed(2) + ' A' + r + ',' + r + ' 0 ' + largeArc + ',1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z'
+      const midAngle = (startAngle + endAngle) / 2
+      const labelR = r * 0.62
+      const labelX = labelR * Math.cos((midAngle * Math.PI) / 180)
+      const labelY = labelR * Math.sin((midAngle * Math.PI) / 180)
+      const percentage = ((sec.size / Math.max(totalSize, 1)) * 100).toFixed(0)
+      startAngle = endAngle
+      return { path, color: sec.color, label: sec.label, labelX, labelY, percentage }
+    })
+  }, [sections, totalSize])
+
+  // Results table
+  const resultsList = useMemo(() => {
+    return sections.map(sec => ({
+      label: sec.label,
+      color: sec.color,
+      theoretical: (sec.size / Math.max(totalSize, 1)) * 100,
+      experimental: totalSpins > 0 ? ((results[sec.label] || 0) / totalSpins) * 100 : 0,
+      count: results[sec.label] || 0,
+    }))
+  }, [sections, results, totalSpins, totalSize])
+
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Sections editor */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {sections.map((sec, i) => (
+          <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+            <input type="color" value={sec.color} onChange={e => updateSection(i, 'color', e.target.value)} style={{ width: 24, height: 24, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }} />
+            <input value={sec.label} onChange={e => updateSection(i, 'label', e.target.value)} style={{ ...s.input, flex: 1 }} />
+            <input type="number" value={sec.size} onChange={e => updateSection(i, 'size', e.target.value)} style={{ ...s.input, width: 45 }} />
+            <span style={{ fontSize: 9, color: s.text, minWidth: 32, textAlign: 'right' as const }}>{((sec.size / Math.max(totalSize, 1)) * 100).toFixed(0)}%</span>
+            <button onClick={() => removeSection(i)} style={{ ...s.btn(false), color: '#f87171' }}>✕</button>
+          </div>
+        ))}
+        <button onClick={addSection} disabled={sections.length >= 6} style={{ ...s.btn(false), alignSelf: 'flex-start', opacity: sections.length >= 6 ? 0.5 : 1 }}>+ Add section</button>
+      </div>
+      {/* Spinner */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <svg width={140} height={140} viewBox="-70 -70 140 140">
+          <g transform={'rotate(' + rotation + ')'}>
+            {sectionPaths.map((sp, i) => (
+              <g key={i}>
+                <path d={sp.path} fill={sp.color} stroke={isDark ? '#1e293b' : '#fff'} strokeWidth={1.5} opacity={0.88} />
+                <text x={sp.labelX} y={sp.labelY} fontSize={7} fill="#fff" textAnchor="middle" fontWeight={700}>{sp.label}</text>
+                <text x={sp.labelX} y={sp.labelY + 8} fontSize={6} fill="#fff" textAnchor="middle">{sp.percentage}%</text>
+              </g>
+            ))}
+          </g>
+          {/* Center hub */}
+          <circle cx={0} cy={0} r={4} fill={isDark ? '#1e293b' : '#fff'} stroke={axisColor} strokeWidth={1} />
+          {/* Pointer at top */}
+          <polygon points="0,-68 -5,-58 5,-58" fill="#f87171" stroke={isDark ? '#1e293b' : '#fff'} strokeWidth={1} />
+        </svg>
+      </div>
+      {/* Spin button */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <button onClick={spin} disabled={spinning} style={{
+          padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+          background: spinning ? (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)') : 'rgba(5,150,105,0.15)',
+          border: spinning ? '1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)') : '1px solid rgba(5,150,105,0.3)',
+          color: spinning ? (isDark ? '#64748b' : '#94a3b8') : '#34d399',
+          cursor: spinning ? 'not-allowed' : 'pointer',
+          opacity: spinning ? 0.6 : 1,
+        }}>
+          {spinning ? 'Spinning...' : 'Spin!'}
+        </button>
+        {lastResult && !spinning && (
+          <span style={{ fontSize: 11, color: s.bright }}>
+            Last: <b style={{ color: lastResult.color }}>{lastResult.label}</b>
+          </span>
+        )}
+        <button onClick={reset} style={{ ...s.btn(false), color: '#f87171', marginLeft: 'auto' }}>Reset</button>
+      </div>
+      {/* Results table */}
+      {totalSpins > 0 && (
+        <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '2px 6px', fontSize: 10, color: s.bright, alignItems: 'center' }}>
+            <div style={{ fontWeight: 700 }}>Section</div>
+            <div style={{ fontWeight: 700, textAlign: 'right' as const }}>Count</div>
+            <div style={{ fontWeight: 700, textAlign: 'right' as const }}>Exp %</div>
+            <div style={{ fontWeight: 700, textAlign: 'right' as const, color: isDark ? '#fbbf24' : '#d97706' }}>Theo %</div>
+            {resultsList.map((r, i) => (
+              <React.Fragment key={i}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 9, height: 9, borderRadius: 2, background: r.color, display: 'inline-block' }} />
+                  {r.label}
+                </div>
+                <div style={{ fontFamily: 'monospace', textAlign: 'right' as const }}>{r.count}</div>
+                <div style={{ fontFamily: 'monospace', textAlign: 'right' as const }}>{r.experimental.toFixed(1)}</div>
+                <div style={{ fontFamily: 'monospace', textAlign: 'right' as const, color: isDark ? '#fbbf24' : '#d97706' }}>{r.theoretical.toFixed(1)}</div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: {sections.length} sections:{' '}{sections.map((sec, idx) => (
+          <span key={idx}>{idx > 0 ? ', ' : ''}{sec.label} {((sec.size / Math.max(totalSize, 1)) * 100).toFixed(0)}%</span>
+        ))}</div>
+        <div>Step 2: Total spins: {totalSpins}</div>
+        <div>Step 3: {totalSpins > 0 ? 'Results: ' : 'Click "Spin" to start — '}{totalSpins > 0 ? resultsList.map((r, idx) => (
+          <span key={idx}>{idx > 0 ? ', ' : ''}{r.label}={r.count}</span>
+        )) : ''}</div>
+        <div>Step 4: {totalSpins > 0 && lastResult ? 'Last spin: ' : 'Spin the wheel!'}{totalSpins > 0 && lastResult && <b style={{ color: lastResult.color }}>{lastResult.label}</b>}</div>
+        <div>Step 5: {totalSpins > 5 ? 'Bigger sections land more often — experimental is approaching theoretical' : 'Spin more times to see the pattern emerge'}</div>
+        <div>Step 6: Probability = size of section ÷ total size — bigger section = more likely</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Probability is the size of the "favorable" outcome divided by the total. The more you spin, the closer your actual results get to the expected (theoretical) probability — that's the Law of Large Numbers.
+      </div>
+    </div>
   )
 }

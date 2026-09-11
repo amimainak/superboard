@@ -17,6 +17,12 @@ const NaturalSelectionLazy = lazy(() => import('./biology/BiologyUtilities').the
 const CellDivisionLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.CellDivisionAnimator })))
 const PhotoRespLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.PhotosynthesisRespiration })))
 const HumanBodyInterLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.HumanBodyInteractive })))
+// K-5 widgets
+const HabitatSorterLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.HabitatSorter })))
+const LifeCycleBuilderLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.LifeCycleBuilder })))
+const BasicNeedsSorterLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.BasicNeedsSorter })))
+const TraitInheritanceLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.TraitInheritanceExplorer })))
+const FoodChainBuilderLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.FoodChainBuilder })))
 
 // Stable wrapper components (no remount on re-render)
 function PunnettSquarePanel({ isDark }: { isDark: boolean }) {
@@ -48,6 +54,22 @@ function PhotoRespPanel({ isDark }: { isDark: boolean }) {
 }
 function HumanBodyInterPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><HumanBodyInterLazy isDark={isDark} /></Suspense>
+}
+// K-5 panels
+function HabitatSorterPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><HabitatSorterLazy isDark={isDark} /></Suspense>
+}
+function LifeCycleBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><LifeCycleBuilderLazy isDark={isDark} /></Suspense>
+}
+function BasicNeedsSorterPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><BasicNeedsSorterLazy isDark={isDark} /></Suspense>
+}
+function TraitInheritancePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><TraitInheritanceLazy isDark={isDark} /></Suspense>
+}
+function FoodChainBuilderPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><FoodChainBuilderLazy isDark={isDark} /></Suspense>
 }
 
 
@@ -241,6 +263,31 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
             {sectionTitle('Meiosis Visualizer', 'bio-meiosis')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step meiosis I & II with crossing over, compare to mitosis.</p>
           </div>
+
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🏡 Habitat Sorter', 'bio-habitat-sorter')}
+            <div style={{ padding: '0 12px 12px' }}><HabitatSorterPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔄 Life Cycle Builder', 'bio-life-cycle')}
+            <div style={{ padding: '0 12px 12px' }}><LifeCycleBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌱 Basic Needs Sorter', 'bio-basic-needs')}
+            <div style={{ padding: '0 12px 12px' }}><BasicNeedsSorterPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Trait Inheritance Explorer', 'bio-trait-inheritance')}
+            <div style={{ padding: '0 12px 12px' }}><TraitInheritancePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔗 Food Chain Builder', 'bio-food-chain-k5')}
+            <div style={{ padding: '0 12px 12px' }}><FoodChainBuilderPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -257,6 +304,31 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Plant Life Cycle', 'bio-plant-life-cycle')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Seed → sprout → plant → flower → fruit → seed cycle with labels.</p>
+          </div>
+
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🏡 Habitat Sorter', 'bio-habitat-sorter')}
+            <div style={{ padding: '0 12px 12px' }}><HabitatSorterPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔄 Life Cycle Builder', 'bio-life-cycle')}
+            <div style={{ padding: '0 12px 12px' }}><LifeCycleBuilderPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌱 Basic Needs Sorter', 'bio-basic-needs')}
+            <div style={{ padding: '0 12px 12px' }}><BasicNeedsSorterPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Trait Inheritance Explorer', 'bio-trait-inheritance')}
+            <div style={{ padding: '0 12px 12px' }}><TraitInheritancePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔗 Food Chain Builder', 'bio-food-chain-k5')}
+            <div style={{ padding: '0 12px 12px' }}><FoodChainBuilderPanel isDark={isDark} /></div>
           </div>
         </>
       )}

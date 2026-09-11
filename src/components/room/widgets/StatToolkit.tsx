@@ -13,6 +13,13 @@ const BoxPlotLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ defau
 const ScatterPlotLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.ScatterPlot })))
 const NormalDistLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.NormalDist })))
 const ProbabilitySimLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.ProbabilitySimulator })))
+// K-5 widgets
+const PictographLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.PictographBuilder })))
+const BarGraphLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.BarGraphMaker })))
+const LinePlotLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.LinePlotFractions })))
+const TallyChartLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.TallyChartConverter })))
+const MeanFairShareLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.MeanAsFairShare })))
+const CustomSpinnerLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.CustomSpinner })))
 
 // Stable wrapper components (no remount on re-render)
 function DataTablePanel({ isDark }: { isDark: boolean }) {
@@ -32,6 +39,25 @@ function NormalDistPanel({ isDark }: { isDark: boolean }) {
 }
 function ProbabilitySimPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><ProbabilitySimLazy isDark={isDark} /></Suspense>
+}
+// K-5 panels
+function PictographPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PictographLazy isDark={isDark} /></Suspense>
+}
+function BarGraphPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><BarGraphLazy isDark={isDark} /></Suspense>
+}
+function LinePlotPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><LinePlotLazy isDark={isDark} /></Suspense>
+}
+function TallyChartPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TallyChartLazy isDark={isDark} /></Suspense>
+}
+function MeanFairSharePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><MeanFairShareLazy isDark={isDark} /></Suspense>
+}
+function CustomSpinnerPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><CustomSpinnerLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -180,6 +206,35 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
             {sectionTitle('Probability Simulator', 'stat-probability')}
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
           </div>
+
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Pictograph Builder', 'stat-pictograph')}
+            <div style={{ padding: '0 12px 12px' }}><PictographPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📈 Bar Graph Maker', 'stat-bar-graph')}
+            <div style={{ padding: '0 12px 12px' }}><BarGraphPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📍 Line Plot with Fractions', 'stat-line-plot')}
+            <div style={{ padding: '0 12px 12px' }}><LinePlotPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🤚 Tally Chart Converter', 'stat-tally')}
+            <div style={{ padding: '0 12px 12px' }}><TallyChartPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Mean as Fair Share', 'stat-mean-fair')}
+            <div style={{ padding: '0 12px 12px' }}><MeanFairSharePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎡 Custom Spinner', 'stat-spinner')}
+            <div style={{ padding: '0 12px 12px' }}><CustomSpinnerPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -192,6 +247,35 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
             {sectionTitle('Probability Simulator', 'stat-probability')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Flip coins, roll dice, or spin to explore chance. Great for introducing probability concepts.</p>
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
+          </div>
+
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Pictograph Builder', 'stat-pictograph')}
+            <div style={{ padding: '0 12px 12px' }}><PictographPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📈 Bar Graph Maker', 'stat-bar-graph')}
+            <div style={{ padding: '0 12px 12px' }}><BarGraphPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📍 Line Plot with Fractions', 'stat-line-plot')}
+            <div style={{ padding: '0 12px 12px' }}><LinePlotPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🤚 Tally Chart Converter', 'stat-tally')}
+            <div style={{ padding: '0 12px 12px' }}><TallyChartPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Mean as Fair Share', 'stat-mean-fair')}
+            <div style={{ padding: '0 12px 12px' }}><MeanFairSharePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎡 Custom Spinner', 'stat-spinner')}
+            <div style={{ padding: '0 12px 12px' }}><CustomSpinnerPanel isDark={isDark} /></div>
           </div>
         </>
       )}

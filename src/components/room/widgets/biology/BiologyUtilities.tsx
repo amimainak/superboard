@@ -1856,3 +1856,749 @@ export function HumanBodyInteractive({ isDark }: { isDark: boolean }) {
 </div>
   )
 }
+
+// ============================================================
+// 11. HabitatSorter (K-5)
+// ============================================================
+
+const HABITATS = [
+  { id: 'forest', name: 'Forest', emoji: '🌳', color: '#16a34a' },
+  { id: 'ocean', name: 'Ocean', emoji: '🌊', color: '#0284c7' },
+  { id: 'desert', name: 'Desert', emoji: '🏜️', color: '#d97706' },
+  { id: 'arctic', name: 'Arctic', emoji: '❄️', color: '#0891b2' },
+]
+
+const ANIMALS = [
+  { id: 'fish', name: 'Fish', emoji: '🐟', habitat: 'ocean', hint: 'Gills breathe underwater; fins swim' },
+  { id: 'frog', name: 'Frog', emoji: '🐸', habitat: 'forest', hint: 'Moist skin, lays eggs in ponds' },
+  { id: 'bird', name: 'Bird', emoji: '🐦', habitat: 'forest', hint: 'Builds nests in trees' },
+  { id: 'rabbit', name: 'Rabbit', emoji: '🐰', habitat: 'forest', hint: 'Burrows in soil, eats plants' },
+  { id: 'deer', name: 'Deer', emoji: '🦌', habitat: 'forest', hint: 'Long legs to run, eats leaves' },
+  { id: 'bear', name: 'Bear', emoji: '🐻', habitat: 'forest', hint: 'Thick fur, dens in woods' },
+  { id: 'camel', name: 'Camel', emoji: '🐫', habitat: 'desert', hint: 'Humps store fat, needs little water' },
+  { id: 'snake', name: 'Snake', emoji: '🐍', habitat: 'desert', hint: 'Scales hold moisture, burrows in sand' },
+  { id: 'penguin', name: 'Penguin', emoji: '🐧', habitat: 'arctic', hint: 'Thick fat and feathers for cold' },
+  { id: 'shark', name: 'Shark', emoji: '🦈', habitat: 'ocean', hint: 'Gills, streamlined body, sharp teeth' },
+  { id: 'squirrel', name: 'Squirrel', emoji: '🐿️', habitat: 'forest', hint: 'Climbs trees, gathers nuts' },
+  { id: 'butterfly', name: 'Butterfly', emoji: '🦋', habitat: 'forest', hint: 'Lays eggs on leaves, drinks nectar' },
+]
+
+export function HabitatSorter({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [placements, setPlacements] = useState<Record<string, string>>({})
+  const [selected, setSelected] = useState<string | null>(null)
+  const [lastPlacement, setLastPlacement] = useState<{ animal: string; habitat: string; correct: boolean; correctHabitat: string } | null>(null)
+
+  const sortedCount = Object.keys(placements).length
+  const correctCount = Object.entries(placements).filter(([aid, hid]) => ANIMALS.find(a => a.id === aid)?.habitat === hid).length
+  const selectedAnimal = ANIMALS.find(a => a.id === selected)
+
+  const handleAnimalClick = (aid: string) => {
+    if (placements[aid]) return
+    setSelected(selected === aid ? null : aid)
+  }
+
+  const handleHabitatClick = (hid: string) => {
+    if (!selected) return
+    const animal = ANIMALS.find(a => a.id === selected)
+    if (!animal) return
+    const correct = animal.habitat === hid
+    setPlacements({ ...placements, [selected]: hid })
+    setLastPlacement({ animal: animal.name, habitat: HABITATS.find(h => h.id === hid)?.name || hid, correct, correctHabitat: HABITATS.find(h => h.id === animal.habitat)?.name || animal.habitat })
+    setSelected(null)
+  }
+
+  const reset = () => {
+    setPlacements({})
+    setSelected(null)
+    setLastPlacement(null)
+  }
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 10, flexWrap: 'wrap', gap: 4 }}>
+        <span>Sorted: <b style={{ color: s.bright }}>{sortedCount}/12</b></span>
+        <span>✓ <b style={{ color: '#22c55e' }}>{correctCount}</b> | ✗ <b style={{ color: '#ef4444' }}>{sortedCount - correctCount}</b></span>
+        <button onClick={reset} style={s.btn(false)}>Reset</button>
+      </div>
+
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>Animals — click to select</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+          {ANIMALS.map(a => {
+            const placed = placements[a.id]
+            const correct = placed && placed === a.habitat
+            const wrong = placed && placed !== a.habitat
+            const isSelected = selected === a.id
+            return (
+              <button key={a.id} onClick={() => handleAnimalClick(a.id)} disabled={!!placed} style={{
+                padding: '4px 2px', fontSize: 10, cursor: placed ? 'default' : 'pointer',
+                background: correct ? 'rgba(34,197,94,0.2)' : wrong ? 'rgba(239,68,68,0.2)' : isSelected ? 'rgba(167,139,250,0.2)' : s.bg,
+                border: '1px solid ' + (correct ? 'rgba(34,197,94,0.5)' : wrong ? 'rgba(239,68,68,0.5)' : isSelected ? 'rgba(167,139,250,0.5)' : s.border),
+                color: s.bright, borderRadius: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              }}>
+                <span style={{ fontSize: 18 }}>{a.emoji}</span>
+                <span style={{ fontSize: 8, opacity: placed ? 0.5 : 1 }}>{a.name}{correct ? ' ✓' : wrong ? ' ✗' : ''}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>{selectedAnimal ? `Click a habitat for ${selectedAnimal.name}` : 'Habitats — select an animal first'}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
+          {HABITATS.map(h => {
+            const placedHere = Object.entries(placements).filter(([, hid]) => hid === h.id).map(([aid]) => ANIMALS.find(a => a.id === aid)!)
+            return (
+              <button key={h.id} onClick={() => handleHabitatClick(h.id)} disabled={!selected} style={{
+                padding: 4, cursor: selected ? 'pointer' : 'default',
+                background: s.bg, border: '1px solid ' + (selected ? h.color : s.border),
+                borderRadius: 4, opacity: selected ? 1 : 0.6, textAlign: 'left',
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: h.color }}>{h.emoji} {h.name}</div>
+                <div style={{ fontSize: 12, marginTop: 2, minHeight: 16, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                  {placedHere.length === 0 ? <span style={{ fontSize: 9, opacity: 0.4 }}>—</span> : placedHere.map(a => {
+                    const correct = a.habitat === h.id
+                    return <span key={a.id} style={{ fontSize: 14, opacity: correct ? 1 : 0.5 }} title={a.name + (correct ? ' ✓' : ' ✗')}>{a.emoji}<span style={{ fontSize: 8 }}>{correct ? '✓' : '✗'}</span></span>
+                  })}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Sorted <b>{sortedCount}/12</b> animals into habitats</div>
+        <div>Step 2: Correct: <b style={{ color: '#22c55e' }}>{correctCount}</b> | Incorrect: <b style={{ color: '#ef4444' }}>{sortedCount - correctCount}</b></div>
+        <div>Step 3: {selectedAnimal ? <>Placing <b>{selectedAnimal.name}</b> — think: where does it find food and shelter?</> : 'Click an animal, then click a habitat'}</div>
+        <div>Step 4: {selectedAnimal ? <>{selectedAnimal.name}: {selectedAnimal.hint}</> : 'Each habitat has unique climate and resources'}</div>
+        <div>Step 5: {lastPlacement ? <>Last: <b>{lastPlacement.animal}</b> → {lastPlacement.habitat} {lastPlacement.correct ? '✓' : '✗ (correct: ' + lastPlacement.correctHabitat + ')'}</> : 'Start sorting!'}</div>
+        <div>Step 6: Animals are adapted to their habitat — body parts help them survive there</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A habitat gives an animal what it needs — food, water, shelter, and the right climate. Body parts (adaptations) match the habitat: fur for cold, gills for water, humps for deserts.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 12. LifeCycleBuilder (K-5)
+// ============================================================
+
+const LIFE_CYCLES: Record<string, { name: string; stages: { id: string; name: string; emoji: string }[] }> = {
+  Frog: {
+    name: 'Frog',
+    stages: [
+      { id: 'egg', name: 'Egg', emoji: '🥚' },
+      { id: 'tadpole', name: 'Tadpole', emoji: '🐟' },
+      { id: 'froglet', name: 'Froglet', emoji: '🐸' },
+      { id: 'frog', name: 'Adult Frog', emoji: '🐸' },
+    ],
+  },
+  Butterfly: {
+    name: 'Butterfly',
+    stages: [
+      { id: 'egg', name: 'Egg', emoji: '🥚' },
+      { id: 'caterpillar', name: 'Caterpillar', emoji: '🐛' },
+      { id: 'chrysalis', name: 'Chrysalis', emoji: '🟤' },
+      { id: 'butterfly', name: 'Butterfly', emoji: '🦋' },
+    ],
+  },
+  Plant: {
+    name: 'Plant',
+    stages: [
+      { id: 'seed', name: 'Seed', emoji: '🌰' },
+      { id: 'sprout', name: 'Sprout', emoji: '🌱' },
+      { id: 'seedling', name: 'Seedling', emoji: '🌿' },
+      { id: 'adult', name: 'Adult Plant', emoji: '🌳' },
+      { id: 'flower', name: 'Flower', emoji: '🌸' },
+      { id: 'fruit', name: 'Fruit', emoji: '🍎' },
+    ],
+  },
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = a[i]; a[i] = a[j]; a[j] = tmp
+  }
+  return a
+}
+
+export function LifeCycleBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [cycleName, setCycleName] = useState<string>('Frog')
+  const [shuffled, setShuffled] = useState(() => shuffle(LIFE_CYCLES.Frog.stages))
+  const [placed, setPlaced] = useState<string[]>([])
+  const [lastAction, setLastAction] = useState<'correct' | 'wrong' | null>(null)
+  const [wrongId, setWrongId] = useState<string | null>(null)
+
+  const cycle = LIFE_CYCLES[cycleName]
+  const totalStages = cycle.stages.length
+  const placedCount = placed.length
+  const currentStageName = placedCount < totalStages ? cycle.stages[placedCount].name : null
+  const complete = placedCount === totalStages
+
+  const selectCycle = (name: string) => {
+    setCycleName(name)
+    setShuffled(shuffle(LIFE_CYCLES[name].stages))
+    setPlaced([])
+    setLastAction(null)
+    setWrongId(null)
+  }
+
+  const handleStageClick = (stageId: string) => {
+    if (placed.includes(stageId) || complete) return
+    const expectedId = cycle.stages[placedCount].id
+    if (stageId === expectedId) {
+      setPlaced([...placed, stageId])
+      setLastAction('correct')
+      setWrongId(null)
+    } else {
+      setLastAction('wrong')
+      setWrongId(stageId)
+      setTimeout(() => setWrongId(null), 500)
+    }
+  }
+
+  const reset = () => {
+    setShuffled(shuffle(LIFE_CYCLES[cycleName].stages))
+    setPlaced([])
+    setLastAction(null)
+    setWrongId(null)
+  }
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
+        {Object.keys(LIFE_CYCLES).map(name => (
+          <button key={name} onClick={() => selectCycle(name)} style={s.btn(cycleName === name)}>{name}</button>
+        ))}
+        <button onClick={reset} style={s.btn(false)}>Shuffle</button>
+      </div>
+
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 4 }}>Build the Life Cycle</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2, justifyContent: 'center' }}>
+          {cycle.stages.map((stage, i) => {
+            const placedIdx = placed.indexOf(stage.id)
+            const isPlaced = placedIdx !== -1
+            const isNext = !isPlaced && i === placedCount
+            return (
+              <div key={stage.id} style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <div style={{
+                  padding: '4px 5px', borderRadius: 4, minWidth: 44, textAlign: 'center',
+                  background: isPlaced ? 'rgba(34,197,94,0.2)' : isNext ? 'rgba(167,139,250,0.15)' : 'transparent',
+                  border: '1px solid ' + (isPlaced ? 'rgba(34,197,94,0.5)' : isNext ? 'rgba(167,139,250,0.4)' : s.border),
+                }}>
+                  <div style={{ fontSize: 18 }}>{isPlaced || isNext ? stage.emoji : '❓'}</div>
+                  <div style={{ fontSize: 8, color: isPlaced ? '#22c55e' : isNext ? '#a78bfa' : s.text }}>{isPlaced ? stage.name : isNext ? 'next' : '?'}</div>
+                </div>
+                {i < cycle.stages.length - 1 && <span style={{ color: s.text, fontSize: 10 }}>→</span>}
+              </div>
+            )
+          })}
+          {complete && <span style={{ color: '#22c55e', fontSize: 14, marginLeft: 2 }} title="cycle repeats">↻</span>}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>Click stages in order</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
+          {shuffled.map(stage => {
+            const isPlaced = placed.includes(stage.id)
+            const isWrong = wrongId === stage.id
+            return (
+              <button key={stage.id} onClick={() => handleStageClick(stage.id)} disabled={isPlaced || complete} style={{
+                padding: '6px 2px', fontSize: 10, cursor: isPlaced || complete ? 'default' : 'pointer',
+                background: isPlaced ? 'rgba(34,197,94,0.15)' : isWrong ? 'rgba(239,68,68,0.3)' : s.bg,
+                border: '1px solid ' + (isPlaced ? 'rgba(34,197,94,0.4)' : isWrong ? 'rgba(239,68,68,0.6)' : s.border),
+                color: s.bright, borderRadius: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                transform: isWrong ? 'translateX(-3px)' : 'none',
+                transition: 'transform 0.1s',
+                opacity: isPlaced ? 0.4 : 1,
+              }}>
+                <span style={{ fontSize: 18 }}>{stage.emoji}</span>
+                <span style={{ fontSize: 8 }}>{stage.name}</span>
+                {isPlaced && <span style={{ fontSize: 9, color: '#22c55e' }}>✓</span>}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Life cycle: <b>{cycleName}</b></div>
+        <div>Step 2: Stages placed: <b>{placedCount}/{totalStages}</b></div>
+        <div>Step 3: Current stage: <b>{currentStageName || '✓ complete'}</b></div>
+        <div>Step 4: {lastAction === 'correct' ? '✓ Correct! That comes next in the cycle.' : lastAction === 'wrong' ? '✗ Wrong — try again. Think about what comes BEFORE this stage.' : 'Click stages in order from start to finish'}</div>
+        <div>Step 5: {complete ? 'Complete! The cycle repeats — adults lay eggs to start over.' : 'Next: think about what the previous stage turns INTO'}</div>
+        <div>Step 6: Life cycles are circular — the adult produces eggs/seeds, starting the cycle again</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Metamorphosis (frog, butterfly) is a complete body transformation. Plants have a cyclical life — seeds grow into plants that make more seeds. The cycle never ends.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 13. BasicNeedsSorter (K-5)
+// ============================================================
+
+const BASIC_NEEDS = [
+  { id: 'food', name: 'Food', emoji: '🍎', color: '#ef4444', desc: 'Energy & nutrients' },
+  { id: 'water', name: 'Water', emoji: '💧', color: '#0284c7', desc: 'Hydration' },
+  { id: 'air', name: 'Air', emoji: '💨', color: '#06b6d4', desc: 'Oxygen to breathe' },
+  { id: 'shelter', name: 'Shelter', emoji: '🏠', color: '#8b5cf6', desc: 'Protection' },
+  { id: 'sunlight', name: 'Sunlight', emoji: '☀️', color: '#f59e0b', desc: 'Energy for plants' },
+]
+
+const NEED_ITEMS = [
+  { id: 'apple', name: 'Apple', emoji: '🍎', need: 'food' },
+  { id: 'water_bottle', name: 'Water Bottle', emoji: '💧', need: 'water' },
+  { id: 'hamburger', name: 'Hamburger', emoji: '🍔', need: 'food' },
+  { id: 'ac', name: 'Air Conditioner', emoji: '❄️', need: 'shelter' },
+  { id: 'sunlight', name: 'Sunlight', emoji: '☀️', need: 'sunlight' },
+  { id: 'house', name: 'House', emoji: '🏠', need: 'shelter' },
+  { id: 'oxygen', name: 'Oxygen', emoji: '💨', need: 'air' },
+  { id: 'sweater', name: 'Sweater', emoji: '🧥', need: 'shelter' },
+  { id: 'tree', name: 'Tree', emoji: '🌳', need: 'air' },
+  { id: 'blanket', name: 'Blanket', emoji: '🛏️', need: 'shelter' },
+  { id: 'rain', name: 'Rain', emoji: '🌧️', need: 'water' },
+  { id: 'soil', name: 'Soil', emoji: '🌱', need: 'food' },
+]
+
+export function BasicNeedsSorter({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [placements, setPlacements] = useState<Record<string, string>>({})
+  const [selected, setSelected] = useState<string | null>(null)
+  const [lastPlacement, setLastPlacement] = useState<{ item: string; need: string; correct: boolean; correctNeed: string } | null>(null)
+
+  const sortedCount = Object.keys(placements).length
+  const correctCount = Object.entries(placements).filter(([iid, nid]) => NEED_ITEMS.find(i => i.id === iid)?.need === nid).length
+  const selectedItem = NEED_ITEMS.find(i => i.id === selected)
+
+  const handleItemClick = (iid: string) => {
+    if (placements[iid]) return
+    setSelected(selected === iid ? null : iid)
+  }
+
+  const handleNeedClick = (nid: string) => {
+    if (!selected) return
+    const item = NEED_ITEMS.find(i => i.id === selected)
+    if (!item) return
+    const correct = item.need === nid
+    setPlacements({ ...placements, [selected]: nid })
+    setLastPlacement({ item: item.name, need: BASIC_NEEDS.find(n => n.id === nid)?.name || nid, correct, correctNeed: BASIC_NEEDS.find(n => n.id === item.need)?.name || item.need })
+    setSelected(null)
+  }
+
+  const reset = () => {
+    setPlacements({})
+    setSelected(null)
+    setLastPlacement(null)
+  }
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 10, flexWrap: 'wrap', gap: 4 }}>
+        <span>Sorted: <b style={{ color: s.bright }}>{sortedCount}/12</b></span>
+        <span>✓ <b style={{ color: '#22c55e' }}>{correctCount}</b> | ✗ <b style={{ color: '#ef4444' }}>{sortedCount - correctCount}</b></span>
+        <button onClick={reset} style={s.btn(false)}>Reset</button>
+      </div>
+
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>Items — click to select</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
+          {NEED_ITEMS.map(it => {
+            const placed = placements[it.id]
+            const correct = placed && placed === it.need
+            const wrong = placed && placed !== it.need
+            const isSelected = selected === it.id
+            return (
+              <button key={it.id} onClick={() => handleItemClick(it.id)} disabled={!!placed} style={{
+                padding: '4px 2px', fontSize: 9, cursor: placed ? 'default' : 'pointer',
+                background: correct ? 'rgba(34,197,94,0.2)' : wrong ? 'rgba(239,68,68,0.2)' : isSelected ? 'rgba(167,139,250,0.2)' : s.bg,
+                border: '1px solid ' + (correct ? 'rgba(34,197,94,0.5)' : wrong ? 'rgba(239,68,68,0.5)' : isSelected ? 'rgba(167,139,250,0.5)' : s.border),
+                color: s.bright, borderRadius: 3, display: 'flex', flexDirection: 'column', alignItems: 'center',
+              }}>
+                <span style={{ fontSize: 16 }}>{it.emoji}</span>
+                <span style={{ fontSize: 7, opacity: placed ? 0.5 : 1 }}>{it.name}</span>
+                {placed && <span style={{ fontSize: 8 }}>{correct ? '✓' : '✗'}</span>}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>{selectedItem ? `Click a need for ${selectedItem.name}` : 'Basic Needs — select an item first'}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 2 }}>
+          {BASIC_NEEDS.map(n => {
+            const placedHere = Object.entries(placements).filter(([, nid]) => nid === n.id).map(([iid]) => NEED_ITEMS.find(i => i.id === iid)!)
+            return (
+              <button key={n.id} onClick={() => handleNeedClick(n.id)} disabled={!selected} style={{
+                padding: 3, cursor: selected ? 'pointer' : 'default',
+                background: s.bg, border: '1px solid ' + (selected ? n.color : s.border),
+                borderRadius: 4, opacity: selected ? 1 : 0.6, textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 16 }}>{n.emoji}</div>
+                <div style={{ fontSize: 8, fontWeight: 700, color: n.color }}>{n.name}</div>
+                <div style={{ fontSize: 11, minHeight: 14, marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', alignItems: 'center' }}>
+                  {placedHere.length === 0 ? <span style={{ fontSize: 8, opacity: 0.4 }}>—</span> : placedHere.map(i => {
+                    const correct = i.need === n.id
+                    return <span key={i.id} style={{ fontSize: 13, opacity: correct ? 1 : 0.5 }}>{i.emoji}</span>
+                  })}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Sorted <b>{sortedCount}/12</b> items into need categories</div>
+        <div>Step 2: Correct: <b style={{ color: '#22c55e' }}>{correctCount}</b> | Need to re-sort: <b style={{ color: '#ef4444' }}>{sortedCount - correctCount}</b></div>
+        <div>Step 3: {selectedItem ? <>Placing "<b>{selectedItem.name}</b>" — which basic need does it satisfy?</> : 'Click an item, then click a need category'}</div>
+        <div>Step 4: 5 basic needs: Food (energy), Water (hydration), Air (oxygen), Shelter (protection), Sunlight (energy for plants)</div>
+        <div>Step 5: {lastPlacement ? <>Last: <b>{lastPlacement.item}</b> → {lastPlacement.need} {lastPlacement.correct ? '✓' : '✗ (correct: ' + lastPlacement.correctNeed + ')'}</> : 'Start sorting!'}</div>
+        <div>Step 6: Without any one of these needs, living things cannot survive</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> All living things have the same basic needs — food, water, air, shelter, and energy. Different organisms meet these needs in different ways, but no need can be skipped.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 14. TraitInheritanceExplorer (K-5)
+// ============================================================
+
+const TRAITS = [
+  { id: 'eye', name: 'Eye Color', domName: 'Brown', domColor: '#8B4513', recName: 'Blue', recColor: '#3b82f6' },
+  { id: 'hair', name: 'Hair Color', domName: 'Brown', domColor: '#6b4423', recName: 'Blonde', recColor: '#fde047' },
+  { id: 'flower', name: 'Flower Color', domName: 'Purple', domColor: '#a855f7', recName: 'White', recColor: '#e5e7eb' },
+  { id: 'seed', name: 'Seed Shape', domName: 'Round', domColor: '#22c55e', recName: 'Wrinkled', recColor: '#84cc16' },
+]
+
+type Geno = 'BB' | 'Bb' | 'bb'
+
+function cycleGeno(g: Geno): Geno {
+  return g === 'BB' ? 'Bb' : g === 'Bb' ? 'bb' : 'BB'
+}
+
+function genoPheno(g: Geno, dom: string, rec: string): string {
+  return g === 'bb' ? rec : dom
+}
+
+function allelesOf(g: Geno): ('B' | 'b')[] {
+  return g === 'BB' ? ['B', 'B'] : g === 'bb' ? ['b', 'b'] : ['B', 'b']
+}
+
+export function TraitInheritanceExplorer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [traitIdx, setTraitIdx] = useState(0)
+  const [p1Geno, setP1Geno] = useState<Geno>('Bb')
+  const [p2Geno, setP2Geno] = useState<Geno>('bb')
+  const [offspring, setOffspring] = useState<{ a1: 'B' | 'b'; a2: 'B' | 'b' } | null>(null)
+
+  const trait = TRAITS[traitIdx]
+  const p1Phenotype = genoPheno(p1Geno, trait.domName, trait.recName)
+  const p2Phenotype = genoPheno(p2Geno, trait.domName, trait.recName)
+  const p1Alleles = allelesOf(p1Geno)
+  const p2Alleles = allelesOf(p2Geno)
+
+  const selectTrait = (i: number) => {
+    setTraitIdx(i)
+    setOffspring(null)
+  }
+
+  const makeOffspring = () => {
+    const a1 = p1Alleles[Math.floor(Math.random() * 2)]
+    const a2 = p2Alleles[Math.floor(Math.random() * 2)]
+    setOffspring({ a1, a2 })
+  }
+
+  const offspringGeno: Geno | null = offspring ? (
+    (offspring.a1 === 'B' && offspring.a2 === 'B') ? 'BB'
+      : (offspring.a1 === 'b' && offspring.a2 === 'b') ? 'bb'
+        : 'Bb'
+  ) : null
+  const offspringPheno = offspringGeno ? genoPheno(offspringGeno, trait.domName, trait.recName) : null
+  const dominance = offspringGeno ? (offspringGeno === 'bb' ? 0 : 1) : null
+
+  const AlleleCircle = ({ allele, size = 16 }: { allele: 'B' | 'b'; size?: number }) => (
+    <span style={{ width: size, height: size, borderRadius: '50%', background: allele === 'B' ? trait.domColor : trait.recColor, border: '1px solid rgba(0,0,0,0.25)', display: 'inline-block', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.3)' }} />
+  )
+
+  const GenoDisplay = ({ g }: { g: Geno }) => (
+    <span style={{ display: 'inline-flex', gap: 2, alignItems: 'center' }}>
+      <AlleleCircle allele={g[0] === 'B' ? 'B' : 'b'} />
+      <AlleleCircle allele={g[1] === 'B' ? 'B' : 'b'} />
+    </span>
+  )
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
+        {TRAITS.map((t, i) => (
+          <button key={t.id} onClick={() => selectTrait(i)} style={s.btn(traitIdx === i)}>{t.name}</button>
+        ))}
+      </div>
+
+      {/* Parents */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        {[{ label: 'Parent 1', geno: p1Geno, setGeno: setP1Geno, pheno: p1Phenotype },
+          { label: 'Parent 2', geno: p2Geno, setGeno: setP2Geno, pheno: p2Phenotype }].map((p, i) => (
+          <div key={i} style={{ flex: 1, padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, textAlign: 'center' }}>
+            <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text }}>{p.label}</div>
+            <div style={{ marginTop: 3 }}><GenoDisplay g={p.geno} /></div>
+            <div style={{ fontSize: 10, color: s.bright, marginTop: 2 }}>{p.pheno}</div>
+            <div style={{ fontSize: 8, color: s.text, marginTop: 1 }}>({p.geno})</div>
+            <button onClick={() => { setOffspring(null); p.setGeno(cycleGeno(p.geno)) }} style={{ ...s.btn(false), marginTop: 4, fontSize: 9 }}>Change alleles</button>
+          </div>
+        ))}
+      </div>
+
+      {/* Picture Punnett square */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 4 }}>Picture Punnett — all 4 possible offspring</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto', gap: 3, justifyContent: 'center', alignItems: 'center' }}>
+          <div></div>
+          <div style={{ textAlign: 'center' }}><AlleleCircle allele={p2Alleles[0]} /></div>
+          <div style={{ textAlign: 'center' }}><AlleleCircle allele={p2Alleles[1]} /></div>
+          <div style={{ textAlign: 'center' }}><AlleleCircle allele={p1Alleles[0]} /></div>
+          <div style={{ textAlign: 'center', padding: 3, borderRadius: 3, background: 'rgba(167,139,250,0.06)', border: '1px solid ' + s.border }}>
+            <span style={{ display: 'inline-flex', gap: 1 }}><AlleleCircle allele={p1Alleles[0]} size={13} /><AlleleCircle allele={p2Alleles[0]} size={13} /></span>
+          </div>
+          <div style={{ textAlign: 'center', padding: 3, borderRadius: 3, background: 'rgba(167,139,250,0.06)', border: '1px solid ' + s.border }}>
+            <span style={{ display: 'inline-flex', gap: 1 }}><AlleleCircle allele={p1Alleles[0]} size={13} /><AlleleCircle allele={p2Alleles[1]} size={13} /></span>
+          </div>
+          <div style={{ textAlign: 'center' }}><AlleleCircle allele={p1Alleles[1]} /></div>
+          <div style={{ textAlign: 'center', padding: 3, borderRadius: 3, background: 'rgba(167,139,250,0.06)', border: '1px solid ' + s.border }}>
+            <span style={{ display: 'inline-flex', gap: 1 }}><AlleleCircle allele={p1Alleles[1]} size={13} /><AlleleCircle allele={p2Alleles[0]} size={13} /></span>
+          </div>
+          <div style={{ textAlign: 'center', padding: 3, borderRadius: 3, background: 'rgba(167,139,250,0.06)', border: '1px solid ' + s.border }}>
+            <span style={{ display: 'inline-flex', gap: 1 }}><AlleleCircle allele={p1Alleles[1]} size={13} /><AlleleCircle allele={p2Alleles[1]} size={13} /></span>
+          </div>
+        </div>
+        <div style={{ fontSize: 8, color: s.text, marginTop: 4, textAlign: 'center' }}>Top row = Parent 2 alleles | Left col = Parent 1 alleles</div>
+      </div>
+
+      {/* Make Offspring */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6, alignItems: 'center' }}>
+        <button onClick={makeOffspring} style={{ ...s.btn(true), padding: '4px 8px', fontSize: 11 }}>🎲 Make Offspring</button>
+        {offspring && (
+          <div style={{ flex: 1, padding: 6, background: 'rgba(34,197,94,0.1)', borderRadius: 4, border: '1px solid rgba(34,197,94,0.4)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ display: 'inline-flex', gap: 1 }}>
+              <AlleleCircle allele={offspring.a1} />
+              <AlleleCircle allele={offspring.a2} />
+            </span>
+            <div>
+              <div style={{ fontSize: 9, fontWeight: 700, color: '#22c55e' }}>Offspring</div>
+              <div style={{ fontSize: 10, color: s.bright }}>{offspringPheno}</div>
+              <div style={{ fontSize: 8, color: s.text }}>({offspringGeno})</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Trait: <b>{trait.name}</b> | Parent 1: {p1Phenotype} ({p1Geno}) | Parent 2: {p2Phenotype} ({p2Geno})</div>
+        <div>Step 2: Each parent gives ONE allele to the offspring (random which one)</div>
+        <div>Step 3: Parent 1 gives: <b>{offspring ? offspring.a1 : '?'}</b> | Parent 2 gives: <b>{offspring ? offspring.a2 : '?'}</b></div>
+        <div>Step 4: Offspring genotype: <b>{offspringGeno || '— click "Make Offspring"'}</b></div>
+        <div>Step 5: Offspring phenotype: <b>{offspringPheno || '—'}</b> {dominance !== null ? (dominance > 0 ? '(dominant allele shows)' : '(both recessive → recessive shows)') : ''}</div>
+        <div>Step 6: Dominant alleles mask recessive ones — that's why traits can "skip" generations</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Parents pass alleles to offspring — one from each. Dominant alleles always show; recessive alleles hide until two copies meet. This is heredity, Mendel's great discovery.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 15. FoodChainBuilder (K-5)
+// ============================================================
+
+const FOOD_CHAIN_HABITATS: Record<string, { name: string; emoji: string; organisms: { id: string; name: string; emoji: string; role: string; hint: string }[] }> = {
+  Forest: {
+    name: 'Forest', emoji: '🌳',
+    organisms: [
+      { id: 'tree', name: 'Tree', emoji: '🌳', role: 'Producer', hint: 'Makes food from sunlight' },
+      { id: 'rabbit', name: 'Rabbit', emoji: '🐰', role: 'Primary Consumer', hint: 'Eats plants (herbivore)' },
+      { id: 'fox', name: 'Fox', emoji: '🦊', role: 'Secondary Consumer', hint: 'Eats rabbits (carnivore)' },
+      { id: 'eagle', name: 'Eagle', emoji: '🦅', role: 'Tertiary Consumer', hint: 'Top predator (eats foxes)' },
+    ],
+  },
+  Ocean: {
+    name: 'Ocean', emoji: '🌊',
+    organisms: [
+      { id: 'algae', name: 'Algae', emoji: '🌿', role: 'Producer', hint: 'Makes food from sunlight' },
+      { id: 'fish', name: 'Small Fish', emoji: '🐟', role: 'Primary Consumer', hint: 'Eats algae (herbivore)' },
+      { id: 'squid', name: 'Squid', emoji: '🦑', role: 'Secondary Consumer', hint: 'Eats small fish' },
+      { id: 'shark', name: 'Shark', emoji: '🦈', role: 'Tertiary Consumer', hint: 'Top predator' },
+    ],
+  },
+  Grassland: {
+    name: 'Grassland', emoji: '🌾',
+    organisms: [
+      { id: 'grass', name: 'Grass', emoji: '🌾', role: 'Producer', hint: 'Makes food from sunlight' },
+      { id: 'zebra', name: 'Zebra', emoji: '🦓', role: 'Primary Consumer', hint: 'Eats grass (herbivore)' },
+      { id: 'cheetah', name: 'Cheetah', emoji: '🐆', role: 'Secondary Consumer', hint: 'Eats zebras (carnivore)' },
+      { id: 'lion', name: 'Lion', emoji: '🦁', role: 'Tertiary Consumer', hint: 'Top predator' },
+    ],
+  },
+  Pond: {
+    name: 'Pond', emoji: '🪷',
+    organisms: [
+      { id: 'weed', name: 'Pond Weed', emoji: '🌿', role: 'Producer', hint: 'Makes food from sunlight' },
+      { id: 'tadpole', name: 'Tadpole', emoji: '🐸', role: 'Primary Consumer', hint: 'Eats pond weed' },
+      { id: 'frog', name: 'Frog', emoji: '🐸', role: 'Secondary Consumer', hint: 'Eats tadpoles/insects' },
+      { id: 'heron', name: 'Heron', emoji: '🦩', role: 'Tertiary Consumer', hint: 'Top predator (eats frogs)' },
+    ],
+  },
+}
+
+export function FoodChainBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [habitatName, setHabitatName] = useState<string>('Forest')
+  const [shuffled, setShuffled] = useState(() => shuffle(FOOD_CHAIN_HABITATS.Forest.organisms))
+  const [placed, setPlaced] = useState<string[]>([])
+  const [lastOrganism, setLastOrganism] = useState<{ name: string; role: string } | null>(null)
+  const [wrongId, setWrongId] = useState<string | null>(null)
+
+  const habitat = FOOD_CHAIN_HABITATS[habitatName]
+  const totalOrganisms = habitat.organisms.length
+  const placedCount = placed.length
+  const chainComplete = placedCount === totalOrganisms
+  const nextExpected = !chainComplete ? habitat.organisms[placedCount] : null
+
+  const selectHabitat = (name: string) => {
+    setHabitatName(name)
+    setShuffled(shuffle(FOOD_CHAIN_HABITATS[name].organisms))
+    setPlaced([])
+    setLastOrganism(null)
+    setWrongId(null)
+  }
+
+  const handleOrganismClick = (orgId: string) => {
+    if (placed.includes(orgId) || chainComplete) return
+    const expectedId = habitat.organisms[placedCount].id
+    if (orgId === expectedId) {
+      const org = habitat.organisms.find(o => o.id === orgId)!
+      setPlaced([...placed, orgId])
+      setLastOrganism({ name: org.name, role: org.role })
+      setWrongId(null)
+    } else {
+      setWrongId(orgId)
+      setTimeout(() => setWrongId(null), 500)
+    }
+  }
+
+  const reset = () => {
+    setShuffled(shuffle(habitat.organisms))
+    setPlaced([])
+    setLastOrganism(null)
+    setWrongId(null)
+  }
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
+        {Object.keys(FOOD_CHAIN_HABITATS).map(name => (
+          <button key={name} onClick={() => selectHabitat(name)} style={s.btn(habitatName === name)}>{FOOD_CHAIN_HABITATS[name].emoji} {name}</button>
+        ))}
+        <button onClick={reset} style={s.btn(false)}>Shuffle</button>
+      </div>
+
+      {/* Vertical chain display */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 4 }}>Energy Flow Chain</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 6px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 3 }}>
+            <span style={{ fontSize: 16 }}>☀️</span>
+            <span style={{ fontSize: 9, color: s.bright }}>Sun (energy)</span>
+          </div>
+          <span style={{ color: s.text, fontSize: 11 }}>↓</span>
+          {placed.map((orgId, i) => {
+            const org = habitat.organisms.find(o => o.id === orgId)!
+            return (
+              <div key={orgId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 6px', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: 3 }}>
+                  <span style={{ fontSize: 16 }}>{org.emoji}</span>
+                  <span style={{ fontSize: 10, color: s.bright }}>{org.name}</span>
+                  <span style={{ fontSize: 7, color: s.text }}>({org.role})</span>
+                </div>
+                {i < placed.length - 1 && <span style={{ color: s.text, fontSize: 11 }}>↓</span>}
+              </div>
+            )
+          })}
+          {!chainComplete && placed.length > 0 && <span style={{ color: s.text, fontSize: 11 }}>↓</span>}
+          {!chainComplete ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '2px 6px', border: '1px dashed ' + s.border, borderRadius: 3 }}>
+              <span style={{ fontSize: 16 }}>❓</span>
+              <span style={{ fontSize: 9, color: s.text }}>Next: {nextExpected?.role}</span>
+            </div>
+          ) : (
+            <div style={{ fontSize: 10, color: '#22c55e', marginTop: 4, fontWeight: 700 }}>✓ Chain complete!</div>
+          )}
+        </div>
+      </div>
+
+      {/* Shuffled organisms */}
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>Click organisms in order: producer first</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 3 }}>
+          {shuffled.map(org => {
+            const isPlaced = placed.includes(org.id)
+            const isWrong = wrongId === org.id
+            return (
+              <button key={org.id} onClick={() => handleOrganismClick(org.id)} disabled={isPlaced || chainComplete} style={{
+                padding: '4px 2px', fontSize: 10, cursor: isPlaced || chainComplete ? 'default' : 'pointer',
+                background: isPlaced ? 'rgba(34,197,94,0.1)' : isWrong ? 'rgba(239,68,68,0.3)' : s.bg,
+                border: '1px solid ' + (isPlaced ? 'rgba(34,197,94,0.3)' : isWrong ? 'rgba(239,68,68,0.6)' : s.border),
+                color: s.bright, borderRadius: 3, display: 'flex', alignItems: 'center', gap: 3,
+                transform: isWrong ? 'translateX(-3px)' : 'none',
+                transition: 'transform 0.1s',
+                opacity: isPlaced ? 0.4 : 1,
+              }}>
+                <span style={{ fontSize: 16 }}>{org.emoji}</span>
+                <span style={{ fontSize: 9 }}>{org.name}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Habitat: <b>{habitatName}</b></div>
+        <div>Step 2: Chain built: <b>{placedCount}/{totalOrganisms}</b> organisms</div>
+        <div>Step 3: {lastOrganism ? <>Added: <b>{lastOrganism.name}</b> ({lastOrganism.role})</> : 'Start with the PRODUCER (a plant)'}</div>
+        <div>Step 4: {nextExpected ? <>Next needed: {nextExpected.role} ({nextExpected.hint})</> : 'Complete!'}</div>
+        <div>Step 5: {chainComplete ? 'Energy flows: Sun → Plant → Herbivore → Carnivore' : 'Order matters: energy flows from sun to producer to consumer'}</div>
+        <div>Step 6: Each link eats the one below — remove one and the chain breaks</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Energy from the sun is captured by plants (producers) and passes up the chain as animals eat each other. Producers make their own food; consumers must eat other organisms to survive.
+      </div>
+    </div>
+  )
+}
