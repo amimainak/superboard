@@ -84,7 +84,11 @@ export function Calculator({ isDark }: { isDark: boolean }) {
         {btn('0', '0')}{btn('.', '.')}{btn('DEL', 'DEL')}{btn('+', '+')}
         {btn('C', 'C', 2)}{btn('=', '=', 2, true)}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> PEMDAS: Parentheses, Exponents, Multiply/Divide, Add/Subtract. Without rules, "2+3×4" could be 20 or 14 — we agreed it's 14.
+      </div>
+</div>
   )
 }
 
@@ -171,7 +175,11 @@ export function UnitConverter({ isDark }: { isDark: boolean }) {
         <span style={{ fontSize: 14, fontWeight: 700, color: activeText, minWidth: 60, textAlign: 'center' }}>{result}</span>
         {select(toUnit, setToUnit, unitList)}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Multiply by fractions equal to 1 (e.g., 1km/1000m). Units cancel, leaving desired unit. Track units to catch errors.
+      </div>
+</div>
   )
 }
 
@@ -298,7 +306,11 @@ export function FormulaReference({ band, isDark }: { band: string; isDark: boole
           </div>
         )
       })}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Formulas are shortcuts encoding patterns. The quadratic formula looks complex but it's just completing the square generalized.
+      </div>
+</div>
   )
 }
 
@@ -338,7 +350,11 @@ export function MultiplicationGrid({ isDark }: { isDark: boolean }) {
           </React.Fragment>
         ))}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Multiplication = repeated addition. 3×4 = 3 rows of 4 = 12. The diagonal shows perfect squares (n×n = n²).
+      </div>
+</div>
   )
 }
 
@@ -367,7 +383,11 @@ export function Base10Blocks({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 10, color: text, lineHeight: 1.3 }}>
         <strong>Tip:</strong> Use the grid background (set to line mode) as a base-10 grid. Each cell = 1 unit.
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Base-10: each position is 10× the previous. 10 ones = 1 ten. Regrouping = exchanging: 10 pennies = 1 dime.
+      </div>
+</div>
   )
 }
 
@@ -420,7 +440,11 @@ export function Flashcards({ isDark }: { isDark: boolean }) {
           style={{ padding: '4px 12px', borderRadius: 4, fontSize: 11, background: bg, border: '1px solid ' + border, color: text, cursor: 'pointer' }}
         >Next</button>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Spaced repetition: review at increasing intervals. The brain forgets exponentially, but each review flattens the curve.
+      </div>
+</div>
   )
 }
 
@@ -473,6 +497,10 @@ export function ProofBuilder({ isDark }: { isDark: boolean }) {
         background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.3)',
         color: '#34d399', cursor: 'pointer', fontWeight: 600,
       }}>+ Add Step</button>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A proof: each step follows from the previous. Like building with blocks — if any step is wrong, the whole proof collapses.
+      </div>
+</div>
   )
 }

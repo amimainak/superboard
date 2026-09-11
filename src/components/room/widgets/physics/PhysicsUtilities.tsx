@@ -269,7 +269,11 @@ export function PhysicsFormulaCalculator({ isDark }: { isDark: boolean }) {
           {result}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Force = mass × acceleration. Heavier objects need more force to accelerate — that's why trucks need bigger engines.
+      </div>
+</div>
   )
 }
 
@@ -379,7 +383,11 @@ export function WaveSimulator({ isDark }: { isDark: boolean }) {
         <span>T = 1/f = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b></span>
         <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} m/s</b></span>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> v = f×λ. If 2 waves pass per second, each 60m long, then 120m of wave passes per second — that's velocity!
+      </div>
+</div>
   )
 }
 
@@ -517,7 +525,11 @@ export function PendulumSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         {'\u03B8'}(t) = {'\u03B8\u2080'} {'\u00B7'} cos({'\u221A'}(g/L) {'\u00B7'} t) &nbsp;|&nbsp; T = 2{'\u03C0'}{'\u221A'}(L/g)
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Period depends only on length and gravity — NOT mass. Gravity pulls harder on heavy objects, but they resist more. The effects cancel (Galileo's discovery).
+      </div>
+</div>
   )
 }
 
@@ -655,7 +667,11 @@ export function ScienceUnitConverter({ isDark }: { isDark: boolean }) {
           {result}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Dimensional analysis: multiply by fractions equal to 1. Units cancel, leaving the desired unit. Always track units to catch errors.
+      </div>
+</div>
   )
 }
 
@@ -837,7 +853,11 @@ export function ProjectileMotionSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         y = v₀sin(θ)t - ½gt² &nbsp;|&nbsp; x = v₀cos(θ)t &nbsp;|&nbsp; H = v₀²sin²(θ)/2g &nbsp;|&nbsp; R = v₀²sin(2θ)/g &nbsp;|&nbsp; T = 2v₀sin(θ)/g
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Horizontal and vertical motions are INDEPENDENT. Gravity only affects vertical. A bullet dropped and fired from the same height hit the ground simultaneously.
+      </div>
+</div>
   )
 }
 
@@ -954,7 +974,11 @@ export function OhmsLawCalculator({ isDark }: { isDark: boolean }) {
           </span>
         </div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> V = I×R. Like water: voltage = pressure, current = flow, resistance = pipe narrowing. Double voltage → double current.
+      </div>
+</div>
   )
 }
 
@@ -1187,7 +1211,11 @@ export function CircuitDiagramBuilder({ isDark }: { isDark: boolean }) {
           Series: I = V/R = {seriesV}V / {totalR}Ω = {seriesI.toFixed(3)} A
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Series: current same everywhere, resistance adds. Parallel: voltage same, currents split. Homes use parallel so devices work independently.
+      </div>
+</div>
   )
 }
 
@@ -1363,7 +1391,11 @@ export function FreeBodyDiagramBuilder({ isDark }: { isDark: boolean }) {
           {balanced ? 'Equilibrium! Net force is zero.' : 'Not in equilibrium.'}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> If forces balance (net = 0), no acceleration — Newton's First Law. The diagram shows ALL forces on ONE object.
+      </div>
+</div>
   )
 }
 
@@ -1549,7 +1581,11 @@ export function RayDiagramOptics({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 8, color: s.text, opacity: 0.7 }}>
         1/f = 1/do + 1/di &nbsp;|&nbsp; m = -di/do
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Reflection: angle in = angle out. Refraction: light bends entering a new medium. Lenses use refraction to focus light.
+      </div>
+</div>
   )
 }
 
@@ -1685,7 +1721,11 @@ export function EnergyBarCharts({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, fontWeight: 600, color: conserved ? '#34d399' : '#f87171', borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         Energy Conserved: {conserved ? 'Yes! Initial = Final = ' + initialTotal.toFixed(1) + ' J' : 'No. Initial = ' + initialTotal.toFixed(1) + ' J, Final = ' + finalTotal.toFixed(1) + ' J'}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Energy is never created or destroyed — it transforms. PE → KE → heat. Total always stays the same (First Law of Thermodynamics).
+      </div>
+</div>
   )
 }
 
@@ -1884,6 +1924,10 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
           <span>n = {pts.length}</span>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Straight line = constant rate. Curve = changing rate. Steeper slope = faster change. Graphs make relationships visible.
+      </div>
+</div>
   )
 }

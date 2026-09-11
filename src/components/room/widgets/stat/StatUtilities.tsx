@@ -201,7 +201,11 @@ export function DataTable({ isDark }: ToolProps) {
           {statRow('IQR', stats.iqr)}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Mean = balance point. Median = middle. Mode = most frequent. Each tells a different story — always check all three.
+      </div>
+</div>
   )
 }
 
@@ -286,7 +290,11 @@ export function HistogramBuilder({ isDark }: ToolProps) {
           <line x1={30} y1={10} x2={30} y2={120} stroke={axisColor} strokeWidth={1} />
         </svg>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Bell-shaped = normal. Skewed = long tail. Bimodal = two peaks. The shape reveals patterns numbers hide.
+      </div>
+</div>
   )
 }
 
@@ -373,7 +381,11 @@ export function BoxPlotGenerator({ isDark }: ToolProps) {
       {data.length > 0 && data.length < 4 && (
         <p style={{ fontSize: 10, color: s.text, opacity: 0.7 }}>Enter at least 4 data points to generate a box plot.</p>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Box = middle 50%. Line = median. Whiskers = range. Dots = outliers. One picture shows center, spread, AND outliers.
+      </div>
+</div>
   )
 }
 
@@ -482,7 +494,11 @@ export function ScatterPlot({ isDark }: ToolProps) {
           )}
         </>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Up-right = positive correlation. Down-right = negative. No pattern = none. But correlation ≠ causation!
+      </div>
+</div>
   )
 }
 
@@ -611,7 +627,11 @@ export function NormalDist({ isDark }: ToolProps) {
           </text>
         )}
       </svg>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> 68% within 1σ, 95% within 2σ, 99.7% within 3σ. Z-scores tell you how unusual a value is.
+      </div>
+</div>
   )
 }
 
@@ -762,6 +782,10 @@ export function ProbabilitySimulator({ isDark }: ToolProps) {
           </div>
         </>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Law of Large Numbers: more trials → closer to theoretical. 10 coin flips: maybe 7 heads. 10,000: very close to 5,000.
+      </div>
+</div>
   )
 }

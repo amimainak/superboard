@@ -127,7 +127,11 @@ export function RockCycleDiagram({ isDark }: ToolProps) {
           <div style={{ fontSize: 11, color: v.text, lineHeight: 1.5 }}>{selectedProcess.desc}</div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> The cycle never stops: igneous → sedimentary → metamorphic → magma → igneous. Earth's crust has recycled for 4 billion years.
+      </div>
+</div>
   )
 }
 
@@ -194,7 +198,11 @@ export function PlateTectonicsMap({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click a colored boundary line to learn more.</div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Convergent: mountains/volcanoes. Divergent: new crust. Transform: earthquakes. Ring of Fire = 75% of Earth's volcanoes.
+      </div>
+</div>
   )
 }
 
@@ -310,7 +318,11 @@ export function WeatherMapReader({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click any feature on the map to learn about it.</div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> High pressure = sinking air (clear). Low = rising air (storms). Cold fronts: sudden storms. Warm fronts: gradual rain.
+      </div>
+</div>
   )
 }
 
@@ -447,7 +459,11 @@ export function WaterCarbonCycle({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click any process or reservoir to learn about it.</div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Water: evaporation → condensation → precipitation → repeat. Closed system — dinosaur water is in your glass. Carbon cycles between air, oceans, rocks, life.
+      </div>
+</div>
   )
 }
 
@@ -542,7 +558,11 @@ export function SolarSystemScale({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click a planet to see its details.</div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Kepler's Third Law: T² ∝ r³. Farther planets orbit slower. Mercury: 88 days. Neptune: 165 years. Newton proved this from gravity.
+      </div>
+</div>
   )
 }
 
@@ -804,6 +824,10 @@ export function TopographicMapTool({ isDark }: ToolProps) {
           <b style={{ color: v.bright }}>Elevation:</b> approximately <b style={{ color: '#ef4444' }}>~{clickPoint.elev}m</b> at selected point. Drag on the map to draw a cross-section line.
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Contour lines = equal elevation. Close lines = steep. V-shapes point upstream. Reading contours = seeing 3D from 2D.
+      </div>
+</div>
   )
 }

@@ -206,7 +206,11 @@ export function RootMorphologyExplorer({ isDark }: { isDark: boolean }) {
           )}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> English is built from Greek/Latin roots. "Bio" = life, "graph" = write. Know roots → decode unfamiliar words.
+      </div>
+</div>
   )
 }
 
@@ -426,7 +430,11 @@ export function ActivePassiveVoice({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Active: "Dog bit man" (clear). Passive: "Man was bitten" (hides actor). Use active for clarity, passive when actor is unknown.
+      </div>
+</div>
   )
 }
 
@@ -569,7 +577,11 @@ export function ReadingComprehensionStrategies({ isDark }: { isDark: boolean }) 
           })}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Good readers predict, question, clarify, summarize WHILE reading. It's an active conversation with the text.
+      </div>
+</div>
   )
 }
 
@@ -827,7 +839,11 @@ export function GrammarErrorDiagnostic({ isDark }: { isDark: boolean }) {
           </div>
         </TutorReveal>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Common errors: its/it's, there/their/they're, affect/effect. Understand the rule, then check deliberately.
+      </div>
+</div>
   )
 }
 
@@ -1025,6 +1041,10 @@ export function SpellingPatterns({ isDark }: { isDark: boolean }) {
           )
         })}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> English follows patterns: "I before E except after C." Silent e makes vowels long. Learn patterns, not individual words.
+      </div>
+</div>
   )
 }

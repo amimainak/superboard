@@ -238,7 +238,11 @@ export function TimerStopwatch({ isDark }: { isDark: boolean }) {
           )}
         </>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Pomodoro: 25 min work, 5 min break. The brain can't sustain attention for long stretches — it needs recovery.
+      </div>
+</div>
   )
 }
 
@@ -475,7 +479,11 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
           <span>Y: [{yMin.toFixed(1)}, {yMax.toFixed(1)}]</span>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Straight line = constant rate. Curve = changing rate. Steeper slope = faster change. Graphs make relationships visible.
+      </div>
+</div>
   )
 }
 
@@ -646,6 +654,10 @@ export function RandomStudentPicker({ isDark }: { isDark: boolean }) {
           ))}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Random calling ensures equitable participation. Students who rarely volunteer often have the best insights.
+      </div>
+</div>
   )
 }

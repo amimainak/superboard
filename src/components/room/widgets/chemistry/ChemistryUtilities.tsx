@@ -374,7 +374,11 @@ export function PeriodicTableExplorer({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Same column = same valence electrons = similar chemistry. Period = electron shells. The table predicts behavior from position.
+      </div>
+</div>
   )
 }
 
@@ -549,7 +553,11 @@ export function ChemicalEquationBalancer({ isDark }: { isDark: boolean }) {
           )}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Conservation of Mass: atoms can't be created or destroyed. Start with 10 oxygen → end with 10. Balancing enforces this law.
+      </div>
+</div>
   )
 }
 
@@ -678,7 +686,11 @@ export function PhScaleVisualizer({ isDark }: { isDark: boolean }) {
           </button>
         ))}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> pH is logarithmic: each unit = 10× difference. pH 3 is 10× more acidic than pH 4. The scale compresses 14 orders of magnitude to 0-14.
+      </div>
+</div>
   )
 }
 
@@ -819,7 +831,11 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> The exponent = how many places to move the decimal. Positive = right (big), negative = left (small). Handles very large/small numbers.
+      </div>
+</div>
   )
 }
 
@@ -896,7 +912,11 @@ export function MolarMassCalculator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, marginTop: 6, opacity: 0.6 }}>
         Supports parentheses: Ca(OH)2, Al2(SO4)3, Fe2(SO4)3
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> One mole = 6.022×10²³ particles. Molar mass connects atomic scale to grams. For H₂O: 18g = 6.022×10²³ molecules.
+      </div>
+</div>
   )
 }
 
@@ -1093,7 +1113,11 @@ export function LewisDotStructureBuilder({ isDark }: { isDark: boolean }) {
         </>}
         {mode === 'atom' && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{lonePairsCount}</span></div>}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Octet rule: atoms bond to get 8 valence electrons. Dots = valence electrons, lines = shared pairs. H wants 2, B wants 6 (exceptions).
+      </div>
+</div>
   )
 }
 
@@ -1158,7 +1182,11 @@ export function MolecularGeometryVSEPR({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{d.lonePairs}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Polarity:</span><span style={{ color: d.polarity === 'Polar' ? '#f87171' : '#34d399', fontWeight: 600 }}>{d.polarity}</span></div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Electron pairs repel → molecules maximize distance. 4 pairs = tetrahedral (109.5°). Lone pairs push harder than bonds.
+      </div>
+</div>
   )
 }
 
@@ -1298,7 +1326,11 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7 }}>
         PV = nRT | R = 0.08206 L·atm/(mol·K) | Lock 3 variables, adjust the 4th
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Boyle: P↑ V↓ (squeeze balloon). Charles: T↑ V↑ (warm air rises). Ideal gas law PV=nRT ties them together.
+      </div>
+</div>
   )
 }
 
@@ -1446,7 +1478,11 @@ export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
           <div>Total volume: <strong style={{ color: s.bright }}>{totalVol.toFixed(1)} mL</strong></div>
         </div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> At equivalence point: moles acid = moles base. pH jumps sharply here. Indicators change color at this sudden shift.
+      </div>
+</div>
   )
 }
 
@@ -1549,6 +1585,10 @@ export function IonFormationVisualizer({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Charge:</span><span style={{ color: elem.charge.startsWith('+') ? '#f87171' : '#60a5fa', fontWeight: 700 }}>{elem.charge}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Process:</span><span style={{ color: s.bright }}>{elem.name} {isGain ? 'gains' : 'loses'} {electronChange} electron{electronChange > 1 ? 's' : ''} to form {elem.sym}{elem.charge}</span></div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Metals LOSE electrons (positive ions). Nonmetals GAIN electrons (negative ions). Opposite charges attract = ionic bond.
+      </div>
+</div>
   )
 }

@@ -171,7 +171,11 @@ export function VocabularyFlashcards({ isDark }: { isDark: boolean }) {
           <button onClick={addCard} style={{ ...s.btn(true), marginTop: 2, padding: '4px 8px', fontWeight: 600 }}>+ Add Card</button>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Vocabulary builds through exposure. Learn word parts (prefix/root/suffix). Read widely — context is how the brain learns best.
+      </div>
+</div>
   )
 }
 
@@ -286,7 +290,11 @@ export function ReadingPassageAnalyzer({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Literal (what happened), inferential (what it means), evaluative (is it good). Don't skip to evaluation.
+      </div>
+</div>
   )
 }
 
@@ -448,7 +456,11 @@ export function StoryElementsMap({ isDark }: { isDark: boolean }) {
           )}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Characters (who), setting (where/when), plot (what), conflict (problem), theme (message). Map these to understand the story's construction.
+      </div>
+</div>
   )
 }
 
@@ -611,7 +623,11 @@ export function SentenceStructureBuilder({ isDark }: { isDark: boolean }) {
           {breakdown}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Sentence = subject + predicate. "The cat sat." Add adjectives, adverbs, phrases to expand. Same structure, more detail.
+      </div>
+</div>
   )
 }
 
@@ -833,7 +849,11 @@ export function FigurativeLanguageFinder({ isDark }: { isDark: boolean }) {
           ))}
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Simile (like/as), Metaphor (is), Personification (human qualities), Hyperbole (exaggeration). Look for signal words.
+      </div>
+</div>
   )
 }
 
@@ -1205,7 +1225,11 @@ export function PhonicsDecodingBuilder({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Digraphs: two letters, one sound (sh, ch). Blends: two letters, two sounds (st, bl). Teach the pattern, not each word.
+      </div>
+</div>
   )
 }
 
@@ -1540,7 +1564,11 @@ export function PartsOfSpeechTagger({ isDark }: { isDark: boolean }) {
           )}
         </TutorReveal>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Don't memorize lists — use test questions. "The" before = noun. Takes "-ed" = verb. Answers "what kind?" = adjective.
+      </div>
+</div>
   )
 }
 
@@ -2019,7 +2047,11 @@ export function SentenceExpansionTool({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Expand by adding: adjectives (what kind), adverbs (how), phrases (where/when). "Dog ran" → "The excited dog ran quickly across the park."
+      </div>
+</div>
   )
 }
 
@@ -2820,7 +2852,11 @@ export function PunctuationInteractive({ isDark }: { isDark: boolean }) {
         </button>
       </div>
       {tab === 'rules' ? renderRulesTab() : renderPracticeTab()}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Period = complete thought. Comma = separates. Semicolon = joins related sentences. Apostrophe = possession/contraction. Each has a job.
+      </div>
+</div>
   )
 }
 
@@ -3195,6 +3231,10 @@ export function ParagraphOrganizer({ isDark }: { isDark: boolean }) {
           </div>
         )}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Topic sentence + evidence + explanation + conclusion. Like a mini-essay: introduce, prove, explain, wrap up.
+      </div>
+</div>
   )
 }

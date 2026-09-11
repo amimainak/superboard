@@ -181,7 +181,11 @@ export function PunnettSquareCalculator({ isDark }: { isDark: boolean }) {
         <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: isDark ? 'rgba(234,179,8,0.4)' : 'rgba(234,179,8,0.3)', display: 'inline-block' }}></span> Heterozygous</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: isDark ? 'rgba(239,68,68,0.4)' : 'rgba(239,68,68,0.3)', display: 'inline-block' }}></span> Homozygous Recessive</span>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Law of Segregation: each parent passes ONE allele. The 3:1 ratio in Bb×Bb is the signature of complete dominance (Mendel, 1865).
+      </div>
+</div>
   )
 }
 
@@ -371,7 +375,11 @@ export function CellDiagramExplorer({ isDark }: { isDark: boolean }) {
           )}
         </div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Plants have cell walls + chloroplasts. Both have nucleus (DNA), mitochondria (energy), ribosomes (protein). Structure follows function.
+      </div>
+</div>
   )
 }
 
@@ -457,7 +465,11 @@ export function TaxonomyClassifier({ isDark }: { isDark: boolean }) {
           <span style={{ fontStyle: 'italic' }}>{customLevels[6]}</span>{' '}<span style={{ fontStyle: 'italic' }}>{customLevels[7]}</span>
         </span>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Each level groups by shared characteristics.
+      </div>
+</div>
   )
 }
 
@@ -762,7 +774,11 @@ export function BodySystemsExplorer({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Systems work together: circulatory transports oxygen from respiratory, nutrients from digestive. No system works alone.
+      </div>
+</div>
   )
 }
 
@@ -1011,7 +1027,11 @@ export function EcologyFoodWeb({ isDark }: { isDark: boolean }) {
           <div style={{ marginTop: 4, fontSize: 9, color: s.text, opacity: 0.6 }}>Click organism again or another to change selection</div>
         </div>
       )}
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Energy flows one direction: sun → producers → consumers → decomposers. Only ~10% transfers per level — why food chains are short.
+      </div>
+</div>
   )
 }
 
@@ -1115,7 +1135,11 @@ export function DNAStructureViewer({ isDark }: { isDark: boolean }) {
         {mode === 'transcribe' && <div><span style={{ fontWeight: 600, color: '#34d399' }}>mRNA:</span> {mrnaStrand}</div>}
         {mode === 'none' && <div style={{ opacity: 0.5 }}>Click Replicate or Transcribe to see the result</div>}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Central Dogma: DNA → RNA → Protein. Base pairing (A-T, G-C) ensures faithful copying. One wrong base = mutation.
+      </div>
+</div>
   )
 }
 
@@ -1255,7 +1279,11 @@ export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
         <span>Best fitness: <b style={{ color: '#34d399' }}>{bestFit.toFixed(0)}</b>/360</span>
       </div>
       <div style={{ fontSize: 8, color: s.text, opacity: 0.6, marginTop: 4 }}>Red dashed line = environment hue. Bugs closer in hue survive better.</div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Variation exists → environment selects → favorable traits spread. No goal — just what works in that environment.
+      </div>
+</div>
   )
 }
 
@@ -1471,7 +1499,11 @@ export function CellDivisionAnimator({ isDark }: { isDark: boolean }) {
           ))}
         </div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Mitosis: 1→2 identical (growth). Meiosis: 1→4 different (sperm/egg). Meiosis shuffles genetics — why siblings differ.
+      </div>
+</div>
   )
 }
 
@@ -1637,7 +1669,11 @@ export function PhotosynthesisRespiration({ isDark }: { isDark: boolean }) {
       <div style={{ marginTop: 4, fontSize: 8, color: s.text, opacity: 0.6 }}>
         Light intensity affects the rate of photosynthesis. Higher light = more energy for the light reactions.
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Photosynthesis stores energy (6CO₂+6H₂O+light→glucose+6O₂). Respiration releases it (reverse). They're the energy cycle of life.
+      </div>
+</div>
   )
 }
 
@@ -1712,6 +1748,10 @@ export function HumanBodyInteractive({ isDark }: { isDark: boolean }) {
           )}
         </div>
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Homeostasis keeps internal conditions stable. When one system fails, others compensate — until they can't.
+      </div>
+</div>
   )
 }

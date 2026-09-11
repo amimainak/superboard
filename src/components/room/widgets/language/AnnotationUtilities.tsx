@@ -146,7 +146,11 @@ export function WritingAnnotationRubric({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 10, color: t.muted, textAlign: 'center' }}>
         Click cells to highlight proficiency level for each criterion
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Rubrics make expectations explicit. Specific criteria, not vague "write well." Makes grading fair and feedback actionable.
+      </div>
+</div>
   )
 }
 
@@ -193,7 +197,11 @@ export function GrammarChecklist({ isDark }: { isDark: boolean }) {
           </label>
         ))}
       </div>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Grammar rules exist for clarity. Subject-verb agreement prevents confusion. Each rule solves a specific communication problem.
+      </div>
+</div>
   )
 }
 
@@ -252,6 +260,10 @@ export function WritingPromptGenerator({ isDark }: { isDark: boolean }) {
       >
         Generate Prompt
       </button>
-    </div>
+          {/* Instructional insight */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Good prompts have tension: conflict, choice, or mystery. They give enough context to start, but leave room for creativity.
+      </div>
+</div>
   )
 }
