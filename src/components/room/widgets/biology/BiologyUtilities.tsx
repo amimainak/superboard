@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 
 // ============================================================
 // Shared style helper
@@ -2598,6 +2598,1841 @@ export function FoodChainBuilder({ isDark }: { isDark: boolean }) {
 
       <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Energy from the sun is captured by plants (producers) and passes up the chain as animals eat each other. Producers make their own food; consumers must eat other organisms to survive.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 16. ProteinSynthesisVisualizer (HS 9-12)
+// ============================================================
+
+const RNA_COMP_PS: Record<string, string> = { A: 'U', T: 'A', G: 'C', C: 'G' }
+const DNA_COMP_PS: Record<string, string> = { A: 'T', T: 'A', G: 'C', C: 'G' }
+
+const CODON_TABLE: Record<string, string> = {
+  AUG: 'Met', UAA: 'Stop', UAG: 'Stop', UGA: 'Stop',
+  UUU: 'Phe', UUC: 'Phe', UUA: 'Leu', UUG: 'Leu',
+  CUU: 'Leu', CUC: 'Leu', CUA: 'Leu', CUG: 'Leu',
+  AUU: 'Ile', AUC: 'Ile', AUA: 'Ile',
+  GUU: 'Val', GUC: 'Val', GUA: 'Val', GUG: 'Val',
+  UCU: 'Ser', UCC: 'Ser', UCA: 'Ser', UCG: 'Ser', AGU: 'Ser', AGC: 'Ser',
+  CCU: 'Pro', CCC: 'Pro', CCA: 'Pro', CCG: 'Pro',
+  ACU: 'Thr', ACC: 'Thr', ACA: 'Thr', ACG: 'Thr',
+  GCU: 'Ala', GCC: 'Ala', GCA: 'Ala', GCG: 'Ala',
+  UAU: 'Tyr', UAC: 'Tyr', CAU: 'His', CAC: 'His',
+  CAA: 'Gln', CAG: 'Gln', AAU: 'Asn', AAC: 'Asn',
+  AAA: 'Lys', AAG: 'Lys', GAU: 'Asp', GAC: 'Asp',
+  GAA: 'Glu', GAG: 'Glu', UGU: 'Cys', UGC: 'Cys', UGG: 'Trp',
+  CGU: 'Arg', CGC: 'Arg', CGA: 'Arg', CGG: 'Arg', AGA: 'Arg', AGG: 'Arg',
+  GGU: 'Gly', GGC: 'Gly', GGA: 'Gly', GGG: 'Gly',
+}
+
+const AA_COLOR: Record<string, string> = {
+  Met: '#22c55e', Stop: '#ef4444',
+  Phe: '#3b82f6', Leu: '#3b82f6', Ile: '#3b82f6', Val: '#3b82f6',
+  Ser: '#a855f7', Pro: '#a855f7', Thr: '#a855f7', Ala: '#a855f7',
+  Tyr: '#eab308', His: '#eab308', Gln: '#eab308', Asn: '#eab308',
+  Lys: '#f97316', Asp: '#f97316', Glu: '#f97316',
+  Cys: '#06b6d4', Trp: '#06b6d4', Arg: '#ec4899', Gly: '#10b981',
+}
+
+const PS_BASE_COLOR: Record<string, string> = { A: '#ef4444', T: '#3b82f6', G: '#22c55e', C: '#eab308', U: '#a855f7' }
+
+export function ProteinSynthesisVisualizer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [dnaInput, setDnaInput] = useState('TACTCTCCA')
+  const [stage, setStage] = useState(1)
+  const [pulse, setPulse] = useState(0)
+  const rafRef = useRef<number | null>(null)
+
+  const dnaRaw = dnaInput.toUpperCase().replace(/[^ATGC]/g, '').slice(0, 9)
+  const validLen = Math.floor(dnaRaw.length / 3) * 3
+  const dna = validLen >= 3 ? dnaRaw.slice(0, validLen) : ''
+
+  const dnaComp = dna.split('').map(b => DNA_COMP_PS[b] || '').join('')
+  const mrna = dna.split('').map(b => RNA_COMP_PS[b] || '').join('')
+
+  const codons: string[] = []
+  for (let i = 0; i + 3 <= mrna.length; i += 3) codons.push(mrna.slice(i, i + 3))
+  const anticodons = codons.map(c => c.split('').map(b => RNA_COMP_PS[b] || '').join(''))
+  const aminoAcids = codons.map(c => CODON_TABLE[c] || '???')
+
+  const proteinParts: string[] = []
+  for (const aa of aminoAcids) {
+    if (aa === 'Stop') break
+    proteinParts.push(aa)
+  }
+  const proteinChain = proteinParts.join('—')
+
+  useEffect(() => {
+    let start: number | null = null
+    const tick = (t: number) => {
+      if (start === null) start = t
+      setPulse((t - start) / 1000)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [])
+
+  const pulseGlow = 0.4 + 0.6 * (0.5 + 0.5 * Math.sin(pulse * 3))
+
+  const stageNames = ['DNA Template', 'Transcription', 'mRNA Codons', 'tRNA Anticodons', 'Protein Chain']
+  const stageName = stageNames[stage - 1] || 'Done'
+
+  const renderSeq = (seq: string, highlight: boolean) => (
+    <span style={{ display: 'inline-flex', gap: 1 }}>
+      {seq.split('').map((b, i) => (
+        <span key={i} style={{
+          display: 'inline-block', width: 13, height: 15, lineHeight: '15px', textAlign: 'center',
+          background: highlight ? (PS_BASE_COLOR[b] || '#888') + '33' : 'transparent',
+          color: highlight ? (PS_BASE_COLOR[b] || '#888') : (isDark ? '#94a3b8' : '#475569'),
+          border: '1px solid ' + (highlight ? (PS_BASE_COLOR[b] || '#888') + '66' : 'transparent'),
+          borderRadius: 2, fontSize: 9, fontWeight: 700,
+        }}>{b}</span>
+      ))}
+    </span>
+  )
+
+  const next = () => setStage(Math.min(5, stage + 1))
+  const reset = () => setStage(1)
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 9, fontWeight: 600 }}>DNA (3'→5'):</span>
+        <input value={dnaInput} onChange={e => { setDnaInput(e.target.value.toUpperCase()); setStage(1) }} style={{ ...s.input, width: 110, fontFamily: 'monospace' }} maxLength={9} placeholder="TACTCTCCA" />
+      </div>
+
+      {/* Visualization */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        {/* Stage 1: DNA */}
+        <div style={{ marginBottom: 4 }}>
+          <div style={{ fontSize: 9, color: s.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ display: 'inline-block', width: 14, height: 14, lineHeight: '14px', textAlign: 'center', borderRadius: '50%', background: stage >= 1 ? '#22c55e' : s.bg, color: stage >= 1 ? '#fff' : s.text, fontSize: 8, fontWeight: 700 }}>1</span>
+            <span style={{ fontWeight: 700, color: stage >= 1 ? (isDark ? '#34d399' : '#059669') : s.text }}>Nucleus — DNA template</span>
+          </div>
+          {stage >= 1 && dna ? (
+            <div style={{ fontFamily: 'monospace', fontSize: 10, paddingLeft: 18 }}>
+              <div>3' {renderSeq(dna, true)} 5'</div>
+              <div style={{ opacity: 0.6 }}>5' {renderSeq(dnaComp, false)} 3'</div>
+            </div>
+          ) : <div style={{ fontSize: 9, color: s.text, opacity: 0.6, paddingLeft: 18 }}>Enter valid DNA (A, T, G, C — min 3 bases)</div>}
+        </div>
+
+        {/* Stage 2: mRNA */}
+        {stage >= 2 && (
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontSize: 9, color: s.text, opacity: 0.7, textAlign: 'center', paddingLeft: 18 }}>↓ transcription (T→A, A→U, C→G, G→C)</div>
+            <div style={{ fontSize: 9, color: s.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ display: 'inline-block', width: 14, height: 14, lineHeight: '14px', textAlign: 'center', borderRadius: '50%', background: '#22c55e', color: '#fff', fontSize: 8, fontWeight: 700 }}>2</span>
+              <span style={{ fontWeight: 700, color: isDark ? '#34d399' : '#059669' }}>mRNA exits nucleus</span>
+            </div>
+            <div style={{ fontFamily: 'monospace', fontSize: 10, paddingLeft: 18 }}>5' {renderSeq(mrna, true)} 3'</div>
+          </div>
+        )}
+
+        {/* Stage 3: Codons */}
+        {stage >= 3 && (
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontSize: 9, color: s.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ display: 'inline-block', width: 14, height: 14, lineHeight: '14px', textAlign: 'center', borderRadius: '50%', background: '#22c55e', color: '#fff', fontSize: 8, fontWeight: 700 }}>3</span>
+              <span style={{ fontWeight: 700, color: isDark ? '#34d399' : '#059669' }}>mRNA codons (3 bases = 1 amino acid)</span>
+            </div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', paddingLeft: 18 }}>
+              {codons.map((c, i) => (
+                <span key={i} style={{ padding: '1px 5px', background: isDark ? 'rgba(168,85,247,0.18)' : 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.4)', borderRadius: 3, fontFamily: 'monospace', fontSize: 10, fontWeight: 700, color: '#a855f7' }}>{c}</span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Stage 4: tRNA + ribosome */}
+        {stage >= 4 && (
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontSize: 9, color: s.text, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ display: 'inline-block', width: 14, height: 14, lineHeight: '14px', textAlign: 'center', borderRadius: '50%', background: '#22c55e', color: '#fff', fontSize: 8, fontWeight: 700 }}>4</span>
+              <span style={{ fontWeight: 700, color: isDark ? '#34d399' : '#059669' }}>Ribosome — tRNA anticodons match codons</span>
+            </div>
+            <svg viewBox="0 0 280 70" style={{ width: '100%' }}>
+              {/* Ribosome */}
+              <ellipse cx="140" cy="40" rx="120" ry="22" fill={isDark ? 'rgba(56,189,248,0.08)' : 'rgba(14,116,144,0.08)'} stroke={isDark ? 'rgba(56,189,248,0.3)' : 'rgba(14,116,144,0.3)'} strokeWidth="1" strokeDasharray="3 2" />
+              <text x="140" y="16" textAnchor="middle" fontSize="8" fill={s.text}>🦠 Ribosome</text>
+              {/* Codon + tRNA pairs */}
+              {codons.map((codon, i) => {
+                const totalW = codons.length * 38
+                const x = 140 - totalW / 2 + i * 38 + 19
+                const anti = anticodons[i]
+                const aa = aminoAcids[i]
+                const aaColor = AA_COLOR[aa] || '#888'
+                return (
+                  <g key={i}>
+                    {/* mRNA codon */}
+                    <text x={x} y="46" textAnchor="middle" fontSize="9" fontFamily="monospace" fill={PS_BASE_COLOR[codon[0]] || '#fff'} fontWeight="700">{codon}</text>
+                    <text x={x} y="56" textAnchor="middle" fontSize="8" fill={s.text} opacity="0.7">{anti}</text>
+                    {/* Amino acid circle */}
+                    <circle cx={x} cy={28} r="8" fill={aaColor} opacity="0.5" stroke={aaColor} strokeWidth="1.2" />
+                    <text x={x} y="31" textAnchor="middle" fontSize="7" fill={isDark ? '#fff' : '#1e293b'} fontWeight="700">{aa === 'Stop' ? '✗' : aa}</text>
+                    {/* tRNA line */}
+                    <line x1={x} y1="36" x2={x} y2="50" stroke={aaColor} strokeWidth="0.6" strokeDasharray="1 1" />
+                  </g>
+                )
+              })}
+            </svg>
+          </div>
+        )}
+
+        {/* Stage 5: Protein */}
+        {stage >= 5 && (
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontSize: 9, color: s.text, marginBottom: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ display: 'inline-block', width: 14, height: 14, lineHeight: '14px', textAlign: 'center', borderRadius: '50%', background: '#22c55e', color: '#fff', fontSize: 8, fontWeight: 700, boxShadow: `0 0 ${4 + 4 * pulseGlow}px rgba(34,197,94,${0.4 + 0.4 * pulseGlow})` }}>5</span>
+              <span style={{ fontWeight: 700, color: '#22c55e' }}>Protein chain released</span>
+            </div>
+            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', paddingLeft: 18 }}>
+              {proteinParts.length > 0 ? proteinParts.map((aa, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span style={{ color: s.text, fontSize: 9 }}>—</span>}
+                  <span style={{ padding: '2px 6px', background: (AA_COLOR[aa] || '#888') + '22', border: '1px solid ' + (AA_COLOR[aa] || '#888'), borderRadius: 8, fontSize: 9, fontWeight: 700, color: AA_COLOR[aa] || '#888' }}>{aa}</span>
+                </React.Fragment>
+              )) : <span style={{ fontSize: 9, color: '#ef4444', fontStyle: 'italic' }}>No protein — stop codon at start</span>}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Controls */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+        <button onClick={next} disabled={stage >= 5 || !dna} style={{ ...s.btn(stage < 5 && !!dna), padding: '4px 10px' }}>Next Step →</button>
+        <button onClick={reset} style={s.btn(false)}>Reset</button>
+        <span style={{ fontSize: 9, color: s.text }}>Stage <b style={{ color: s.bright }}>{stage}</b>/5</span>
+        <span style={{ fontSize: 9, color: s.text, opacity: 0.7 }}>{stageName}</span>
+      </div>
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: DNA template: <b style={{ color: '#ef4444' }}>{dna || '(enter DNA)'}</b></div>
+        <div>Step 2: Transcription: DNA → mRNA = <b style={{ color: '#a855f7' }}>{mrna || '—'}</b> (T→A, A→U, C→G, G→C)</div>
+        <div>Step 3: mRNA codons: <b style={{ color: '#a855f7' }}>{codons.join('-') || '—'}</b> (grouped in 3s)</div>
+        <div>Step 4: {stage >= 4 ? <>tRNA anticodons: <b style={{ color: '#06b6d4' }}>{anticodons.join('-')}</b></> : 'Next: tRNA matches anticodons to codons'}</div>
+        <div>Step 5: {stage >= 5 ? <>Amino acids: <b style={{ color: '#22c55e' }}>{aminoAcids.join(', ')}</b> → Protein: <b style={{ color: '#22c55e' }}>{proteinChain || '(stop codon)'}</b></> : 'Next: each codon = one amino acid'}</div>
+        <div>Step 6: The genetic code is universal — bacteria, plants, and humans all use the same codon → amino acid mapping</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> The Central Dogma of biology — DNA stores information, mRNA carries it out of the nucleus, and ribosomes translate it into proteins. The genetic code is universal across all life.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 17. PCRGelElectrophoresis (HS 9-12)
+// ============================================================
+
+const GEL_SAMPLES = [
+  { id: 's1', label: 'Crime Scene', fragments: [300, 700, 1500], color: '#ef4444' },
+  { id: 's2', label: 'Suspect A', fragments: [200, 500, 1000], color: '#3b82f6' },
+  { id: 's3', label: 'Suspect B', fragments: [300, 700, 1500], color: '#22c55e' },
+  { id: 's4', label: 'Suspect C', fragments: [400, 800, 1200], color: '#eab308' },
+]
+
+export function PCRGelElectrophoresis({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [mode, setMode] = useState<'pcr' | 'gel'>('pcr')
+  const [cycles, setCycles] = useState(0)
+  const [gelRun, setGelRun] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const rafRef = useRef<number | null>(null)
+  const startRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!gelRun) return
+    startRef.current = null
+    const tick = (t: number) => {
+      if (startRef.current === null) startRef.current = t
+      const elapsed = (t - startRef.current) / 2500
+      if (elapsed >= 1) {
+        setProgress(1)
+        setGelRun(false)
+        return
+      }
+      setProgress(elapsed)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [gelRun])
+
+  const dnaCopies = Math.pow(2, cycles)
+
+  const runGel = () => {
+    setProgress(0)
+    setGelRun(true)
+  }
+
+  const resetGel = () => {
+    setGelRun(false)
+    setProgress(0)
+  }
+
+  const maxSize = 2000
+  const minSize = 100
+  const distFor = (size: number) => {
+    if (size <= minSize) return 1
+    if (size >= maxSize) return 0
+    return 1 - Math.log(size / minSize) / Math.log(maxSize / minSize)
+  }
+
+  const wellX = (i: number) => 35 + i * 60
+  const wellY = 35
+  const gelBottom = 200
+  const maxDist = gelBottom - wellY - 10
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        <button onClick={() => setMode('pcr')} style={s.btn(mode === 'pcr')}>PCR</button>
+        <button onClick={() => { setMode('gel'); resetGel() }} style={s.btn(mode === 'gel')}>Gel Electrophoresis</button>
+      </div>
+
+      {mode === 'pcr' ? (
+        <div>
+          {/* PCR copy counter */}
+          <div style={{ padding: 8, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6, textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 700, color: '#34d399', lineHeight: 1.1 }}>{dnaCopies.toLocaleString()}</div>
+            <div style={{ fontSize: 9, color: s.text }}>DNA copies = 2^{cycles}</div>
+          </div>
+
+          {/* DNA copies visualization (cap at 32) */}
+          <svg viewBox="0 0 280 80" style={{ width: '100%', marginBottom: 6 }}>
+            {Array.from({ length: Math.min(dnaCopies, 32) }, (_, i) => {
+              const col = i % 16
+              const row = Math.floor(i / 16)
+              const x = 15 + col * 16
+              const y = 12 + row * 22
+              return (
+                <g key={i}>
+                  <line x1={x} y1={y} x2={x + 11} y2={y} stroke="#3b82f6" strokeWidth="2" />
+                  <line x1={x} y1={y + 3} x2={x + 11} y2={y + 3} stroke="#3b82f6" strokeWidth="2" />
+                  <line x1={x + 3} y1={y} x2={x + 3} y2={y + 3} stroke="#3b82f6" strokeWidth="0.5" opacity="0.5" />
+                  <line x1={x + 8} y1={y} x2={x + 8} y2={y + 3} stroke="#3b82f6" strokeWidth="0.5" opacity="0.5" />
+                </g>
+              )
+            })}
+            {dnaCopies > 32 && (
+              <text x="140" y="70" textAnchor="middle" fontSize="9" fill={s.text}>+ {(dnaCopies - 32).toLocaleString()} more copies...</text>
+            )}
+            {dnaCopies === 0 && (
+              <text x="140" y="40" textAnchor="middle" fontSize="10" fill={s.text} opacity="0.6">Click "+ Cycle" to amplify DNA</text>
+            )}
+          </svg>
+
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+            <button onClick={() => setCycles(cycles + 1)} style={{ ...s.btn(false), padding: '4px 10px' }}>+ Cycle</button>
+            <button onClick={() => setCycles(0)} style={s.btn(false)}>Reset</button>
+            <span style={{ fontSize: 9, color: s.text }}>Cycle: <b style={{ color: s.bright }}>{cycles}</b></span>
+          </div>
+
+          {/* PCR steps */}
+          <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, fontSize: 10, lineHeight: 1.5 }}>
+            <div style={{ fontWeight: 600, color: s.bright, marginBottom: 3 }}>Each PCR cycle = 3 steps:</div>
+            <div>1. <b>Denature</b> (95°C): strands split</div>
+            <div>2. <b>Anneal</b> (55°C): primers attach</div>
+            <div>3. <b>Extend</b> (72°C): polymerase copies</div>
+          </div>
+        </div>
+      ) : (
+        <div>
+          {/* Gel visualization */}
+          <svg viewBox="0 0 280 230" style={{ width: '100%', border: '1px solid ' + s.border, borderRadius: 4, background: s.bg, marginBottom: 6 }}>
+            {/* Negative electrode (top) */}
+            <line x1="10" y1="22" x2="270" y2="22" stroke={isDark ? '#94a3b8' : '#475569'} strokeWidth="1" strokeDasharray="3 2" />
+            <text x="10" y="14" fontSize="8" fill={isDark ? '#94a3b8' : '#475569'}>− (wells)</text>
+
+            {/* Wells */}
+            {GEL_SAMPLES.map((sample, i) => {
+              const x = wellX(i)
+              return (
+                <g key={sample.id}>
+                  <rect x={x - 13} y={wellY - 5} width="26" height="6" fill={isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)'} />
+                  <text x={x} y={wellY - 8} textAnchor="middle" fontSize="7" fill={s.bright} fontWeight="600">{sample.label}</text>
+                </g>
+              )
+            })}
+
+            {/* Bands (migrate based on size and progress) */}
+            {GEL_SAMPLES.map((sample, i) => {
+              const x = wellX(i)
+              return sample.fragments.map((size, j) => {
+                const dist = maxDist * distFor(size) * progress
+                const y = wellY + 4 + dist
+                const opacity = Math.min(1, progress * 2)
+                return (
+                  <rect key={`${sample.id}-${j}`} x={x - 11} y={y} width="22" height="3.5" fill={sample.color} opacity={opacity} rx="1" />
+                )
+              })
+            })}
+
+            {/* Positive electrode (bottom) */}
+            <line x1="10" y1={gelBottom} x2="270" y2={gelBottom} stroke="#ef4444" strokeWidth="1" strokeDasharray="3 2" />
+            <text x="10" y={gelBottom + 12} fontSize="8" fill="#ef4444">+ (DNA migrates here)</text>
+
+            {/* Size scale (right side) */}
+            <text x="272" y={wellY + 8} textAnchor="end" fontSize="7" fill={s.text}>small →</text>
+            <text x="272" y={gelBottom - 2} textAnchor="end" fontSize="7" fill={s.text}>← large</text>
+
+            {/* Progress bar */}
+            <rect x="200" y="218" width="60" height="4" fill={isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'} rx="1" />
+            <rect x="200" y="218" width={60 * progress} height="4" fill="#34d399" rx="1" />
+          </svg>
+
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
+            <button onClick={runGel} disabled={gelRun} style={{ ...s.btn(!gelRun && progress === 0), padding: '4px 10px' }}>{gelRun ? 'Running...' : '▶ Run Gel'}</button>
+            <button onClick={resetGel} style={s.btn(false)}>Reset</button>
+            <span style={{ fontSize: 9, color: s.text }}>Progress: <b style={{ color: s.bright }}>{(progress * 100).toFixed(0)}%</b></span>
+          </div>
+
+          {/* Sample legend */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, fontSize: 9, marginBottom: 6 }}>
+            {GEL_SAMPLES.map(sample => (
+              <div key={sample.id} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span style={{ width: 8, height: 8, background: sample.color, display: 'inline-block', borderRadius: 1 }} />
+                <span style={{ color: s.bright }}>{sample.label}</span>
+                <span style={{ color: s.text, opacity: 0.6, fontSize: 8 }}>({sample.fragments.join(', ')})</span>
+              </div>
+            ))}
+          </div>
+
+          {progress === 1 && (
+            <div style={{ padding: 6, background: 'rgba(34,197,94,0.1)', borderRadius: 4, border: '1px solid rgba(34,197,94,0.3)', fontSize: 10, color: '#34d399', marginBottom: 6 }}>
+              ✓ Match found: <b>Crime Scene</b> and <b>Suspect B</b> have identical band patterns!
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Mode: <b>{mode === 'pcr' ? 'PCR (amplification)' : 'Gel Electrophoresis (separation)'}</b></div>
+        <div>Step 2: {mode === 'pcr' ? <>Cycles: <b>{cycles}</b> | DNA copies: <b>{dnaCopies.toLocaleString()}</b> (2^{cycles})</> : '4 samples loaded in gel wells'}</div>
+        <div>Step 3: {mode === 'pcr' ? 'Each cycle: 1) Denature (split strands), 2) Anneal (primers attach), 3) Extend (polymerase copies)' : 'DNA is negatively charged → moves toward positive electrode'}</div>
+        <div>Step 4: {mode === 'pcr' ? '30 cycles = ~1 billion copies (2^30 ≈ 10^9)' : gelRun || progress === 1 ? 'Smaller fragments moved farther — bands visible' : 'Click "Run Gel" to separate by size'}</div>
+        <div>Step 5: {mode === 'pcr' ? 'PCR amplifies a SPECIFIC segment using primers' : progress === 1 ? 'Compare band patterns to identify matches (forensics, paternity)' : 'Gel separates by size: small = far, large = near'}</div>
+        <div>Step 6: PCR + gel = the foundation of DNA fingerprinting</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> PCR exponentially amplifies a specific DNA segment, while gel electrophoresis separates fragments by size. Together, they power DNA fingerprinting — used in forensics, paternity testing, and genetic disease diagnosis.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 18. CladogramBuilder (HS 9-12)
+// ============================================================
+
+const CLADO_ORGANISMS = [
+  { name: 'Lamprey', y: 55 },
+  { name: 'Tuna', y: 90 },
+  { name: 'Salamander', y: 125 },
+  { name: 'Lizard', y: 160 },
+  { name: 'Wolf', y: 195 },
+]
+
+const CLADO_TRAITS = [
+  { id: 'vertebrae', name: 'Vertebrae', desc: 'Backbone — shared by ALL 5 organisms (most ancestral derived trait)' },
+  { id: 'jaws', name: 'Jaws', desc: 'Jawed mouth — lamprey is jawless, all others have jaws' },
+  { id: 'lungs', name: 'Lungs', desc: 'Air-breathing lungs — tuna has gills, all others have lungs' },
+  { id: 'amniotic', name: 'Amniotic Egg', desc: 'Egg with amnion — salamander lacks this; lizard and wolf have it' },
+]
+
+const CLADO_BRANCH_POINTS = [
+  { id: 'bp1', x: 30, correctTrait: 'vertebrae' },
+  { id: 'bp2', x: 70, correctTrait: 'jaws' },
+  { id: 'bp3', x: 110, correctTrait: 'lungs' },
+  { id: 'bp4', x: 150, correctTrait: 'amniotic' },
+]
+
+export function CladogramBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [selectedTrait, setSelectedTrait] = useState<string | null>(null)
+  const [placements, setPlacements] = useState<Record<string, string>>({})
+  const [lastAction, setLastAction] = useState<'correct' | 'wrong' | null>(null)
+  const [wrongBp, setWrongBp] = useState<string | null>(null)
+  const [pulse, setPulse] = useState(0)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (lastAction !== 'correct') return
+    let start: number | null = null
+    const tick = (t: number) => {
+      if (start === null) start = t
+      const elapsed = (t - start) / 1000
+      if (elapsed > 2) return
+      setPulse(elapsed)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [lastAction])
+
+  const placedCount = Object.keys(placements).length
+  const correctCount = Object.entries(placements).filter(([bpId, traitId]) =>
+    CLADO_BRANCH_POINTS.find(bp => bp.id === bpId)?.correctTrait === traitId
+  ).length
+  const complete = placedCount === CLADO_TRAITS.length && correctCount === CLADO_TRAITS.length
+
+  const handleBpClick = (bpId: string) => {
+    if (!selectedTrait) return
+    if (placements[bpId]) return
+    const bp = CLADO_BRANCH_POINTS.find(b => b.id === bpId)!
+    if (bp.correctTrait === selectedTrait) {
+      setPlacements({ ...placements, [bpId]: selectedTrait })
+      setLastAction('correct')
+      setSelectedTrait(null)
+      setPulse(0)
+    } else {
+      setLastAction('wrong')
+      setWrongBp(bpId)
+      setTimeout(() => setWrongBp(null), 600)
+    }
+  }
+
+  const reset = () => {
+    setPlacements({})
+    setSelectedTrait(null)
+    setLastAction(null)
+    setWrongBp(null)
+    setPulse(0)
+  }
+
+  const spineY = 25
+  const orgX = 215
+
+  const pulseScale = 1 + 0.3 * Math.sin(pulse * 6) * Math.exp(-pulse)
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <svg viewBox="0 0 280 215" style={{ width: '100%', border: '1px solid ' + s.border, borderRadius: 4, background: s.bg, marginBottom: 6 }}>
+        {/* Spine + branches */}
+        <g stroke={isDark ? 'rgba(148,163,184,0.6)' : 'rgba(71,85,105,0.6)'} strokeWidth="1.5" fill="none">
+          <line x1="5" y1={spineY} x2={CLADO_BRANCH_POINTS[0].x} y2={spineY} />
+          <polyline points={`${CLADO_BRANCH_POINTS[0].x},${spineY} ${CLADO_BRANCH_POINTS[0].x},${CLADO_ORGANISMS[0].y} ${orgX},${CLADO_ORGANISMS[0].y}`} />
+          <line x1={CLADO_BRANCH_POINTS[0].x} y1={spineY} x2={CLADO_BRANCH_POINTS[1].x} y2={spineY} />
+          <polyline points={`${CLADO_BRANCH_POINTS[1].x},${spineY} ${CLADO_BRANCH_POINTS[1].x},${CLADO_ORGANISMS[1].y} ${orgX},${CLADO_ORGANISMS[1].y}`} />
+          <line x1={CLADO_BRANCH_POINTS[1].x} y1={spineY} x2={CLADO_BRANCH_POINTS[2].x} y2={spineY} />
+          <polyline points={`${CLADO_BRANCH_POINTS[2].x},${spineY} ${CLADO_BRANCH_POINTS[2].x},${CLADO_ORGANISMS[2].y} ${orgX},${CLADO_ORGANISMS[2].y}`} />
+          <line x1={CLADO_BRANCH_POINTS[2].x} y1={spineY} x2={CLADO_BRANCH_POINTS[3].x} y2={spineY} />
+          <polyline points={`${CLADO_BRANCH_POINTS[3].x},${spineY} ${CLADO_BRANCH_POINTS[3].x},${CLADO_ORGANISMS[3].y} ${orgX},${CLADO_ORGANISMS[3].y}`} />
+          <polyline points={`${CLADO_BRANCH_POINTS[3].x},${spineY} ${CLADO_BRANCH_POINTS[3].x},${CLADO_ORGANISMS[4].y} ${orgX},${CLADO_ORGANISMS[4].y}`} />
+        </g>
+
+        {/* Organism labels */}
+        {CLADO_ORGANISMS.map(org => (
+          <text key={org.name} x={orgX + 4} y={org.y + 3} fontSize="10" fill={s.bright} fontWeight="600">{org.name}</text>
+        ))}
+
+        {/* Root label */}
+        <text x="5" y="15" fontSize="8" fill={s.text}>root →</text>
+        <text x="5" y={spineY + 13} fontSize="7" fill={s.text} opacity="0.7">(ancestral)</text>
+
+        {/* "derived" arrow */}
+        <text x="280" y={spineY - 4} textAnchor="end" fontSize="7" fill={s.text} opacity="0.7">→ derived</text>
+
+        {/* Branch points */}
+        {CLADO_BRANCH_POINTS.map(bp => {
+          const placedTrait = placements[bp.id]
+          const isWrong = wrongBp === bp.id
+          const traitObj = CLADO_TRAITS.find(t => t.id === placedTrait)
+          const isPulsing = placedTrait && pulse < 2
+          return (
+            <g key={bp.id} onClick={() => handleBpClick(bp.id)} style={{ cursor: selectedTrait && !placedTrait ? 'pointer' : 'default' }}>
+              {isPulsing && (
+                <circle cx={bp.x} cy={spineY} r={8 * pulseScale} fill="none" stroke="#34d399" strokeWidth="1.5" opacity={1 - pulse / 2} />
+              )}
+              <circle cx={bp.x} cy={spineY} r={isWrong ? 9 : 7} fill={placedTrait ? 'rgba(34,197,94,0.4)' : isWrong ? 'rgba(239,68,68,0.5)' : selectedTrait ? 'rgba(168,85,247,0.25)' : 'rgba(148,163,184,0.2)'} stroke={placedTrait ? '#34d399' : isWrong ? '#ef4444' : isDark ? '#94a3b8' : '#475569'} strokeWidth="1.5" />
+              {placedTrait && traitObj && (
+                <text x={bp.x} y={spineY + 3} textAnchor="middle" fontSize="8" fill="#fff" fontWeight="700">✓</text>
+              )}
+              {placedTrait && traitObj && (
+                <text x={bp.x} y={spineY - 12} textAnchor="middle" fontSize="7" fill="#34d399" fontWeight="600">{traitObj.name}</text>
+              )}
+              {!placedTrait && (
+                <text x={bp.x} y={spineY + 22} textAnchor="middle" fontSize="7" fill={s.text} opacity="0.5">?</text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Trait chips */}
+      <div style={{ fontSize: 9, color: s.text, marginBottom: 3, fontWeight: 600 }}>
+        {selectedTrait ? <>Click a branch point to place "<b style={{ color: '#a855f7' }}>{CLADO_TRAITS.find(t => t.id === selectedTrait)?.name}</b>"</> : 'Click a trait below, then click a branch point on the tree'}
+      </div>
+      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 6 }}>
+        {CLADO_TRAITS.map(trait => {
+          const isPlaced = Object.values(placements).includes(trait.id)
+          const isSelected = selectedTrait === trait.id
+          return (
+            <button key={trait.id}
+              onClick={() => !isPlaced && setSelectedTrait(isSelected ? null : trait.id)}
+              disabled={isPlaced}
+              style={{
+                padding: '3px 6px', fontSize: 9, cursor: isPlaced ? 'default' : 'pointer',
+                background: isPlaced ? 'rgba(34,197,94,0.15)' : isSelected ? 'rgba(168,85,247,0.2)' : s.bg,
+                border: '1px solid ' + (isPlaced ? 'rgba(34,197,94,0.4)' : isSelected ? 'rgba(168,85,247,0.5)' : s.border),
+                color: isPlaced ? '#34d399' : isSelected ? '#a855f7' : s.text,
+                borderRadius: 3, fontWeight: 600,
+              }}>
+              {isPlaced ? '✓ ' : ''}{trait.name}
+            </button>
+          )
+        })}
+        <button onClick={reset} style={s.btn(false)}>Reset</button>
+      </div>
+
+      {/* Status */}
+      <div style={{ display: 'flex', gap: 8, fontSize: 9, color: s.text, marginBottom: 6 }}>
+        <span>Placed: <b style={{ color: s.bright }}>{placedCount}/{CLADO_TRAITS.length}</b></span>
+        <span>Correct: <b style={{ color: '#34d399' }}>{correctCount}</b></span>
+        {complete && <span style={{ color: '#34d399', fontWeight: 700 }}>✓ Complete!</span>}
+      </div>
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Cladogram: <b>{CLADO_ORGANISMS.map(o => o.name).join(', ')}</b> | <b>{CLADO_TRAITS.length}</b> derived traits to place</div>
+        <div>Step 2: Placed: <b>{placedCount}/{CLADO_TRAITS.length}</b> | Correct: <b>{correctCount}</b></div>
+        <div>Step 3: {lastAction === 'correct' ? '✓ Correct — this trait defines this branch point' : lastAction === 'wrong' ? '✗ Wrong branch — think about which organisms share this trait' : 'Click a trait, then click a branch point'}</div>
+        <div>Step 4: {complete ? 'Complete! The tree shows evolutionary relationships.' : 'Derived traits appear at branch points — all organisms branching after share it'}</div>
+        <div>Step 5: {complete ? 'Wolf and Lizard share the amniotic egg → they are more closely related than either is to Tuna' : 'More shared traits = more closely related'}</div>
+        <div>Step 6: Cladograms are hypotheses about evolutionary history based on shared characteristics</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Cladograms group organisms by shared derived traits. The more recent the common ancestor (the more traits shared), the more closely related two organisms are. Each branch point represents a new evolutionary innovation.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 19. BiogeochemicalCyclesExplorer (HS 9-12)
+// ============================================================
+
+interface CycleStep {
+  id: string
+  name: string
+  desc: string
+  reservoir: string
+  keyOrganism: string
+}
+
+interface CycleData {
+  name: string
+  color: string
+  steps: CycleStep[]
+}
+
+const CYCLES: Record<'nitrogen' | 'phosphorus' | 'sulfur', CycleData> = {
+  nitrogen: {
+    name: 'Nitrogen Cycle',
+    color: '#3b82f6',
+    steps: [
+      { id: 'fix', name: 'N₂ Fixation', desc: 'N₂ gas → NH₃ (ammonia). Atmospheric nitrogen is converted to ammonia by nitrogen-fixing bacteria.', reservoir: 'Atmosphere → Soil', keyOrganism: 'Rhizobium (root nodules of legumes)' },
+      { id: 'nit', name: 'Nitrification', desc: 'NH₃ → NO₂⁻ → NO₃⁻. Ammonia is oxidized to nitrite then nitrate by nitrifying bacteria.', reservoir: 'Soil', keyOrganism: 'Nitrosomonas & Nitrobacter' },
+      { id: 'ass', name: 'Assimilation', desc: 'Plants absorb NO₃⁻ (nitrate) through roots. Animals get nitrogen by eating plants or other animals.', reservoir: 'Soil → Biosphere', keyOrganism: 'Plant roots (then food chain)' },
+      { id: 'amn', name: 'Ammonification', desc: 'Decomposers break down dead organisms and waste, releasing NH₃ back into soil.', reservoir: 'Biosphere → Soil', keyOrganism: 'Fungi & bacteria (decomposers)' },
+      { id: 'den', name: 'Denitrification', desc: 'NO₃⁻ → N₂. Denitrifying bacteria convert nitrate back to atmospheric nitrogen gas, completing the cycle.', reservoir: 'Soil → Atmosphere', keyOrganism: 'Pseudomonas (anaerobic)' },
+    ],
+  },
+  phosphorus: {
+    name: 'Phosphorus Cycle',
+    color: '#eab308',
+    steps: [
+      { id: 'wea', name: 'Weathering', desc: 'PO₄³⁻ (phosphate) is released from rocks by chemical weathering (rain, weak acids).', reservoir: 'Rocks → Soil', keyOrganism: 'Chemical weathering (no organism)' },
+      { id: 'upt', name: 'Uptake', desc: 'Plants absorb PO₄³⁻ through roots. Animals get phosphorus by eating plants.', reservoir: 'Soil → Biosphere', keyOrganism: 'Plant roots' },
+      { id: 'dec', name: 'Decomposition', desc: 'Decomposers return phosphorus from dead organisms and waste back to soil.', reservoir: 'Biosphere → Soil', keyOrganism: 'Bacteria & fungi (decomposers)' },
+      { id: 'sed', name: 'Sedimentation', desc: 'Phosphorus washes into oceans, settles as sediment, and over geologic time forms new rock.', reservoir: 'Ocean → Rocks (geologic)', keyOrganism: 'Marine sedimentation' },
+    ],
+  },
+  sulfur: {
+    name: 'Sulfur Cycle',
+    color: '#f97316',
+    steps: [
+      { id: 'wea', name: 'Weathering', desc: 'SO₄²⁻ (sulfate) is released from rocks into soil and water.', reservoir: 'Rocks → Soil/Ocean', keyOrganism: 'Chemical weathering' },
+      { id: 'ass', name: 'Assimilation', desc: 'Plants absorb SO₄²⁻ and use it to build sulfur-containing amino acids (cysteine, methionine).', reservoir: 'Soil → Biosphere', keyOrganism: 'Plant roots' },
+      { id: 'dec', name: 'Decomposition', desc: 'Decomposers release H₂S (hydrogen sulfide) from dead organisms.', reservoir: 'Biosphere → Soil', keyOrganism: 'Anaerobic decomposers' },
+      { id: 'ox', name: 'Oxidation', desc: 'H₂S → S → SO₄²⁻. Sulfur bacteria oxidize hydrogen sulfide back to sulfate.', reservoir: 'Soil → Ocean', keyOrganism: 'Thiobacillus (chemosynthetic)' },
+      { id: 'red', name: 'Reduction', desc: 'SO₄²⁻ → H₂S. In anaerobic conditions, sulfate-reducing bacteria convert sulfate back to H₂S.', reservoir: 'Ocean → Sediment', keyOrganism: 'Desulfovibrio (anaerobic)' },
+    ],
+  },
+}
+
+export function BiogeochemicalCyclesExplorer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [cycleKey, setCycleKey] = useState<'nitrogen' | 'phosphorus' | 'sulfur'>('nitrogen')
+  const [selectedStep, setSelectedStep] = useState<string>('fix')
+  const [pulse, setPulse] = useState(0)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    let start: number | null = null
+    const tick = (t: number) => {
+      if (start === null) start = t
+      setPulse((t - start) / 1000)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [])
+
+  const switchCycle = (key: 'nitrogen' | 'phosphorus' | 'sulfur') => {
+    setCycleKey(key)
+    setSelectedStep(CYCLES[key].steps[0].id)
+  }
+
+  const cycle = CYCLES[cycleKey]
+  const step = cycle.steps.find(st => st.id === selectedStep) || cycle.steps[0]
+
+  const centerX = 140
+  const centerY = 110
+  const radius = 75
+  const stepPositions = cycle.steps.map((stp, i) => {
+    const angle = -90 + (i * 360 / cycle.steps.length)
+    const rad = angle * Math.PI / 180
+    return {
+      ...stp,
+      x: centerX + radius * Math.cos(rad),
+      y: centerY + radius * Math.sin(rad),
+      index: i,
+    }
+  })
+
+  const arrows = stepPositions.map((stp, i) => ({
+    from: stp,
+    to: stepPositions[(i + 1) % stepPositions.length],
+  }))
+
+  const renderArrow = (from: { x: number; y: number; id: string }, to: { x: number; y: number; id: string }, color: string, isHighlight: boolean) => {
+    const dx = to.x - from.x
+    const dy = to.y - from.y
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    const nodeR = 14
+    const arrowSize = 5
+    const startX = from.x + (dx / dist) * nodeR
+    const startY = from.y + (dy / dist) * nodeR
+    const endX = to.x - (dx / dist) * (nodeR + arrowSize + 1)
+    const endY = to.y - (dy / dist) * (nodeR + arrowSize + 1)
+    // Curve outward
+    const midX = (startX + endX) / 2
+    const midY = (startY + endY) / 2
+    const mdx = midX - centerX
+    const mdy = midY - centerY
+    const mdist = Math.sqrt(mdx * mdx + mdy * mdy)
+    const offset = 10
+    const ctrlX = midX + (mdx / mdist) * offset
+    const ctrlY = midY + (mdy / mdist) * offset
+    // Tangent at end (direction from ctrl to end)
+    const tdx = endX - ctrlX
+    const tdy = endY - ctrlY
+    const tdist = Math.sqrt(tdx * tdx + tdy * tdy)
+    const tnx = tdx / tdist
+    const tny = tdy / tdist
+    const ax1 = endX + arrowSize * tnx - arrowSize * 0.5 * tny
+    const ay1 = endY + arrowSize * tny + arrowSize * 0.5 * tnx
+    const ax2 = endX + arrowSize * tnx + arrowSize * 0.5 * tny
+    const ay2 = endY + arrowSize * tny - arrowSize * 0.5 * tnx
+    return (
+      <g key={from.id + '-' + to.id}>
+        <path d={`M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY}`} fill="none" stroke={color} strokeWidth={isHighlight ? 2 : 1} opacity={isHighlight ? 1 : 0.5} />
+        <polygon points={`${endX},${endY} ${ax1},${ay1} ${ax2},${ay2}`} fill={color} opacity={isHighlight ? 1 : 0.5} />
+      </g>
+    )
+  }
+
+  const pulseGlow = 0.5 + 0.5 * Math.sin(pulse * 3)
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        <button onClick={() => switchCycle('nitrogen')} style={s.btn(cycleKey === 'nitrogen')}>Nitrogen</button>
+        <button onClick={() => switchCycle('phosphorus')} style={s.btn(cycleKey === 'phosphorus')}>Phosphorus</button>
+        <button onClick={() => switchCycle('sulfur')} style={s.btn(cycleKey === 'sulfur')}>Sulfur</button>
+      </div>
+
+      <svg viewBox="0 0 280 220" style={{ width: '100%', border: '1px solid ' + s.border, borderRadius: 4, background: s.bg, marginBottom: 6 }}>
+        {/* Reservoir labels at corners */}
+        <text x="8" y="14" fontSize="7" fill={isDark ? '#94a3b8' : '#475569'}>☁ Atmosphere</text>
+        <text x="8" y="214" fontSize="7" fill={isDark ? '#94a3b8' : '#475569'}>🌱 Soil</text>
+        <text x="272" y="14" fontSize="7" fill={isDark ? '#94a3b8' : '#475569'} textAnchor="end">🌊 Ocean</text>
+        <text x="272" y="214" fontSize="7" fill={isDark ? '#94a3b8' : '#475569'} textAnchor="end">🦠 Biosphere</text>
+
+        {/* Arrows between steps */}
+        {arrows.map(arr => {
+          const isHighlight = step && (arr.from.id === step.id || arr.to.id === step.id)
+          const color = isHighlight ? cycle.color : (isDark ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.5)')
+          return renderArrow(arr.from, arr.to, color, !!isHighlight)
+        })}
+
+        {/* Center label */}
+        <text x={centerX} y={centerY - 4} textAnchor="middle" fontSize="11" fill={s.bright} fontWeight="700">{cycle.name.split(' ')[0]}</text>
+        <text x={centerX} y={centerY + 8} textAnchor="middle" fontSize="8" fill={s.text}>Cycle</text>
+        {cycleKey === 'phosphorus' && (
+          <text x={centerX} y={centerY + 20} textAnchor="middle" fontSize="6" fill={s.text} opacity="0.7">(no atmospheric phase)</text>
+        )}
+
+        {/* Step nodes */}
+        {stepPositions.map(stp => {
+          const isSelected = stp.id === step.id
+          const r = isSelected ? 14 + 2 * pulseGlow : 12
+          return (
+            <g key={stp.id} onClick={() => setSelectedStep(stp.id)} style={{ cursor: 'pointer' }}>
+              {isSelected && (
+                <circle cx={stp.x} cy={stp.y} r={r + 4} fill="none" stroke={cycle.color} strokeWidth="1" opacity={0.4 * pulseGlow} />
+              )}
+              <circle cx={stp.x} cy={stp.y} r={r} fill={isSelected ? cycle.color : (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)')} stroke={isSelected ? cycle.color : (isDark ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.4)')} strokeWidth="1.5" />
+              <text x={stp.x} y={stp.y + 2} textAnchor="middle" fontSize="7" fill={isSelected ? '#fff' : s.bright} fontWeight="700">{stp.name.split(' ')[0]}</text>
+              <text x={stp.x} y={stp.y - 18} textAnchor="middle" fontSize="8" fill={isSelected ? cycle.color : s.text} fontWeight="700">{stp.index + 1}</text>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Selected step info */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + cycle.color + '40', marginBottom: 6, fontSize: 10, lineHeight: 1.5 }}>
+        <div style={{ fontWeight: 700, color: cycle.color, marginBottom: 3 }}>{step.name}</div>
+        <div style={{ color: s.text, marginBottom: 4 }}>{step.desc}</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', fontSize: 9 }}>
+          <span style={{ color: s.text }}>Reservoir: <b style={{ color: s.bright }}>{step.reservoir}</b></span>
+        </div>
+        <div style={{ fontSize: 9, color: s.text, marginTop: 2 }}>Key: <b style={{ color: s.bright }}>{step.keyOrganism}</b></div>
+      </div>
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Cycle: <b style={{ color: cycle.color }}>{cycle.name}</b></div>
+        <div>Step 2: Selected step: <b style={{ color: cycle.color }}>{step.name}</b></div>
+        <div>Step 3: {step.desc}</div>
+        <div>Step 4: Reservoir: <b>{step.reservoir}</b></div>
+        <div>Step 5: Key organism/process: <b>{step.keyOrganism}</b></div>
+        <div>Step 6: Unlike energy (which flows in and out), matter CYCLES — atoms are recycled</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Matter cycles through ecosystems — the same nitrogen, phosphorus, and sulfur atoms have been recycling for billions of years. Bacteria are the unsung heroes, converting elements between forms that organisms can and cannot use.
+      </div>
+    </div>
+  )
+}
+// ============================================================
+// 16. MicroscopeSimulator (MS 6-8)
+// ============================================================
+
+type SpecimenType = 'plant' | 'animal' | 'bacteria' | 'mixed'
+
+interface MicroSpecimen {
+  id: string
+  name: string
+  shortName: string
+  type: SpecimenType
+  emoji: string
+  cellTypeName: string
+  visibleParts: Record<number, string>
+}
+
+const MICROSCOPE_SPECIMENS: MicroSpecimen[] = [
+  { id: 'onion', name: 'Onion Root Tip', shortName: 'Onion', type: 'plant', emoji: '🧅', cellTypeName: 'plant cell',
+    visibleParts: { 10: 'specimen outline', 100: 'rectangular cells in rows', 400: 'cell wall, nucleus, cytoplasm', 1000: 'cell wall, nucleus, large vacuole' } },
+  { id: 'cheek', name: 'Cheek Cell', shortName: 'Cheek', type: 'animal', emoji: '👄', cellTypeName: 'animal cell',
+    visibleParts: { 10: 'scattered cells', 100: 'flat irregular cells', 400: 'cell membrane, nucleus', 1000: 'membrane, nucleus, cytoplasm' } },
+  { id: 'leaf', name: 'Leaf Cross-Section', shortName: 'Leaf', type: 'plant', emoji: '🍃', cellTypeName: 'plant cell (with chloroplasts)',
+    visibleParts: { 10: 'leaf layers', 100: 'green cells in rows', 400: 'cell wall, chloroplasts, nucleus', 1000: 'chloroplasts, nucleus, vacuole' } },
+  { id: 'bacteria', name: 'Bacteria', shortName: 'Bacteria', type: 'bacteria', emoji: '🦠', cellTypeName: 'prokaryotic cell',
+    visibleParts: { 10: 'tiny dots', 100: 'rod & sphere shapes', 400: 'individual bacterial cells', 1000: 'no nucleus! DNA loop + cell wall' } },
+  { id: 'pond', name: 'Pond Water', shortName: 'Pond', type: 'mixed', emoji: '💧', cellTypeName: 'protist cell',
+    visibleParts: { 10: 'moving specks', 100: 'various protists', 400: 'cell structures & cilia', 1000: 'organelles, nucleus, cilia' } },
+  { id: 'blood', name: 'Blood Smear', shortName: 'Blood', type: 'animal', emoji: '🩸', cellTypeName: 'blood cell',
+    visibleParts: { 10: 'pink smear', 100: 'red blood cell discs', 400: 'RBCs (no nucleus) + WBCs', 1000: 'RBC detail, WBC nucleus' } },
+]
+
+const ZOOM_LEVELS = [10, 100, 400, 1000]
+const OBJECTIVE_LENS = [1, 10, 40, 100]
+const EYEPIECE_MAG = 10
+
+function seededRand(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (s * 9301 + 49297) % 233280
+    return s / 233280
+  }
+}
+
+function getMicroCellPositions(specimenId: string, zoom: number, count: number): { x: number; y: number }[] {
+  if (count === 1) return [{ x: 120, y: 120 }]
+  if (count === 3) return [{ x: 70, y: 80 }, { x: 150, y: 145 }, { x: 95, y: 195 }]
+  if (count === 8) return [
+    { x: 55, y: 60 }, { x: 130, y: 50 }, { x: 200, y: 70 },
+    { x: 70, y: 130 }, { x: 155, y: 130 }, { x: 200, y: 145 },
+    { x: 60, y: 200 }, { x: 160, y: 200 },
+  ]
+  let seed = 7
+  for (let i = 0; i < specimenId.length; i++) seed = (seed * 31 + specimenId.charCodeAt(i)) | 0
+  seed = (seed + zoom * 7) | 0
+  const rng = seededRand(Math.abs(seed) + 1)
+  const positions: { x: number; y: number }[] = []
+  for (let i = 0; i < count; i++) {
+    let x: number, y: number, d: number, tries = 0
+    do {
+      x = rng() * 240
+      y = rng() * 240
+      d = Math.sqrt((x - 120) ** 2 + (y - 120) ** 2)
+      tries++
+    } while (d > 105 && tries < 20)
+    positions.push({ x: Math.round(x), y: Math.round(y) })
+  }
+  return positions
+}
+
+export function MicroscopeSimulator({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [specimenId, setSpecimenId] = useState('onion')
+  const [zoomIdx, setZoomIdx] = useState(1) // start at 100x
+  const [selectedCell, setSelectedCell] = useState<number | null>(null)
+
+  const specimen = MICROSCOPE_SPECIMENS.find(sp => sp.id === specimenId)!
+  const objective = OBJECTIVE_LENS[zoomIdx]
+  const zoom = ZOOM_LEVELS[zoomIdx]
+  const totalMag = EYEPIECE_MAG * objective
+  const visibleParts = specimen.visibleParts[zoom] || 'specimen'
+
+  const cellCounts: Record<number, number> = { 10: 24, 100: 8, 400: 3, 1000: 1 }
+  const cellCount = cellCounts[zoom]
+  const cellSizes: Record<number, { w: number; h: number }> = {
+    10: { w: 4, h: 4 },
+    100: { w: 16, h: 13 },
+    400: { w: 50, h: 42 },
+    1000: { w: 105, h: 88 },
+  }
+  const sz = cellSizes[zoom]
+
+  useEffect(() => { setSelectedCell(null) }, [specimenId, zoomIdx])
+
+  const positions = useMemo(() => getMicroCellPositions(specimenId, zoom, cellCount), [specimenId, zoom, cellCount])
+
+  const isPlant = specimen.type === 'plant'
+  const isAnimal = specimen.type === 'animal'
+  const isBacteria = specimen.type === 'bacteria'
+
+  const cellFillBase = isPlant
+    ? (specimen.id === 'leaf' ? 'rgba(34,197,94,0.35)' : 'rgba(234,179,8,0.28)')
+    : isAnimal
+      ? (specimen.id === 'blood' ? 'rgba(239,68,68,0.45)' : 'rgba(167,139,250,0.3)')
+      : isBacteria
+        ? 'rgba(20,184,166,0.45)'
+        : 'rgba(59,130,246,0.32)'
+
+  const selFill = (base: string) => base.replace(/0\.\d+\)/, '0.65)')
+
+  const renderCell = (cx: number, cy: number, idx: number) => {
+    const isSel = selectedCell === idx
+    const stroke = isSel ? (isDark ? '#34d399' : '#059669') : isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.35)'
+    const sw = isSel ? 2 : 0.6
+    const fill = isSel ? selFill(cellFillBase) : cellFillBase
+    const clickable = zoom >= 100
+    const onClick = clickable ? () => setSelectedCell(idx === selectedCell ? null : idx) : undefined
+    const cursor = clickable ? 'pointer' : 'default'
+    const shape = isPlant
+      ? <rect x={cx - sz.w / 2} y={cy - sz.h / 2} width={sz.w} height={sz.h} rx={3}
+          fill={fill} stroke={stroke} strokeWidth={sw} onClick={onClick} style={{ cursor }} />
+      : <ellipse cx={cx} cy={cy} rx={sz.w / 2} ry={sz.h / 2}
+          fill={fill} stroke={stroke} strokeWidth={sw} onClick={onClick} style={{ cursor }} />
+    return <g key={'c' + idx}>{shape}</g>
+  }
+
+  const renderOrganelles = (cx: number, cy: number, idx: number) => {
+    if (zoom < 400 || selectedCell !== idx) return null
+    const nuclR = Math.max(4, sz.w * 0.16)
+    const chlRx = Math.max(3, sz.w * 0.09)
+    const chlRy = Math.max(2, sz.h * 0.06)
+    return (
+      <g key={'o' + idx}>
+        {/* Nucleus — not for bacteria, not for mature RBCs */}
+        {specimen.type !== 'bacteria' && (
+          <circle cx={cx} cy={cy} r={nuclR}
+            fill={isDark ? 'rgba(139,92,246,0.5)' : 'rgba(139,92,246,0.55)'}
+            stroke={isDark ? 'rgba(139,92,246,0.8)' : 'rgba(109,40,217,0.8)'} strokeWidth={0.8} />
+        )}
+        {/* Chloroplasts for leaf */}
+        {specimen.id === 'leaf' && (
+          <>
+            {[[cx - sz.w * 0.25, cy - sz.h * 0.2], [cx + sz.w * 0.25, cy + sz.h * 0.15], [cx - sz.w * 0.22, cy + sz.h * 0.22], [cx + sz.w * 0.22, cy - sz.h * 0.2]].map(([px, py], i) => (
+              <ellipse key={'chl' + i} cx={px} cy={py} rx={chlRx} ry={chlRy}
+                fill="rgba(22,163,74,0.75)" stroke="rgba(22,101,52,0.85)" strokeWidth={0.5} />
+            ))}
+          </>
+        )}
+        {/* Large vacuole for plant cells */}
+        {isPlant && zoom >= 1000 && (
+          <ellipse cx={cx} cy={cy} rx={sz.w * 0.32} ry={sz.h * 0.3}
+            fill="rgba(59,130,246,0.15)" stroke="rgba(59,130,246,0.4)" strokeWidth={0.6} strokeDasharray="2 2" />
+        )}
+        {/* Bacteria DNA loop */}
+        {specimen.type === 'bacteria' && (
+          <ellipse cx={cx} cy={cy} rx={sz.w * 0.32} ry={sz.h * 0.25}
+            fill="none" stroke={isDark ? 'rgba(20,184,166,0.9)' : 'rgba(15,118,110,0.9)'} strokeWidth={1} strokeDasharray="3 2" />
+        )}
+        {/* Pond water cilia */}
+        {specimen.type === 'mixed' && zoom >= 400 && (
+          <>
+            {Array.from({ length: 8 }, (_, i) => {
+              const ang = (i / 8) * Math.PI * 2
+              const r1x = Math.cos(ang) * (sz.w / 2)
+              const r1y = Math.sin(ang) * (sz.h / 2)
+              const r2x = Math.cos(ang) * (sz.w / 2 + 6)
+              const r2y = Math.sin(ang) * (sz.h / 2 + 6)
+              return <line key={'cil' + i} x1={cx + r1x} y1={cy + r1y} x2={cx + r2x} y2={cy + r2y}
+                stroke={isDark ? 'rgba(167,139,250,0.7)' : 'rgba(109,40,217,0.7)'} strokeWidth={0.6} />
+            })}
+          </>
+        )}
+      </g>
+    )
+  }
+
+  const renderLabels = () => {
+    if (selectedCell === null || zoom < 400) return null
+    const pos = positions[selectedCell]
+    if (!pos) return null
+    const labels: { text: string; dx: number; dy: number }[] = []
+    const off = sz.w / 2 + 10
+    if (isPlant) {
+      labels.push({ text: 'cell wall', dx: pos.x + off, dy: pos.y - sz.h / 4 })
+      labels.push({ text: 'nucleus', dx: pos.x - off - 30, dy: pos.y + 4 })
+      if (specimen.id === 'leaf') labels.push({ text: 'chloroplast', dx: pos.x + off, dy: pos.y + sz.h / 4 })
+      if (zoom >= 1000) labels.push({ text: 'vacuole', dx: pos.x - off - 26, dy: pos.y + sz.h / 3 })
+    } else if (isAnimal) {
+      if (specimen.id === 'blood') {
+        labels.push({ text: 'RBC (no nucleus!)', dx: pos.x + off, dy: pos.y + 4 })
+      } else {
+        labels.push({ text: 'cell membrane', dx: pos.x + off, dy: pos.y - sz.h / 4 })
+        labels.push({ text: 'nucleus', dx: pos.x - off - 30, dy: pos.y + 4 })
+      }
+    } else if (isBacteria) {
+      labels.push({ text: 'DNA (no nucleus!)', dx: pos.x + off, dy: pos.y })
+      labels.push({ text: 'cell wall', dx: pos.x - off - 30, dy: pos.y + 4 })
+    } else {
+      labels.push({ text: 'cell membrane', dx: pos.x + off, dy: pos.y - sz.h / 4 })
+      labels.push({ text: 'nucleus', dx: pos.x - off - 30, dy: pos.y + 4 })
+      labels.push({ text: 'cilia', dx: pos.x - 10, dy: pos.y + sz.h / 2 + 14 })
+    }
+    const lc = isDark ? '#34d399' : '#059669'
+    return (
+      <g>
+        {labels.map((l, i) => (
+          <g key={'l' + i}>
+            <line x1={pos.x} y1={pos.y} x2={l.dx + (l.dx > pos.x ? -2 : 2)} y2={l.dy} stroke={lc} strokeWidth={0.5} />
+            <text x={l.dx + (l.dx > pos.x ? 2 : -2)} y={l.dy + 3} textAnchor={l.dx > pos.x ? 'start' : 'end'} fontSize={8} fill={lc} fontWeight={700}>{l.text}</text>
+          </g>
+        ))}
+      </g>
+    )
+  }
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {MICROSCOPE_SPECIMENS.map(sp => (
+          <button key={sp.id} onClick={() => setSpecimenId(sp.id)} style={s.btn(specimenId === sp.id)}>
+            <span>{sp.emoji}</span> <span style={{ fontSize: 9 }}>{sp.shortName}</span>
+          </button>
+        ))}
+      </div>
+
+      <svg viewBox="0 0 280 280" style={{ width: '100%', maxWidth: 280, borderRadius: 4, border: '1px solid ' + s.border, background: isDark ? '#0a0e1a' : '#fafbff', display: 'block', margin: '0 auto' }}>
+        <defs>
+          <clipPath id="fovClip">
+            <circle cx={140} cy={140} r={130} />
+          </clipPath>
+        </defs>
+        <circle cx={140} cy={140} r={130} fill={isDark ? 'rgba(15,23,42,0.4)' : 'rgba(248,250,252,0.6)'} stroke={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.25)'} strokeWidth={1.5} />
+        <g clipPath="url(#fovClip)" transform="translate(20, 20)">
+          {positions.map((p, i) => renderCell(p.x, p.y, i))}
+          {positions.map((p, i) => renderOrganelles(p.x, p.y, i))}
+        </g>
+        <g transform="translate(20, 20)">
+          {renderLabels()}
+        </g>
+        {/* Magnification badge */}
+        <g transform="translate(140, 262)">
+          <rect x={-55} y={-11} width={110} height={20} rx={10} fill={isDark ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.8)'} />
+          <text x={0} y={2} textAnchor="middle" fontSize={11} fill="#34d399" fontWeight={700}>{totalMag}× total mag</text>
+        </g>
+      </svg>
+
+      <div style={{ display: 'flex', gap: 4, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 9, color: s.text }}>Objective:</span>
+        {ZOOM_LEVELS.map((z, i) => (
+          <button key={z} onClick={() => setZoomIdx(i)} style={s.btn(zoomIdx === i)}>{z}×</button>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 6, padding: '4px 6px', background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, fontSize: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 4 }}>
+          <span>Specimen: <b style={{ color: s.bright }}>{specimen.name}</b></span>
+          <span>Type: <b style={{ color: s.bright }}>{specimen.type}</b></span>
+        </div>
+        <div style={{ marginTop: 2 }}>
+          Eyepiece <b>10×</b> × Objective <b>{objective}×</b> = <b style={{ color: '#34d399' }}>{totalMag}× total</b>
+        </div>
+        <div style={{ marginTop: 2 }}>
+          Visible at {zoom}×: <b style={{ color: s.bright }}>{visibleParts}</b>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Specimen: <b>{specimen.name}</b></div>
+        <div>Step 2: Magnification: 10× eyepiece × {objective}× objective = <b>{totalMag}×</b> total</div>
+        <div>Step 3: At {totalMag}×, you can see: <b>{visibleParts}</b></div>
+        <div>Step 4: {selectedCell !== null ? <>Selected cell — <b>{specimen.cellTypeName}</b></> : 'Click a cell to identify its type and parts'}</div>
+        <div>Step 5: {isPlant ? 'Plant cells have: cell wall (rigid), chloroplasts in leaves, large vacuole' : isBacteria ? 'Bacteria are PROKARYOTES — no nucleus, DNA floats in cytoplasm' : isAnimal ? 'Animal cells have: cell membrane (flexible), no cell wall, no chloroplasts' : 'Pond water has protists — eukaryotes with nucleus, cilia, organelles'}</div>
+        <div>Step 6: Higher magnification = more detail visible, but smaller field of view</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Microscopes reveal a hidden world. Magnification = eyepiece × objective. At low power you see many cells; at high power you see one cell's parts. Plant cells have walls & chloroplasts; animal cells do not; bacteria have neither nucleus nor organelles.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 17. PhotosynthesisEquationBuilder (MS 6-8)
+// ============================================================
+
+interface PhotoMolecule {
+  id: string
+  label: string
+  shortLabel: string
+  role: 'reactant' | 'product'
+  name: string
+}
+
+const PHOTOSYNTHESIS_MOLECULES: PhotoMolecule[] = [
+  { id: 'co2', label: '6CO₂', shortLabel: '6CO₂', role: 'reactant', name: 'carbon dioxide' },
+  { id: 'h2o', label: '6H₂O', shortLabel: '6H₂O', role: 'reactant', name: 'water' },
+  { id: 'light', label: 'light energy', shortLabel: 'light', role: 'reactant', name: 'sunlight' },
+  { id: 'glucose', label: 'C₆H₁₂O₆', shortLabel: 'C₆H₁₂O₆', role: 'product', name: 'glucose' },
+  { id: 'o2', label: '6O₂', shortLabel: '6O₂', role: 'product', name: 'oxygen' },
+]
+
+const PHOTOSYNTHESIS_SLOTS = [
+  { id: 0, side: 'reactant' as const, correctId: 'co2' },
+  { id: 1, side: 'reactant' as const, correctId: 'h2o' },
+  { id: 2, side: 'reactant' as const, correctId: 'light' },
+  { id: 3, side: 'product' as const, correctId: 'glucose' },
+  { id: 4, side: 'product' as const, correctId: 'o2' },
+]
+
+export function PhotosynthesisEquationBuilder({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [selectedCard, setSelectedCard] = useState<string | null>(null)
+  const [placements, setPlacements] = useState<Record<number, string>>({})
+  const [wrongSlot, setWrongSlot] = useState<number | null>(null)
+  const [lastAction, setLastAction] = useState<'correct' | 'wrong' | null>(null)
+  const [animTime, setAnimTime] = useState(0)
+  const rafRef = useRef<number | null>(null)
+
+  const placedCount = Object.keys(placements).length
+  const correctCount = placedCount // all placed are correct (wrong doesn't lock)
+  const complete = placedCount === 5
+
+  useEffect(() => {
+    if (!complete) return
+    let start: number | null = null
+    const tick = (t: number) => {
+      if (start === null) start = t
+      setAnimTime((t - start) / 1000)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+  }, [complete])
+
+  const handleCardClick = (cardId: string) => {
+    if (Object.values(placements).includes(cardId) || complete) return
+    setSelectedCard(cardId === selectedCard ? null : cardId)
+    setLastAction(null)
+  }
+
+  const handleSlotClick = (slotId: number) => {
+    if (selectedCard === null || placements[slotId] || complete) return
+    const slot = PHOTOSYNTHESIS_SLOTS[slotId]
+    if (slot.correctId === selectedCard) {
+      setPlacements({ ...placements, [slotId]: selectedCard })
+      setSelectedCard(null)
+      setLastAction('correct')
+      setWrongSlot(null)
+    } else {
+      setWrongSlot(slotId)
+      setLastAction('wrong')
+      setTimeout(() => setWrongSlot(null), 500)
+    }
+  }
+
+  const reset = () => {
+    setPlacements({})
+    setSelectedCard(null)
+    setWrongSlot(null)
+    setLastAction(null)
+  }
+
+  const getCard = (id: string) => PHOTOSYNTHESIS_MOLECULES.find(m => m.id === id)!
+
+  const renderSlot = (slotId: number) => {
+    const slot = PHOTOSYNTHESIS_SLOTS[slotId]
+    const filled = placements[slotId]
+    const card = filled ? getCard(filled) : null
+    const isWrong = wrongSlot === slotId
+    const isReady = selectedCard !== null && !filled
+    const sideColor = slot.side === 'reactant' ? '#3b82f6' : '#22c55e'
+    return (
+      <div onClick={() => handleSlotClick(slotId)} style={{
+        minWidth: 36, minHeight: 30, padding: '4px 4px', borderRadius: 3,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+        background: filled ? 'rgba(34,197,94,0.18)' : isReady ? 'rgba(167,139,250,0.12)' : s.bg,
+        border: '2px dashed ' + (filled ? 'rgba(34,197,94,0.6)' : isReady ? 'rgba(167,139,250,0.55)' : isWrong ? 'rgba(239,68,68,0.7)' : sideColor + '80'),
+        color: filled ? '#22c55e' : isReady ? '#a78bfa' : s.text,
+        fontSize: 10, fontWeight: 700,
+        cursor: filled || complete ? 'default' : selectedCard ? 'pointer' : 'default',
+        transform: isWrong ? 'translateX(-3px)' : 'none',
+        transition: 'transform 0.1s',
+      }}>
+        {card ? card.shortLabel : '?'}
+      </div>
+    )
+  }
+
+  // Animation visual: sun → light particles → plant → glucose + O2
+  const animPhase = animTime % 3
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      {/* Equation display */}
+      <div style={{ padding: 8, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 4 }}>Photosynthesis Equation</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {renderSlot(0)}
+          <span style={{ fontSize: 12, color: s.bright, fontWeight: 700 }}>+</span>
+          {renderSlot(1)}
+          <span style={{ fontSize: 12, color: s.bright, fontWeight: 700 }}>+</span>
+          {renderSlot(2)}
+          <span style={{ fontSize: 14, color: '#f59e0b', fontWeight: 700, padding: '0 2px' }}>→</span>
+          {renderSlot(3)}
+          <span style={{ fontSize: 12, color: s.bright, fontWeight: 700 }}>+</span>
+          {renderSlot(4)}
+        </div>
+      </div>
+
+      {/* Molecule cards */}
+      <div style={{ marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>
+          {selectedCard ? '✓ Card selected — now click a slot' : 'Click a molecule, then click a slot'}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 3 }}>
+          {PHOTOSYNTHESIS_MOLECULES.map(m => {
+            const isPlaced = Object.values(placements).includes(m.id)
+            const isSelected = selectedCard === m.id
+            return (
+              <button key={m.id} onClick={() => handleCardClick(m.id)} disabled={isPlaced || complete} style={{
+                padding: '4px 2px', fontSize: 9, fontWeight: 700,
+                minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+                background: isPlaced ? 'rgba(34,197,94,0.12)' : isSelected ? 'rgba(167,139,250,0.22)' : s.bg,
+                border: '1px solid ' + (isPlaced ? 'rgba(34,197,94,0.45)' : isSelected ? 'rgba(167,139,250,0.55)' : s.border),
+                color: isPlaced ? '#22c55e' : isSelected ? '#a78bfa' : s.bright, borderRadius: 3,
+                cursor: isPlaced || complete ? 'default' : 'pointer',
+                opacity: isPlaced ? 0.55 : 1,
+                lineHeight: 1.15,
+              }}>
+                {m.shortLabel}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Status or animation */}
+      {complete ? (
+        <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#22c55e', marginBottom: 4, textAlign: 'center' }}>✓ Equation balanced! Photosynthesis in action:</div>
+          <svg viewBox="0 0 280 100" style={{ width: '100%', borderRadius: 4 }}>
+            {/* Sun (left) */}
+            <g transform="translate(35, 35)">
+              <circle r={13} fill="#fbbf24" stroke="#f59e0b" strokeWidth={1.5} />
+              {Array.from({ length: 10 }, (_, i) => {
+                const ang = (i / 10) * Math.PI * 2 + animPhase * 0.5
+                const r2 = 17 + Math.sin(animTime * 4 + i) * 2.5
+                return <line key={i} x1={Math.cos(ang) * 14} y1={Math.sin(ang) * 14} x2={Math.cos(ang) * r2} y2={Math.sin(ang) * r2} stroke="#f59e0b" strokeWidth={1.5} />
+              })}
+              <text y={32} textAnchor="middle" fontSize={8} fill="#f59e0b" fontWeight={700}>light</text>
+            </g>
+            {/* Light particles flowing right toward plant */}
+            {Array.from({ length: 4 }, (_, i) => {
+              const t = ((animPhase / 3 + i * 0.25) % 1)
+              const px = 55 + t * 65
+              const py = 28 + Math.sin(t * Math.PI * 2 + i) * 8
+              return <circle key={i} cx={px} cy={py} r={2.5} fill="#fbbf24" opacity={1 - t * 0.7} />
+            })}
+            {/* Plant (center) */}
+            <g transform="translate(155, 50)">
+              <rect x={-2} y={0} width={4} height={30} fill="#84cc16" />
+              <ellipse cx={-10} cy={6} rx={9} ry={5} fill="#22c55e" stroke="#16a34a" strokeWidth={0.5} />
+              <ellipse cx={10} cy={6} rx={9} ry={5} fill="#22c55e" stroke="#16a34a" strokeWidth={0.5} />
+              <ellipse cx={0} cy={-6} rx={11} ry={8} fill="#16a34a" stroke="#15803d" strokeWidth={0.5} />
+              <text y={45} textAnchor="middle" fontSize={8} fill="#22c55e" fontWeight={700}>plant</text>
+            </g>
+            {/* Outputs flowing right: glucose + O2 */}
+            {Array.from({ length: 5 }, (_, i) => {
+              const t = ((animPhase / 3 + i * 0.2) % 1)
+              const isGlucose = i % 2 === 0
+              const px = 190 + t * 70
+              const py = 28 + (i % 2) * 18
+              return (
+                <g key={i} transform={`translate(${px}, ${py})`}>
+                  <circle r={6} fill={isGlucose ? 'rgba(245,158,11,0.7)' : 'rgba(59,130,246,0.7)'} stroke={isGlucose ? '#f59e0b' : '#3b82f6'} strokeWidth={0.6} opacity={1 - t * 0.4} />
+                  <text textAnchor="middle" y={2} fontSize={6} fill="#fff" fontWeight={700}>{isGlucose ? 'C₆' : 'O₂'}</text>
+                </g>
+              )
+            })}
+            <text x={255} y={92} textAnchor="middle" fontSize={8} fill="#3b82f6" fontWeight={700}>O₂ out</text>
+            <text x={215} y={92} textAnchor="middle" fontSize={8} fill="#f59e0b" fontWeight={700}>glucose out</text>
+          </svg>
+        </div>
+      ) : (
+        <div style={{ padding: '4px 6px', background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6, fontSize: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Placed: <b style={{ color: s.bright }}>{placedCount}/5</b> | Correct: <b style={{ color: '#22c55e' }}>{correctCount}</b></span>
+          <button onClick={reset} style={s.btn(false)}>↺ Reset</button>
+        </div>
+      )}
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Equation: ? + ? + ? → ? + ? (5 molecules to place)</div>
+        <div>Step 2: Placed: <b>{placedCount}/5</b> | Correct: <b>{correctCount}</b></div>
+        <div>Step 3: {lastAction === 'correct' ? '✓ Correct placement!' : lastAction === 'wrong' ? '✗ Wrong slot — think about what goes IN vs what comes OUT' : 'Click a molecule, then click a slot'}</div>
+        <div>Step 4: {complete ? 'Complete! 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂' : 'Reactants (inputs) on the LEFT, products (outputs) on the RIGHT'}</div>
+        <div>Step 5: {complete ? '6 carbon atoms in (CO₂) = 6 carbon atoms out (C₆H₁₂O₆) — balanced!' : 'Light energy drives the reaction but is NOT a molecule'}</div>
+        <div>Step 6: Plants make glucose (food) from sunlight — they are the base of every food chain</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Photosynthesis turns light energy into chemical energy (glucose). The equation must balance — every atom that goes in must come out. Plants are the only living things that can make their own food from sunlight.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 18. DihybridCrossExplorer (MS 6-8)
+// ============================================================
+
+interface TraitSet {
+  id: string
+  label: string
+  emoji: string
+  trait1Name: string
+  t1Dom: string
+  t1Rec: string
+  t1DomName: string
+  t1RecName: string
+  trait2Name: string
+  t2Dom: string
+  t2Rec: string
+  t2DomName: string
+  t2RecName: string
+}
+
+const DIHYBRID_TRAITS: TraitSet[] = [
+  {
+    id: 'pea', label: 'Pea Seeds', emoji: '🟡',
+    trait1Name: 'Seed Color', t1Dom: 'Y', t1Rec: 'y', t1DomName: 'Yellow', t1RecName: 'Green',
+    trait2Name: 'Seed Shape', t2Dom: 'R', t2Rec: 'r', t2DomName: 'Round', t2RecName: 'Wrinkled',
+  },
+  {
+    id: 'guinea', label: 'Guinea Pig', emoji: '🐹',
+    trait1Name: 'Fur Color', t1Dom: 'B', t1Rec: 'b', t1DomName: 'Black', t1RecName: 'White',
+    trait2Name: 'Fur Length', t2Dom: 'S', t2Rec: 's', t2DomName: 'Short', t2RecName: 'Long',
+  },
+  {
+    id: 'flower', label: 'Flower', emoji: '🌸',
+    trait1Name: 'Flower Color', t1Dom: 'P', t1Rec: 'p', t1DomName: 'Purple', t1RecName: 'White',
+    trait2Name: 'Flower Position', t2Dom: 'A', t2Rec: 'a', t2DomName: 'Axial', t2RecName: 'Terminal',
+  },
+]
+
+function sortAllelePair(a1: string, a2: string): string {
+  const up = [a1, a2].filter(c => c === c.toUpperCase()).join('')
+  const lo = [a1, a2].filter(c => c === c.toLowerCase()).join('')
+  return up + lo
+}
+
+export function DihybridCrossExplorer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [traitSetId, setTraitSetId] = useState('pea')
+  const [p1t1, setP1t1] = useState<[boolean, boolean]>([true, false])
+  const [p1t2, setP1t2] = useState<[boolean, boolean]>([true, false])
+  const [p2t1, setP2t1] = useState<[boolean, boolean]>([true, false])
+  const [p2t2, setP2t2] = useState<[boolean, boolean]>([true, false])
+
+  const traits = DIHYBRID_TRAITS.find(t => t.id === traitSetId)!
+  const T1D = traits.t1Dom, T1R = traits.t1Rec
+  const T2D = traits.t2Dom, T2R = traits.t2Rec
+
+  const al = (b: boolean, dom: string, rec: string) => b ? dom : rec
+  const p1a1 = al(p1t1[0], T1D, T1R), p1a2 = al(p1t1[1], T1D, T1R)
+  const p1b1 = al(p1t2[0], T2D, T2R), p1b2 = al(p1t2[1], T2D, T2R)
+  const p2a1 = al(p2t1[0], T1D, T1R), p2a2 = al(p2t1[1], T1D, T1R)
+  const p2b1 = al(p2t2[0], T2D, T2R), p2b2 = al(p2t2[1], T2D, T2R)
+
+  const p1Geno = sortAllelePair(p1a1, p1a2) + sortAllelePair(p1b1, p1b2)
+  const p2Geno = sortAllelePair(p2a1, p2a2) + sortAllelePair(p2b1, p2b2)
+
+  // 4 gametes per parent: combinations of (trait1 allele, trait2 allele)
+  const p1Gametes = [p1a1 + p1b1, p1a1 + p1b2, p1a2 + p1b1, p1a2 + p1b2]
+  const p2Gametes = [p2a1 + p2b1, p2a1 + p2b2, p2a2 + p2b1, p2a2 + p2b2]
+
+  // 4×4 Punnett grid — combine gametes, normalize each trait pair (dominant first)
+  const grid: string[][] = []
+  for (let r = 0; r < 4; r++) {
+    const row: string[] = []
+    for (let c = 0; c < 4; c++) {
+      const t1Pair = sortAllelePair(p1Gametes[r][0], p2Gametes[c][0])
+      const t2Pair = sortAllelePair(p1Gametes[r][1], p2Gametes[c][1])
+      row.push(t1Pair + t2Pair)
+    }
+    grid.push(row)
+  }
+
+  const hasDom = (pair: string, domChar: string) => pair.includes(domChar)
+  let bothDom = 0, dom1Rec2 = 0, rec1Dom2 = 0, bothRec = 0
+  grid.forEach(row => row.forEach(g => {
+    const t1 = g[0] + g[1]
+    const t2 = g[2] + g[3]
+    const t1D = hasDom(t1, T1D)
+    const t2D = hasDom(t2, T2D)
+    if (t1D && t2D) bothDom++
+    else if (t1D && !t2D) dom1Rec2++
+    else if (!t1D && t2D) rec1Dom2++
+    else bothRec++
+  }))
+
+  const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b)
+  const gAll = [bothDom, dom1Rec2, rec1Dom2, bothRec].reduce(gcd) || 1
+  const ratioStr = `${bothDom / gAll} : ${dom1Rec2 / gAll} : ${rec1Dom2 / gAll} : ${bothRec / gAll}`
+  const isClassic = bothDom === 9 && dom1Rec2 === 3 && rec1Dom2 === 3 && bothRec === 1
+
+  const cellColor = (g: string) => {
+    const t1 = g[0] + g[1], t2 = g[2] + g[3]
+    const t1D = hasDom(t1, T1D), t2D = hasDom(t2, T2D)
+    if (t1D && t2D) return 'rgba(34,197,94,0.22)'
+    if (t1D && !t2D) return 'rgba(234,179,8,0.22)'
+    if (!t1D && t2D) return 'rgba(59,130,246,0.22)'
+    return 'rgba(239,68,68,0.22)'
+  }
+
+  const handleTraitSetChange = (id: string) => {
+    setTraitSetId(id)
+    setP1t1([true, false]); setP1t2([true, false])
+    setP2t1([true, false]); setP2t2([true, false])
+  }
+
+  const renderToggle = (value: boolean, onChange: (v: boolean) => void, dom: string, rec: string, key: string) => (
+    <select key={key} value={value ? '1' : '0'} onChange={e => onChange(e.target.value === '1')} style={{ ...s.input, padding: '2px 4px', fontSize: 10 }}>
+      <option value="1">{dom}</option>
+      <option value="0">{rec}</option>
+    </select>
+  )
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6, flexWrap: 'wrap' }}>
+        {DIHYBRID_TRAITS.map(t => (
+          <button key={t.id} onClick={() => handleTraitSetChange(t.id)} style={s.btn(traitSetId === t.id)}>{t.emoji} {t.label}</button>
+        ))}
+      </div>
+
+      {/* Parent genotype controls */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+        <div style={{ flex: '1 1 130px', padding: 4, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#3b82f6', marginBottom: 3 }}>Parent 1: {p1Geno}</div>
+          <div style={{ fontSize: 8, color: s.text, marginBottom: 1 }}>{traits.trait1Name}:</div>
+          <div style={{ display: 'flex', gap: 2, marginBottom: 2 }}>
+            {renderToggle(p1t1[0], v => setP1t1([v, p1t1[1]]), T1D, T1R, 'p1t1a')}
+            {renderToggle(p1t1[1], v => setP1t1([p1t1[0], v]), T1D, T1R, 'p1t1b')}
+          </div>
+          <div style={{ fontSize: 8, color: s.text, marginBottom: 1 }}>{traits.trait2Name}:</div>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {renderToggle(p1t2[0], v => setP1t2([v, p1t2[1]]), T2D, T2R, 'p1t2a')}
+            {renderToggle(p1t2[1], v => setP1t2([p1t2[0], v]), T2D, T2R, 'p1t2b')}
+          </div>
+        </div>
+        <div style={{ flex: '1 1 130px', padding: 4, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#f59e0b', marginBottom: 3 }}>Parent 2: {p2Geno}</div>
+          <div style={{ fontSize: 8, color: s.text, marginBottom: 1 }}>{traits.trait1Name}:</div>
+          <div style={{ display: 'flex', gap: 2, marginBottom: 2 }}>
+            {renderToggle(p2t1[0], v => setP2t1([v, p2t1[1]]), T1D, T1R, 'p2t1a')}
+            {renderToggle(p2t1[1], v => setP2t1([p2t1[0], v]), T1D, T1R, 'p2t1b')}
+          </div>
+          <div style={{ fontSize: 8, color: s.text, marginBottom: 1 }}>{traits.trait2Name}:</div>
+          <div style={{ display: 'flex', gap: 2 }}>
+            {renderToggle(p2t2[0], v => setP2t2([v, p2t2[1]]), T2D, T2R, 'p2t2a')}
+            {renderToggle(p2t2[1], v => setP2t2([p2t2[0], v]), T2D, T2R, 'p2t2b')}
+          </div>
+        </div>
+      </div>
+
+      {/* 4×4 Punnett square */}
+      <div style={{ marginBottom: 6, overflowX: 'auto' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 10, margin: '0 auto' }}>
+          <thead>
+            <tr>
+              <td style={{ padding: '3px 4px', borderBottom: '1px solid ' + s.border, borderRight: '1px solid ' + s.border }}></td>
+              {p2Gametes.map((g, i) => (
+                <td key={i} style={{ padding: '3px 5px', borderBottom: '1px solid ' + s.border, textAlign: 'center', fontWeight: 700, color: '#f59e0b', fontSize: 11 }}>{g}</td>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {[0, 1, 2, 3].map(r => (
+              <tr key={r}>
+                <td style={{ padding: '3px 5px', borderRight: '1px solid ' + s.border, fontWeight: 700, color: '#3b82f6', fontSize: 11, textAlign: 'center' }}>{p1Gametes[r]}</td>
+                {[0, 1, 2, 3].map(c => {
+                  const geno = grid[r][c]
+                  return (
+                    <td key={c} style={{
+                      padding: '4px 6px', textAlign: 'center', fontWeight: 700, fontSize: 10,
+                      background: cellColor(geno),
+                      border: '1px solid ' + s.border,
+                      color: s.bright,
+                    }}>{geno}</td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Phenotype summary */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6, fontSize: 10 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 3 }}>Phenotype Counts (out of 16)</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+          <div style={{ padding: 3, background: 'rgba(34,197,94,0.15)', borderRadius: 3, border: '1px solid rgba(34,197,94,0.3)' }}>
+            <b style={{ color: '#22c55e', fontSize: 12 }}>{bothDom}</b> {traits.t1DomName} {traits.t2DomName}
+          </div>
+          <div style={{ padding: 3, background: 'rgba(234,179,8,0.15)', borderRadius: 3, border: '1px solid rgba(234,179,8,0.3)' }}>
+            <b style={{ color: '#eab308', fontSize: 12 }}>{dom1Rec2}</b> {traits.t1DomName} {traits.t2RecName}
+          </div>
+          <div style={{ padding: 3, background: 'rgba(59,130,246,0.15)', borderRadius: 3, border: '1px solid rgba(59,130,246,0.3)' }}>
+            <b style={{ color: '#3b82f6', fontSize: 12 }}>{rec1Dom2}</b> {traits.t1RecName} {traits.t2DomName}
+          </div>
+          <div style={{ padding: 3, background: 'rgba(239,68,68,0.15)', borderRadius: 3, border: '1px solid rgba(239,68,68,0.3)' }}>
+            <b style={{ color: '#ef4444', fontSize: 12 }}>{bothRec}</b> {traits.t1RecName} {traits.t2RecName}
+          </div>
+        </div>
+        <div style={{ marginTop: 4, fontSize: 11, fontWeight: 700, color: s.bright, textAlign: 'center' }}>
+          Ratio: {ratioStr} {isClassic && <span style={{ color: '#22c55e' }}>✓ classic 9:3:3:1</span>}
+        </div>
+      </div>
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Trait 1: <b>{traits.trait1Name}</b> ({p1a1}{p1a2} × {p2a1}{p2a2}) | Trait 2: <b>{traits.trait2Name}</b> ({p1b1}{p1b2} × {p2b1}{p2b2})</div>
+        <div>Step 2: Parent gametes: P1 = {p1Gametes.join(', ')} | P2 = {p2Gametes.join(', ')} (4 per parent = 16 combinations)</div>
+        <div>Step 3: 4×4 Punnett square = 16 possible offspring</div>
+        <div>Step 4: Phenotypes: <b style={{ color: '#22c55e' }}>{bothDom} {traits.t1DomName} {traits.t2DomName}</b> : <b style={{ color: '#eab308' }}>{dom1Rec2} {traits.t1DomName} {traits.t2RecName}</b> : <b style={{ color: '#3b82f6' }}>{rec1Dom2} {traits.t1RecName} {traits.t2DomName}</b> : <b style={{ color: '#ef4444' }}>{bothRec} {traits.t1RecName} {traits.t2RecName}</b></div>
+        <div>Step 5: Ratio: <b>{ratioStr}</b> {isClassic && <span style={{ color: '#22c55e' }}>(the classic dihybrid ratio!)</span>}</div>
+        <div>Step 6: Independent assortment — each trait sorts separately (Mendel's 2nd Law)</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A dihybrid cross tracks TWO traits at once. Mendel's Law of Independent Assortment says the two traits sort separately — that's why heterozygous parents (e.g., YyRr × YyRr) give the signature 9:3:3:1 ratio.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 19. HomeostasisExplorer (MS 6-8)
+// ============================================================
+
+interface HomeoScenario {
+  id: string
+  name: string
+  emoji: string
+  variable: string
+  unit: string
+  normalMin: number
+  normalMax: number
+  disrupted: number
+  direction: 'high' | 'low'
+  sensor: string
+  controlCenter: string
+  effector: string
+  effectorAction: string
+  returnTarget: number
+}
+
+const HOMEOSTASIS_SCENARIOS: HomeoScenario[] = [
+  {
+    id: 'exercise', name: 'Exercise', emoji: '🏃',
+    variable: 'Heart Rate', unit: 'BPM', normalMin: 60, normalMax: 100,
+    disrupted: 155, direction: 'high',
+    sensor: 'Baroreceptors (pressure sensors)',
+    controlCenter: 'Medulla oblongata',
+    effector: 'Heart',
+    effectorAction: 'Parasympathetic signals slow the heart',
+    returnTarget: 75,
+  },
+  {
+    id: 'sugar', name: 'Eating Sugar', emoji: '🍬',
+    variable: 'Blood Glucose', unit: 'mg/dL', normalMin: 70, normalMax: 110,
+    disrupted: 185, direction: 'high',
+    sensor: 'Pancreas beta cells',
+    controlCenter: 'Pancreas',
+    effector: 'Liver & muscle cells',
+    effectorAction: 'Insulin triggers cells to absorb glucose',
+    returnTarget: 90,
+  },
+  {
+    id: 'cold', name: 'Cold Exposure', emoji: '🥶',
+    variable: 'Body Temp', unit: '°C', normalMin: 36.5, normalMax: 37.5,
+    disrupted: 35.4, direction: 'low',
+    sensor: 'Thermoreceptors in skin',
+    controlCenter: 'Hypothalamus',
+    effector: 'Muscles & blood vessels',
+    effectorAction: 'Shivering generates heat + vessels constrict',
+    returnTarget: 37.0,
+  },
+  {
+    id: 'dehydration', name: 'Dehydration', emoji: '🥵',
+    variable: 'Blood Water', unit: '%', normalMin: 90, normalMax: 92,
+    disrupted: 87, direction: 'low',
+    sensor: 'Hypothalamus osmoreceptors',
+    controlCenter: 'Hypothalamus',
+    effector: 'Kidneys',
+    effectorAction: 'ADH hormone makes kidneys reabsorb water',
+    returnTarget: 91,
+  },
+]
+
+export function HomeostasisExplorer({ isDark }: { isDark: boolean }) {
+  const s = styles(isDark)
+  const [scenarioId, setScenarioId] = useState('exercise')
+  const [responseTriggered, setResponseTriggered] = useState(false)
+  const [currentValue, setCurrentValue] = useState(155)
+  const [loopPhase, setLoopPhase] = useState(0)
+  const rafRef = useRef<number | null>(null)
+
+  const scenario = HOMEOSTASIS_SCENARIOS.find(sc => sc.id === scenarioId)!
+
+  // Reset to disrupted value when scenario changes
+  useEffect(() => {
+    setCurrentValue(scenario.disrupted)
+    setResponseTriggered(false)
+    setLoopPhase(0)
+  }, [scenarioId, scenario.disrupted])
+
+  // Animate value back to normal + loop phase when triggered
+  useEffect(() => {
+    if (!responseTriggered) return
+    let start: number | null = null
+    const startVal = currentValue
+    const target = scenario.returnTarget
+    const duration = 2500
+    const tick = (t: number) => {
+      if (start === null) start = t
+      const elapsed = t - start
+      const p = Math.min(1, elapsed / duration)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setCurrentValue(startVal + (target - startVal) * eased)
+      setLoopPhase((elapsed / 800) % 4)
+      if (p < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        // Keep the loop animation going after the value settles
+        const tick2 = (t2: number) => {
+          setLoopPhase(((t2 - (start || 0)) / 800) % 4)
+          rafRef.current = requestAnimationFrame(tick2)
+        }
+        rafRef.current = requestAnimationFrame(tick2)
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [responseTriggered])
+
+  const formatVal = (v: number) => scenario.unit.includes('°') || scenario.unit === '%' ? v.toFixed(1) : Math.round(v).toString()
+  const normalRange = `${scenario.normalMin}–${scenario.normalMax} ${scenario.unit}`
+
+  const inNormal = currentValue >= scenario.normalMin && currentValue <= scenario.normalMax
+  const aboveNormal = currentValue > scenario.normalMax
+  const status = inNormal ? 'NORMAL ✓' : aboveNormal ? 'HIGH' : 'LOW'
+  const statusColor = inNormal ? '#22c55e' : '#ef4444'
+
+  // Number line scale
+  const delta = Math.abs(scenario.disrupted - (scenario.direction === 'high' ? scenario.normalMax : scenario.normalMin))
+  const min = Math.min(scenario.normalMin, scenario.disrupted, scenario.returnTarget) - delta * 0.3
+  const max = Math.max(scenario.normalMax, scenario.disrupted, scenario.returnTarget) + delta * 0.3
+  const range = Math.max(0.001, max - min)
+  const normalLeft = ((scenario.normalMin - min) / range) * 100
+  const normalWidth = ((scenario.normalMax - scenario.normalMin) / range) * 100
+  const currentPct = Math.max(0, Math.min(100, ((currentValue - min) / range) * 100))
+
+  const triggerResponse = () => {
+    if (responseTriggered) {
+      setResponseTriggered(false)
+      setCurrentValue(scenario.disrupted)
+      setLoopPhase(0)
+    } else {
+      setResponseTriggered(true)
+    }
+  }
+
+  // Feedback loop SVG
+  const cx = 140, cy = 65, r = 50
+  const nodes = [
+    { label: 'Sensor', sub: scenario.sensor, ang: -Math.PI * 0.75 },
+    { label: 'Control Center', sub: scenario.controlCenter, ang: -Math.PI * 0.25 },
+    { label: 'Effector', sub: scenario.effector, ang: Math.PI * 0.25 },
+    { label: 'Response', sub: 'Variable returns to normal', ang: Math.PI * 0.75 },
+  ]
+
+  return (
+    <div style={{ fontSize: 11, color: s.text }}>
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6, flexWrap: 'wrap' }}>
+        {HOMEOSTASIS_SCENARIOS.map(sc => (
+          <button key={sc.id} onClick={() => setScenarioId(sc.id)} style={s.btn(scenarioId === sc.id)}>
+            {sc.emoji} {sc.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Variable display + number line */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: s.text }}>Variable: <b style={{ color: s.bright }}>{scenario.variable}</b></span>
+          <span style={{ fontSize: 9, fontWeight: 700, color: statusColor, padding: '1px 6px', background: statusColor + '22', borderRadius: 3, border: '1px solid ' + statusColor + '60' }}>{status}</span>
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: statusColor, textAlign: 'center', marginBottom: 4, fontVariantNumeric: 'tabular-nums' }}>
+          {formatVal(currentValue)} <span style={{ fontSize: 11, color: s.text }}>{scenario.unit}</span>
+        </div>
+        {/* Number line */}
+        <div style={{ position: 'relative', height: 22, marginBottom: 4 }}>
+          <div style={{ position: 'absolute', top: 8, left: 0, right: 0, height: 6, background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', borderRadius: 3 }} />
+          <div style={{ position: 'absolute', top: 8, left: normalLeft + '%', width: normalWidth + '%', height: 6, background: 'rgba(34,197,94,0.4)', borderRadius: 3, border: '1px solid rgba(34,197,94,0.6)' }} />
+          <div style={{ position: 'absolute', top: 4, left: currentPct + '%', transform: 'translateX(-50%)', width: 10, height: 14, background: statusColor, borderRadius: 2, border: '1px solid ' + (isDark ? '#fff' : '#000'), boxShadow: '0 0 5px ' + statusColor, transition: 'left 0.05s linear' }} />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, color: s.text }}>
+          <span>{formatVal(min)}</span>
+          <span style={{ color: '#22c55e' }}>Normal: {scenario.normalMin}–{scenario.normalMax}</span>
+          <span>{formatVal(max)}</span>
+        </div>
+      </div>
+
+      {/* Feedback loop visualization */}
+      <div style={{ padding: 6, background: s.bg, borderRadius: 4, border: '1px solid ' + s.border, marginBottom: 6 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: s.text, marginBottom: 4 }}>Negative Feedback Loop</div>
+        <svg viewBox="0 0 280 130" style={{ width: '100%', borderRadius: 4 }}>
+          <defs>
+            <marker id="homeoArrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+              <polygon points="0 0, 6 2, 0 4" fill={isDark ? 'rgba(148,163,184,0.6)' : 'rgba(71,85,105,0.6)'} />
+            </marker>
+            <marker id="homeoArrowActive" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+              <polygon points="0 0, 6 2, 0 4" fill="#34d399" />
+            </marker>
+          </defs>
+          {/* Arrows between nodes */}
+          {nodes.map((n, i) => {
+            const next = nodes[(i + 1) % 4]
+            const x1 = cx + Math.cos(n.ang) * r
+            const y1 = cy + Math.sin(n.ang) * r
+            const x2 = cx + Math.cos(next.ang) * r
+            const y2 = cy + Math.sin(next.ang) * r
+            const isActive = responseTriggered && Math.floor(loopPhase) === i
+            const midAng = (n.ang + next.ang) / 2
+            const ctrlX = cx + Math.cos(midAng) * (r + 14)
+            const ctrlY = cy + Math.sin(midAng) * (r + 14)
+            return (
+              <g key={'a' + i}>
+                <path d={`M ${x1} ${y1} Q ${ctrlX} ${ctrlY} ${x2} ${y2}`}
+                  fill="none"
+                  stroke={isActive ? '#34d399' : (isDark ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.3)')}
+                  strokeWidth={isActive ? 2 : 1}
+                  markerEnd={isActive ? 'url(#homeoArrowActive)' : 'url(#homeoArrow)'} />
+                {isActive && (
+                  <circle cx={ctrlX} cy={ctrlY} r={3.5} fill="#34d399">
+                    <animate attributeName="r" values="2.5;4;2.5" dur="0.6s" repeatCount="indefinite" />
+                  </circle>
+                )}
+              </g>
+            )
+          })}
+          {/* Nodes */}
+          {nodes.map((n, i) => {
+            const x = cx + Math.cos(n.ang) * r
+            const y = cy + Math.sin(n.ang) * r
+            const isActive = responseTriggered && Math.floor(loopPhase) === i
+            return (
+              <g key={'n' + i} transform={`translate(${x}, ${y})`}>
+                <circle r={17} fill={isActive ? 'rgba(52,211,153,0.3)' : isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}
+                  stroke={isActive ? '#34d399' : isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'} strokeWidth={isActive ? 2 : 1} />
+                <text textAnchor="middle" y={-21} fontSize={8} fill={isActive ? '#34d399' : s.bright} fontWeight={700}>{n.label}</text>
+                <text textAnchor="middle" y={29} fontSize={6.5} fill={s.text}>{n.sub.length > 26 ? n.sub.slice(0, 24) + '…' : n.sub}</text>
+              </g>
+            )
+          })}
+          {/* Center label */}
+          <text x={cx} y={cy + 3} textAnchor="middle" fontSize={9} fill={responseTriggered ? '#34d399' : s.text} fontWeight={700}>
+            {responseTriggered ? '↻ ACTIVE' : 'IDLE'}
+          </text>
+        </svg>
+      </div>
+
+      {/* Trigger button */}
+      <button onClick={triggerResponse} style={{
+        width: '100%', padding: '6px 10px', fontSize: 11, fontWeight: 700,
+        marginBottom: 6, cursor: 'pointer', borderRadius: 3,
+        background: responseTriggered ? 'rgba(167,139,250,0.18)' : 'rgba(52,211,153,0.18)',
+        border: '1px solid ' + (responseTriggered ? 'rgba(167,139,250,0.5)' : 'rgba(52,211,153,0.5)'),
+        color: responseTriggered ? '#a78bfa' : '#34d399',
+      }}>
+        {responseTriggered ? '↺ Reset to disrupted' : '▶ Trigger Response'}
+      </button>
+
+      {/* How It Works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Scenario: <b>{scenario.emoji} {scenario.name}</b></div>
+        <div>Step 2: Normal <b>{scenario.variable}</b>: <b>{normalRange}</b> | Current (disrupted): <b style={{ color: '#ef4444' }}>{formatVal(scenario.disrupted)} {scenario.unit}</b></div>
+        <div>Step 3: {responseTriggered ? <>Response activated! → now <b style={{ color: statusColor }}>{formatVal(currentValue)} {scenario.unit}</b></> : 'Click "Trigger Response" to see the body react'}</div>
+        <div>Step 4: {responseTriggered ? <>Sensor detects change → Control center (<b>{scenario.controlCenter}</b>) → Effector (<b>{scenario.effector}</b>)</> : 'Body detects the disruption via sensors'}</div>
+        <div>Step 5: {responseTriggered ? <>Effector action: <b>{scenario.effectorAction}</b> → {scenario.variable} returning to normal</> : 'The body will reverse the change (negative feedback)'}</div>
+        <div>Step 6: Homeostasis = dynamic equilibrium — the body constantly adjusts to stay in range</div>
+      </div>
+
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Homeostasis is the body's way of staying balanced. Negative feedback works like a thermostat: when a value drifts too high or too low, sensors alert a control center, which triggers effectors to bring it back to the normal range.
       </div>
     </div>
   )

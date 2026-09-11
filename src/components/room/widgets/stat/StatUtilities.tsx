@@ -1767,3 +1767,1733 @@ export function CustomSpinner({ isDark }: ToolProps) {
     </div>
   )
 }
+
+// ============================================================
+// 13. CONFIDENCE INTERVAL BUILDER  (Grades 9-12)
+// ============================================================
+
+const CI_PRESETS = [
+  { level: 90, z: 1.645 },
+  { level: 95, z: 1.96 },
+  { level: 99, z: 2.576 },
+]
+
+export function ConfidenceIntervalBuilder({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [mu, setMu] = useState(100)
+  const [sigma, setSigma] = useState(15)
+  const [n, setN] = useState(30)
+  const [confIdx, setConfIdx] = useState(1)
+  const [sampleMeans, setSampleMeans] = useState<number[]>([])
+
+  const conf = CI_PRESETS[confIdx]
+  const zCritical = conf.z
+  const confLevel = conf.level
+  const stdError = sigma / Math.sqrt(n)
+  const marginOfError = zCritical * stdError
+  const lowerBound = mu - marginOfError
+  const upperBound = mu + marginOfError
+
+  const totalSamples = sampleMeans.length
+  const insideCount = sampleMeans.filter(m => m >= lowerBound && m <= upperBound).length
+  const insidePct = totalSamples > 0 ? Math.round((insideCount / totalSamples) * 100) : 0
+
+  // Clear samples when parameters change so inside% stays consistent with current CI
+  useEffect(() => {
+    setSampleMeans([])
+  }, [mu, sigma, n, confIdx])
+
+  function randNormal() {
+    const u1 = Math.random() || 1e-10
+    const u2 = Math.random()
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+  }
+  function drawSample() {
+    const sm = mu + randNormal() * stdError
+    setSampleMeans(prev => [...prev, sm].slice(-500))
+  }
+  function drawMany(count: number) {
+    const news: number[] = []
+    for (let i = 0; i < count; i++) news.push(mu + randNormal() * stdError)
+    setSampleMeans(prev => [...prev, ...news].slice(-500))
+  }
+  function resetSamples() { setSampleMeans([]) }
+
+  // SVG geometry — sampling distribution N(μ, SE)
+  const curveColor = isDark ? '#34d399' : '#059669'
+  const shadeColor = isDark ? 'rgba(52,211,153,0.22)' : 'rgba(5,150,105,0.18)'
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const meanColor = isDark ? '#fbbf24' : '#d97706'
+  const boundColor = isDark ? '#60a5fa' : '#2563eb'
+
+  const xMin = mu - 4 * stdError
+  const xMax = mu + 4 * stdError
+  const steps = 100
+  const dxStep = (xMax - xMin) / steps
+  const points: { x: number; y: number }[] = []
+  let maxY = 0
+  for (let i = 0; i <= steps; i++) {
+    const x = xMin + i * dxStep
+    const y = normalPDF(x, mu, stdError)
+    points.push({ x, y })
+    if (y > maxY) maxY = y
+  }
+  maxY *= 1.1
+
+  const svgW = 280, svgH = 150
+  const pad = { l: 30, r: 10, t: 16, b: 28 }
+  const pw = svgW - pad.l - pad.r
+  const ph = svgH - pad.t - pad.b
+  const sx = (v: number) => pad.l + ((v - xMin) / (xMax - xMin)) * pw
+  const sy = (v: number) => pad.t + ph - (v / maxY) * ph
+
+  // Shade CI region
+  const lb = Math.max(xMin, lowerBound)
+  const ub = Math.min(xMax, upperBound)
+  const shadeSteps = 50
+  const shadeDx = (ub - lb) / shadeSteps
+  const shadePath = 'M' + sx(lb) + ',' + sy(0) +
+    Array.from({ length: shadeSteps + 1 }, (_, i) => {
+      const x = lb + i * shadeDx
+      return ' L' + sx(x) + ',' + sy(normalPDF(x, mu, stdError))
+    }).join('') +
+    ' L' + sx(ub) + ',' + sy(0) + ' Z'
+  const curvePath = 'M' + points.map(p => sx(p.x) + ',' + sy(p.y)).join(' L')
+
+  const recentSamples = sampleMeans.slice(-50)
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Controls */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+        <label style={{ fontSize: 10, color: s.text, display: 'flex', alignItems: 'center', gap: 4 }}>
+          μ
+          <input type="number" value={mu} step={1} onChange={e => setMu(Number(e.target.value))} style={{ ...s.input, width: 50 }} />
+        </label>
+        <label style={{ fontSize: 10, color: s.text, display: 'flex', alignItems: 'center', gap: 4 }}>
+          σ
+          <input type="number" value={sigma} step={1} min={1} onChange={e => setSigma(Number(e.target.value))} style={{ ...s.input, width: 50 }} />
+        </label>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 10, color: s.text, minWidth: 35 }}>n =</span>
+        <input type="range" min={5} max={200} step={1} value={n} onChange={e => setN(Number(e.target.value))} style={{ flex: 1, accentColor: curveColor }} />
+        <span style={{ fontSize: 11, color: s.bright, fontFamily: 'monospace', minWidth: 28 }}>{n}</span>
+      </div>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {CI_PRESETS.map((p, i) => (
+          <button key={p.level} onClick={() => setConfIdx(i)} style={s.btn(confIdx === i)}>{p.level}%</button>
+        ))}
+      </div>
+      {/* SVG */}
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {[0.25, 0.5, 0.75].map(f => (
+          <line key={f} x1={pad.l} y1={sy(f * maxY)} x2={svgW - pad.r} y2={sy(f * maxY)} stroke={gridColor} strokeWidth={0.5} />
+        ))}
+        <path d={shadePath} fill={shadeColor} stroke="none" />
+        <path d={curvePath} fill="none" stroke={curveColor} strokeWidth={1.5} />
+        {/* Mean line */}
+        <line x1={sx(mu)} y1={pad.t} x2={sx(mu)} y2={svgH - pad.b} stroke={meanColor} strokeWidth={1} strokeDasharray="3 3" />
+        {/* Bound lines */}
+        <line x1={sx(lb)} y1={pad.t} x2={sx(lb)} y2={svgH - pad.b} stroke={boundColor} strokeWidth={1} strokeDasharray="2 2" />
+        <line x1={sx(ub)} y1={pad.t} x2={sx(ub)} y2={svgH - pad.b} stroke={boundColor} strokeWidth={1} strokeDasharray="2 2" />
+        {/* Sample dots */}
+        {recentSamples.map((m, i) => {
+          if (m < xMin || m > xMax) return null
+          const inside = m >= lowerBound && m <= upperBound
+          return <circle key={i} cx={sx(m)} cy={svgH - pad.b - 4 - (i % 5) * 2.4} r={1.8} fill={inside ? '#22c55e' : '#ef4444'} opacity={0.75} />
+        })}
+        {/* Axes */}
+        <line x1={pad.l} y1={svgH - pad.b} x2={svgW - pad.r} y2={svgH - pad.b} stroke={axisColor} strokeWidth={1} />
+        <line x1={pad.l} y1={pad.t} x2={pad.l} y2={svgH - pad.b} stroke={axisColor} strokeWidth={1} />
+        {/* Tick labels */}
+        <text x={sx(lb)} y={svgH - pad.b + 11} fontSize={7.5} fill={boundColor} textAnchor="middle" fontWeight={700}>{lb.toFixed(0)}</text>
+        <text x={sx(mu)} y={svgH - pad.b + 11} fontSize={7.5} fill={meanColor} textAnchor="middle" fontWeight={700}>{mu.toFixed(0)}</text>
+        <text x={sx(ub)} y={svgH - pad.b + 11} fontSize={7.5} fill={boundColor} textAnchor="middle" fontWeight={700}>{ub.toFixed(0)}</text>
+        <text x={svgW / 2} y={pad.t - 4} fontSize={8.5} fill={curveColor} textAnchor="middle" fontWeight={700}>
+          {confLevel}% CI: [{lowerBound.toFixed(1)}, {upperBound.toFixed(1)}]
+        </text>
+      </svg>
+      {/* Stats */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px', fontSize: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>z*</span><span style={s.statValue}>{zCritical}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>SE</span><span style={s.statValue}>{stdError.toFixed(3)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Margin</span><span style={s.statValue}>{marginOfError.toFixed(3)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Inside</span><span style={s.statValue}>{insideCount}/{totalSamples}</span></div>
+      </div>
+      {/* Buttons */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={drawSample} style={{ ...s.btn(true), padding: '4px 10px', fontWeight: 600 }}>Draw 1 Sample</button>
+        <button onClick={() => drawMany(10)} style={{ ...s.btn(false), padding: '4px 10px' }}>Draw 10</button>
+        <button onClick={resetSamples} style={{ ...s.btn(false), color: '#f87171', marginLeft: 'auto' }}>Reset</button>
+      </div>
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Population: μ = <b>{mu}</b>, σ = <b>{sigma}</b>, n = <b>{n}</b></div>
+        <div>Step 2: Confidence level: <b>{confLevel}%</b> | z* = <b>{zCritical}</b></div>
+        <div>Step 3: Standard error: σ/√n = {sigma}/√{n} = <b>{stdError.toFixed(2)}</b></div>
+        <div>Step 4: Margin of error: z* × SE = {zCritical} × {stdError.toFixed(2)} = <b>{marginOfError.toFixed(2)}</b></div>
+        <div>Step 5: CI: <b style={{ color: boundColor }}>{lowerBound.toFixed(1)}</b> to <b style={{ color: boundColor }}>{upperBound.toFixed(1)}</b> | Samples inside: {insideCount}/{totalSamples} ({insidePct}%)</div>
+        <div>Step 6: Over many samples, ~{confLevel}% of CIs will contain μ — that's what "{confLevel}% confident" means</div>
+      </div>
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> A confidence interval gives a RANGE of plausible values for the true parameter. Higher confidence means a wider net (more certainty, less precision). Larger samples shrink the standard error, making the interval narrower — that's why bigger studies give sharper estimates.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 14. HYPOTHESIS TEST EXPLORER  (Grades 9-12)
+// ============================================================
+
+type AltType = 'neq' | 'gt' | 'lt'
+
+const ALT_OPTIONS: { type: AltType; symbol: string; label: string }[] = [
+  { type: 'neq', symbol: '≠', label: 'μ ≠ μ₀ (two-tailed)' },
+  { type: 'gt', symbol: '>', label: 'μ > μ₀ (right-tailed)' },
+  { type: 'lt', symbol: '<', label: 'μ < μ₀ (left-tailed)' },
+]
+
+// Critical z values: [α=0.05, α=0.01]
+const Z_CRIT: Record<AltType, [number, number]> = {
+  neq: [1.96, 2.576],
+  gt: [1.645, 2.326],
+  lt: [-1.645, -2.326],
+}
+
+export function HypothesisTestExplorer({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [h0Value, setH0Value] = useState(100)
+  const [altType, setAltType] = useState<AltType>('neq')
+  const [sampleMean, setSampleMean] = useState(105)
+  const [sampleStd, setSampleStd] = useState(15)
+  const [n, setN] = useState(30)
+  const [alphaIdx, setAlphaIdx] = useState(0)
+  const [showStep, setShowStep] = useState(6)
+
+  const alpha = alphaIdx === 0 ? 0.05 : 0.01
+  const stdError = sampleStd / Math.sqrt(n)
+  const zStat = (sampleMean - h0Value) / stdError
+  const absZ = Math.abs(zStat)
+
+  const pValue = useMemo(() => {
+    if (altType === 'neq') return 2 * normalCDF(-absZ, 0, 1)
+    if (altType === 'gt') return normalCDF(-zStat, 0, 1)
+    return normalCDF(zStat, 0, 1)
+  }, [altType, zStat, absZ])
+
+  const reject = pValue < alpha
+  const zCrit = Z_CRIT[altType][alphaIdx]
+  const altSymbol = ALT_OPTIONS.find(a => a.type === altType)!.symbol
+  const altDescription = altType === 'neq' ? 'μ ≠ μ₀' : altType === 'gt' ? 'μ > μ₀' : 'μ < μ₀'
+
+  // SVG: standard normal curve with rejection regions shaded
+  const curveColor = isDark ? '#34d399' : '#059669'
+  const rejectColor = 'rgba(248,113,113,0.35)'
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const statColor = reject ? '#f87171' : '#60a5fa'
+  const critColor = isDark ? '#fbbf24' : '#d97706'
+
+  const xMin = -4, xMax = 4
+  const steps = 120
+  const dxStep = (xMax - xMin) / steps
+  const points: { x: number; y: number }[] = []
+  let maxY = 0
+  for (let i = 0; i <= steps; i++) {
+    const x = xMin + i * dxStep
+    const y = normalPDF(x, 0, 1)
+    points.push({ x, y })
+    if (y > maxY) maxY = y
+  }
+  maxY *= 1.1
+
+  const svgW = 280, svgH = 150
+  const pad = { l: 24, r: 10, t: 16, b: 28 }
+  const pw = svgW - pad.l - pad.r
+  const ph = svgH - pad.t - pad.b
+  const sx = (v: number) => pad.l + ((v - xMin) / (xMax - xMin)) * pw
+  const sy = (v: number) => pad.t + ph - (v / maxY) * ph
+
+  const curvePath = 'M' + points.map(p => sx(p.x) + ',' + sy(p.y)).join(' L')
+
+  function shadeRegion(from: number, to: number): string {
+    const f = Math.max(xMin, from), t = Math.min(xMax, to)
+    if (f >= t) return ''
+    const ss = 25
+    const dd = (t - f) / ss
+    return 'M' + sx(f) + ',' + sy(0) +
+      Array.from({ length: ss + 1 }, (_, i) => {
+        const x = f + i * dd
+        return ' L' + sx(x) + ',' + sy(normalPDF(x, 0, 1))
+      }).join('') +
+      ' L' + sx(t) + ',' + sy(0) + ' Z'
+  }
+  const rejectPaths: string[] = []
+  if (altType === 'neq') {
+    rejectPaths.push(shadeRegion(xMin, -zCrit))
+    rejectPaths.push(shadeRegion(zCrit, xMax))
+  } else if (altType === 'gt') {
+    rejectPaths.push(shadeRegion(zCrit, xMax))
+  } else {
+    rejectPaths.push(shadeRegion(xMin, zCrit))
+  }
+
+  const xTicks = [-3, -2, -1, 0, 1, 2, 3]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Controls */}
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: s.text }}>H₀: μ =</span>
+        <input type="number" value={h0Value} step={1} onChange={e => setH0Value(Number(e.target.value))} style={{ ...s.input, width: 50 }} />
+        <span style={{ fontSize: 10, color: s.text, marginLeft: 6 }}>α:</span>
+        <button onClick={() => setAlphaIdx(0)} style={s.btn(alphaIdx === 0)}>0.05</button>
+        <button onClick={() => setAlphaIdx(1)} style={s.btn(alphaIdx === 1)}>0.01</button>
+      </div>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: s.text }}>H₁:</span>
+        {ALT_OPTIONS.map(a => (
+          <button key={a.type} onClick={() => setAltType(a.type)} style={{ ...s.btn(altType === a.type), fontSize: 13, minWidth: 30, fontWeight: 700 }}>{a.symbol}</button>
+        ))}
+        <span style={{ fontSize: 9, color: s.text, marginLeft: 4 }}>{ALT_OPTIONS.find(a => a.type === altType)!.label}</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+        <label style={{ fontSize: 10, color: s.text, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span>Sample mean (x̄)</span>
+          <input type="number" value={sampleMean} step={1} onChange={e => setSampleMean(Number(e.target.value))} style={{ ...s.input, fontFamily: 'monospace' }} />
+        </label>
+        <label style={{ fontSize: 10, color: s.text, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span>Sample std (s)</span>
+          <input type="number" value={sampleStd} step={1} min={1} onChange={e => setSampleStd(Number(e.target.value))} style={{ ...s.input, fontFamily: 'monospace' }} />
+        </label>
+        <label style={{ fontSize: 10, color: s.text, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span>Sample size (n)</span>
+          <input type="number" value={n} step={1} min={2} onChange={e => setN(Number(e.target.value))} style={{ ...s.input, fontFamily: 'monospace' }} />
+        </label>
+      </div>
+      {/* SVG */}
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {[0.25, 0.5, 0.75].map(f => (
+          <line key={f} x1={pad.l} y1={sy(f * maxY)} x2={svgW - pad.r} y2={sy(f * maxY)} stroke={gridColor} strokeWidth={0.5} />
+        ))}
+        {/* Rejection regions */}
+        {rejectPaths.map((p, i) => (
+          <path key={i} d={p} fill={rejectColor} stroke="none" />
+        ))}
+        {/* Curve */}
+        <path d={curvePath} fill="none" stroke={curveColor} strokeWidth={1.5} />
+        {/* Critical value lines */}
+        {altType === 'neq' && (
+          <>
+            <line x1={sx(-zCrit)} y1={pad.t} x2={sx(-zCrit)} y2={svgH - pad.b} stroke={critColor} strokeWidth={1} strokeDasharray="3 2" />
+            <line x1={sx(zCrit)} y1={pad.t} x2={sx(zCrit)} y2={svgH - pad.b} stroke={critColor} strokeWidth={1} strokeDasharray="3 2" />
+            <text x={sx(-zCrit)} y={svgH - pad.b + 11} fontSize={7.5} fill={critColor} textAnchor="middle" fontWeight={700}>−{zCrit}</text>
+            <text x={sx(zCrit)} y={svgH - pad.b + 11} fontSize={7.5} fill={critColor} textAnchor="middle" fontWeight={700}>+{zCrit}</text>
+          </>
+        )}
+        {altType !== 'neq' && (
+          <>
+            <line x1={sx(zCrit)} y1={pad.t} x2={sx(zCrit)} y2={svgH - pad.b} stroke={critColor} strokeWidth={1} strokeDasharray="3 2" />
+            <text x={sx(zCrit)} y={svgH - pad.b + 11} fontSize={7.5} fill={critColor} textAnchor="middle" fontWeight={700}>{zCrit}</text>
+          </>
+        )}
+        {/* Test statistic line */}
+        {zStat >= xMin && zStat <= xMax && (
+          <>
+            <line x1={sx(zStat)} y1={pad.t} x2={sx(zStat)} y2={svgH - pad.b} stroke={statColor} strokeWidth={1.8} />
+            <text x={sx(zStat)} y={pad.t - 4} fontSize={8} fill={statColor} textAnchor="middle" fontWeight={700}>z={zStat.toFixed(2)}</text>
+          </>
+        )}
+        {/* Axes */}
+        <line x1={pad.l} y1={svgH - pad.b} x2={svgW - pad.r} y2={svgH - pad.b} stroke={axisColor} strokeWidth={1} />
+        <line x1={pad.l} y1={pad.t} x2={pad.l} y2={svgH - pad.b} stroke={axisColor} strokeWidth={1} />
+        {/* x-axis labels */}
+        {xTicks.map(t => (
+          <text key={t} x={sx(t)} y={svgH - pad.b + 21} fontSize={7} fill={axisColor} textAnchor="middle">{t}</text>
+        ))}
+      </svg>
+      {/* Stats */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px', fontSize: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>z-stat</span><span style={s.statValue}>{zStat.toFixed(3)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>p-value</span><span style={s.statValue}>{pValue.toFixed(4)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>z-crit</span><span style={s.statValue}>{altType === 'neq' ? `±${zCrit}` : `${zCrit}`}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>SE</span><span style={s.statValue}>{stdError.toFixed(3)}</span></div>
+      </div>
+      {/* Decision banner */}
+      <div style={{ padding: '5px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, textAlign: 'center' as const, background: reject ? 'rgba(248,113,113,0.12)' : 'rgba(34,197,94,0.12)', border: '1px solid ' + (reject ? 'rgba(248,113,113,0.3)' : 'rgba(34,197,94,0.3)'), color: reject ? '#f87171' : '#22c55e' }}>
+        {reject ? `✗ REJECT H₀ — p (${pValue.toFixed(4)}) < α (${alpha})` : `✓ FAIL TO REJECT H₀ — p (${pValue.toFixed(4)}) ≥ α (${alpha})`}
+      </div>
+      {/* Step reveal controls */}
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <button onClick={() => setShowStep(p => Math.max(1, p - 1))} style={s.btn(false)}>← Prev</button>
+        <span style={{ fontSize: 10, color: s.text }}>Step {showStep} of 6</span>
+        <button onClick={() => setShowStep(p => Math.min(6, p + 1))} style={s.btn(false)}>Next →</button>
+        <button onClick={() => setShowStep(6)} style={{ ...s.btn(showStep === 6), marginLeft: 'auto' }}>Show All</button>
+      </div>
+      {/* How it works (revealed steps) */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        {showStep >= 1 && <div>Step 1: H₀: μ = <b>{h0Value}</b> | H₁: μ {altSymbol} {h0Value} | α = <b>{alpha}</b></div>}
+        {showStep >= 2 && <div>Step 2: Sample: x̄ = <b>{sampleMean}</b>, s = <b>{sampleStd}</b>, n = <b>{n}</b></div>}
+        {showStep >= 3 && <div>Step 3: Test statistic: z = (x̄ − μ₀)/(s/√n) = ({sampleMean} − {h0Value})/{stdError.toFixed(2)} = <b>{zStat.toFixed(3)}</b></div>}
+        {showStep >= 4 && <div>Step 4: p-value = <b>{pValue.toFixed(4)}</b> | {pValue < alpha ? 'p < α → REJECT H₀' : 'p ≥ α → FAIL TO REJECT H₀'}</div>}
+        {showStep >= 5 && <div>Step 5: {pValue < alpha ? `There IS sufficient evidence to support H₁ (${altDescription})` : `There is NOT sufficient evidence to support H₁ — we can't rule out H₀`}</div>}
+        {showStep >= 6 && <div>Step 6: Rejecting H₀ doesn't prove H₁ — it means H₀ is unlikely given the data</div>}
+      </div>
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> The p-value answers: "If H₀ were true, how surprising is this data?" A small p-value means the data is rare under H₀, so we doubt H₀. A large p-value just means we don't have enough evidence — it does NOT prove H₀ is true.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 15. CENTRAL LIMIT THEOREM DEMO  (Grades 9-12)
+// ============================================================
+
+type PopShape = 'uniform' | 'skewed' | 'bimodal' | 'exponential'
+
+const POP_SHAPES: { type: PopShape; label: string }[] = [
+  { type: 'uniform', label: 'Uniform' },
+  { type: 'skewed', label: 'Skewed' },
+  { type: 'bimodal', label: 'Bimodal' },
+  { type: 'exponential', label: 'Exponential' },
+]
+
+const SAMPLE_SIZES = [1, 2, 5, 10, 30, 50]
+
+function generatePopulation(shape: PopShape, size = 5000): number[] {
+  const arr: number[] = []
+  for (let i = 0; i < size; i++) {
+    let v: number
+    if (shape === 'uniform') {
+      v = Math.random() * 100
+    } else if (shape === 'skewed') {
+      // Right-skewed: 100 * u^3, biased toward 0, long tail to 100
+      v = 100 * Math.pow(Math.random(), 3)
+    } else if (shape === 'bimodal') {
+      // 50/50 mix of N(25, 7) and N(75, 7)
+      const u1 = Math.random() || 1e-10
+      const u2 = Math.random()
+      const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+      v = (Math.random() < 0.5 ? 25 : 75) + z * 7
+    } else {
+      // Exponential: -ln(1-u) * 20, mean ≈ 20
+      v = -Math.log(1 - Math.random()) * 20
+    }
+    arr.push(Math.max(0, Math.min(100, v)))
+  }
+  return arr
+}
+
+export function CentralLimitTheoremDemo({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [popShape, setPopShape] = useState<PopShape>('uniform')
+  const [n, setN] = useState(10)
+  const [sampleMeans, setSampleMeans] = useState<number[]>([])
+  const [isAuto, setIsAuto] = useState(false)
+
+  const population = useMemo(() => generatePopulation(popShape), [popShape])
+  const popMean = useMemo(() => mean(population), [population])
+  const popStd = useMemo(() => stdev(population), [population])
+  const theoreticalSE = popStd / Math.sqrt(n)
+
+  // Clear samples when n or popShape changes
+  useEffect(() => {
+    setSampleMeans([])
+    setIsAuto(false)
+  }, [n, popShape])
+
+  // Latest drawSome function via ref so the rAF loop calls the freshest closure
+  const drawSomeRef = useRef<(count: number) => void>(() => {})
+  drawSomeRef.current = (count: number) => {
+    const news: number[] = []
+    for (let i = 0; i < count; i++) {
+      let sum = 0
+      for (let j = 0; j < n; j++) {
+        sum += population[Math.floor(Math.random() * population.length)]
+      }
+      news.push(sum / n)
+    }
+    setSampleMeans(prev => [...prev, ...news].slice(-1000))
+  }
+
+  // Auto-draw loop with cleanup
+  useEffect(() => {
+    if (!isAuto) return
+    let raf = 0
+    let last = performance.now()
+    const loop = (t: number) => {
+      if (t - last > 80) {
+        drawSomeRef.current(2)
+        last = t
+      }
+      raf = requestAnimationFrame(loop)
+    }
+    raf = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(raf)
+  }, [isAuto])
+
+  function drawManual() { drawSomeRef.current(5) }
+  function resetSamples() { setSampleMeans([]); setIsAuto(false) }
+
+  const sampleCount = sampleMeans.length
+  const meanOfMeans = sampleCount > 0 ? mean(sampleMeans) : 0
+  const observedSE = sampleCount > 1 ? stdev(sampleMeans) : 0
+
+  // Histogram bins
+  const numBins = 20
+  const binDataWidth = 100 / numBins
+  const popBins = new Array(numBins).fill(0)
+  for (const v of population) popBins[Math.min(numBins - 1, Math.floor(v / binDataWidth))]++
+  const smBins = new Array(numBins).fill(0)
+  for (const m of sampleMeans) smBins[Math.min(numBins - 1, Math.floor(m / binDataWidth))]++
+  const popMax = Math.max(...popBins, 1)
+  const smMax = Math.max(...smBins, 1)
+
+  // SVG geometry
+  const svgW = 280, svgH = 200
+  const pad = { l: 22, r: 8, t: 14, b: 16 }
+  const plotH = (svgH - pad.t - pad.b - 10) / 2
+  const plotW = svgW - pad.l - pad.r
+  const binPxW = plotW / numBins
+  const sx = (v: number) => pad.l + (v / 100) * plotW
+
+  const popTop = pad.t
+  const smTop = pad.t + plotH + 10
+
+  // Normal overlay curve on sample means histogram
+  const normalPath = (() => {
+    if (sampleCount < 5 || theoreticalSE <= 0) return ''
+    const ns = 80
+    const dxN = 100 / ns
+    const peakPdf = 1 / (theoreticalSE * Math.sqrt(2 * Math.PI))
+    const yScale = (sampleCount * binDataWidth) / Math.max(smMax, 1) // count → fraction of plotH
+    const pts: string[] = []
+    for (let i = 0; i <= ns; i++) {
+      const x = i * dxN
+      const pdf = peakPdf * Math.exp(-0.5 * ((x - popMean) / theoreticalSE) ** 2)
+      const expectedCount = sampleCount * binDataWidth * pdf
+      const px = sx(x)
+      const py = smTop + plotH - (expectedCount / Math.max(smMax, 1)) * plotH
+      pts.push((i === 0 ? 'M' : ' L') + px + ',' + Math.max(smTop, py))
+    }
+    return pts.join('')
+  })()
+
+  const popColor = isDark ? '#60a5fa' : '#2563eb'
+  const smColor = isDark ? '#a78bfa' : '#7c3aed'
+  const normalColor = isDark ? '#fbbf24' : '#d97706'
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const meanColor = isDark ? '#34d399' : '#059669'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Pop shape selector */}
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {POP_SHAPES.map(p => (
+          <button key={p.type} onClick={() => setPopShape(p.type)} style={s.btn(popShape === p.type)}>{p.label}</button>
+        ))}
+      </div>
+      {/* Sample size selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <span style={{ fontSize: 10, color: s.text, minWidth: 28 }}>n =</span>
+        {SAMPLE_SIZES.map(sz => (
+          <button key={sz} onClick={() => setN(sz)} style={{ ...s.btn(n === sz), flex: 1, padding: '2px 0' }}>{sz}</button>
+        ))}
+      </div>
+      {/* SVG */}
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {/* Population histogram */}
+        <text x={pad.l} y={popTop - 3} fontSize={8} fill={popColor} fontWeight={700}>Population ({popShape}) — μ={popMean.toFixed(1)}, σ={popStd.toFixed(1)}</text>
+        {popBins.map((c, i) => (
+          <rect key={'p' + i} x={pad.l + i * binPxW} y={popTop + plotH - (c / popMax) * plotH} width={Math.max(0.5, binPxW - 0.5)} height={(c / popMax) * plotH} fill={popColor} opacity={0.7} />
+        ))}
+        <line x1={sx(popMean)} y1={popTop} x2={sx(popMean)} y2={popTop + plotH} stroke={meanColor} strokeWidth={1} strokeDasharray="3 2" />
+        <line x1={pad.l} y1={popTop + plotH} x2={svgW - pad.r} y2={popTop + plotH} stroke={axisColor} strokeWidth={1} />
+
+        {/* Sample means histogram */}
+        <text x={pad.l} y={smTop - 3} fontSize={8} fill={smColor} fontWeight={700}>Sample Means (n={n}, {sampleCount} drawn){sampleCount >= 5 ? ' — normal overlay in orange' : ''}</text>
+        {smBins.map((c, i) => (
+          <rect key={'s' + i} x={pad.l + i * binPxW} y={smTop + plotH - (c / smMax) * plotH} width={Math.max(0.5, binPxW - 0.5)} height={(c / smMax) * plotH} fill={smColor} opacity={0.7} />
+        ))}
+        {sampleCount >= 5 && normalPath && (
+          <path d={normalPath} fill="none" stroke={normalColor} strokeWidth={1.5} />
+        )}
+        <line x1={sx(popMean)} y1={smTop} x2={sx(popMean)} y2={smTop + plotH} stroke={meanColor} strokeWidth={1} strokeDasharray="3 2" />
+        <line x1={pad.l} y1={smTop + plotH} x2={svgW - pad.r} y2={smTop + plotH} stroke={axisColor} strokeWidth={1} />
+
+        {/* X-axis labels */}
+        {[0, 25, 50, 75, 100].map(t => (
+          <text key={t} x={sx(t)} y={svgH - 3} fontSize={7} fill={axisColor} textAnchor="middle">{t}</text>
+        ))}
+      </svg>
+      {/* Stats */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px', fontSize: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Pop μ</span><span style={s.statValue}>{popMean.toFixed(2)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Pop σ</span><span style={s.statValue}>{popStd.toFixed(2)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Th SE</span><span style={s.statValue}>{theoreticalSE.toFixed(2)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Obs SE</span><span style={s.statValue}>{observedSE.toFixed(2)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>x̄ of means</span><span style={s.statValue}>{meanOfMeans.toFixed(2)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>Samples</span><span style={s.statValue}>{sampleCount}</span></div>
+      </div>
+      {/* Buttons */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={drawManual} style={{ ...s.btn(true), padding: '4px 10px', fontWeight: 600 }}>Draw 5</button>
+        <button onClick={() => setIsAuto(p => !p)} style={{ ...s.btn(isAuto), padding: '4px 10px' }}>{isAuto ? '■ Stop' : '▶ Auto'}</button>
+        <button onClick={resetSamples} style={{ ...s.btn(false), color: '#f87171', marginLeft: 'auto' }}>Reset</button>
+      </div>
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Population: <b>{popShape}</b> | Sample size: n = <b>{n}</b></div>
+        <div>Step 2: Samples drawn: <b>{sampleCount}</b> | Mean of sample means: <b>{meanOfMeans.toFixed(2)}</b> (vs pop mean <b>{popMean.toFixed(2)}</b>)</div>
+        <div>Step 3: SE (theoretical) = σ/√n = {popStd.toFixed(2)}/√{n} = <b>{theoreticalSE.toFixed(2)}</b></div>
+        <div>Step 4: SE (observed) = std of sample means = <b>{observedSE.toFixed(2)}</b></div>
+        <div>Step 5: {n >= 30 ? `n=${n} ≥ 30 → sample means look NORMAL regardless of population shape` : `n=${n} < 30 → need larger n for normality (try n=30)`}</div>
+        <div>Step 6: The Central Limit Theorem: sample means → normal as n → ∞, no matter the population</div>
+      </div>
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> No matter how weird the population shape — uniform, skewed, bimodal, exponential — the distribution of sample means APPROACHES a normal bell curve as the sample size grows. That's why the normal distribution appears everywhere in statistics.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 16. CHI-SQUARE EXPLORER  (Grades 9-12)
+// ============================================================
+
+// Chi-square survival function (Wilson-Hilferty approximation)
+function chiSquareP(x: number, df: number): number {
+  if (df <= 0) return 1
+  if (x <= 0) return 1
+  const h = 2 / (9 * df)
+  const z = (Math.cbrt(x / df) - (1 - h)) / Math.sqrt(h)
+  return normalCDF(-z, 0, 1)
+}
+
+// Critical chi-square values: [α=0.05, α=0.01] for df=1..6
+const CHI_CRIT: Record<number, [number, number]> = {
+  1: [3.841, 6.635],
+  2: [5.991, 9.210],
+  3: [7.815, 11.345],
+  4: [9.488, 13.277],
+  5: [11.070, 15.086],
+  6: [12.592, 16.812],
+}
+
+const DEFAULT_CHI_CATS = [
+  { name: 'Red', color: '#ef4444', observed: 25 },
+  { name: 'Orange', color: '#fb923c', observed: 15 },
+  { name: 'Yellow', color: '#eab308', observed: 20 },
+  { name: 'Green', color: '#22c55e', observed: 18 },
+  { name: 'Blue', color: '#3b82f6', observed: 22 },
+]
+
+export function ChiSquareExplorer({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [cats, setCats] = useState(DEFAULT_CHI_CATS.map(c => ({ ...c })))
+  const [alphaIdx, setAlphaIdx] = useState(0)
+
+  const alpha = alphaIdx === 0 ? 0.05 : 0.01
+  const k = cats.length
+  const total = cats.reduce((sum, c) => sum + c.observed, 0)
+  const expected = total / k
+
+  // χ² = Σ (O−E)²/E
+  const chiSquare = cats.reduce((sum, c) => {
+    return sum + ((c.observed - expected) ** 2) / Math.max(expected, 0.0001)
+  }, 0)
+  const df = k - 1
+  const pValue = chiSquareP(chiSquare, df)
+  const reject = pValue < alpha
+  const chiCrit = CHI_CRIT[df] ? CHI_CRIT[df][alphaIdx] : 0
+
+  function setObserved(idx: number, val: number) {
+    setCats(prev => prev.map((c, i) => i === idx ? { ...c, observed: Math.max(0, isNaN(val) ? 0 : val) } : c))
+  }
+  function resetCats() { setCats(DEFAULT_CHI_CATS.map(c => ({ ...c }))) }
+
+  // SVG bar chart
+  const svgW = 280, svgH = 160
+  const pad = { l: 22, r: 10, t: 14, b: 26 }
+  const plotW = svgW - pad.l - pad.r
+  const plotH = svgH - pad.t - pad.b
+  const groupW = plotW / k
+  const barW = groupW * 0.34
+  const maxVal = Math.max(...cats.map(c => c.observed), expected, 1) * 1.15
+  const sxg = (i: number) => pad.l + i * groupW + groupW / 2
+  const sy = (v: number) => pad.t + plotH - (v / maxVal) * plotH
+
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+  const expColor = isDark ? '#fbbf24' : '#d97706'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Observed inputs */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        {cats.map((c, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: c.color, display: 'inline-block' }} />
+            <span style={{ color: s.bright, minWidth: 48 }}>{c.name}</span>
+            <span style={{ color: s.text }}>Obs:</span>
+            <input type="number" min={0} value={c.observed} onChange={e => setObserved(i, Number(e.target.value))} style={{ ...s.input, width: 42, fontFamily: 'monospace' }} />
+            <span style={{ color: s.text, marginLeft: 'auto' }}>Exp: <b style={{ color: expColor, fontFamily: 'monospace' }}>{expected.toFixed(1)}</b></span>
+          </div>
+        ))}
+      </div>
+      {/* SVG bar chart */}
+      <svg viewBox={"0 0 " + svgW + ' ' + svgH} style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {/* Grid */}
+        {[0.25, 0.5, 0.75, 1].map(f => (
+          <line key={f} x1={pad.l} y1={sy(f * maxVal)} x2={svgW - pad.r} y2={sy(f * maxVal)} stroke={gridColor} strokeWidth={0.5} />
+        ))}
+        {/* Expected line */}
+        <line x1={pad.l} y1={sy(expected)} x2={svgW - pad.r} y2={sy(expected)} stroke={expColor} strokeWidth={1} strokeDasharray="4 2" />
+        <text x={svgW - pad.r} y={sy(expected) - 2} fontSize={7.5} fill={expColor} textAnchor="end" fontWeight={700}>E={expected.toFixed(1)}</text>
+        {/* Bars */}
+        {cats.map((c, i) => (
+          <g key={i}>
+            {/* Observed bar (solid colored) */}
+            <rect x={sxg(i) - barW - 1} y={sy(c.observed)} width={barW} height={Math.max(0, pad.t + plotH - sy(c.observed))} fill={c.color} opacity={0.85} />
+            {/* Expected bar (outlined dashed) */}
+            <rect x={sxg(i) + 1} y={sy(expected)} width={barW} height={Math.max(0, pad.t + plotH - sy(expected))} fill="none" stroke={expColor} strokeWidth={1.2} strokeDasharray="2 1" />
+            {/* Category label */}
+            <text x={sxg(i)} y={svgH - pad.b + 10} fontSize={7.5} fill={axisColor} textAnchor="middle">{c.name.slice(0, 3)}</text>
+            {/* Observed value label */}
+            <text x={sxg(i) - barW / 2 - 1} y={sy(c.observed) - 2} fontSize={7.5} fill={c.color} textAnchor="middle" fontWeight={700}>{c.observed}</text>
+          </g>
+        ))}
+        {/* Axes */}
+        <line x1={pad.l} y1={pad.t + plotH} x2={svgW - pad.r} y2={pad.t + plotH} stroke={axisColor} strokeWidth={1} />
+        <line x1={pad.l} y1={pad.t} x2={pad.l} y2={pad.t + plotH} stroke={axisColor} strokeWidth={1} />
+      </svg>
+      {/* Stats */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px', fontSize: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>χ²</span><span style={s.statValue}>{chiSquare.toFixed(3)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>df</span><span style={s.statValue}>{df}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>p-value</span><span style={s.statValue}>{pValue.toFixed(4)}</span></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={s.statLabel}>χ²crit</span><span style={s.statValue}>{chiCrit.toFixed(3)}</span></div>
+      </div>
+      {/* Decision banner */}
+      <div style={{ padding: '5px 8px', borderRadius: 4, fontSize: 11, fontWeight: 700, textAlign: 'center' as const, background: reject ? 'rgba(248,113,113,0.12)' : 'rgba(34,197,94,0.12)', border: '1px solid ' + (reject ? 'rgba(248,113,113,0.3)' : 'rgba(34,197,94,0.3)'), color: reject ? '#f87171' : '#22c55e' }}>
+        {reject ? `✗ REJECT H₀ — χ² (${chiSquare.toFixed(2)}) > χ²crit (${chiCrit.toFixed(2)})` : `✓ FAIL TO REJECT — χ² (${chiSquare.toFixed(2)}) ≤ χ²crit (${chiCrit.toFixed(2)})`}
+      </div>
+      {/* Alpha toggle + reset */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>α:</span>
+        <button onClick={() => setAlphaIdx(0)} style={s.btn(alphaIdx === 0)}>0.05</button>
+        <button onClick={() => setAlphaIdx(1)} style={s.btn(alphaIdx === 1)}>0.01</button>
+        <button onClick={resetCats} style={{ ...s.btn(false), color: '#f87171', marginLeft: 'auto' }}>Reset</button>
+      </div>
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: <b>{k}</b> categories | H₀: observed = expected (fits the model)</div>
+        <div>Step 2: χ² = Σ (O−E)²/E = <b>{chiSquare.toFixed(3)}</b></div>
+        <div>Step 3: Degrees of freedom: df = k − 1 = {k} − 1 = <b>{df}</b></div>
+        <div>Step 4: p-value = <b>{pValue.toFixed(4)}</b> | {pValue < alpha ? 'p < α → REJECT H₀ (data does NOT fit)' : 'p ≥ α → FAIL TO REJECT (data fits the model)'}</div>
+        <div>Step 5: {pValue < alpha ? 'The observed distribution is significantly different from expected' : 'The observed distribution is consistent with the expected model'}</div>
+        <div>Step 6: Chi-square compares what you OBSERVED vs what you EXPECTED — used in genetics, market research, quality control</div>
+      </div>
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Chi-square measures how far observed data drifts from what a model predicts. Big gaps between O and E inflate χ²; small gaps keep it near zero. It's the go-to test for "does this distribution match what I expected?" — like checking if a die is fair or if genetics follow Mendel's ratios.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 17. TWO-WAY TABLE BUILDER  (Grades 6-8)
+// ============================================================
+
+export function TwoWayTableBuilder({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [rowLabels, setRowLabels] = useState<string[]>(['Boys', 'Girls'])
+  const [colLabels, setColLabels] = useState<string[]>(['Like', "Don't"])
+  const [counts, setCounts] = useState<number[][]>([[15, 10], [20, 10]])
+  const [view, setView] = useState<'count' | 'percent'>('count')
+
+  const updateRowLabel = (i: number, val: string) =>
+    setRowLabels(prev => prev.map((l, idx) => (idx === i ? val : l)))
+  const updateColLabel = (i: number, val: string) =>
+    setColLabels(prev => prev.map((l, idx) => (idx === i ? val : l)))
+  const updateCell = (r: number, c: number, val: number) =>
+    setCounts(prev => prev.map((row, ri) => (ri === r ? row.map((v, ci) => (ci === c ? Math.max(0, val) : v)) : row)))
+
+  const grandTotal = counts.flat().reduce((a, b) => a + b, 0)
+  const rowTotals = counts.map(r => r.reduce((a, b) => a + b, 0))
+  const colTotals = [0, 1].map(c => counts[0][c] + counts[1][c])
+
+  // Conditional distribution: % in column 0 within each row
+  const r0p = rowTotals[0] > 0 ? (counts[0][0] / rowTotals[0]) * 100 : 0
+  const r1p = rowTotals[1] > 0 ? (counts[1][0] / rowTotals[1]) * 100 : 0
+  const association = Math.abs(r0p - r1p) > 10
+
+  // Max cell
+  let maxCell = 0
+  let maxCellLabel = ''
+  counts.forEach((row, r) => row.forEach((v, c) => {
+    if (v > maxCell) {
+      maxCell = v
+      maxCellLabel = rowLabels[r] + ' × ' + colLabels[c]
+    }
+  }))
+  const maxPct = grandTotal > 0 ? Math.round((maxCell / grandTotal) * 100) : 0
+  const marginSummary = rowLabels.map((l, i) =>
+    l + '=' + rowTotals[i] + ' (' + (grandTotal > 0 ? Math.round((rowTotals[i] / grandTotal) * 100) : 0) + '%)'
+  ).join(', ')
+
+  const headerBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'
+  const totalBg = isDark ? 'rgba(167,139,250,0.08)' : 'rgba(167,139,250,0.06)'
+
+  const inputStyle = {
+    ...s.input, padding: '3px 4px', fontSize: 10, width: '100%', textAlign: 'center' as const, fontFamily: 'monospace',
+  }
+  const cellInputStyle = {
+    ...s.input, padding: '3px 4px', fontSize: 11, width: '100%', textAlign: 'center' as const, fontFamily: 'monospace',
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* View toggle */}
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        <span style={{ fontSize: 10, color: s.text }}>View:</span>
+        <button onClick={() => setView('count')} style={s.btn(view === 'count')}>Counts</button>
+        <button onClick={() => setView('percent')} style={s.btn(view === 'percent')}>Percents</button>
+        <span style={{ fontSize: 9, color: s.text, marginLeft: 'auto' }}>Edit any label or cell</span>
+      </div>
+
+      {/* The 2x2 table */}
+      <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 52px', gap: 1, fontSize: 10 }}>
+        {/* Header row */}
+        <div style={{ background: headerBg, padding: '4px 2px' }} />
+        {colLabels.map((l, i) => (
+          <div key={i} style={{ background: headerBg, padding: '2px' }}>
+            <input value={l} onChange={e => updateColLabel(i, e.target.value)} style={inputStyle} />
+          </div>
+        ))}
+        <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontSize: 9 }}>Total</div>
+
+        {/* Row 1 */}
+        <div style={{ background: headerBg, padding: '2px' }}>
+          <input value={rowLabels[0]} onChange={e => updateRowLabel(0, e.target.value)} style={inputStyle} />
+        </div>
+        {[0, 1].map(c => (
+          <div key={c} style={{ background: s.bg, padding: '2px' }}>
+            <input type="number" value={counts[0][c]} onChange={e => updateCell(0, c, parseInt(e.target.value) || 0)} style={cellInputStyle} />
+          </div>
+        ))}
+        <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontFamily: 'monospace' }}>{rowTotals[0]}</div>
+
+        {/* Row 2 */}
+        <div style={{ background: headerBg, padding: '2px' }}>
+          <input value={rowLabels[1]} onChange={e => updateRowLabel(1, e.target.value)} style={inputStyle} />
+        </div>
+        {[0, 1].map(c => (
+          <div key={c} style={{ background: s.bg, padding: '2px' }}>
+            <input type="number" value={counts[1][c]} onChange={e => updateCell(1, c, parseInt(e.target.value) || 0)} style={cellInputStyle} />
+          </div>
+        ))}
+        <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontFamily: 'monospace' }}>{rowTotals[1]}</div>
+
+        {/* Total row */}
+        <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontSize: 9 }}>Total</div>
+        {[0, 1].map(c => (
+          <div key={c} style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontFamily: 'monospace' }}>{colTotals[c]}</div>
+        ))}
+        <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontFamily: 'monospace' }}>{grandTotal}</div>
+      </div>
+
+      {/* Conditional distribution visualization */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 4 }}>
+          Conditional Distribution — % who "{colLabels[0]}"
+        </div>
+        {[0, 1].map(r => (
+          <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+            <span style={{ fontSize: 10, color: s.bright, minWidth: 40 }}>{rowLabels[r]}</span>
+            <div style={{ flex: 1, height: 14, background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{ width: (r === 0 ? r0p : r1p) + '%', height: '100%', background: association ? '#f87171' : '#34d399', opacity: 0.85 }} />
+            </div>
+            <span style={{ fontSize: 10, color: s.bright, fontFamily: 'monospace', minWidth: 38, textAlign: 'right' as const }}>{(r === 0 ? r0p : r1p).toFixed(1)}%</span>
+          </div>
+        ))}
+        <div style={{ fontSize: 9, color: s.text, marginTop: 3 }}>
+          Δ = <b style={{ color: association ? '#f87171' : '#34d399' }}>{Math.abs(r0p - r1p).toFixed(1)}pp</b> — {association ? 'association detected (>10pp)' : 'no clear association'}
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: 2×2 table | Grand total: <b>{grandTotal}</b> {grandTotal === 1 ? 'student' : 'students'}</div>
+        <div>Step 2: {view === 'count' ? 'Showing counts' : 'Showing percentages'} | Row totals: {rowTotals.join(', ')} | Column totals: {colTotals.join(', ')}</div>
+        <div>Step 3: {view === 'percent' ? maxPct + '% in the largest cell (' + maxCellLabel + ')' : 'Largest cell: ' + maxCellLabel + ' = ' + maxCell}</div>
+        <div>Step 4: Marginal: {marginSummary}</div>
+        <div>Step 5: {association ? 'There IS an association — ' + rowLabels[0] + ' ' + (r0p > r1p ? 'more' : 'less') + ' likely to "' + colLabels[0] + '" (Δ=' + Math.abs(r0p - r1p).toFixed(0) + 'pp)' : 'No clear association — similar proportions across groups (Δ=' + Math.abs(r0p - r1p).toFixed(0) + 'pp)'}</div>
+        <div>Step 6: Compare percentages WITHIN rows (conditional distribution) to find associations</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Two-way tables organize two categorical variables. Marginal totals show overall distribution; conditional percentages reveal associations. If percentages within rows are similar, the variables are independent.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 18. TREE DIAGRAM PROBABILITY  (Grades 6-8)
+// ============================================================
+
+type TreeScenario = 'coins' | 'spinflip' | 'marbles'
+type TreeBranch = { label: string; full: string; prob: number }
+type TreeLeaf = {
+  outcome: string
+  e1Label: string
+  e2Label: string
+  e1Prob: number
+  e2Prob: number
+  totalProb: number
+  e1Idx: number
+  e2Idx: number
+}
+
+export function TreeDiagramProbability({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [scenario, setScenario] = useState<TreeScenario>('coins')
+  const [replacement, setReplacement] = useState(true)
+  const [selectedLeaf, setSelectedLeaf] = useState(0)
+  const [calculated, setCalculated] = useState(false)
+
+  const data = useMemo(() => {
+    if (scenario === 'coins') {
+      const e1: TreeBranch[] = [
+        { label: 'H', full: 'Heads', prob: 0.5 },
+        { label: 'T', full: 'Tails', prob: 0.5 },
+      ]
+      const e2: TreeBranch[][] = [
+        [{ label: 'H', full: 'Heads', prob: 0.5 }, { label: 'T', full: 'Tails', prob: 0.5 }],
+        [{ label: 'H', full: 'Heads', prob: 0.5 }, { label: 'T', full: 'Tails', prob: 0.5 }],
+      ]
+      return {
+        name: 'Flip 2 Coins',
+        e1Name: 'Coin #1',
+        e2Name: 'Coin #2',
+        e1, e2,
+        replacement: null as boolean | null,
+      }
+    } else if (scenario === 'spinflip') {
+      const e1: TreeBranch[] = [
+        { label: 'R', full: 'Red', prob: 0.5 },
+        { label: 'B', full: 'Blue', prob: 0.5 },
+      ]
+      const e2: TreeBranch[][] = [
+        [{ label: 'H', full: 'Heads', prob: 0.5 }, { label: 'T', full: 'Tails', prob: 0.5 }],
+        [{ label: 'H', full: 'Heads', prob: 0.5 }, { label: 'T', full: 'Tails', prob: 0.5 }],
+      ]
+      return {
+        name: 'Spin then Flip',
+        e1Name: 'Spinner',
+        e2Name: 'Coin',
+        e1, e2,
+        replacement: null as boolean | null,
+      }
+    } else {
+      const e1: TreeBranch[] = [
+        { label: 'R', full: 'Red', prob: 3 / 5 },
+        { label: 'B', full: 'Blue', prob: 2 / 5 },
+      ]
+      const e2: TreeBranch[][] = replacement
+        ? [
+            [{ label: 'R', full: 'Red', prob: 3 / 5 }, { label: 'B', full: 'Blue', prob: 2 / 5 }],
+            [{ label: 'R', full: 'Red', prob: 3 / 5 }, { label: 'B', full: 'Blue', prob: 2 / 5 }],
+          ]
+        : [
+            [{ label: 'R', full: 'Red', prob: 2 / 4 }, { label: 'B', full: 'Blue', prob: 2 / 4 }],
+            [{ label: 'R', full: 'Red', prob: 3 / 4 }, { label: 'B', full: 'Blue', prob: 1 / 4 }],
+          ]
+      return {
+        name: 'Draw 2 Marbles (Bag: 3R, 2B)',
+        e1Name: 'Draw 1st',
+        e2Name: 'Draw 2nd',
+        e1, e2,
+        replacement: replacement as boolean | null,
+      }
+    }
+  }, [scenario, replacement])
+
+  const leaves = useMemo<TreeLeaf[]>(() => {
+    const result: TreeLeaf[] = []
+    data.e1.forEach((b1, i) => {
+      data.e2[i].forEach((b2, j) => {
+        result.push({
+          outcome: b1.label + b2.label,
+          e1Label: b1.full,
+          e2Label: b2.full,
+          e1Prob: b1.prob,
+          e2Prob: b2.prob,
+          totalProb: b1.prob * b2.prob,
+          e1Idx: i,
+          e2Idx: j,
+        })
+      })
+    })
+    return result
+  }, [data])
+
+  const selected = leaves[selectedLeaf] || leaves[0]
+  const totalProbSum = leaves.reduce((sum, l) => sum + l.totalProb, 0)
+
+  // SVG coordinates
+  const rootX = 18, rootY = 110
+  const e1X = 100
+  const e1Ys = [50, 170]
+  const e2X = 190
+  const e2Ys = [25, 75, 145, 195]
+  const leafX = 275
+
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const highlight = '#34d399'
+  const dimStroke = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'
+
+  const e1PathIdx = selected.e1Idx
+  const e2PathIdx = selected.e2Idx
+
+  // Format probability as fraction
+  const fmt = (p: number) => {
+    if (p === 0.5) return '½'
+    if (Math.abs(p - 3 / 5) < 1e-9) return '3/5'
+    if (Math.abs(p - 2 / 5) < 1e-9) return '2/5'
+    if (Math.abs(p - 3 / 4) < 1e-9) return '3/4'
+    if (Math.abs(p - 2 / 4) < 1e-9) return '2/4'
+    if (Math.abs(p - 1 / 4) < 1e-9) return '1/4'
+    return p.toFixed(3)
+  }
+  const pct = (p: number) => (p * 100).toFixed(1) + '%'
+
+  useEffect(() => {
+    setCalculated(false)
+    setSelectedLeaf(0)
+  }, [scenario, replacement])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Scenario selector */}
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {([['coins', '2 Coins'], ['spinflip', 'Spin+Flip'], ['marbles', '2 Marbles']] as [TreeScenario, string][]).map(([id, label]) => (
+          <button key={id} onClick={() => setScenario(id)} style={s.btn(scenario === id)}>{label}</button>
+        ))}
+      </div>
+
+      {/* Replacement toggle (only for marbles) */}
+      {scenario === 'marbles' && (
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: s.text }}>Draw:</span>
+          <button onClick={() => setReplacement(true)} style={s.btn(replacement)}>With replacement</button>
+          <button onClick={() => setReplacement(false)} style={s.btn(!replacement)}>Without</button>
+        </div>
+      )}
+
+      {/* Tree SVG */}
+      <svg viewBox="0 0 280 210" style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {/* Column headers */}
+        <text x={rootX} y={12} fontSize={8} fill={axisColor} textAnchor="middle" fontWeight={700}>Start</text>
+        <text x={e1X} y={12} fontSize={8} fill={axisColor} textAnchor="middle" fontWeight={700}>Event 1</text>
+        <text x={e2X} y={12} fontSize={8} fill={axisColor} textAnchor="middle" fontWeight={700}>Event 2</text>
+        <text x={leafX - 5} y={12} fontSize={8} fill={axisColor} textAnchor="end" fontWeight={700}>Outcomes</text>
+
+        {/* Event 1 branches */}
+        {data.e1.map((b1, i) => {
+          const isPath = calculated && i === e1PathIdx
+          return (
+            <g key={'e1' + i}>
+              <line x1={rootX} y1={rootY} x2={e1X} y2={e1Ys[i]}
+                stroke={isPath ? highlight : dimStroke}
+                strokeWidth={isPath ? 2 : 1} />
+              <text x={(rootX + e1X) / 2} y={(rootY + e1Ys[i]) / 2 - 4}
+                fontSize={9} fill={isPath ? highlight : axisColor} textAnchor="middle" fontWeight={isPath ? 700 : 400}>
+                {b1.label} ({fmt(b1.prob)})
+              </text>
+              <circle cx={e1X} cy={e1Ys[i]} r={6} fill={isPath ? highlight : (isDark ? '#1e293b' : '#fff')} stroke={isPath ? highlight : axisColor} strokeWidth={1.5} />
+              <text x={e1X} y={e1Ys[i] + 3} fontSize={8} fill={isPath ? (isDark ? '#0f172a' : '#fff') : s.bright} textAnchor="middle" fontWeight={700}>{b1.label}</text>
+            </g>
+          )
+        })}
+
+        {/* Event 2 branches */}
+        {data.e1.map((_, i) => {
+          return data.e2[i].map((b2, j) => {
+            const leafIdx = i * 2 + j
+            const isPath = calculated && leafIdx === (e1PathIdx * 2 + e2PathIdx)
+            const e2Y = e2Ys[leafIdx]
+            return (
+              <g key={'e2' + leafIdx}>
+                <line x1={e1X} y1={e1Ys[i]} x2={e2X} y2={e2Y}
+                  stroke={isPath ? highlight : dimStroke}
+                  strokeWidth={isPath ? 2 : 1} />
+                <text x={(e1X + e2X) / 2} y={(e1Ys[i] + e2Y) / 2 - 4}
+                  fontSize={9} fill={isPath ? highlight : axisColor} textAnchor="middle" fontWeight={isPath ? 700 : 400}>
+                  {b2.label} ({fmt(b2.prob)})
+                </text>
+                <circle cx={e2X} cy={e2Y} r={6} fill={isPath ? highlight : (isDark ? '#1e293b' : '#fff')} stroke={isPath ? highlight : axisColor} strokeWidth={1.5} />
+                <text x={e2X} y={e2Y + 3} fontSize={8} fill={isPath ? (isDark ? '#0f172a' : '#fff') : s.bright} textAnchor="middle" fontWeight={700}>{b2.label}</text>
+              </g>
+            )
+          })
+        })}
+
+        {/* Root node */}
+        <circle cx={rootX} cy={rootY} r={6} fill={isDark ? '#1e293b' : '#fff'} stroke={axisColor} strokeWidth={1.5} />
+
+        {/* Outcome labels (leaves) */}
+        {leaves.map((l, i) => {
+          const isPath = calculated && i === selectedLeaf
+          return (
+            <g key={'leaf' + i}>
+              <line x1={e2X} y1={e2Ys[i]} x2={leafX - 5} y2={e2Ys[i]}
+                stroke={isPath ? highlight : dimStroke}
+                strokeWidth={isPath ? 1.5 : 0.5}
+                strokeDasharray={isPath ? 'none' : '2 2'} />
+              <text x={leafX - 8} y={e2Ys[i] - 2}
+                fontSize={10} fontWeight={700}
+                fill={isPath ? highlight : s.bright}
+                textAnchor="end">{l.outcome}</text>
+              <text x={leafX - 8} y={e2Ys[i] + 9}
+                fontSize={8}
+                fill={isPath ? highlight : axisColor}
+                textAnchor="end">{pct(l.totalProb)}</text>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Calculate + leaf selector */}
+      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+        <button onClick={() => setCalculated(true)} style={{
+          padding: '5px 12px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+          background: 'rgba(5,150,105,0.15)', border: '1px solid rgba(5,150,105,0.3)',
+          color: '#34d399', cursor: 'pointer',
+        }}>Calculate</button>
+        <span style={{ fontSize: 10, color: s.text }}>Pick:</span>
+        {leaves.map((l, i) => (
+          <button key={i} onClick={() => { setSelectedLeaf(i); setCalculated(true) }} style={s.btn(selectedLeaf === i && calculated)}>{l.outcome}</button>
+        ))}
+      </div>
+
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Scenario: <b>{data.name}</b> | 2 sequential events</div>
+        <div>Step 2: Event 1 ({data.e1Name}) → {data.e1.map(b => b.full + '=' + fmt(b.prob)).join(', ')}</div>
+        <div>Step 3: Event 2 ({data.e2Name}) → {data.e2[0].map(b => b.full + '=' + fmt(b.prob)).join(', ')}</div>
+        <div>Step 4: {data.replacement === null ? 'Each branch shows the probability of that outcome' : (data.replacement ? 'WITH replacement → independent events (probabilities don\'t change)' : 'WITHOUT replacement → dependent events (2nd probability changes after 1st draw)')}</div>
+        <div>Step 5: {calculated ? <>P({selected.outcome}) = {fmt(selected.e1Prob)} × {fmt(selected.e2Prob)} = <b>{fmt(selected.totalProb)}</b> = {pct(selected.totalProb)}</> : 'Click "Calculate" to multiply along branches'}</div>
+        <div>Step 6: All leaf probabilities sum to <b>{pct(totalProbSum)}</b> — the tree covers every possible outcome</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Compound probability multiplies along branches: P(A and B) = P(A) × P(B|A). With replacement, events are independent; without, they're dependent — the second probability depends on what happened first.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 19. SAMPLE vs POPULATION SIMULATOR  (Grades 6-8)
+// ============================================================
+
+const POP_SAMPLE_SIZES = [5, 10, 25, 50, 100, 200]
+
+export function SampleVsPopulationSim({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [popPercent, setPopPercent] = useState(60)
+  const [n, setN] = useState(10)
+  const [samples, setSamples] = useState<number[]>([])
+  const [lastSample, setLastSample] = useState<{ red: number; blue: number } | null>(null)
+  const [drawing, setDrawing] = useState(false)
+  const rafRef = useRef<number | null>(null)
+
+  const popTotal = 1000
+
+  useEffect(() => {
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current) }
+  }, [])
+
+  const drawSample = () => {
+    if (drawing) return
+    setDrawing(true)
+    const startTime = performance.now()
+    const animate = (now: number) => {
+      if (now - startTime < 180) {
+        rafRef.current = requestAnimationFrame(animate)
+        return
+      }
+      let redCount = 0
+      for (let i = 0; i < n; i++) {
+        if (Math.random() * 100 < popPercent) redCount++
+      }
+      const blueCount = n - redCount
+      setLastSample({ red: redCount, blue: blueCount })
+      const samplePct = (redCount / n) * 100
+      setSamples(prev => [...prev, samplePct].slice(-30))
+      setDrawing(false)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+  }
+
+  const reset = () => {
+    setSamples([])
+    setLastSample(null)
+  }
+
+  const lastSamplePct = lastSample ? (lastSample.red / n) * 100 : 0
+  const meanSample = samples.length > 0 ? samples.reduce((a, b) => a + b, 0) / samples.length : 0
+
+  // Histogram of sample percentages (bins of 10%)
+  const binCounts = Array.from({ length: 10 }, (_, i) => {
+    if (i === 9) return samples.filter(p => p >= 90 && p <= 100).length
+    return samples.filter(p => p >= i * 10 && p < (i + 1) * 10).length
+  })
+  const maxBin = Math.max(1, ...binCounts)
+
+  // Population dot grid (25x40 = 1000)
+  const cols = 40, rows = 25
+  const dotGap = 3
+  const popDots = useMemo(() => {
+    const dots: boolean[] = []
+    let red = Math.round(popTotal * popPercent / 100)
+    let blue = popTotal - red
+    for (let i = 0; i < popTotal; i++) {
+      if (red > 0 && (blue === 0 || Math.random() < red / (red + blue))) {
+        dots.push(true); red--
+      } else {
+        dots.push(false); blue--
+      }
+    }
+    return dots
+  }, [popPercent])
+
+  const redColor = isDark ? '#f87171' : '#dc2626'
+  const blueColor = isDark ? '#60a5fa' : '#3b82f6'
+  const popLineColor = isDark ? '#fbbf24' : '#d97706'
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Population % slider */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: s.text }}>
+        <span style={{ minWidth: 75 }}>Pop % red:</span>
+        <input type="range" min={10} max={90} step={5} value={popPercent}
+          onChange={e => { setPopPercent(parseInt(e.target.value)); reset() }}
+          style={{ flex: 1 }} />
+        <span style={{ fontFamily: 'monospace', color: s.bright, minWidth: 32, textAlign: 'right' as const }}>{popPercent}%</span>
+      </div>
+
+      {/* Population visualization */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 4 }}>
+          Population (1000 items) — <span style={{ color: redColor }}>{popPercent}% red</span>, <span style={{ color: blueColor }}>{100 - popPercent}% blue</span>
+        </div>
+        <svg viewBox={"0 0 " + (cols * dotGap + 2) + " " + (rows * dotGap + 2)} style={{ width: '100%', maxHeight: 78 }} preserveAspectRatio="xMidYMid meet">
+          {popDots.map((isRed, i) => (
+            <circle key={i} cx={1 + (i % cols) * dotGap} cy={1 + Math.floor(i / cols) * dotGap} r={1.3} fill={isRed ? redColor : blueColor} opacity={0.85} />
+          ))}
+        </svg>
+      </div>
+
+      {/* Sample size selector */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: 10, color: s.text }}>n =</span>
+        {POP_SAMPLE_SIZES.map(sz => (
+          <button key={sz} onClick={() => { setN(sz); setLastSample(null) }} style={s.btn(n === sz)}>{sz}</button>
+        ))}
+      </div>
+
+      {/* Draw Sample button */}
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <button onClick={drawSample} disabled={drawing} style={{
+          padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+          background: drawing ? (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)') : 'rgba(5,150,105,0.15)',
+          border: drawing ? '1px solid ' + (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)') : '1px solid rgba(5,150,105,0.3)',
+          color: drawing ? (isDark ? '#64748b' : '#94a3b8') : '#34d399',
+          cursor: drawing ? 'not-allowed' : 'pointer',
+        }}>{drawing ? 'Drawing...' : 'Draw Sample'}</button>
+        <button onClick={reset} style={{ ...s.btn(false), color: '#f87171' }}>Reset</button>
+      </div>
+
+      {/* Last sample visualization */}
+      {lastSample && (
+        <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 4 }}>
+            Last sample (n={n}): {lastSample.red} red, {lastSample.blue} blue = <span style={{ color: redColor }}>{lastSamplePct.toFixed(1)}%</span> red
+          </div>
+          <div style={{ display: 'flex', height: 18, borderRadius: 3, overflow: 'hidden', border: '1px solid ' + s.border }}>
+            <div style={{ width: lastSamplePct + '%', background: redColor, opacity: 0.85 }} />
+            <div style={{ flex: 1, background: blueColor, opacity: 0.85 }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 8, color: s.text, marginTop: 2 }}>
+            <span style={{ color: redColor }}>Red {lastSamplePct.toFixed(0)}%</span>
+            <span style={{ color: blueColor }}>Blue {(100 - lastSamplePct).toFixed(0)}%</span>
+          </div>
+        </div>
+      )}
+
+      {/* Sample history histogram */}
+      {samples.length > 0 && (
+        <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 4 }}>
+            Distribution of sample % red ({samples.length} samples) — mean = <span style={{ color: s.bright }}>{meanSample.toFixed(1)}%</span>
+          </div>
+          <svg viewBox="0 0 280 85" style={{ width: '100%' }}>
+            {/* Population % line */}
+            <line x1={28 + (popPercent / 100) * 250} y1={6} x2={28 + (popPercent / 100) * 250} y2={72} stroke={popLineColor} strokeWidth={1.5} strokeDasharray="3 2" />
+            <text x={28 + (popPercent / 100) * 250} y={5} fontSize={7} fill={popLineColor} textAnchor="middle" fontWeight={700}>pop {popPercent}%</text>
+            {/* Bars */}
+            {binCounts.map((c, i) => {
+              const h = (c / maxBin) * 60
+              const x = 28 + i * 25
+              const y = 72 - h
+              const binMidPct = i * 10 + 5
+              const isNearPop = Math.abs(binMidPct - popPercent) <= 10
+              return (
+                <g key={i}>
+                  <rect x={x + 1} y={y} width={23} height={h} fill={isNearPop ? '#34d399' : (isDark ? '#60a5fa' : '#3b82f6')} opacity={0.75} rx={1} />
+                  {c > 0 && <text x={x + 12.5} y={y - 2} fontSize={7} fill={isDark ? '#94a3b8' : '#475569'} textAnchor="middle">{c}</text>}
+                  <text x={x + 12.5} y={80} fontSize={6} fill={isDark ? '#64748b' : '#94a3b8'} textAnchor="middle">{i * 10}</text>
+                </g>
+              )
+            })}
+            <line x1={28} y1={72} x2={278} y2={72} stroke={isDark ? '#475569' : '#94a3b8'} strokeWidth={0.5} />
+            <text x={278} y={84} fontSize={6} fill={isDark ? '#64748b' : '#94a3b8'} textAnchor="end">% red</text>
+          </svg>
+        </div>
+      )}
+
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Population: 1000 items, <b>{popPercent}%</b> red | Sample size: n = <b>{n}</b></div>
+        <div>Step 2: Samples drawn: <b>{samples.length}</b> | Last sample: <b style={{ color: redColor }}>{lastSample ? lastSamplePct.toFixed(1) + '%' : '—'}</b> red</div>
+        <div>Step 3: {samples.length > 0 ? <>Sample % history: {samples.slice(-6).map(p => p.toFixed(0) + '%').join(', ')}{samples.length > 6 ? '...' : ''}</> : 'Click "Draw Sample" to collect data'}</div>
+        <div>Step 4: {samples.length > 2 ? <>Mean of samples: <b>{meanSample.toFixed(1)}%</b> (vs population {popPercent}%)</> : 'Draw more samples to see the pattern'}</div>
+        <div>Step 5: {n < 25 ? 'Small sample (n=' + n + ') → high variability, samples differ a lot' : 'Larger sample (n=' + n + ') → less variability, samples cluster near ' + popPercent + '%'}</div>
+        <div>Step 6: Bigger sample = more representative — this is why polls use ~1000 people, not 10</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Larger samples better represent the population. Small samples bounce around; large samples cluster near the true value. This is the foundation of statistical inference — why pollsters trust a sample of 1000 to represent millions.
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 20. MISLEADING GRAPHS GALLERY  (Grades 6-8)
+// ============================================================
+
+type MisleadingTechnique = 'truncated' | 'inconsistent' | '3d' | 'cherry'
+
+type TechniqueInfo = {
+  name: string
+  problem: string
+  description: string
+  truncatedStart: number
+  amplified: number
+}
+
+const TECHNIQUES: Record<MisleadingTechnique, TechniqueInfo> = {
+  truncated: {
+    name: 'Truncated Y-axis',
+    problem: 'Y-axis starts at 80 instead of 0, making small differences look huge',
+    description: 'Bar chart of test scores: A=85, B=87, C=83. Truncating the axis exaggerates the 4-point gap.',
+    truncatedStart: 80,
+    amplified: 3,
+  },
+  inconsistent: {
+    name: 'Inconsistent Scale',
+    problem: 'Y-axis uses non-linear ticks (0, 10, 20, 50, 100), distorting proportions',
+    description: 'Non-linear y-axis makes 100 look only ~2× taller than 20 (should be 5×).',
+    truncatedStart: 0,
+    amplified: 2,
+  },
+  '3d': {
+    name: '3D Distortion',
+    problem: '3D perspective makes back slices look smaller and front slices look bigger',
+    description: '3D pie distorts visual angles — same data looks different depending on slice position.',
+    truncatedStart: 0,
+    amplified: 2,
+  },
+  cherry: {
+    name: 'Cherry-picked Timeframe',
+    problem: 'Only showing months 6-8 (a dip) hides the overall upward trend',
+    description: 'Selecting a short timeframe can hide the true long-term pattern.',
+    truncatedStart: 0,
+    amplified: 4,
+  },
+}
+
+const MONTHS_DATA = [
+  { label: 'J', val: 30 },
+  { label: 'F', val: 35 },
+  { label: 'M', val: 42 },
+  { label: 'A', val: 50 },
+  { label: 'M', val: 65 },
+  { label: 'J', val: 78 },
+  { label: 'J', val: 72 },
+  { label: 'A', val: 60 },
+  { label: 'S', val: 55 },
+  { label: 'O', val: 70 },
+  { label: 'N', val: 85 },
+  { label: 'D', val: 95 },
+]
+
+function TruncatedViz({ isDark, revealed }: { isDark: boolean; revealed: boolean }) {
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const redColor = '#f87171'
+  const greenColor = '#34d399'
+  const barColor = isDark ? '#60a5fa' : '#3b82f6'
+  const data = [{ label: 'A', val: 85 }, { label: 'B', val: 87 }, { label: 'C', val: 83 }]
+  return (
+    <>
+      {/* Left: misleading — y-axis 80-90 */}
+      <g>
+        <text x={22} y={28} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="start">90</text>
+        <text x={22} y={92} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="start">80</text>
+        <line x1={20} y1={95} x2={130} y2={95} stroke={axisColor} strokeWidth={0.5} />
+        {revealed && <text x={26} y={22} fontSize={7} fill={redColor} textAnchor="start" fontWeight={700}>✗ starts at 80</text>}
+        {data.map((d, i) => {
+          const x = 38 + i * 30
+          const barH = ((d.val - 80) / 10) * 60
+          return (
+            <g key={i}>
+              <rect x={x} y={95 - barH} width={20} height={barH} fill={barColor} opacity={0.85} rx={1} />
+              <text x={x + 10} y={105} fontSize={7} fill={axisColor} textAnchor="middle">{d.label}</text>
+              <text x={x + 10} y={95 - barH - 2} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="middle" fontWeight={revealed ? 700 : 400}>{d.val}</text>
+            </g>
+          )
+        })}
+      </g>
+      {/* Right: corrected — y-axis 0-100 */}
+      <g>
+        <text x={152} y={22} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">100</text>
+        <text x={152} y={95} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">0</text>
+        <line x1={150} y1={95} x2={270} y2={95} stroke={axisColor} strokeWidth={0.5} />
+        {revealed && <text x={156} y={16} fontSize={7} fill={greenColor} textAnchor="start" fontWeight={700}>✓ starts at 0</text>}
+        {data.map((d, i) => {
+          const x = 168 + i * 30
+          const barH = (d.val / 100) * 70
+          return (
+            <g key={i}>
+              <rect x={x} y={95 - barH} width={20} height={barH} fill={barColor} opacity={0.85} rx={1} />
+              <text x={x + 10} y={105} fontSize={7} fill={axisColor} textAnchor="middle">{d.label}</text>
+              <text x={x + 10} y={95 - barH - 2} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="middle" fontWeight={revealed ? 700 : 400}>{d.val}</text>
+            </g>
+          )
+        })}
+      </g>
+    </>
+  )
+}
+
+function InconsistentViz({ isDark, revealed }: { isDark: boolean; revealed: boolean }) {
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const redColor = '#f87171'
+  const greenColor = '#34d399'
+  const barColor = isDark ? '#60a5fa' : '#3b82f6'
+  const data = [{ label: 'A', val: 10 }, { label: 'B', val: 20 }, { label: 'C', val: 50 }, { label: 'D', val: 100 }]
+  // Misleading: non-linear ticks 0, 10, 20, 50, 100 placed at evenly spaced positions
+  // y=95 (bottom) for 0, y=80 for 10, y=65 for 20, y=50 for 50, y=35 for 100
+  const misTicks: Array<[number, number]> = [[0, 95], [10, 80], [20, 65], [50, 50], [100, 35]]
+  const misYForVal = (v: number) => {
+    // Linear interpolation between ticks
+    for (let i = 0; i < misTicks.length - 1; i++) {
+      const [v1, y1] = misTicks[i]
+      const [v2, y2] = misTicks[i + 1]
+      if (v >= v1 && v <= v2) return y1 + ((v - v1) / (v2 - v1)) * (y2 - y1)
+    }
+    return 95
+  }
+  return (
+    <>
+      {/* Left: misleading non-linear scale */}
+      <g>
+        {misTicks.map(([v, y]) => (
+          <text key={v} x={22} y={y + 2} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="start">{v}</text>
+        ))}
+        <line x1={20} y1={95} x2={130} y2={95} stroke={axisColor} strokeWidth={0.5} />
+        {revealed && <text x={26} y={22} fontSize={7} fill={redColor} textAnchor="start" fontWeight={700}>✗ non-linear</text>}
+        {data.map((d, i) => {
+          const x = 38 + i * 22
+          const yTop = misYForVal(d.val)
+          return (
+            <g key={i}>
+              <rect x={x} y={yTop} width={16} height={95 - yTop} fill={barColor} opacity={0.85} rx={1} />
+              <text x={x + 8} y={105} fontSize={7} fill={axisColor} textAnchor="middle">{d.label}</text>
+              <text x={x + 8} y={yTop - 2} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="middle" fontWeight={revealed ? 700 : 400}>{d.val}</text>
+            </g>
+          )
+        })}
+      </g>
+      {/* Right: corrected linear 0-100 */}
+      <g>
+        <text x={152} y={24} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">100</text>
+        <text x={152} y={60} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">50</text>
+        <text x={152} y={95} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">0</text>
+        <line x1={150} y1={95} x2={270} y2={95} stroke={axisColor} strokeWidth={0.5} />
+        {revealed && <text x={156} y={16} fontSize={7} fill={greenColor} textAnchor="start" fontWeight={700}>✓ linear</text>}
+        {data.map((d, i) => {
+          const x = 168 + i * 22
+          const barH = (d.val / 100) * 70
+          return (
+            <g key={i}>
+              <rect x={x} y={95 - barH} width={16} height={barH} fill={barColor} opacity={0.85} rx={1} />
+              <text x={x + 8} y={105} fontSize={7} fill={axisColor} textAnchor="middle">{d.label}</text>
+              <text x={x + 8} y={95 - barH - 2} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="middle" fontWeight={revealed ? 700 : 400}>{d.val}</text>
+            </g>
+          )
+        })}
+      </g>
+    </>
+  )
+}
+
+function ThreeDViz({ isDark, revealed }: { isDark: boolean; revealed: boolean }) {
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const redColor = '#f87171'
+  const greenColor = '#34d399'
+  // 3 slices: A=30%, B=40%, C=30% (108°, 144°, 108°)
+  const slices = [
+    { label: 'A', pct: 30, color: '#60a5fa', start: 0, end: 108 },
+    { label: 'B', pct: 40, color: '#34d399', start: 108, end: 252 },
+    { label: 'C', pct: 30, color: '#fbbf24', start: 252, end: 360 },
+  ]
+  // Helper: get a point on an ellipse at angle (deg, 0=top)
+  const ellipsePoint = (cx: number, cy: number, rx: number, ry: number, angleDeg: number) => {
+    const a = (angleDeg - 90) * Math.PI / 180
+    return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) }
+  }
+  const slicePath = (cx: number, cy: number, rx: number, ry: number, startDeg: number, endDeg: number) => {
+    const p1 = ellipsePoint(cx, cy, rx, ry, startDeg)
+    const p2 = ellipsePoint(cx, cy, rx, ry, endDeg)
+    const largeArc = endDeg - startDeg > 180 ? 1 : 0
+    return 'M' + cx + ',' + cy + ' L' + p1.x.toFixed(2) + ',' + p1.y.toFixed(2) +
+      ' A' + rx + ',' + ry + ' 0 ' + largeArc + ',1 ' + p2.x.toFixed(2) + ',' + p2.y.toFixed(2) + ' Z'
+  }
+  return (
+    <>
+      {/* Left: misleading 3D pie */}
+      <g>
+        {revealed && <text x={70} y={20} fontSize={7} fill={redColor} textAnchor="middle" fontWeight={700}>✗ 3D distorts</text>}
+        {/* Side wall (darker shade) */}
+        {slices.map((sl, i) => {
+          // Only draw side wall for bottom half (180° to 360°, i.e., the front)
+          const wallStart = Math.max(sl.start, 180)
+          const wallEnd = Math.min(sl.end, 360)
+          if (wallEnd <= wallStart) return null
+          const p1 = ellipsePoint(70, 55, 38, 14, wallStart)
+          const p2 = ellipsePoint(70, 55, 38, 14, wallEnd)
+          const largeArc = wallEnd - wallStart > 180 ? 1 : 0
+          return (
+            <path key={'wall' + i}
+              d={'M' + p1.x.toFixed(2) + ',' + p1.y.toFixed(2) +
+                 ' A38,14 0 ' + largeArc + ',1 ' + p2.x.toFixed(2) + ',' + p2.y.toFixed(2) +
+                 ' L' + p2.x.toFixed(2) + ',' + (p2.y + 8).toFixed(2) +
+                 ' A38,14 0 ' + largeArc + ',0 ' + p1.x.toFixed(2) + ',' + (p1.y + 8).toFixed(2) + ' Z'}
+              fill={sl.color} opacity={0.45} stroke={isDark ? '#1e293b' : '#fff'} strokeWidth={0.5} />
+          )
+        })}
+        {/* Top surface (ellipse slices) */}
+        {slices.map((sl, i) => (
+          <path key={'top' + i} d={slicePath(70, 55, 38, 14, sl.start, sl.end)}
+            fill={sl.color} opacity={0.85} stroke={isDark ? '#1e293b' : '#fff'} strokeWidth={1} />
+        ))}
+        {/* Labels */}
+        {slices.map((sl, i) => {
+          const mid = (sl.start + sl.end) / 2
+          const p = ellipsePoint(70, 55, 38 * 0.6, 14 * 0.6, mid)
+          return <text key={'lbl' + i} x={p.x} y={p.y + 3} fontSize={8} fill="#fff" textAnchor="middle" fontWeight={700}>{sl.label}</text>
+        })}
+      </g>
+      {/* Right: corrected 2D pie */}
+      <g>
+        {revealed && <text x={210} y={20} fontSize={7} fill={greenColor} textAnchor="middle" fontWeight={700}>✓ 2D true</text>}
+        {slices.map((sl, i) => (
+          <path key={'c' + i} d={slicePath(210, 55, 28, 28, sl.start, sl.end)}
+            fill={sl.color} opacity={0.85} stroke={isDark ? '#1e293b' : '#fff'} strokeWidth={1} />
+        ))}
+        {slices.map((sl, i) => {
+          const mid = (sl.start + sl.end) / 2
+          const p = ellipsePoint(210, 55, 28 * 0.6, 28 * 0.6, mid)
+          return <text key={'cl' + i} x={p.x} y={p.y + 3} fontSize={8} fill="#fff" textAnchor="middle" fontWeight={700}>{sl.label}</text>
+        })}
+      </g>
+    </>
+  )
+}
+
+function CherryViz({ isDark, revealed }: { isDark: boolean; revealed: boolean }) {
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const redColor = '#f87171'
+  const greenColor = '#34d399'
+  // Misleading: show only months 6-8 (Jul, Aug, Sep) = values 72, 60, 55 (a "crash")
+  const misleadingData = MONTHS_DATA.slice(6, 9)
+  // Corrected: all 12 months
+  const allData = MONTHS_DATA
+  // Y-axis scales
+  const misMin = 50, misMax = 80
+  const allMin = 0, allMax = 100
+  const misYForVal = (v: number) => 95 - ((v - misMin) / (misMax - misMin)) * 65
+  const allYForVal = (v: number) => 95 - ((v - allMin) / (allMax - allMin)) * 65
+  return (
+    <>
+      {/* Left: misleading — only 3 months */}
+      <g>
+        <text x={22} y={32} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="start">80</text>
+        <text x={22} y={95} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="start">50</text>
+        <line x1={20} y1={95} x2={130} y2={95} stroke={axisColor} strokeWidth={0.5} />
+        {revealed && <text x={26} y={22} fontSize={7} fill={redColor} textAnchor="start" fontWeight={700}>✗ only 3 months</text>}
+        {/* Line connecting points */}
+        <polyline
+          points={misleadingData.map((d, i) => {
+            const x = 38 + i * 30
+            const y = misYForVal(d.val)
+            return x + ',' + y
+          }).join(' ')}
+          fill="none" stroke={redColor} strokeWidth={1.5} />
+        {/* Points */}
+        {misleadingData.map((d, i) => {
+          const x = 38 + i * 30
+          const y = misYForVal(d.val)
+          return (
+            <g key={i}>
+              <circle cx={x} cy={y} r={2.5} fill={redColor} />
+              <text x={x} y={105} fontSize={7} fill={axisColor} textAnchor="middle">{d.label}</text>
+              <text x={x} y={y - 4} fontSize={6} fill={revealed ? redColor : axisColor} textAnchor="middle" fontWeight={revealed ? 700 : 400}>{d.val}</text>
+            </g>
+          )
+        })}
+      </g>
+      {/* Right: corrected — all 12 months */}
+      <g>
+        <text x={152} y={32} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">100</text>
+        <text x={152} y={64} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">50</text>
+        <text x={152} y={95} fontSize={6} fill={revealed ? greenColor : axisColor} textAnchor="start">0</text>
+        <line x1={150} y1={95} x2={270} y2={95} stroke={axisColor} strokeWidth={0.5} />
+        {revealed && <text x={156} y={22} fontSize={7} fill={greenColor} textAnchor="start" fontWeight={700}>✓ full year</text>}
+        <polyline
+          points={allData.map((d, i) => {
+            const x = 156 + i * 9.5
+            const y = allYForVal(d.val)
+            return x.toFixed(1) + ',' + y.toFixed(1)
+          }).join(' ')}
+          fill="none" stroke={greenColor} strokeWidth={1.5} />
+        {/* Highlight the misleading window */}
+        {revealed && (
+          <rect x={156 + 6 * 9.5 - 1} y={28} width={3 * 9.5 + 2} height={67}
+            fill="none" stroke={redColor} strokeWidth={0.8} strokeDasharray="2 1" opacity={0.7} />
+        )}
+        {allData.map((d, i) => {
+          const x = 156 + i * 9.5
+          const y = allYForVal(d.val)
+          return <circle key={i} cx={x} cy={y} r={1.8} fill={greenColor} />
+        })}
+      </g>
+    </>
+  )
+}
+
+export function MisleadingGraphsGallery({ isDark }: ToolProps) {
+  const s = styles(isDark)
+  const [technique, setTechnique] = useState<MisleadingTechnique>('truncated')
+  const [revealed, setRevealed] = useState(false)
+
+  const axisColor = isDark ? '#475569' : '#94a3b8'
+  const redColor = '#f87171'
+  const greenColor = '#34d399'
+
+  useEffect(() => { setRevealed(false) }, [technique])
+
+  const info = TECHNIQUES[technique]
+
+  const step3Text = (() => {
+    if (!revealed) return 'Compare the misleading graph (left) with the corrected version (right)'
+    switch (technique) {
+      case 'truncated': return 'The y-axis starts at ' + info.truncatedStart + ' instead of 0, making the difference look ' + info.amplified + '× bigger'
+      case 'inconsistent': return 'Non-linear ticks (0, 10, 20, 50, 100) make values look more similar than they really are'
+      case '3d': return '3D perspective distorts slice sizes — back slices look smaller, front slices look bigger'
+      case 'cherry': return 'Showing only Jul-Sep reverses the true trend — the full year shows steady growth'
+    }
+  })()
+
+  const step4Text = (() => {
+    if (!revealed) return 'Both graphs show the SAME data — only the presentation differs'
+    switch (technique) {
+      case 'truncated': return 'Corrected: y-axis starts at 0, showing the true proportional difference'
+      case 'inconsistent': return 'Corrected: linear scale shows true proportions (100 is 5× taller than 20)'
+      case '3d': return 'Corrected: flat 2D pie shows true slice proportions (30/40/30)'
+      case 'cherry': return 'Corrected: full 12-month timeline reveals the real upward trend (30 → 95)'
+    }
+  })()
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {/* Technique selector */}
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {(['truncated', 'inconsistent', '3d', 'cherry'] as MisleadingTechnique[]).map(t => (
+          <button key={t} onClick={() => setTechnique(t)} style={s.btn(technique === t)}>{TECHNIQUES[t].name}</button>
+        ))}
+      </div>
+
+      {/* Description */}
+      <div style={{ padding: '6px 8px', borderRadius: 6, background: s.bg, border: '1px solid ' + s.border, fontSize: 10, color: s.bright, lineHeight: 1.5 }}>
+        {info.description}
+      </div>
+
+      {/* The two SVGs side by side */}
+      <svg viewBox="0 0 280 110" style={{ width: '100%', borderRadius: 6, background: s.bg }}>
+        {/* Divider */}
+        <line x1={140} y1={5} x2={140} y2={105} stroke={axisColor} strokeWidth={0.5} strokeDasharray="2 2" />
+        {/* Labels */}
+        <text x={70} y={10} fontSize={8} fill={revealed ? redColor : axisColor} textAnchor="middle" fontWeight={700}>MISLEADING</text>
+        <text x={210} y={10} fontSize={8} fill={revealed ? greenColor : axisColor} textAnchor="middle" fontWeight={700}>CORRECTED</text>
+        {/* Technique-specific content */}
+        {technique === 'truncated' && <TruncatedViz isDark={isDark} revealed={revealed} />}
+        {technique === 'inconsistent' && <InconsistentViz isDark={isDark} revealed={revealed} />}
+        {technique === '3d' && <ThreeDViz isDark={isDark} revealed={revealed} />}
+        {technique === 'cherry' && <CherryViz isDark={isDark} revealed={revealed} />}
+      </svg>
+
+      {/* Reveal button */}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button onClick={() => setRevealed(p => !p)} style={{
+          padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 700,
+          background: revealed ? 'rgba(248,113,113,0.15)' : 'rgba(5,150,105,0.15)',
+          border: revealed ? '1px solid rgba(248,113,113,0.3)' : '1px solid rgba(5,150,105,0.3)',
+          color: revealed ? redColor : '#34d399',
+          cursor: 'pointer',
+        }}>{revealed ? 'Hide Problem' : 'Reveal Problem'}</button>
+      </div>
+
+      {/* How it works */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works — Step by Step</div>
+        <div>Step 1: Misleading technique: <b>{info.name}</b></div>
+        <div>Step 2: {revealed ? 'Problem: ' + info.problem : 'Click "Reveal Problem" to see what\'s wrong'}</div>
+        <div>Step 3: {step3Text}</div>
+        <div>Step 4: {step4Text}</div>
+        <div>Step 5: {revealed ? 'Always check: Does the y-axis start at 0? Is the scale consistent? Is the timeframe complete?' : 'Look for: truncated axes, 3D effects, non-linear scales, missing context'}</div>
+        <div>Step 6: Data doesn\'t lie, but graphs CAN mislead — always read the axes and scale critically</div>
+      </div>
+      {/* Insight */}
+      <div style={{ marginTop: 4, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+        💡 <b>Insight:</b> Graphs are interpretations of data. Always check axes, scales, sample sizes, and timeframes before drawing conclusions. Critical thinking protects against misleading visuals.
+      </div>
+    </div>
+  )
+}

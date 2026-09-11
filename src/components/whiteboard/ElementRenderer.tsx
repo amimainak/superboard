@@ -35,6 +35,7 @@ const LazyCanvasWidgets = dynamic(
 
 // Load KaTeX CSS (client-only)
 if (typeof window !== 'undefined') {
+  // @ts-ignore — CSS module import for KaTeX rendering
   import('katex/dist/katex.min.css')
 }
 

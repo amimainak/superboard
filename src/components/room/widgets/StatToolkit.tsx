@@ -20,6 +20,16 @@ const LinePlotLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ defa
 const TallyChartLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.TallyChartConverter })))
 const MeanFairShareLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.MeanAsFairShare })))
 const CustomSpinnerLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.CustomSpinner })))
+// 6-8 widgets
+const TwoWayTableLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.TwoWayTableBuilder })))
+const TreeDiagramLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.TreeDiagramProbability })))
+const SampleVsPopLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.SampleVsPopulationSim })))
+const MisleadingGraphsLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.MisleadingGraphsGallery })))
+// 9-12 widgets
+const ConfidenceIntervalLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.ConfidenceIntervalBuilder })))
+const HypothesisTestLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.HypothesisTestExplorer })))
+const CLTDemoLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.CentralLimitTheoremDemo })))
+const ChiSquareLazy = lazy(() => import('./stat/StatUtilities').then(m => ({ default: m.ChiSquareExplorer })))
 
 // Stable wrapper components (no remount on re-render)
 function DataTablePanel({ isDark }: { isDark: boolean }) {
@@ -58,6 +68,32 @@ function MeanFairSharePanel({ isDark }: { isDark: boolean }) {
 }
 function CustomSpinnerPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><CustomSpinnerLazy isDark={isDark} /></Suspense>
+}
+// 6-8 panels
+function TwoWayTablePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TwoWayTableLazy isDark={isDark} /></Suspense>
+}
+function TreeDiagramPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TreeDiagramLazy isDark={isDark} /></Suspense>
+}
+function SampleVsPopPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><SampleVsPopLazy isDark={isDark} /></Suspense>
+}
+function MisleadingGraphsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><MisleadingGraphsLazy isDark={isDark} /></Suspense>
+}
+// 9-12 panels
+function ConfidenceIntervalPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ConfidenceIntervalLazy isDark={isDark} /></Suspense>
+}
+function HypothesisTestPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><HypothesisTestLazy isDark={isDark} /></Suspense>
+}
+function CLTDemoPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><CLTDemoLazy isDark={isDark} /></Suspense>
+}
+function ChiSquarePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ChiSquareLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -235,6 +271,48 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
             {sectionTitle('🎡 Custom Spinner', 'stat-spinner')}
             <div style={{ padding: '0 12px 12px' }}><CustomSpinnerPanel isDark={isDark} /></div>
           </div>
+
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Two-Way Table Builder', 'stat-two-way-table')}
+            <div style={{ padding: '0 12px 12px' }}><TwoWayTablePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌳 Tree Diagram & Probability', 'stat-tree-diagram')}
+            <div style={{ padding: '0 12px 12px' }}><TreeDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎯 Sample vs Population', 'stat-sample-pop')}
+            <div style={{ padding: '0 12px 12px' }}><SampleVsPopPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚠️ Misleading Graphs Gallery', 'stat-misleading-graphs')}
+            <div style={{ padding: '0 12px 12px' }}><MisleadingGraphsPanel isDark={isDark} /></div>
+          </div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📐 Confidence Interval Builder', 'stat-confidence-interval')}
+            <div style={{ padding: '0 12px 12px' }}><ConfidenceIntervalPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 Hypothesis Test Explorer', 'stat-hypothesis-test')}
+            <div style={{ padding: '0 12px 12px' }}><HypothesisTestPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Central Limit Theorem Demo', 'stat-clt-demo')}
+            <div style={{ padding: '0 12px 12px' }}><CLTDemoPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('χ² Chi-Square Explorer', 'stat-chi-square')}
+            <div style={{ padding: '0 12px 12px' }}><ChiSquarePanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -301,6 +379,27 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
             {sectionTitle('Probability Simulator', 'stat-probability')}
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
           </div>
+
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Two-Way Table Builder', 'stat-two-way-table')}
+            <div style={{ padding: '0 12px 12px' }}><TwoWayTablePanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌳 Tree Diagram & Probability', 'stat-tree-diagram')}
+            <div style={{ padding: '0 12px 12px' }}><TreeDiagramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🎯 Sample vs Population', 'stat-sample-pop')}
+            <div style={{ padding: '0 12px 12px' }}><SampleVsPopPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚠️ Misleading Graphs Gallery', 'stat-misleading-graphs')}
+            <div style={{ padding: '0 12px 12px' }}><MisleadingGraphsPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -332,6 +431,27 @@ export function StatToolkit({ roomId: _roomId }: StatToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Probability Simulator', 'stat-probability')}
             <div style={{ padding: '0 12px 12px' }}><ProbabilitySimPanel isDark={isDark} /></div>
+          </div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📐 Confidence Interval Builder', 'stat-confidence-interval')}
+            <div style={{ padding: '0 12px 12px' }}><ConfidenceIntervalPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 Hypothesis Test Explorer', 'stat-hypothesis-test')}
+            <div style={{ padding: '0 12px 12px' }}><HypothesisTestPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Central Limit Theorem Demo', 'stat-clt-demo')}
+            <div style={{ padding: '0 12px 12px' }}><CLTDemoPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('χ² Chi-Square Explorer', 'stat-chi-square')}
+            <div style={{ padding: '0 12px 12px' }}><ChiSquarePanel isDark={isDark} /></div>
           </div>
         </>
       )}

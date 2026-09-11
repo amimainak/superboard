@@ -23,6 +23,16 @@ const LifeCycleBuilderLazy = lazy(() => import('./biology/BiologyUtilities').the
 const BasicNeedsSorterLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.BasicNeedsSorter })))
 const TraitInheritanceLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.TraitInheritanceExplorer })))
 const FoodChainBuilderLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.FoodChainBuilder })))
+// 6-8 widgets
+const MicroscopeSimLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.MicroscopeSimulator })))
+const PhotosynthesisEqLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.PhotosynthesisEquationBuilder })))
+const DihybridCrossLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.DihybridCrossExplorer })))
+const HomeostasisLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.HomeostasisExplorer })))
+// 9-12 widgets
+const ProteinSynthesisLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.ProteinSynthesisVisualizer })))
+const PCRGelLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.PCRGelElectrophoresis })))
+const CladogramLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.CladogramBuilder })))
+const BiogeochemicalLazy = lazy(() => import('./biology/BiologyUtilities').then(m => ({ default: m.BiogeochemicalCyclesExplorer })))
 
 // Stable wrapper components (no remount on re-render)
 function PunnettSquarePanel({ isDark }: { isDark: boolean }) {
@@ -70,6 +80,32 @@ function TraitInheritancePanel({ isDark }: { isDark: boolean }) {
 }
 function FoodChainBuilderPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><FoodChainBuilderLazy isDark={isDark} /></Suspense>
+}
+// 6-8 panels
+function MicroscopeSimPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><MicroscopeSimLazy isDark={isDark} /></Suspense>
+}
+function PhotosynthesisEqPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PhotosynthesisEqLazy isDark={isDark} /></Suspense>
+}
+function DihybridCrossPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><DihybridCrossLazy isDark={isDark} /></Suspense>
+}
+function HomeostasisPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><HomeostasisLazy isDark={isDark} /></Suspense>
+}
+// 9-12 panels
+function ProteinSynthesisPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><ProteinSynthesisLazy isDark={isDark} /></Suspense>
+}
+function PCRGelPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><PCRGelLazy isDark={isDark} /></Suspense>
+}
+function CladogramPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><CladogramLazy isDark={isDark} /></Suspense>
+}
+function BiogeochemicalPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={<ToolSkeleton isDark={isDark} />}><BiogeochemicalLazy isDark={isDark} /></Suspense>
 }
 
 
@@ -288,6 +324,48 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
             {sectionTitle('🔗 Food Chain Builder', 'bio-food-chain-k5')}
             <div style={{ padding: '0 12px 12px' }}><FoodChainBuilderPanel isDark={isDark} /></div>
           </div>
+
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔬 Microscope Simulator', 'bio-microscope')}
+            <div style={{ padding: '0 12px 12px' }}><MicroscopeSimPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌱 Photosynthesis Equation Builder', 'bio-photosynthesis-eq')}
+            <div style={{ padding: '0 12px 12px' }}><PhotosynthesisEqPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Dihybrid Cross Explorer', 'bio-dihybrid')}
+            <div style={{ padding: '0 12px 12px' }}><DihybridCrossPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Homeostasis Explorer', 'bio-homeostasis')}
+            <div style={{ padding: '0 12px 12px' }}><HomeostasisPanel isDark={isDark} /></div>
+          </div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Protein Synthesis Visualizer', 'bio-protein-synthesis')}
+            <div style={{ padding: '0 12px 12px' }}><ProteinSynthesisPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 PCR & Gel Electrophoresis', 'bio-pcr-gel')}
+            <div style={{ padding: '0 12px 12px' }}><PCRGelPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌳 Cladogram Builder', 'bio-cladogram')}
+            <div style={{ padding: '0 12px 12px' }}><CladogramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('♻️ Biogeochemical Cycles Explorer', 'bio-biogeochemical')}
+            <div style={{ padding: '0 12px 12px' }}><BiogeochemicalPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -379,6 +457,27 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
             {sectionTitle('Food Chain Builder', 'bio-food-chain')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Drag organisms into chain order with energy flow arrows and labels.</p>
           </div>
+
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔬 Microscope Simulator', 'bio-microscope')}
+            <div style={{ padding: '0 12px 12px' }}><MicroscopeSimPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌱 Photosynthesis Equation Builder', 'bio-photosynthesis-eq')}
+            <div style={{ padding: '0 12px 12px' }}><PhotosynthesisEqPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Dihybrid Cross Explorer', 'bio-dihybrid')}
+            <div style={{ padding: '0 12px 12px' }}><DihybridCrossPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Homeostasis Explorer', 'bio-homeostasis')}
+            <div style={{ padding: '0 12px 12px' }}><HomeostasisPanel isDark={isDark} /></div>
+          </div>
         </>
       )}
 
@@ -439,6 +538,27 @@ export function BiologyToolkit({ roomId: _roomId }: BiologyToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Meiosis Visualizer', 'bio-meiosis')}
             <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Step-by-step meiosis I & II with crossing over, compare to mitosis.</p>
+          </div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧬 Protein Synthesis Visualizer', 'bio-protein-synthesis')}
+            <div style={{ padding: '0 12px 12px' }}><ProteinSynthesisPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🧪 PCR & Gel Electrophoresis', 'bio-pcr-gel')}
+            <div style={{ padding: '0 12px 12px' }}><PCRGelPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🌳 Cladogram Builder', 'bio-cladogram')}
+            <div style={{ padding: '0 12px 12px' }}><CladogramPanel isDark={isDark} /></div>
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('♻️ Biogeochemical Cycles Explorer', 'bio-biogeochemical')}
+            <div style={{ padding: '0 12px 12px' }}><BiogeochemicalPanel isDark={isDark} /></div>
           </div>
         </>
       )}
