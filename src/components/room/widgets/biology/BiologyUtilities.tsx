@@ -181,7 +181,18 @@ export function PunnettSquareCalculator({ isDark }: { isDark: boolean }) {
         <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: isDark ? 'rgba(234,179,8,0.4)' : 'rgba(234,179,8,0.3)', display: 'inline-block' }}></span> Heterozygous</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><span style={{ width: 10, height: 10, borderRadius: 2, background: isDark ? 'rgba(239,68,68,0.4)' : 'rgba(239,68,68,0.3)', display: 'inline-block' }}></span> Homozygous Recessive</span>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify parental genotypes (e.g., Bb × Bb)</div>
+          <div>Step 2: Apply Law of Segregation — each parent passes ONE allele</div>
+          <div>Step 3: List possible gametes (Bb parent → B or b)</div>
+          <div>Step 4: Create 2×2 grid — cross each gamete combination</div>
+          <div>Step 5: Count genotypes: BB, Bb, bb</div>
+          <div>Step 6: Determine phenotypes (dominant masks recessive)</div>
+          <div>Step 7: Express as ratio (Bb × Bb → 3 dominant : 1 recessive)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Law of Segregation: each parent passes ONE allele. The 3:1 ratio in Bb×Bb is the signature of complete dominance (Mendel, 1865).
       </div>
@@ -375,7 +386,18 @@ export function CellDiagramExplorer({ isDark }: { isDark: boolean }) {
           )}
         </div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify if cell is plant or animal</div>
+          <div>Step 2: Find the nucleus — contains DNA, controls the cell</div>
+          <div>Step 3: Find mitochondria — produces ATP energy (cellular respiration)</div>
+          <div>Step 4: Find ribosomes — synthesize proteins from mRNA</div>
+          <div>Step 5: Plant only: find chloroplasts — photosynthesis (sunlight → glucose)</div>
+          <div>Step 6: Plant only: find cell wall — rigid cellulose structure</div>
+          <div>Step 7: Structure follows function — each organelle has a specific job</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Plants have cell walls + chloroplasts. Both have nucleus (DNA), mitochondria (energy), ribosomes (protein). Structure follows function.
       </div>
@@ -465,7 +487,18 @@ export function TaxonomyClassifier({ isDark }: { isDark: boolean }) {
           <span style={{ fontStyle: 'italic' }}>{customLevels[6]}</span>{' '}<span style={{ fontStyle: 'italic' }}>{customLevels[7]}</span>
         </span>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Start broad — Domain (Bacteria, Archaea, Eukarya)</div>
+          <div>Step 2: Kingdom (Animalia, Plantae, Fungi, Protista)</div>
+          <div>Step 3: Phylum — body plan (e.g., Chordata = has backbone)</div>
+          <div>Step 4: Class — major group (Mammalia = mammals)</div>
+          <div>Step 5: Order — specific group (Primates)</div>
+          <div>Step 6: Family → Genus → Species (most specific)</div>
+          <div>Step 7: Binomial name = Genus + species (Homo sapiens)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Domain → Kingdom → Phylum → Class → Order → Family → Genus → Species. Each level groups by shared characteristics.
       </div>
@@ -774,7 +807,17 @@ export function BodySystemsExplorer({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify the body system (circulatory, respiratory, etc.)</div>
+          <div>Step 2: Find the main organs in that system</div>
+          <div>Step 3: Trace the flow (blood, air, food, signals)</div>
+          <div>Step 4: Identify what the system takes in and puts out</div>
+          <div>Step 5: Find connections to OTHER systems</div>
+          <div>Step 6: No system works alone — they're all interconnected</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Systems work together: circulatory transports oxygen from respiratory, nutrients from digestive. No system works alone.
       </div>
@@ -1027,7 +1070,18 @@ export function EcologyFoodWeb({ isDark }: { isDark: boolean }) {
           <div style={{ marginTop: 4, fontSize: 9, color: s.text, opacity: 0.6 }}>Click organism again or another to change selection</div>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Start with producers (plants) — they capture sun energy</div>
+          <div>Step 2: Primary consumers eat producers (herbivores)</div>
+          <div>Step 3: Secondary consumers eat primary (carnivores)</div>
+          <div>Step 4: Decomposers recycle dead material back to soil</div>
+          <div>Step 5: Arrows show energy FLOW (who eats whom)</div>
+          <div>Step 6: Only ~10% of energy transfers between levels</div>
+          <div>Step 7: This limits food chains to 4-5 levels</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Energy flows one direction: sun → producers → consumers → decomposers. Only ~10% transfers per level — why food chains are short.
       </div>
@@ -1135,7 +1189,17 @@ export function DNAStructureViewer({ isDark }: { isDark: boolean }) {
         {mode === 'transcribe' && <div><span style={{ fontWeight: 600, color: '#34d399' }}>mRNA:</span> {mrnaStrand}</div>}
         {mode === 'none' && <div style={{ opacity: 0.5 }}>Click Replicate or Transcribe to see the result</div>}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: DNA is a double helix — two strands connected</div>
+          <div>Step 2: Bases pair: A-T (2 hydrogen bonds), G-C (3 bonds)</div>
+          <div>Step 3: Replication: helicase unwinds, polymerase copies</div>
+          <div>Step 4: Transcription: DNA → mRNA (replace T with U)</div>
+          <div>Step 5: Translation: mRNA → codons (groups of 3) → amino acids</div>
+          <div>Step 6: Amino acids link → protein (structure determines function)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Central Dogma: DNA → RNA → Protein. Base pairing (A-T, G-C) ensures faithful copying. One wrong base = mutation.
       </div>
@@ -1279,7 +1343,18 @@ export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
         <span>Best fitness: <b style={{ color: '#34d399' }}>{bestFit.toFixed(0)}</b>/360</span>
       </div>
       <div style={{ fontSize: 8, color: s.text, opacity: 0.6, marginTop: 4 }}>Red dashed line = environment hue. Bugs closer in hue survive better.</div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Variation exists in the population (different traits)</div>
+          <div>Step 2: Environment selects — some traits are advantageous</div>
+          <div>Step 3: Individuals with favorable traits survive and reproduce</div>
+          <div>Step 4: Favorable traits become MORE common over generations</div>
+          <div>Step 5: Unfavorable traits become LESS common</div>
+          <div>Step 6: No goal — just what works in THAT environment</div>
+          <div>Step 7: Over time, this can lead to new species</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Variation exists → environment selects → favorable traits spread. No goal — just what works in that environment.
       </div>
@@ -1499,7 +1574,18 @@ export function CellDivisionAnimator({ isDark }: { isDark: boolean }) {
           ))}
         </div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Interphase — DNA replicates (chromosomes double)</div>
+          <div>Step 2: Prophase — chromosomes condense and become visible</div>
+          <div>Step 3: Metaphase — chromosomes line up at center (equator)</div>
+          <div>Step 4: Anaphase — sister chromatids separate to opposite poles</div>
+          <div>Step 5: Telophase — nuclear membranes reform around each set</div>
+          <div>Step 6: Cytokinesis — cell splits into two</div>
+          <div>Step 7: Mitosis = identical copies; Meiosis = 4 different cells</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Mitosis: 1→2 identical (growth). Meiosis: 1→4 different (sperm/egg). Meiosis shuffles genetics — why siblings differ.
       </div>
@@ -1669,7 +1755,18 @@ export function PhotosynthesisRespiration({ isDark }: { isDark: boolean }) {
       <div style={{ marginTop: 4, fontSize: 8, color: s.text, opacity: 0.6 }}>
         Light intensity affects the rate of photosynthesis. Higher light = more energy for the light reactions.
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Photosynthesis: 6CO₂ + 6H₂O + light → C₆H₁₂O₆ + 6O₂</div>
+          <div>Step 2: Chloroplasts capture light energy in chlorophyll</div>
+          <div>Step 3: Water is split → oxygen released, hydrogen used</div>
+          <div>Step 4: CO₂ is fixed into glucose (Calvin cycle)</div>
+          <div>Step 5: Respiration: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + ATP</div>
+          <div>Step 6: Mitochondria release energy stored in glucose</div>
+          <div>Step 7: They're OPPOSITES — the energy cycle of life</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Photosynthesis stores energy (6CO₂+6H₂O+light→glucose+6O₂). Respiration releases it (reverse). They're the energy cycle of life.
       </div>
@@ -1748,7 +1845,17 @@ export function HumanBodyInteractive({ isDark }: { isDark: boolean }) {
           )}
         </div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify the body system being studied</div>
+          <div>Step 2: Trace the path (food through digestive, blood through circulatory)</div>
+          <div>Step 3: Find where exchange happens (oxygen in lungs, nutrients in intestine)</div>
+          <div>Step 4: Identify what the system regulates (blood sugar, temperature)</div>
+          <div>Step 5: Homeostasis = maintaining stable internal conditions</div>
+          <div>Step 6: Feedback loops: sensor → control center → effector</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Homeostasis keeps internal conditions stable. When one system fails, others compensate — until they can't.
       </div>

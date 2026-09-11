@@ -146,7 +146,17 @@ export function WritingAnnotationRubric({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 10, color: t.muted, textAlign: 'center' }}>
         Click cells to highlight proficiency level for each criterion
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Read the rubric criteria before writing</div>
+          <div>Step 2: Content — is the main idea clear and developed?</div>
+          <div>Step 3: Organization — logical flow with transitions?</div>
+          <div>Step 4: Language — varied vocabulary and sentence structure?</div>
+          <div>Step 5: Mechanics — correct spelling, grammar, punctuation?</div>
+          <div>Step 6: Self-assess using the rubric before submitting</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Rubrics make expectations explicit. Specific criteria, not vague "write well." Makes grading fair and feedback actionable.
       </div>
@@ -197,7 +207,17 @@ export function GrammarChecklist({ isDark }: { isDark: boolean }) {
           </label>
         ))}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Check subject-verb agreement (he runs, they run)</div>
+          <div>Step 2: Check pronoun case (I vs me, who vs whom)</div>
+          <div>Step 3: Check for fragments (incomplete sentences)</div>
+          <div>Step 4: Check for run-ons (two sentences joined incorrectly)</div>
+          <div>Step 5: Check homophones (their/there/they're, its/it's)</div>
+          <div>Step 6: Read aloud — errors often sound wrong</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Grammar rules exist for clarity. Subject-verb agreement prevents confusion. Each rule solves a specific communication problem.
       </div>
@@ -260,7 +280,17 @@ export function WritingPromptGenerator({ isDark }: { isDark: boolean }) {
       >
         Generate Prompt
       </button>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Read the prompt carefully</div>
+          <div>Step 2: Identify the task (describe, argue, narrate, explain)</div>
+          <div>Step 3: Brainstorm ideas related to the prompt</div>
+          <div>Step 4: Choose your strongest idea</div>
+          <div>Step 5: Plan your structure (introduction, body, conclusion)</div>
+          <div>Step 6: The best prompts have tension — conflict, choice, or mystery</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Good prompts have tension: conflict, choice, or mystery. They give enough context to start, but leave room for creativity.
       </div>

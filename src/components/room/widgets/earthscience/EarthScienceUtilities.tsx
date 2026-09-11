@@ -127,7 +127,17 @@ export function RockCycleDiagram({ isDark }: ToolProps) {
           <div style={{ fontSize: 11, color: v.text, lineHeight: 1.5 }}>{selectedProcess.desc}</div>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Igneous — forms from cooling magma/lava</div>
+          <div>Step 2: Weathering breaks rock into sediments</div>
+          <div>Step 3: Sediments compact and cement → Sedimentary rock</div>
+          <div>Step 4: Heat and pressure (no melting) → Metamorphic rock</div>
+          <div>Step 5: Extreme heat melts rock back into magma</div>
+          <div>Step 6: The cycle repeats — Earth's crust recycles endlessly</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> The cycle never stops: igneous → sedimentary → metamorphic → magma → igneous. Earth's crust has recycled for 4 billion years.
       </div>
@@ -198,7 +208,17 @@ export function PlateTectonicsMap({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click a colored boundary line to learn more.</div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Earth's crust = plates floating on the mantle</div>
+          <div>Step 2: Convergent boundary — plates collide → mountains/volcanoes</div>
+          <div>Step 3: Divergent boundary — plates separate → new crust forms</div>
+          <div>Step 4: Transform boundary — plates slide past → earthquakes</div>
+          <div>Step 5: Subduction = one plate dives under another (oceanic under continental)</div>
+          <div>Step 6: Ring of Fire = subduction zones around Pacific</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Convergent: mountains/volcanoes. Divergent: new crust. Transform: earthquakes. Ring of Fire = 75% of Earth's volcanoes.
       </div>
@@ -318,7 +338,17 @@ export function WeatherMapReader({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click any feature on the map to learn about it.</div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Find High pressure (H) — sinking air → clear, dry weather</div>
+          <div>Step 2: Find Low pressure (L) — rising air → clouds, storms</div>
+          <div>Step 3: Cold front (triangles) — cold air pushes warm air up → storms</div>
+          <div>Step 4: Warm front (semicircles) — warm air slides over cold → gradual rain</div>
+          <div>Step 5: Isobars (lines) connect equal pressure — closer = stronger wind</div>
+          <div>Step 6: Wind flows from High to Low (pressure gradient)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> High pressure = sinking air (clear). Low = rising air (storms). Cold fronts: sudden storms. Warm fronts: gradual rain.
       </div>
@@ -459,7 +489,18 @@ export function WaterCarbonCycle({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click any process or reservoir to learn about it.</div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Evaporation — sun heats water → water vapor rises</div>
+          <div>Step 2: Condensation — vapor cools → forms clouds</div>
+          <div>Step 3: Precipitation — water falls as rain/snow</div>
+          <div>Step 4: Runoff — water flows back to oceans</div>
+          <div>Step 5: Transpiration — plants release water vapor</div>
+          <div>Step 6: Carbon: photosynthesis removes CO₂, respiration adds it</div>
+          <div>Step 7: Both are closed cycles — nothing is lost</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Water: evaporation → condensation → precipitation → repeat. Closed system — dinosaur water is in your glass. Carbon cycles between air, oceans, rocks, life.
       </div>
@@ -558,7 +599,17 @@ export function SolarSystemScale({ isDark }: ToolProps) {
         </div>
       )}
       <div style={{ fontSize: 10, color: v.text, marginTop: 4, opacity: 0.7 }}>Click a planet to see its details.</div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Inner planets (Mercury-Mars) — rocky, close to Sun</div>
+          <div>Step 2: Outer planets (Jupiter-Neptune) — gas/ice giants, far</div>
+          <div>Step 3: Kepler's Law: T² ∝ r³ — farther = slower orbit</div>
+          <div>Step 4: Mercury: 88 days; Earth: 365 days; Neptune: 165 years</div>
+          <div>Step 5: Gravity decreases with distance² (inverse square)</div>
+          <div>Step 6: This is why outer planets orbit slowly</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Kepler's Third Law: T² ∝ r³. Farther planets orbit slower. Mercury: 88 days. Neptune: 165 years. Newton proved this from gravity.
       </div>
@@ -824,7 +875,17 @@ export function TopographicMapTool({ isDark }: ToolProps) {
           <b style={{ color: v.bright }}>Elevation:</b> approximately <b style={{ color: '#ef4444' }}>~{clickPoint.elev}m</b> at selected point. Drag on the map to draw a cross-section line.
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Contour lines connect points of equal elevation</div>
+          <div>Step 2: Close lines = steep slope (big change in short distance)</div>
+          <div>Step 3: Wide spacing = gentle slope</div>
+          <div>Step 4: V-shapes point upstream (contours bend up-valley)</div>
+          <div>Step 5: Concentric circles = hill (numbers increase inward) or depression</div>
+          <div>Step 6: Numbers tell you the elevation — read the contour interval</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Contour lines = equal elevation. Close lines = steep. V-shapes point upstream. Reading contours = seeing 3D from 2D.
       </div>

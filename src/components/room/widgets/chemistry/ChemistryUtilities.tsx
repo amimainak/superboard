@@ -374,7 +374,17 @@ export function PeriodicTableExplorer({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Find the element by atomic number (number of protons)</div>
+          <div>Step 2: Row (period) = number of electron shells</div>
+          <div>Step 3: Column (group) = number of valence electrons</div>
+          <div>Step 4: Valence electrons determine chemical behavior</div>
+          <div>Step 5: Metals (left) lose electrons; Nonmetals (right) gain them</div>
+          <div>Step 6: Noble gases (Group 18) are stable — full valence shell</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Same column = same valence electrons = similar chemistry. Period = electron shells. The table predicts behavior from position.
       </div>
@@ -553,7 +563,18 @@ export function ChemicalEquationBalancer({ isDark }: { isDark: boolean }) {
           )}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Write the unbalanced equation</div>
+          <div>Step 2: Count atoms of each element on BOTH sides</div>
+          <div>Step 3: Find elements that are unbalanced (different counts)</div>
+          <div>Step 4: Add coefficients (numbers in front) — NEVER change subscripts</div>
+          <div>Step 5: Start with the most complex molecule</div>
+          <div>Step 6: Recount after each coefficient change</div>
+          <div>Step 7: Repeat until all elements balance</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Conservation of Mass: atoms can't be created or destroyed. Start with 10 oxygen → end with 10. Balancing enforces this law.
       </div>
@@ -686,7 +707,17 @@ export function PhScaleVisualizer({ isDark }: { isDark: boolean }) {
           </button>
         ))}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: [H⁺] is the hydrogen ion concentration</div>
+          <div>Step 2: pH = -log₁₀([H⁺])</div>
+          <div>Step 3: Take the log of [H⁺]</div>
+          <div>Step 4: Negate it (the minus makes acids pH &lt; 7)</div>
+          <div>Step 5: pH &lt; 7 = acidic, pH = 7 = neutral, pH &gt; 7 = basic</div>
+          <div>Step 6: Each pH unit = 10× difference in [H⁺]</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> pH is logarithmic: each unit = 10× difference. pH 3 is 10× more acidic than pH 4. The scale compresses 14 orders of magnitude to 0-14.
       </div>
@@ -831,7 +862,17 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Move the decimal to after the first non-zero digit</div>
+          <div>Step 2: Count how many places you moved it</div>
+          <div>Step 3: If you moved LEFT, exponent is POSITIVE (big number)</div>
+          <div>Step 4: If you moved RIGHT, exponent is NEGATIVE (small number)</div>
+          <div>Step 5: Write as: mantissa × 10^exponent</div>
+          <div>Step 6: The mantissa must be between 1 and 10</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> The exponent = how many places to move the decimal. Positive = right (big), negative = left (small). Handles very large/small numbers.
       </div>
@@ -912,7 +953,16 @@ export function MolarMassCalculator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, marginTop: 6, opacity: 0.6 }}>
         Supports parentheses: Ca(OH)2, Al2(SO4)3, Fe2(SO4)3
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Parse the chemical formula (e.g., H₂O = 2 H + 1 O)</div>
+          <div>Step 2: Look up atomic mass for each element from periodic table</div>
+          <div>Step 3: Multiply: count × atomic mass = subtotal for each element</div>
+          <div>Step 4: Sum all subtotals = molar mass (g/mol)</div>
+          <div>Step 5: This tells you the mass of 6.022×10²³ molecules (one mole)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> One mole = 6.022×10²³ particles. Molar mass connects atomic scale to grams. For H₂O: 18g = 6.022×10²³ molecules.
       </div>
@@ -1113,7 +1163,18 @@ export function LewisDotStructureBuilder({ isDark }: { isDark: boolean }) {
         </>}
         {mode === 'atom' && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{lonePairsCount}</span></div>}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Count total valence electrons (group number for main group)</div>
+          <div>Step 2: Place the least electronegative atom in center (never H)</div>
+          <div>Step 3: Connect atoms with single bonds (2 electrons each)</div>
+          <div>Step 4: Distribute remaining electrons to outer atoms first</div>
+          <div>Step 5: Check: does each atom have an octet? (8 valence electrons)</div>
+          <div>Step 6: If not, form double/triple bonds by sharing lone pairs</div>
+          <div>Step 7: Verify total electron count matches Step 1</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Octet rule: atoms bond to get 8 valence electrons. Dots = valence electrons, lines = shared pairs. H wants 2, B wants 6 (exceptions).
       </div>
@@ -1182,7 +1243,18 @@ export function MolecularGeometryVSEPR({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Lone pairs:</span><span style={{ color: s.bright, fontWeight: 600 }}>{d.lonePairs}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Polarity:</span><span style={{ color: d.polarity === 'Polar' ? '#f87171' : '#34d399', fontWeight: 600 }}>{d.polarity}</span></div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Draw the Lewis structure (count electron domains)</div>
+          <div>Step 2: Count bonding pairs AND lone pairs on central atom</div>
+          <div>Step 3: Electron domains repel → arrange for maximum distance</div>
+          <div>Step 4: 2 domains = linear (180°), 3 = trigonal (120°)</div>
+          <div>Step 5: 4 domains = tetrahedral (109.5°), 6 = octahedral (90°)</div>
+          <div>Step 6: Lone pairs take more space → compress bond angles</div>
+          <div>Step 7: Molecular shape = arrangement of ATOMS (not electron domains)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Electron pairs repel → molecules maximize distance. 4 pairs = tetrahedral (109.5°). Lone pairs push harder than bonds.
       </div>
@@ -1326,7 +1398,17 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7 }}>
         PV = nRT | R = 0.08206 L·atm/(mol·K) | Lock 3 variables, adjust the 4th
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Boyle's Law: P₁V₁ = P₂V₂ (constant T) — squeeze = less volume</div>
+          <div>Step 2: Charles' Law: V₁/T₁ = V₂/T₂ (constant P) — heat = expand</div>
+          <div>Step 3: Gay-Lussac: P₁/T₁ = P₂/T₂ (constant V) — heat = more pressure</div>
+          <div>Step 4: Combined: PV/T = constant</div>
+          <div>Step 5: Ideal Gas Law: PV = nRT (n = moles, R = gas constant)</div>
+          <div>Step 6: Temperature must be in Kelvin (K = °C + 273.15)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Boyle: P↑ V↓ (squeeze balloon). Charles: T↑ V↑ (warm air rises). Ideal gas law PV=nRT ties them together.
       </div>
@@ -1478,7 +1560,18 @@ export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
           <div>Total volume: <strong style={{ color: s.bright }}>{totalVol.toFixed(1)} mL</strong></div>
         </div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Write the balanced neutralization reaction</div>
+          <div>Step 2: At equivalence point: moles acid = moles base</div>
+          <div>Step 3: Use M₁V₁ = M₂V₂ (molarity × volume)</div>
+          <div>Step 4: Before equivalence: excess acid → low pH</div>
+          <div>Step 5: At equivalence: sudden pH jump (steep curve)</div>
+          <div>Step 6: After equivalence: excess base → high pH</div>
+          <div>Step 7: Indicator changes color at the equivalence point</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> At equivalence point: moles acid = moles base. pH jumps sharply here. Indicators change color at this sudden shift.
       </div>
@@ -1585,7 +1678,17 @@ export function IonFormationVisualizer({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Charge:</span><span style={{ color: elem.charge.startsWith('+') ? '#f87171' : '#60a5fa', fontWeight: 700 }}>{elem.charge}</span></div>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Process:</span><span style={{ color: s.bright }}>{elem.name} {isGain ? 'gains' : 'loses'} {electronChange} electron{electronChange > 1 ? 's' : ''} to form {elem.sym}{elem.charge}</span></div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Find the element's valence electrons (group number)</div>
+          <div>Step 2: Goal: achieve noble gas configuration (8 valence)</div>
+          <div>Step 3: Metals (1-3 valence) → LOSE electrons → positive ion</div>
+          <div>Step 4: Nonmetals (5-7 valence) → GAIN electrons → negative ion</div>
+          <div>Step 5: Charge = valence - 8 (or 8 - valence for metals)</div>
+          <div>Step 6: Opposite charges attract → ionic bond forms</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Metals LOSE electrons (positive ions). Nonmetals GAIN electrons (negative ions). Opposite charges attract = ionic bond.
       </div>

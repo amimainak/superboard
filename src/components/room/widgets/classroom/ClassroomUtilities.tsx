@@ -238,7 +238,17 @@ export function TimerStopwatch({ isDark }: { isDark: boolean }) {
           )}
         </>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Set the target time for the activity</div>
+          <div>Step 2: Start the timer when the activity begins</div>
+          <div>Step 3: Pomodoro technique: 25 min focused work + 5 min break</div>
+          <div>Step 4: The brain cannot sustain focus for long periods</div>
+          <div>Step 5: Breaks improve retention and reduce fatigue</div>
+          <div>Step 6: After 4 cycles, take a longer break (15-30 min)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Pomodoro: 25 min work, 5 min break. The brain can't sustain attention for long stretches — it needs recovery.
       </div>
@@ -479,7 +489,17 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
           <span>Y: [{yMin.toFixed(1)}, {yMax.toFixed(1)}]</span>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Plot each (x, y) point on the coordinate plane</div>
+          <div>Step 2: Look at the pattern — does it go up or down?</div>
+          <div>Step 3: Draw a line of best fit through the points</div>
+          <div>Step 4: Slope = rise/run = Δy/Δx</div>
+          <div>Step 5: y-intercept = where the line crosses the y-axis</div>
+          <div>Step 6: Equation: y = mx + b (m = slope, b = intercept)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Straight line = constant rate. Curve = changing rate. Steeper slope = faster change. Graphs make relationships visible.
       </div>
@@ -654,7 +674,17 @@ export function RandomStudentPicker({ isDark }: { isDark: boolean }) {
           ))}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Enter all student names (one per line)</div>
+          <div>Step 2: Click "Pick 1" to randomly select a student</div>
+          <div>Step 3: The selection is truly random — everyone has equal chance</div>
+          <div>Step 4: Remove picked option prevents repeats until reset</div>
+          <div>Step 5: This ensures equitable participation</div>
+          <div>Step 6: Students stay engaged — they might be called next</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Random calling ensures equitable participation. Students who rarely volunteer often have the best insights.
       </div>

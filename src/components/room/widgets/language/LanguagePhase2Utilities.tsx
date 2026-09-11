@@ -206,7 +206,17 @@ export function RootMorphologyExplorer({ isDark }: { isDark: boolean }) {
           )}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Break the word into parts (prefix + root + suffix)</div>
+          <div>Step 2: Identify the root (the core meaning)</div>
+          <div>Step 3: Look up the root origin (Greek or Latin)</div>
+          <div>Step 4: The prefix modifies the root (re = again, un = not)</div>
+          <div>Step 5: The suffix shows the part of speech (-tion = noun, -ly = adverb)</div>
+          <div>Step 6: Combine: prefix + root meaning + suffix = word meaning</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> English is built from Greek/Latin roots. "Bio" = life, "graph" = write. Know roots → decode unfamiliar words.
       </div>
@@ -430,7 +440,17 @@ export function ActivePassiveVoice({ isDark }: { isDark: boolean }) {
           </div>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Find the subject — is it doing the action (active)?</div>
+          <div>Step 2: Or is the action happening TO the subject (passive)?</div>
+          <div>Step 3: Active: "The dog bit the man" (dog = subject doing action)</div>
+          <div>Step 4: Passive: "The man was bitten" (man = subject receiving)</div>
+          <div>Step 5: Passive uses "was/were + past participle"</div>
+          <div>Step 6: Use active for clarity and impact; passive to hide the actor</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Active: "Dog bit man" (clear). Passive: "Man was bitten" (hides actor). Use active for clarity, passive when actor is unknown.
       </div>
@@ -577,7 +597,17 @@ export function ReadingComprehensionStrategies({ isDark }: { isDark: boolean }) 
           })}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Predict — what will happen next based on context?</div>
+          <div>Step 2: Question — what don't you understand? What confuses you?</div>
+          <div>Step 3: Clarify — reread, use context clues, look up words</div>
+          <div>Step 4: Summarize — what was the main point of this section?</div>
+          <div>Step 5: Connect — how does this relate to what you already know?</div>
+          <div>Step 6: These strategies work together — use them simultaneously</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Good readers predict, question, clarify, summarize WHILE reading. It's an active conversation with the text.
       </div>
@@ -839,7 +869,17 @@ export function GrammarErrorDiagnostic({ isDark }: { isDark: boolean }) {
           </div>
         </TutorReveal>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Read the sentence carefully</div>
+          <div>Step 2: Check subject-verb agreement (singular/plural match?)</div>
+          <div>Step 3: Check pronoun agreement (singular they? he/she consistency?)</div>
+          <div>Step 4: Check homophones (its/it's, there/their/they're)</div>
+          <div>Step 5: Check for fragments and run-ons</div>
+          <div>Step 6: Read aloud — errors often sound wrong to the ear</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Common errors: its/it's, there/their/they're, affect/effect. Understand the rule, then check deliberately.
       </div>
@@ -1041,7 +1081,17 @@ export function SpellingPatterns({ isDark }: { isDark: boolean }) {
           )
         })}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify the sound you hear</div>
+          <div>Step 2: Check common patterns: "i before e except after c"</div>
+          <div>Step 3: Silent e makes the vowel long (hat → hate)</div>
+          <div>Step 4: Doubling rule: CVC + suffix → double (run → running)</div>
+          <div>Step 5: When two vowels go walking, the first one talks (boat, rain)</div>
+          <div>Step 6: Learn the PATTERN, not each individual word</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> English follows patterns: "I before E except after C." Silent e makes vowels long. Learn patterns, not individual words.
       </div>

@@ -201,7 +201,17 @@ export function DataTable({ isDark }: ToolProps) {
           {statRow('IQR', stats.iqr)}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Enter your data values</div>
+          <div>Step 2: To find mean: add all values, divide by count</div>
+          <div>Step 3: To find median: sort, find middle value</div>
+          <div>Step 4: To find mode: which value appears most?</div>
+          <div>Step 5: Range = maximum − minimum</div>
+          <div>Step 6: Each measure tells a different story about the data</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Mean = balance point. Median = middle. Mode = most frequent. Each tells a different story — always check all three.
       </div>
@@ -290,7 +300,17 @@ export function HistogramBuilder({ isDark }: ToolProps) {
           <line x1={30} y1={10} x2={30} y2={120} stroke={axisColor} strokeWidth={1} />
         </svg>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Determine the range of your data (min to max)</div>
+          <div>Step 2: Choose a bin size (width of each bar)</div>
+          <div>Step 3: Create bins: [min, min+bin), [min+bin, min+2×bin), etc.</div>
+          <div>Step 4: Count how many values fall in each bin</div>
+          <div>Step 5: Draw bars — height = frequency (count)</div>
+          <div>Step 6: The SHAPE reveals patterns: bell, skewed, bimodal</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Bell-shaped = normal. Skewed = long tail. Bimodal = two peaks. The shape reveals patterns numbers hide.
       </div>
@@ -381,7 +401,18 @@ export function BoxPlotGenerator({ isDark }: ToolProps) {
       {data.length > 0 && data.length < 4 && (
         <p style={{ fontSize: 10, color: s.text, opacity: 0.7 }}>Enter at least 4 data points to generate a box plot.</p>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Sort the data from smallest to largest</div>
+          <div>Step 2: Find median (Q2) — splits data in half</div>
+          <div>Step 3: Find Q1 — median of the lower half</div>
+          <div>Step 4: Find Q3 — median of the upper half</div>
+          <div>Step 5: IQR = Q3 − Q1 (the middle 50%)</div>
+          <div>Step 6: Outlier fence: Q1 − 1.5×IQR and Q3 + 1.5×IQR</div>
+          <div>Step 7: Draw box from Q1 to Q3, line at median, whiskers to extremes</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Box = middle 50%. Line = median. Whiskers = range. Dots = outliers. One picture shows center, spread, AND outliers.
       </div>
@@ -494,7 +525,18 @@ export function ScatterPlot({ isDark }: ToolProps) {
           )}
         </>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Plot each (x, y) data point on the graph</div>
+          <div>Step 2: Observe the pattern — going up? down? scattered?</div>
+          <div>Step 3: Up-right = positive correlation</div>
+          <div>Step 4: Down-right = negative correlation</div>
+          <div>Step 5: No pattern = no correlation</div>
+          <div>Step 6: Draw a line of best fit: y = mx + b</div>
+          <div>Step 7: Correlation ≠ causation — always check the context</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Up-right = positive correlation. Down-right = negative. No pattern = none. But correlation ≠ causation!
       </div>
@@ -627,7 +669,17 @@ export function NormalDist({ isDark }: ToolProps) {
           </text>
         )}
       </svg>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: The bell curve is centered at the mean (μ)</div>
+          <div>Step 2: Width is determined by standard deviation (σ)</div>
+          <div>Step 3: 68% of data falls within 1σ of the mean</div>
+          <div>Step 4: 95% within 2σ, 99.7% within 3σ</div>
+          <div>Step 5: To find probability: convert to z-score (z = (x−μ)/σ)</div>
+          <div>Step 6: Look up z in the standard normal table</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> 68% within 1σ, 95% within 2σ, 99.7% within 3σ. Z-scores tell you how unusual a value is.
       </div>
@@ -782,7 +834,17 @@ export function ProbabilitySimulator({ isDark }: ToolProps) {
           </div>
         </>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify the sample space (all possible outcomes)</div>
+          <div>Step 2: Count favorable outcomes (what you want)</div>
+          <div>Step 3: P = favorable / total</div>
+          <div>Step 4: Run many trials — experimental probability</div>
+          <div>Step 5: Compare to theoretical probability</div>
+          <div>Step 6: More trials → experimental gets closer to theoretical</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Law of Large Numbers: more trials → closer to theoretical. 10 coin flips: maybe 7 heads. 10,000: very close to 5,000.
       </div>

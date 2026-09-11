@@ -84,7 +84,16 @@ export function Calculator({ isDark }: { isDark: boolean }) {
         {btn('0', '0')}{btn('.', '.')}{btn('DEL', 'DEL')}{btn('+', '+')}
         {btn('C', 'C', 2)}{btn('=', '=', 2, true)}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify what operation you need</div>
+          <div>Step 2: Apply PEMDAS: Parentheses → Exponents → Multiply/Divide → Add/Subtract</div>
+          <div>Step 3: Work left to right for same-precedence operations</div>
+          <div>Step 4: Parentheses override normal order — do them first</div>
+          <div>Step 5: Check your answer by estimating (is it reasonable?)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> PEMDAS: Parentheses, Exponents, Multiply/Divide, Add/Subtract. Without rules, "2+3×4" could be 20 or 14 — we agreed it's 14.
       </div>
@@ -175,7 +184,17 @@ export function UnitConverter({ isDark }: { isDark: boolean }) {
         <span style={{ fontSize: 14, fontWeight: 700, color: activeText, minWidth: 60, textAlign: 'center' }}>{result}</span>
         {select(toUnit, setToUnit, unitList)}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Write down what you have (e.g., 5 km)</div>
+          <div>Step 2: Find the conversion: 1 km = 1000 m</div>
+          <div>Step 3: Write as fraction: (1000 m / 1 km)</div>
+          <div>Step 4: Multiply: 5 km × (1000 m / 1 km)</div>
+          <div>Step 5: km cancels → answer in meters</div>
+          <div>Step 6: Always verify the unit you DON'T want cancels out</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Multiply by fractions equal to 1 (e.g., 1km/1000m). Units cancel, leaving desired unit. Track units to catch errors.
       </div>
@@ -306,7 +325,17 @@ export function FormulaReference({ band, isDark }: { band: string; isDark: boole
           </div>
         )
       })}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify what you're solving for</div>
+          <div>Step 2: Find the formula that relates known and unknown variables</div>
+          <div>Step 3: Rearrange the formula to isolate the unknown</div>
+          <div>Step 4: Substitute the known values</div>
+          <div>Step 5: Calculate and check units</div>
+          <div>Step 6: Verify the answer is reasonable (does it make sense?)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Formulas are shortcuts encoding patterns. The quadratic formula looks complex but it's just completing the square generalized.
       </div>
@@ -350,7 +379,17 @@ export function MultiplicationGrid({ isDark }: { isDark: boolean }) {
           </React.Fragment>
         ))}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Find the first number on the left column</div>
+          <div>Step 2: Find the second number on the top row</div>
+          <div>Step 3: Follow the row and column to where they meet</div>
+          <div>Step 4: That intersection = the product</div>
+          <div>Step 5: The diagonal (1,4,9,16...) = perfect squares (n×n)</div>
+          <div>Step 6: Multiplication = repeated addition (3×4 = 4+4+4)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Multiplication = repeated addition. 3×4 = 3 rows of 4 = 12. The diagonal shows perfect squares (n×n = n²).
       </div>
@@ -383,7 +422,17 @@ export function Base10Blocks({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 10, color: text, lineHeight: 1.3 }}>
         <strong>Tip:</strong> Use the grid background (set to line mode) as a base-10 grid. Each cell = 1 unit.
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Each small cube = 1 (ones place)</div>
+          <div>Step 2: A rod of 10 = 10 (tens place)</div>
+          <div>Step 3: A flat of 100 = 100 (hundreds place)</div>
+          <div>Step 4: A large cube of 1000 = 1000 (thousands)</div>
+          <div>Step 5: Regrouping: 10 ones → 1 ten, 10 tens → 1 hundred</div>
+          <div>Step 6: This is why we "carry" in addition</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Base-10: each position is 10× the previous. 10 ones = 1 ten. Regrouping = exchanging: 10 pennies = 1 dime.
       </div>
@@ -440,7 +489,17 @@ export function Flashcards({ isDark }: { isDark: boolean }) {
           style={{ padding: '4px 12px', borderRadius: 4, fontSize: 11, background: bg, border: '1px solid ' + border, color: text, cursor: 'pointer' }}
         >Next</button>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Read the front of the card (the question/term)</div>
+          <div>Step 2: Try to recall the answer BEFORE flipping</div>
+          <div>Step 3: Flip to check — were you right?</div>
+          <div>Step 4: If wrong, read the answer and explanation</div>
+          <div>Step 5: Review wrong cards more frequently (spaced repetition)</div>
+          <div>Step 6: The brain strengthens memory through effortful recall</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Spaced repetition: review at increasing intervals. The brain forgets exponentially, but each review flattens the curve.
       </div>
@@ -497,7 +556,17 @@ export function ProofBuilder({ isDark }: { isDark: boolean }) {
         background: 'rgba(5,150,105,0.1)', border: '1px solid rgba(5,150,105,0.3)',
         color: '#34d399', cursor: 'pointer', fontWeight: 600,
       }}>+ Add Step</button>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: State what you need to prove (the conclusion)</div>
+          <div>Step 2: List what you know (the given/assumptions)</div>
+          <div>Step 3: Find a logical path from given to conclusion</div>
+          <div>Step 4: Each step must follow from the previous (justified)</div>
+          <div>Step 5: Use definitions, theorems, and axioms as justification</div>
+          <div>Step 6: If any step is unjustified, the proof fails</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> A proof: each step follows from the previous. Like building with blocks — if any step is wrong, the whole proof collapses.
       </div>

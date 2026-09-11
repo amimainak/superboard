@@ -269,7 +269,17 @@ export function PhysicsFormulaCalculator({ isDark }: { isDark: boolean }) {
           {result}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Select the physics formula you want to explore</div>
+          <div>Step 2: Choose which variable to solve for</div>
+          <div>Step 3: Enter the known values with correct units</div>
+          <div>Step 4: The formula rearranges to isolate the unknown</div>
+          <div>Step 5: Substitute values and calculate</div>
+          <div>Step 6: Check units — the result must have the correct unit</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Force = mass × acceleration. Heavier objects need more force to accelerate — that's why trucks need bigger engines.
       </div>
@@ -383,7 +393,16 @@ export function WaveSimulator({ isDark }: { isDark: boolean }) {
         <span>T = 1/f = <b style={{ color: s.bright }}>{period.toFixed(3)} s</b></span>
         <span>v = f{'\u00B7\u03BB'} = <b style={{ color: s.bright }}>{waveSpeed.toFixed(1)} m/s</b></span>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Frequency (f) = how many waves pass per second (Hz)</div>
+          <div>Step 2: Wavelength (λ) = distance between wave peaks (m)</div>
+          <div>Step 3: Period T = 1/f (time for one complete wave)</div>
+          <div>Step 4: Wave speed v = f × λ (meters of wave per second)</div>
+          <div>Step 5: Adjust sliders to see how f and λ affect v</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> v = f×λ. If 2 waves pass per second, each 60m long, then 120m of wave passes per second — that's velocity!
       </div>
@@ -525,7 +544,17 @@ export function PendulumSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         {'\u03B8'}(t) = {'\u03B8\u2080'} {'\u00B7'} cos({'\u221A'}(g/L) {'\u00B7'} t) &nbsp;|&nbsp; T = 2{'\u03C0'}{'\u221A'}(L/g)
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Length (L) determines how far the bob swings</div>
+          <div>Step 2: Gravity (g) pulls the bob back to center</div>
+          <div>Step 3: Period T = 2π√(L/g) — derive: L/g gives the ratio</div>
+          <div>Step 4: Take square root of L/g</div>
+          <div>Step 5: Multiply by 2π to get full period</div>
+          <div>Step 6: Notice: mass does NOT appear in the formula!</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Period depends only on length and gravity — NOT mass. Gravity pulls harder on heavy objects, but they resist more. The effects cancel (Galileo's discovery).
       </div>
@@ -667,7 +696,17 @@ export function ScienceUnitConverter({ isDark }: { isDark: boolean }) {
           {result}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify the unit you have and the unit you want</div>
+          <div>Step 2: Find the conversion factor (e.g., 1 km = 1000 m)</div>
+          <div>Step 3: Set up as a fraction: (1000 m / 1 km) = 1</div>
+          <div>Step 4: Multiply your value by this fraction</div>
+          <div>Step 5: The old unit cancels, leaving the new unit</div>
+          <div>Step 6: Always verify units cancel correctly</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Dimensional analysis: multiply by fractions equal to 1. Units cancel, leaving the desired unit. Always track units to catch errors.
       </div>
@@ -853,7 +892,17 @@ export function ProjectileMotionSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, color: s.text, opacity: 0.7, borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         y = v₀sin(θ)t - ½gt² &nbsp;|&nbsp; x = v₀cos(θ)t &nbsp;|&nbsp; H = v₀²sin²(θ)/2g &nbsp;|&nbsp; R = v₀²sin(2θ)/g &nbsp;|&nbsp; T = 2v₀sin(θ)/g
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Horizontal velocity is CONSTANT (no horizontal force)</div>
+          <div>Step 2: Vertical velocity changes due to gravity (g = 9.8 m/s²)</div>
+          <div>Step 3: Time of flight depends only on vertical: t = 2v₀sin(θ)/g</div>
+          <div>Step 4: Range = v₀² × sin(2θ) / g</div>
+          <div>Step 5: Maximum range occurs at 45° (sin(90°) = 1)</div>
+          <div>Step 6: The two motions are INDEPENDENT — analyze separately</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Horizontal and vertical motions are INDEPENDENT. Gravity only affects vertical. A bullet dropped and fired from the same height hit the ground simultaneously.
       </div>
@@ -974,7 +1023,18 @@ export function OhmsLawCalculator({ isDark }: { isDark: boolean }) {
           </span>
         </div>
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify which two values you know (V, I, or R)</div>
+          <div>Step 2: Ohm's Law: V = I × R (voltage = current × resistance)</div>
+          <div>Step 3: Rearrange to solve for the unknown:</div>
+          <div>   To find V: V = I × R</div>
+          <div>   To find I: I = V / R</div>
+          <div>   To find R: R = V / I</div>
+          <div>Step 4: Substitute and calculate with correct units</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> V = I×R. Like water: voltage = pressure, current = flow, resistance = pipe narrowing. Double voltage → double current.
       </div>
@@ -1211,7 +1271,17 @@ export function CircuitDiagramBuilder({ isDark }: { isDark: boolean }) {
           Series: I = V/R = {seriesV}V / {totalR}Ω = {seriesI.toFixed(3)} A
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Series circuit — current is the SAME everywhere</div>
+          <div>Step 2: Series resistance: R_total = R₁ + R₂ + R₃...</div>
+          <div>Step 3: Parallel circuit — voltage is the SAME across branches</div>
+          <div>Step 4: Parallel resistance: 1/R_total = 1/R₁ + 1/R₂...</div>
+          <div>Step 5: Use Ohm's Law (V=IR) on the total resistance</div>
+          <div>Step 6: In parallel, total resistance is LESS than any individual</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Series: current same everywhere, resistance adds. Parallel: voltage same, currents split. Homes use parallel so devices work independently.
       </div>
@@ -1391,7 +1461,18 @@ export function FreeBodyDiagramBuilder({ isDark }: { isDark: boolean }) {
           {balanced ? 'Equilibrium! Net force is zero.' : 'Not in equilibrium.'}
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Isolate the object — draw it alone</div>
+          <div>Step 2: Draw gravity (weight = mg) pointing DOWN</div>
+          <div>Step 3: Draw normal force (surface pushes back) perpendicular to surface</div>
+          <div>Step 4: Draw applied forces (pushes, pulls) in their directions</div>
+          <div>Step 5: Draw friction opposing motion</div>
+          <div>Step 6: If ΣF = 0, object is stationary or constant velocity</div>
+          <div>Step 7: If ΣF ≠ 0, object accelerates (F = ma)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> If forces balance (net = 0), no acceleration — Newton's First Law. The diagram shows ALL forces on ONE object.
       </div>
@@ -1581,7 +1662,17 @@ export function RayDiagramOptics({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 8, color: s.text, opacity: 0.7 }}>
         1/f = 1/do + 1/di &nbsp;|&nbsp; m = -di/do
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Draw the lens/mirror and principal axis</div>
+          <div>Step 2: Ray 1: parallel to axis → refracts through focal point</div>
+          <div>Step 3: Ray 2: through center of lens → continues straight</div>
+          <div>Step 4: Ray 3: through focal point → refracts parallel to axis</div>
+          <div>Step 5: Where rays converge = real image location</div>
+          <div>Step 6: Where rays appear to diverge from = virtual image</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Reflection: angle in = angle out. Refraction: light bends entering a new medium. Lenses use refraction to focus light.
       </div>
@@ -1721,7 +1812,17 @@ export function EnergyBarCharts({ isDark }: { isDark: boolean }) {
       <div style={{ fontSize: 9, fontWeight: 600, color: conserved ? '#34d399' : '#f87171', borderTop: '1px solid ' + s.border, paddingTop: 4 }}>
         Energy Conserved: {conserved ? 'Yes! Initial = Final = ' + initialTotal.toFixed(1) + ' J' : 'No. Initial = ' + initialTotal.toFixed(1) + ' J, Final = ' + finalTotal.toFixed(1) + ' J'}
       </div>
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Identify the initial state — what energy exists?</div>
+          <div>Step 2: Identify the final state — what energy exists now?</div>
+          <div>Step 3: Energy is conserved: E_initial = E_final</div>
+          <div>Step 4: If PE decreases, KE must increase (and vice versa)</div>
+          <div>Step 5: Some energy becomes thermal (heat) due to friction</div>
+          <div>Step 6: Total height of bars must be EQUAL (conservation)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Energy is never created or destroyed — it transforms. PE → KE → heat. Total always stays the same (First Law of Thermodynamics).
       </div>
@@ -1924,7 +2025,17 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
           <span>n = {pts.length}</span>
         </div>
       )}
-          {/* Instructional insight */}
+                {/* Step-by-step derivation */}
+      <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
+          <div>Step 1: Plot each (x, y) point on the coordinate plane</div>
+          <div>Step 2: Look at the pattern — does it go up or down?</div>
+          <div>Step 3: Draw a line of best fit through the points</div>
+          <div>Step 4: Slope = rise/run = Δy/Δx</div>
+          <div>Step 5: y-intercept = where the line crosses the y-axis</div>
+          <div>Step 6: Equation: y = mx + b (m = slope, b = intercept)</div>
+      </div>
+{/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Straight line = constant rate. Curve = changing rate. Steeper slope = faster change. Graphs make relationships visible.
       </div>
