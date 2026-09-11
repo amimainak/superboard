@@ -1934,7 +1934,7 @@ export function TransformationsExplorer({ isDark }: { isDark: boolean }) {
         <div>Step 4: Vertex B (4, 1) → B' <b style={{ color: accentText }}>({transformed[1][0]}, {transformed[1][1]})</b></div>
         <div>Step 5: Vertex C (3, 3) → C' <b style={{ color: accentText }}>({transformed[2][0]}, {transformed[2][1]})</b></div>
         <div>Step 6: {transform === 'translate' ? 'A translation slides every point by the same amount — shape and size are preserved'
-          : transform === 'reflect' ? `The ${axis === 'x' ? 'x-axis' : axis === 'y' ? 'y-axis' : 'line y=x'} is the &quot;mirror&quot; — distance to the mirror is preserved`
+          : transform === 'reflect' ? `The ${axis === 'x' ? 'x-axis' : axis === 'y' ? 'y-axis' : 'line y=x'} is the "mirror" — distance to the mirror is preserved`
           : transform === 'rotate' ? `Rotation turns every point around the origin by ${angle}° ${dir === 'CW' ? 'clockwise' : 'counterclockwise'} — distance from origin is preserved`
           : `Dilation scales every point's distance from origin by ${scale}× — angles preserved, size changes`}</div>
       </div>

@@ -958,14 +958,6 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Shows f(x), f&apos;(x), f&apos;&apos;(x) with tangent line at cursor.</p>
           {addBoardBtn('Add to Board', function() { addToBoard('math-derivative-visualizer', {}) })}</div>
 
-          <div className="toolkit-section">{sectionTitle('🔵 Conic Sections')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Adjust parameters to see parabola/ellipse/hyperbola change.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-conic-sections', {}) })}</div>
-
-          <div className="toolkit-section">{sectionTitle('📈 Log & Exp Visualizer')}
-          <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Graph y=a^x and y=log_a(x) with domain/range info.</p>
-          {addBoardBtn('Add to Board', function() { addToBoard('math-log-exp-visualizer', {}) })}</div>
-
           {/* NEW 9-12 Interactive Manipulatives */}
           <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
             Interactive Manipulatives
