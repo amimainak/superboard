@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Enforce sub-tutor limit for AGENCY_STANDARD (5 max)
     const { TIER_LIMITS } = await import('@/types');
-    const effectiveTier = agency.tier === 'AGENCY' ? 'AGENCY_STANDARD' : agency.tier;
+    const effectiveTier = (agency.tier === 'AGENCY' ? 'AGENCY_STANDARD' : agency.tier) as keyof typeof TIER_LIMITS;
     const maxSubTutors = TIER_LIMITS[effectiveTier]?.maxSubTutors ?? Infinity;
     if (subTutorCount >= maxSubTutors) {
       return NextResponse.json(

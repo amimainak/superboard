@@ -82,7 +82,7 @@ export async function PATCH(request: NextRequest) {
     if (cancelAtPeriodEnd !== undefined) updateData.cancelAtPeriodEnd = cancelAtPeriodEnd;
     if (extendDays) {
       const sub = await db.subscription.findUnique({ where: { id: subscriptionId } });
-      if (sub) {
+      if (sub && sub.currentPeriodEnd) {
         const newEnd = new Date(sub.currentPeriodEnd);
         newEnd.setDate(newEnd.getDate() + extendDays);
         updateData.currentPeriodEnd = newEnd;

@@ -166,13 +166,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
       ]);
 
     // Compute progress stats
-    const completedLessons = completedParticipants.filter((p) => p.room.endedAt);
-    const subjectsCovered = [...new Set(completedLessons.map((p) => p.room.subject))];
+    const completedLessons = completedParticipants.filter((p) => p.room?.endedAt);
+    const subjectsCovered = [...new Set(completedLessons.map((p) => p.room!.subject))];
     const lastLessonDate = completedLessons.length > 0
       ? completedLessons.reduce((latest, p) => {
-          const d = p.room.endedAt!;
+          const d = p.room!.endedAt!;
           return d > latest ? d : latest;
-        }, completedLessons[0].room.endedAt!)
+        }, completedLessons[0].room!.endedAt!)
       : null;
 
     return NextResponse.json({
@@ -184,9 +184,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
         id: l.id,
         title: l.title,
         subject: l.subject,
-        scheduledAt: l.scheduledAt.toISOString(),
+        scheduledAt: l.scheduledAt?.toISOString() ?? null,
         durationMinutes: l.durationMinutes,
-        tutorName: l.tutor.name || l.tutor.email,
+        tutorName: l.tutor?.name || l.tutor?.email || 'Tutor',
       })),
       progress: {
         totalLessons: completedLessons.length,
@@ -216,7 +216,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       notes: recentNotes.map((n) => ({
         id: n.id,
         content: n.content,
-        tutorName: n.tutor.name ?? null,
+        tutorName: n.tutor?.name ?? null,
         subject: n.room?.subject ?? 'GENERAL',
         createdAt: n.createdAt.toISOString(),
         rating: n.rating ?? 0,

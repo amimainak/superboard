@@ -69,7 +69,7 @@ export async function PUT(
         ...(data.subject && { subject: data.subject.toUpperCase() }),
         ...(data.gradeBand && { gradeBand: data.gradeBand }),
         ...(data.topic && { topic: data.topic }),
-        ...(data.difficulty !== undefined && { difficulty: data.difficulty }),
+        ...(data.difficulty !== undefined && { difficulty: String(data.difficulty) }),
         ...(data.curriculum && { curriculum: data.curriculum.toUpperCase() }),
         ...(data.standardCode !== undefined && { standardCode: data.standardCode }),
         ...(data.stem && { stem: data.stem }),

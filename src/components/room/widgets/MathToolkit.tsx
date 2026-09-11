@@ -16,11 +16,6 @@ const Base10Lazy = lazy(() => import('./math/MathUtilities').then(m => ({ defaul
 const FlashcardsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Flashcards })))
 const ProofBuilderLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.ProofBuilder })))
 
-// Phase 3: Enhanced K-5 tools
-const NumberLineEnhancedLazy = lazy(() => import('@/components/tools/math/NumberLinePanelEnhanced').then(m => ({ default: m.NumberLineEnhanced })))
-const FractionBarLazy = lazy(() => import('@/components/tools/math/FractionBarPanel').then(m => ({ default: m.FractionBarPanel })))
-const ShapeBuilderLazy = lazy(() => import('@/components/tools/math/ShapeBuilderPanel').then(m => ({ default: m.ShapeBuilderPanel })))
-
 // Pre-built wrapper components (stable references, no remount on re-render)
 function CalcPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><CalculatorLazy isDark={isDark} /></Suspense>
@@ -43,16 +38,6 @@ function FlashcardsPanel({ isDark }: { isDark: boolean }) {
 function ProofPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><ProofBuilderLazy isDark={isDark} /></Suspense>
 }
-function NumberLineEnhancedPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><NumberLineEnhancedLazy isDark={isDark} /></Suspense>
-}
-function FractionBarEnhancedPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FractionBarLazy isDark={isDark} /></Suspense>
-}
-function ShapeBuilderPanelRender({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ShapeBuilderLazy isDark={isDark} /></Suspense>
-}
-
 interface MathToolkitProps {
   roomId?: string
 }
@@ -426,7 +411,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           {/* Phase 3: Enhanced K-5 Interactive Tools */}
           <div className="toolkit-section">
             {sectionTitle('Interactive Number Line')}
-            <div style={{ padding: '0 12px 12px' }}><NumberLineEnhancedPanel isDark={isDark} /></div>
+            <div style={{ padding: '0 12px 12px', fontSize: 11, color: dkText, fontStyle: 'italic' }}>Interactive number line widget — click to add to board.</div>
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Choose the range (0-10, 0-20, 0-50, 0-100)</div>
@@ -441,7 +426,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Fraction Bars')}
-            <div style={{ padding: '0 12px 12px' }}><FractionBarEnhancedPanel isDark={isDark} /></div>
+            <div style={{ padding: '0 12px 12px', fontSize: 11, color: dkText, fontStyle: 'italic' }}>Fraction bars widget — click to add to board.</div>
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Choose the denominator (how many equal parts)</div>
@@ -456,7 +441,7 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           </div>
           <div className="toolkit-section">
             {sectionTitle('Shape Builder')}
-            <div style={{ padding: '0 12px 12px' }}><ShapeBuilderPanelRender isDark={isDark} /></div>
+            <div style={{ padding: '0 12px 12px', fontSize: 11, color: dkText, fontStyle: 'italic' }}>Shape builder widget — click to add to board.</div>
             <div style={{ padding: '6px 8px', margin: '0 12px 4px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + dkBorder, color: isDark ? '#e2e8f0' : '#1e293b' }}>
               <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: dkText, marginBottom: 3 }}>How It Works</div>
               <div>Step 1: Select a shape type (triangle, rectangle, circle, etc.)</div>

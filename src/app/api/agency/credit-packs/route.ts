@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
-    const totalHoursRemaining = packs.reduce((sum, p) => sum + p.hoursRemaining, 0);
+    const totalHoursRemaining = packs.reduce((sum, p) => sum + (p.hoursRemaining ?? 0), 0);
 
     return NextResponse.json({ packs, totalHoursRemaining });
   } catch (error) {
@@ -84,6 +84,8 @@ export async function POST(request: NextRequest) {
     const creditPack = await db.creditPack.create({
       data: {
         agencyId,
+        credits: packConfig.hours,
+        price: packConfig.priceCents / 100,
         hoursPurchased: packConfig.hours,
         hoursRemaining: packConfig.hours,
         pricePaidCents: packConfig.priceCents,

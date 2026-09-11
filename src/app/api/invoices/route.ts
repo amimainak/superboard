@@ -165,13 +165,16 @@ export async function POST(request: NextRequest) {
     const agencyId = user.parentAgencyId || auth.userId;
 
     // If studentId provided, verify student belongs to this agency
+    let studentName = '';
     if (studentId) {
       const student = await db.student.findFirst({
         where: { id: studentId, agencyId },
+        select: { name: true, email: true },
       });
       if (!student) {
         return NextResponse.json({ error: 'Student not found in your agency' }, { status: 404 });
       }
+      studentName = student.name || student.email;
     }
 
     // Generate invoice number
@@ -179,10 +182,13 @@ export async function POST(request: NextRequest) {
 
     const invoice = await db.invoice.create({
       data: {
+        creatorId: auth.userId,
         agencyId,
         studentId: studentId ?? null,
+        studentName: studentName ?? '',
         invoiceNumber,
         description: description ?? null,
+        amount: amountCents / 100,
         amountCents,
         currency,
         lessonHours,

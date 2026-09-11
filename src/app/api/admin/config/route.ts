@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     let config = await db.platformConfig.findUnique({ where: { id: 'platform' } });
     if (!config) {
       config = await db.platformConfig.create({
-        data: { id: 'platform', maintenanceMode: false },
+        data: { id: 'platform', key: 'platform', maintenanceMode: false },
       });
     }
     return NextResponse.json({
@@ -59,7 +59,7 @@ export async function PATCH(request: NextRequest) {
     const config = await db.platformConfig.upsert({
       where: { id: 'platform' },
       update: updateData,
-      create: { id: 'platform', ...updateData, maintenanceMode: updateData.maintenanceMode ?? false },
+      create: { id: 'platform', key: 'platform', ...updateData, maintenanceMode: updateData.maintenanceMode ?? false },
     });
 
     // Log individual changes

@@ -56,7 +56,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     // SECURITY FIX (API-M06): Fix sub-tutor access check — verify the room's tutor
     // is a sub-tutor under the same agency as the caller
     const tutorAgency = await db.user.findUnique({
-      where: { id: note.room.tutorId },
+      where: { id: note.room?.tutorId ?? '' },
       select: { parentAgencyId: true },
     });
     const isSubTutor = tutorAgency?.parentAgencyId === auth.userId;

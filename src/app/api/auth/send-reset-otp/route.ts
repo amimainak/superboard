@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = createClient(supabaseUrl, serviceKey);
 
     // --- 5. Check user exists (direct lookup instead of listing all users) ---
-    const { data: user, error: lookupError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: user, error: lookupError } = await (supabaseAdmin.auth.admin as any).getUserByEmail(email);
     if (lookupError) {
       // Don't reveal whether email exists — return success anyway
       return NextResponse.json({ success: true });

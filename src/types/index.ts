@@ -5,7 +5,7 @@
 export type Tier = 'FREE' | 'PRO' | 'AGENCY' | 'AGENCY_STANDARD' | 'AGENCY_PREMIUM';
 
 /** Check if a tier is any agency tier (AGENCY, AGENCY_STANDARD, or AGENCY_PREMIUM) */
-export function isAgencyTier(tier: Tier): boolean {
+export function isAgencyTier(tier: string): boolean {
   return tier === 'AGENCY' || tier === 'AGENCY_STANDARD' || tier === 'AGENCY_PREMIUM';
 }
 

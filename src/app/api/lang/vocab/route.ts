@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204 })
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const authCheck = await requireAuth(request)
   if (authCheck instanceof NextResponse) return authCheck
   try {

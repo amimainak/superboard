@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { NextResponse } from 'next/server'
 
 // ---- Enums ----
 export const SUBJECTS = ['GENERAL', 'MATH', 'SCIENCE', 'LANGUAGE', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'ENGLISH'] as const
@@ -71,6 +72,7 @@ export const updateTemplateSchema = z.object({
 // A-03: Only user-writable fields. NEVER include tier, email, id, isAdmin — those are server-managed.
 export const updateProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
+  displayName: z.string().min(1).max(100).optional(),
   avatarUrl: z.string().max(500).url().optional(),
   bio: z.string().max(280).optional(),
   timezone: z.string().max(50).optional(),
@@ -94,13 +96,31 @@ export const livekitTokenSchema = z.object({
 })
 
 // ---- Helper: parse and validate request body ----
-export function parseBody<T>(schema: z.ZodSchema<T>, body: unknown) {
+// Returns a discriminated union so callers can use either pattern:
+//   const parsed = parseBody(schema, body)
+//   if (!parsed.success) return parsed.response
+//   // parsed.data is now T
+// OR
+//   const { data, error } = parseBody(schema, body)
+//   if (error) return NextResponse.json({ error }, { status: 400 })
+export type ParseResult<T> =
+  | { success: true; data: T; error: null; response: null }
+  | { success: false; data: null; error: string; response: NextResponse }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function parseBody<T = any>(schema: z.ZodTypeAny, body: unknown): ParseResult<T> {
   const result = schema.safeParse(body)
   if (!result.success) {
     const errors = result.error.issues.map(i => i.path.join('.') + ': ' + i.message)
-    return { data: null, error: errors.join('; ') }
+    const message = errors.join('; ')
+    return {
+      success: false as const,
+      data: null,
+      error: message,
+      response: NextResponse.json({ error: message }, { status: 400 }),
+    }
   }
-  return { data: result.data, error: null }
+  return { success: true as const, data: result.data as unknown as T, error: null, response: null }
 }
 
 // Backward-compatible aliases for routes that import these names
@@ -109,6 +129,6 @@ export const registerSchema = z.object({ id: z.string().uuid(), email: z.string(
 export const joinRoomSchema = z.object({ roomId: z.string().min(1), studentIdentity: z.string().min(1).optional(), studentName: z.string().optional().nullable() })
 export const updateScheduleSchema = z.object({ status: z.string().optional(), startTime: z.string().optional(), endTime: z.string().optional() })
 export const createInviteSchema = z.object({ email: z.string().email(), role: z.string().optional() })
-export const registerWebhookSchema = z.object({ url: z.string().url(), events: z.array(z.string()) })
+export const registerWebhookSchema = z.object({ url: z.string().url(), events: z.array(z.string()), secret: z.string().optional() })
 export const applyReferralSchema = z.object({ code: z.string().min(1) })
 export const aiActionSchema = z.object({ prompt: z.string().min(1), roomId: z.string().optional() })

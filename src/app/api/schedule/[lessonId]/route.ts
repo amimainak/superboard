@@ -9,7 +9,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { requireAuth } from '@/lib/auth';
 import { updateScheduleSchema, validateInput } from '@/lib/validations';
-import type { Subject, LessonStatus } from '@prisma/client';
 
 export async function PATCH(
   request: NextRequest,
@@ -59,10 +58,10 @@ export async function PATCH(
     const updateData: Record<string, unknown> = {};
     if (parsed.data.title !== undefined) updateData.title = parsed.data.title;
     if (parsed.data.description !== undefined) updateData.description = parsed.data.description;
-    if (parsed.data.subject !== undefined) updateData.subject = parsed.data.subject as Subject;
+    if (parsed.data.subject !== undefined) updateData.subject = parsed.data.subject as string;
     if (parsed.data.scheduledAt !== undefined) updateData.scheduledAt = new Date(parsed.data.scheduledAt);
     if (parsed.data.durationMinutes !== undefined) updateData.durationMinutes = parsed.data.durationMinutes;
-    if (parsed.data.status !== undefined) updateData.status = parsed.data.status as LessonStatus;
+    if (parsed.data.status !== undefined) updateData.status = parsed.data.status as string;
 
     const updated = await db.scheduledLesson.update({
       where: { id: lessonId },
@@ -76,7 +75,7 @@ export async function PATCH(
       subject: updated.subject,
       studentEmail: updated.studentEmail,
       studentName: updated.studentName,
-      scheduledAt: updated.scheduledAt.toISOString(),
+      scheduledAt: updated.scheduledAt?.toISOString() ?? null,
       durationMinutes: updated.durationMinutes,
       timeZone: updated.timeZone,
       status: updated.status,

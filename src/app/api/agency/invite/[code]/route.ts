@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 
 // GET: Get invite details by code
 export async function GET(
-  _request: Request,
+  _request: NextRequest,
   { params }: { params: Promise<{ code: string }> }
 ) {
   const authCheck = await requireAuth(_request)

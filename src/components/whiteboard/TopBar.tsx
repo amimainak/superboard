@@ -56,6 +56,12 @@ interface TopBarProps {
   onToggleGridType: () => void
   onTogglePresentation: () => void
   onSearch: () => void
+  /** Open the Save-as-Template modal */
+  onSaveAsTemplate?: () => void
+  /** Open the My Templates panel */
+  onMyTemplates?: () => void
+  /** Open the Community Templates panel */
+  onCommunityTemplates?: () => void
   /** When false, export menu items (PNG, JPEG, SVG, JSON) are disabled with a tooltip */
   canExport?: boolean
   /** Disable undo when nothing to undo */
@@ -99,6 +105,9 @@ export function TopBar({
   onToggleGridType,
   onTogglePresentation,
   onSearch,
+  onSaveAsTemplate,
+  onMyTemplates,
+  onCommunityTemplates,
   canExport = true,
   canUndo = true,
   canRedo = true,
@@ -288,6 +297,15 @@ export function TopBar({
                 onPdfUpload()
                 setMenuOpen(false)
               }} />
+              {onSaveAsTemplate && (
+                <MenuItem label="Save as Template" isDark={isDark} shortcut="Ctrl+⇧S" onClick={() => { onSaveAsTemplate(); setMenuOpen(false) }} />
+              )}
+              {onMyTemplates && (
+                <MenuItem label="My Templates" isDark={isDark} shortcut="Ctrl+⇧T" onClick={() => { onMyTemplates(); setMenuOpen(false) }} />
+              )}
+              {onCommunityTemplates && (
+                <MenuItem label="Community Templates" isDark={isDark} onClick={() => { onCommunityTemplates(); setMenuOpen(false) }} />
+              )}
               <MenuItem label={canExport ? 'Export as PNG' : 'Export as PNG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportPng(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
               <MenuItem label={canExport ? 'Export as JPEG' : 'Export as JPEG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportJpg(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
               <MenuItem label={canExport ? 'Export as SVG' : 'Export as SVG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportSvg(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />

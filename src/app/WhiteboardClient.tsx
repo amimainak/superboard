@@ -302,7 +302,15 @@ export default function WhiteboardClient() {
       <SaveAsTemplateModal
         open={saveTemplateOpen}
         onClose={() => { setSaveTemplateOpen(false); setEditingTemplate(undefined) }}
-        editTemplate={editingTemplate}
+        editTemplate={editingTemplate ? {
+          id: editingTemplate.id,
+          name: editingTemplate.name,
+          description: editingTemplate.description ?? '',
+          subject: editingTemplate.subject,
+          gradeBand: editingTemplate.gradeBand,
+          tags: editingTemplate.tags,
+          isPublic: editingTemplate.isPublic,
+        } : undefined}
         onSuccess={() => { if (myTemplatesOpen) setMyTemplatesOpen(true) }}
       />
       <MyTemplatesPanel

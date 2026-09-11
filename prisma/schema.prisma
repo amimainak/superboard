@@ -57,12 +57,18 @@ model User {
   bookings           Booking[]
   scheduleSlots      ScheduleSlot[]
   auditLogs          AuditLog[]
+  auditLogsAdmin     AuditLog[]           @relation("AuditLogAdmin")
   students           Student[]            @relation("AgencyOwnerStudent")
   creditPacks        CreditPack[]
   homeworkAssigned   Homework[]           @relation("HomeworkTutor")
   lessonNotes        LessonNote[]
   invoicesCreated    Invoice[]            @relation("InvoiceCreator")
   subscriptions      Subscription[]
+  scheduledLessons   ScheduledLesson[]
+  inviteRecipients   AgencyInvite[]       @relation("InviteRecipient")
+  resourceUploads    ResourceLibrary[]    @relation("ResourceLibraryUploader")
+  testPrepCategories TestPrepCategory[]   @relation("TestPrepCategoryOwner")
+  questions          QuestionItem[]
 
   @@index([parentAgencyId])
 }
@@ -91,13 +97,16 @@ model AgencyInvite {
   invitedEmail String?
   recipientId  String?  @unique
   status       String   @default("PENDING")
+  acceptedAt   DateTime?
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
-  agency User @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency    User  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  recipient User? @relation("InviteRecipient", fields: [recipientId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([code])
+  @@index([agencyId])
 }
 
 // ── Room ──
@@ -113,6 +122,7 @@ model Room {
   brandingLogo    String?
   brandingColor   String?
   createdAt       DateTime  @default(now())
+  updatedAt       DateTime? @updatedAt
 
   // Relations
   tutor        User              @relation(fields: [tutorId], references: [id], onDelete: Cascade)
@@ -191,6 +201,8 @@ model UsageLog {
   videoMinutesUsed      Int      @default(0)
   aiCreditsUsed         Int      @default(0)
   estimatedAiSpendCents Int      @default(0)
+  aiCostCents           Int      @default(0)
+  recordingsUsed        Int      @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -214,11 +226,13 @@ model RoomParticipant {
   studentId       String?   @map("studentId")
   lastActiveAt    DateTime? @map("lastActiveAt")
 
-  room Room? @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room    Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  student Student? @relation("StudentParticipant", fields: [studentId], references: [id], onDelete: SetNull)
 
   @@unique([roomId, studentIdentity])
   @@index([roomId])
   @@index([userId])
+  @@index([studentId])
 
   @@map("RoomParticipant")
 }
@@ -275,13 +289,20 @@ model Student {
   agencyId          String
   email             String
   name              String?
+  displayName       String?
+  grade             String?
+  notes             String?  @db.Text
   isActive          Boolean   @default(true)
   parentAccessToken  String?   @unique
   deactivatedAt     DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  agency User @relation("AgencyOwnerStudent", fields: [agencyId], references: [id], onDelete: Cascade)
+  agency           User              @relation("AgencyOwnerStudent", fields: [agencyId], references: [id], onDelete: Cascade)
+  roomParticipants RoomParticipant[] @relation("StudentParticipant")
+  homework         Homework[]        @relation("HomeworkStudent")
+  lessonNotes      LessonNote[]      @relation("LessonNoteStudent")
+  invoices         Invoice[]         @relation("InvoiceStudent")
 
   @@unique([agencyId, email])
   @@index([agencyId])
@@ -291,15 +312,21 @@ model Student {
 // ── Audit Log (admin action trail) ──
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  action    String
-  target    String?
-  details   Json?    @db.JsonB
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  adminId    String?
+  admin      User?    @relation("AuditLogAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+  action     String
+  target     String?
+  targetType String?
+  targetId   String?
+  details    Json?    @db.JsonB
+  metadata   Json?    @db.JsonB
+  createdAt  DateTime @default(now())
 
   @@index([userId])
+  @@index([adminId])
   @@index([action])
   @@index([createdAt])
 }
@@ -313,9 +340,12 @@ model Recording {
   startedAt    DateTime?
   endedAt      DateTime?
   durationSec  Int       @default(0)
-  status       String    @default("recording") // recording | processing | ready | failed | deleted
+  duration     Int?
+  status       String    @default("recording") // recording | processing | ready | failed | deleted | STARTED | STOPPED | FAILED
   storageUrl   String?
+  url          String?
   thumbnailUrl String?
+  egressId     String?  @unique
   createdAt    DateTime  @default(now())
 
   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
@@ -323,6 +353,7 @@ model Recording {
   @@index([roomId])
   @@index([tutorId])
   @@index([status])
+  @@index([egressId])
 }
 
 // ── Subscription (Stripe subscription tracking) ──
@@ -336,6 +367,8 @@ model Subscription {
   currentPeriodStart  DateTime?
   currentPeriodEnd    DateTime?
   cancelAtPeriodEnd   Boolean   @default(false)
+  amountMonthlyCents  Int?
+  planName            String?
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -345,86 +378,125 @@ model Subscription {
 // ── Platform Config (global settings) ──
 
 model PlatformConfig {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  value     Json?    @db.JsonB
-  createdAt DateTime @default(now())
-  updatedAt DateTime  @updatedAt
+  id               String   @id @default(uuid())
+  key              String   @unique
+  value            Json?    @db.JsonB
+  maintenanceMode  Boolean?
+  announcementText String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 // ── Invoice ──
 
 model Invoice {
-  id              String   @id @default(uuid())
-  creatorId       String
-  studentName     String
-  amount          Float
-  currency        String   @default("usd")
-  status          String   @default("draft") // draft | sent | paid | overdue | canceled
-  dueDate         DateTime?
-  paidAt          DateTime?
-  items           Json?    @db.JsonB
-  notes           String?  @db.Text
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  creatorId          String
+  agencyId           String?
+  studentId          String?
+  studentName        String
+  invoiceNumber      String?
+  description        String?  @db.Text
+  amount             Float
+  amountCents        Int?
+  paidAmountCents    Int?
+  currency           String   @default("usd")
+  status             String   @default("draft") // draft | sent | paid | overdue | canceled | DRAFT | SENT | PAID | OVERDUE | CANCELLED
+  lessonHours        Float?
+  ratePerHourCents   Int?
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+  dueDate            DateTime?
+  paidAt             DateTime?
+  items              Json?    @db.JsonB
+  notes              String?  @db.Text
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  creator User @relation("InvoiceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creator User     @relation("InvoiceCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  student Student? @relation("InvoiceStudent", fields: [studentId], references: [id], onDelete: SetNull)
 
   @@index([creatorId])
+  @@index([agencyId])
+  @@index([studentId])
   @@index([status])
+  @@index([invoiceNumber])
 }
 
 // ── Scheduled Lesson ──
 
 model ScheduledLesson {
-  id          String    @id @default(uuid())
-  tutorId     String
-  studentName String?
-  studentEmail String?
-  subject     String    @default("GENERAL")
-  startTime   DateTime
-  endTime     DateTime?
-  status      String    @default("scheduled") // scheduled | completed | cancelled
-  roomId      String?
-  notes       String?   @db.Text
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  tutorId         String
+  studentName     String?
+  studentEmail    String?
+  subject         String    @default("GENERAL")
+  title           String?
+  description     String?   @db.Text
+  notes           String?   @db.Text
+  startTime       DateTime?
+  endTime         DateTime?
+  scheduledAt     DateTime?
+  durationMinutes Int?
+  timeZone        String?
+  roomUrl         String?
+  roomId          String?
+  reminderSent    Boolean?  @default(false)
+  status          String    @default("scheduled") // scheduled | completed | cancelled | SCHEDULED | COMPLETED | CANCELLED
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
 
   @@index([tutorId])
   @@index([status])
+  @@index([scheduledAt])
 }
 
 // ── Credit Pack (agency credit system) ──
 
 model CreditPack {
-  id        String   @id @default(uuid())
-  agencyId  String
-  credits   Int
-  price     Float
-  status    String   @default("active")
-  createdAt DateTime @default(now())
+  id              String   @id @default(uuid())
+  agencyId        String
+  credits         Int
+  hoursPurchased  Float?
+  hoursRemaining  Float?
+  pricePaidCents  Int?
+  price           Float
+  status          String   @default("active") // active | pending_payment | PENDING_PAYMENT | ACTIVE
+  createdAt       DateTime @default(now())
 
   agency User @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   @@index([agencyId])
+  @@index([status])
 }
 
 // ── Homework ──
 
 model Homework {
-  id          String   @id @default(uuid())
-  tutorId     String
-  roomId      String?
-  title       String
-  description String?  @db.Text
-  dueDate     DateTime?
-  status      String   @default("assigned") // assigned | submitted | graded
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  tutorId       String
+  agencyId      String?
+  studentId     String?
+  roomId        String?
+  title         String
+  description   String?  @db.Text
+  subject       String?
+  snapshot      String?  @db.Text
+  dueDate       DateTime?
+  status        String   @default("assigned") // assigned | submitted | graded | PENDING | SUBMITTED | GRADED | OVERDUE
+  grade         String?
+  tutorFeedback String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  tutor User @relation("HomeworkTutor", fields: [tutorId], references: [id], onDelete: Cascade)
+  tutor   User     @relation("HomeworkTutor", fields: [tutorId], references: [id], onDelete: Cascade)
+  student Student? @relation("HomeworkStudent", fields: [studentId], references: [id], onDelete: SetNull)
 
   @@index([tutorId])
+  @@index([agencyId])
+  @@index([studentId])
   @@index([roomId])
 }
 
@@ -432,17 +504,25 @@ model Homework {
 // Maps to existing session_notes table.
 
 model LessonNote {
-  id        String   @id @default(uuid())
-  roomId    String
-  tutorId   String?
-  tutor     User?    @relation(fields: [tutorId], references: [id], onDelete: SetNull)
-  content   String   @default("") @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  roomId        String
+  tutorId       String?
+  studentId     String?
+  content       String   @default("") @db.Text
+  tutorFeedback String?  @db.Text
+  topicsForNext String?  @db.Text
+  rating        Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  room Room? @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tutor   User?    @relation(fields: [tutorId], references: [id], onDelete: SetNull)
+  room    Room?    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  student Student? @relation("LessonNoteStudent", fields: [studentId], references: [id], onDelete: SetNull)
 
+  @@unique([roomId])
   @@index([roomId])
+  @@index([tutorId])
+  @@index([studentId])
 
   @@map("session_notes")
 }
@@ -464,19 +544,114 @@ model WebhookConfig {
 // ── Question Item (question bank) ──
 
 model QuestionItem {
-  id          String   @id @default(uuid())
-  tutorId     String?
-  type        String   @default("multiple_choice") // multiple_choice | short_answer | true_false
-  subject     String   @default("GENERAL")
-  difficulty  String   @default("medium")
-  question    String   @db.Text
-  options     Json?    @db.JsonB
-  correctAnswer String? @db.Text
-  explanation String?  @db.Text
-  tags        String[]
- createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  tutorId            String?
+  type               String   @default("multiple_choice") // multiple_choice | short_answer | true_false
+  questionType       QuestionType?  // OPEN | MULTIPLE_CHOICE | TRUE_FALSE | SHORT_ANSWER | FILL_IN_BLANK | ESSAY
+  subject            String   @default("GENERAL")
+  gradeBand          String?
+  topic              String?
+  curriculum         String?
+  standardCode       String?
+  difficulty         String   @default("medium")
+  question           String   @db.Text
+  stem               String?  @db.Text
+  stemLatex          String?  @db.Text
+  options            Json?    @db.JsonB
+  correctAnswer      String?  @db.Text
+  answerKey          String?  @db.Text
+  solutionSteps      String?  @db.Text
+  explanation        String?  @db.Text
+  distractors        String[] @default([])
+  tags               String[]
+  estimatedTimeSec   Int?
+  diagramSvg         String?  @db.Text
+  testPrepCategoryId String?
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tutor            User?             @relation(fields: [tutorId], references: [id], onDelete: SetNull)
+  testPrepCategory TestPrepCategory? @relation("QuestionItemTestPrepCategory", fields: [testPrepCategoryId], references: [id], onDelete: SetNull)
 
   @@index([tutorId])
   @@index([subject])
+  @@index([gradeBand])
+  @@index([testPrepCategoryId])
+  @@index([isActive])
+}
+
+// ── Resource Library (agency shared resources) ──
+
+model ResourceLibrary {
+  id                String   @id @default(uuid())
+  agencyId          String
+  uploadedByTutorId String?
+  name              String
+  description       String?  @db.Text
+  category          String   @default("general")
+  subject           String   @default("GENERAL")
+  fileUrl           String
+  fileType          String
+  fileSize          Int      @default(0)
+  downloadCount     Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  uploadedBy User? @relation("ResourceLibraryUploader", fields: [uploadedByTutorId], references: [id], onDelete: SetNull)
+
+  @@index([agencyId])
+  @@index([category])
+  @@index([subject])
+  @@index([uploadedByTutorId])
+}
+
+// ── Test Prep Category (SAT/ACT/AP/STAAR grouping) ──
+
+model TestPrepCategory {
+  id          String   @id @default(uuid())
+  ownerId     String?
+  name        String
+  testType    String
+  subject     String
+  gradeLevel  String?
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner     User?          @relation("TestPrepCategoryOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  questions QuestionItem[] @relation("QuestionItemTestPrepCategory")
+
+  @@index([testType])
+  @@index([subject])
+  @@index([ownerId])
+}
+
+// ── Enums (exported as TypeScript types; not applied to existing String fields) ──
+
+enum QuestionType {
+  OPEN
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  FILL_IN_BLANK
+  ESSAY
+}
+
+enum Subject {
+  GENERAL
+  MATH
+  SCIENCE
+  LANGUAGE
+  PHYSICS
+  CHEMISTRY
+  BIOLOGY
+  ENGLISH
+}
+
+enum LessonStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
 }

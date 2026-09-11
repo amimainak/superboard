@@ -11,7 +11,16 @@
 //   - The JWT user must be the tutor or a participant in the room
 // ============================================================
 
-import { Server } from '@hocuspocus/server';
+import {
+  Server,
+  onAuthenticatePayload,
+  onConnectPayload,
+  onDisconnectPayload,
+  onAwarenessUpdatePayload,
+  onLoadDocumentPayload,
+  onChangePayload,
+  onStoreDocumentPayload,
+} from '@hocuspocus/server';
 import * as Y from 'yjs';
 import { createClient } from '@supabase/supabase-js';
 
@@ -132,11 +141,11 @@ function debounceSave(roomId: string, document: Y.Doc) {
 
 // --- Server ----------------------------------------------------------------
 
-const server = Server.configure({
+const server = new Server({
   port: PORT,
 
   // SECURITY: Verify JWT + room membership before allowing connection
-  async onAuthenticate({ documentName, context }) {
+  async onAuthenticate({ documentName, context }: onAuthenticatePayload) {
     const roomId = documentName.replace('room-', '');
 
     // 1. Verify JWT token (required — no more anonymous fallback)
@@ -174,15 +183,15 @@ const server = Server.configure({
     };
   },
 
-  async onConnect({ documentName, context }) {
+  async onConnect({ documentName, context }: onConnectPayload) {
     console.log(`[Hocuspocus] Client connected to ${documentName} (userId: ${context?.userId})`);
   },
 
-  async onDisconnect({ documentName, context }) {
+  async onDisconnect({ documentName, context }: onDisconnectPayload) {
     console.log(`[Hocuspocus] Client disconnected from ${documentName} (userId: ${context?.userId})`);
   },
 
-  async onAwarenessUpdate({ awareness, documentName }) {
+  async onAwarenessUpdate({ awareness, documentName }: onAwarenessUpdatePayload) {
     const states = awareness.getStates();
     if (states.size > 0) {
       const participantCount = states.size;
@@ -201,7 +210,7 @@ const server = Server.configure({
     }
   },
 
-  async onLoadDocument({ documentName, document }) {
+  async onLoadDocument({ documentName, document }: onLoadDocumentPayload) {
     const roomId = documentName.replace('room-', '');
     const snapshot = await fetchSnapshot(roomId, 0);
     if (snapshot) {
@@ -217,12 +226,12 @@ const server = Server.configure({
     }
   },
 
-  async onChange({ document, documentName }) {
+  async onChange({ document, documentName }: onChangePayload) {
     const roomId = documentName.replace('room-', '');
     debounceSave(roomId, document);
   },
 
-  async onStoreDocument({ documentName, document }) {
+  async onStoreDocument({ documentName, document }: onStoreDocumentPayload) {
     const roomId = documentName.replace('room-', '');
     const pending = debounceTimers.get(roomId);
     if (pending) {

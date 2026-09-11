@@ -112,19 +112,19 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       ]);
 
     // Completed lessons only (rooms with endedAt)
-    const completedLessons = roomParticipation.filter((p) => p.room.endedAt);
+    const completedLessons = roomParticipation.filter((p) => p.room?.endedAt);
     const totalLessonMinutes = completedLessons.reduce(
-      (sum, p) => sum + (p.room.durationMinutes || 0),
+      (sum, p) => sum + (p.room?.durationMinutes || 0),
       0,
     );
 
     // Subject breakdown
     const subjectMap: Record<string, { count: number; minutes: number }> = {};
     for (const p of completedLessons) {
-      const subj = p.room.subject;
+      const subj = p.room?.subject ?? 'GENERAL';
       if (!subjectMap[subj]) subjectMap[subj] = { count: 0, minutes: 0 };
       subjectMap[subj].count += 1;
-      subjectMap[subj].minutes += p.room.durationMinutes || 0;
+      subjectMap[subj].minutes += p.room?.durationMinutes || 0;
     }
 
     // Homework stats map
@@ -146,9 +146,12 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
     // Last active: max of all room participation lastActiveAt
     const lastActive = roomParticipation.length > 0
-      ? roomParticipation.reduce((latest, p) => {
-          return p.lastActiveAt > latest ? p.lastActiveAt : latest;
-        }, roomParticipation[0].lastActiveAt)
+      ? roomParticipation.reduce<Date | null>((latest, p) => {
+          const cur = p.lastActiveAt;
+          if (!cur) return latest;
+          if (!latest) return cur;
+          return cur > latest ? cur : latest;
+        }, null)
       : null;
 
     return NextResponse.json({
@@ -167,10 +170,10 @@ export async function GET(_request: NextRequest, context: RouteContext) {
         subjectBreakdown: subjectMap,
         recentLessons: completedLessons.slice(0, 10).map((p) => ({
           roomId: p.roomId,
-          subject: p.room.subject,
-          durationMinutes: p.room.durationMinutes,
-          date: p.room.endedAt!.toISOString(),
-          tutorName: p.room.tutor.name || p.room.tutor.email,
+          subject: p.room?.subject ?? 'GENERAL',
+          durationMinutes: p.room?.durationMinutes ?? 0,
+          date: p.room?.endedAt?.toISOString() ?? null,
+          tutorName: p.room?.tutor?.name || p.room?.tutor?.email || 'Tutor',
         })),
       },
       homework: {
@@ -202,7 +205,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
           rating: n.rating,
           subject: n.room?.subject ?? null,
           date: n.createdAt.toISOString(),
-          tutorName: n.tutor.name || null,
+          tutorName: n.tutor?.name || null,
         })),
       },
       lastActive: lastActive?.toISOString() ?? null,

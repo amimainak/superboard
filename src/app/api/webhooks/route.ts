@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Validate that all events are from the allowed set
     const invalidEvents = events.filter(
-      (e) => !ALLOWED_EVENTS.includes(e as WebhookEvent)
+      (e: string) => !ALLOWED_EVENTS.includes(e as WebhookEvent)
     );
     if (invalidEvents.length > 0) {
       return NextResponse.json(

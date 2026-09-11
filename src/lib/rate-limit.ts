@@ -112,7 +112,7 @@ export async function checkRateLimit(
       pipeline.expire(fullKey, windowSec)
       const [count] = await pipeline.exec()
 
-      if (count > maxRequests) {
+      if ((count as unknown as number) > maxRequests) {
         const ttl = await r.ttl(fullKey)
         const retryAfterSec = Math.max(1, typeof ttl === 'number' ? ttl : windowSec)
         const res = new Response(

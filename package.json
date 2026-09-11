@@ -7,9 +7,8 @@
   },
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "tsc --noEmit -p tsconfig.widgets.json && next build",
-    "typecheck": "tsc --noEmit -p tsconfig.widgets.json",
-    "typecheck:full": "tsc --noEmit -p tsconfig.json",
+    "build": "tsc --noEmit && next build",
+    "typecheck": "tsc --noEmit",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "postinstall": "prisma generate"

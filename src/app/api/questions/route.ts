@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
 
     if (gradeBand) where.gradeBand = gradeBand;
     if (topic) where.topic = { contains: topic, mode: 'insensitive' } as Record<string, unknown>;
-    if (difficulty) where.difficulty = parseInt(difficulty, 10);
+    if (difficulty) where.difficulty = String(difficulty);
     if (curriculum) where.curriculum = curriculum.toUpperCase();
     if (questionType) where.questionType = questionType.toUpperCase() as QuestionType;
     if (search) {
@@ -118,7 +118,8 @@ export async function POST(req: NextRequest) {
     const question = await db.questionItem.create({
       data: {
         subject: subject.toUpperCase(),
-        gradeBand, topic, difficulty,
+        question: stem || '',
+        gradeBand, topic, difficulty: String(difficulty),
         curriculum: curriculum?.toUpperCase(),
         standardCode, stem, stemLatex, answerKey, solutionSteps,
         distractors, questionType: (questionType?.toUpperCase() || 'OPEN') as QuestionType,

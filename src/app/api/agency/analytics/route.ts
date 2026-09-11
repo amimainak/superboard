@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
       const tutorRooms = roomsInPeriod.filter((r) => r.tutorId === tutor.id);
       const tutorHours = tutorRooms.reduce((sum, r) => sum + (r.durationMinutes / 60), 0);
       const tutorScheduled = scheduleData.filter((s) => s.tutorId === tutor.id);
-      const tutorScheduledHours = tutorScheduled.reduce((sum, s) => sum + (s.durationMinutes / 60), 0);
+      const tutorScheduledHours = tutorScheduled.reduce((sum, s) => sum + ((s.durationMinutes ?? 0) / 60), 0);
       return {
         tutorId: tutor.id,
         name: tutor.name || tutor.email,
@@ -151,8 +151,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Invoice stats
-    const totalRevenueCents = invoiceData._sum.amountCents || 0;
-    const totalPaidCents = invoiceData._sum.paidAmountCents || 0;
+    const totalRevenueCents = invoiceData._sum?.amountCents ?? 0;
+    const totalPaidCents = invoiceData._sum?.paidAmountCents ?? 0;
     const outstandingCents = totalRevenueCents - totalPaidCents;
 
     // Average rating from lesson notes

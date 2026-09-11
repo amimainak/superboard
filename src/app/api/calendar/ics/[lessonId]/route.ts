@@ -67,15 +67,15 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     }
 
     // Calculate end time
-    const start = new Date(lesson.scheduledAt);
-    const end = new Date(start.getTime() + lesson.durationMinutes * 60 * 1000);
+    const start = lesson.scheduledAt ? new Date(lesson.scheduledAt) : new Date(lesson.startTime ?? Date.now());
+    const end = new Date(start.getTime() + (lesson.durationMinutes ?? 0) * 60 * 1000);
 
     const now = formatICSDate(new Date());
     const dtStart = formatICSDate(start);
     const dtEnd = formatICSDate(end);
     const uid = `superboard-lesson-${lesson.id}@superboard.app`;
 
-    const tutorName = lesson.tutor.name || lesson.tutor.email;
+    const tutorName = lesson.tutor?.name || lesson.tutor?.email || 'Tutor';
 
     // Build description
     const descLines: string[] = [];
@@ -83,7 +83,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     if (lesson.studentName) descLines.push(`Student: ${lesson.studentName}`);
     if (lesson.studentEmail) descLines.push(`Student Email: ${lesson.studentEmail}`);
     descLines.push(`Subject: ${lesson.subject}`);
-    descLines.push(`Duration: ${lesson.durationMinutes} minutes`);
+    descLines.push(`Duration: ${lesson.durationMinutes ?? 0} minutes`);
     const description = escapeICS(descLines.join('\n'));
 
     // Build ICS content
@@ -98,9 +98,9 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       `DTSTAMP:${now}`,
       `DTSTART:${dtStart}`,
       `DTEND:${dtEnd}`,
-      `SUMMARY:${escapeICS(lesson.title)}`,
+      `SUMMARY:${escapeICS(lesson.title ?? lesson.subject)}`,
       `DESCRIPTION:${description}`,
-      `ORGANIZER;CN=${escapeICS(tutorName)}:mailto:${lesson.tutor.email}`,
+      `ORGANIZER;CN=${escapeICS(tutorName)}:mailto:${lesson.tutor?.email ?? ''}`,
       `STATUS:${lesson.status === 'CANCELLED' ? 'CANCELLED' : 'CONFIRMED'}`,
       'END:VEVENT',
       'END:VCALENDAR',

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     });
 
     // MRR = sum of all active subscription monthly amounts
-    const mrrCents = activeSubs.reduce((sum, s) => sum + s.amountMonthlyCents, 0);
+    const mrrCents = activeSubs.reduce((sum, s) => sum + (s.amountMonthlyCents ?? 0), 0);
     const mrr = mrrCents / 100; // dollars
     const arr = mrr * 12;
 
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       const tier = sub.user.tier;
       if (!acc[tier]) acc[tier] = { count: 0, mrrCents: 0 };
       acc[tier].count += 1;
-      acc[tier].mrrCents += sub.amountMonthlyCents;
+      acc[tier].mrrCents += sub.amountMonthlyCents ?? 0;
       return acc;
     }, {} as Record<string, { count: number; mrrCents: number }>);
 

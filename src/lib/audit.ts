@@ -48,7 +48,7 @@ export async function logAudit(
         action,
         targetType: targetType || null,
         targetId: targetId || null,
-        metadata: metadata ? JSON.stringify(metadata) : null,
+        metadata: metadata ? (metadata as any) : undefined,
       },
     });
   } catch (error) {
