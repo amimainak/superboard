@@ -368,6 +368,10 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
                 })}
               </div>
               {addBoardBtn('Add to Board', function() { addToBoard('math-function-plotter', { expression: plotterExpr, range: plotterRange }) })}
+              {/* Insight */}
+              <div style={{ padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+                💡 <b>How to read graphs:</b> The curve shows y for every x. Steep parts = rapid change. Flat parts = slow change. Where it crosses the x-axis = where y=0 (roots). The shape reveals the function's behavior — a parabola (x²) has one minimum, a cubic (x³) goes up-then-down-then-up.
+              </div>
             </div>
           </div>
           <div className="toolkit-section">
@@ -414,14 +418,23 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div className="toolkit-section">
             {sectionTitle('Interactive Number Line')}
             <div style={{ padding: '0 12px 12px' }}><NumberLineEnhancedPanel isDark={isDark} /></div>
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Why number lines matter:</b> The number line makes abstract numbers visual. Positive = right, negative = left. Jumps show addition (right) and subtraction (left). It builds the foundation for understanding signed numbers, absolute value, and inequalities.
+            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Fraction Bars')}
             <div style={{ padding: '0 12px 12px' }}><FractionBarEnhancedPanel isDark={isDark} /></div>
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>Why fraction bars work:</b> Visual models make fractions concrete — you can SEE that 3/4 = 6/8 because the shaded areas match. Equivalent fractions aren't just a rule; they're the same amount cut into different-sized pieces. This builds intuition before algorithms.
+            </div>
           </div>
           <div className="toolkit-section">
             {sectionTitle('Shape Builder')}
             <div style={{ padding: '0 12px 12px' }}><ShapeBuilderPanelRender isDark={isDark} /></div>
+            <div style={{ padding: '6px 8px', margin: '0 12px 12px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
+              💡 <b>What shapes teach:</b> Every shape has properties — sides, angles, symmetry. A triangle is rigid (used in bridges). A circle has constant width (used in wheels). Measuring dimensions and angles builds the foundation for area, perimeter, and the Pythagorean theorem.
+            </div>
           </div>
         </>
       )}
