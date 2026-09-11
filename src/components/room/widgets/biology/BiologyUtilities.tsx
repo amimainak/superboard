@@ -488,7 +488,7 @@ export function TaxonomyClassifier({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Organism: {selectedExample || 'custom'} ({selectedExample ? EXAMPLE_ORGANISMS[selectedExample]?.name : 'Custom input'})</div>
+          <div>Step 1: Organism: {selectedExample ? EXAMPLE_ORGANISMS[selectedExample]?.label : 'Custom input'}</div>
           <div>Step 2: Domain = {customLevels[0]}</div>
           <div>Step 3: Kingdom = {customLevels[1]}</div>
           <div>Step 4: Phylum = {customLevels[2]}</div>
@@ -1573,7 +1573,7 @@ export function CellDivisionAnimator({ isDark }: { isDark: boolean }) {
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
           <div>Step 1: Mode: {mode} ({mode === 'mitosis' ? 'produces 2 identical cells' : 'produces 4 different cells'})</div>
-          <div>Step 2: Current phase: {MITOSIS_STEPS[step]?.name || MEIOSIS_STEPS[step]?.name || 'Unknown'} (step {step + 1})</div>
+          <div>Step 2: Current phase: {MITOSIS_PHASES[step]?.name || MEIOSIS_PHASES[step]?.name || 'Unknown'} (step {step + 1})</div>
           <div>Step 3: {step >= 1 ? 'Prophase: chromosomes condense ✓' : 'Next: Prophase — chromosomes condense'}</div>
           <div>Step 4: {step >= 2 ? 'Metaphase: chromosomes align ✓' : 'Next: Metaphase — align at center'}</div>
           <div>Step 5: {step >= 3 ? 'Anaphase: chromatids separate ✓' : 'Next: Anaphase — separate to poles'}</div>

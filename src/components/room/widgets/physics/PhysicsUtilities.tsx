@@ -57,6 +57,8 @@ interface FormulaDef {
   equation: string
   variables: FormulaVar[]
   solve: (solveFor: string, vals: Record<string, number>) => number
+  units?: string
+  insight?: string
 }
 
 const FORMULAS: FormulaDef[] = [
@@ -714,9 +716,9 @@ export function ScienceUnitConverter({ isDark }: { isDark: boolean }) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Category: {category}</div>
-          <div>Step 2: Convert {inputValue} {fromUnit} → {toUnit}</div>
-          <div>Step 3: Result: {outputValue} {toUnit}</div>
+          <div>Step 1: Category: {cat.name}</div>
+          <div>Step 2: Convert {inputVal || '?'} {fromUnit} → {toUnit}</div>
+          <div>Step 3: Result: {result || <span style={{ color: isDark ? '#64748b' : '#94a3b8' }}>click Convert</span>}</div>
           <div>Step 4: Verify: units cancel correctly</div>
       </div>
 {/* Instructional insight */}
@@ -909,8 +911,8 @@ export function ProjectileMotionSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
           <div>Step 1: v₀ = {velocity} m/s, θ = {angle}°</div>
-          <div>Step 2: Horizontal: constant {velocity * Math.cos(angle * Math.PI / 180).toFixed(2)} m/s</div>
-          <div>Step 3: Vertical: {velocity * Math.sin(angle * Math.PI / 180).toFixed(2)} m/s initial, g = 9.8 m/s²</div>
+          <div>Step 2: Horizontal: constant {(velocity * Math.cos(angle * Math.PI / 180)).toFixed(2)} m/s</div>
+          <div>Step 3: Vertical: {(velocity * Math.sin(angle * Math.PI / 180)).toFixed(2)} m/s initial, g = 9.8 m/s²</div>
           <div>Step 4: Range = v₀² × sin(2θ) / g = {((velocity * velocity * Math.sin(2 * angle * Math.PI / 180)) / 9.8).toFixed(2)} m</div>
           <div>Step 5: {angle === 45 ? 'At 45° — maximum range!' : 'Max range at 45°'}</div>
           <div>Step 6: Horizontal and vertical are INDEPENDENT</div>

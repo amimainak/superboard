@@ -202,6 +202,7 @@ export function DataTable({ isDark }: ToolProps) {
         </div>
       )}
                 {/* Step-by-step derivation */}
+      {stats && (
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
           <div>Step 1: Data: {data.length} values {sorted ? '(sorted)' : '(unsorted)'}</div>
@@ -211,6 +212,7 @@ export function DataTable({ isDark }: ToolProps) {
           <div>Step 5: Range = {stats.max} − {stats.min} = <b>{stats.range}</b></div>
           <div>Step 6: Std Dev = <b>{stats.stdev.toFixed(4)}</b> (spread of data)</div>
       </div>
+      )}
 {/* Instructional insight */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.5, background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', color: '#a78bfa' }}>
         💡 <b>Insight:</b> Mean = balance point. Median = middle. Mode = most frequent. Each tells a different story — always check all three.
@@ -331,6 +333,14 @@ export function BoxPlotGenerator({ isDark }: ToolProps) {
   [raw])
 
   const q = useMemo(() => data.length >= 4 ? quartiles(data) : null, [data])
+
+  // Derived values for the step-by-step derivation (null-safe fallbacks)
+  const sortedData = useMemo(() => [...data].sort((a, b) => a - b), [data])
+  const q1 = q ? q.q1 : 0
+  const q2 = q ? q.q2 : 0
+  const q3 = q ? q.q3 : 0
+  const iqr = q ? q.iqr : 0
+  const outliers = q ? q.outliers : []
 
   const boxColor = isDark ? '#34d399' : '#059669'
   const boxFill = isDark ? 'rgba(52,211,153,0.15)' : 'rgba(5,150,105,0.1)'
@@ -754,6 +764,15 @@ export function ProbabilitySimulator({ isDark }: ToolProps) {
   else if (simType === 'dice') { for (let i = 1; i <= 6; i++) theoretical[String(i)] = 1 / 6 }
   else { SPINNER_SEGMENTS.forEach(seg => theoretical[seg.label] = 1 / SPINNER_SEGMENTS.length) }
 
+  // Derived values for the step-by-step derivation
+  const scenarioLabel = simType === 'coin' ? 'Coin Flip' : simType === 'dice' ? 'Dice Roll' : 'Spinner'
+  const outcomes = simType === 'coin' ? ['Heads', 'Tails'] : simType === 'dice' ? ['1', '2', '3', '4', '5', '6'] : SPINNER_SEGMENTS.map(seg => seg.label)
+  const favorable = 1
+  const total = outcomes.length
+  const probability = 1 / total
+  const topResult = sortedResults.length > 0 ? sortedResults[0] : null
+  const simulationResult = (totalRuns > 0 && topResult) ? { favorable: topResult[1], total: totalRuns } : null
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {/* Sim type selector */}
@@ -833,7 +852,7 @@ export function ProbabilitySimulator({ isDark }: ToolProps) {
                 {/* Step-by-step derivation */}
       <div style={{ marginTop: 6, padding: '6px 8px', borderRadius: 4, fontSize: 11, lineHeight: 1.6, background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', border: '1px solid ' + (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'), color: isDark ? '#e2e8f0' : '#1e293b' }}>
         <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: isDark ? '#64748b' : '#94a3b8', marginBottom: 3 }}>How It Works</div>
-          <div>Step 1: Scenario: {currentScenario} ({outcomes.length} possible outcomes)</div>
+          <div>Step 1: Scenario: {scenarioLabel} ({outcomes.length} possible outcomes)</div>
           <div>Step 2: Favorable: {favorable}, Total: {total}</div>
           <div>Step 3: P = {favorable}/{total} = <b>{probability.toFixed(4)}</b> = <b>{(probability * 100).toFixed(2)}%</b></div>
           <div>Step 4: {simulationResult ? 'Experimental: ' + (simulationResult.favorable / simulationResult.total).toFixed(4) + ' (' + simulationResult.favorable + '/' + simulationResult.total + ')' : 'Run simulation to compare'}</div>
