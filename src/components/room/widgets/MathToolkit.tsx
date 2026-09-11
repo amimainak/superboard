@@ -15,6 +15,24 @@ const MultGridLazy = lazy(() => import('./math/MathUtilities').then(m => ({ defa
 const Base10Lazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Base10Blocks })))
 const FlashcardsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Flashcards })))
 const ProofBuilderLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.ProofBuilder })))
+// K-5 widgets
+const HundredsChartLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.HundredsChart })))
+const FactFamilyLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.FactFamilyTriangle })))
+const BarModelLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.BarModelBuilder })))
+const ElapsedTimeLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.ElapsedTimeExplorer })))
+// 6-8 widgets
+const AlgebraBalanceLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.AlgebraBalanceScale })))
+const IntegerChipsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.IntegerChips })))
+const PercentDNL_Lazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.PercentDoubleNumberLine })))
+const TwoStepEqLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.TwoStepEquationSolver })))
+const TransformationsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.TransformationsExplorer })))
+// 9-12 widgets
+const UnitCircleLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.UnitCircleExplorer })))
+const RiemannSumLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.RiemannSumExplorer })))
+const ConicSectionsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.ConicSectionsExplorer })))
+const LogScaleLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.LogarithmScaleExplorer })))
+const SequenceSeriesLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.SequenceSeriesExplorer })))
+const MatrixOpsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.MatrixOperationsExplorer })))
 
 // Pre-built wrapper components (stable references, no remount on re-render)
 function CalcPanel({ isDark }: { isDark: boolean }) {
@@ -37,6 +55,54 @@ function FlashcardsPanel({ isDark }: { isDark: boolean }) {
 }
 function ProofPanel({ isDark }: { isDark: boolean }) {
   return <Suspense fallback={null}><ProofBuilderLazy isDark={isDark} /></Suspense>
+}
+// K-5 panels
+function HundredsChartPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><HundredsChartLazy isDark={isDark} /></Suspense>
+}
+function FactFamilyPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><FactFamilyLazy isDark={isDark} /></Suspense>
+}
+function BarModelPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><BarModelLazy isDark={isDark} /></Suspense>
+}
+function ElapsedTimePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ElapsedTimeLazy isDark={isDark} /></Suspense>
+}
+// 6-8 panels
+function AlgebraBalancePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><AlgebraBalanceLazy isDark={isDark} /></Suspense>
+}
+function IntegerChipsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><IntegerChipsLazy isDark={isDark} /></Suspense>
+}
+function PercentDNL_Panel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><PercentDNL_Lazy isDark={isDark} /></Suspense>
+}
+function TwoStepEqPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TwoStepEqLazy isDark={isDark} /></Suspense>
+}
+function TransformationsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><TransformationsLazy isDark={isDark} /></Suspense>
+}
+// 9-12 panels
+function UnitCirclePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><UnitCircleLazy isDark={isDark} /></Suspense>
+}
+function RiemannSumPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><RiemannSumLazy isDark={isDark} /></Suspense>
+}
+function ConicSectionsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><ConicSectionsLazy isDark={isDark} /></Suspense>
+}
+function LogScalePanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><LogScaleLazy isDark={isDark} /></Suspense>
+}
+function SequenceSeriesPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><SequenceSeriesLazy isDark={isDark} /></Suspense>
+}
+function MatrixOpsPanel({ isDark }: { isDark: boolean }) {
+  return <Suspense fallback={null}><MatrixOpsLazy isDark={isDark} /></Suspense>
 }
 interface MathToolkitProps {
   roomId?: string
@@ -454,6 +520,102 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
               💡 <b>What shapes teach:</b> Every shape has properties — sides, angles, symmetry. A triangle is rigid (used in bridges). A circle has constant width (used in wheels). Measuring dimensions and angles builds the foundation for area, perimeter, and the Pythagorean theorem.
             </div>
           </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — K-5 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            K-5 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔢 Hundreds Chart')}
+            <div style={{ padding: '0 12px 12px' }}><HundredsChartPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-hundreds-chart', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔺 Fact Family Triangle')}
+            <div style={{ padding: '0 12px 12px' }}><FactFamilyPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-fact-family', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('▮ Bar Model Builder')}
+            <div style={{ padding: '0 12px 12px' }}><BarModelPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-bar-model', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🕐 Elapsed Time Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><ElapsedTimePanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-elapsed-time', {}) })}
+          </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — 6-8 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            6-8 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⚖️ Algebra Balance Scale')}
+            <div style={{ padding: '0 12px 12px' }}><AlgebraBalancePanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-algebra-balance', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔴 Integer Chips (Zero Pairs)')}
+            <div style={{ padding: '0 12px 12px' }}><IntegerChipsPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-integer-chips', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('% Percent Double Number Line')}
+            <div style={{ padding: '0 12px 12px' }}><PercentDNL_Panel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-percent-dnl', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📝 Two-Step Equation Solver')}
+            <div style={{ padding: '0 12px 12px' }}><TwoStepEqPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-two-step-eq', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔄 Transformations Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><TransformationsPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-transformations', {}) })}
+          </div>
+
+          {/* ============================================================ */}
+          {/* NEW INTERACTIVE WIDGETS — 9-12 */}
+          {/* ============================================================ */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            9-12 Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('⭕ Unit Circle Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><UnitCirclePanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-unit-circle', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📊 Riemann Sum Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><RiemannSumPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-riemann-sum', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔺 Conic Sections Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><ConicSectionsPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-conic-sections-2', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('📈 Logarithm Scale Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><LogScalePanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-log-scale', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔢 Sequence & Series Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><SequenceSeriesPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-sequence-series', {}) })}
+          </div>
+          <div className="toolkit-section">
+            {sectionTitle('🔲 Matrix Operations Explorer')}
+            <div style={{ padding: '0 12px 12px' }}><MatrixOpsPanel isDark={isDark} /></div>
+            {addBoardBtn('Add to Board', function() { addToBoard('math-matrix-ops', {}) })}
+          </div>
         </>
       )}
 
@@ -568,6 +730,26 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Choose categories, add data, renders pictograph with emoji icons.</p>
           {addBoardBtn('Add to Board', function() { addToBoard('math-picture-graph', {}) })}</div>
 
+          {/* NEW K-5 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#f97316', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">{sectionTitle('🔢 Hundreds Chart')}
+          <div style={{ padding: '0 12px 12px' }}><HundredsChartPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-hundreds-chart', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🔺 Fact Family Triangle')}
+          <div style={{ padding: '0 12px 12px' }}><FactFamilyPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-fact-family', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('▮ Bar Model Builder')}
+          <div style={{ padding: '0 12px 12px' }}><BarModelPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-bar-model', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🕐 Elapsed Time Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><ElapsedTimePanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-elapsed-time', {}) })}</div>
+
 
         </>
       )}
@@ -669,6 +851,30 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Input ratio → auto-generates equivalent ratios with bar model.</p>
           {addBoardBtn('Add to Board', function() { addToBoard('math-ratio-table', {}) })}</div>
 
+          {/* NEW 6-8 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">{sectionTitle('⚖️ Algebra Balance Scale')}
+          <div style={{ padding: '0 12px 12px' }}><AlgebraBalancePanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-algebra-balance', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🔴 Integer Chips (Zero Pairs)')}
+          <div style={{ padding: '0 12px 12px' }}><IntegerChipsPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-integer-chips', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('% Percent Double Number Line')}
+          <div style={{ padding: '0 12px 12px' }}><PercentDNL_Panel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-percent-dnl', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('📝 Two-Step Equation Solver')}
+          <div style={{ padding: '0 12px 12px' }}><TwoStepEqPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-two-step-eq', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🔄 Transformations Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><TransformationsPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-transformations', {}) })}</div>
+
 
         </>
       )}
@@ -759,6 +965,34 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
           <div className="toolkit-section">{sectionTitle('📈 Log & Exp Visualizer')}
           <p style={{ fontSize: 10, color: dkText, lineHeight: 1.4, margin: '0 12px 8px' }}>Graph y=a^x and y=log_a(x) with domain/range info.</p>
           {addBoardBtn('Add to Board', function() { addToBoard('math-log-exp-visualizer', {}) })}</div>
+
+          {/* NEW 9-12 Interactive Manipulatives */}
+          <div style={{ padding: '10px 12px 2px', fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            Interactive Manipulatives
+          </div>
+          <div className="toolkit-section">{sectionTitle('⭕ Unit Circle Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><UnitCirclePanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-unit-circle', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('📊 Riemann Sum Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><RiemannSumPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-riemann-sum', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🔺 Conic Sections Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><ConicSectionsPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-conic-sections-2', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('📈 Logarithm Scale Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><LogScalePanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-log-scale', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🔢 Sequence & Series Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><SequenceSeriesPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-sequence-series', {}) })}</div>
+
+          <div className="toolkit-section">{sectionTitle('🔲 Matrix Operations Explorer')}
+          <div style={{ padding: '0 12px 12px' }}><MatrixOpsPanel isDark={isDark} /></div>
+          {addBoardBtn('Add to Board', function() { addToBoard('math-matrix-ops', {}) })}</div>
 
 
         </>
