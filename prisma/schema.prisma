@@ -50,6 +50,7 @@ model User {
   // Relations
   rooms              Room[]
   templates          Template[]
+  lessonPlans        LessonPlan[]
   usageLogs          UsageLog[]
   sentInvites        AgencyInvite[]
   agencyMembers      AgencyMember[]       @relation("AgencyOwner")
@@ -172,6 +173,32 @@ model Template {
   @@index([isPublic])
   @@index([subject])
   @@index([gradeBand])
+}
+
+// ── Lesson Plan (Milestone 2 — Lesson Builder) ──
+// A tutor-authored sequence of LessonStep objects that can be "played"
+// during a session. Each step places a widget on the canvas and shows
+// tutor instructions. Distinct from Template (which saves a canvas
+// snapshot of all widgets at once).
+
+model LessonPlan {
+  id          String   @id @default(uuid())
+  tutorId     String
+  title       String   @db.VarChar(200)
+  description String?  @db.Text
+  subject     String   @default("GENERAL")
+  gradeBand   String   @default("")
+  tags        String[] @default([])
+  steps       Json     // Array of LessonStep objects
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tutor User @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+
+  @@index([tutorId])
+  @@index([isPublic])
+  @@index([subject])
 }
 
 // ── Chat Message ──

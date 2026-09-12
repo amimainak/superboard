@@ -30,6 +30,8 @@ interface TopBarProps {
   onExportSvg: () => void
   onExportJson: () => void
   onExportJpg: () => void
+  /** Generate a structured handout PDF (Task 45). Optional. */
+  onGenerateHandout?: () => void
   onShowShortcuts: () => void
   onGroup: () => void
   onUngroup: () => void
@@ -62,6 +64,10 @@ interface TopBarProps {
   onMyTemplates?: () => void
   /** Open the Community Templates panel */
   onCommunityTemplates?: () => void
+  /** Open the Lesson Builder modal (Milestone 2) */
+  onLessonBuilder?: () => void
+  /** Play the currently-loaded lesson plan (Milestone 2) */
+  onPlayLesson?: () => void
   /** When false, export menu items (PNG, JPEG, SVG, JSON) are disabled with a tooltip */
   canExport?: boolean
   /** Disable undo when nothing to undo */
@@ -84,6 +90,7 @@ export function TopBar({
   onExportSvg,
   onExportJson,
   onExportJpg,
+  onGenerateHandout,
   onShowShortcuts,
   onGroup,
   onUngroup,
@@ -113,6 +120,8 @@ export function TopBar({
   onSaveAsTemplate,
   onMyTemplates,
   onCommunityTemplates,
+  onLessonBuilder,
+  onPlayLesson,
   canExport = true,
   canUndo = true,
   canRedo = true,
@@ -319,10 +328,19 @@ export function TopBar({
               {onCommunityTemplates && (
                 <MenuItem label="Community Templates" isDark={isDark} onClick={() => { onCommunityTemplates(); setMenuOpen(false) }} />
               )}
+              {onLessonBuilder && (
+                <MenuItem label="Lesson Builder" isDark={isDark} shortcut="Ctrl+⇧L" onClick={() => { onLessonBuilder(); setMenuOpen(false) }} />
+              )}
+              {onPlayLesson && (
+                <MenuItem label="Play Current Lesson" isDark={isDark} onClick={() => { onPlayLesson(); setMenuOpen(false) }} />
+              )}
               <MenuItem label={canExport ? 'Export as PNG' : 'Export as PNG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportPng(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
               <MenuItem label={canExport ? 'Export as JPEG' : 'Export as JPEG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportJpg(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
               <MenuItem label={canExport ? 'Export as SVG' : 'Export as SVG (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportSvg(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
               <MenuItem label={canExport ? 'Export as JSON' : 'Export as JSON (Pro)'} isDark={isDark} onClick={canExport ? () => { onExportJson(); setMenuOpen(false) } : () => setMenuOpen(false)} disabled={!canExport} />
+              {onGenerateHandout && (
+                <MenuItem label="Generate Handout (PDF)" isDark={isDark} onClick={() => { onGenerateHandout(); setMenuOpen(false) }} />
+              )}
               {/* Edit */}
               <div className={`wb-menu-section-label wb-menu-section-label-${isDark ? 'dark' : 'light'}`}>
                 Edit

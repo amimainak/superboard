@@ -20,9 +20,11 @@ import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar
 import { SaveAsTemplateModal } from '@/components/whiteboard/SaveAsTemplateModal'
 import { MyTemplatesPanel } from '@/components/whiteboard/MyTemplatesPanel'
 import { CommunityTemplatesPanel } from '@/components/whiteboard/CommunityTemplatesPanel'
+import { LessonBuilder } from '@/components/whiteboard/LessonBuilder'
+import { LessonPlayer } from '@/components/whiteboard/LessonPlayer'
 import { AccountBadge } from '@/components/whiteboard/AccountBadge'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
-import type { TemplateFull } from '@/types'
+import type { TemplateFull, LessonPlanFull } from '@/types'
 import {
   exportAsPng,
   exportAsJpg,
@@ -31,10 +33,12 @@ import {
   downloadBlob,
   downloadString,
 } from '@/lib/whiteboard/export'
-import { getDefaultWidgetConfig, getWidgetDefaultSize } from '@/components/whiteboard/CanvasWidgets'
+import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import { generateId } from '@/lib/whiteboard/utils'
 import { playClickSound } from '@/lib/whiteboard/sound'
 import { UploadProgressBar, type UploadProgress } from '@/components/whiteboard/UploadProgressBar'
+import { extractTemplateSnapshot } from '@/lib/template-snapshot'
+import { generateHandout, downloadHandoutBlob } from '@/lib/handout-generator'
 
 // ---- Task 42 / Fix #28 — Haptic feedback for mobile ----
 // Vibrates the device (if supported) for key actions. No-op on desktop.
@@ -62,6 +66,7 @@ export default function WhiteboardClient() {
   const showGrid = useWhiteboardStore((s) => s.showGrid)
   const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
   const gridType = useWhiteboardStore((s) => s.gridType)
+  const gridSize = useWhiteboardStore((s) => s.gridSize)
   const isPresentationMode = useWhiteboardStore((s) => s.isPresentationMode)
 
   const setShortcutsOpen = useWhiteboardStore((s) => s.setShortcutsOpen)
@@ -100,6 +105,12 @@ export default function WhiteboardClient() {
   const [communityTemplatesOpen, setCommunityTemplatesOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<TemplateFull | undefined>(undefined)
 
+  // ---- Lesson Builder / Player State (Milestone 2) ----
+  const [lessonBuilderOpen, setLessonBuilderOpen] = useState(false)
+  const [lessonPlayerOpen, setLessonPlayerOpen] = useState(false)
+  const [currentLesson, setCurrentLesson] = useState<LessonPlanFull | null>(null)
+  const [editingLesson, setEditingLesson] = useState<LessonPlanFull | null>(null)
+
   // ---- Fix #5: Add-to-Board toast + canvas pulse feedback ----
   const [addToBoardToast, setAddToBoardToast] = useState<string | null>(null)
   const [canvasPulseKey, setCanvasPulseKey] = useState(0)
@@ -108,6 +119,31 @@ export default function WhiteboardClient() {
 
   // ---- Task 42 / Fix #30 — File upload progress ----
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
+
+  // ---- Milestone 2 — Pick up pending lesson from dashboard ----
+  // The dashboard's LessonPlansPanel stashes a {lesson, mode} payload
+  // in sessionStorage and navigates here. Read it on mount and open
+  // the Lesson Builder (edit) or Lesson Player (play).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = window.sessionStorage.getItem('superboard_pending_lesson')
+      if (!raw) return
+      window.sessionStorage.removeItem('superboard_pending_lesson')
+      const parsed = JSON.parse(raw) as { lesson: LessonPlanFull; mode: 'edit' | 'play' }
+      if (parsed?.lesson?.id) {
+        setCurrentLesson(parsed.lesson)
+        if (parsed.mode === 'play') {
+          setLessonPlayerOpen(true)
+        } else {
+          setEditingLesson(parsed.lesson)
+          setLessonBuilderOpen(true)
+        }
+      }
+    } catch {
+      // Malformed payload — silently ignore so the whiteboard still loads.
+    }
+  }, [])
 
   // Detect new widget elements added to current page → fire toast + pulse.
   // (Skips the initial sync — only fires when a NEW widget appears after mount.)
@@ -188,6 +224,57 @@ export default function WhiteboardClient() {
     const json = exportAsJson(elements)
     downloadString(json, `whiteboard-${Date.now()}.json`, 'application/json')
   }, [elements])
+
+  // ---- Task 45: Structured Handout Generator ----
+  // Builds an A4 PDF with header, widget list, "What I Learned" prompts,
+  // and blank practice problems. Uses pdf-lib (NOT the browser print dialog).
+  const handleGenerateHandout = useCallback(async () => {
+    try {
+      // 1. Get the widget list from the canvas via extractTemplateSnapshot + WIDGET_KIND_LABELS
+      const snapshot = extractTemplateSnapshot({
+        elements,
+        isDark,
+        showGrid,
+        gridSize,
+        gridType,
+        snapToGrid,
+      })
+      const widgetNames = snapshot.widgets.map(
+        (w) => WIDGET_KIND_LABELS[w.widgetKind] || w.widgetKind
+      )
+
+      // 2. Optionally capture a canvas screenshot (PNG bytes) for the widgets section.
+      //    Skipped when there are no widgets OR capture fails — the handout is still useful text-only.
+      let canvasImageBytes: Uint8Array | undefined
+      if (widgetNames.length > 0) {
+        try {
+          const container = canvasContainerRef.current
+          if (container) {
+            const pngBlob = await exportAsPng(
+              elements,
+              camera,
+              container.clientWidth,
+              container.clientHeight,
+              isDark
+            )
+            canvasImageBytes = new Uint8Array(await pngBlob.arrayBuffer())
+          }
+        } catch (captureErr) {
+          console.error('Handout canvas capture failed:', captureErr)
+        }
+      }
+
+      // 3. Build the PDF and trigger a download
+      const blob = await generateHandout({
+        widgetNames,
+        canvasImageBytes,
+      })
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadHandoutBlob(blob, `superboard-handout-${stamp}.pdf`)
+    } catch (err) {
+      console.error('Handout generation failed:', err)
+    }
+  }, [elements, isDark, showGrid, gridSize, gridType, snapToGrid, camera])
 
   // ---- File Upload ----
 
@@ -339,6 +426,8 @@ export default function WhiteboardClient() {
           setShortcutsOpen(false)
           return
         }
+        if (lessonPlayerOpen) { e.preventDefault(); setLessonPlayerOpen(false); return }
+        if (lessonBuilderOpen) { e.preventDefault(); setLessonBuilderOpen(false); setEditingLesson(null); return }
         if (saveTemplateOpen) { e.preventDefault(); setSaveTemplateOpen(false); setEditingTemplate(undefined); return }
         if (myTemplatesOpen) { e.preventDefault(); setMyTemplatesOpen(false); return }
         if (communityTemplatesOpen) { e.preventDefault(); setCommunityTemplatesOpen(false); return }
@@ -370,6 +459,12 @@ export default function WhiteboardClient() {
       if (e.shiftKey && (e.key === 'T' || e.key === 't')) {
         e.preventDefault()
         setMyTemplatesOpen(true)
+        return
+      }
+      // Ctrl+Shift+L — Lesson Builder (Milestone 2)
+      if (e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+        e.preventDefault()
+        setLessonBuilderOpen(true)
         return
       }
       // Ctrl+Shift+D — Toggle dark mode (Fix #16).
@@ -433,6 +528,7 @@ export default function WhiteboardClient() {
         if (last === 'save-template') setSaveTemplateOpen(true)
         else if (last === 'my-templates') setMyTemplatesOpen(true)
         else if (last === 'community-templates') setCommunityTemplatesOpen(true)
+        else if (last === 'lesson-builder') setLessonBuilderOpen(true)
         else if (last === 'search') setSearchKey((k) => (k > 0 ? k : 1))
         return
       }
@@ -445,11 +541,16 @@ export default function WhiteboardClient() {
     saveTemplateOpen,
     myTemplatesOpen,
     communityTemplatesOpen,
+    lessonBuilderOpen,
+    lessonPlayerOpen,
     searchOpen,
     setSaveTemplateOpen,
     setMyTemplatesOpen,
     setCommunityTemplatesOpen,
+    setLessonBuilderOpen,
+    setLessonPlayerOpen,
     setEditingTemplate,
+    setEditingLesson,
   ])
 
   return (
@@ -474,6 +575,7 @@ export default function WhiteboardClient() {
           onExportSvg={handleExportSvg}
           onExportJson={handleExportJson}
           onExportJpg={handleExportJpg}
+          onGenerateHandout={handleGenerateHandout}
           onShowShortcuts={() => setShortcutsOpen(true)}
           onGroup={groupSelected}
           onUngroup={ungroupSelected}
@@ -503,6 +605,8 @@ export default function WhiteboardClient() {
           onSaveAsTemplate={() => setSaveTemplateOpen(true)}
           onMyTemplates={() => setMyTemplatesOpen(true)}
           onCommunityTemplates={() => setCommunityTemplatesOpen(true)}
+          onLessonBuilder={() => setLessonBuilderOpen(true)}
+          onPlayLesson={currentLesson ? () => setLessonPlayerOpen(true) : undefined}
           accountBadge={<AccountBadge isDark={isDark} />}
         />
         </div>
@@ -620,6 +724,25 @@ export default function WhiteboardClient() {
       <CommunityTemplatesPanel
         open={communityTemplatesOpen}
         onClose={() => { setCommunityTemplatesOpen(false); rememberLastPanel('community-templates') }}
+      />
+
+      {/* Lesson Builder & Player (Milestone 2) */}
+      <LessonBuilder
+        open={lessonBuilderOpen}
+        onClose={() => { setLessonBuilderOpen(false); setEditingLesson(null); rememberLastPanel('lesson-builder') }}
+        editLesson={editingLesson}
+        onSaved={(lesson) => { setCurrentLesson(lesson); setEditingLesson(lesson) }}
+        onPlay={(lesson) => {
+          setCurrentLesson(lesson)
+          setLessonBuilderOpen(false)
+          setEditingLesson(null)
+          setLessonPlayerOpen(true)
+        }}
+      />
+      <LessonPlayer
+        open={lessonPlayerOpen}
+        lesson={currentLesson}
+        onClose={() => setLessonPlayerOpen(false)}
       />
 
       {/* Search Overlay */}

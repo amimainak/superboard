@@ -1759,3 +1759,240 @@ Verification:
 Stage Summary:
 - 12 of 12 listed UX fixes are now in place: #16 keyboard shortcuts (Ctrl+K/Ctrl+Shift+D/Esc + Ctrl+Shift+P reopen + Ctrl+Shift+R random widget, all listed in the Ctrl+/ ShortcutsDialog), #17 mobile touch targets (44×44 minimum, widget-content max-width 70vw, touch-action: manipulation), #18 lazy-widget loading skeletons (shared WidgetLoadingSkeleton across all 8 toolkits), #19 dark-mode detection (localStorage preference + prefers-color-scheme fallback in store.ts), #20 connection-status indicator (bottom-left pill + NEW top-bar dot + dismissible disconnect banner), #21 favicon + icons metadata, #23 breadcrumbs (room page shadcn Breadcrumb + NEW dashboard inline breadcrumb), #26 reopen-last-panel via Ctrl+Shift+P, #27 .toolkit-btn shared button styles, #28 haptic feedback on widget add + tool toggle, #29 Web Audio click sound muted by default, #30 file-read progress overlay via UploadProgressBar.
 - tsc --noEmit passes cleanly (0 errors). The pre-existing katex error mentioned in the brief is not reproduced (filtered by skipLibCheck).
+
+---
+Task ID: 45
+Agent: Build Handout Generation (Milestone 2, Feature 3)
+
+Task: Build a structured PDF handout generator (not just a canvas screenshot) that includes widget content references, "What I Learned Today" reflection prompts, and blank practice problems. Wire it into both the standalone whiteboard's "More options" menu and the room page's export menu.
+
+Work Log:
+- Read worklog.md and confirmed prior tasks (Task 42 UX fixes, Phase 2 templates, etc.).
+- Read existing related code:
+  · `src/lib/canvas-export.ts` (530 lines) — confirmed `openCanvasForPrint()` (browser-print PDF), `downloadCanvasAsPng()`, `exportCanvasWithBookmarks()`, and the `useCanvasExport()` hook. None of these generate a structured handout — they all just render a canvas screenshot.
+  · `src/components/branding/BrandedPdfExport.tsx` (133 lines) — confirmed it's a stub (`// TODO: install html2canvas and jsPDF`); no actual rendering.
+  · `src/lib/template-snapshot.ts` (115 lines) — confirmed `extractTemplateSnapshot({ elements, isDark, showGrid, gridSize, gridType, snapToGrid, activeSubject? })` returns `{ widgets: [{ id, widgetKind, x, y, width, height, config }], canvas, subject? }`, filtering elements to type === 'widget'.
+  · `src/components/whiteboard/CanvasWidgets.tsx` line 1244 — confirmed `WIDGET_KIND_LABELS: Record<string, string>` mapping widgetKind → human-readable name (e.g. 'stat-data-table' → 'Data Table & Statistics').
+  · `src/lib/whiteboard/export.ts` lines 280–306 — confirmed `downloadBlob()` (creates `<a>`, click, revoke URL) and `exportAsPng(elements, camera, w, h, isDark)` (returns PNG Blob). Both reused for the handout's optional canvas screenshot.
+  · `src/components/whiteboard/TopBar.tsx` (430 lines) — confirmed the "More options" menu (lines 258–351) groups items under section labels: Page / File / Edit / View / Help. The File section ends with four export items (PNG, JPEG, SVG, JSON). No existing "Export as PDF" item — the brief's "after the existing Export as PDF option" was interpreted as "after the export items in the File section".
+  · `src/app/WhiteboardClient.tsx` (716 lines) — confirmed the existing export handlers (`handleExportPng/Jpg/Svg/Json`), the `canvasContainerRef`, and the TopBar wiring (lines 466–507).
+  · `src/components/room/RoomWhiteboard.tsx` (557 lines) — confirmed the room-page whiteboard has its own TopBar wiring (lines 433–469) with the same export handlers but no template-panel props; this is the second integration target.
+  · `package.json` line 80 — confirmed `pdf-lib@^1.17.1` is installed. `node_modules/pdf-lib` is present (the earlier `ls node_modules` returned "no such directory" due to a glob-expansion artefact; `find /` confirmed the package is at `/home/z/my-project/superboard-source/node_modules/pdf-lib`).
+
+Created `src/lib/handout-generator.ts` (404 lines):
+- Exports `generateHandout(options: HandoutOptions): Promise<Blob>` and `downloadHandoutBlob(blob, filename)`.
+- Uses `pdf-lib` (NOT browser print). A4 page size (595 × 842). StandardFonts only (Helvetica + HelveticaBold + HelveticaOblique).
+- Brand palette: `EMERALD = rgb(0.02, 0.59, 0.41)` (#059669) for headers/titles/bullets/numbered markers, `SLATE_BODY = rgb(0.278, 0.333, 0.412)` (#475569) for body text, `SLATE_MUTED` for meta/footer, `LINE_GRAY` for blank fill-in lines, `DIVIDER_GRAY` for hairline separators.
+- Layout uses a mutable `LayoutCtx` (`{ pdfDoc, page, y, font, boldFont, italicFont }`) cursor. The `ensureSpace(ctx, needed)` helper appends a new A4 page and resets the cursor whenever the next block would overflow the bottom margin — so long widget lists or many practice problems automatically paginate.
+- Sections (in order):
+  1. Header — tutor/agency name (large emerald bold, top-left) + lesson title (right-aligned, fallback "Session Handout"). Below: meta line `Student: ___    |    Date: ___` (left) and `Subject: ___` (right). Both optional.
+  2. "Today's Widgets" — emerald section title with a thin emerald underline. Body: bulleted list of widget names (wrapped via a naïve `wrapText()` word-wrap helper so long names don't overflow). If `widgetNames.length === 0`, renders the italic note "No widgets used in this session." If a `canvasImageBytes` PNG is supplied, embeds it as a "Canvas snapshot:" image (aspect-ratio-preserved, max width 495pt, max height 220pt, horizontally centred).
+  3. "What I Learned Today" — four reflection prompts, each followed by a blank fill-in line that extends from just after the prompt text to the right margin:
+     · "Today I learned about:"
+     · "The most important thing was:"
+     · "I still need help with:"
+     · "One thing I will practice:"
+  4. "Practice Problems" — three numbered problem spaces. Each problem has the emerald number ("1.", "2.", "3.") followed by a blank line, then two more full-width blank lines (indented 16pt) for working space.
+  5. Footer — drawn on EVERY page (loop over `pdfDoc.getPages()` after content is laid out). Left: "Generated by Superboard". Centre: today's date. Right: `Page X of Y`. Hairline above.
+- The function returns `new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' })`. The `new Uint8Array(...)` wrap is needed because `pdfDoc.save()` returns a `Uint8Array<ArrayBufferLike>` and the Blob constructor is picky about backing-buffer types across TS lib targets.
+- `downloadHandoutBlob(blob, filename)` mirrors the existing `downloadBlob()` pattern in `src/lib/whiteboard/export.ts`: creates an `<a>` element, sets `href` to a `URL.createObjectURL(blob)`, sets `download`, appends to body, clicks, removes, and revokes the URL after a 1-second delay (deferred revoke so the download reliably starts in all browsers). SSR-safe (early-returns if `typeof document === 'undefined'`).
+
+Wired up the "Generate Handout (PDF)" menu item:
+- `src/components/whiteboard/TopBar.tsx`:
+  · Added optional `onGenerateHandout?: () => void` to `TopBarProps` (line 33–34).
+  · Added `onGenerateHandout` to the destructured props (line 89).
+  · Added a `<MenuItem label="Generate Handout (PDF)" isDark={isDark} onClick={() => { onGenerateHandout(); setMenuOpen(false) }} />` inside the File section of the More-menu, immediately after the "Export as JSON" item and before the Edit section label (lines 329–331). Rendered conditionally (`{onGenerateHandout && (...)}`) so any future TopBar consumer that doesn't pass the prop won't see the item.
+- `src/app/WhiteboardClient.tsx` (standalone whiteboard):
+  · Added imports: `WIDGET_KIND_LABELS` (from CanvasWidgets), `extractTemplateSnapshot` (from template-snapshot), `generateHandout` + `downloadHandoutBlob` (from handout-generator).
+  · Added `const gridSize = useWhiteboardStore((s) => s.gridSize)` (was already pulling showGrid/snapToGrid/gridType).
+  · Added `handleGenerateHandout` useCallback (lines 195–244). Flow:
+    1. Calls `extractTemplateSnapshot({ elements, isDark, showGrid, gridSize, gridType, snapToGrid })` to get the widget list.
+    2. Maps `snapshot.widgets` → `WIDGET_KIND_LABELS[w.widgetKind] || w.widgetKind` to get human-readable names.
+    3. If `widgetNames.length > 0`, captures the canvas via the existing `exportAsPng(elements, camera, container.clientWidth, container.clientHeight, isDark)` and converts the Blob to a `Uint8Array` via `blob.arrayBuffer()`. Wrapped in a try/catch so a capture failure still produces a text-only handout.
+    4. Calls `generateHandout({ widgetNames, canvasImageBytes })` and `downloadHandoutBlob(blob, 'superboard-handout-YYYY-MM-DD.pdf')`.
+    Deps: `[elements, isDark, showGrid, gridSize, gridType, snapToGrid, camera]`.
+  · Passed `onGenerateHandout={handleGenerateHandout}` to `<TopBar>` (line 531).
+- `src/components/room/RoomWhiteboard.tsx` (room page):
+  · Same imports + gridSize selector + handleGenerateHandout callback (lines 24–26, 65, 274–324). Mirrors the standalone handler byte-for-byte except for the comment header.
+  · Passed `onGenerateHandout={handleGenerateHandout}` to `<TopBar>` (line 498).
+
+Empty-canvas handling:
+- If no widget elements are on the canvas, `extractTemplateSnapshot().widgets` is empty, so `widgetNames = []` and `generateHandout()` renders the italic note "No widgets used in this session." in the Today's Widgets section (instead of the bulleted list + screenshot). The rest of the handout (header, reflection prompts, practice problems, footer) is still generated — so the tutor gets a usable handout shell even before any widgets are placed.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS" | grep -v "katex" | head -10` → ZERO output (0 TS errors). Full `npx tsc --noEmit -p tsconfig.json` also exits 0 with no warnings.
+- Files changed this run:
+  · `src/lib/handout-generator.ts` — NEW (404 lines). Exports `generateHandout()` + `downloadHandoutBlob()` + `HandoutOptions` interface.
+  · `src/components/whiteboard/TopBar.tsx` — added optional `onGenerateHandout` prop + destructuring + conditional `<MenuItem label="Generate Handout (PDF)">` in the File section of the More-menu (430 → 437 lines, +7).
+  · `src/app/WhiteboardClient.tsx` — added imports (WIDGET_KIND_LABELS, extractTemplateSnapshot, generateHandout, downloadHandoutBlob), added `gridSize` selector, added `handleGenerateHandout` useCallback (~50 lines), passed `onGenerateHandout` to `<TopBar>` (716 → 768 lines, +52).
+  · `src/components/room/RoomWhiteboard.tsx` — same imports + gridSize selector + `handleGenerateHandout` callback + `onGenerateHandout` prop wiring (557 → 611 lines, +54).
+- No commits or pushes made.
+
+Stage Summary:
+- The platform can now generate a structured A4 PDF handout (header + widget list + optional canvas screenshot + reflection prompts + blank practice problems + footer with page numbers) via pdf-lib, fully distinct from the existing browser-print canvas export. Accessible from the "More options" menu in both the standalone whiteboard (`/whiteboard`) and the room page (`/room/[roomId]`) as "Generate Handout (PDF)", placed after the existing PNG/JPEG/SVG/JSON export items.
+
+---
+Task ID: 44
+Agent: Sub-agent (Cross-Session Continuity)
+
+Task: Build Cross-Session Continuity (Milestone 2, Feature 2) — surface a student's prior session data (last lesson note, homework status, suggested starting widget) at the start of a new tutoring session via a collapsible SessionResume card on the room page.
+
+Work Log:
+- Read worklog.md (1832 lines) and reviewed recent Task 42 (UX polish) and the Task 43 handout generator to confirm the codebase is at a 0-error TS baseline before starting. Read the existing artifacts mentioned in the brief:
+  · `src/app/api/student/[studentId]/progress/route.ts` (217 lines) — the student progress aggregation API. Returns `{ student, lessons, homework, notes, lastActive }`.
+  · `src/components/dashboard/StudentProgressPanel.tsx` (614 lines) — full dashboard consumer of that API. Confirmed its `ProgressApiResponse` type so any refactor preserves the wire shape.
+  · `src/app/room/[roomId]/page.tsx` (199 lines) — the room page. Layout: `room-layout > room-main (contains WhiteboardClient + breadcrumb + RoomInfoBar + ConnectionStatus + AutoSaveIndicator + WidgetToggleBar + RaiseHandButton + SessionControls) + WidgetPanel`. All overlays are absolutely positioned on top of the whiteboard. RoomInfoBar lives at `top: 56px, left: 60px` (z-index 999); breadcrumb at `top: 12px, left: 60px` (z-index 998).
+  · `src/components/room/widgets/RoomInfoBar.tsx`, `widgets.css` (`.room-info-bar`, `.room-breadcrumb` rules) — to match the styling palette (dark slate translucent background, backdrop-blur, emerald accent).
+  · `src/components/room/widgets/StatToolkit.tsx` addToBoard pattern (lines 138-162) — the canonical "place a widget on the board" pattern using `useWhiteboardStore` + `getDefaultWidgetConfig` + `getWidgetDefaultSize` + `generateId` + `WidgetElement`. Reused this exact pattern in the room page.
+  · `src/lib/room/canvas-widget-registry.ts` — verified every widget kind referenced by my keyword map actually exists in the registry (e.g. `math-fraction-bar`, `math-coordinate-plane`, `math-function-plotter`, `chem-periodic-table`, `bio-cell-diagram`, `phys-circuit-diagram`, etc.). The brief's example kinds like `math-bar-model`, `math-algebra-balance`, `chem-atom-builder` do NOT exist in the registry, so I substituted real kinds and built a more comprehensive map.
+  · `prisma/schema.prisma` — Room, RoomParticipant (has `studentId` column), Student, LessonNote (has `content`, `tutorFeedback`, `topicsForNext`, `rating`; `@@unique([roomId])` so one note per room), Homework (has `status`, `grade`, `tutorFeedback`).
+  · `src/lib/auth-fetch.ts`, `src/lib/auth.ts` — confirmed `authFetch` is the canonical client-side authed fetch and `requireAuth` is the canonical server-side auth guard.
+
+Step 1 — Extract shared progress logic (NO duplication):
+- Created `src/lib/student-progress.ts` (276 lines, NEW). Exports `getStudentProgress(authUserId, studentId): Promise<StudentProgressData | null>` containing the exact aggregation logic that was inline in the progress route handler: user/tier/agency lookup, student lookup with agency scoping, parallel Prisma queries (roomParticipation, homework groupBy, recentNotes, homeworkList), derived stats (completed lessons, subject breakdown, homework completion rate, average rating, last active). Returns the same JSON-serializable shape the route was returning. Returns `null` (instead of a 404 response) when the student isn't found or the caller has no access — so any future caller can decide how to translate that.
+- Refactored `src/app/api/student/[studentId]/progress/route.ts` (217 → 36 lines) to import `getStudentProgress` and translate `null` → 404, otherwise return the data as JSON. Response shape is byte-for-byte identical to before, so `StudentProgressPanel.tsx` continues to work without changes.
+
+Step 2 — Suggested-widget keyword map (simple object lookup, no AI):
+- Created `src/lib/suggested-widget.ts` (134 lines, NEW). Exports `SuggestedWidget` interface and `suggestWidgetForTopics(topicsForNext): SuggestedWidget | null`. Implemented as an ordered `Array<{ keywords: string[], widget: SuggestedWidget }>` with substring matching (first match wins). ~50 rules covering math (fractions, algebra, geometry, number sense, measurement, stats, advanced), chemistry (atoms, bonding, reactions, pH, gas laws, etc.), biology (cells, DNA, genetics, photosynthesis, body systems, ecology, evolution), physics (circuits, forces, motion, waves, energy, optics), and language arts. Every widget kind referenced is verified against `canvas-widget-registry.ts`. Returns `null` when no keyword matches → caller shows the generic "pick a widget from the toolkit" message.
+
+Step 3 — Room resume API endpoint:
+- Created `src/app/api/room/[roomId]/resume/route.ts` (183 lines, NEW). GET handler:
+  1. `requireAuth` → 401 if no auth.
+  2. Validate `roomId` format (`/^[a-zA-Z0-9-]{1,100}$/`, same guard as `/api/room/[roomId]`).
+  3. Look up the room; 404 if not found. Verify caller is the room owner OR an agency owner of the room's tutor (mirrors the access-control pattern in `/api/room/[roomId]/route.ts`); 403 otherwise.
+  4. `db.roomParticipant.findFirst({ where: { roomId, studentId: { not: null } }, orderBy: { joinedAt: 'desc' } })` — finds the most recent participant with a studentId for this room.
+  5. If no such participant → return 200 with all fields `null` (client hides card).
+  6. Otherwise call `getStudentProgress(auth.userId, studentId)` — reuses the existing aggregation logic, no duplication.
+  7. If progress is `null` (caller has no access to that student) → return 200 with all fields `null` (graceful hide, not a 404).
+  8. Compute `hasPreviousSessions = totalAttended > 0 || notes.recent.length > 0`. If false → return 200 with `student` filled but everything else `null` (client hides card via the `!lastSession && !notes` check).
+  9. Otherwise build the simplified response: `{ student: {id, name}, lastSession: {subject, date, durationMinutes} | null, notes: {content, tutorFeedback, topicsForNext, rating, subject, date} | null, homework: {title, status, grade, tutorFeedback, dueDate} | null, suggestedWidget: {kind, label} | null }`. The suggested widget is derived from `notes.topicsForNext` via `suggestWidgetForTopics()`.
+
+Step 4 — SessionResume component:
+- Created `src/components/room/SessionResume.tsx` (458 lines, NEW). Client component:
+  · Props: `roomId: string`, `onStartWidget?: (widgetKind: string) => void`.
+  · Subscribes to `useWhiteboardStore` for `isDark` (so the card palette matches the room theme).
+  · On mount, calls `authFetch('/api/room/${roomId}/resume')`. Fail-open: any non-OK response or network error sets `data=null` (card stays hidden, never blocks the room).
+  · Hidden entirely when: loading, dismissed (local state), `data` is null, `data.student` is null, or `!data.lastSession && !data.notes` (no previous sessions).
+  · Layout: absolute-positioned card at `top: 96px, left: 60px` (sits below the room-info-bar at top: 56px), width 380px, z-index 997, max-width `calc(100% - 76px)`. Same backdrop-blur + translucent slate palette as `.room-info-bar` / `.room-breadcrumb`.
+  · Header row: 📋 + "Session Resume — {studentName}" + ▼ collapse toggle + ✕ dismiss button. ▼ rotates -90deg when collapsed (CSS transition).
+  · Body (collapsible via CSS `max-height` transition with dynamic measurement): last session summary (relative date + short date + subject + duration), Lesson Notes section (content as a blockquote + tutor feedback + rating pill colored by score), Homework section (title + colored status pill + grade + tutor feedback), Suggested starting point section (emerald-tinted card with the widget label + "Start with this widget →" button calling `onStartWidget(kind)`; or the generic "No specific recommendation — pick a widget from the toolkit" message), and a Topics for next footer.
+  · Collapse animation: uses a `bodyRef` + `useEffect` to measure `scrollHeight` (with `maxHeight='none'` temporarily, restored synchronously so there's no visual flash) and stores it in `bodyHeight` state. The body's `maxHeight` is set to `${bodyHeight}px` when expanded, `0px` when collapsed, with a `transition: max-height 0.3s ease`. Falls back to `1000px` if `bodyHeight` is still null on first render.
+  · All buttons have `aria-label` + `title` for accessibility; the card has `role="region"` + `aria-label="Session resume for {name}"`; the collapse button reports `aria-expanded`.
+
+Step 5 — Wire into room page:
+- Modified `src/app/room/[roomId]/page.tsx` (199 → 252 lines). Added imports: `useWhiteboardStore`, `getDefaultWidgetConfig`/`getWidgetDefaultSize` from `@/components/whiteboard/CanvasWidgets`, `generateId` from `@/lib/whiteboard/utils`, `WidgetElement` type from `@/lib/whiteboard/types`, `SessionResume` from `@/components/room/SessionResume`. Added four `useWhiteboardStore` selectors (`addElement`, `camera`, `currentPageIndex`, `isDark`) and a `handleStartWidget` `useCallback` that builds a `WidgetElement` (same construction as `StatToolkit.addToBoard`) and calls `addElement(el)`. Placed `<SessionResume roomId={roomId} onStartWidget={handleStartWidget} />` between `<RoomInfoBar>` and `<ConnectionStatus>` in the room-main area, with a comment explaining the auto-hide behavior.
+
+Step 6 — CSS:
+- Appended a Task 44 block to `src/components/room/widgets/widgets.css` (3903 → 3945 lines, +42). The component itself uses inline styles for theme-adaptive colors and dynamic measurement, so the CSS block is purely for global rules: `.session-resume-card` hook, `@media (max-width: 640px)` repositioning for phones (full-width minus 8px, below the room-info-bar, max-height 70vh with overflow), `@media print { display: none }`, and `@media (prefers-reduced-motion: reduce)` to disable the max-height transition.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx tsc --noEmit -p tsconfig.json` → EXIT 0, zero TS errors (katex filter not even needed — no errors at all).
+- `npx eslint src/components/room/SessionResume.tsx src/lib/student-progress.ts src/lib/suggested-widget.ts 'src/app/api/room/[roomId]/resume/route.ts' 'src/app/api/student/[studentId]/progress/route.ts' 'src/app/room/[roomId]/page.tsx'` → zero warnings/errors.
+- Manually traced the data flow for the four edge cases:
+  · Room has no student participant → API returns 200 with all-null fields → component's `!data.student` check hides the card.
+  · Student has no completed lessons and no notes → API returns 200 with `student` filled but everything else null → component's `!data.lastSession && !data.notes` check hides the card.
+  · Student has notes but no completed lessons (e.g. notes saved mid-session) → API returns notes + suggestedWidget → card shows.
+  · Progress API call fails or returns 401/404 → component catches and sets `data=null` → card stays hidden (fail-open, never blocks the room).
+
+Files changed this run:
+- `src/lib/student-progress.ts` — NEW (276 lines). Extracted shared `getStudentProgress(authUserId, studentId)` helper.
+- `src/lib/suggested-widget.ts` — NEW (134 lines). Keyword→widget-kind lookup with ~50 rules.
+- `src/app/api/student/[studentId]/progress/route.ts` — refactored to thin wrapper around `getStudentProgress` (217 → 36 lines). Response shape unchanged.
+- `src/app/api/room/[roomId]/resume/route.ts` — NEW (183 lines). GET handler that finds the room's most recent student participant, reuses `getStudentProgress`, and returns the simplified `{ student, lastSession, notes, homework, suggestedWidget }` payload.
+- `src/components/room/SessionResume.tsx` — NEW (458 lines). Collapsible, dismissible card. Fetches `/api/room/[roomId]/resume` via `authFetch`. Calls `onStartWidget(widgetKind)` when the tutor clicks "Start with this widget →".
+- `src/app/room/[roomId]/page.tsx` — added `useWhiteboardStore` selectors + `handleStartWidget` callback + `<SessionResume>` JSX between RoomInfoBar and ConnectionStatus (199 → 252 lines, +53).
+- `src/components/room/widgets/widgets.css` — appended `.session-resume-card` responsive + print + reduced-motion rules (3903 → 3945 lines, +42).
+- No commits or pushes made.
+
+Stage Summary:
+- Cross-Session Continuity is live. When a tutor opens `/room/[roomId]` and the room has a student participant (via `RoomParticipant.studentId`) with prior sessions, a collapsible "Session Resume" card materializes below the room-info-bar showing the student's name, last session metadata (subject/duration/relative date), most recent lesson note (content + tutor feedback + star rating), most recent homework (title + status pill + grade + tutor feedback), the `topicsForNext` field, and a one-click "Start with this widget →" button that places a suggested widget onto the board. The suggestion is derived from a ~50-rule keyword map over `topicsForNext` (no AI, O(n) substring scan). The card is hidden entirely when the room has no student, the student has no prior sessions, or the resume API errors (fail-open). Collapsible via ▼ (max-height CSS transition with dynamic measurement) and dismissible via ✕ (in-memory state for the current session). The existing `/api/student/[studentId]/progress` API and `StudentProgressPanel` are untouched in behavior — only the implementation was refactored to share the new `getStudentProgress` helper, so the room-resume endpoint and the dashboard panel read from the exact same code path.
+
+---
+Task ID: 43
+Agent: Lesson Builder (Milestone 2, Feature 1)
+
+Task: Build a Lesson Builder feature that lets tutors compose sequenced lessons from the platform's 120+ interactive widgets, then "play" them step-by-step during sessions. Re-use the existing Template system patterns (Prisma + requireAuth + authFetch + WIDGET_KIND_LABELS) without duplicating addToBoard logic.
+
+Work Log:
+- Read worklog.md (Tasks 41 & 42) + the existing template system: `prisma/schema.prisma` (Template model pattern), `src/app/api/room/templates/route.ts` + `[id]/route.ts` (requireAuth + parseBody pattern), `src/lib/auth.ts` (requireAuth), `src/lib/auth-fetch.ts` (authFetch), `src/lib/validations.ts` (zod schemas + parseBody), `src/components/whiteboard/SaveAsTemplateModal.tsx` + `MyTemplatesPanel.tsx` (UI patterns + .template-modal styles), `src/components/whiteboard/TopBar.tsx` (More menu + MenuItem), `src/components/whiteboard/CanvasWidgets.tsx` (WIDGET_KIND_LABELS, getDefaultWidgetConfig, getWidgetDefaultSize), `src/components/whiteboard/ShortcutsDialog.tsx` (shortcut listing), `src/app/WhiteboardClient.tsx` (state, keyboard handler, Ctrl+Shift+R addToBoard pattern via store.addElement + getDefaultWidgetConfig + getWidgetDefaultSize + camera centering math), `src/lib/whiteboard/types.ts` (WidgetElement, TextElement, BaseElement), `src/lib/whiteboard/store.ts` (addElement, clearCurrentPage, pushHistory, camera, currentPageIndex), `src/lib/whiteboard/utils.ts` (generateId), `src/types/index.ts` (TemplateFull pattern), `src/components/dashboard/DashboardPage.tsx` (nav structure, Resources Tabs), `src/components/dashboard/SavedBoardsPanel.tsx` (panel pattern), `src/lib/subject-meta.ts`, `src/components/dashboard/TemplatesPanel.tsx`.
+- Confirmed the brief's reference to "addToBoard() in WhiteboardClient.tsx" maps to the inline widget-placement pattern used by Ctrl+Shift+R (lines 387-425) and by every toolkit's addToBoard callback (MathToolkit.tsx:290 is the canonical example): compute canvas-center from camera, fetch default size + default config, then call `useWhiteboardStore.getState().addElement({...widget element...})`. Re-used this exact pattern in LessonPlayer.placeStepOnCanvas.
+
+Step 1 — Prisma model:
+- `prisma/schema.prisma`: Added `LessonPlan` model after `Template` (lines 178-201) with fields: id (uuid), tutorId, title (VarChar 200), description (Text, nullable), subject (default "GENERAL"), gradeBand (default ""), tags (String[], default []), steps (Json), isPublic (default false), createdAt, updatedAt. Relation: `tutor User @relation(...)` with `onDelete: Cascade`. Indexes: `@@index([tutorId])`, `@@index([isPublic])`, `@@index([subject])`.
+- Added `lessonPlans LessonPlan[]` to the User model's Relations block (line 53).
+- Ran `npx prisma generate` (Prisma Client v5.22.0) — generated successfully in 345ms with no schema validation errors. Verified via `node -e "const {PrismaClient}=require('@prisma/client'); const p=new PrismaClient(); console.log(Object.keys(p).filter(k=>k.toLowerCase().includes('lesson')));"` → outputs `[ 'lessonPlan', 'scheduledLesson', 'lessonNote' ]`, confirming `db.lessonPlan` is now a valid accessor.
+- Note: Per the brief's "DO NOT commit or push" + the schema's `// New tables will be created via prisma db push` header comment, I did NOT run `prisma db push` or `prisma migrate dev` — the DB-side table creation is a separate deployment step. The TypeScript layer is fully wired and ready.
+
+Step 2 — API routes:
+- `src/lib/validations.ts`: Added `lessonStepSchema`, `createLessonPlanSchema`, `updateLessonPlanSchema` zod schemas (lines 71-102). LessonStep shape matches the brief: `{ id, title, instructions, widgetKind, widgetConfig, duration? }`. Validates widgetKind as 1-120 char string (no enum constraint — widget kinds evolve over time, so loose validation is intentional). Steps array capped at 100 per plan, each instruction capped at 5000 chars, description at 2000 chars, tags at 20 entries of 30 chars.
+- `src/app/api/lessons/route.ts` (new): GET — list own lesson plans with optional `?subject=` filter, omits `steps` (could be large) on list view; POST — create new lesson plan with payload size guard (2MB steps cap) and per-user count limit (100). Both use `requireAuth(request)` from `@/lib/auth` and `parseBody(createLessonPlanSchema, body)`. Mirrors the room/templates route's structure exactly.
+- `src/app/api/lessons/[lessonId]/route.ts` (new): GET (owner or public), PUT (owner-only, partial update), DELETE (owner-only). Uses the Next.js 15 `params: Promise<{ lessonId: string }>` async-params pattern (matches the templates `[id]/route.ts`). Validates lessonId against `^[a-zA-Z0-9-]{1,100}$` to prevent injection via the path. Returns 404 for non-owner access to private lessons (information-leak protection).
+
+Step 3 — LessonBuilder component (`src/components/whiteboard/LessonBuilder.tsx`, ~750 lines):
+- Modal overlay (`.lesson-builder-overlay` + `.lesson-builder`) styled to match SaveAsTemplateModal's rounded-20px card + backdrop-blur + slide-up animation. Width 1100px, max-height calc(100vh - 32px).
+- Header: icon, title ("Lesson Builder" or "Edit Lesson Plan" when editingId is set), step count subtitle, Load button (opens LoadLessonDialog inline sub-component), Play Lesson button (only when editingId is set), Close X.
+- Metadata section: title input, subject select, grade band select, description textarea, tag input + chips (Enter to add, click X to remove, max 20 tags), visibility toggle (Private/Public with Eye/EyeOff icons).
+- Body grid: left column = ordered Step List (320px width, scrollable). Each step row shows grip icon, step number badge, title (or "Untitled step" placeholder in italic gray), widget label (from WIDGET_KIND_LABELS), optional duration pill with Clock icon. Hover reveals Up/Down/Delete action buttons (ChevronUp, ChevronDown, Trash2). Click selects the step for editing. Empty state has helpful message. Add Step button in list header creates a blank step pre-filled with a default widget kind.
+- Right column = Step Editor: title input, instructions textarea (5 rows, 5000 char limit with live counter), widget picker button (shows current widget label + kind + "Change widget ▾" pill). Clicking opens a dropdown with a search input + scrollable list of all 120+ widgets from WIDGET_KIND_LABELS (sorted alphabetically, filtered by search against both label and kind). Selecting a widget calls `getDefaultWidgetConfig(kind)` to auto-fill the step's widgetConfig (resets to that widget's defaults). Optional duration input (number, 0-600 min). Read-only JSON config preview in a <details> for advanced users.
+- Footer: keyboard shortcut hint ("Press Ctrl+Shift+L to open this panel any time"), Cancel + Save buttons. Save validates title (required), step count (>0), each step has widgetKind + title. POST for new, PUT for existing (editingId). Calls onSaved callback with the saved LessonPlanFull, auto-closes after 800ms for new lessons (saved toast), keeps open with a saved-check indicator for updates.
+- LoadLessonDialog sub-component (rendered as an absolute-positioned inner overlay): fetches `/api/lessons` list, displays each as a clickable row with subject icon, title, public/private indicator, meta line (subject · grade band · updated date), description preview. Clicking fetches the full record from `/api/lessons/[id]` and calls onLoad, which populates all fields + sets editingId.
+
+Step 4 — LessonPlayer component (`src/components/whiteboard/LessonPlayer.tsx`, ~430 lines):
+- Floating bottom bar (`.lp-bar`, fixed bottom: 16px, max-width 880px, centered, z-index 10000) with a 3px progress track at the top edge showing % through the lesson.
+- Confirm-clear dialog: shown on open (or restart). Explains that the canvas will be cleared and walks through N steps. Cancel / Start Lesson buttons. Uses pushHistory + clearCurrentPage so the user can undo the clear.
+- placeStepOnCanvas(step): mirrors the toolkit addToBoard pattern — gets `getWidgetDefaultSize(step.widgetKind)`, computes viewport center in canvas coords using `camera.x/y/zoom` (offset 60px from top to clear the top bar), places widget slightly left-of-center so the instructions text can sit to the right. Uses step.widgetConfig if non-empty, else falls back to `getDefaultWidgetConfig(step.widgetKind)`. If the step has instructions, also adds a TextElement to the right of the widget with the step title + instructions (multi-line, 14px, semi-bold). Both elements respect currentPageIndex.
+- Step navigation: Next button advances to next step. If "Keep widgets" toggle is OFF (default), calls pushHistory + clearCurrentPage + places the next step (so the canvas shows one step at a time). If ON, just places the next step on top of the existing canvas (widgets accumulate). Prev button just rewinds the counter (does NOT undo — the user can use Ctrl+Z if they want to undo). When on the last step, Next becomes "Finish" with a Check icon, which sets `finished=true`.
+- Keyboard: ArrowRight/ArrowLeft advance/rewind (only when not typing in a form field, no modifier keys). Escape closes the player.
+- Instructions overlay (top-center, dismissible): shows step counter badge, step title, instructions text (white-space: pre-wrap), optional duration. Hide/Show button in the player bar toggles it.
+- "Lesson Complete!" modal (replaces the player bar): large check icon, lesson title, count of steps completed, optional session-notes textarea (2000 char limit), Restart + Done buttons.
+- Mobile responsive: at ≤640px, hides the lesson title / step info on the left and the "Keep widgets" label text (keeps the checkbox).
+
+Step 5 — WhiteboardClient wiring:
+- Imported `LessonBuilder` and `LessonPlayer` (lines 23-24), plus `LessonPlanFull` from `@/types`.
+- Added state: `lessonBuilderOpen`, `lessonPlayerOpen`, `currentLesson: LessonPlanFull | null`, `editingLesson: LessonPlanFull | null` (lines 108-112).
+- Added a `useEffect` on mount that reads `sessionStorage['superboard_pending_lesson']` (set by the dashboard's LessonPlansPanel) and, if present, sets currentLesson + opens the appropriate panel (edit → LessonBuilder, play → LessonPlayer). Clears the storage entry so it doesn't re-open on refresh (lines 123-146).
+- Keyboard handler additions:
+  · Escape handler (line 404-405): closes lessonPlayer first, then lessonBuilder (clearing editingLesson), before falling through to template modals.
+  · Ctrl+Shift+L (lines 439-444): opens the Lesson Builder.
+  · Ctrl+Shift+P reopen-last-panel: added `else if (last === 'lesson-builder') setLessonBuilderOpen(true)` (line 506) so the lesson builder can be reopened like the other panels.
+- Updated the keyboard useEffect dependency array to include `lessonBuilderOpen`, `lessonPlayerOpen`, `setLessonBuilderOpen`, `setLessonPlayerOpen`, `setEditingLesson` (lines 519-528).
+- Passed `onLessonBuilder={() => setLessonBuilderOpen(true)}` and `onPlayLesson={currentLesson ? () => setLessonPlayerOpen(true) : undefined}` to TopBar (lines 583-584).
+- Rendered `<LessonBuilder>` and `<LessonPlayer>` after the existing template modals (lines 704-721). LessonBuilder's onClose calls `rememberLastPanel('lesson-builder')`. Its `onPlay` callback closes the builder, clears editingLesson, sets currentLesson, and opens the player. Its `onSaved` callback updates currentLesson + editingLesson so subsequent edits are PUTs not POSTs.
+
+Step 6 — TopBar menu integration:
+- Added `onLessonBuilder?` and `onPlayLesson?` props to TopBarProps (lines 68-71), destructured them in the component signature (lines 124-125).
+- Added two MenuItem entries to the More menu's File section (after Community Templates):
+  · "Lesson Builder" with shortcut "Ctrl+⇧L" — always shown when onLessonBuilder is provided.
+  · "Play Current Lesson" — only shown when onPlayLesson is provided (i.e., a lesson is loaded).
+- Did NOT add an unused Play lucide import — the menu items use MenuItem's text label only.
+
+Step 7 — Dashboard integration:
+- Created `src/components/dashboard/LessonPlansPanel.tsx` (~190 lines): Card-based panel listing saved lesson plans with Play / Edit / Delete buttons. Fetches `/api/lessons` on mount. Play/Edit fetch the full record from `/api/lessons/[id]`, stash it in `sessionStorage['superboard_pending_lesson']` as `{ lesson, mode }`, then navigate to `/whiteboard` (where the new mount useEffect picks it up). Delete calls DELETE with a confirm() guard. Pro/Agency tier gate (FREE users see an upgrade prompt). Empty state explains the Ctrl+Shift+L shortcut. Each row shows subject gradient icon, title, public/private Globe/Lock icon, subject · grade band · updated date meta, first 2 tag badges (hidden on mobile). Per-row busy state disables buttons during async ops.
+- Updated `src/components/dashboard/DashboardPage.tsx`:
+  · Imported `ListChecks` from lucide-react (line 65) and `LessonPlansPanel` (line 110).
+  · Added a "Lesson Plans" tab (value="lessons") to BOTH the agency-tier and non-agency Resources TabsList (lines 916-918 and 945-947). Each gets a matching TabsContent rendering `<LessonPlansPanel userId={user?.id || ''} tier={tier} />` (lines 929-931 and 955-957).
+
+Step 8 — ShortcutsDialog update:
+- Added "Ctrl + Shift + L → Open Lesson Builder (compose sequenced lessons)" to the "Panels & Theme" section of the shortcuts list (line 72), between "Open My Templates panel" and "Close any open panel or modal".
+
+Step 9 — Types:
+- `src/types/index.ts`: Added `LessonStep`, `LessonPlanRow` (list view, no steps), and `LessonPlanFull` (with steps) interfaces (lines 336-370). LessonPlanFull extends LessonPlanRow + adds `steps: LessonStep[]`. Mirrors the TemplateFull pattern.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx prisma generate 2>&1 | tail -3` → "✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 345ms" + "Start by importing your Prisma Client" + "Tip: Want to react to database changes...". No schema errors.
+- `npx tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS" | grep -v "katex" | head -10` → ZERO output (0 TS errors). Full tsc also exits 0 with no warnings.
+- Note: node_modules was missing from the workspace (was not pre-installed). Installed dependencies via `bun install --frozen-lockfile` (971 packages, 9.88s) before running prisma generate + tsc. This matches the Task 42 verification pattern.
+- Verified `db.lessonPlan` accessor exists in the PrismaClient via a one-liner node script.
+- No commits or pushes made.
+
+Stage Summary:
+- New Prisma model `LessonPlan` with full CRUD API at `/api/lessons` + `/api/lessons/[lessonId]` (requireAuth + parseBody validated, owner-scoped, with payload size + count limits).
+- New LessonBuilder modal (Ctrl+Shift+L or More menu → "Lesson Builder"): two-pane composer with step list (up/down/delete/reorder via buttons) + step editor (title, instructions, searchable widget picker that auto-fills getDefaultWidgetConfig, optional duration). Lesson metadata (title, subject, grade band, tags, public toggle). Load Existing dialog for opening saved lessons. Save button POSTs new / PUTs existing. Play Lesson button hands off to LessonPlayer.
+- New LessonPlayer floating bottom bar: walks the tutor through steps, places each step's widget on the canvas via the existing addElement pattern (NOT a separate widget-placement mechanism), adds an instructions TextElement next to the widget, supports "Keep widgets" vs "Show one at a time" toggle, ArrowLeft/Right keyboard nav, progress bar, instructions overlay, "Lesson Complete!" finish state with optional session notes.
+- WhiteboardClient integration: state for builder/player/currentLesson/editingLesson, keyboard shortcuts (Ctrl+Shift+L open, Esc close, Ctrl+Shift+P reopen), sessionStorage bridge so the dashboard's Play/Edit buttons can launch directly into the appropriate panel on the whiteboard.
+- TopBar More menu: new "Lesson Builder" + "Play Current Lesson" entries.
+- ShortcutsDialog: Ctrl+Shift+L documented under Panels & Theme.
+- Dashboard: new "Lesson Plans" tab in the Resources section (both agency + non-agency variants) with Play/Edit/Delete actions per lesson.
+- All API routes use `requireAuth` from `src/lib/auth.ts`. All client-side calls use `authFetch`. Widget picker uses `WIDGET_KIND_LABELS`. Default configs use `getDefaultWidgetConfig()`. The builder is a modal overlay (like SaveAsTemplateModal); the player is a floating bottom bar (as specified). No duplicate widget-placement mechanism — the player reuses the same `addElement` + `getDefaultWidgetConfig` + `getWidgetDefaultSize` + camera-centering pattern as the existing Ctrl+Shift+R shortcut and the toolkit addToBoard callbacks.
+- tsc --noEmit passes cleanly (0 errors). The pre-existing katex error mentioned in the brief is not reproduced (filtered by skipLibCheck, per prior tasks' notes).
+- DB-side next step (NOT done — brief said no commit/push): run `npx prisma db push` (or `npx prisma migrate dev --name add_lesson_plan`) to create the `LessonPlan` table in the database. The TypeScript layer is fully wired and ready; runtime will 500 on `/api/lessons/*` until the table exists.

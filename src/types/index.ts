@@ -333,6 +333,42 @@ export interface TemplateFull {
   authorName?: string | null;
 }
 
+// ============================================================
+// Lesson Plan Types (Milestone 2 — Lesson Builder)
+// ============================================================
+
+/** A single sequenced step in a LessonPlan. */
+export interface LessonStep {
+  id: string;
+  title: string;
+  instructions: string;
+  /** Widget kind from WIDGET_KIND_LABELS, e.g. 'math-algebra-balance' */
+  widgetKind: string;
+  /** Default config from getDefaultWidgetConfig() — may be overridden */
+  widgetConfig: Record<string, unknown>;
+  /** Optional estimated duration in minutes */
+  duration?: number;
+}
+
+/** Summary row (list view) — steps omitted. */
+export interface LessonPlanRow {
+  id: string;
+  tutorId: string;
+  title: string;
+  description: string | null;
+  subject: string;
+  gradeBand: string;
+  tags: string[];
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Full lesson plan record (with steps) returned by GET /api/lessons/[id]. */
+export interface LessonPlanFull extends LessonPlanRow {
+  steps: LessonStep[];
+}
+
 export interface SubTutorRow {
   id: string;
   email: string;

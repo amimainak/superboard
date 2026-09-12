@@ -69,6 +69,7 @@ const shortcutSections = [
       { keys: 'Ctrl + Shift + P', action: 'Reopen last closed panel' },
       { keys: 'Ctrl + Shift + S', action: 'Save current board as template' },
       { keys: 'Ctrl + Shift + T', action: 'Open My Templates panel' },
+      { keys: 'Ctrl + Shift + L', action: 'Open Lesson Builder (compose sequenced lessons)' },
       { keys: 'Esc', action: 'Close any open panel or modal' },
     ],
   },

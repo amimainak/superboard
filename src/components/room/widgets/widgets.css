@@ -3900,3 +3900,46 @@
 /* ============================================================
    Superboard — Widget System Styles (end)
    ============================================================ */
+
+/* ============================================================
+   Task 44 — Session Resume Card (Cross-Session Continuity)
+   ============================================================
+   Floating, collapsible card shown when a tutor opens a room with
+   a student they've taught before. The bulk of the styling lives
+   inline in the component (so it can adapt to dark/light + content
+   height); this block handles responsive positioning + print.
+   ============================================================ */
+
+.session-resume-card {
+  /* Default dark palette is set inline; this class is the hook for
+     global rules (responsive, print, forced-colors). */
+}
+
+@media (max-width: 640px) {
+  /* On phones: move below the room-info-bar, full-width minus a
+     small margin, and cap the height so the whiteboard stays
+     reachable. The card itself remains collapsible. */
+  .session-resume-card {
+    top: 78px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+@media print {
+  .session-resume-card {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Disable the max-height collapse animation for users who
+     request reduced motion. The state still toggles instantly. */
+  .session-resume-card * {
+    transition: none !important;
+  }
+}

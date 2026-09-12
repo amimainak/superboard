@@ -13,6 +13,11 @@ import {
   AutoSaveIndicator,
 } from '@/components/room/widgets'
 import { useWidgetStore } from '@/lib/room/widget-store'
+import { useWhiteboardStore } from '@/lib/whiteboard/store'
+import { getDefaultWidgetConfig, getWidgetDefaultSize } from '@/components/whiteboard/CanvasWidgets'
+import { generateId } from '@/lib/whiteboard/utils'
+import type { WidgetElement } from '@/lib/whiteboard/types'
+import { SessionResume } from '@/components/room/SessionResume'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -66,6 +71,46 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null)
   const [saveTrigger, setSaveTrigger] = useState(0)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>('saved')
+
+  // ---- Task 44 — Cross-Session Continuity ----
+  // Subscribe to the whiteboard store so the room page can place a
+  // suggested widget onto the board when the tutor clicks the
+  // "Start with this widget" button on the SessionResume card.
+  // Mirrors the addToBoard pattern used inside the toolkit panels
+  // (see StatToolkit.tsx / MathToolkit.tsx).
+  const addElement = useWhiteboardStore((s) => s.addElement)
+  const camera = useWhiteboardStore((s) => s.camera)
+  const currentPageIndex = useWhiteboardStore((s) => s.currentPageIndex)
+  const isDark = useWhiteboardStore((s) => s.isDark)
+
+  const handleStartWidget = useCallback(
+    (widgetKind: string) => {
+      const size = getWidgetDefaultSize(widgetKind)
+      const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+      const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+      const cx = (vw / 2 - camera.x) / camera.zoom
+      const cy = ((vh / 2 - 44) - camera.y) / camera.zoom
+      const el: WidgetElement = {
+        id: generateId(),
+        type: 'widget',
+        widgetKind,
+        config: getDefaultWidgetConfig(widgetKind),
+        x: cx - size.width / 2,
+        y: cy - size.height / 2,
+        width: size.width,
+        height: size.height,
+        rotation: 0,
+        opacity: 1,
+        strokeColor: isDark ? '#334155' : '#e2e8f0',
+        fillColor: isDark ? '#0f172a' : '#ffffff',
+        strokeWidth: 1,
+        locked: false,
+        pageIndex: currentPageIndex,
+      }
+      addElement(el)
+    },
+    [addElement, camera, isDark, currentPageIndex],
+  )
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -168,6 +213,15 @@ export default function RoomPage() {
         <RoomInfoBar
           subject={room?.subject || 'Room'}
           isActive={room?.isActive ?? false}
+        />
+
+        {/* Task 44 — Cross-Session Continuity: collapsible card showing
+            the student's last lesson note, homework, and a suggested
+            starting widget. Hidden automatically if the room has no
+            student participant or no previous sessions. */}
+        <SessionResume
+          roomId={roomId}
+          onStartWidget={handleStartWidget}
         />
 
         {/* Connection Status — bottom-left overlay on whiteboard */}

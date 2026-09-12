@@ -21,6 +21,9 @@ import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar
 import { useCollabStore } from '@/lib/collab/store'
 import { playNotifySound, playClickSound } from '@/lib/whiteboard/sound'
 import { UploadProgressBar, type UploadProgress } from '@/components/whiteboard/UploadProgressBar'
+import { WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
+import { extractTemplateSnapshot } from '@/lib/template-snapshot'
+import { generateHandout, downloadHandoutBlob } from '@/lib/handout-generator'
 
 // ---- Task 42 / Fix #28 — Haptic feedback for mobile (room context) ----
 function hapticFeedback(pattern: number | number[] = 10) {
@@ -59,6 +62,7 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
   const showGrid = useWhiteboardStore((s) => s.showGrid)
   const snapToGrid = useWhiteboardStore((s) => s.snapToGrid)
   const gridType = useWhiteboardStore((s) => s.gridType)
+  const gridSize = useWhiteboardStore((s) => s.gridSize)
   const isPresentationMode = useWhiteboardStore((s) => s.isPresentationMode)
 
   const setShortcutsOpen = useWhiteboardStore((s) => s.setShortcutsOpen)
@@ -267,6 +271,58 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
     downloadString(json, `superboard-${Date.now()}.json`, 'application/json')
   }, [elements])
 
+  // ---- Task 45: Structured Handout Generator (room context) ----
+  // Mirrors the handler in /app/WhiteboardClient.tsx. Builds an A4 PDF
+  // with header, widget list, "What I Learned" prompts, and blank practice
+  // problems using pdf-lib.
+  const handleGenerateHandout = useCallback(async () => {
+    try {
+      // 1. Get the widget list from the canvas via extractTemplateSnapshot + WIDGET_KIND_LABELS
+      const snapshot = extractTemplateSnapshot({
+        elements,
+        isDark,
+        showGrid,
+        gridSize,
+        gridType,
+        snapToGrid,
+      })
+      const widgetNames = snapshot.widgets.map(
+        (w) => WIDGET_KIND_LABELS[w.widgetKind] || w.widgetKind
+      )
+
+      // 2. Optionally capture a canvas screenshot (PNG bytes) for the widgets section.
+      //    Skipped when there are no widgets OR capture fails — the handout is still useful text-only.
+      let canvasImageBytes: Uint8Array | undefined
+      if (widgetNames.length > 0) {
+        try {
+          const container = canvasContainerRef.current
+          if (container) {
+            const pngBlob = await exportAsPng(
+              elements,
+              camera,
+              container.clientWidth,
+              container.clientHeight,
+              isDark
+            )
+            canvasImageBytes = new Uint8Array(await pngBlob.arrayBuffer())
+          }
+        } catch (captureErr) {
+          console.error('Handout canvas capture failed:', captureErr)
+        }
+      }
+
+      // 3. Build the PDF and trigger a download
+      const blob = await generateHandout({
+        widgetNames,
+        canvasImageBytes,
+      })
+      const stamp = new Date().toISOString().slice(0, 10)
+      downloadHandoutBlob(blob, `superboard-handout-${stamp}.pdf`)
+    } catch (err) {
+      console.error('Handout generation failed:', err)
+    }
+  }, [elements, isDark, showGrid, gridSize, gridType, snapToGrid, camera])
+
   // ---- File Upload ----
   const handleFileUpload = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -439,6 +495,7 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
             onExportSvg={handleExportSvg}
             onExportJson={handleExportJson}
             onExportJpg={handleExportJpg}
+            onGenerateHandout={handleGenerateHandout}
             onShowShortcuts={() => setShortcutsOpen(true)}
             onGroup={groupSelected}
             onUngroup={ungroupSelected}

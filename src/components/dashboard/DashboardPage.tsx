@@ -62,6 +62,7 @@ import {
   Plus,
   BookOpen,
   LayoutTemplate,
+  ListChecks,
   CreditCard,
   Settings,
   Users,
@@ -106,6 +107,7 @@ import { ResourceLibraryPanel } from './ResourceLibraryPanel';
 import { InvoicePanel } from './InvoicePanel';
 import { AgencyAnalyticsPanel } from './AgencyAnalyticsPanel';
 import { StudentProgressPanel } from './StudentProgressPanel';
+import { LessonPlansPanel } from './LessonPlansPanel';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -911,6 +913,9 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                     <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <LayoutTemplate className="w-4 h-4" />Templates
                     </TabsTrigger>
+                    <TabsTrigger value="lessons" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                      <ListChecks className="w-4 h-4" />Lesson Plans
+                    </TabsTrigger>
                     <TabsTrigger value="library" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <FolderOpen className="w-4 h-4" />Shared Library
                     </TabsTrigger>
@@ -920,6 +925,9 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                   </TabsContent>
                   <TabsContent value="templates" className="mt-6">
                     <TemplatesPanel userId={user?.id || ''} tier={tier} />
+                  </TabsContent>
+                  <TabsContent value="lessons" className="mt-6">
+                    <LessonPlansPanel userId={user?.id || ''} tier={tier} />
                   </TabsContent>
                   <TabsContent value="library" className="mt-6">
                     <ResourceLibraryPanel agencyId={user?.id || ''} userId={user?.id || ''} />
@@ -934,12 +942,18 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                     <TabsTrigger value="templates" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
                       <LayoutTemplate className="w-4 h-4" />Templates
                     </TabsTrigger>
+                    <TabsTrigger value="lessons" className="flex items-center gap-2 rounded-lg px-4 py-2.5 data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-emerald-700 font-medium text-sm">
+                      <ListChecks className="w-4 h-4" />Lesson Plans
+                    </TabsTrigger>
                   </TabsList>
                   <TabsContent value="boards" className="mt-6">
                     <SavedBoardsPanel userId={user?.id || ''} tier={tier} />
                   </TabsContent>
                   <TabsContent value="templates" className="mt-6">
                     <TemplatesPanel userId={user?.id || ''} tier={tier} />
+                  </TabsContent>
+                  <TabsContent value="lessons" className="mt-6">
+                    <LessonPlansPanel userId={user?.id || ''} tier={tier} />
                   </TabsContent>
                 </Tabs>
                 )}

@@ -68,6 +68,39 @@ export const updateTemplateSchema = z.object({
   snapshot: z.record(z.string(), z.unknown()).optional(),
 })
 
+// ---- Lesson Plan (Milestone 2 — Lesson Builder) ----
+// A LessonStep is a single sequenced instruction in a lesson plan.
+// It places a widget on the canvas (via its widgetKind + widgetConfig)
+// and shows the tutor a title + freeform instructions.
+export const lessonStepSchema = z.object({
+  id: z.string().min(1).max(80),
+  title: z.string().min(1).max(200),
+  instructions: z.string().max(5000).default(''),
+  widgetKind: z.string().min(1).max(120),
+  widgetConfig: z.record(z.string(), z.unknown()).default({}),
+  duration: z.number().int().min(0).max(600).optional(),
+})
+
+export const createLessonPlanSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  subject: z.enum(SUBJECTS).default('GENERAL'),
+  gradeBand: z.string().max(20).optional(),
+  tags: z.array(z.string().max(30)).max(20).default([]),
+  steps: z.array(lessonStepSchema).max(100).default([]),
+  isPublic: z.boolean().default(false),
+})
+
+export const updateLessonPlanSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  subject: z.enum(SUBJECTS).optional(),
+  gradeBand: z.string().max(20).optional(),
+  tags: z.array(z.string().max(30)).max(20).optional(),
+  steps: z.array(lessonStepSchema).max(100).optional(),
+  isPublic: z.boolean().optional(),
+})
+
 // ---- User Profile ----
 // A-03: Only user-writable fields. NEVER include tier, email, id, isAdmin — those are server-managed.
 export const updateProfileSchema = z.object({
