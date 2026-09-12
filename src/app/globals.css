@@ -2103,17 +2103,30 @@ body {
    on all buttons to remove the 300ms tap delay on legacy iOS.
    ============================================================ */
 @media (max-width: 768px) {
+  /* Touch targets: 44×44 minimum for ALL interactive elements */
   .toolkit-chip,
   .toolkit-add-to-board-btn,
-  button[class*="toolkit"] {
+  button[class*="toolkit"],
+  .widget-content button,
+  .widget-content [role="button"] {
     min-height: 44px;
     min-width: 44px;
     padding: 8px 12px;
   }
+  /* Widget panel: cap at 75vw so canvas stays visible */
   .widget-content {
-    max-width: 70vw;
+    max-width: 75vw !important;
+    width: 75vw !important;
   }
+  /* All buttons: remove 300ms tap delay */
   button {
     touch-action: manipulation;
+  }
+  /* Toolbar buttons: ensure 44px height */
+  .wb-toolbar button,
+  .toolbar button,
+  [class*="toolbar"] button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

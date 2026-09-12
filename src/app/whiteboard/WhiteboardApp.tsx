@@ -21,6 +21,7 @@ import dynamic from 'next/dynamic'
 import {
   WidgetPanel,
   WidgetToggleBar,
+  ConnectionStatus,
 } from '@/components/room/widgets'
 import { OnboardingModal } from '@/components/room/OnboardingModal'
 import '@/components/room/widgets/widgets.css'
@@ -254,6 +255,9 @@ export default function WhiteboardApp() {
         <div aria-live="polite" className="sr-only" id="announcements"></div>
 
         <WidgetPanel roomId="home" />
+
+        {/* Connection status indicator (Fix #20) */}
+        <ConnectionStatus />
 
         {/* Fix #3 — Onboarding modal (first visit only).
             Rendered here at the wrapper layer so it shows even before the

@@ -8,6 +8,7 @@
 
 import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
+import { useWidgetStore } from '@/lib/room/widget-store'
 import { TopBar } from '@/components/whiteboard/TopBar'
 import { ShortcutsDialog } from '@/components/whiteboard/ShortcutsDialog'
 import { LeftToolbar } from '@/components/whiteboard/LeftToolbar'
@@ -342,6 +343,13 @@ export default function WhiteboardClient() {
         if (myTemplatesOpen) { e.preventDefault(); setMyTemplatesOpen(false); return }
         if (communityTemplatesOpen) { e.preventDefault(); setCommunityTemplatesOpen(false); return }
         if (searchOpen) { e.preventDefault(); setSearchKey(0); return }
+        // Close any open widget panels
+        const widgetState = useWidgetStore.getState()
+        if (widgetState.openWidgets.length > 0) {
+          e.preventDefault()
+          widgetState.openWidgets.forEach((w: string) => widgetState.toggleWidget(w as any))
+          return
+        }
         // (Presentation mode is exited by the canvas-level Escape handler.)
       }
 
