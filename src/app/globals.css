@@ -2109,9 +2109,9 @@ body {
   button[class*="toolkit"],
   .widget-content button,
   .widget-content [role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 8px 12px;
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 8px 12px !important;
   }
   /* Widget panel: cap at 75vw so canvas stays visible */
   .widget-content {
