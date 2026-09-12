@@ -65,6 +65,9 @@
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   pointer-events: auto; /* only actual buttons capture pointer events */
+  /* Task 42 / Fix #17 — kill 300ms double-tap zoom on touch */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .widget-toggle-label {
@@ -120,6 +123,67 @@
   background: rgba(14, 14, 16, 0.85);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ---- Room Breadcrumb (Task 42 / Fix #23) ---- */
+.room-breadcrumb {
+  position: absolute;
+  top: 12px;
+  left: 60px;
+  z-index: 998;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: rgba(14, 14, 16, 0.78);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  max-width: calc(100% - 76px);
+  overflow: hidden;
+}
+
+.room-breadcrumb ol {
+  flex-wrap: nowrap !important;
+  gap: 4px !important;
+  font-size: 12px;
+}
+
+.room-breadcrumb a {
+  color: #94a3b8;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.room-breadcrumb a:hover {
+  color: #e2e8f0;
+}
+
+.room-breadcrumb [data-slot="breadcrumb-page"] {
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.room-breadcrumb [data-slot="breadcrumb-separator"] svg {
+  color: #64748b;
+}
+
+@media (max-width: 640px) {
+  .room-breadcrumb {
+    left: 8px;
+    right: 8px;
+    max-width: none;
+    top: 8px;
+    padding: 4px 8px;
+  }
+
+  .room-info-bar {
+    top: 48px;
+    left: 8px;
+  }
 }
 
 .room-info-dot {
@@ -817,19 +881,25 @@
     height: 18px;
   }
 
-  /* Widget panel: full-screen overlay */
+  /* Widget panel: right-side 70% overlay (Task 42 / Fix #17 — leave canvas
+     visible on the left 30% so the tutor can still see the board) */
   .widget-panel {
     position: absolute;
     right: 0;
     top: 0;
     bottom: 0;
-    left: 0;
-    width: 100% !important;
-    min-width: 100% !important;
+    left: 30%;
+    width: 70% !important;
+    min-width: 70% !important;
     z-index: 999;
-    border-left: none;
+    border-left: 1px solid rgba(255,255,255,0.08);
     border-radius: 0;
-    animation: none;
+    animation: widget-panel-slide-in-mobile 0.2s ease;
+  }
+
+  @keyframes widget-panel-slide-in-mobile {
+    from { transform: translateX(8%); opacity: 0.6; }
+    to   { transform: translateX(0); opacity: 1; }
   }
 
   .widget-panel-float {
@@ -837,11 +907,11 @@
     top: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 100% !important;
-    min-width: 100% !important;
+    width: 70% !important;
+    min-width: 70% !important;
     height: 100% !important;
     border-radius: 0 !important;
-    box-shadow: none !important;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.4) !important;
     border: none !important;
   }
 
@@ -1006,6 +1076,124 @@
 
 .connection-status-light .connection-status-count {
   color: #94a3b8;
+}
+
+/* ---- Connection Lost Banner (Task 42 / Fix #20) ---- */
+.connection-lost-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(239, 68, 68, 0.95);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+  backdrop-filter: blur(8px);
+  max-width: calc(100% - 32px);
+  animation: connection-lost-slide-in 0.25s ease;
+}
+
+.connection-lost-banner-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.connection-lost-banner-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.connection-lost-banner-close {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.connection-lost-banner-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+@keyframes connection-lost-slide-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Pulsing dot for the "connecting" state */
+.connection-status-dot-pulse {
+  animation: connection-status-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes connection-status-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+/* ---- Top-bar connection dot (Task 42 / Fix #20) ----
+   Small floating indicator at the top-right of the whiteboard area
+   so connection state is glanceable from the top bar. The widget
+   toggle bar lives in the same vertical band, so this dot is offset
+   to the left of the toggle bar to avoid overlap. */
+.connection-status-topdot {
+  position: absolute;
+  top: 10px;
+  right: 56px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.connection-status-topdot-light {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0,0,0,0.08);
+}
+
+@media (max-width: 640px) {
+  /* On mobile the top-right is crowded by the widget toggle bar — hide
+     the top-bar dot and rely on the bottom-left pill + disconnect
+     banner instead. */
+  .connection-status-topdot {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .connection-lost-banner {
+    font-size: 11px;
+    padding: 6px 10px;
+    gap: 8px;
+    left: 8px;
+    right: 8px;
+    transform: none;
+    max-width: none;
+  }
+
+  .connection-lost-banner-text {
+    white-space: normal;
+  }
 }
 
 /* ---- Raise Hand wrapper (positioned via CSS, not inline) ---- */

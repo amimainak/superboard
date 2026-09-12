@@ -518,11 +518,11 @@ export function ChemicalEquationBalancer({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 58 }}>Reactants:</span>
-          <input style={{ ...s.input, flex: 1, minWidth: 0 }} value={reactStr} onChange={e => { setReactStr(e.target.value); setResult(null); setAttempted(false) }} />
+          <input style={{ ...s.input, flex: 1, minWidth: 0 }} aria-label="Reactants" value={reactStr} onChange={e => { setReactStr(e.target.value); setResult(null); setAttempted(false) }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 58 }}>Products:</span>
-          <input style={{ ...s.input, flex: 1, minWidth: 0 }} value={prodStr} onChange={e => { setProdStr(e.target.value); setResult(null); setAttempted(false) }} />
+          <input style={{ ...s.input, flex: 1, minWidth: 0 }} aria-label="Products" value={prodStr} onChange={e => { setProdStr(e.target.value); setResult(null); setAttempted(false) }} />
         </div>
         <button style={{ ...s.btn(false), alignSelf: 'flex-start' }} onClick={handleBalance}>Balance</button>
       </div>
@@ -689,7 +689,7 @@ export function PhScaleVisualizer({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: 10, color: s.text }}>pH:</span>
-          <input type="number" min={0} max={14} step={0.1} value={ph}
+          <input type="number" aria-label="pH value" min={0} max={14} step={0.1} value={ph}
             onChange={e => setPh(Math.max(0, Math.min(14, parseFloat(e.target.value) || 0)))}
             style={{ ...s.input, width: 52 }} />
         </div>
@@ -836,13 +836,13 @@ export function ScientificNotationConverter({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 38 }}>Number:</span>
-          <input style={{ ...s.input, flex: 1, minWidth: 0 }} value={input1}
+          <input style={{ ...s.input, flex: 1, minWidth: 0 }} aria-label="First number" value={input1}
             onChange={e => setInput1(e.target.value)} placeholder="e.g. 3500000 or 3.5e6" />
         </div>
         {isOp && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 38 }}>Number 2:</span>
-            <input style={{ ...s.input, flex: 1, minWidth: 0 }} value={input2}
+            <input style={{ ...s.input, flex: 1, minWidth: 0 }} aria-label="Second number" value={input2}
               onChange={e => setInput2(e.target.value)} placeholder="Second number" />
           </div>
         )}
@@ -936,7 +936,7 @@ export function MolarMassCalculator({ isDark }: { isDark: boolean }) {
     <div>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 42 }}>Formula:</span>
-        <input style={{ ...s.input, flex: 1, minWidth: 0 }} value={formula}
+        <input style={{ ...s.input, flex: 1, minWidth: 0 }} aria-label="Chemical formula" value={formula}
           onChange={e => setFormula(e.target.value)} placeholder="e.g. Ca(OH)2, C6H12O6" />
       </div>
 
@@ -1404,7 +1404,7 @@ export function GasLawsSimulator({ isDark }: { isDark: boolean }) {
         return (
           <div key={sl.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10 }}>
             <span style={{ color: s.text, width: 105, flexShrink: 0 }}>{sl.label}</span>
-            <input type="range" min={sl.min} max={sl.max} step={sl.step} value={isLocked ? Math.min(sl.max, Math.max(sl.min, sl.displayVal)) : sl.val}
+            <input type="range" aria-label={`${sl.label} slider`} min={sl.min} max={sl.max} step={sl.step} value={isLocked ? Math.min(sl.max, Math.max(sl.min, sl.displayVal)) : sl.val}
               onChange={e => { if (!isLocked) sl.setter(parseFloat(e.target.value)) }}
               style={{ flex: 1, accentColor: '#34d399', opacity: isLocked ? 0.4 : 1 }} />
             <span style={{ color: isComputed ? '#34d399' : s.bright, fontWeight: 600, width: 55, textAlign: 'right', fontSize: 10 }}>{parseFloat(sl.displayVal.toFixed(2))} {sl.unit}</span>
@@ -1530,15 +1530,15 @@ export function AcidBaseTitration({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
           <span style={{ color: s.text }}>Acid (M):</span>
-          <input type="number" value={acidConc} onChange={e => setAcidConc(Math.max(0.001, parseFloat(e.target.value) || 0.1))} step={0.01} min={0.001} max={2} style={{ ...s.input, width: 60 }} />
+          <input type="number" aria-label="Acid concentration in molarity" value={acidConc} onChange={e => setAcidConc(Math.max(0.001, parseFloat(e.target.value) || 0.1))} step={0.01} min={0.001} max={2} style={{ ...s.input, width: 60 }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
           <span style={{ color: s.text }}>Acid vol (mL):</span>
-          <input type="number" value={acidVol} onChange={e => setAcidVol(Math.max(1, parseFloat(e.target.value) || 25))} step={1} min={1} max={100} style={{ ...s.input, width: 50 }} />
+          <input type="number" aria-label="Acid volume in milliliters" value={acidVol} onChange={e => setAcidVol(Math.max(1, parseFloat(e.target.value) || 25))} step={1} min={1} max={100} style={{ ...s.input, width: 50 }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
           <span style={{ color: s.text }}>Base (M):</span>
-          <input type="number" value={baseConc} onChange={e => setBaseConc(Math.max(0.001, parseFloat(e.target.value) || 0.1))} step={0.01} min={0.001} max={2} style={{ ...s.input, width: 60 }} />
+          <input type="number" aria-label="Base concentration in molarity" value={baseConc} onChange={e => setBaseConc(Math.max(0.001, parseFloat(e.target.value) || 0.1))} step={0.01} min={0.001} max={2} style={{ ...s.input, width: 60 }} />
         </div>
       </div>
 
@@ -1858,7 +1858,7 @@ export function StatesOfMatterExplorer({ isDark }: { isDark: boolean }) {
       {/* Temperature slider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 38 }}>Temp</span>
-        <input type="range" min={-50} max={200} step={1} value={temp}
+        <input type="range" aria-label="Temperature in degrees Celsius" min={-50} max={200} step={1} value={temp}
           onChange={e => setTemp(parseInt(e.target.value, 10))}
           style={{ flex: 1, accentColor: stateColor }} />
         <span style={{ fontSize: 11, color: s.bright, minWidth: 42, textAlign: 'right' }}>{temp}°C</span>
@@ -2013,7 +2013,7 @@ export function MixturesAndSolutions({ isDark }: { isDark: boolean }) {
       {/* Temperature slider + Heat toggle */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 28 }}>Heat</span>
-        <input type="range" min={5} max={90} step={1} value={temp}
+        <input type="range" aria-label="Heat temperature in degrees Celsius" min={5} max={90} step={1} value={temp}
           onChange={e => setTemp(parseInt(e.target.value, 10))}
           style={{ flex: 1, accentColor: '#f87171' }} />
         <span style={{ fontSize: 11, color: s.bright, minWidth: 36, textAlign: 'right' }}>{temp}°C</span>
@@ -2781,7 +2781,7 @@ export function NuclearChemistryExplorer({ isDark }: { isDark: boolean }) {
         </button>
         <button onClick={reset} style={s.btn(false)}>↺ Reset</button>
         <span style={{ fontSize: 10, color: s.text }}>Speed: <b style={{ color: s.bright }}>{speed.toFixed(1)}×</b></span>
-        <input type="range" min={0.5} max={5} step={0.5} value={speed} onChange={e => setSpeed(parseFloat(e.target.value))} style={{ flex: 1, accentColor: '#34d399' }} />
+        <input type="range" aria-label="Animation speed multiplier" min={0.5} max={5} step={0.5} value={speed} onChange={e => setSpeed(parseFloat(e.target.value))} style={{ flex: 1, accentColor: '#34d399' }} />
       </div>
 
       <div style={{ background: s.bg, border: '1px solid ' + s.border, borderRadius: 4, padding: '6px 8px', display: 'flex', gap: 12, fontSize: 10, color: s.text, flexWrap: 'wrap' }}>
@@ -4119,7 +4119,7 @@ export function PhaseChangeGraph({ isDark }: { isDark: boolean }) {
         <button onClick={() => { setPlaying(false); setTime(0) }} style={s.btn(false)}>↺ Reset</button>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
           <span style={{ fontSize: 9, color: s.text }}>t:</span>
-          <input type="range" min={0} max={20} step={0.1} value={time} onChange={e => { setPlaying(false); setTime(parseFloat(e.target.value)) }} style={{ flex: 1 }} />
+          <input type="range" aria-label="Time in seconds" min={0} max={20} step={0.1} value={time} onChange={e => { setPlaying(false); setTime(parseFloat(e.target.value)) }} style={{ flex: 1 }} />
         </div>
       </div>
 
@@ -4305,7 +4305,7 @@ export function AcidBaseIndicators({ isDark }: { isDark: boolean }) {
       {/* pH slider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text }}>pH:</span>
-        <input type="range" min={0} max={14} step={0.1} value={ph} onChange={e => onSliderChange(parseFloat(e.target.value))} style={{ flex: 1 }} />
+        <input type="range" aria-label="pH slider" min={0} max={14} step={0.1} value={ph} onChange={e => onSliderChange(parseFloat(e.target.value))} style={{ flex: 1 }} />
         <span style={{ fontSize: 12, fontWeight: 700, color: s.bright, minWidth: 28, textAlign: 'right' }}>{ph.toFixed(1)}</span>
         <span style={{ fontSize: 9, fontWeight: 700, color: classColor, padding: '1px 6px', borderRadius: 8, background: classColor + '22' }}>{classification}</span>
       </div>

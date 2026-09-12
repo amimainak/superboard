@@ -475,12 +475,12 @@ export function ScatterPlot({ isDark }: ToolProps) {
       <div style={{ display: 'flex', gap: 6 }}>
         <div style={{ flex: 1 }}>
           <label style={{ fontSize: 10, color: s.text, display: 'block', marginBottom: 2 }}>X values</label>
-          <input value={rawX} onChange={e => setRawX(e.target.value)} placeholder="1, 2, 3..."
+          <input aria-label="X values" value={rawX} onChange={e => setRawX(e.target.value)} placeholder="1, 2, 3..."
             style={{ ...s.input, width: '100%', fontFamily: 'monospace' }} />
         </div>
         <div style={{ flex: 1 }}>
           <label style={{ fontSize: 10, color: s.text, display: 'block', marginBottom: 2 }}>Y values</label>
-          <input value={rawY} onChange={e => setRawY(e.target.value)} placeholder="2, 4, 6..."
+          <input aria-label="Y values" value={rawY} onChange={e => setRawY(e.target.value)} placeholder="2, 4, 6..."
             style={{ ...s.input, width: '100%', fontFamily: 'monospace' }} />
         </div>
       </div>
@@ -615,13 +615,13 @@ export function NormalDist({ isDark }: ToolProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 11, color: s.text, minWidth: 45 }}>Mean:</span>
-          <input type="range" min={-5} max={5} step={0.1} value={mu} onChange={e => setMu(Number(e.target.value))}
+          <input type="range" aria-label="Mean" min={-5} max={5} step={0.1} value={mu} onChange={e => setMu(Number(e.target.value))}
             style={{ flex: 1, accentColor: curveColor }} />
           <span style={{ fontSize: 11, color: s.bright, fontFamily: 'monospace', minWidth: 30 }}>{mu.toFixed(1)}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 11, color: s.text, minWidth: 45 }}>Std Dev:</span>
-          <input type="range" min={0.2} max={3} step={0.1} value={sigma} onChange={e => setSigma(Number(e.target.value))}
+          <input type="range" aria-label="Standard deviation" min={0.2} max={3} step={0.1} value={sigma} onChange={e => setSigma(Number(e.target.value))}
             style={{ flex: 1, accentColor: curveColor }} />
           <span style={{ fontSize: 11, color: s.bright, fontFamily: 'monospace', minWidth: 30 }}>{sigma.toFixed(1)}</span>
         </div>
@@ -631,9 +631,9 @@ export function NormalDist({ isDark }: ToolProps) {
         {shading && (
           <>
             <span style={{ fontSize: 10, color: s.text }}>From:</span>
-            <input type="number" value={shadeFrom} step={0.1} onChange={e => setShadeFrom(Number(e.target.value))} style={{ ...s.input, width: 52 }} />
+            <input type="number" aria-label="Shade from value" value={shadeFrom} step={0.1} onChange={e => setShadeFrom(Number(e.target.value))} style={{ ...s.input, width: 52 }} />
             <span style={{ fontSize: 10, color: s.text }}>To:</span>
-            <input type="number" value={shadeTo} step={0.1} onChange={e => setShadeTo(Number(e.target.value))} style={{ ...s.input, width: 52 }} />
+            <input type="number" aria-label="Shade to value" value={shadeTo} step={0.1} onChange={e => setShadeTo(Number(e.target.value))} style={{ ...s.input, width: 52 }} />
           </>
         )}
       </div>
@@ -902,7 +902,7 @@ export function PictographBuilder({ isDark }: ToolProps) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Pictograph title..." style={{ ...s.input, width: '100%' }} />
+      <input aria-label="Pictograph title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Pictograph title..." style={{ ...s.input, width: '100%' }} />
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: 10, color: s.text }}>Icon:</span>
         {PICTOGRAPH_ICONS.map(ic => (
@@ -919,8 +919,8 @@ export function PictographBuilder({ isDark }: ToolProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {categories.map((cat, i) => (
           <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <input value={cat.name} onChange={e => updateCat(i, 'name', e.target.value)} style={{ ...s.input, flex: 1 }} />
-            <input type="number" value={cat.count} onChange={e => updateCat(i, 'count', e.target.value)} style={{ ...s.input, width: 50 }} />
+            <input aria-label={`Category ${i + 1} name`} value={cat.name} onChange={e => updateCat(i, 'name', e.target.value)} style={{ ...s.input, flex: 1 }} />
+            <input type="number" aria-label={`Category ${i + 1} count`} value={cat.count} onChange={e => updateCat(i, 'count', e.target.value)} style={{ ...s.input, width: 50 }} />
             <button onClick={() => removeCat(i)} style={{ ...s.btn(false), color: '#f87171' }}>✕</button>
           </div>
         ))}
@@ -1016,8 +1016,8 @@ export function BarGraphMaker({ isDark }: ToolProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <input value={labels} onChange={e => setLabels(e.target.value)} placeholder="Labels (comma-separated)" style={{ ...s.input, width: '100%' }} />
-        <input value={values} onChange={e => setValues(e.target.value)} placeholder="Values (comma-separated)" style={{ ...s.input, width: '100%' }} />
+        <input aria-label="Bar chart labels (comma-separated)" value={labels} onChange={e => setLabels(e.target.value)} placeholder="Labels (comma-separated)" style={{ ...s.input, width: '100%' }} />
+        <input aria-label="Bar chart values (comma-separated)" value={values} onChange={e => setValues(e.target.value)} placeholder="Values (comma-separated)" style={{ ...s.input, width: '100%' }} />
       </div>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{ fontSize: 10, color: s.text }}>Color:</span>
@@ -1213,7 +1213,7 @@ export function LinePlotFractions({ isDark }: ToolProps) {
         })}
       </svg>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-        <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="Add value (0, 0.5, 1, 1.5...)" style={{ ...s.input, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter') addValue() }} />
+        <input aria-label="Add dot plot value" value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="Add value (0, 0.5, 1, 1.5...)" style={{ ...s.input, flex: 1 }} onKeyDown={e => { if (e.key === 'Enter') addValue() }} />
         <button onClick={addValue} style={s.btn(false)}>Add</button>
         <button onClick={removeLast} style={s.btn(false)}>Undo</button>
         <button onClick={clearAll} style={{ ...s.btn(false), color: '#f87171' }}>Clear</button>
@@ -1300,7 +1300,7 @@ export function TallyChartConverter({ isDark }: ToolProps) {
           return (
             <div key={i} style={{ padding: '4px 6px', borderRadius: 4, background: s.bg, border: '1px solid ' + s.border }}>
               <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 3 }}>
-                <input value={cat.name} onChange={e => updateName(i, e.target.value)} style={{ ...s.input, flex: 1 }} />
+                <input aria-label={`Tally category ${i + 1} name`} value={cat.name} onChange={e => updateName(i, e.target.value)} style={{ ...s.input, flex: 1 }} />
                 <span style={{ fontSize: 11, fontWeight: 700, color: s.bright, fontFamily: 'monospace', minWidth: 24, textAlign: 'right' as const }}>{cat.count}</span>
                 <button onClick={() => addTally(i)} style={{ ...s.btn(false), padding: '2px 8px', fontWeight: 700 as const }}>+</button>
                 <button onClick={() => removeTally(i)} style={{ ...s.btn(false), padding: '2px 8px' }}>−</button>
@@ -1678,9 +1678,9 @@ export function CustomSpinner({ isDark }: ToolProps) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         {sections.map((sec, i) => (
           <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <input type="color" value={sec.color} onChange={e => updateSection(i, 'color', e.target.value)} style={{ width: 24, height: 24, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }} />
-            <input value={sec.label} onChange={e => updateSection(i, 'label', e.target.value)} style={{ ...s.input, flex: 1 }} />
-            <input type="number" value={sec.size} onChange={e => updateSection(i, 'size', e.target.value)} style={{ ...s.input, width: 45 }} />
+            <input type="color" aria-label={`Section ${i + 1} color`} value={sec.color} onChange={e => updateSection(i, 'color', e.target.value)} style={{ width: 24, height: 24, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }} />
+            <input aria-label={`Section ${i + 1} label`} value={sec.label} onChange={e => updateSection(i, 'label', e.target.value)} style={{ ...s.input, flex: 1 }} />
+            <input type="number" aria-label={`Section ${i + 1} size`} value={sec.size} onChange={e => updateSection(i, 'size', e.target.value)} style={{ ...s.input, width: 45 }} />
             <span style={{ fontSize: 9, color: s.text, minWidth: 32, textAlign: 'right' as const }}>{((sec.size / Math.max(totalSize, 1)) * 100).toFixed(0)}%</span>
             <button onClick={() => removeSection(i)} style={{ ...s.btn(false), color: '#f87171' }}>✕</button>
           </div>
@@ -1878,7 +1878,7 @@ export function ConfidenceIntervalBuilder({ isDark }: ToolProps) {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 35 }}>n =</span>
-        <input type="range" min={5} max={200} step={1} value={n} onChange={e => setN(Number(e.target.value))} style={{ flex: 1, accentColor: curveColor }} />
+        <input type="range" aria-label="Sample size n" min={5} max={200} step={1} value={n} onChange={e => setN(Number(e.target.value))} style={{ flex: 1, accentColor: curveColor }} />
         <span style={{ fontSize: 11, color: s.bright, fontFamily: 'monospace', minWidth: 28 }}>{n}</span>
       </div>
       <div style={{ display: 'flex', gap: 4 }}>
@@ -2049,7 +2049,7 @@ export function HypothesisTestExplorer({ isDark }: ToolProps) {
       {/* Controls */}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
         <span style={{ fontSize: 10, color: s.text }}>H₀: μ =</span>
-        <input type="number" value={h0Value} step={1} onChange={e => setH0Value(Number(e.target.value))} style={{ ...s.input, width: 50 }} />
+        <input type="number" aria-label="Null hypothesis value" value={h0Value} step={1} onChange={e => setH0Value(Number(e.target.value))} style={{ ...s.input, width: 50 }} />
         <span style={{ fontSize: 10, color: s.text, marginLeft: 6 }}>α:</span>
         <button onClick={() => setAlphaIdx(0)} style={s.btn(alphaIdx === 0)}>0.05</button>
         <button onClick={() => setAlphaIdx(1)} style={s.btn(alphaIdx === 1)}>0.01</button>
@@ -2483,7 +2483,7 @@ export function ChiSquareExplorer({ isDark }: ToolProps) {
             <span style={{ width: 10, height: 10, borderRadius: 2, background: c.color, display: 'inline-block' }} />
             <span style={{ color: s.bright, minWidth: 48 }}>{c.name}</span>
             <span style={{ color: s.text }}>Obs:</span>
-            <input type="number" min={0} value={c.observed} onChange={e => setObserved(i, Number(e.target.value))} style={{ ...s.input, width: 42, fontFamily: 'monospace' }} />
+            <input type="number" aria-label={`${c.name} observed count`} min={0} value={c.observed} onChange={e => setObserved(i, Number(e.target.value))} style={{ ...s.input, width: 42, fontFamily: 'monospace' }} />
             <span style={{ color: s.text, marginLeft: 'auto' }}>Exp: <b style={{ color: expColor, fontFamily: 'monospace' }}>{expected.toFixed(1)}</b></span>
           </div>
         ))}
@@ -2616,29 +2616,29 @@ export function TwoWayTableBuilder({ isDark }: ToolProps) {
         <div style={{ background: headerBg, padding: '4px 2px' }} />
         {colLabels.map((l, i) => (
           <div key={i} style={{ background: headerBg, padding: '2px' }}>
-            <input value={l} onChange={e => updateColLabel(i, e.target.value)} style={inputStyle} />
+            <input aria-label={`Column ${i + 1} label`} value={l} onChange={e => updateColLabel(i, e.target.value)} style={inputStyle} />
           </div>
         ))}
         <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontSize: 9 }}>Total</div>
 
         {/* Row 1 */}
         <div style={{ background: headerBg, padding: '2px' }}>
-          <input value={rowLabels[0]} onChange={e => updateRowLabel(0, e.target.value)} style={inputStyle} />
+          <input aria-label="Row 1 label" value={rowLabels[0]} onChange={e => updateRowLabel(0, e.target.value)} style={inputStyle} />
         </div>
         {[0, 1].map(c => (
           <div key={c} style={{ background: s.bg, padding: '2px' }}>
-            <input type="number" value={counts[0][c]} onChange={e => updateCell(0, c, parseInt(e.target.value) || 0)} style={cellInputStyle} />
+            <input type="number" aria-label={`Row 1 column ${c + 1} count`} value={counts[0][c]} onChange={e => updateCell(0, c, parseInt(e.target.value) || 0)} style={cellInputStyle} />
           </div>
         ))}
         <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontFamily: 'monospace' }}>{rowTotals[0]}</div>
 
         {/* Row 2 */}
         <div style={{ background: headerBg, padding: '2px' }}>
-          <input value={rowLabels[1]} onChange={e => updateRowLabel(1, e.target.value)} style={inputStyle} />
+          <input aria-label="Row 2 label" value={rowLabels[1]} onChange={e => updateRowLabel(1, e.target.value)} style={inputStyle} />
         </div>
         {[0, 1].map(c => (
           <div key={c} style={{ background: s.bg, padding: '2px' }}>
-            <input type="number" value={counts[1][c]} onChange={e => updateCell(1, c, parseInt(e.target.value) || 0)} style={cellInputStyle} />
+            <input type="number" aria-label={`Row 2 column ${c + 1} count`} value={counts[1][c]} onChange={e => updateCell(1, c, parseInt(e.target.value) || 0)} style={cellInputStyle} />
           </div>
         ))}
         <div style={{ background: totalBg, padding: '4px 2px', textAlign: 'center', fontWeight: 700, color: '#a78bfa', fontFamily: 'monospace' }}>{rowTotals[1]}</div>
@@ -3029,7 +3029,7 @@ export function SampleVsPopulationSim({ isDark }: ToolProps) {
       {/* Population % slider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: s.text }}>
         <span style={{ minWidth: 75 }}>Pop % red:</span>
-        <input type="range" min={10} max={90} step={5} value={popPercent}
+        <input type="range" aria-label="Population percent red" min={10} max={90} step={5} value={popPercent}
           onChange={e => { setPopPercent(parseInt(e.target.value)); reset() }}
           style={{ flex: 1 }} />
         <span style={{ fontFamily: 'monospace', color: s.bright, minWidth: 32, textAlign: 'right' as const }}>{popPercent}%</span>

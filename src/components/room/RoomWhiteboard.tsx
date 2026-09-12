@@ -18,6 +18,18 @@ import { initRealtimeSync } from '@/lib/collab/realtime-sync'
 import { hasFeature } from '@/lib/features'
 import type { Tier } from '@/lib/validations'
 import { MobileBottomToolbar } from '@/components/whiteboard/MobileBottomToolbar'
+import { useCollabStore } from '@/lib/collab/store'
+import { playNotifySound, playClickSound } from '@/lib/whiteboard/sound'
+import { UploadProgressBar, type UploadProgress } from '@/components/whiteboard/UploadProgressBar'
+
+// ---- Task 42 / Fix #28 — Haptic feedback for mobile (room context) ----
+function hapticFeedback(pattern: number | number[] = 10) {
+  if (typeof window === 'undefined') return
+  const nav = navigator as Navigator & { vibrate?: (p: number | number[]) => boolean }
+  if (typeof nav.vibrate === 'function') {
+    try { nav.vibrate(pattern) } catch { /* ignore */ }
+  }
+}
 
 interface RoomWhiteboardProps {
   roomId: string
@@ -84,6 +96,8 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
   const loadedRef = useRef(false)
   const saveRequestRef = useRef(false)
   const realtimeCleanupRef = useRef<(() => void) | null>(null)
+  // Task 42 / Fix #30 — file upload progress
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
 
   // Fetch user tier for feature gating
   useEffect(() => {
@@ -261,7 +275,14 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
       for (const file of Array.from(files)) {
         if (!file.type.startsWith('image/')) continue
         const reader = new FileReader()
+        // Task 42 / Fix #30 — track file-read progress
+        reader.onprogress = (ev) => {
+          if (ev.lengthComputable) {
+            setUploadProgress({ fileName: file.name, loaded: ev.loaded, total: ev.total })
+          }
+        }
         reader.onload = (re) => {
+          setUploadProgress((p) => p ? { ...p, loaded: p.total || 1 } : p)
           const img = new Image()
           img.onload = () => {
             const maxW = 400
@@ -280,9 +301,11 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
               src: re.target?.result as string,
               naturalWidth: img.width, naturalHeight: img.height,
             })
+            window.setTimeout(() => setUploadProgress(null), 250)
           }
           img.src = re.target?.result as string
         }
+        reader.onerror = () => setUploadProgress(null)
         reader.readAsDataURL(file)
       }
       e.target.value = ''
@@ -344,6 +367,58 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // ---- Task 42 / Fix #29 — notify sound when a student joins ----
+  // Watches the collab store's remoteUsers count; when it increases,
+  // plays a soft two-tone notification (muted by default).
+  const prevRemoteCountRef = useRef<number>(0)
+  const remoteUserCount = useCollabStore((s) => s.remoteUsers.length)
+  useEffect(() => {
+    // Skip the very first run (initial sync / hydration).
+    if (prevRemoteCountRef.current === 0 && remoteUserCount > 0) {
+      prevRemoteCountRef.current = remoteUserCount
+      return
+    }
+    if (remoteUserCount > prevRemoteCountRef.current) {
+      playNotifySound()
+    }
+    prevRemoteCountRef.current = remoteUserCount
+  }, [remoteUserCount])
+
+  // ---- Task 42 / Fix #28 — haptic + click sound when a widget is added ----
+  // Watches the elements array; when a NEW widget element appears on the
+  // current page (after the initial sync), fires haptic + click sound.
+  const prevWidgetIdsRef = useRef<Set<string> | null>(null)
+  useEffect(() => {
+    const currentWidgetIds = new Set(
+      elements
+        .filter((el) => el.type === 'widget' && el.pageIndex === currentPageIndex)
+        .map((el) => el.id)
+    )
+    const prev = prevWidgetIdsRef.current
+    if (prev !== null) {
+      let added = false
+      currentWidgetIds.forEach((id) => { if (!prev.has(id)) added = true })
+      if (added) {
+        hapticFeedback(12)
+        playClickSound()
+      }
+    }
+    prevWidgetIdsRef.current = currentWidgetIds
+  }, [elements, currentPageIndex])
+
+  // ---- Task 42 / Fix #28 — haptic on tool change ----
+  const prevToolRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (prevToolRef.current === null) {
+      prevToolRef.current = tool
+      return
+    }
+    if (prevToolRef.current !== tool) {
+      hapticFeedback(8)
+      prevToolRef.current = tool
+    }
+  }, [tool])
+
   return (
     <div
       className={[
@@ -401,6 +476,8 @@ export default function RoomWhiteboard({ roomId, onSaveRequest, saveStatus, onSa
       {/* Canvas Area */}
       <div ref={canvasContainerRef} style={{ position: 'relative', overflow: 'hidden' }}>
         <WhiteboardCanvas />
+        {/* Task 42 / Fix #30 — file upload progress overlay */}
+        <UploadProgressBar progress={uploadProgress} isDark={isDark} />
         {!isPresentationMode && (
           <>
             <PageTabs />

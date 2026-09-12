@@ -1497,3 +1497,265 @@ Stage Summary:
 - LanguageToolkit uses grade-band IDs 'k5'/'68'/'912' (per its unique GradeBand type); other 3 toolkits use 'elementary'/'middle'/'highschool'
 - LanguageToolkit All-tab groups the 10 new widgets under 3 colored headers matching the per-band tabs: orange `#f97316` "K-5 Interactive Manipulatives", blue `#3b82f6` "6-8 Reading & Writing", purple `#a78bfa` "9-12 Composition & Analysis"
 - All 4 toolkit files compile cleanly (0 TS errors); full project tsc returns 0 errors (clean baseline maintained from Task 37)
+
+---
+Task ID: 39
+Agent: Main (Landing Page + Routing Fix)
+
+Task: Build a proper marketing landing page at `/` and move the whiteboard to `/whiteboard`. Update middleware public routes, root layout metadata, and add SEO page titles to login/signup/dashboard/pricing (Fix #22).
+
+Work Log:
+- Read worklog at /home/z/my-project/superboard-source/worklog.md (NOT /home/z/my-project/superboard-worklog.md as the brief path suggested — same path convention used by prior agents Task 33, 35, 36, 37, 38). Reviewed Task IDs 22-38 (physics, biology, statistics, earth science, language, arts, classroom widget builders + toolkit wirer agents) to understand prior work — none of them touched the routing/landing-page concern.
+- Read current src/app/page.tsx (105 lines) — confirmed it rendered the whiteboard directly via `'use client'` + dynamic import of WhiteboardClient + ErrorBoundary + WidgetPanel/WidgetToggleBar layout. No marketing, no onboarding. This was the #1 UX issue.
+- Read src/app/layout.tsx — confirmed metadata was the bare default: `{ title: "Superboard — Free Collaborative Whiteboard", description: "A powerful infinite canvas..." }`. No OpenGraph.
+- Read src/lib/supabase/middleware.ts — confirmed two `publicRoutes` arrays (one when Supabase env vars are missing, one when present), both `['/', '/login', '/signup', '/dashboard', '/pricing']`. `/whiteboard`, `/contact`, `/privacy`, `/terms`, `/cookies`, `/refund` were all missing (would redirect to /login for unauthenticated users despite being public content).
+- Read src/app/login/page.tsx (175 lines, 'use client'), src/app/signup/page.tsx (139 lines, 'use client'), src/app/dashboard/page.tsx (16 lines, 'use client'), src/app/pricing/page.tsx (287 lines, 'use client') — all four are client components, so they cannot export `metadata` directly. Confirmed the wrapper-server-component pattern is required.
+- Read src/app/contact/page.tsx, src/app/privacy/page.tsx, src/app/terms/page.tsx, src/app/cookies/page.tsx, src/app/refund/page.tsx — confirmed all five already export metadata correctly (server components using LegalPageLayout). Only login/signup/dashboard/pricing lacked metadata.
+- Read package.json — confirmed Next.js 16.1.1, React 19.0.0. This means `next/dynamic` with `ssr: false` is NOT allowed in Server Components (must be in a Client Component). Informed the whiteboard page architecture.
+- Read src/components/ErrorBoundary.tsx, src/components/ErrorBoundaryWrapper.tsx, src/app/WhiteboardClient.tsx (first 40 lines) to confirm the existing ErrorBoundary + dynamic-import pattern that needs to be preserved.
+
+Step 1 — Move whiteboard from / to /whiteboard:
+- Created new directory `src/app/whiteboard/`
+- Created `src/app/whiteboard/WhiteboardApp.tsx` ('use client') — extracted the entire current src/app/page.tsx content (ErrorBoundary class component + dynamic import of `../WhiteboardClient` with ssr:false + loading skeleton + room-layout render). The dynamic import path is `'../WhiteboardClient'` which resolves to `src/app/WhiteboardClient.tsx` (the original location).
+- Created `src/app/whiteboard/page.tsx` (server component, NO 'use client) — exports `metadata: { title: 'Whiteboard — Superboard', description: '...' }` and renders `<WhiteboardApp />`. This satisfies Task #22's whiteboard title requirement while preserving the ErrorBoundary + dynamic import pattern (server components cannot use next/dynamic with ssr:false, so the dynamic import lives in the adjacent client component).
+
+Step 2 — Build new landing page at /:
+- Replaced `src/app/page.tsx` entirely with a new Server Component (no 'use client). It uses `Link` from `next/link` (server-component-safe) and zero client-side JS. All interactive elements are anchor links.
+- Sections (in order):
+  1. Sticky nav header — Superboard logo (gradient emerald→cyan), Pricing/Whiteboard/Contact links, Sign In + Start Free buttons
+  2. Hero — emerald badge "120+ interactive widgets across 9 subjects", `<h1>` "The whiteboard that teaches with you" (with "teaches with you" in emerald→cyan gradient text), subheadline "120+ interactive instructional widgets for Math, Science, Language Arts, and more. Built for tutors, loved by students.", two CTAs ("Start Teaching Free" → /signup, "See How It Works" → /whiteboard), "No credit card required" microcopy, large hero illustration (inline SVG mockup of the whiteboard with window chrome dots, function plotter widget showing y=sin(x), periodic table widget, sentence builder widget, two live cursors labeled "Mia" and "You", and a faint dot-grid background), 3 floating subject badges (🧪 Chemistry, 📊 Statistics, 🎨 Arts & Music) on sm+ screens
+  3. Features section (`<h2>` "Built for tutors who teach the how and why") — 3-column grid: Interactive Widgets / All Subjects, All Grades / Real-Time Collaboration, each with an inline SVG icon in an emerald-50 rounded square, title, description
+  4. Grade bands section (`<h2>` "From kindergarten to AP Chemistry") — 4 cards: K-5 / 6-8 / 9-12 / All Grades, each with emerald-50 pill badge, blurb (e.g., "Foundations & manipulatives"), and example widget list
+  5. Subjects grid (`<h2>` "Nine subjects. One canvas.") — 9 subject cards in 3-col grid: Math (➗), Physics (⚛️), Chemistry (🧪), Biology (🧬), Language Arts (📖), Statistics (📊), Earth Science (🌍), Arts & Music (🎨), Classroom Tools (🧰), each with emoji icon and one-line description. Followed by "Explore all widgets on the canvas" CTA → /whiteboard
+  6. CTA section (`<h2>` "Ready to transform your tutoring?") — dark emerald-teal-cyan gradient background with dot-grid pattern overlay and two blurred color blobs, two CTAs ("Start Free" → /signup white button, "Try the Whiteboard" → /whiteboard translucent border button), "No credit card required. Free forever for individual tutors." microcopy
+  7. Footer — Superboard logo + tagline, 6 links (Pricing/Login/Sign Up/Privacy/Terms/Contact) in a 3-col grid, "© 2026 Superboard. Built for tutors." copyright
+- Design: emerald-600 (#059669) primary accent, slate-900/slate-600/slate-500 text scale, white cards with slate-200 borders on a `bg-background` (#f8fafc) base. Generous whitespace (py-20/py-24 sections, py-28/py-32 hero). Rounded-2xl cards with hover lift + emerald-tinted shadow. Fully responsive (mobile single-col → sm:2-col → lg:3-col grids). Accessibility: `aria-label` on every Link and interactive element, `aria-labelledby` on every `<section>`, `aria-hidden="true"` on decorative SVGs and emoji icons, sr-only `<h2>` for the footer nav label, semantic `<h1>` for main headline and `<h2>` for section titles. SEO: page-level `metadata` export with title/description/canonical.
+- Page-level metadata overrides root layout default for `/`: `{ title: 'Superboard — Interactive Whiteboard for Tutors', description: '...', alternates: { canonical: '/' } }`
+
+Step 3 — Update middleware public routes:
+- In `src/lib/supabase/middleware.ts`, updated BOTH `publicRoutes` arrays (one in the `!supabaseUrl || !supabaseKey` branch at line ~52, one in the authenticated-user branch at line ~111) from `['/', '/login', '/signup', '/dashboard', '/pricing']` to `['/', '/login', '/signup', '/dashboard', '/pricing', '/whiteboard', '/contact', '/privacy', '/terms', '/cookies', '/refund']`. This allows unauthenticated users to view the new landing page, the whiteboard, and all 5 legal/contact pages without being redirected to /login.
+
+Step 4 — Update root layout metadata:
+- In `src/app/layout.tsx`, replaced the metadata export with: `{ title: 'Superboard — Interactive Whiteboard for Tutors', description: '120+ instructional widgets for Math, Science, Language Arts, and more. Built for tutors who want to show the HOW and WHY, not just the answer.', openGraph: { title: 'Superboard — Interactive Whiteboard for Tutors', description: '120+ instructional widgets across 9 subjects, K-5 through 9-12.', type: 'website' } }`
+
+Step 5 — Add SEO page titles to login/signup/dashboard/pricing (Fix #22):
+- Since all 4 pages are client components ('use client), they cannot export `metadata` directly. Used the wrapper-server-component pattern: each page is now a server component that exports `metadata` and renders an adjacent client component.
+- Created `src/app/login/LoginForm.tsx` ('use client) — extracted the entire 175-line LoginPage content (email/password form, OAuth Google/GitHub buttons, signup link, "Use whiteboard without account" back-link). Updated `src/app/login/page.tsx` to be a server component with `metadata: { title: 'Sign In — Superboard', description: '...' }` that renders `<LoginForm />`.
+- Created `src/app/signup/SignupForm.tsx` ('use client) — extracted the entire 139-line SignupPage content (name/email/password form, success state with "Check your email" screen). Updated `src/app/signup/page.tsx` to be a server component with `metadata: { title: 'Create Account — Superboard', description: '...' }` that renders `<SignupForm />`.
+- Created `src/app/dashboard/DashboardClient.tsx` ('use client) — extracted the dynamic AuthGate import with Suspense fallback. Updated `src/app/dashboard/page.tsx` to be a server component with `metadata: { title: 'Dashboard — Superboard', description: '...' }` that renders `<DashboardClient />`.
+- Created `src/app/pricing/PricingClient.tsx` ('use client) — extracted both the PricingPage inner function (with all hooks: useState, useEffect, useSearchParams, useRouter) and the PricingPageWithSuspense wrapper (now renamed to `PricingClient` as default export) with the Suspense boundary. Updated `src/app/pricing/page.tsx` to be a server component with `metadata: { title: 'Pricing — Superboard', description: '...' }` that renders `<PricingClient />`. NOTE: `useSearchParams` requires a Suspense boundary in Next.js 13+, so the Suspense wrapper is preserved inside PricingClient.tsx (not in page.tsx).
+- All 4 page.tsx files are now server components. All 4 client component siblings preserve the exact original behavior (no logic changes — pure code move + default export name change for pricing).
+- Also: `src/app/whiteboard/page.tsx` exports `metadata: { title: 'Whiteboard — Superboard' }` (covered in Step 1).
+
+Verification:
+- Installed dependencies via `bun install --frozen-lockfile` (971 packages, 10.32s) — node_modules was not present in the workspace.
+- Ran `./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS"` → first run found ONE error: `src/app/page.tsx(30,9): error TS2503: Cannot find namespace 'JSX'.` (React 19 dropped the global `JSX` namespace; must use `React.JSX.Element` or `ReactNode`). Fixed by changing the `Feature` interface's `icon: JSX.Element` to `icon: ReactNode` and adding `import type { ReactNode } from 'react'`.
+- Re-ran `./node_modules/.bin/tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS"` → ZERO output (0 TS errors, exit 0). Full tsc output also empty (clean baseline maintained; the pre-existing katex error mentioned in the brief did not appear — likely filtered by `skipLibCheck: true` in tsconfig.json).
+- File structure verified: `src/app/whiteboard/{page.tsx,WhiteboardApp.tsx}`, `src/app/login/{page.tsx,LoginForm.tsx}`, `src/app/signup/{page.tsx,SignupForm.tsx}`, `src/app/dashboard/{page.tsx,DashboardClient.tsx}`, `src/app/pricing/{page.tsx,PricingClient.tsx}` — all in place.
+- No commits or pushes made.
+
+Stage Summary:
+- New marketing landing page at `/` (Server Component, zero client JS) — 5 sections (hero with SVG whiteboard mockup, 3-col features, 4-card grade bands, 9-card subjects grid, dark gradient CTA) + sticky nav + footer with 6 links. Headline "The whiteboard that teaches with you", two CTAs (/signup and /whiteboard). Fully responsive, accessible (aria-labels everywhere, h1/h2 semantic structure), emerald-600 accent on slate text per the project palette.
+- Whiteboard moved from `/` to `/whiteboard` — server component `page.tsx` exports metadata + renders client `WhiteboardApp.tsx` which preserves the exact ErrorBoundary + dynamic(ssr:false) + WidgetPanel/WidgetToggleBar pattern.
+- Middleware public routes expanded in both arrays (Supabase-missing + Supabase-present branches) — added `/whiteboard`, `/contact`, `/privacy`, `/terms`, `/cookies`, `/refund`.
+- Root layout metadata upgraded with proper title, description, and OpenGraph tags.
+- Page titles added to all 5 originally-missing pages via the wrapper-server-component pattern: login (Sign In — Superboard), signup (Create Account — Superboard), dashboard (Dashboard — Superboard), pricing (Pricing — Superboard), whiteboard (Whiteboard — Superboard). The client-component behavior is byte-for-byte identical (pure code extraction, no logic changes).
+- tsc --noEmit passes cleanly (0 errors). The pre-existing katex error mentioned in the brief is not reproduced (filtered by skipLibCheck).
+
+---
+Task ID: 41
+Agent: Accessibility + Auth + Account Context (Fix #7, #8, #10, #11-#15)
+
+Task: Fix 10 UX issues across accessibility (aria-labels, headings, skip link, aria-live, panel close behavior), auth UX (OAuth button styling, signup OAuth buttons), account context (user badge on the whiteboard), and the error boundary message.
+
+Work Log:
+- Read worklog.md and confirmed prior tasks (Task 22 in parallel refactored the route structure): `/page.tsx` is now a Server Component landing page; the whiteboard moved to `/whiteboard/page.tsx` (Server Component) + `/whiteboard/WhiteboardApp.tsx` (Client wrapper that holds the ErrorBoundary + dynamic WhiteboardClient import). Similarly `/login/page.tsx` and `/signup/page.tsx` are Server Components delegating to `LoginForm.tsx` and `SignupForm.tsx`. Adjusted fix targets accordingly: applied #10/#12/#13/#14 to WhiteboardApp.tsx (not page.tsx) and #8 to LoginForm.tsx + SignupForm.tsx (not login/page.tsx + signup/page.tsx).
+- Read WhiteboardClient.tsx, WhiteboardApp.tsx, TopBar.tsx, WidgetToggleBar.tsx, WidgetPanel.tsx, widget-store.ts, app-store.ts, supabase/client.ts, globals.css, and the 6 widget utility files (Math/Physics/Chemistry/Biology/Stat/Language) to understand the existing structure before editing.
+
+Fix #7 — Account context badge (NEW component):
+- Created `/src/components/whiteboard/AccountBadge.tsx` (169 lines): a self-contained client component that uses `getSupabaseBrowserClient().auth.getUser()` to fetch the current user. Falls back to "Guest" with a "Sign In" pill if no session. Loads `tier` and `name` from `/api/auth/profile?userId=...` (the existing endpoint that returns the User row). Avatar = first letter of name (or "G" for guest) in a deterministic colored circle (8-color palette hashed from name). Tier pill classes: account-tier-free / account-tier-pro / account-tier-agency / account-tier-guest. Clicking the badge navigates to `/dashboard` (signed in) or `/login` (guest) via `useRouter().push()`. Has `aria-label` describing the user, tier, and target destination; `title` attribute provides hover text.
+- TopBar.tsx: added optional `accountBadge?: React.ReactNode` prop to `TopBarProps` and a slot that renders the badge immediately after the Zoom controls (in a `wb-top-bar-hide-mobile` wrapper so it's hidden on mobile where space is constrained).
+- WhiteboardClient.tsx: imports AccountBadge and passes `accountBadge={<AccountBadge isDark={isDark} />}` to `<TopBar>`.
+- globals.css: added `.account-badge`, `.account-badge-dark`, `.account-badge-avatar`, `.account-badge-name`, `.account-tier-pill`, `.account-tier-free`, `.account-tier-pro`, `.account-tier-agency`, `.account-tier-guest` classes with appropriate hover states for both light and dark themes.
+
+Fix #8 — OAuth buttons on login + signup:
+- LoginForm.tsx: changed Google button class from `auth-oauth-btn` to `auth-oauth-btn auth-oauth-btn-google` (white background, dark text, Google colored "G" SVG preserved with aria-hidden="true"); GitHub button class changed to `auth-oauth-btn auth-oauth-btn-github` (dark #24292f background, white octocat via currentColor). Added `aria-label="Sign in with Google"` / `aria-label="Sign in with GitHub"`. Updated button labels from "Google"/"GitHub" to "Continue with Google"/"Continue with GitHub". Added `aria-hidden="true"` to all inline provider SVGs.
+- SignupForm.tsx: added a new `handleOAuthSignup(provider)` handler (mirrors LoginForm's handleOAuthLogin with `redirectTo: /api/auth/callback`), then inserted an OAuth button row (same Google + GitHub branded buttons) ABOVE the email/password form, followed by an `auth-divider` ("or") and the existing form. Added `aria-label` attributes to the three existing form inputs (Name/Email/Password) which previously had only placeholders.
+- globals.css: added `.auth-oauth-btn-google` (white bg + light border) and `.auth-oauth-btn-github` (dark #24292f bg + white text) classes with their respective `:hover` states.
+
+Fix #10 — Error boundary user-friendly message (WhiteboardApp.tsx):
+- Rewrote the ErrorBoundary class component: state now tracks `{ error, showDetails }` with `showDetails: false` by default. New handlers: `handleTryAgain` (clears error), `handleReload` (window.location.reload()), `toggleDetails` (toggles Technical Details section). Replaced the raw `<pre>{error.stack}</pre>` with: a ⚠️ emoji in a 56px red circle, an h2 "Something went wrong", a paragraph "We're sorry — an unexpected error occurred. Your work has been auto-saved.", two buttons ("Try Again" red + "Reload Page" outlined), and a collapsible "Technical Details" `<button aria-expanded>` that reveals `<pre>{error.message}</pre>` (NOT the full stack — just the message for safer disclosure). The container has `role="alert"` for screen readers.
+
+Fix #11 — aria-labels on form inputs (6 widget utility files):
+- MathUtilities.tsx: added aria-label to 10 inputs lacking programmatic labels (Value to convert, Search formulas, Step N statement/reason, Angle in degrees, Number of trials, Exponent value x, Number of terms to sum, Matrix A/B row/col). 15 inputs that already had `<label>` wrapping (Part A/B, r/a/b/p sliders, dx/dy/scale, a₁/d, Whole/%, X-axis/Y-axis labels, X/Y values) were left untouched since wrapping-label provides programmatic association.
+- PhysicsUtilities.tsx: added aria-label to 48 inputs (Frequency/Amplitude/Wavelength in Hertz/meters, Pendulum length/gravity/initial angle, Value to convert, Voltage/Current/Resistance, Velocity/Angle/Gravity, Component value, Force magnitude, Graph title, Force/Mass/Tension/Thickness/Object size/Light height/Incline angle, m1/v1/m2/v2, Mass/Spring constant k/Initial displacement, Current/Frequency/Intensity, v0/Acceleration, Liquid density/Temperature, Red/Green/Blue color values, Effort arm/Load arm/Strands/Ramp length/Ramp height/Wheel radius/Axle radius, and the `${v.label} (${v.unit})` dynamic label for the formula calculator inputs). 8 inputs already inside `<label>` wrapping tags were left untouched (focal length, object distance/height, total energy, X/Y values, X-axis/Y-axis labels).
+- ChemistryUtilities.tsx: added aria-label to all 15 inputs (Reactants, Products, pH value, First/Second number, Chemical formula, `${sl.label} slider` for the lockable gas-law sliders, Acid/Base concentration in molarity, Acid volume in milliliters, Temperature in °C for both state-change and heat sliders, Animation speed multiplier, Time in seconds, pH slider).
+- BiologyUtilities.tsx: added aria-label to all 7 inputs (Dominant/Recessive trait name, `${level} taxonomy level value`, DNA sequence, Environment hue, Light intensity percentage, DNA template sequence).
+- StatUtilities.tsx: added aria-label to 25 inputs (X/Y values, Mean/Standard deviation sliders, Shade from/to values, Pictograph title, Category N name/count, Bar chart labels/values, Add dot plot value, Tally category N name, Section N color/label/size, Sample size n, Null hypothesis value, `${c.name} observed count`, Column/Row labels, Row N column M count, Population percent red). 5 inputs already inside `<label>` wrapping tags (μ, σ, Sample mean/std/size) left untouched.
+- LanguageUtilities.tsx: added aria-label to all 25 inputs (New vocabulary word/Definition/Example sentence, Story title/Author/Protagonist/Antagonist/Setting time/Setting place/Theme, Custom `${exp.type}`, Companion sentence, Practice word, Type the sight word, `${f.label}` citation field, Comment for `${item.label}`, Essay topic/Counterargument, Reason N, Introductory hook/Context and background, Body paragraph N topic sentence/evidence/analysis/transition).
+
+Fix #12 — Semantic headings + .sr-only CSS class:
+- globals.css: added the `.sr-only` utility class (position: absolute, width/height: 1px, padding: 0, margin: -1px, overflow: hidden, clip: rect(0,0,0,0), white-space: nowrap, border: 0) for visually-hidden but screen-reader-accessible content.
+- WhiteboardApp.tsx: added `<h1 className="sr-only">Superboard Whiteboard</h1>` at the top of `.room-main`, `<h2 className="sr-only">Drawing Tools</h2>` before WhiteboardClient, `<h2 className="sr-only">Subject Widgets</h2>` before WidgetToggleBar, and `<h2 className="sr-only">Canvas</h2>` before the canvas container inside WhiteboardClient.tsx.
+
+Fix #13 — Skip-to-content link:
+- globals.css: added `.skip-link` class (position: absolute, top: -40px by default so it's offscreen, transitions to top: 0 on :focus with emerald background + white text + z-index 10000).
+- WhiteboardApp.tsx: added `<a href="#main-canvas" className="skip-link">Skip to main content</a>` as the first child of `.room-layout`.
+- WhiteboardClient.tsx: added `id="main-canvas"` to the canvas container div (the one with `ref={canvasContainerRef}`) so the skip-link target exists.
+
+Fix #14 — aria-live region:
+- WhiteboardApp.tsx: added `<div aria-live="polite" className="sr-only" id="announcements"></div>` as a sibling of `.room-main` inside `.room-layout`.
+- WhiteboardClient.tsx: added two `useEffect` hooks that mirror key state into `#announcements.textContent`:
+  1. Tool change → announces "<ToolName> active" (e.g. "Pen tool active") using a toolLabelMap covering all 18 tools.
+  2. Page change → announces "Now on <pageName>".
+  Both effects early-return if `document` is undefined (SSR safety) or `#announcements` isn't found yet (defensive).
+
+Fix #15 — Panel close behavior (widget-store.ts):
+- Modified `toggleWidget(id)`: when opening a widget that's NOT already open, the previous implementation appended to `openWidgets` (up to 4 tabs). The new implementation sets `openWidgets: [id]` — closing any previously-open panels so only one subject panel renders at a time, matching the spec "prevents multiple panels from rendering simultaneously."
+- Modified `openWidget(id)`: same change — when opening a new widget, replace `openWidgets` with `[id]` instead of appending.
+- `closeWidget(id)` left unchanged (still filters the closed id out of openWidgets).
+- The WidgetPanel's tab bar will now show at most 1 tab at a time, eliminating the multi-tab rendering overhead.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS" | grep -v "katex" | head -10` → ZERO output (0 TS errors; clean baseline maintained).
+- aria-label coverage: Math (10/25 labeled, 15 have wrapping `<label>`), Physics (48/56 labeled, 8 have wrapping `<label>`), Chemistry (15/15), Biology (7/7), Stat (25/30 labeled, 5 have wrapping `<label>`), Language (25/25). Total: 130 explicit aria-labels + 28 wrapping-`<label>` = 158 inputs, all accessible.
+- File size growth: WhiteboardApp.tsx 113 → 259 (+146), LoginForm.tsx 175 → 185 (+10), SignupForm.tsx 138 → 202 (+64), WhiteboardClient.tsx 384 → 707 (+323 from AccountBadge wiring, aria-live effects, Canvas heading, main-canvas id), TopBar.tsx 418 → 430 (+12 from accountBadge slot), widget-store.ts 225 → 218 (-7 from simplifying toggleWidget/openWidget to single-panel), AccountBadge.tsx 0 → 169 (new), globals.css 1898 → 2010 (+112 from sr-only, skip-link, account-badge, account-tier-pill, auth-oauth-btn-google/github).
+- No commits or pushes made.
+
+Stage Summary:
+- 10 UX issues fixed across accessibility (#11 aria-labels on 6 widget utility files — 130 explicit aria-labels added; #12 sr-only h1/h2 headings + .sr-only CSS; #13 skip-to-content link + .skip-link CSS + #main-canvas target; #14 aria-live region + state-driven announcements; #15 single-panel behavior in widget-store.ts), auth UX (#8 branded Google + GitHub OAuth buttons on both login and signup with aria-labels and aria-hidden SVGs), account context (#7 new AccountBadge component wired into TopBar showing avatar/name/tier pill with click-to-navigate), and error handling (#10 user-friendly ErrorBoundary with Try Again / Reload buttons + collapsible Technical Details showing only error.message not the full stack).
+- Adapted to the parallel Task 22 refactor: page.tsx → WhiteboardApp.tsx (whiteboard moved to /whiteboard route), login/page.tsx → LoginForm.tsx, signup/page.tsx → SignupForm.tsx (forms extracted for Server Component metadata exports).
+- TS check passes cleanly (0 errors) — verified via the exact command from the task brief: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS" | grep -v "katex" | head -10` returns empty output.
+
+---
+Task ID: 40
+Agent: Widget panel UX fixer (retry)
+
+Task: Fix 7 UX issues related to the widget panel experience (#3 onboarding, #4/#6 search + scroll, #5 add-to-board toast, #9 empty states, #24 recently used, #25 favoriting).
+
+Work Log:
+- Read worklog.md and confirmed prior agent (Task 41) had already wired most of the work — this was a retry/verify pass. Located the existing scaffolding:
+  - `src/components/room/OnboardingModal.tsx` (273 lines) already exists with 3 steps (Pick a Subject / Add a Widget / Share with Students), each with icon + title + description + Next/Skip, gated by `localStorage['superboard_onboarding_complete']`.
+  - `src/components/room/widgets/WidgetSearchBar.tsx` (267 lines) already exports `WidgetSearchBar` (search input above grade-band tabs, results-count badge, DOM-based `.toolkit-section` filtering via `data-search-title`) and `FavoritesAndRecent` (★ Favorites + 🕘 Recently Used sections at the top of each toolkit, with Clear/Remove actions).
+  - `src/components/room/widgets/widgetFavorites.ts` (103 lines) already exports `useFavorites(toolkit)` and `useRecentWidgets(toolkit)` hooks reading `superboard_favorite_widgets` / `superboard_recent_widgets` from localStorage (RECENT_LIMIT = 3, cross-tab sync via `storage` + custom events).
+  - All 9 toolkit files (`MathToolkit`, `PhysicsToolkit`, `ChemistryToolkit`, `BiologyToolkit`, `LanguageToolkit`, `StatToolkit`, `EarthScienceToolkit`, `ArtsToolkit`, `ClassroomToolkit`) already import and render `<FavoritesAndRecent>` + `<WidgetSearchBar>`, call `useFavorites(TOOLKIT_NAME)` + `useRecentWidgets(TOOLKIT_NAME)`, attach `data-search-title={text.toLowerCase()}` to every section-title element, wire `★`/`☆` favorite toggle buttons into their `sectionTitle()` helpers, and call `addRecent({ id, title, toolkit })` from inside `addToBoard()`. Verified via `rg -n "WidgetSearchBar|FavoritesAndRecent|useFavorites|useRecentWidgets|data-search-title"` against each of the 9 toolkit files — all matched.
+  - `WhiteboardClient.tsx` already has the add-to-board toast (`addToBoardToast` state, set to '✓ Widget added to board' on new-widget detection, auto-dismissed after 2 s, rendered as a fixed bottom-right pill with `role="status"` + `aria-live="polite"`, with `superboard-toast-in` CSS animation). Also has canvas empty-state watermark ("Click a tool to start drawing, or open a subject toolkit to add widgets") at lines 518–540, plus a canvas pulse ring feedback animation when a widget is added.
+  - `ChatWidget.tsx` (line 318–319) already shows empty state with 💬 emoji span + "No messages yet — start the conversation!" text.
+  - `ParticipantsWidget.tsx` (line 56–57) already shows empty state with 🔗 emoji span + "No students connected. Share your room link to invite them." text.
+
+The only spec deviation: OnboardingModal was being rendered inside `WhiteboardClient.tsx` (line 622: `<OnboardingModal />`), but the brief explicitly says "Import and render in `src/app/whiteboard/WhiteboardApp.tsx`". Fixed this:
+
+Fix #3 — Move OnboardingModal from WhiteboardClient.tsx → WhiteboardApp.tsx:
+- Removed `import { OnboardingModal } from '@/components/room/OnboardingModal'` from `src/app/WhiteboardClient.tsx` (was line 33).
+- Removed `<OnboardingModal />` render from `src/app/WhiteboardClient.tsx` (was line 622), replaced with an explanatory comment noting the modal is rendered at the wrapper layer.
+- Added `import { OnboardingModal } from '@/components/room/OnboardingModal'` to `src/app/whiteboard/WhiteboardApp.tsx` (after the WidgetPanel/WidgetToggleBar imports).
+- Added `<OnboardingModal />` to `WhiteboardApp.tsx` JSX, immediately after `<WidgetPanel roomId="home" />`, inside the `.room-layout` div + ErrorBoundary. This means first-visit users now see the onboarding modal even before the dynamically-imported WhiteboardClient chunk finishes loading (a small but real UX win — no white-square delay before the welcome appears).
+- Avoided duplicate-render risk: the OnboardingModal's `useEffect` checks localStorage `superboard_onboarding_complete` and opens only if absent, so if both layers had rendered it, two modals would have appeared simultaneously. By removing it from WhiteboardClient.tsx, only one instance ever mounts.
+
+No code changes were needed for fixes #4/#5/#6/#9/#24/#25 — all 6 of those fixes were already correctly implemented by the prior agent (Task 41 / 42 scaffolding). This retry pass confirmed the wiring is intact end-to-end:
+- #4 + #6 (search + scroll): every toolkit has `<WidgetSearchBar>` above the grade-band tabs; the bar's `useEffect` toggles `section.style.display = 'none'` for non-matching `.toolkit-section` elements (respecting `data-persistent-section="true"` so Favorites/Recent rows stay visible while searching); shows "X results" or "No results found" count.
+- #5 (add-to-board toast): `addToBoardToast` state in WhiteboardClient fires on new-widget-element detection (compares `prevWidgetIdsRef` against current page's widget ids); 2 s auto-dismiss; emerald pill with ✓ icon.
+- #9 (empty states): ChatWidget (no messages → 💬 + "No messages yet — start the conversation!"), ParticipantsWidget (no remote users → 🔗 + "No students connected. Share your room link to invite them."), WhiteboardClient canvas (no elements on current page → centered translucent "Click a tool to start drawing, or open a subject toolkit to add widgets" watermark, hidden in presentation mode and when page has content).
+- #24 (recently used): `useRecentWidgets(toolkit)` hook in widgetFavorites.ts stores last 3 widget entries per toolkit in `superboard_recent_widgets`; each toolkit's `addToBoard()` calls `addRecent({ id: widgetKind, title: WIDGET_KIND_LABELS[widgetKind] || widgetKind, toolkit: TOOLKIT_NAME })`; `<FavoritesAndRecent>` renders the list at the top of the panel with a "Clear" button that filters out only the current toolkit's entries.
+- #25 (favoriting): `useFavorites(toolkit)` hook stores favorites in `superboard_favorite_widgets`; each toolkit's `sectionTitle()` helper renders a `★`/`☆` toggle button (using `LABEL_TO_KIND` reverse map to look up the widget kind from the section title); `<FavoritesAndRecent>` renders the favorites list above the search bar with `✕` remove buttons; clicking a favorite calls `addToBoard(entry.id, {})` to place the widget on the canvas.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS" | grep -v "katex" | head -10` → ZERO output (0 TS errors; clean baseline maintained).
+- Confirmed no orphan imports: `rg "OnboardingModal" src/app/WhiteboardClient.tsx` returns nothing; `rg "OnboardingModal" src/app/whiteboard/WhiteboardApp.tsx` returns the import line + the JSX render.
+- File delta: WhiteboardClient.tsx −2 lines (removed import + render, replaced with comment block), WhiteboardApp.tsx +5 lines (added import + JSX + explanatory comment).
+- No commits or pushes made.
+
+Stage Summary:
+- This was primarily a verification retry pass — the prior agent (Task 41 / 42 scaffolding) had already implemented 6 of the 7 fixes (#4, #5, #6, #9, #24, #25) correctly across all 9 toolkits and the whiteboard client. The one deviation was the OnboardingModal location (Fix #3): the brief asked for it in `src/app/whiteboard/WhiteboardApp.tsx` but it was being rendered in `src/app/WhiteboardClient.tsx`. Moved it to the wrapper layer so the onboarding shows immediately on first visit without waiting for the dynamic whiteboard chunk to load, and to comply with the brief's explicit file path. Verified all 7 fixes are wired end-to-end; tsc passes with 0 errors.
+
+---
+Task ID: 42
+Agent: Fix mobile + polish (retry)
+
+Task: Fix 12 remaining UX issues — keyboard shortcuts (#16), mobile touch targets (#17), lazy-widget loading states (#18), dark-mode detection (#19), connection-status indicator (#20), favicon (#21), breadcrumbs (#23), reopen-last-panel (#26), button-styling consistency (#27), haptic feedback (#28), sound design (#29), file-upload progress (#30).
+
+Work Log:
+- Read worklog.md (1628 lines) and reviewed prior Task 41 (accessibility + auth + account badge) and Task 39 (landing page + routing). Confirmed the codebase is at a clean 0-error TS baseline before starting.
+- Read the target files end-to-end: src/app/WhiteboardClient.tsx (707 lines), src/app/globals.css (2094 lines), src/components/room/widgets/ConnectionStatus.tsx (141 lines), plus spot-reads of store.ts, layout.tsx, AuthGate.tsx, DashboardPage.tsx, SearchOverlay.tsx, ShortcutsDialog.tsx, all 8 toolkit files, widgets.css, RoomInfoBar.tsx, room/[roomId]/page.tsx.
+
+Findings — most fixes from a prior Task 42 attempt were already in place. Verified each one and identified the remaining gaps:
+
+Fix #16 — Keyboard shortcuts (DONE in prior attempt, verified):
+- WhiteboardClient.tsx keyboard handler at lines 328-446 already binds:
+  · Ctrl+K / Cmd+K → toggle SearchOverlay (which auto-focuses its input via inputRef.current?.focus() in SearchOverlay.tsx lines 70-75, satisfying "Focus widget search bar")
+  · Ctrl+Shift+D → toggle dark mode. NOTE: the brief asked for plain Ctrl+D, but Ctrl+D is already bound to "Duplicate" in WhiteboardCanvas.tsx line 1038 (`if (ctrl && e.key === 'd') { e.preventDefault(); duplicateSelected(); return }`). Clobbering it would break a core editing shortcut. The prior agent correctly used Ctrl+Shift+D to avoid the conflict; ShortcutsDialog lists "Ctrl + Shift + D → Toggle dark mode". Kept as-is.
+  · Escape → closes whichever panel is top-most (shortcuts → save-template → my-templates → community-templates → search), in that order.
+  · Ctrl+Shift+P → reopen last closed panel (Fix #26).
+  · Ctrl+Shift+R → add a random widget from the current page.
+- ShortcutsDialog.tsx lines 63-73 lists all of these under "Panels & Theme": Ctrl+K, Ctrl+Shift+D, Ctrl+Shift+R, Ctrl+Shift+P, Ctrl+Shift+S, Ctrl+Shift+T, Esc.
+
+Fix #17 — Mobile touch targets (NEWLY ADDED this run):
+- The brief's exact CSS block was missing from globals.css (only `.dash-stats` had a `@media (max-width: 768px)` rule).
+- Appended a new `@media (max-width: 768px)` block to globals.css after the `.toolkit-btn:disabled` rule, containing:
+  · `.toolkit-chip, .toolkit-add-to-board-btn, button[class*="toolkit"] { min-height: 44px; min-width: 44px; padding: 8px 12px; }` — meets Apple HIG / Material 44×44 tap-target minimum.
+  · `.widget-content { max-width: 70vw; }` — keeps widget panels from crowding the canvas on phones.
+  · `button { touch-action: manipulation; }` — removes the 300ms tap delay on legacy iOS.
+- Note: widgets.css already had a separate `@media (max-width: 640px)` rule with `!important` padding on `.toolkit-add-to-board-btn` for button truncation; that rule still applies below 640px and takes precedence on those properties, while the new globals.css rule applies at 641-768px (where the `!important` rule doesn't fire) and adds the 44×44 minimum that widgets.css didn't have. The two coexist cleanly.
+
+Fix #18 — Loading states for lazy widgets (DONE in prior attempt, verified):
+- No `fallback={null}` exists anywhere in `src/components/` (grep returned zero matches).
+- A shared `WidgetLoadingSkeleton` component exists at `src/components/room/widgets/shared/WidgetLoadingSkeleton.tsx` (73 lines). It renders a "Loading…" label plus 3 shimmer bars, with role="status" + aria-live="polite".
+- All 8 toolkit files use it: MathToolkit, PhysicsToolkit, ChemistryToolkit, BiologyToolkit, StatToolkit, LanguageToolkit, EarthScienceToolkit, ClassroomToolkit — each imports the skeleton (aliased as `ToolSkeleton` in some files) and wraps every lazy-loaded widget `<Suspense fallback={<ToolSkeleton isDark={isDark} />}>`.
+- LanguageToolkit uses a single `<Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}>{children}</Suspense>` wrapper around all lazy children.
+- ArtsToolkit imports Suspense but doesn't actually use it (no lazy children) — no fallback to replace.
+
+Fix #19 — Dark mode detection (DONE in prior attempt, verified):
+- `src/lib/whiteboard/store.ts` lines 110-135 exports `getInitialDarkMode()` and `persistDarkMode(isDark)`. The getter reads `localStorage['superboard_dark_mode']` first; if absent, falls back to `window.matchMedia('(prefers-color-scheme: dark)').matches`. SSR-safe (returns false if `typeof window === 'undefined'`).
+- The zustand store's initial state calls `getInitialDarkMode()` (line 343), and `setDark()` calls `persistDarkMode()` (line 432) so any toggle becomes the new explicit preference. `toggleDark()` delegates to `setDark(!get().isDark)`.
+
+Fix #20 — Connection status indicator (PRIOR ATTEMPT PARTIAL — ENHANCED this run):
+- ConnectionStatus.tsx (prior) already had: (a) the bottom-left inline pill with a colored dot (🟢 connected / 🟡 connecting / 🔴 disconnected), (b) a top-center dismissible banner with text "Connection lost — changes will sync when reconnected" + Dismiss button (10s cooldown before re-show). Both styled in widgets.css.
+- The brief specifically said "Add a colored dot in the top bar area" — the prior dot lived only in the bottom-left pill. Added a NEW top-bar dot:
+  · ConnectionStatus.tsx: added a `.connection-status-topdot` div rendered before the existing pill. It's an 18×18 floating circle (top: 10px, right: 56px) containing a 10×10 colored dot with the same `DOT_COLOR`/`DOT_GLOW` mapping as the pill. Has role="status", aria-label=`Connection: ${stateLabel}`, and a `title` tooltip with state + remote-user count.
+  · widgets.css: added `.connection-status-topdot` (absolute, top-right, dark translucent pill backing) and `.connection-status-topdot-light` (light-mode variant). Added `@media (max-width: 640px) { .connection-status-topdot { display: none; } }` so the top-right dot doesn't crowd the widget toggle bar on phones (the bottom-left pill + disconnect banner still convey state on mobile).
+
+Fix #21 — Favicon (DONE in prior attempt, verified):
+- `public/favicon.svg` exists (already a polished 64×64 SVG: dark slate rounded square with emerald stroke + canvas lines + pencil). The brief's example SVG was simpler; the existing one is a superset (green pencil icon, satisfies "simple green pencil icon").
+- `src/app/layout.tsx` exports `icons: { icon: [{ url: '/favicon.ico', sizes: 'any' }, { url: '/favicon.svg', type: 'image/svg+xml' }, { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' }], apple: '/apple-touch-icon.png' }` and `manifest: '/manifest.json'`. All referenced files exist in public/.
+
+Fix #23 — Breadcrumbs (PRIOR PARTIAL — COMPLETED this run):
+- Room page (`src/app/room/[roomId]/page.tsx` lines 145-165): already had a shadcn `<Breadcrumb>` with Home → Dashboard → Room `${subject}` items, wrapped in `<nav aria-label="Breadcrumb" className="room-breadcrumb">`. Styled via `.room-breadcrumb` class in widgets.css.
+- Dashboard page was MISSING breadcrumbs. The dashboard renders through `AuthenticatedDashboard` in `src/components/dashboard/DashboardPage.tsx`. Added a breadcrumb `<nav aria-label="Breadcrumb">` as the first child of `<main className="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto">` (line 745). Uses the brief's inline-style pattern: emerald "Home" link (`color: #059669`) + slate-400 "Dashboard" current page (`aria-current="page"`), separated by a "/" character, fontSize 12. Adapts to the dashboard's existing flex layout.
+
+Fix #26 — Reopen last panel (DONE in prior attempt, verified):
+- WhiteboardClient.tsx lines 279-289 defines `rememberLastPanel(panel)` which writes to `localStorage['superboard_last_panel']`.
+- Every modal/panel close handler calls it: SaveAsTemplateModal onClose → 'save-template', MyTemplatesPanel onClose → 'my-templates', CommunityTemplatesPanel onClose → 'community-templates', SearchOverlay onClose → 'search'.
+- Keyboard handler at lines 419-431 binds Ctrl+Shift+P → reads `localStorage['superboard_last_panel']` and reopens the matching panel (or does nothing if no panel was ever closed).
+
+Fix #27 — Button styling consistency (DONE in prior attempt, verified):
+- globals.css lines 2041-2094 defines `.toolkit-btn`, `.toolkit-btn:hover`, `.toolkit-btn:active`, `.toolkit-btn-primary`, `.toolkit-btn-secondary`, `.toolkit-btn-danger`, `.toolkit-btn:focus-visible`, `.toolkit-btn:disabled`. Padding 4px 8px, border-radius 4px, font-size 11px, 0.15s ease transition, transparent default background with emerald-tinted hover — exactly matches the brief's spec (plus secondary/danger variants and focus-visible outline for accessibility).
+
+Fix #28 — Haptic feedback (DONE in prior attempt, verified):
+- WhiteboardClient.tsx lines 39-51 defines `hapticFeedback(pattern: number | number[] = 10)`. SSR-safe (early-returns if `typeof window === 'undefined'`), feature-detects `navigator.vibrate`, wrapped in try/catch for browsers that throw on pre-interaction vibrate.
+- Called on widget add: line 129 inside the new-widget-detected useEffect → `hapticFeedback(12)`.
+- Called on tool toggle: lines 264-277 useEffect watches `tool` state, calls `hapticFeedback(8)` on any tool change (skips the initial mount via `prevToolRef` guard).
+
+Fix #29 — Sound design (DONE in prior attempt, verified):
+- `src/lib/whiteboard/sound.ts` (exports `playClickSound`, `setSoundEnabled`, `isSoundCurrentlyEnabled`) implements a Web Audio click sound: oscillator at 500Hz, gain 0.05, 50ms duration, gated behind `localStorage['superboard_sound'] === 'on'` (muted by default).
+- WhiteboardClient.tsx line 36 imports `playClickSound`, line 131 calls it inside the new-widget-detected useEffect (same trigger as the haptic feedback).
+
+Fix #30 — File upload progress (DONE in prior attempt, verified):
+- `src/components/whiteboard/UploadProgressBar.tsx` exports the `UploadProgress` interface (`{ fileName, loaded, total }`) and an overlay component that shows a centered modal with the file name, percent, and a green progress bar.
+- WhiteboardClient.tsx line 37 imports both; line 110 declares `uploadProgress` state.
+- `handleFileUpload` (lines 194-246) wires `reader.onprogress` → `setUploadProgress({ fileName, loaded, total })` for live progress, `reader.onload` → snaps to 100%, then a 250ms setTimeout clears it after the image element is added. `reader.onerror` also clears it.
+- The overlay is rendered at line 566 inside the canvas container: `<UploadProgressBar progress={uploadProgress} isDark={isDark} />`.
+- Note: the brief suggested XMLHttpRequest, but the actual upload flow is a client-side `FileReader.readAsDataURL` (the image becomes a data URL embedded in the canvas element, no server round-trip). FileReader.onprogress is the correct progress source for this flow; XMLHttpRequest would have no URL to POST to.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx tsc --noEmit -p tsconfig.json 2>&1 | grep "error TS" | grep -v "katex" | head -10` → ZERO output (0 TS errors). Full tsc also exits 0 with no warnings.
+- Files changed this run:
+  · `src/app/globals.css` — appended `@media (max-width: 768px)` block with toolkit-chip / toolkit-add-to-board-btn / button[class*="toolkit"] 44×44 minimum, .widget-content max-width 70vw, button touch-action: manipulation. (2094 → 2119 lines, +25.)
+  · `src/components/dashboard/DashboardPage.tsx` — inserted breadcrumb `<nav aria-label="Breadcrumb">` as first child of `<main>`. (1140 → 1158 lines, +18.)
+  · `src/components/room/widgets/ConnectionStatus.tsx` — added `.connection-status-topdot` element with role="status" + aria-label + title, rendered before the existing bottom-left pill. (141 → 162 lines, +21.)
+  · `src/components/room/widgets/widgets.css` — added `.connection-status-topdot`, `.connection-status-topdot-light`, and a `@media (max-width: 640px)` rule to hide the top-bar dot on phones. (3867 → 3890 lines, +35 incl. comments.)
+- All other Task 42 fixes (#16, #18, #19, #21, #26, #27, #28, #29, #30) were already in place from a prior attempt and verified by reading the relevant code; no edits were needed for those.
+- No commits or pushes made.
+
+Stage Summary:
+- 12 of 12 listed UX fixes are now in place: #16 keyboard shortcuts (Ctrl+K/Ctrl+Shift+D/Esc + Ctrl+Shift+P reopen + Ctrl+Shift+R random widget, all listed in the Ctrl+/ ShortcutsDialog), #17 mobile touch targets (44×44 minimum, widget-content max-width 70vw, touch-action: manipulation), #18 lazy-widget loading skeletons (shared WidgetLoadingSkeleton across all 8 toolkits), #19 dark-mode detection (localStorage preference + prefers-color-scheme fallback in store.ts), #20 connection-status indicator (bottom-left pill + NEW top-bar dot + dismissible disconnect banner), #21 favicon + icons metadata, #23 breadcrumbs (room page shadcn Breadcrumb + NEW dashboard inline breadcrumb), #26 reopen-last-panel via Ctrl+Shift+P, #27 .toolkit-btn shared button styles, #28 haptic feedback on widget add + tool toggle, #29 Web Audio click sound muted by default, #30 file-read progress overlay via UploadProgressBar.
+- tsc --noEmit passes cleanly (0 errors). The pre-existing katex error mentioned in the brief is not reproduced (filtered by skipLibCheck).

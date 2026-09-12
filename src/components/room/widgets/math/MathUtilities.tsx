@@ -200,7 +200,7 @@ export function UnitConverter({ isDark }: { isDark: boolean }) {
         ))}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        <input type="number" value={value} onChange={(e) => setValue(e.target.value)}
+        <input type="number" aria-label="Value to convert" value={value} onChange={(e) => setValue(e.target.value)}
           style={{
             width: 64, padding: '4px 6px', borderRadius: 4, fontSize: 11, textAlign: 'center',
             border: '1px solid ' + border, background: bg, color: text, outline: 'none',
@@ -346,6 +346,7 @@ export function FormulaReference({ band, isDark }: { band: string; isDark: boole
     <div style={{ padding: '4px 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
       <input
         type="text"
+        aria-label="Search formulas"
         placeholder="Search formulas..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
@@ -619,9 +620,9 @@ export function ProofBuilder({ isDark }: { isDark: boolean }) {
       {steps.map((step, i) => (
         <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <span style={{ width: 24, fontSize: 11, color: subText, textAlign: 'center' }}>{i + 1}</span>
-          <input value={step.statement} onChange={(e) => updateStep(i, 'statement', e.target.value)}
+          <input aria-label={`Step ${i + 1} statement`} value={step.statement} onChange={(e) => updateStep(i, 'statement', e.target.value)}
             placeholder="Statement..." style={inputStyle} />
-          <input value={step.reason} onChange={(e) => updateStep(i, 'reason', e.target.value)}
+          <input aria-label={`Step ${i + 1} reason`} value={step.reason} onChange={(e) => updateStep(i, 'reason', e.target.value)}
             placeholder="Given, SAS, ..." style={inputStyle} />
           <button onClick={() => removeStep(i)} style={{
             width: 20, height: 20, borderRadius: 3, fontSize: 12, border: 'none',
@@ -2055,6 +2056,7 @@ export function UnitCircleExplorer({ isDark }: { isDark: boolean }) {
         <span style={{ fontSize: 10, color: subText, minWidth: 56 }}>θ = {angle}°</span>
         <input
           type="range"
+          aria-label="Angle in degrees"
           min={0}
           max={360}
           step={1}
@@ -2287,7 +2289,7 @@ export function RiemannSumExplorer({ isDark }: { isDark: boolean }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
         <span style={{ fontSize: 10, color: subText, minWidth: 50 }}>N = {N}</span>
-        <input type="range" min={1} max={50} value={N}
+        <input type="range" aria-label="Number of trials" min={1} max={50} value={N}
           onChange={(e) => setN(parseInt(e.target.value))}
           style={{ flex: 1 }} />
       </div>
@@ -2670,7 +2672,7 @@ export function LogarithmScaleExplorer({ isDark }: { isDark: boolean }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
         <span style={{ fontSize: 10, color: subText, minWidth: 50 }}>x = {x.toFixed(2)}</span>
-        <input type="range" min={0} max={maxX} step={0.05} value={x}
+        <input type="range" aria-label="Exponent value x" min={0} max={maxX} step={0.05} value={x}
           onChange={(e) => setX(parseFloat(e.target.value))}
           style={{ flex: 1 }} />
       </div>
@@ -2856,7 +2858,7 @@ export function SequenceSeriesExplorer({ isDark }: { isDark: boolean }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
         <span style={{ fontSize: 10, color: subText, minWidth: 60 }}>Sum n = {N}</span>
-        <input type="range" min={1} max={10} value={N}
+        <input type="range" aria-label="Number of terms to sum" min={1} max={10} value={N}
           onChange={(e) => setN(parseInt(e.target.value))}
           style={{ flex: 1 }} />
       </div>
@@ -2958,7 +2960,7 @@ export function MatrixOperationsExplorer({ isDark }: { isDark: boolean }) {
           <div style={{ display: 'inline-block', padding: '4px 6px', border: '1px solid ' + border, borderRadius: 4, background: bg }}>
             <div style={{ display: 'grid', gridTemplateColumns: '30px 30px', gap: 3 }}>
               {A.flat().map((v, idx) => (
-                <input key={idx} type="number" value={v}
+                <input key={idx} aria-label={`Matrix A row ${Math.floor(idx / 2) + 1} column ${(idx % 2) + 1}`} type="number" value={v}
                   onChange={(e) => updateCell('A', Math.floor(idx / 2), idx % 2, e.target.value)}
                   style={inputStyle} />
               ))}
@@ -2973,7 +2975,7 @@ export function MatrixOperationsExplorer({ isDark }: { isDark: boolean }) {
           <div style={{ display: 'inline-block', padding: '4px 6px', border: '1px solid ' + border, borderRadius: 4, background: bg }}>
             <div style={{ display: 'grid', gridTemplateColumns: '30px 30px', gap: 3 }}>
               {B.flat().map((v, idx) => (
-                <input key={idx} type="number" value={v}
+                <input key={idx} aria-label={`Matrix B row ${Math.floor(idx / 2) + 1} column ${(idx % 2) + 1}`} type="number" value={v}
                   onChange={(e) => updateCell('B', Math.floor(idx / 2), idx % 2, e.target.value)}
                   style={inputStyle} />
               ))}

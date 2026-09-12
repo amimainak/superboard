@@ -5,6 +5,14 @@ import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { WidgetSearchBar, FavoritesAndRecent } from './WidgetSearchBar'
+import { useFavorites, useRecentWidgets } from './widgetFavorites'
+
+// Reverse map: section title (lowercase) → widget kind, for the ★ favorite button.
+const ARTS_LABEL_TO_KIND: Record<string, string> = {}
+Object.entries(WIDGET_KIND_LABELS).forEach(([kind, label]) => {
+  if (label && kind.startsWith('arts-')) ARTS_LABEL_TO_KIND[label.toLowerCase()] = kind
+})
 
 function ToolSkeleton({ isDark }: { isDark: boolean }) {
   return (
@@ -329,6 +337,13 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
 
+  // ---- Fix #4/#6/#24/#25: search + favorites + recents ----
+  const TOOLKIT_NAME = 'arts'
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { favorites, isFavorite, toggleFavorite } = useFavorites(TOOLKIT_NAME)
+  const { recent, addRecent } = useRecentWidgets(TOOLKIT_NAME)
+
   const toggleBand = (band: GradeBand) => {
     setVisibleBands(prev => {
       const next = new Set(prev)
@@ -370,7 +385,9 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
       pageIndex: currentPageIndex,
     }
     addElement(el)
-  }, [addElement, camera, isDark, currentPageIndex])
+    // Fix #24 — track in recently-used list
+    addRecent({ id: widgetKind, title: WIDGET_KIND_LABELS[widgetKind] || widgetKind, toolkit: TOOLKIT_NAME })
+  }, [addElement, camera, isDark, currentPageIndex, addRecent])
 
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
@@ -383,19 +400,70 @@ export function ArtsToolkit({ roomId: _roomId }: ArtsToolkitProps) {
   const addBorder = 'rgba(5,150,105,0.3)'
   const addText = '#34d399'
 
-  const sectionTitle = (text: string, sectionId: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none' }} onClick={() => toggleSection(sectionId)}>
-      <span>{text}</span>
-      <span style={{ fontSize: 10, color: dkText, transition: 'transform 0.15s', transform: collapsedSections.has(sectionId) ? 'rotate(-90deg)' : 'rotate(0deg)' }}>&#9660;</span>
-    </div>
-  )
+  const sectionTitle = (text: string, sectionId: string) => {
+    const kind = ARTS_LABEL_TO_KIND[text.toLowerCase()]
+    const fav = kind ? isFavorite(kind) : false
+    return (
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', userSelect: 'none', gap: 6 }} onClick={() => toggleSection(sectionId)} data-search-title={text.toLowerCase()}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span>{text}</span>
+          {kind && (
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleFavorite({ id: kind, title: text, toolkit: TOOLKIT_NAME }) }}
+              style={{
+                padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600, lineHeight: 1,
+                background: fav ? 'rgba(251,191,36,0.15)' : 'transparent',
+                border: fav ? '1px solid rgba(251,191,36,0.3)' : '1px solid ' + dkBorder,
+                color: fav ? '#fbbf24' : dkText,
+                cursor: 'pointer',
+              }}
+              title={fav ? 'Remove from favorites' : 'Add to favorites'}
+              aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              {fav ? '⭐' : '☆'}
+            </button>
+          )}
+        </span>
+        <span style={{ fontSize: 10, color: dkText, transition: 'transform 0.15s', transform: collapsedSections.has(sectionId) ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▼</span>
+      </div>
+    )
+  }
 
   const addBoardBtn = (widgetKind: string) => (
     <button onClick={() => addToBoard(widgetKind)} className="toolkit-add-to-board-btn" style={{ padding: '5px 14px', borderRadius: 5, fontSize: 11, fontWeight: 600, background: addBg, border: '1px solid ' + addBorder, color: addText, cursor: 'pointer', alignSelf: 'flex-end', flexShrink: 0 }}>+ Add to Board</button>
   )
 
   return (
-    <div className="widget-content toolkit-arts" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+    <div ref={containerRef} className="widget-content toolkit-arts" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+      {/* ---- Fix #24/#25: Favorites + Recently Used ---- */}
+      <FavoritesAndRecent
+        isDark={isDark}
+        favorites={favorites}
+        recent={recent}
+        onSelect={(wk, _title) => addToBoard(wk, {})}
+        onRemoveFavorite={(id) => toggleFavorite({ id, title: '', toolkit: TOOLKIT_NAME })}
+        onClearRecent={() => {
+          if (typeof window === 'undefined') return
+          try {
+            const raw = window.localStorage.getItem('superboard_recent_widgets')
+            if (raw) {
+              const all = JSON.parse(raw)
+              const next = all.filter((e: { id: string; title: string; toolkit: string }) => e.toolkit !== TOOLKIT_NAME)
+              window.localStorage.setItem('superboard_recent_widgets', JSON.stringify(next))
+              window.dispatchEvent(new Event('superboard-recent-changed'))
+            }
+          } catch { /* ignore */ }
+        }}
+      />
+
+      {/* ---- Fix #4/#6: Search Bar ---- */}
+      <WidgetSearchBar
+        isDark={isDark}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        containerRef={containerRef}
+      />
+
       {/* ---- Grade Band Tabs ---- */}
       <div style={{ display: 'flex', gap: 2, padding: '8px 12px 4px', flexWrap: 'wrap' }}>
         {GRADE_BANDS.filter(b => b.id === 'all' || visibleBands.has(b.id)).map((band) => {

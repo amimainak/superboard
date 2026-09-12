@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useCallback, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense, useRef } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { WidgetLoadingSkeleton } from './shared/WidgetLoadingSkeleton'
+import { WidgetSearchBar, FavoritesAndRecent } from './WidgetSearchBar'
+import { useFavorites, useRecentWidgets } from './widgetFavorites'
 
 // Lazy-load each tool — only parsed when the grade tab renders it
 const RockCycleLazy = lazy(() => import('./earthscience/EarthScienceUtilities').then(m => ({ default: m.RockCycleDiagram })))
@@ -30,56 +33,56 @@ const StarLifeCycleLazy = lazy(() => import('./earthscience/EarthScienceUtilitie
 
 // Stable wrapper components (no remount on re-render)
 function RockCyclePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><RockCycleLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><RockCycleLazy isDark={isDark} /></Suspense>
 }
 function PlateTectonicsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PlateTectonicsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><PlateTectonicsLazy isDark={isDark} /></Suspense>
 }
 function WeatherMapPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><WeatherMapLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><WeatherMapLazy isDark={isDark} /></Suspense>
 }
 function WaterCarbonPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><WaterCarbonLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><WaterCarbonLazy isDark={isDark} /></Suspense>
 }
 function SolarSystemPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SolarSystemLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><SolarSystemLazy isDark={isDark} /></Suspense>
 }
 function TopographicPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TopographicLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><TopographicLazy isDark={isDark} /></Suspense>
 }
 
 // Phase 4 wrappers — K-5
 function WeatherObservationPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><WeatherObservationLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><WeatherObservationLazy isDark={isDark} /></Suspense>
 }
 function SeasonsModelPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SeasonsModelLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><SeasonsModelLazy isDark={isDark} /></Suspense>
 }
 function RockSorterPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><RockSorterLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><RockSorterLazy isDark={isDark} /></Suspense>
 }
 // Phase 4 wrappers — 6-8
 function LayeredEarthPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><LayeredEarthLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><LayeredEarthLazy isDark={isDark} /></Suspense>
 }
 function MoonPhasePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><MoonPhaseLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><MoonPhaseLazy isDark={isDark} /></Suspense>
 }
 function EclipseModelPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><EclipseModelLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><EclipseModelLazy isDark={isDark} /></Suspense>
 }
 // Phase 4 wrappers — 9-12
 function AtmosphericLapsePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><AtmosphericLapseLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><AtmosphericLapseLazy isDark={isDark} /></Suspense>
 }
 function CoriolisEffectPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><CoriolisEffectLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><CoriolisEffectLazy isDark={isDark} /></Suspense>
 }
 function SeismographReaderPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SeismographReaderLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><SeismographReaderLazy isDark={isDark} /></Suspense>
 }
 function StarLifeCyclePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><StarLifeCycleLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><StarLifeCycleLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================
@@ -110,6 +113,13 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
+
+  // ---- Fix #4/#6/#24/#25: search + favorites + recents ----
+  const TOOLKIT_NAME = 'earthscience'
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { favorites, isFavorite, toggleFavorite } = useFavorites(TOOLKIT_NAME)
+  const { recent, addRecent } = useRecentWidgets(TOOLKIT_NAME)
 
   const toggleBand = (band: GradeBand) => {
     setVisibleBands(prev => {
@@ -147,6 +157,12 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
     addElement(el)
   }, [addElement, camera, isDark])
 
+  // Wrap addToBoard so we also record the widget in the recents list (Fix #24)
+  const handleAddToBoard = useCallback((widgetKind: string, title: string) => {
+    addToBoard(widgetKind)
+    addRecent({ id: widgetKind, title, toolkit: TOOLKIT_NAME })
+  }, [addToBoard, addRecent])
+
   // ---- Style helpers ----
   const dkBg = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'
   const dkBorder = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
@@ -156,26 +172,71 @@ export function EarthScienceToolkit({ roomId: _roomId }: EarthScienceToolkitProp
   const actText = '#34d399'
 
   const sectionTitle = (text: string, widgetKind?: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }} data-search-title={text.toLowerCase()}>
       <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
       {widgetKind && (
-        <button
-          onClick={() => addToBoard(widgetKind)}
-          style={{
-            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
-            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
-            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
-          }}
-          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
-        >
-          + Add to Board
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={() => toggleFavorite({ id: widgetKind, title: text, toolkit: TOOLKIT_NAME })}
+            style={{
+              padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+              background: isFavorite(widgetKind) ? 'rgba(251,191,36,0.15)' : 'transparent',
+              border: isFavorite(widgetKind) ? '1px solid rgba(251,191,36,0.3)' : '1px solid ' + dkBorder,
+              color: isFavorite(widgetKind) ? '#fbbf24' : dkText,
+              cursor: 'pointer', lineHeight: 1,
+            }}
+            title={isFavorite(widgetKind) ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={isFavorite(widgetKind) ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            {isFavorite(widgetKind) ? '⭐' : '☆'}
+          </button>
+          <button
+            onClick={() => handleAddToBoard(widgetKind, text)}
+            style={{
+              padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+              background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+              color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+            title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+          >
+            + Add to Board
+          </button>
+        </div>
       )}
     </div>
   )
 
   return (
-    <div className="widget-content toolkit-earthscience" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+    <div ref={containerRef} className="widget-content toolkit-earthscience" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+      {/* ---- Fix #24/#25: Favorites + Recently Used ---- */}
+      <FavoritesAndRecent
+        isDark={isDark}
+        favorites={favorites}
+        recent={recent}
+        onSelect={(wk, title) => handleAddToBoard(wk, title)}
+        onRemoveFavorite={(id) => toggleFavorite({ id, title: '', toolkit: TOOLKIT_NAME })}
+        onClearRecent={() => {
+          if (typeof window === 'undefined') return
+          try {
+            const raw = window.localStorage.getItem('superboard_recent_widgets')
+            if (raw) {
+              const all = JSON.parse(raw)
+              const next = all.filter((e: { id: string; title: string; toolkit: string }) => e.toolkit !== TOOLKIT_NAME)
+              window.localStorage.setItem('superboard_recent_widgets', JSON.stringify(next))
+              window.dispatchEvent(new Event('superboard-recent-changed'))
+            }
+          } catch { /* ignore */ }
+        }}
+      />
+
+      {/* ---- Fix #4/#6: Search Bar ---- */}
+      <WidgetSearchBar
+        isDark={isDark}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        containerRef={containerRef}
+      />
+
       {/* ---- Grade Band Tabs ---- */}
       <div style={{ display: 'flex', gap: 2, padding: '8px 12px 4px', flexWrap: 'wrap' }}>
         {GRADE_BANDS.filter(b => b.id === 'all' || visibleBands.has(b.id)).map((band) => {

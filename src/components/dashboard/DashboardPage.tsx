@@ -106,6 +106,14 @@ import { ResourceLibraryPanel } from './ResourceLibraryPanel';
 import { InvoicePanel } from './InvoicePanel';
 import { AgencyAnalyticsPanel } from './AgencyAnalyticsPanel';
 import { StudentProgressPanel } from './StudentProgressPanel';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 // ============================================================
 // Types
@@ -204,6 +212,21 @@ function SettingsPanel({
   toggleDark: () => void;
   onClose: () => void;
 }) {
+  // Task 42 / Fix #29 — sound toggle persisted in localStorage
+  const [soundOn, setSoundOn] = useState(false)
+  useEffect(() => {
+    try {
+      setSoundOn(window.localStorage.getItem('superboard_sound') === 'on')
+    } catch { /* ignore */ }
+  }, [])
+  const toggleSound = () => {
+    const next = !soundOn
+    setSoundOn(next)
+    try {
+      window.localStorage.setItem('superboard_sound', next ? 'on' : 'off')
+    } catch { /* ignore */ }
+  }
+
   return (
     <div className="space-y-6">
       {/* Account Information */}
@@ -252,6 +275,23 @@ function SettingsPanel({
               aria-label="Toggle dark mode"
             >
               <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${isDark ? 'translate-x-6' : ''}`} />
+            </button>
+          </div>
+          <Separator />
+          {/* Task 42 / Fix #29 — sound effects toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Sound Effects</p>
+              <p className="text-xs text-muted-foreground">Subtle audio cues when adding widgets, completing onboarding, and when students join (muted by default)</p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleSound}
+              className={`relative w-12 h-6 rounded-full transition-colors ${soundOn ? 'bg-emerald-500' : 'bg-gray-300'}`}
+              aria-label="Toggle sound effects"
+              aria-pressed={soundOn}
+            >
+              <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${soundOn ? 'translate-x-6' : ''}`} />
             </button>
           </div>
           <Separator />
@@ -652,8 +692,22 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
                 >
                   <PanelLeft className="w-4 h-4" />
                 </Button>
-                {/* View title */}
-                <h2 className="text-base font-semibold text-foreground">
+                {/* Task 42 / Fix #23 — breadcrumb navigation */}
+                <Breadcrumb className="hidden sm:flex">
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="/">Home</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>
+                        {navGroups.flatMap(g => g.items).find(i => i.id === activeView)?.label || 'Dashboard'}
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+                {/* Mobile-only compact view title */}
+                <h2 className="text-base font-semibold text-foreground sm:hidden">
                   {navGroups.flatMap(g => g.items).find(i => i.id === activeView)?.label || 'Dashboard'}
                 </h2>
               </div>
@@ -689,6 +743,24 @@ export function AuthenticatedDashboard({ user, userName, tierLoading, isAdmin }:
 
           {/* Content */}
           <main className="flex-1 p-4 sm:p-6 max-w-6xl w-full mx-auto">
+            {/* Task 42 / Fix #23 — breadcrumb at the top of the dashboard
+                main content area. Mirrors the room page's breadcrumb so
+                tutors always know "Home / Dashboard" context. */}
+            <nav
+              aria-label="Breadcrumb"
+              style={{
+                padding: '4px 0 12px',
+                fontSize: 12,
+                color: '#94a3b8',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <a href="/" style={{ color: '#059669', textDecoration: 'none' }}>Home</a>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">Dashboard</span>
+            </nav>
             {/* ============================================================
                 VIEW: Overview
                 ============================================================ */}

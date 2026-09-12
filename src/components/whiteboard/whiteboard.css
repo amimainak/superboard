@@ -2518,6 +2518,55 @@ div[data-placeholder]:empty::before {
   }
 }
 
+/* ---- Task 42 / Fix #17 — Mobile touch targets & double-tap-zoom fix ---- */
+/* All interactive toolbar/canvas buttons get:
+   · `touch-action: manipulation` → prevents 300ms double-tap zoom
+   · 44×44 minimum size on touch devices (WCAG 2.5.5) */
+.wb-tool-btn,
+.wb-ico,
+.wb-pocket-btn,
+.wb-opt-btn,
+.wb-font-btn,
+.wb-size-btn,
+.wb-swatch,
+.wb-mobile-tool-btn,
+.wb-lib-mobile-item,
+.wb-lib-mobile-close,
+.wb-zoom-btn,
+.wb-page-tab,
+.wb-page-add-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  /* Larger tap targets on mobile / tablet portrait */
+  .wb-tool-btn,
+  .wb-opt-btn,
+  .wb-font-btn,
+  .wb-size-btn,
+  .wb-zoom-btn,
+  .wb-page-tab,
+  .wb-page-add-btn {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  /* Pocket & icon buttons: at least 44 tall */
+  .wb-pocket-btn,
+  .wb-ico {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Swatches: 32px (still tappable; grouped tightly) */
+  .wb-swatch {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 /* ---- High contrast mode support ---- */
 @media (forced-colors: active) {
   .wb-tool-btn-active,
@@ -2667,6 +2716,7 @@ div[data-placeholder]:empty::before {
   .session-controls,
   .room-info-bar,
   .connection-status,
+  .connection-lost-banner,
   .auto-save-indicator,
   .raise-hand-wrapper {
     display: none !important;

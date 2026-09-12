@@ -255,6 +255,7 @@ export function PhysicsFormulaCalculator({ isDark }: { isDark: boolean }) {
               <label style={{ fontSize: 10, color: s.text, minWidth: 90, flexShrink: 0 }}>{v.label} ({v.unit}):</label>
               <input
                 style={s.input}
+                aria-label={`${v.label} (${v.unit})`}
                 value={values[v.key] || ''}
                 onChange={e => setValues(prev => ({ ...prev, [v.key]: e.target.value }))}
                 type="number"
@@ -393,17 +394,17 @@ export function WaveSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Frequency:</span>
-          <input type="range" min={0.5} max={5} step={0.1} value={frequency} onChange={e => setFrequency(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Frequency in Hertz" min={0.5} max={5} step={0.1} value={frequency} onChange={e => setFrequency(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{frequency.toFixed(1)} Hz</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Amplitude:</span>
-          <input type="range" min={10} max={50} step={1} value={amplitude} onChange={e => setAmplitude(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Amplitude in meters" min={10} max={50} step={1} value={amplitude} onChange={e => setAmplitude(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{amplitude} m</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>{'Wavelength (\u03BB):'}</span>
-          <input type="range" min={20} max={100} step={1} value={wavelength} onChange={e => setWavelength(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Wavelength in meters" min={20} max={100} step={1} value={wavelength} onChange={e => setWavelength(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{wavelength} m</span>
         </div>
       </div>
@@ -533,17 +534,17 @@ export function PendulumSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Length:</span>
-          <input type="range" min={0.5} max={3} step={0.1} value={length} onChange={e => setLength(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Pendulum length in meters" min={0.5} max={3} step={0.1} value={length} onChange={e => setLength(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{length.toFixed(1)} m</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Gravity:</span>
-          <input type="range" min={1} max={20} step={0.1} value={gravity} onChange={e => setGravity(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Gravity in meters per second squared" min={1} max={20} step={0.1} value={gravity} onChange={e => setGravity(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 50, textAlign: 'right' }}>{gravity.toFixed(1)} m/s{'\u00B2'}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Initial angle:</span>
-          <input type="range" min={5} max={80} step={1} value={initialAngleDeg} onChange={e => setInitialAngleDeg(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Initial angle in degrees" min={5} max={80} step={1} value={initialAngleDeg} onChange={e => setInitialAngleDeg(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{initialAngleDeg}{'\u00B0'}</span>
         </div>
       </div>
@@ -698,6 +699,7 @@ export function ScienceUnitConverter({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <input
           style={{ ...s.input, flex: 1, minWidth: 0 }}
+          aria-label="Value to convert"
           type="number"
           value={inputVal}
           onChange={e => setInputVal(e.target.value)}
@@ -879,17 +881,17 @@ export function ProjectileMotionSimulator({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 90 }}>Initial velocity:</span>
-          <input type="range" min={5} max={50} step={1} value={velocity} onChange={e => setVelocity(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Initial velocity in meters per second" min={5} max={50} step={1} value={velocity} onChange={e => setVelocity(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 50, textAlign: 'right' }}>{velocity} m/s</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 90 }}>Launch angle:</span>
-          <input type="range" min={5} max={85} step={1} value={angle} onChange={e => setAngle(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Launch angle in degrees" min={5} max={85} step={1} value={angle} onChange={e => setAngle(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 30, textAlign: 'right' }}>{angle}{'\u00B0'}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 90 }}>Gravity:</span>
-          <input type="range" min={1} max={20} step={0.1} value={grav} onChange={e => setGrav(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Gravity in meters per second squared" min={1} max={20} step={0.1} value={grav} onChange={e => setGrav(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 55, textAlign: 'right' }}>{grav.toFixed(1)} m/s{'\u00B2'}</span>
         </div>
       </div>
@@ -1002,6 +1004,7 @@ export function OhmsLawCalculator({ isDark }: { isDark: boolean }) {
           <label style={{ fontSize: 10, color: s.text, fontWeight: 600 }}>Voltage (V)</label>
           <input
             style={inputStyle('V')}
+            aria-label="Voltage in volts"
             type="number"
             value={fields.V}
             onChange={e => handleChange('V', e.target.value)}
@@ -1015,6 +1018,7 @@ export function OhmsLawCalculator({ isDark }: { isDark: boolean }) {
           <label style={{ fontSize: 10, color: s.text, fontWeight: 600 }}>Current (I)</label>
           <input
             style={inputStyle('I')}
+            aria-label="Current in amps"
             type="number"
             value={fields.I}
             onChange={e => handleChange('I', e.target.value)}
@@ -1028,6 +1032,7 @@ export function OhmsLawCalculator({ isDark }: { isDark: boolean }) {
           <label style={{ fontSize: 10, color: s.text, fontWeight: 600 }}>{'Resistance (R)'}</label>
           <input
             style={inputStyle('R')}
+            aria-label="Resistance in ohms"
             type="number"
             value={fields.R}
             onChange={e => handleChange('R', e.target.value)}
@@ -1271,7 +1276,7 @@ export function CircuitDiagramBuilder({ isDark }: { isDark: boolean }) {
         return (
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
             <span style={{ color: s.text }}>{comp.type === 'battery' ? 'Voltage (V):' : 'Resistance (Ω):'}</span>
-            <input style={s.input} type="number" value={comp.value || 0} onChange={e => updateCompValue(comp.id, e.target.value)} />
+            <input style={s.input} aria-label="Component value" type="number" value={comp.value || 0} onChange={e => updateCompValue(comp.id, e.target.value)} />
             <button onClick={() => setEditingId(null)} style={s.btn(false)}>Done</button>
           </div>
         )
@@ -1454,7 +1459,7 @@ export function FreeBodyDiagramBuilder({ isDark }: { isDark: boolean }) {
           return (
             <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9 }}>
               <span style={{ color: f.color, fontWeight: 600, width: 40 }}>{f.label}:</span>
-              <input style={{ ...s.input, width: 40 }} type="number" value={mag.toFixed(1)} onChange={e => updateForceMag(f.id, parseFloat(e.target.value) || 0)} />
+              <input style={{ ...s.input, width: 40 }} aria-label={`Force ${f.label} magnitude in Newtons`} type="number" value={mag.toFixed(1)} onChange={e => updateForceMag(f.id, parseFloat(e.target.value) || 0)} />
               <span style={{ color: s.text }}>N</span>
               <button onClick={() => removeForce(f.id)} style={{ ...s.btn(false), fontSize: 8, padding: '1px 4px', color: '#f87171' }}>x</button>
             </div>
@@ -1930,7 +1935,7 @@ export function InteractiveGraphingTool({ isDark }: { isDark: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-        <input style={{ ...s.input, width: 80 }} placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
+        <input style={{ ...s.input, width: 80 }} aria-label="Graph title" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} />
         <button onClick={handleClear} style={{ ...s.btn(false), color: '#f87171' }}>Clear</button>
       </div>
 
@@ -2211,12 +2216,12 @@ export function PushPullPlayground({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Force:</span>
-          <input type="range" min={1} max={20} step={1} value={force} onChange={e => setForce(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Force in Newtons" min={1} max={20} step={1} value={force} onChange={e => setForce(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{force} N</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Mass:</span>
-          <input type="range" min={1} max={10} step={1} value={mass} onChange={e => setMass(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Mass in kilograms" min={1} max={10} step={1} value={mass} onChange={e => setMass(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{mass} kg</span>
         </div>
       </div>
@@ -2383,12 +2388,12 @@ export function SoundWaveMaker({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Tension:</span>
-          <input type="range" min={1} max={10} step={1} value={tension} onChange={e => setTension(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Tension in Newtons" min={1} max={10} step={1} value={tension} onChange={e => setTension(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 30, textAlign: 'right' }}>{tension}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Thickness:</span>
-          <input type="range" min={1} max={5} step={1} value={thickness} onChange={e => setThickness(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="String thickness in millimeters" min={1} max={5} step={1} value={thickness} onChange={e => setThickness(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 30, textAlign: 'right' }}>{thickness}</span>
         </div>
       </div>
@@ -2512,12 +2517,12 @@ export function LightAndShadow({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Object size:</span>
-          <input type="range" min={1} max={5} step={1} value={objSize} onChange={e => setObjSize(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Object size" min={1} max={5} step={1} value={objSize} onChange={e => setObjSize(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 30, textAlign: 'right' }}>{objSize}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Light height:</span>
-          <input type="range" min={1} max={5} step={1} value={lightHeight} onChange={e => setLightHeight(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Light source height" min={1} max={5} step={1} value={lightHeight} onChange={e => setLightHeight(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 30, textAlign: 'right' }}>{lightHeight}</span>
         </div>
       </div>
@@ -2902,7 +2907,7 @@ export function FrictionRamp({ isDark }: { isDark: boolean }) {
       {/* Angle slider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Ramp angle:</span>
-        <input type="range" min={0} max={45} step={1} value={angle} onChange={e => { setAngle(Number(e.target.value)); reset() }} style={{ flex: 1 }} />
+        <input type="range" aria-label="Incline angle in degrees" min={0} max={45} step={1} value={angle} onChange={e => { setAngle(Number(e.target.value)); reset() }} style={{ flex: 1 }} />
         <span style={{ fontSize: 10, color: s.bright, minWidth: 40, textAlign: 'right' }}>{angle}°</span>
       </div>
       {/* Surface type buttons */}
@@ -3096,22 +3101,22 @@ export function MomentumCollisionsExplorer({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 70 }}>Mass m₁:</span>
-          <input type="range" min={1} max={10} step={0.5} value={m1} onChange={e => setM1(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Mass 1 in kilograms" min={1} max={10} step={0.5} value={m1} onChange={e => setM1(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{m1} kg</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 70 }}>Velocity v₁:</span>
-          <input type="range" min={-10} max={10} step={0.5} value={v1} onChange={e => setV1(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Velocity 1 in meters per second" min={-10} max={10} step={0.5} value={v1} onChange={e => setV1(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{v1} m/s</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 70 }}>Mass m₂:</span>
-          <input type="range" min={1} max={10} step={0.5} value={m2} onChange={e => setM2(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Mass 2 in kilograms" min={1} max={10} step={0.5} value={m2} onChange={e => setM2(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{m2} kg</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 70 }}>Velocity v₂:</span>
-          <input type="range" min={-10} max={10} step={0.5} value={v2} onChange={e => setV2(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Velocity 2 in meters per second" min={-10} max={10} step={0.5} value={v2} onChange={e => setV2(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{v2} m/s</span>
         </div>
       </div>
@@ -3278,17 +3283,17 @@ export function SHMSpringExplorer({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Mass (m):</span>
-          <input type="range" min={0.1} max={5} step={0.1} value={mass} onChange={e => setMass(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Mass in kilograms" min={0.1} max={5} step={0.1} value={mass} onChange={e => setMass(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{mass.toFixed(1)} kg</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Spring (k):</span>
-          <input type="range" min={1} max={100} step={1} value={k} onChange={e => setK(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Spring constant k" min={1} max={100} step={1} value={k} onChange={e => setK(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{k} N/m</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Initial disp:</span>
-          <input type="range" min={-1} max={1} step={0.05} value={x0} onChange={e => setX0(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
+          <input type="range" aria-label="Initial displacement" min={-1} max={1} step={0.05} value={x0} onChange={e => setX0(Number(e.target.value))} style={{ flex: 1 }} disabled={running} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{x0.toFixed(2)} m</span>
         </div>
       </div>
@@ -3627,7 +3632,7 @@ export function MagneticFieldExplorer({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 70 }}>Current (I):</span>
-          <input type="range" min={1} max={20} step={0.5} value={current} onChange={e => setCurrent(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Current in amps" min={1} max={20} step={0.5} value={current} onChange={e => setCurrent(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{current} A</span>
         </div>
       </div>
@@ -3884,12 +3889,12 @@ function PhotoelectricPanel({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Frequency:</span>
-          <input type="range" min={0.4} max={2.5} step={0.05} value={freq} onChange={e => setFreq(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Frequency in Hertz" min={0.4} max={2.5} step={0.05} value={freq} onChange={e => setFreq(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 45, textAlign: 'right' }}>{freq.toFixed(2)} PHz</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 80 }}>Intensity:</span>
-          <input type="range" min={10} max={100} step={5} value={intensity} onChange={e => setIntensity(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Sound intensity" min={10} max={100} step={5} value={intensity} onChange={e => setIntensity(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 45, textAlign: 'right' }}>{intensity}%</span>
         </div>
       </div>
@@ -4056,12 +4061,12 @@ export function SpeedVelocityAcceleration({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Initial speed v₀:</span>
-          <input type="range" min={0} max={20} step={0.5} value={v0} onChange={e => setV0(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Initial velocity in meters per second" min={0} max={20} step={0.5} value={v0} onChange={e => setV0(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 50, textAlign: 'right' }}>{v0.toFixed(1)} m/s</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Acceleration a:</span>
-          <input type="range" min={-5} max={5} step={0.5} value={a} onChange={e => setA(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Acceleration in meters per second squared" min={-5} max={5} step={0.5} value={a} onChange={e => setA(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 50, textAlign: 'right' }}>{a.toFixed(1)} m/s²</span>
         </div>
       </div>
@@ -4185,7 +4190,7 @@ export function DensityExplorer({ isDark }: { isDark: boolean }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Liquid density:</span>
-        <input type="range" min={0.5} max={13} step={0.1} value={liquidDensity} onChange={e => setLiquidDensity(Number(e.target.value))} style={{ flex: 1 }} />
+        <input type="range" aria-label="Liquid density in grams per cubic centimeter" min={0.5} max={13} step={0.1} value={liquidDensity} onChange={e => setLiquidDensity(Number(e.target.value))} style={{ flex: 1 }} />
         <span style={{ fontSize: 10, color: s.bright, minWidth: 60, textAlign: 'right' }}>{liquidDensity.toFixed(2)} g/cm³</span>
       </div>
       <div style={{ fontSize: 9, color: s.text }}>Liquid type guess: <b style={{ color: s.bright }}>{liquidLabel}</b> (1.0=water, 13.5=mercury)</div>
@@ -4332,7 +4337,7 @@ export function HeatTransferExplorer({ isDark }: { isDark: boolean }) {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Temperature:</span>
-        <input type="range" min={5} max={100} step={1} value={temp} onChange={e => setTemp(Number(e.target.value))} style={{ flex: 1 }} />
+        <input type="range" aria-label="Temperature in degrees Celsius" min={5} max={100} step={1} value={temp} onChange={e => setTemp(Number(e.target.value))} style={{ flex: 1 }} />
         <span style={{ fontSize: 10, color: s.bright, minWidth: 50, textAlign: 'right' }}>{temp}°C</span>
       </div>
 
@@ -4448,17 +4453,17 @@ export function LightColorMixing({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 30 }}>{c1Label}:</span>
-          <input type="range" min={0} max={100} step={1} value={r} onChange={e => setR(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Red color value" min={0} max={100} step={1} value={r} onChange={e => setR(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{r}%</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 30 }}>{c2Label}:</span>
-          <input type="range" min={0} max={100} step={1} value={g} onChange={e => setG(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Green color value" min={0} max={100} step={1} value={g} onChange={e => setG(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{g}%</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 30 }}>{c3Label}:</span>
-          <input type="range" min={0} max={100} step={1} value={b} onChange={e => setB(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Blue color value" min={0} max={100} step={1} value={b} onChange={e => setB(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{b}%</span>
         </div>
       </div>
@@ -4651,12 +4656,12 @@ export function SimpleMachinesExplorer({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Effort arm:</span>
-            <input type="range" min={1} max={6} step={0.5} value={effortArm} onChange={e => setEffortArm(Number(e.target.value))} style={{ flex: 1 }} />
+            <input type="range" aria-label="Effort arm length" min={1} max={6} step={0.5} value={effortArm} onChange={e => setEffortArm(Number(e.target.value))} style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{effortArm}m</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Load arm:</span>
-            <input type="range" min={0.5} max={3} step={0.5} value={loadArm} onChange={e => setLoadArm(Number(e.target.value))} style={{ flex: 1 }} />
+            <input type="range" aria-label="Load arm length" min={0.5} max={3} step={0.5} value={loadArm} onChange={e => setLoadArm(Number(e.target.value))} style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{loadArm}m</span>
           </div>
         </div>
@@ -4664,7 +4669,7 @@ export function SimpleMachinesExplorer({ isDark }: { isDark: boolean }) {
       {machine === 'pulley' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Supporting strands:</span>
-          <input type="range" min={1} max={6} step={1} value={strands} onChange={e => setStrands(Number(e.target.value))} style={{ flex: 1 }} />
+          <input type="range" aria-label="Number of supporting strands" min={1} max={6} step={1} value={strands} onChange={e => setStrands(Number(e.target.value))} style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{strands}</span>
         </div>
       )}
@@ -4672,12 +4677,12 @@ export function SimpleMachinesExplorer({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Ramp length:</span>
-            <input type="range" min={2} max={10} step={0.5} value={rampLen} onChange={e => setRampLen(Number(e.target.value))} style={{ flex: 1 }} />
+            <input type="range" aria-label="Ramp length" min={2} max={10} step={0.5} value={rampLen} onChange={e => setRampLen(Number(e.target.value))} style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{rampLen}m</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Ramp height:</span>
-            <input type="range" min={0.5} max={4} step={0.5} value={rampHeight} onChange={e => setRampHeight(Number(e.target.value))} style={{ flex: 1 }} />
+            <input type="range" aria-label="Ramp height" min={0.5} max={4} step={0.5} value={rampHeight} onChange={e => setRampHeight(Number(e.target.value))} style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{rampHeight}m</span>
           </div>
         </div>
@@ -4686,12 +4691,12 @@ export function SimpleMachinesExplorer({ isDark }: { isDark: boolean }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Wheel radius:</span>
-            <input type="range" min={2} max={6} step={0.5} value={wheelR} onChange={e => setWheelR(Number(e.target.value))} style={{ flex: 1 }} />
+            <input type="range" aria-label="Wheel radius" min={2} max={6} step={0.5} value={wheelR} onChange={e => setWheelR(Number(e.target.value))} style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{wheelR}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ fontSize: 10, color: s.text, minWidth: 100 }}>Axle radius:</span>
-            <input type="range" min={0.5} max={3} step={0.5} value={axleR} onChange={e => setAxleR(Number(e.target.value))} style={{ flex: 1 }} />
+            <input type="range" aria-label="Axle radius" min={0.5} max={3} step={0.5} value={axleR} onChange={e => setAxleR(Number(e.target.value))} style={{ flex: 1 }} />
             <span style={{ fontSize: 10, color: s.bright, minWidth: 35, textAlign: 'right' }}>{axleR}</span>
           </div>
         </div>

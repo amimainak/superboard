@@ -300,6 +300,25 @@ export function ChatWidget({ roomId, onUnreadCount }: ChatWidgetProps) {
         </div>
       )}
       <div className={`widget-messages ${isDark ? '' : 'widget-messages-light'}`} ref={messagesContainerRef} onScroll={handleScroll}>
+        {messages.length === 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '40px 16px',
+              color: isDark ? '#64748b' : '#94a3b8',
+              fontSize: 12,
+              textAlign: 'center',
+              lineHeight: 1.6,
+              gap: 6,
+            }}
+          >
+            <span style={{ fontSize: 28, opacity: 0.6 }}>💬</span>
+            <div>No messages yet — start the conversation!</div>
+          </div>
+        )}
         {messages.map((msg) => {
           const isOwn = senderId ? msg.senderId === senderId : msg.senderLabel === senderLabel
           return (

@@ -13,6 +13,14 @@ import {
   AutoSaveIndicator,
 } from '@/components/room/widgets'
 import { useWidgetStore } from '@/lib/room/widget-store'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import '@/components/room/widgets/widgets.css'
 
 const WhiteboardClient = dynamic(() => import('@/components/room/RoomWhiteboard'), {
@@ -133,6 +141,28 @@ export default function RoomPage() {
           saveStatus={saveTrigger > 0 ? `Save #${saveTrigger}` : ''}
           onSaved={handleSaved}
         />
+
+        {/* Task 42 / Fix #23 — breadcrumb (top-left, above the info bar) */}
+        <nav
+          aria-label="Breadcrumb"
+          className="room-breadcrumb"
+        >
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/">Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{`Room ${room?.subject || ''}`.trim()}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </nav>
 
         {/* Room Info Bar — top-left overlay */}
         <RoomInfoBar

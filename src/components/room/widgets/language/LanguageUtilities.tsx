@@ -158,9 +158,9 @@ export function VocabularyFlashcards({ isDark }: { isDark: boolean }) {
 
       {mode === 'create' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <input placeholder="Word" value={newWord[0]} onChange={(e) => newWord[1](e.target.value)} style={s.input} />
-          <input placeholder="Definition" value={newDef[0]} onChange={(e) => newDef[1](e.target.value)} style={s.input} />
-          <input placeholder="Example sentence" value={newEx[0]} onChange={(e) => newEx[1](e.target.value)} style={s.input} />
+          <input aria-label="New vocabulary word" placeholder="Word" value={newWord[0]} onChange={(e) => newWord[1](e.target.value)} style={s.input} />
+          <input aria-label="Word definition" placeholder="Definition" value={newDef[0]} onChange={(e) => newDef[1](e.target.value)} style={s.input} />
+          <input aria-label="Example sentence" placeholder="Example sentence" value={newEx[0]} onChange={(e) => newEx[1](e.target.value)} style={s.input} />
           <select value={newPos[0]} onChange={(e) => newPos[1](e.target.value)} style={s.input}>
             <option value="noun">Noun</option>
             <option value="verb">Verb</option>
@@ -359,27 +359,27 @@ export function StoryElementsMap({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         <div style={{ flex: '1 1 45%', minWidth: 0 }}>
           <label style={labelStyle}>Title</label>
-          <input value={data.title} onChange={set('title')} style={fieldStyle} />
+          <input aria-label="Story title" value={data.title} onChange={set('title')} style={fieldStyle} />
         </div>
         <div style={{ flex: '1 1 45%', minWidth: 0 }}>
           <label style={labelStyle}>Author</label>
-          <input value={data.author} onChange={set('author')} style={fieldStyle} />
+          <input aria-label="Author" value={data.author} onChange={set('author')} style={fieldStyle} />
         </div>
         <div style={{ flex: '1 1 45%', minWidth: 0 }}>
           <label style={labelStyle}>Protagonist</label>
-          <input value={data.protagonist} onChange={set('protagonist')} style={fieldStyle} />
+          <input aria-label="Protagonist" value={data.protagonist} onChange={set('protagonist')} style={fieldStyle} />
         </div>
         <div style={{ flex: '1 1 45%', minWidth: 0 }}>
           <label style={labelStyle}>Antagonist</label>
-          <input value={data.antagonist} onChange={set('antagonist')} style={fieldStyle} />
+          <input aria-label="Antagonist" value={data.antagonist} onChange={set('antagonist')} style={fieldStyle} />
         </div>
         <div style={{ flex: '1 1 30%', minWidth: 0 }}>
           <label style={labelStyle}>Setting (Time)</label>
-          <input value={data.settingTime} onChange={set('settingTime')} style={fieldStyle} />
+          <input aria-label="Setting time" value={data.settingTime} onChange={set('settingTime')} style={fieldStyle} />
         </div>
         <div style={{ flex: '1 1 45%', minWidth: 0 }}>
           <label style={labelStyle}>Setting (Place)</label>
-          <input value={data.settingPlace} onChange={set('settingPlace')} style={fieldStyle} />
+          <input aria-label="Setting place" value={data.settingPlace} onChange={set('settingPlace')} style={fieldStyle} />
         </div>
         <div style={{ flex: '1 1 100%', minWidth: 0 }}>
           <label style={labelStyle}>Conflict Type</label>
@@ -394,7 +394,7 @@ export function StoryElementsMap({ isDark }: { isDark: boolean }) {
         <div><label style={labelStyle}>Climax</label><textarea value={data.climax} onChange={set('climax')} rows={2} style={{ ...fieldStyle, resize: 'vertical' }} /></div>
         <div><label style={labelStyle}>Falling Action</label><textarea value={data.fallingAction} onChange={set('fallingAction')} rows={2} style={{ ...fieldStyle, resize: 'vertical' }} /></div>
         <div><label style={labelStyle}>Resolution</label><textarea value={data.resolution} onChange={set('resolution')} rows={2} style={{ ...fieldStyle, resize: 'vertical' }} /></div>
-        <div><label style={labelStyle}>Theme</label><input value={data.theme} onChange={set('theme')} style={fieldStyle} /></div>
+        <div><label style={labelStyle}>Theme</label><input aria-label="Theme" value={data.theme} onChange={set('theme')} style={fieldStyle} /></div>
       </div>
 
       <div style={{ marginTop: 6, textAlign: 'center' }}>
@@ -1977,6 +1977,7 @@ export function SentenceExpansionTool({ isDark }: { isDark: boolean }) {
                   </button>
                   <input
                     style={{ ...s.input, flex: 1, minWidth: 0 }}
+                    aria-label={`Custom ${exp.type.toLowerCase()}`}
                     placeholder={'custom ' + exp.type.toLowerCase() + '...'}
                     value={exp.custom}
                     onChange={function (e) { exp.setCustom(e.target.value) }}
@@ -2061,6 +2062,7 @@ export function SentenceExpansionTool({ isDark }: { isDark: boolean }) {
             <span style={{ fontSize: 10, color: s.text, fontWeight: 600, minWidth: 60 }}>Companion:</span>
             <input
               style={{ ...s.input, flex: 1, minWidth: 0 }}
+              aria-label="Companion sentence"
               value={companion}
               onChange={function (e) { setCompanion(e.target.value) }}
             />
@@ -3479,7 +3481,7 @@ export function SoundWallBuilder({ isDark }: { isDark: boolean }) {
       {mode === 'practice' && (
         <div>
           <div style={{ fontSize: 10, color: s.text, marginBottom: 4 }}>Type a word to break it into phonemes:</div>
-          <input value={practiceWord} onChange={(e) => setPracticeWord(e.target.value)} placeholder="e.g. cat, ship, sing..." style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+          <input aria-label="Practice word" value={practiceWord} onChange={(e) => setPracticeWord(e.target.value)} placeholder="e.g. cat, ship, sing..." style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
           {practiceWord && (
             <div style={{ marginTop: 8, padding: 8, borderRadius: 6, background: s.bg, border: '1px solid ' + s.border }}>
               <div style={{ fontSize: 9, fontWeight: 700, color: s.text, letterSpacing: 0.5, marginBottom: 6 }}>PHONEMES ({segmented.length})</div>
@@ -3707,7 +3709,7 @@ export function SightWordOrthographicMap({ isDark }: { isDark: boolean }) {
           {phase === 'type' && (
             <div>
               <div style={{ fontSize: 10, color: s.text, marginBottom: 6 }}>Type the word you saw:</div>
-              <input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus style={{ ...s.input, width: '100%', fontSize: 18, textAlign: 'center' as const, padding: '6px', boxSizing: 'border-box' }} />
+              <input aria-label="Type the sight word" value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus style={{ ...s.input, width: '100%', fontSize: 18, textAlign: 'center' as const, padding: '6px', boxSizing: 'border-box' }} />
               <button onClick={check} disabled={!typed.trim()} style={{ ...s.btn(true), width: '100%', padding: '6px', fontWeight: 600, marginTop: 6, opacity: typed.trim() ? 1 : 0.5 }}>Check</button>
             </div>
           )}
@@ -4024,7 +4026,7 @@ export function CitationGeneratorIntro({ isDark }: { isDark: boolean }) {
         {fields.map(f => (
           <div key={f.key}>
             <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>{f.label}</div>
-            <input value={values[f.key] || ''} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} placeholder={f.placeholder} style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+            <input aria-label={f.label} value={values[f.key] || ''} onChange={(e) => setValues({ ...values, [f.key]: e.target.value })} placeholder={f.placeholder} style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
           </div>
         ))}
       </div>
@@ -4141,7 +4143,7 @@ export function PeerReviewChecklist({ isDark }: { isDark: boolean }) {
                 <div style={{ fontSize: 11, fontWeight: 700, color: checked ? '#34d399' : s.bright }}>{item.label}</div>
               </div>
               <div style={{ fontSize: 9, color: s.text, marginBottom: 4, fontStyle: 'italic' }}>{item.description}</div>
-              <input value={comments[item.key] || ''} onChange={(e) => setComments({ ...comments, [item.key]: e.target.value })} placeholder="Add a comment for the author..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', fontSize: 10 }} />
+              <input aria-label={`Comment for ${item.label}`} value={comments[item.key] || ''} onChange={(e) => setComments({ ...comments, [item.key]: e.target.value })} placeholder="Add a comment for the author..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', fontSize: 10 }} />
             </div>
           )
         })}
@@ -4202,7 +4204,7 @@ export function ThesisStatementBuilder({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 6 }}>
         <div>
           <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>TOPIC</div>
-          <input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. school uniforms" style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+          <input aria-label="Essay topic" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. school uniforms" style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
         </div>
         <div>
           <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>POSITION</div>
@@ -4214,7 +4216,7 @@ export function ThesisStatementBuilder({ isDark }: { isDark: boolean }) {
         </div>
         <div>
           <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>COUNTERARGUMENT (opposing view)</div>
-          <input value={counter} onChange={(e) => setCounter(e.target.value)} placeholder="e.g. uniforms limit self-expression" style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+          <input aria-label="Counterargument" value={counter} onChange={(e) => setCounter(e.target.value)} placeholder="e.g. uniforms limit self-expression" style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
         </div>
         <div>
           <div style={{ fontSize: 9, color: s.text, marginBottom: 1, fontWeight: 600 }}>3 REASONS</div>
@@ -4222,7 +4224,7 @@ export function ThesisStatementBuilder({ isDark }: { isDark: boolean }) {
             {reasons.map((r, i) => (
               <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                 <span style={{ fontSize: 10, fontWeight: 700, color: '#fb923c', minWidth: 14 }}>{i + 1}.</span>
-                <input value={r} onChange={(e) => setReasons(reasons.map((rr, idx) => idx === i ? e.target.value : rr))} placeholder={`Reason ${i + 1}`} style={{ ...s.input, flex: 1, boxSizing: 'border-box' }} />
+                <input aria-label={`Reason ${i + 1}`} value={r} onChange={(e) => setReasons(reasons.map((rr, idx) => idx === i ? e.target.value : rr))} placeholder={`Reason ${i + 1}`} style={{ ...s.input, flex: 1, boxSizing: 'border-box' }} />
               </div>
             ))}
           </div>
@@ -4524,18 +4526,18 @@ export function EssayOutlineBuilder({ isDark }: { isDark: boolean }) {
     <div>
       <div style={{ padding: 6, borderRadius: 4, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)', marginBottom: 4 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: '#60a5fa', letterSpacing: 0.5, marginBottom: 3 }}>INTRODUCTION</div>
-        <input value={hook} onChange={(e) => setHook(e.target.value)} placeholder="Hook (grab attention)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
-        <input value={context} onChange={(e) => setContext(e.target.value)} placeholder="Context (background info)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+        <input aria-label="Introductory hook" value={hook} onChange={(e) => setHook(e.target.value)} placeholder="Hook (grab attention)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+        <input aria-label="Context and background" value={context} onChange={(e) => setContext(e.target.value)} placeholder="Context (background info)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
         <textarea value={thesis} onChange={(e) => setThesis(e.target.value)} rows={2} placeholder="Thesis (main claim + reasons)..." style={{ ...s.input, width: '100%', resize: 'vertical' as const, minHeight: 30, fontFamily: 'inherit', boxSizing: 'border-box' }} />
       </div>
 
       {bodies.map((b, i) => (
         <div key={i} style={{ padding: 6, borderRadius: 4, background: 'rgba(168,85,247,0.06)', border: '1px solid rgba(168,85,247,0.2)', marginBottom: 4 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#a855f7', letterSpacing: 0.5, marginBottom: 3 }}>BODY {i + 1}</div>
-          <input value={b.topic} onChange={(e) => updateBody(i, 'topic', e.target.value)} placeholder="Topic sentence..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
-          <input value={b.evidence} onChange={(e) => updateBody(i, 'evidence', e.target.value)} placeholder="Evidence (fact/quote)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
-          <input value={b.analysis} onChange={(e) => updateBody(i, 'analysis', e.target.value)} placeholder="Analysis (why it matters)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
-          <input value={b.transition} onChange={(e) => updateBody(i, 'transition', e.target.value)} placeholder="Transition to next paragraph..." style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
+          <input aria-label={`Body paragraph ${i + 1} topic sentence`} value={b.topic} onChange={(e) => updateBody(i, 'topic', e.target.value)} placeholder="Topic sentence..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+          <input aria-label={`Body paragraph ${i + 1} evidence`} value={b.evidence} onChange={(e) => updateBody(i, 'evidence', e.target.value)} placeholder="Evidence (fact/quote)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+          <input aria-label={`Body paragraph ${i + 1} analysis`} value={b.analysis} onChange={(e) => updateBody(i, 'analysis', e.target.value)} placeholder="Analysis (why it matters)..." style={{ ...s.input, width: '100%', boxSizing: 'border-box', marginBottom: 2 }} />
+          <input aria-label={`Body paragraph ${i + 1} transition`} value={b.transition} onChange={(e) => updateBody(i, 'transition', e.target.value)} placeholder="Transition to next paragraph..." style={{ ...s.input, width: '100%', boxSizing: 'border-box' }} />
         </div>
       ))}
 

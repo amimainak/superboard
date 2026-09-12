@@ -1,11 +1,20 @@
 'use client'
 
-import { useState, useCallback, lazy, Suspense } from 'react'
+import { useState, useCallback, lazy, Suspense, useRef } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import type { ToolId } from '@/lib/whiteboard/types'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { WidgetLoadingSkeleton } from './shared/WidgetLoadingSkeleton'
+import { WidgetSearchBar, FavoritesAndRecent } from './WidgetSearchBar'
+import { useFavorites, useRecentWidgets } from './widgetFavorites'
+
+// Reverse map: section title (lowercase) → widget kind, for the ★ favorite button.
+const LABEL_TO_KIND: Record<string, string> = {}
+Object.entries(WIDGET_KIND_LABELS).forEach(([kind, label]) => {
+  if (label) LABEL_TO_KIND[label.toLowerCase()] = kind
+})
 
 // Lazy-load panel utilities — only parsed when the grade tab renders them
 const CalculatorLazy = lazy(() => import('./math/MathUtilities').then(m => ({ default: m.Calculator })))
@@ -36,73 +45,73 @@ const MatrixOpsLazy = lazy(() => import('./math/MathUtilities').then(m => ({ def
 
 // Pre-built wrapper components (stable references, no remount on re-render)
 function CalcPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><CalculatorLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><CalculatorLazy isDark={isDark} /></Suspense>
 }
 function UnitPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><UnitConverterLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><UnitConverterLazy isDark={isDark} /></Suspense>
 }
 function FormulaPanel({ band, isDark }: { band: string; isDark: boolean }) {
-  return <Suspense fallback={null}><FormulaRefLazy band={band} isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><FormulaRefLazy band={band} isDark={isDark} /></Suspense>
 }
 function MultGridPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><MultGridLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><MultGridLazy isDark={isDark} /></Suspense>
 }
 function Base10Panel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><Base10Lazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><Base10Lazy isDark={isDark} /></Suspense>
 }
 function FlashcardsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FlashcardsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><FlashcardsLazy isDark={isDark} /></Suspense>
 }
 function ProofPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ProofBuilderLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><ProofBuilderLazy isDark={isDark} /></Suspense>
 }
 // K-5 panels
 function HundredsChartPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><HundredsChartLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><HundredsChartLazy isDark={isDark} /></Suspense>
 }
 function FactFamilyPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><FactFamilyLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><FactFamilyLazy isDark={isDark} /></Suspense>
 }
 function BarModelPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><BarModelLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><BarModelLazy isDark={isDark} /></Suspense>
 }
 function ElapsedTimePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ElapsedTimeLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><ElapsedTimeLazy isDark={isDark} /></Suspense>
 }
 // 6-8 panels
 function AlgebraBalancePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><AlgebraBalanceLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><AlgebraBalanceLazy isDark={isDark} /></Suspense>
 }
 function IntegerChipsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><IntegerChipsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><IntegerChipsLazy isDark={isDark} /></Suspense>
 }
 function PercentDNL_Panel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PercentDNL_Lazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><PercentDNL_Lazy isDark={isDark} /></Suspense>
 }
 function TwoStepEqPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TwoStepEqLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><TwoStepEqLazy isDark={isDark} /></Suspense>
 }
 function TransformationsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TransformationsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><TransformationsLazy isDark={isDark} /></Suspense>
 }
 // 9-12 panels
 function UnitCirclePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><UnitCircleLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><UnitCircleLazy isDark={isDark} /></Suspense>
 }
 function RiemannSumPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><RiemannSumLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><RiemannSumLazy isDark={isDark} /></Suspense>
 }
 function ConicSectionsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ConicSectionsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><ConicSectionsLazy isDark={isDark} /></Suspense>
 }
 function LogScalePanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><LogScaleLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><LogScaleLazy isDark={isDark} /></Suspense>
 }
 function SequenceSeriesPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><SequenceSeriesLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><SequenceSeriesLazy isDark={isDark} /></Suspense>
 }
 function MatrixOpsPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><MatrixOpsLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><MatrixOpsLazy isDark={isDark} /></Suspense>
 }
 interface MathToolkitProps {
   roomId?: string
@@ -165,6 +174,13 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
   // Which grade bands are visible (toggled by tutor)
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'elementary', 'middle', 'highschool']))
+
+  // ---- Fix #4/#6/#24/#25: search + favorites + recents ----
+  const TOOLKIT_NAME = 'math'
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { favorites, isFavorite, toggleFavorite } = useFavorites(TOOLKIT_NAME)
+  const { recent, addRecent } = useRecentWidgets(TOOLKIT_NAME)
 
   // Fraction Circle config (separate from bar)
   const [circleDivisions, setCircleDivisions] = useState(4)
@@ -296,7 +312,9 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
       pageIndex: currentPageIndex,
     }
     addElement(el)
-  }, [addElement, camera, isDark, currentPageIndex, sizePreset])
+    // Fix #24 — track in recently-used list
+    addRecent({ id: widgetKind, title: WIDGET_KIND_LABELS[widgetKind] || widgetKind, toolkit: TOOLKIT_NAME })
+  }, [addElement, camera, isDark, currentPageIndex, sizePreset, addRecent])
 
   // NOTE: Panel stays open after placing widget (no auto-collapse)
 
@@ -314,9 +332,31 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   const actBorder = 'rgba(5,150,105,0.3)'
   const actText = '#34d399'
 
-  const sectionTitle = (text: string) => (
-    <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
-  )
+  const sectionTitle = (text: string) => {
+    const kind = LABEL_TO_KIND[text.toLowerCase()]
+    const fav = kind ? isFavorite(kind) : false
+    return (
+      <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }} data-search-title={text.toLowerCase()}>
+        <span>{text}</span>
+        {kind && (
+          <button
+            onClick={() => toggleFavorite({ id: kind, title: text, toolkit: TOOLKIT_NAME })}
+            style={{
+              padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600, lineHeight: 1,
+              background: fav ? 'rgba(251,191,36,0.15)' : 'transparent',
+              border: fav ? '1px solid rgba(251,191,36,0.3)' : '1px solid ' + dkBorder,
+              color: fav ? '#fbbf24' : dkText,
+              cursor: 'pointer',
+            }}
+            title={fav ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={fav ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            {fav ? '⭐' : '☆'}
+          </button>
+        )}
+      </div>
+    )
+  }
 
   const numInput = (value: number, onChange: (v: number) => void, min: number, max: number, step: number, w?: number) => (
     <input type="number" value={value} min={min} max={max} step={step}
@@ -352,7 +392,36 @@ export function MathToolkit({ roomId: _roomId }: MathToolkitProps) {
   ]
 
   return (
-    <div className="widget-content toolkit-math" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+    <div ref={containerRef} className="widget-content toolkit-math" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+      {/* ---- Fix #24/#25: Favorites + Recently Used ---- */}
+      <FavoritesAndRecent
+        isDark={isDark}
+        favorites={favorites}
+        recent={recent}
+        onSelect={(wk, title) => addToBoard(wk, {})}
+        onRemoveFavorite={(id) => toggleFavorite({ id, title: '', toolkit: TOOLKIT_NAME })}
+        onClearRecent={() => {
+          if (typeof window === 'undefined') return
+          try {
+            const raw = window.localStorage.getItem('superboard_recent_widgets')
+            if (raw) {
+              const all = JSON.parse(raw)
+              const next = all.filter((e: { id: string; title: string; toolkit: string }) => e.toolkit !== TOOLKIT_NAME)
+              window.localStorage.setItem('superboard_recent_widgets', JSON.stringify(next))
+              window.dispatchEvent(new Event('superboard-recent-changed'))
+            }
+          } catch { /* ignore */ }
+        }}
+      />
+
+      {/* ---- Fix #4/#6: Search Bar ---- */}
+      <WidgetSearchBar
+        isDark={isDark}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        containerRef={containerRef}
+      />
+
       {/* ---- Grade Band Tabs ---- */}
       <div style={{ display: 'flex', gap: 2, padding: '8px 12px 4px', flexWrap: 'wrap' }}>
         {GRADE_BANDS.filter(b => b.id === 'all' || visibleBands.has(b.id)).map((band) => {

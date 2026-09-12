@@ -1,16 +1,18 @@
-'use client'
+// ============================================================
+// /dashboard — Server Component route
+// ============================================================
+// Exports metadata for SEO (Task #22) and renders the client
+// DashboardClient which dynamically loads AuthGate (ssr:false).
 
-import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+import type { Metadata } from 'next'
+import DashboardClient from './DashboardClient'
 
-const AuthGate = dynamic(() => import('@/components/auth/AuthGate'), { ssr: false })
+export const metadata: Metadata = {
+  title: 'Dashboard — Superboard',
+  description:
+    'Your Superboard tutor dashboard — rooms, templates, students, recordings, and billing.',
+}
 
-export default function DashboardPageWithSuspense() {
-  return (
-    <Suspense fallback={
-      <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>Loading...</div>
-    }>
-      <AuthGate />
-    </Suspense>
-  )
+export default function DashboardPage() {
+  return <DashboardClient />
 }

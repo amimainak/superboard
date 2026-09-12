@@ -57,7 +57,19 @@ const shortcutSections = [
       { keys: 'Shift + 1', action: 'Zoom to Fit' },
       { keys: 'Space (hold)', action: 'Pan Canvas' },
       { keys: 'P', action: 'Presentation Mode' },
-      { keys: 'Esc', action: 'Exit / Deselect' },
+      { keys: 'Esc', action: 'Exit / Deselect / Close panel' },
+    ],
+  },
+  {
+    title: 'Panels & Theme',
+    shortcuts: [
+      { keys: 'Ctrl + K', action: 'Search board (open / close)' },
+      { keys: 'Ctrl + Shift + D', action: 'Toggle dark mode' },
+      { keys: 'Ctrl + Shift + R', action: 'Add a random widget (from current page)' },
+      { keys: 'Ctrl + Shift + P', action: 'Reopen last closed panel' },
+      { keys: 'Ctrl + Shift + S', action: 'Save current board as template' },
+      { keys: 'Ctrl + Shift + T', action: 'Open My Templates panel' },
+      { keys: 'Esc', action: 'Close any open panel or modal' },
     ],
   },
   {

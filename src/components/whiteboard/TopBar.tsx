@@ -68,6 +68,11 @@ interface TopBarProps {
   canUndo?: boolean
   /** Disable redo when nothing to redo */
   canRedo?: boolean
+  /**
+   * Optional ReactNode rendered after the zoom controls (Fix #7).
+   * Used to inject the AccountBadge without altering TopBar internals.
+   */
+  accountBadge?: React.ReactNode
 }
 
 export function TopBar({
@@ -111,6 +116,7 @@ export function TopBar({
   canExport = true,
   canUndo = true,
   canRedo = true,
+  accountBadge,
 }: TopBarProps) {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
@@ -219,6 +225,13 @@ export function TopBar({
           <ZoomIn size={14} />
         </Ico>
       </div>
+
+      {/* Fix #7 — Account context badge (next to zoom controls) */}
+      {accountBadge && (
+        <div className="wb-top-bar-hide-mobile" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', marginLeft: 4 }}>
+          {accountBadge}
+        </div>
+      )}
 
       {/* Right actions — minimal icons */}
       <Ico title="Search board (Ctrl+K)" isDark={isDark} onClick={onSearch} ariaLabel="Search board">

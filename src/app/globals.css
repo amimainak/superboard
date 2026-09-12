@@ -403,6 +403,31 @@
   opacity: 0.5;
 }
 
+/* Fix #8 — provider-branded OAuth buttons */
+.auth-oauth-btn-google {
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+}
+.auth-oauth-btn-google:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+.auth-oauth-btn-github {
+  background: #24292f;
+  color: #ffffff;
+  border: 1px solid #24292f;
+}
+.auth-oauth-btn-github:hover {
+  background: #1c2025;
+  border-color: #1c2025;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+.auth-oauth-btn-github svg {
+  color: #ffffff;
+}
+
 .auth-error {
   padding: 10px 14px;
   border-radius: var(--radius-md);
@@ -1895,4 +1920,200 @@ body {
 }
 .nav-link-animated:hover::after {
   width: 100%;
+}
+
+/* ============================================================
+   ACCESSIBILITY — Screen-reader-only + skip link
+   ============================================================ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #059669;
+  color: white;
+  padding: 8px 16px;
+  z-index: 10000;
+  transition: top 0.2s;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0 0 6px 0;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+}
+
+/* Account context badge (Fix #7) */
+.account-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(241, 245, 249, 0.6);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  color: #0f172a;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.account-badge:hover {
+  background: rgba(241, 245, 249, 0.95);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+.account-badge-dark {
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.2);
+}
+.account-badge-dark:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(148, 163, 184, 0.4);
+}
+.account-badge-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.account-badge-name {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-tier-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.account-tier-free {
+  background: rgba(100, 116, 139, 0.18);
+  color: #64748b;
+}
+.account-tier-pro {
+  background: rgba(5, 150, 105, 0.16);
+  color: #047857;
+}
+.account-tier-agency {
+  background: rgba(168, 85, 247, 0.16);
+  color: #9333ea;
+}
+.account-tier-guest {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+
+/* ============================================================
+   Task 42 / Fix #27 — Shared toolkit button styling
+   Use this class on new buttons inside widget panels. Existing
+   inline-styled buttons can be migrated gradually.
+   ============================================================ */
+.toolkit-btn {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  white-space: nowrap;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.toolkit-btn:hover {
+  background: rgba(5, 150, 105, 0.1);
+}
+.toolkit-btn:active {
+  transform: scale(0.96);
+}
+.toolkit-btn-primary {
+  background: rgba(5, 150, 105, 0.15);
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #34d399;
+}
+.toolkit-btn-primary:hover {
+  background: rgba(5, 150, 105, 0.22);
+  border-color: rgba(5, 150, 105, 0.45);
+}
+.toolkit-btn-secondary {
+  background: rgba(100, 116, 139, 0.12);
+  border-color: rgba(100, 116, 139, 0.25);
+  color: #94a3b8;
+}
+.toolkit-btn-secondary:hover {
+  background: rgba(100, 116, 139, 0.18);
+}
+.toolkit-btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+.toolkit-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+.toolkit-btn:focus-visible {
+  outline: 2px solid #34d399;
+  outline-offset: 2px;
+}
+.toolkit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================================
+   Task 42 / Fix #17 — Mobile touch targets
+   Ensures toolkit chips, "+ Add to Board" buttons, and any
+   toolkit-* button meet the 44×44 px minimum tap target
+   recommended by Apple HIG / Material Design. Also constrains
+   widget-content width on small viewports so panels don't
+   crowd the canvas, and enables `touch-action: manipulation`
+   on all buttons to remove the 300ms tap delay on legacy iOS.
+   ============================================================ */
+@media (max-width: 768px) {
+  .toolkit-chip,
+  .toolkit-add-to-board-btn,
+  button[class*="toolkit"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+  }
+  .widget-content {
+    max-width: 70vw;
+  }
+  button {
+    touch-action: manipulation;
+  }
 }

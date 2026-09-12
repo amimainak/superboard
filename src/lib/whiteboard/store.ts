@@ -107,6 +107,33 @@ export function getDefaultStroke(isDark: boolean) {
   return isDark ? '#e2e8f0' : '#1e293b'
 }
 
+// ---- Dark Mode Initial Detection (Task 42 / Fix #19) ----
+// On first visit (no localStorage preference), detect via prefers-color-scheme.
+// On subsequent visits, honor the user's explicit saved preference.
+const DARK_MODE_STORAGE_KEY = 'superboard_dark_mode'
+
+export function getInitialDarkMode(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const stored = window.localStorage.getItem(DARK_MODE_STORAGE_KEY)
+    if (stored === 'dark') return true
+    if (stored === 'light') return false
+  } catch {
+    // localStorage may be unavailable (private mode, SSR, etc.) — fall through
+  }
+  // No explicit preference — detect from OS
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+export function persistDarkMode(isDark: boolean): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(DARK_MODE_STORAGE_KEY, isDark ? 'dark' : 'light')
+  } catch {
+    // Silently ignore quota / privacy mode errors
+  }
+}
+
 export const DEFAULT_STYLE: ElementStyle = {
   strokeColor: '#1e293b', // Overridden by store init based on isDark
   fillColor: 'transparent',
@@ -309,17 +336,11 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
     selectedIds: [],
     style: {
       ...DEFAULT_STYLE,
-      strokeColor: getDefaultStroke(
-        typeof window !== 'undefined'
-          ? window.matchMedia('(prefers-color-scheme: dark)').matches
-          : false
-      ),
+      strokeColor: getDefaultStroke(getInitialDarkMode()),
     },
     pages: [{ id: generateId(), name: 'Page 1', index: 0 }],
     currentPageIndex: 0,
-    isDark: typeof window !== 'undefined'
-      ? window.matchMedia('(prefers-color-scheme: dark)').matches
-      : false,
+    isDark: getInitialDarkMode(),
     showGrid: true,
     gridSize: 20,
     gridType: 'dot',
@@ -407,6 +428,8 @@ export const useWhiteboardStore = create<WhiteboardStore>((set, get) => {
       if (typeof document !== 'undefined') {
         document.documentElement.classList.toggle('dark', isDark)
       }
+      // Persist user's explicit preference (Task 42 / Fix #19)
+      persistDarkMode(isDark)
       // Auto-switch stroke color so new drawings are always visible
       set((s) => ({
         isDark,

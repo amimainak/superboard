@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, lazy, Suspense, useCallback } from 'react'
+import { useState, lazy, Suspense, useCallback, useRef } from 'react'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { useWidgetStore } from '@/lib/room/widget-store'
 import { getDefaultWidgetConfig, getWidgetDefaultSize, WIDGET_KIND_LABELS } from '@/components/whiteboard/CanvasWidgets'
 import { generateId } from '@/lib/whiteboard/utils'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { WidgetLoadingSkeleton } from './shared/WidgetLoadingSkeleton'
+import { WidgetSearchBar, FavoritesAndRecent } from './WidgetSearchBar'
+import { useFavorites, useRecentWidgets } from './widgetFavorites'
 import {
   PunctuationPracticeWidget,
   DEFAULT_PUNCT_CONFIG,
@@ -86,8 +89,8 @@ const EssayOutlineBuilderLazy = lazy(() => import('./language/LanguageUtilities'
 // Stable wrappers (prevent remount on re-render)
 // ============================================================
 
-function P1Panel({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={null}>{children}</Suspense>
+function P1Panel({ children, isDark }: { children: React.ReactNode; isDark: boolean }) {
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}>{children}</Suspense>
 }
 
 function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
@@ -95,7 +98,7 @@ function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<VocabWidgetConfig>({ ...DEFAULT_VOCAB_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <VocabFlashcardsWidget
           isDark={isDark}
           config={config}
@@ -119,13 +122,13 @@ function VocabularyFlashcardsPanel({ isDark }: { isDark: boolean }) {
   )
 }
 function ReadingPassageAnalyzerPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><ReadingPassageAnalyzerLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><ReadingPassageAnalyzerLazy isDark={isDark} /></P1Panel>
 }
 function StoryElementsMapPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<StoryMapWidgetConfig>({ ...DEFAULT_STORY_MAP_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <StoryElementsMapWidget
           isDark={isDark}
           config={config}
@@ -152,7 +155,7 @@ function SentenceStructureBuilderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<SentenceStructureWidgetConfig>({ ...DEFAULT_SENTENCE_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <SentenceStructureWidget
           isDark={isDark}
           config={config}
@@ -179,7 +182,7 @@ function FigurativeLanguageFinderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<FigLangWidgetConfig>({ ...DEFAULT_FIGLANG_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <FigurativeLanguageWidget
           isDark={isDark}
           config={config}
@@ -206,7 +209,7 @@ function PhonicsDecodingBuilderPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<PhonicsWidgetConfig>({ ...DEFAULT_PHONICS_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <PhonicsBuilderWidget
           isDark={isDark}
           config={config}
@@ -234,7 +237,7 @@ function PartsOfSpeechTaggerPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<POSWidgetConfig>({ ...DEFAULT_POS_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <POSTaggerWidget
           isDark={isDark}
           config={config}
@@ -262,7 +265,7 @@ function SentenceExpansionToolPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<ExpansionWidgetConfig>({ ...DEFAULT_EXPANSION_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <SentenceExpansionWidget
           isDark={isDark}
           config={config}
@@ -290,7 +293,7 @@ function PunctuationInteractivePanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<PunctWidgetConfig>({ ...DEFAULT_PUNCT_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <PunctuationPracticeWidget
           isDark={isDark}
           config={config}
@@ -318,7 +321,7 @@ function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
   const [config, setConfig] = useState<ParagraphOrganizerWidgetConfig>({ ...DEFAULT_PARAORG_CONFIG })
   return (
     <>
-      <P1Panel>
+      <P1Panel isDark={isDark}>
         <ParagraphOrganizerWidget
           isDark={isDark}
           config={config}
@@ -344,53 +347,53 @@ function ParagraphOrganizerPanel({ isDark }: { isDark: boolean }) {
 
 // Phase 2 wrappers
 function RootMorphologyExplorerPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><RootMorphologyExplorerLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><RootMorphologyExplorerLazy isDark={isDark} /></P1Panel>
 }
 function ActivePassiveVoicePanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><ActivePassiveVoiceLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><ActivePassiveVoiceLazy isDark={isDark} /></P1Panel>
 }
 function ReadingComprehensionStrategiesPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><ReadingComprehensionStrategiesLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><ReadingComprehensionStrategiesLazy isDark={isDark} /></P1Panel>
 }
 function GrammarErrorDiagnosticPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><GrammarErrorDiagnosticLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><GrammarErrorDiagnosticLazy isDark={isDark} /></P1Panel>
 }
 function SpellingPatternsPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><SpellingPatternsLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><SpellingPatternsLazy isDark={isDark} /></P1Panel>
 }
 
 // Phase 4 wrappers — K-5
 function SoundWallBuilderPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><SoundWallBuilderLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><SoundWallBuilderLazy isDark={isDark} /></P1Panel>
 }
 function DecodableTextReaderPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><DecodableTextReaderLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><DecodableTextReaderLazy isDark={isDark} /></P1Panel>
 }
 function SightWordOrthographicMapPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><SightWordOrthographicMapLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><SightWordOrthographicMapLazy isDark={isDark} /></P1Panel>
 }
 // Phase 4 wrappers — 6-8
 function DigitalAnnotationToolPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><DigitalAnnotationToolLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><DigitalAnnotationToolLazy isDark={isDark} /></P1Panel>
 }
 function CitationGeneratorIntroPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><CitationGeneratorIntroLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><CitationGeneratorIntroLazy isDark={isDark} /></P1Panel>
 }
 function PeerReviewChecklistPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><PeerReviewChecklistLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><PeerReviewChecklistLazy isDark={isDark} /></P1Panel>
 }
 // Phase 4 wrappers — 9-12
 function ThesisStatementBuilderPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><ThesisStatementBuilderLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><ThesisStatementBuilderLazy isDark={isDark} /></P1Panel>
 }
 function CounterargumentBuilderPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><CounterargumentBuilderLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><CounterargumentBuilderLazy isDark={isDark} /></P1Panel>
 }
 function CloseReadingFrameworkPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><CloseReadingFrameworkLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><CloseReadingFrameworkLazy isDark={isDark} /></P1Panel>
 }
 function EssayOutlineBuilderPanel({ isDark }: { isDark: boolean }) {
-  return <P1Panel><EssayOutlineBuilderLazy isDark={isDark} /></P1Panel>
+  return <P1Panel isDark={isDark}><EssayOutlineBuilderLazy isDark={isDark} /></P1Panel>
 }
 
 // ============================================================
@@ -431,6 +434,13 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
 
   const [activeBand, setActiveBand] = useState<GradeBand>('all')
 
+  // ---- Fix #4/#6/#24/#25: search + favorites + recents ----
+  const TOOLKIT_NAME = 'language'
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const { favorites, isFavorite, toggleFavorite } = useFavorites(TOOLKIT_NAME)
+  const { recent, addRecent } = useRecentWidgets(TOOLKIT_NAME)
+
   const addToBoard = useCallback((widgetKind: string) => {
     const size = getWidgetDefaultSize(widgetKind)
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
@@ -456,6 +466,12 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
     }
     addElement(el)
   }, [addElement, camera, isDark])
+
+  // Wrap addToBoard so we also record the widget in the recents list (Fix #24)
+  const handleAddToBoard = useCallback((widgetKind: string, title: string) => {
+    addToBoard(widgetKind)
+    addRecent({ id: widgetKind, title, toolkit: TOOLKIT_NAME })
+  }, [addToBoard, addRecent])
   const [visibleBands, setVisibleBands] = useState<Set<GradeBand>>(new Set(['all', 'k5', '68', '912']))
 
   const toggleBand = (band: GradeBand) => {
@@ -481,7 +497,7 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   const actText = '#34d399'
 
   const sectionTitle = (text: string, isMarketplace = false, widgetKind?: string) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingRight: 12 }} data-search-title={text.toLowerCase()}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <div className={'toolkit-section-title' + (isDark ? '' : ' toolkit-section-title-light')}>{text}</div>
         {isMarketplace && (
@@ -493,17 +509,33 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
         )}
       </div>
       {widgetKind && (
-        <button
-          onClick={() => addToBoard(widgetKind)}
-          style={{
-            padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
-            background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
-            color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
-          }}
-          title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
-        >
-          + Add to Board
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            onClick={() => toggleFavorite({ id: widgetKind, title: text, toolkit: TOOLKIT_NAME })}
+            style={{
+              padding: '2px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+              background: isFavorite(widgetKind) ? 'rgba(251,191,36,0.15)' : 'transparent',
+              border: isFavorite(widgetKind) ? '1px solid rgba(251,191,36,0.3)' : '1px solid ' + dkBorder,
+              color: isFavorite(widgetKind) ? '#fbbf24' : dkText,
+              cursor: 'pointer', lineHeight: 1,
+            }}
+            title={isFavorite(widgetKind) ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={isFavorite(widgetKind) ? 'Remove from favorites' : 'Add to favorites'}
+          >
+            {isFavorite(widgetKind) ? '⭐' : '☆'}
+          </button>
+          <button
+            onClick={() => handleAddToBoard(widgetKind, text)}
+            style={{
+              padding: '2px 8px', borderRadius: 4, fontSize: 9, fontWeight: 600,
+              background: 'rgba(5,150,105,0.12)', border: '1px solid rgba(5,150,105,0.3)',
+              color: '#34d399', cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+            title={'Place ' + (WIDGET_KIND_LABELS[widgetKind] || widgetKind) + ' on the board'}
+          >
+            + Add to Board
+          </button>
+        </div>
       )}
     </div>
   )
@@ -521,7 +553,36 @@ export function LanguageToolkit({ roomId: _roomId }: LanguageToolkitProps) {
   }
 
   return (
-    <div className="widget-content toolkit-language" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+    <div ref={containerRef} className="widget-content toolkit-language" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 120px)' }}>
+      {/* ---- Fix #24/#25: Favorites + Recently Used ---- */}
+      <FavoritesAndRecent
+        isDark={isDark}
+        favorites={favorites}
+        recent={recent}
+        onSelect={(wk, title) => handleAddToBoard(wk, title)}
+        onRemoveFavorite={(id) => toggleFavorite({ id, title: '', toolkit: TOOLKIT_NAME })}
+        onClearRecent={() => {
+          if (typeof window === 'undefined') return
+          try {
+            const raw = window.localStorage.getItem('superboard_recent_widgets')
+            if (raw) {
+              const all = JSON.parse(raw)
+              const next = all.filter((e: { id: string; title: string; toolkit: string }) => e.toolkit !== TOOLKIT_NAME)
+              window.localStorage.setItem('superboard_recent_widgets', JSON.stringify(next))
+              window.dispatchEvent(new Event('superboard-recent-changed'))
+            }
+          } catch { /* ignore */ }
+        }}
+      />
+
+      {/* ---- Fix #4/#6: Search Bar ---- */}
+      <WidgetSearchBar
+        isDark={isDark}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        containerRef={containerRef}
+      />
+
       {/* ---- Grade Band Tabs ---- */}
       <div style={{ display: 'flex', gap: 2, padding: '8px 12px 4px', flexWrap: 'wrap' }}>
         {GRADE_BANDS.filter(b => b.id === 'all' || visibleBands.has(b.id)).map((band) => {

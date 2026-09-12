@@ -38,26 +38,23 @@ export function ParticipantsWidget({ roomId, isTutor }: ParticipantsWidgetProps)
 
         {remoteUsers.length === 0 ? (
           <>
-            {/* Placeholder when no remote users */}
-            <div className={`participants-divider ${isDark ? '' : 'participants-divider-light'}`}>
-              <span>Waiting for students to join...</span>
-            </div>
-
-            <div className={`participant-item participant-empty ${isDark ? '' : 'participant-item-light'}`}>
-              <div className={`participant-avatar participant-avatar-empty ${isDark ? '' : 'participant-avatar-empty-light'}`}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <line x1="19" y1="8" x2="19" y2="14" />
-                  <line x1="22" y1="11" x2="16" y2="11" />
-                </svg>
-              </div>
-              <div className="participant-info">
-                <div className={`participant-name participant-name-empty ${isDark ? '' : 'participant-name-empty-light'}`}>Student slot</div>
-                <div className="participant-role participant-role-empty">
-                  Share room link to invite
-                </div>
-              </div>
+            {/* Empty state — Fix #9 */}
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '24px 12px',
+                color: isDark ? '#64748b' : '#94a3b8',
+                fontSize: 12,
+                textAlign: 'center',
+                lineHeight: 1.6,
+                gap: 6,
+              }}
+            >
+              <span style={{ fontSize: 26, opacity: 0.6 }}>🔗</span>
+              <div>No students connected. Share your room link to invite them.</div>
             </div>
           </>
         ) : (

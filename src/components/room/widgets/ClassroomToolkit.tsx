@@ -5,6 +5,7 @@ import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { generateId } from '@/lib/whiteboard/utils'
 import { getDefaultWidgetConfig, getWidgetDefaultSize } from '@/components/whiteboard/CanvasWidgets'
 import type { WidgetElement } from '@/lib/whiteboard/types'
+import { WidgetLoadingSkeleton } from './shared/WidgetLoadingSkeleton'
 
 // Lazy-load panel utilities — only parsed when the grade tab renders them
 const TimerStopwatchLazy = lazy(() => import('./classroom/ClassroomUtilities').then(m => ({ default: m.TimerStopwatch })))
@@ -22,38 +23,38 @@ const BingoCardGeneratorLazy = lazy(() => import('./classroom/ClassroomUtilities
 
 // Stable wrapper components (no remount on re-render)
 function TimerStopwatchPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TimerStopwatchLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><TimerStopwatchLazy isDark={isDark} /></Suspense>
 }
 function GraphingToolPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><GraphingToolLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><GraphingToolLazy isDark={isDark} /></Suspense>
 }
 function StudentPickerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><StudentPickerLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><StudentPickerLazy isDark={isDark} /></Suspense>
 }
 // Phase 4 wrappers
 function GroupMakerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><GroupMakerLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><GroupMakerLazy isDark={isDark} /></Suspense>
 }
 function ExitTicketPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ExitTicketLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><ExitTicketLazy isDark={isDark} /></Suspense>
 }
 function PomodoroTimerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><PomodoroTimerLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><PomodoroTimerLazy isDark={isDark} /></Suspense>
 }
 function VoiceLevelMeterPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><VoiceLevelMeterLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><VoiceLevelMeterLazy isDark={isDark} /></Suspense>
 }
 function TokenBoardPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><TokenBoardLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><TokenBoardLazy isDark={isDark} /></Suspense>
 }
 function QuickPollPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><QuickPollLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><QuickPollLazy isDark={isDark} /></Suspense>
 }
 function ThinkPairShareTimerPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><ThinkPairShareTimerLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><ThinkPairShareTimerLazy isDark={isDark} /></Suspense>
 }
 function BingoCardGeneratorPanel({ isDark }: { isDark: boolean }) {
-  return <Suspense fallback={null}><BingoCardGeneratorLazy isDark={isDark} /></Suspense>
+  return <Suspense fallback={<WidgetLoadingSkeleton isDark={isDark} />}><BingoCardGeneratorLazy isDark={isDark} /></Suspense>
 }
 
 // ============================================================

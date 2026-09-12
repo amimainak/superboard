@@ -146,13 +146,10 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
         panelVisible: remaining.length > 0,
       })
     } else {
-      // Open this widget — limit to 4 tabs, auto-close oldest
-      let newOpen = [...openWidgets, id]
-      if (newOpen.length > 4) {
-        newOpen = newOpen.slice(newOpen.length - 4)
-      }
+      // Fix #15 — Opening a new panel closes any previously-open panels
+      // so only one subject panel renders at a time.
       set({
-        openWidgets: newOpen,
+        openWidgets: [id],
         activeTab: id,
         panelVisible: true,
       })
@@ -175,13 +172,10 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   openWidget: (id) => {
     const { openWidgets } = get()
     if (!openWidgets.includes(id)) {
-      // Limit open tabs to 4 — auto-close oldest if exceeded
-      let updated = [...openWidgets, id]
-      if (updated.length > 4) {
-        updated = updated.slice(updated.length - 4)
-      }
+      // Fix #15 — Opening a new panel closes any previously-open panels
+      // so only one subject panel renders at a time.
       set({
-        openWidgets: updated,
+        openWidgets: [id],
         activeTab: id,
         panelVisible: true,
       })

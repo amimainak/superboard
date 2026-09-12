@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Superboard favicon — green pencil + canvas icon -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0f172a"/>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="none" stroke="#10b981" stroke-width="2" stroke-opacity="0.55"/>
+  <!-- Canvas lines -->
+  <path d="M14 18 H40" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14 26 H50" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14 34 H34" stroke="#475569" stroke-width="2" stroke-linecap="round"/>
+  <!-- Pencil body (diagonal) -->
+  <g transform="rotate(45 44 30)">
+    <rect x="28" y="26" width="22" height="8" rx="1.5" fill="#10b981"/>
+    <rect x="28" y="26" width="22" height="8" rx="1.5" fill="none" stroke="#059669" stroke-width="1"/>
+    <!-- Pencil tip -->
+    <polygon points="50,26 50,34 56,30" fill="#facc15"/>
+    <!-- Pencil eraser -->
+    <rect x="24" y="26" width="4" height="8" rx="1" fill="#ef4444"/>
+  </g>
+</svg>

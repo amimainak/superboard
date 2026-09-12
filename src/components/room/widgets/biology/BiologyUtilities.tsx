@@ -131,11 +131,11 @@ export function PunnettSquareCalculator({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
         <div>
           <span style={{ fontSize: 9, color: s.text }}>Dominant trait: </span>
-          <input value={dominantName} onChange={e => setDominantName(e.target.value)} style={s.input} />
+          <input aria-label="Dominant trait name" value={dominantName} onChange={e => setDominantName(e.target.value)} style={s.input} />
         </div>
         <div>
           <span style={{ fontSize: 9, color: s.text }}>Recessive trait: </span>
-          <input value={recessiveName} onChange={e => setRecessiveName(e.target.value)} style={s.input} />
+          <input aria-label="Recessive trait name" value={recessiveName} onChange={e => setRecessiveName(e.target.value)} style={s.input} />
         </div>
       </div>
 
@@ -473,7 +473,7 @@ export function TaxonomyClassifier({ isDark }: { isDark: boolean }) {
         {TAXONOMY_LEVELS.map((level, i) => (
           <div key={level} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 9, fontWeight: 600, color: (i === 6 || i === 7) ? '#34d399' : s.text, minWidth: 52, textAlign: 'right' }}>{level}</span>
-            <input value={customLevels[i]} onChange={e => handleLevelChange(i, e.target.value)} style={{ ...s.input, flex: 1, minWidth: 0 }} />
+            <input aria-label={`${level} taxonomy level value`} value={customLevels[i]} onChange={e => handleLevelChange(i, e.target.value)} style={{ ...s.input, flex: 1, minWidth: 0 }} />
           </div>
         ))}
       </div>
@@ -1116,6 +1116,7 @@ export function DNAStructureViewer({ isDark }: { isDark: boolean }) {
         <span style={{ fontSize: 10, color: s.text, fontWeight: 600 }}>Sequence:</span>
         <input
           style={s.input}
+          aria-label="DNA sequence"
           value={seq}
           onChange={e => setSeq(e.target.value.toUpperCase())}
           maxLength={20}
@@ -1283,7 +1284,7 @@ export function NaturalSelectionSim({ isDark }: { isDark: boolean }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
         <span style={{ fontSize: 9, color: s.text, fontWeight: 600 }}>Environment:</span>
         <input
-          type="range" min={0} max={360} value={envHue}
+          type="range" aria-label="Environment hue" min={0} max={360} value={envHue}
           onChange={e => setEnvHue(Number(e.target.value))}
           style={{ flex: 1, height: 6, cursor: 'pointer', accentColor: envColor }}
         />
@@ -1627,7 +1628,7 @@ export function PhotosynthesisRespiration({ isDark }: { isDark: boolean }) {
       {/* Light intensity slider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
         <span style={{ fontSize: 9, color: s.text, fontWeight: 600 }}>Light Intensity:</span>
-        <input type="range" min={0} max={100} value={lightIntensity} onChange={e => setLightIntensity(Number(e.target.value))} style={{ flex: 1, height: 6, cursor: 'pointer', accentColor: '#f59e0b' }} />
+        <input type="range" aria-label="Light intensity percentage" min={0} max={100} value={lightIntensity} onChange={e => setLightIntensity(Number(e.target.value))} style={{ flex: 1, height: 6, cursor: 'pointer', accentColor: '#f59e0b' }} />
         <span style={{ fontSize: 10, color: s.bright }}>{lightIntensity}%</span>
       </div>
 
@@ -2702,7 +2703,7 @@ export function ProteinSynthesisVisualizer({ isDark }: { isDark: boolean }) {
     <div style={{ fontSize: 11, color: s.text }}>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginBottom: 6, flexWrap: 'wrap' }}>
         <span style={{ fontSize: 9, fontWeight: 600 }}>DNA (3'→5'):</span>
-        <input value={dnaInput} onChange={e => { setDnaInput(e.target.value.toUpperCase()); setStage(1) }} style={{ ...s.input, width: 110, fontFamily: 'monospace' }} maxLength={9} placeholder="TACTCTCCA" />
+        <input aria-label="DNA template sequence" value={dnaInput} onChange={e => { setDnaInput(e.target.value.toUpperCase()); setStage(1) }} style={{ ...s.input, width: 110, fontFamily: 'monospace' }} maxLength={9} placeholder="TACTCTCCA" />
       </div>
 
       {/* Visualization */}
