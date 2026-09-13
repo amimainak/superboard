@@ -169,7 +169,8 @@ function PricingPage() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        {/* Task 46 / Fix #3 — 1 col mobile, 2 col sm (tablet), 3 col lg (desktop) */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {TIERS.map((tier) => {
             const isCurrent = tier === currentTier
             const isPopular = tier === 'PRO'

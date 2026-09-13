@@ -226,7 +226,7 @@ export default function LandingPage() {
 
               <h1
                 id="hero-heading"
-                className="text-balance text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
+                className="text-balance text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl"
               >
                 The whiteboard that{' '}
                 <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 bg-clip-text text-transparent">
@@ -451,7 +451,8 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {/* Task 46 / Fix #3 — 1 col mobile, 2 col tablet (sm=640px), 3 col desktop (lg=1024px) */}
+            <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((feature) => (
                 <div
                   key={feature.title}
@@ -491,7 +492,8 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Task 46 / Fix #3 — 1 col mobile, 2 col sm, 3 col md (tablet), 4 col lg (desktop) */}
+            <div className="mt-14 grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {GRADE_BANDS.map((band) => (
                 <div
                   key={band.band}
@@ -531,23 +533,24 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Task 46 / Fix #3 — 2 col mobile, 3 col sm (tablet), 4 col lg (desktop) */}
+            <div className="mt-14 grid gap-5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
               {SUBJECTS.map((subject) => (
                 <div
                   key={subject.name}
-                  className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-emerald-200 hover:shadow-md"
+                  className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-200 hover:shadow-md sm:gap-4 sm:p-5"
                 >
                   <div
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-2xl"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-xl sm:h-11 sm:w-11 sm:text-2xl"
                     aria-hidden="true"
                   >
                     {subject.emoji}
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-semibold text-slate-900 sm:text-sm">
                       {subject.name}
                     </h3>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                    <p className="mt-1 text-[10px] leading-snug text-slate-500 sm:text-xs sm:leading-relaxed">
                       {subject.blurb}
                     </p>
                   </div>

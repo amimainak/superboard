@@ -389,6 +389,48 @@
   gap: 8px;
 }
 
+/* Task 46 / Fix #3 — On phones the two OAuth buttons (Google + GitHub)
+   are too narrow when side-by-side (each < 160px with text). Stack
+   them vertically on <=640px so each button is full-width and the
+   provider icon + label are readable. */
+@media (max-width: 640px) {
+  .auth-oauth-row {
+    flex-direction: column;
+  }
+
+  .auth-oauth-btn {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+/* Task 46 / Fix #3 — On very small phones (<=375px) tighten the auth
+   card padding so the form fields have more breathing room. */
+@media (max-width: 375px) {
+  .auth-card {
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+  }
+
+  .auth-title {
+    font-size: 1.25rem;
+  }
+
+  .auth-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .auth-logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .auth-logo svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .auth-oauth-btn:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.14);

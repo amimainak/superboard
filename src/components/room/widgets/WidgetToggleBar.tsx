@@ -6,11 +6,13 @@
 
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useWidgetStore, type WidgetId, AVAILABLE_WIDGETS, getWidgetsForSubject } from '@/lib/room/widget-store'
 import { useWhiteboardStore } from '@/lib/whiteboard/store'
 import { useAppStore } from '@/store/app-store'
 import { WidgetBrowseModal } from './WidgetBrowseModal'
+
+const SUBJECTS_STORAGE_KEY = 'superboard_installed_subjects'
 
 export function WidgetToggleBar() {
   const isDark = useWhiteboardStore((s) => s.isDark)
@@ -18,25 +20,72 @@ export function WidgetToggleBar() {
   const toggleWidget = useWidgetStore((s) => s.toggleWidget)
   const setBrowseModalOpen = useWidgetStore((s) => s.setBrowseModalOpen)
   const setInstalledTools = useWidgetStore((s) => s.setInstalledTools)
+  const installedSubjects = useWidgetStore((s) => s.installedSubjects)
+  const setInstalledSubjects = useWidgetStore((s) => s.setInstalledSubjects)
+  const panelVisible = useWidgetStore((s) => s.panelVisible)
   // H1 FIX: Get the session subject for context-aware filtering
   const subject = useAppStore((s) => s.room.subject)
 
-  // Load installed tools from server on mount
+  // Track whether we're on a small screen (mobile) so we can show the
+  // floating "open panel" button when the panel is closed.
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const update = () => setIsMobile(window.matchMedia('(max-width: 768px)').matches)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  // Load installed tools + installed subjects from server on mount
   useEffect(() => {
     fetch('/api/user/widgets')
       .then(res => res.json())
       .then(data => {
         if (data.installedTools) setInstalledTools(data.installedTools)
+        // Server is source-of-truth for logged-in tutors. If the server
+        // returns a non-empty `installedSubjects` array, it overrides the
+        // localStorage default. If the server returns an empty array
+        // (tutor hasn't customized yet), we fall back to localStorage /
+        // DEFAULT_INSTALLED_SUBJECTS below.
+        if (Array.isArray(data.installedSubjects) && data.installedSubjects.length > 0) {
+          setInstalledSubjects(data.installedSubjects)
+          try { localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(data.installedSubjects)) } catch {}
+        }
       })
       .catch(() => { /* silently fail — will use empty set */ })
-  }, [setInstalledTools])
+  }, [setInstalledTools, setInstalledSubjects])
+
+  // On mount, hydrate installedSubjects from localStorage if the store
+  // is still at the default. This is the guest path (no logged-in user)
+  // and the logged-in-but-never-customized path.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SUBJECTS_STORAGE_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (Array.isArray(parsed)) {
+          setInstalledSubjects(parsed.filter((s): s is string => typeof s === 'string'))
+        }
+      }
+    } catch { /* ignore */ }
+  }, [setInstalledSubjects])
 
   const commWidgets = AVAILABLE_WIDGETS.filter((w) => w.section === 'communication')
-  // H1 FIX: Filter tool widgets based on the session subject
-  const allowedToolIds = useMemo(() => getWidgetsForSubject(subject), [subject])
+  // H1 FIX + Task 46 / Fix #1: Filter tool widgets based on the session
+  // subject AND the tutor's pinned installedSubjects (used when subject
+  // is GENERAL — the standalone whiteboard default).
+  const allowedToolIds = useMemo(
+    () => getWidgetsForSubject(subject, installedSubjects),
+    [subject, installedSubjects]
+  )
   const toolWidgets = AVAILABLE_WIDGETS.filter(
     (w) => w.section === 'tools' && allowedToolIds.includes(w.id as WidgetId)
   )
+
+  // Show the floating "open panel" button only on mobile, when no widgets
+  // are open (panel is closed). Once the tutor opens a widget, the panel
+  // takes over the screen.
+  const showFloatingOpen = isMobile && !panelVisible
 
   return (
     <>
@@ -64,6 +113,35 @@ export function WidgetToggleBar() {
               onToggle={() => toggleWidget(widget.id as WidgetId)}
             />
           ))}
+          {/* Manage subjects button (Task 46 / Fix #1) — opens the
+              WidgetBrowseModal which now has a "My Subjects" section at
+              the top. Only shown when the session subject is GENERAL
+              (the standalone whiteboard default). When a real subject
+              is set, the toolkit list is dictated by SUBJECT_WIDGET_MAP
+              and there's nothing to manage. */}
+          {(!subject || subject === 'GENERAL') && (
+            <button
+              onClick={() => setBrowseModalOpen(true)}
+              title="Manage which subject toolkits appear here"
+              aria-label="Manage subject toolkits"
+              className={[
+                `widget-toggle-btn ${isDark ? '' : 'widget-toggle-btn-light'}`,
+              ].join(' ')}
+              style={{
+                border: '1px dashed ' + (isDark ? 'rgba(168,85,247,0.4)' : 'rgba(168,85,247,0.3)'),
+                background: isDark ? 'rgba(168,85,247,0.06)' : 'rgba(168,85,247,0.04)',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isDark ? '#c084fc' : '#a855f7'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                <path d="M2 12h3" />
+                <path d="M2 18h3" />
+                <path d="M2 6h3" />
+              </svg>
+              <span className="widget-toggle-label" style={{ color: isDark ? '#c084fc' : '#a855f7' }}>Manage</span>
+            </button>
+          )}
           {/* Marketplace browse button */}
           <button
             onClick={() => setBrowseModalOpen(true)}
@@ -84,6 +162,41 @@ export function WidgetToggleBar() {
           </button>
         </div>
       </div>
+
+      {/* Mobile floating "open panel" button (Task 46 / Fix #2).
+          On phones the widget toggle bar lives at the top-right of the
+          canvas, which is hard to discover when the panel is closed.
+          This button floats above the canvas at the bottom-right, above
+          the mobile toolbar, so a tutor can pop the panel back open
+          with one tap. */}
+      {showFloatingOpen && (
+        <button
+          type="button"
+          aria-label="Open tools panel"
+          title="Open tools panel"
+          onClick={() => {
+            // If a widget was previously open but the panel was closed,
+            // toggleWidget will re-open it. Otherwise, open the first
+            // available tool widget so the panel has content.
+            if (openWidgets.length > 0) {
+              toggleWidget(openWidgets[0])
+            } else if (toolWidgets.length > 0) {
+              toggleWidget(toolWidgets[0].id as WidgetId)
+            } else if (commWidgets.length > 0) {
+              toggleWidget(commWidgets[0].id as WidgetId)
+            } else {
+              setBrowseModalOpen(true)
+            }
+          }}
+          className={`widget-mobile-open-fab ${isDark ? '' : 'widget-mobile-open-fab-light'}`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M15 3v18" />
+          </svg>
+        </button>
+      )}
+
       <WidgetBrowseModal />
     </>
   )

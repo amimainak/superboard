@@ -21,14 +21,53 @@ export const SUBJECT_WIDGET_MAP: Record<string, WidgetId[]> = {
   GENERAL: [], // Empty = show all (default/fallback)
 }
 
-/** Get visible widget IDs filtered by subject */
-export function getWidgetsForSubject(subject: string): WidgetId[] {
-  const extra = SUBJECT_WIDGET_MAP[subject]
-  if (!extra || extra.length === 0) {
-    // GENERAL or unknown: show all tool widgets
-    return AVAILABLE_WIDGETS.filter(w => w.section === 'tools').map(w => w.id as WidgetId)
+// Task 46 / Fix #1 — The 9 subject toolkits a tutor can pin to their
+// toggle bar when the session subject is GENERAL (the standalone
+// whiteboard default). A language tutor doesn't want Math/Physics/etc.
+// cluttering their toggle bar by default.
+export const SUBJECT_TOOLKIT_IDS: WidgetId[] = [
+  'math',
+  'physics',
+  'chemistry',
+  'biology',
+  'language',
+  'statistics',
+  'earthscience',
+  'arts',
+  'classroom',
+]
+
+/** Sensible defaults for a brand-new tutor who hasn't customized yet. */
+export const DEFAULT_INSTALLED_SUBJECTS: string[] = ['math', 'language', 'classroom']
+
+/**
+ * Get visible widget IDs filtered by subject.
+ *
+ * - If `subject` is set (anything other than GENERAL/unknown): returns
+ *   that subject's mapped widgets (existing behavior).
+ * - If `subject` is GENERAL AND `installedSubjects` is provided and
+ *   non-empty: returns only the tutor's pinned subject toolkits. This
+ *   is the Fix #1 path — a language tutor sees only Language + Math +
+ *   Classroom (or whatever they pinned), not all 9 toolkits.
+ * - If `subject` is GENERAL AND `installedSubjects` is empty/omitted:
+ *   falls back to showing all tool widgets (legacy behavior).
+ */
+export function getWidgetsForSubject(subject: string, installedSubjects?: string[]): WidgetId[] {
+  const mapped = SUBJECT_WIDGET_MAP[subject]
+  if (mapped && mapped.length > 0) {
+    return mapped
   }
-  return extra
+  // GENERAL / unknown subject
+  if (installedSubjects && installedSubjects.length > 0) {
+    // Restrict to tutor's pinned subject toolkits. Filter to known IDs
+    // so an unknown string in localStorage can't sneak through.
+    const pinned = installedSubjects.filter((s): s is WidgetId =>
+      (SUBJECT_TOOLKIT_IDS as string[]).includes(s)
+    )
+    return pinned.length > 0 ? pinned : AVAILABLE_WIDGETS.filter(w => w.section === 'tools').map(w => w.id as WidgetId)
+  }
+  // Fallback: show all tool widgets
+  return AVAILABLE_WIDGETS.filter(w => w.section === 'tools').map(w => w.id as WidgetId)
 }
 
 export type WidgetId =
@@ -106,6 +145,9 @@ interface WidgetStore {
   panelMode: PanelMode
   /** Installed marketplace tools (persisted to Supabase) */
   installedTools: Set<MarketplaceToolId>
+  /** Task 46 / Fix #1 — Subject toolkits the tutor has pinned for GENERAL sessions.
+   *  Persisted to localStorage for guests and to the User model for logged-in tutors. */
+  installedSubjects: string[]
   /** Whether the browse modal is open */
   browseModalOpen: boolean
 
@@ -121,6 +163,7 @@ interface WidgetStore {
   uninstallTool: (id: MarketplaceToolId) => void
   isToolInstalled: (id: MarketplaceToolId) => boolean
   setInstalledTools: (ids: MarketplaceToolId[]) => void
+  setInstalledSubjects: (subjects: string[]) => void
   setBrowseModalOpen: (open: boolean) => void
 }
 
@@ -130,6 +173,7 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   panelVisible: false,
   panelMode: 'dock',
   installedTools: new Set<MarketplaceToolId>(),
+  installedSubjects: [...DEFAULT_INSTALLED_SUBJECTS],
   browseModalOpen: false,
 
   toggleWidget: (id) => {
@@ -213,6 +257,8 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   isToolInstalled: (id) => get().installedTools.has(id),
 
   setInstalledTools: (ids) => set({ installedTools: new Set(ids) }),
+
+  setInstalledSubjects: (subjects) => set({ installedSubjects: subjects }),
 
   setBrowseModalOpen: (open) => set({ browseModalOpen: open }),
 }))

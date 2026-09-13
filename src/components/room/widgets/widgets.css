@@ -881,18 +881,23 @@
     height: 18px;
   }
 
-  /* Widget panel: right-side 70% overlay (Task 42 / Fix #17 — leave canvas
-     visible on the left 30% so the tutor can still see the board) */
+  /* Widget panel: FULL-SCREEN OVERLAY on phones (Task 46 / Fix #2).
+     Previously the panel took 70% of the screen with 30% canvas on
+     the left — barely usable for actual teaching. Now: when open, the
+     panel covers the whole canvas; when closed (via the prominent
+     close button), 100% of the canvas is visible. A floating
+     "open panel" FAB (see .widget-mobile-open-fab) appears when the
+     panel is closed. */
   .widget-panel {
-    position: absolute;
+    position: fixed;
     right: 0;
     top: 0;
     bottom: 0;
-    left: 30%;
-    width: 70% !important;
-    min-width: 70% !important;
-    z-index: 999;
-    border-left: 1px solid rgba(255,255,255,0.08);
+    left: 0;
+    width: 100% !important;
+    min-width: 100% !important;
+    z-index: 9999;
+    border-left: none;
     border-radius: 0;
     animation: widget-panel-slide-in-mobile 0.2s ease;
   }
@@ -903,20 +908,21 @@
   }
 
   .widget-panel-float {
-    position: absolute !important;
+    position: fixed !important;
     top: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    width: 70% !important;
-    min-width: 70% !important;
+    left: 0 !important;
+    width: 100% !important;
+    min-width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.4) !important;
+    box-shadow: none !important;
     border: none !important;
   }
 
   .widget-panel-minimized {
-    position: absolute !important;
+    position: fixed !important;
     bottom: 64px !important;
     right: 8px !important;
     border-radius: 10px;
@@ -944,10 +950,19 @@
     padding: 4px 10px;
     gap: 6px;
     border-radius: 6px;
+    /* Task 46 / Fix #3 — On phones, cap width so long subject/session
+       names don't push the bar across the screen and overlap the
+       widget toggle bar on the right. Truncate with ellipsis. */
+    max-width: calc(100vw - 80px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .room-info-subject {
     font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* Session controls: bottom center on mobile, above toolbar */
@@ -3584,25 +3599,31 @@
     font-size: 11px;
   }
 
-  /* Widget panel full-screen on tablet portrait when open */
+  /* Widget panel full-screen on tablet portrait when open (Task 46 / Fix #2
+     — keep position: fixed and z-index: 9999 consistent with the 640px
+     block so the cascade never downgrades the panel to position: absolute
+     with a lower z-index on phones, which would cause the mobile toolbar
+     to cover the panel). */
   .widget-panel {
-    position: absolute;
+    position: fixed;
     right: 0;
     top: 0;
     bottom: 0;
+    left: 0;
     width: 100% !important;
     min-width: 100% !important;
-    z-index: 999;
+    z-index: 9999;
     border-left: none;
     border-radius: 0;
     animation: none;
   }
 
   .widget-panel-float {
-    position: absolute !important;
+    position: fixed !important;
     top: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
+    left: 0 !important;
     width: 100% !important;
     min-width: 100% !important;
     height: 100% !important;
@@ -3612,7 +3633,7 @@
   }
 
   .widget-panel-minimized {
-    position: absolute !important;
+    position: fixed !important;
     bottom: 64px !important;
     right: 8px !important;
     border-radius: 10px;
@@ -3943,3 +3964,131 @@
     transition: none !important;
   }
 }
+
+/* ============================================================
+   Task 46 / Fix #2 — Mobile Full-Screen Widget Panel + Floating
+   Open Button + Prominent Close Button
+   ============================================================
+   On phones (<=768px) the widget panel is now a full-screen overlay
+   (see the @media blocks above). This section adds the two pieces of
+   UI chrome that make that work in practice:
+
+   1. .widget-panel-close-btn — a prominent X in the panel header.
+      Hidden on >=769px (the toggle-bar buttons suffice on desktop).
+      Visible only on <=768px where the panel covers the canvas and
+      the toggle bar is hard to reach.
+   2. .widget-mobile-open-fab — a floating "open panel" button that
+      appears in the bottom-right of the canvas when the panel is
+      closed on mobile. Rendered by WidgetToggleBar (the showFloatingOpen
+      flag), styled here.
+
+   Also: .widget-content gets full-height on mobile so toolkits fill
+   the screen instead of clipping.
+   ============================================================ */
+
+/* ---- Prominent close button (mobile-only) ---- */
+.widget-panel-close-btn {
+  /* Hidden by default; only shown <=768px. */
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .widget-panel-close-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    cursor: pointer;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s ease;
+  }
+
+  .widget-panel-close-btn:active {
+    background: rgba(239, 68, 68, 0.2);
+  }
+
+  .widget-panel-close-btn-light {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #dc2626;
+  }
+
+  /* Push the close button to the far right of the tab bar — give it
+     a small left margin so it doesn't crowd the mode toggle. */
+  .widget-tab-bar .widget-panel-close-btn {
+    margin-left: 4px;
+  }
+
+  /* Widget content: fill the screen so toolkits are usable */
+  .widget-content {
+    height: calc(100vh - 100px) !important;
+    max-height: calc(100vh - 100px) !important;
+  }
+
+  /* On mobile the tab bar needs to fit the new 44px close button. */
+  .widget-tab-bar {
+    min-height: 48px;
+    padding-right: 6px;
+  }
+}
+
+/* ---- Floating "open panel" button (mobile-only) ----
+   Rendered by WidgetToggleBar's showFloatingOpen flag. Hidden on
+   >=769px because the toggle bar is always visible there. */
+.widget-mobile-open-fab {
+  display: none; /* overridden by media query below */
+}
+
+@media (max-width: 768px) {
+  .widget-mobile-open-fab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    right: 12px;
+    z-index: 1100; /* above the mobile bottom toolbar */
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(16, 185, 129, 0.95);
+    border: 1px solid rgba(52, 211, 153, 0.5);
+    color: #fff;
+    cursor: pointer;
+    box-shadow:
+      0 8px 24px rgba(16, 185, 129, 0.35),
+      0 2px 6px rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(8px);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    animation: widget-mobile-open-fab-in 0.2s ease;
+  }
+
+  .widget-mobile-open-fab:active {
+    transform: scale(0.94);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  }
+
+  .widget-mobile-open-fab-light {
+    background: rgba(5, 150, 105, 0.95);
+    border-color: rgba(5, 150, 105, 0.5);
+    color: #fff;
+  }
+
+  @keyframes widget-mobile-open-fab-in {
+    from { opacity: 0; transform: scale(0.7) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+}
+
+/* ============================================================
+   Task 46 / Fix #2 — End mobile full-screen panel
+   ============================================================ */

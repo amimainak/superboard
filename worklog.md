@@ -1996,3 +1996,104 @@ Stage Summary:
 - All API routes use `requireAuth` from `src/lib/auth.ts`. All client-side calls use `authFetch`. Widget picker uses `WIDGET_KIND_LABELS`. Default configs use `getDefaultWidgetConfig()`. The builder is a modal overlay (like SaveAsTemplateModal); the player is a floating bottom bar (as specified). No duplicate widget-placement mechanism — the player reuses the same `addElement` + `getDefaultWidgetConfig` + `getWidgetDefaultSize` + camera-centering pattern as the existing Ctrl+Shift+R shortcut and the toolkit addToBoard callbacks.
 - tsc --noEmit passes cleanly (0 errors). The pre-existing katex error mentioned in the brief is not reproduced (filtered by skipLibCheck, per prior tasks' notes).
 - DB-side next step (NOT done — brief said no commit/push): run `npx prisma db push` (or `npx prisma migrate dev --name add_lesson_plan`) to create the `LessonPlan` table in the database. The TypeScript layer is fully wired and ready; runtime will 500 on `/api/lessons/*` until the table exists.
+
+---
+Task ID: 46
+Agent: UX Polish (Widget Filtering + Mobile Space + Responsive Audit)
+
+Task: Fix 3 specific UX concerns — (1) widget filtering so tutors see only their selected subjects, (2) widget panel space management on small screens, (3) full responsiveness audit at 320/375/425/768/1024/1440px.
+
+Work Log:
+- Read worklog.md (Tasks 41–43) + the existing widget system: `src/lib/room/widget-store.ts` (Zustand store with `SUBJECT_WIDGET_MAP`, `getWidgetsForSubject()`, `installedTools: Set<MarketplaceToolId>`, `panelMode`, `panelVisible`), `src/components/room/widgets/WidgetToggleBar.tsx` (toggle buttons grouped by section, loads `installedTools` from `/api/user/widgets` on mount, filters via `getWidgetsForSubject(subject)`), `src/components/room/widgets/WidgetPanel.tsx` (right-side panel with tab bar + mode-toggle dock/float/minimized cycle), `src/components/room/widgets/WidgetBrowseModal.tsx` (marketplace browser with search/filter/3-tab content + install/uninstall flow persisting to Supabase via `installedWidgets` JSON column), `src/components/room/widgets/widgets.css` (3945 lines, multiple `@media (max-width: 1024px/768px/640px/400px)` blocks, mobile panel was previously 70% width leaving 30% canvas — Fix #2 inverts this to 100% overlay).
+- Read `src/lib/room/widget-registry.ts` (manifest system — `CORE_WIDGETS`, `MARKETPLACE_WIDGETS`, `COMING_SOON_WIDGETS`, `WidgetManifest` type, `WidgetSubject` union), `src/app/api/user/widgets/route.ts` (existing GET/PUT — accepted/returned `{ installedTools: string[] }`, persisted as a plain array to `User.installedWidgets` JSON column), `prisma/schema.prisma` (User.installedWidgets is `Json?` — used this column rather than adding a new one to avoid a DB migration), `src/store/app-store.ts` (`room.subject: Subject`), `src/types/index.ts` (`Subject` union = MATH|SCIENCE|LANGUAGE|GENERAL|MUSIC|CODING|TEST_PREP|ART|ESL).
+- Confirmed `getWidgetsForSubject()` is imported in only 2 places (`widget-store.ts` itself + `WidgetToggleBar.tsx`), so the signature change (adding an optional `installedSubjects` parameter) is fully backward-compatible.
+
+Step 1 — Fix #1 widget filtering (tutors see only their selected subjects):
+
+  1a. `src/lib/room/widget-store.ts`:
+    · Added `SUBJECT_TOOLKIT_IDS: WidgetId[]` constant listing the 9 subject toolkits: math, physics, chemistry, biology, language, statistics, earthscience, arts, classroom.
+    · Added `DEFAULT_INSTALLED_SUBJECTS: string[] = ['math', 'language', 'classroom']` — sensible defaults for a general tutor.
+    · Modified `getWidgetsForSubject(subject, installedSubjects?)` signature: if `subject` is set (anything in SUBJECT_WIDGET_MAP with a non-empty array), return that subject's mapped widgets (existing behavior). If `subject` is GENERAL/unknown AND `installedSubjects` is provided + non-empty, return only the tutor's pinned subject toolkits (filtered through `SUBJECT_TOOLKIT_IDS` to reject unknown strings). If `installedSubjects` is empty/omitted, fall back to showing all tool widgets (legacy behavior — guarantees a tutor never sees a blank toggle bar).
+    · Added `installedSubjects: string[]` to the `WidgetStore` interface (with docs noting localStorage-for-guests + User-model-for-tutors persistence).
+    · Added `setInstalledSubjects: (subjects: string[]) => void` action.
+    · Initialized `installedSubjects: [...DEFAULT_INSTALLED_SUBJECTS]` in the store.
+
+  1b. `src/app/api/user/widgets/route.ts` — full rewrite for the structured shape:
+    · New stored shape: `{ tools: string[], subjects: string[] }` in `User.installedWidgets` JSON column. Backward-compatible via `coerceShape()` helper: if the stored value is a plain array (legacy shape), it's wrapped as `{ tools: [...], subjects: [] }` on read.
+    · GET returns `{ installedTools, installedSubjects }` (note: kept the `installedTools` key name for backward compat with the existing WidgetToggleBar + WidgetBrowseModal client code).
+    · PUT validates both arrays against allow-lists (`ALLOWED_TOOL_IDS` for marketplace tools, `ALLOWED_SUBJECT_IDS` for the 9 subject toolkits). Writes the structured shape. If the client only sends one of the two arrays, the other is written as `[]` (not "preserve previous value") so the column stays in sync.
+    · No DB migration needed — reuses the existing `installedWidgets Json?` column.
+
+  1c. `src/components/room/widgets/WidgetToggleBar.tsx`:
+    · Added `installedSubjects` + `setInstalledSubjects` + `panelVisible` selectors from the widget store.
+    · Added `isMobile` state with a `matchMedia('(max-width: 768px)')` listener.
+    · The `/api/user/widgets` fetch now reads both `installedTools` AND `installedSubjects`. If the server returns a non-empty `installedSubjects` array, it overrides the store default AND mirrors to `localStorage['superboard_installed_subjects']`. If the server returns an empty array (tutor hasn't customized yet), the client falls back to localStorage.
+    · Added a second `useEffect` on mount that hydrates `installedSubjects` from `localStorage['superboard_installed_subjects']` (guest path).
+    · The `getWidgetsForSubject` call now passes `installedSubjects` as the second argument: `getWidgetsForSubject(subject, installedSubjects)`.
+    · Added a "Manage" button in the Tools section (only rendered when `subject` is GENERAL — when a real subject is set, the toolkit list is dictated by `SUBJECT_WIDGET_MAP` and there's nothing to manage). It opens the `WidgetBrowseModal` which now has a "My Subjects" section pinned at the top — so "scrolled to the My Subjects section" is automatic.
+    · Added a floating "open panel" FAB (`.widget-mobile-open-fab`) rendered only when `isMobile && !panelVisible`. On click: if a widget was previously open, re-toggles it; otherwise opens the first available tool widget (or comm widget, or the browse modal as last resort).
+
+  1d. `src/components/room/widgets/WidgetBrowseModal.tsx`:
+    · Added a new `SUBJECT_TOOLKIT_META` constant with `{ id, label, description, icon }` for each of the 9 subject toolkits (icons match the WidgetToggleBar's inline SVG renderer so the modal's toggles look identical to the toggle bar's).
+    · Added `installedSubjects` + `setInstalledSubjects` selectors.
+    · Added `subjectSaving` state for per-button busy indicator.
+    · Added a "My Subjects" section at the TOP of the modal (above the search/filter/tabs). It renders as a `grid-template-columns: repeat(auto-fill, minmax(150px, 1fr))` grid of toggle buttons. Each button shows the subject's icon + label + a checkmark (if installed) or plus (if not). Clicking calls `handleSubjectToggle(id, isInstalled)`.
+    · `handleSubjectToggle()` reads the latest `installedSubjects` from the store (avoiding stale closures), computes the next array (filter out or append), calls `setInstalledSubjects(next)`, mirrors to `localStorage['superboard_installed_subjects']`, and fires a best-effort PUT to `/api/user/widgets` with `{ installedSubjects: next }`. The PUT is best-effort: a 401 (guest) or network error is silently ignored — localStorage is the fallback for guests, and the server is the source of truth for logged-in tutors.
+    · Added a "Reset" button next to the section header — restores `DEFAULT_INSTALLED_SUBJECTS` and persists it.
+    · Footer line shows `"{n} of 9 subject toolkits pinned. Applies when your session subject is General."` (or "No subjects selected — all tool widgets will show by default." when the array is empty).
+    · Added a `SubjectIcon` component (inline SVG renderer matching WidgetToggleBar's icons).
+    · Increased modal `maxWidth` from 520 to 560 and `maxHeight` from 80vh to 85vh to accommodate the new section.
+    · Removed duplicate `ToolCard` function definition that was inadvertently left in the file after my replacement.
+
+Step 2 — Fix #2 mobile space management (full-screen panel overlay):
+
+  2a. `src/components/room/widgets/widgets.css`:
+    · Updated the `@media (max-width: 640px)` block: `.widget-panel` is now `position: fixed; top:0; right:0; bottom:0; left:0; width: 100% !important; min-width: 100% !important; z-index: 9999; border-radius: 0` (was 70% width / `position: absolute` / `z-index: 999`). Same for `.widget-panel-float`.
+    · Updated the `@media (max-width: 768px)` block (in the PHASE 4 section) to match: `position: fixed; z-index: 9999` (was `position: absolute; z-index: 999`). This prevents the later-in-source 768px block from overriding the 640px block on phones via CSS cascade.
+    · Updated `.widget-panel-minimized` to `position: fixed` (was `position: absolute`) so the minimized pill stays above the mobile bottom toolbar.
+    · Added a new "Task 46 / Fix #2" section at the end of widgets.css with:
+      - `.widget-panel-close-btn` (mobile-only close button — `display: none` by default, `display: inline-flex` at <=768px; 44x44px red-tinted button with X icon; light-mode variant).
+      - `.widget-mobile-open-fab` (floating "open panel" FAB — `display: none` by default, `display: inline-flex` at <=768px; 52x52px emerald circle at `bottom: calc(76px + env(safe-area-inset-bottom)); right: 12px; z-index: 1100`; entrance animation + press-scale micro-interaction).
+      - `.widget-content` rule at <=768px: `height: calc(100vh - 100px) !important; max-height: calc(100vh - 100px) !important` so toolkits fill the screen.
+      - `.widget-tab-bar` rule at <=768px: `min-height: 48px; padding-right: 6px` so the new 44px close button fits in the header.
+
+  2b. `src/components/room/widgets/WidgetPanel.tsx`:
+    · Added `closePanel` selector from the widget store.
+    · Added a `<button className="widget-panel-close-btn">` after the mode-toggle in the tab bar. It calls `closePanel()` (which delegates to `resetWidgets()` — clears `openWidgets`, `activeTab`, `panelVisible`). Hidden on >=769px via CSS, visible only on <=768px where the panel covers the canvas and the toggle bar is hard to reach.
+
+Step 3 — Fix #3 full responsiveness audit:
+
+  3a. `src/app/page.tsx` (landing page):
+    · Features grid: `grid gap-6 md:grid-cols-3` → `grid gap-6 sm:grid-cols-2 lg:grid-cols-3` (1 col mobile, 2 col tablet at 640px+, 3 col desktop at 1024px+).
+    · Grade bands grid: `sm:grid-cols-2 lg:grid-cols-4` → `sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4` (added the intermediate 3-col tablet breakpoint at 768px+).
+    · Subjects grid: `sm:grid-cols-2 lg:grid-cols-3` → `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4` (2 col mobile, 3 col tablet, 4 col desktop — matches the brief's "2/3/4-5" spec).
+    · Subject card markup: added responsive Tailwind classes for very small screens — `p-4 sm:p-5`, `gap-3 sm:gap-4`, `h-9 w-9 sm:h-11 sm:w-11` (icon), `text-xl sm:text-2xl` (emoji), `text-xs sm:text-sm` (name), `text-[10px] sm:text-xs sm:leading-relaxed` (blurb). Prevents the 2-col mobile layout from looking cramped on 320px iPhone SE.
+    · Hero heading: `text-4xl sm:text-5xl lg:text-6xl` → `text-3xl sm:text-4xl md:text-5xl lg:text-6xl` (one step smaller at every breakpoint so the gradient-clipped "teaches with you" fits comfortably on 320px screens).
+
+  3b. `src/app/pricing/PricingClient.tsx`:
+    · Plan cards grid: `grid gap-6 md:grid-cols-3` → `grid gap-6 sm:grid-cols-2 lg:grid-cols-3` (1 col mobile, 2 col tablet at 640px+, 3 col desktop at 1024px+ — matches the brief's "1/2/3" spec).
+
+  3c. `src/app/globals.css` (auth pages — login + signup):
+    · `.auth-oauth-row` (Google + GitHub buttons): added `@media (max-width: 640px) { flex-direction: column; .auth-oauth-btn { width: 100%; padding: 12px; } }` so the two OAuth buttons stack vertically on phones (they were too narrow when side-by-side at ~160px each).
+    · Added `@media (max-width: 375px)` block: tightens `.auth-card` padding from `--space-10` to `--space-6`, shrinks the logo from 48 to 40px, drops title font from 1.5rem to 1.25rem and subtitle from 0.8125rem to 0.75rem — gives the form fields more breathing room on very small phones. Both LoginForm and SignupForm use the same `.auth-card` / `.auth-oauth-row` classes, so the fix applies to both pages.
+
+  3d. `src/components/room/widgets/widgets.css` (room info bar):
+    · In the existing `@media (max-width: 640px)` block, added `max-width: calc(100vw - 80px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap` to `.room-info-bar` and `overflow: hidden; text-overflow: ellipsis` to `.room-info-subject`. Prevents long subject/session names from pushing the bar across the screen and overlapping the widget toggle bar on the right.
+
+  3e. Verified existing responsive coverage (no changes needed):
+    · Whiteboard top bar already icon-only on mobile (text labels are in `wb-top-bar-hide-mobile` containers, hidden at <=768px). The `@media (max-width: 400px)` block already shrinks the toggle bar to icon-only 40x40 buttons. The brief's "icon-only with tooltips on <=375px" requirement is met — the existing `title` attributes on every toggle button provide tooltips.
+    · Whiteboard left toolbar already converts to a `MobileBottomToolbar` (bottom bar) at <=768px via `.wb-toolbar { display: none } .wb-mobile-toolbar { display: flex !important }`.
+    · Widget toggle bar already icon-only on mobile (existing `@media (max-width: 640px)` block hides `.widget-toggle-label`). The `max-width: calc(100vw - 16px)` rule prevents horizontal overflow.
+    · Dashboard panels already use Tailwind responsive grid classes (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`, `grid-cols-2 md:grid-cols-4`, etc.) — single-column on mobile, multi-column on desktop is already the case across StudentProgressPanel, HomeworkPanel, InvoicePanel, OnboardingWizard, AnalyticsPanel, BillingPanel, ResourceLibraryPanel, SchedulePanel, AgencyAdminPanel, TemplateGallery, AgencyAnalyticsPanel.
+
+Verification:
+- `cd /home/z/my-project/superboard-source && npx tsc --noEmit -p tsconfig.json` → EXIT CODE 0 (0 TypeScript errors). Note: `node_modules` was missing from the workspace — installed dependencies via `bun install --frozen-lockfile` (971 packages, 10.78s) before running tsc. This matches the Task 43 verification pattern.
+- Backward-compat audit: `getWidgetsForSubject()` is the only function whose signature changed (added optional 2nd parameter). Only 2 files import it (`widget-store.ts` itself + `WidgetToggleBar.tsx`). The optional parameter means existing call sites that omit it still compile and behave as before (legacy "show all tools" fallback).
+- API backward-compat: `/api/user/widgets` GET now returns `{ installedTools, installedSubjects }`. Existing client code that only reads `data.installedTools` continues to work (the new `installedSubjects` key is additive). The PUT endpoint accepts both arrays but each is optional — existing callers that only send `installedTools` continue to work (the other array is written as `[]`, which is a no-op for tutors who haven't customized subjects yet since `getWidgetsForSubject()` falls back to "show all" when `installedSubjects` is empty).
+- No commits or pushes made.
+
+Stage Summary:
+- Fix #1 (widget filtering): A language tutor no longer sees Math/Physics/Chemistry/etc. in their toggle bar by default. The 9 subject toolkits are now opt-in via the new "My Subjects" section at the top of the WidgetBrowseModal. Defaults are `['math', 'language', 'classroom']` (sensible for a general tutor). Selections persist to `localStorage['superboard_installed_subjects']` for guests and to the `User.installedWidgets` JSON column (now structured as `{ tools, subjects }`) for logged-in tutors. The existing `SUBJECT_WIDGET_MAP` behavior is preserved — when a real session subject is set (MATH/LANGUAGE/etc.), the mapped widget list takes precedence over `installedSubjects`. The "Manage" button in the toggle bar (visible only when subject is GENERAL) opens the browse modal which auto-scrolls to the "My Subjects" section (it's pinned at the top, so always in view on open).
+- Fix #2 (space management): On mobile (<=768px), the widget panel is now a FULL-SCREEN OVERLAY (was 70% width leaving 30% canvas — barely usable). When closed, 100% of the canvas is visible. A prominent 44x44px red close button appears in the panel header on mobile (hidden on desktop). A floating 52x52px emerald "open panel" FAB appears in the bottom-right of the canvas on mobile when the panel is closed — taps to re-open the most recently active widget (or the first available tool widget). Widget content gets `calc(100vh - 100px)` height on mobile so toolkits fill the screen instead of clipping. The `position: fixed; z-index: 9999` rules are consistent across both the 640px and 768px media query blocks so the CSS cascade never downgrades the panel back to `position: absolute` with a lower z-index.
+- Fix #3 (responsiveness audit): Landing page features grid now goes 1→2→3 columns (mobile→tablet→desktop). Subjects grid goes 2→3→4 columns. Grade bands grid adds an intermediate 3-col tablet breakpoint. Hero heading is one step smaller at every breakpoint so it fits on 320px iPhone SE. Subject cards use responsive padding/font sizes for very small screens. Pricing plan cards now go 1→2→3 columns. Auth pages (login + signup) stack OAuth buttons vertically on <=640px and tighten card padding on <=375px. Room info bar truncates with ellipsis on mobile to prevent overflow. Existing responsive coverage was verified for the whiteboard top bar (icon-only on mobile), whiteboard left toolbar (becomes MobileBottomToolbar at <=768px), widget toggle bar (icon-only on mobile, no horizontal overflow), and dashboard panels (already single-column on mobile, multi-column on desktop).
+- DB-side note: No new Prisma columns or migrations are needed. The `User.installedWidgets Json?` column is reused with a backward-compatible structured shape (`{ tools, subjects }`). Old array values are transparently coerced on read. No `prisma db push` required.
